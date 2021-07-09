@@ -26,6 +26,7 @@ import org.jooq.Result;
 public class RunAdHocQuery
 {
     private static final String QUERY_FILE = "query_file";
+    private static final String OUTPUT_FILE = "output_file";
 
     public static void main(String[] args) throws ParseException, IOException, SQLException
     {
@@ -35,9 +36,9 @@ public class RunAdHocQuery
         setLogLevel(cmd);
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
-        String outputDir = parseOutputDir(cmd);
+        String outputFile = cmd.getOptionValue(OUTPUT_FILE);
 
-        if(refGenomeVersion == null || outputDir == null)
+        if(refGenomeVersion == null || outputFile == null)
         {
             GU_LOGGER.error("missing config");
             System.exit(1);
@@ -54,8 +55,6 @@ public class RunAdHocQuery
 
         final Result<Record> results = context.fetch(query);
 
-        String outputFile = String.format("%sextra_gene_info.%s.tsv", outputDir, refGenomeVersion.identifier());
-
         GU_LOGGER.info("query returned {} entries", results.size());
         writeRecordsAsTsv(outputFile, results);
 
@@ -66,11 +65,10 @@ public class RunAdHocQuery
     {
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        options.addOption(ENSEMBL_DATA_DIR, true, "Path to Ensembl data cache files");
         EnsemblDAO.addCmdLineArgs(options);
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(QUERY_FILE, true, "Ad-hoc query SQL file");
+        options.addOption(OUTPUT_FILE, true, "Output file for test query results");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(QUERY_FILE, false, "Ad-hoc query");
         return options;
     }
 
