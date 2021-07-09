@@ -40,9 +40,10 @@ public class ReportWriter {
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportGermline), new ClinicalEvidenceChapter(report),
-                new SomaticDriverChapter(report), new GermlineFindingsChapter(report, reportGermline), new DatabaseCompareChapter(report),
-                new QualityControlChapter(report) };
+        ReportChapter[] chapters =
+                new ReportChapter[] { new FrontPageChapter(report, reportGermline), new ClinicalEvidenceChapter(report, reportGermline),
+                        new SomaticDriverChapter(report), new GermlineFindingsChapter(report, reportGermline),
+                        new DatabaseCompareChapter(report), new QualityControlChapter(report) };
         writeReport(report, chapters);
     }
 
