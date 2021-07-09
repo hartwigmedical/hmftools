@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.components.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -35,13 +36,12 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
-    private final boolean reportGermline;
-    private final boolean reportCAndDEvidence;
+    @NotNull
+    private final ReportConfig reportConfig;
 
-    public ClinicalEvidenceChapter(@NotNull final OrangeReport report, final boolean reportGermline, final boolean reportCAndDEvidence) {
+    public ClinicalEvidenceChapter(@NotNull final OrangeReport report, @NotNull final ReportConfig reportConfig) {
         this.report = report;
-        this.reportGermline = reportGermline;
-        this.reportCAndDEvidence = reportCAndDEvidence;
+        this.reportConfig = reportConfig;
     }
 
     @NotNull
@@ -54,22 +54,23 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph("Clinical Evidence").addStyle(ReportResources.chapterTitleStyle()));
 
-        if (!reportGermline) {
+        if (!reportConfig.reportGermline()) {
             document.add(note(" * Evidence from germline events is filtered"));
         }
 
-        if (!reportCAndDEvidence) {
-            document.add(note(" * Treatments with a maximum evidence of either C or D are filtered."));
+        if (reportConfig.maxReportingLevel() != null) {
+            document.add(note(" * Treatments are reported up to a maximum evidence level of '" + reportConfig.maxReportingLevel().toString()
+                    + "'.'"));
         }
 
-        Table onLabel = createTreatmentTable("On-Label Evidence", toTreatmentMap(report.protect(), reportGermline, true));
+        Table onLabel = createTreatmentTable("On-Label Evidence", toTreatmentMap(report.protect(), reportConfig.reportGermline(), true));
         if (onLabel == null) {
             document.add(new Paragraph(" * No on-label evidence found!").addStyle(ReportResources.tableContentStyle()));
         } else {
             document.add(onLabel);
         }
 
-        Table offLabel = createTreatmentTable("Off-Label Evidence", toTreatmentMap(report.protect(), reportGermline, false));
+        Table offLabel = createTreatmentTable("Off-Label Evidence", toTreatmentMap(report.protect(), reportConfig.reportGermline(), false));
         if (offLabel == null) {
             document.add(new Paragraph(" * No off-label evidence found!").addStyle(ReportResources.tableContentStyle()));
         } else {
@@ -125,12 +126,14 @@ public class ClinicalEvidenceChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Treatment"), TableUtil.createHeaderCell("Responsive Evidence"),
                         TableUtil.createHeaderCell("Resistance Evidence") });
 
-        addEvidenceWithMaxLevel(treatmentTable, treatmentMap, EvidenceLevel.A);
-        addEvidenceWithMaxLevel(treatmentTable, treatmentMap, EvidenceLevel.B);
-        if (reportCAndDEvidence) {
-            addEvidenceWithMaxLevel(treatmentTable, treatmentMap, EvidenceLevel.C);
-            addEvidenceWithMaxLevel(treatmentTable, treatmentMap, EvidenceLevel.D);
+        EvidenceLevel maxReportingLevel = reportConfig.maxReportingLevel();
+
+        for (EvidenceLevel level : EvidenceLevel.values()) {
+            if (maxReportingLevel == null || !maxReportingLevel.isHigher(level)) {
+                addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level);
+            }
         }
+
         return TableUtil.createWrappingReportTable(treatmentTable, title);
     }
 

@@ -31,21 +31,19 @@ public class ReportWriter {
     private final boolean writeToFile;
     @NotNull
     private final String outputDir;
-    private final boolean reportGermline;
-    private final boolean reportCAndDEvidence;
+    @NotNull
+    private final ReportConfig reportConfig;
 
-    public ReportWriter(final boolean writeToFile, @NotNull final String outputDir, final boolean reportGermline,
-            final boolean reportCAndDEvidence) {
+    public ReportWriter(final boolean writeToFile, @NotNull final String outputDir, @NotNull final ReportConfig reportConfig) {
         this.writeToFile = writeToFile;
         this.outputDir = outputDir;
-        this.reportGermline = reportGermline;
-        this.reportCAndDEvidence = reportCAndDEvidence;
+        this.reportConfig = reportConfig;
     }
 
     public void write(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportGermline),
-                new ClinicalEvidenceChapter(report, reportGermline, reportCAndDEvidence), new SomaticDriverChapter(report),
-                new GermlineFindingsChapter(report, reportGermline), new DatabaseCompareChapter(report),
+        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
+                new ClinicalEvidenceChapter(report, reportConfig), new SomaticDriverChapter(report),
+                new GermlineFindingsChapter(report, reportConfig.reportGermline()), new DatabaseCompareChapter(report),
                 new QualityControlChapter(report) };
         writeReport(report, chapters);
     }
