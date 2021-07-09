@@ -21,29 +21,20 @@ public final class ReportResources {
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
-    static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
+    public static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 30;
-    static final float PAGE_MARGIN_RIGHT = 30;
-    static final float PAGE_MARGIN_BOTTOM = 62;
+    public static final float PAGE_MARGIN_RIGHT = 30;
+    public static final float PAGE_MARGIN_BOTTOM = 62;
 
     public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);
-    public static final DeviceRgb PALETTE_BLUE = new DeviceRgb(38, 90, 166);
 
-    public static final DeviceRgb PALETTE_MID_BLUE = new DeviceRgb(110, 139, 189);
-    public static final DeviceRgb PALETTE_DARK_BLUE = new DeviceRgb(93, 85, 164);
-    public static final DeviceRgb PALETTE_RED = new DeviceRgb(232, 60, 55);
-    public static final DeviceRgb PALETTE_CYAN = new DeviceRgb(0, 179, 233);
-    private static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
+    public static final DeviceRgb PALETTE_DARK_GREY = new DeviceRgb(39, 47, 50);
     public static final DeviceRgb PALETTE_MID_GREY = new DeviceRgb(101, 106, 108);
-    public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
-    public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
-    public static final DeviceRgb PALETTE_VIOLET = new DeviceRgb(156, 97, 168);
 
     public static final DeviceRgb PALETTE_ORANGE = new DeviceRgb(242, 139, 31);
-
     public static final DeviceRgb PALETTE_ORANGE_1 = new DeviceRgb(255, 165, 0);
     public static final DeviceRgb PALETTE_ORANGE_2 = new DeviceRgb(235, 155, 0);
     public static final DeviceRgb PALETTE_ORANGE_3 = new DeviceRgb(215, 145, 0);
@@ -70,6 +61,10 @@ public final class ReportResources {
     public static PdfFont fontBold() {
         // Cannot be created statically as every PDF needs their own private font objects.
         return createFontFromProgram(loadFontProgram(FONT_BOLD_PATH));
+    }
+
+    public static Style chapterTitleStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     public static Style tableTitleStyle() {

@@ -19,10 +19,10 @@ public class ReportWriterTest {
 
     @Test
     public void canWriteTestReport() throws IOException {
-        ReportWriter writer = new ReportWriter(WRITE_TO_PDF, REPORT_BASE_DIR);
-
         OrangeConfig config = OrangeTestFactory.createTestOrangeConfig();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
+
+        ReportWriter writer = new ReportWriter(WRITE_TO_PDF, REPORT_BASE_DIR, config.reportGermline());
 
         OrangeReport reportWithTestSampleId = ImmutableOrangeReport.builder().from(report).sampleId("Test").build();
 

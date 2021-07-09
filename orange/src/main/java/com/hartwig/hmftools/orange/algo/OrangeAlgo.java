@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -56,15 +58,8 @@ public class OrangeAlgo {
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
+                .protect(loadProtectData(config))
                 .plots(buildPlots(config))
-                .build();
-    }
-
-    @NotNull
-    private static OrangePlots buildPlots(@NotNull OrangeConfig config) {
-        return ImmutableOrangePlots.builder()
-                .purpleComprehensiveCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
-                .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
                 .build();
     }
 
@@ -137,5 +132,18 @@ public class OrangeAlgo {
     @NotNull
     private static ChordAnalysis loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
         return ChordDataLoader.load(config.chordPredictionTxt());
+    }
+
+    @NotNull
+    private static List<ProtectEvidence> loadProtectData(@NotNull OrangeConfig config) throws IOException {
+        return ProtectEvidenceFile.read(config.protectEvidenceTsv());
+    }
+
+    @NotNull
+    private static OrangePlots buildPlots(@NotNull OrangeConfig config) {
+        return ImmutableOrangePlots.builder()
+                .purpleComprehensiveCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
+                .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
+                .build();
     }
 }

@@ -855,7 +855,7 @@ Allow early chain termination or disruption by intermediate splice acceptor or d
 '# Out of frame also reported for exonic to exonic EXON_DEL_DUP only (under assumption of possible phased indel)
 '## Skipped exons are allowed if a known exon range is configured, but only if the breakend and fused exon must be within the specified range on the promiscuous side, and any skipping is allowed on the non-promiscuous gene.
 
-Additionally, Linx checks that the protein domains retained in the 4’ partner may form a viable protein. Specifically The following domains must be preserved intact in the 3’ partner if they exist: Ets domain; Protein kinase domain; Epidermal growth factor-like domain; Ankyrin repeat-containing domain, Basic-leucine zipper domain,High mobility group box domain. The Raf-like Ras-binding domain must be disrupted if it exists (mainly affects BRAF). 
+Additionally, Linx checks that the protein domains retained in the 3’ partner may form a viable protein. Specifically The following domains must be preserved intact in the 3’ partner if they exist: Ets domain; Protein kinase domain; Epidermal growth factor-like domain; Ankyrin repeat-containing domain, Basic-leucine zipper domain,High mobility group box domain. The Raf-like Ras-binding domain must be disrupted if it exists (mainly affects BRAF). 
 
 Finally linx sets a likelihood for each reported fusion. KNOWN_PAIR, IG_KNOWN_PAIR and EXON_DEL_DUP are set to HIGH likelihood. PROMISCUOUS fusions are set to HIGH likelihood only if the fused exon matches the known exon range, or else LOW otherwise.
 
