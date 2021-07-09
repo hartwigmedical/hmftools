@@ -76,7 +76,7 @@ public class ReportWriter {
         PdfWriter writer;
         if (writeToFile) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.pdf";
-            LOGGER.info("Writing report {} to {}", report, outputFilePath);
+            LOGGER.info("Writing report {}", outputFilePath);
             writer = new PdfWriter(outputFilePath);
         } else {
             LOGGER.info("Generating report {}", report);
