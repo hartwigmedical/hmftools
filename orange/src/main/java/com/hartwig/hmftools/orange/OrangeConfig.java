@@ -57,6 +57,7 @@ public interface OrangeConfig {
 
     // Some additional optional params and flags
     String DISABLE_GERMLINE = "disable_germline";
+    String DISABLE_C_D_EVIDENCE = "disable_c_d_evidence";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -91,6 +92,7 @@ public interface OrangeConfig {
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
+        options.addOption(DISABLE_C_D_EVIDENCE, false, "If provided, no C or D evidence is added to the report");
 
         return options;
     }
@@ -102,6 +104,8 @@ public interface OrangeConfig {
     String referenceSampleId();
 
     boolean reportGermline();
+
+    boolean reportCAndDEvidence();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -177,6 +181,7 @@ public interface OrangeConfig {
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
                 .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
+                .reportCAndDEvidence(!cmd.hasOption(DISABLE_C_D_EVIDENCE))
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))

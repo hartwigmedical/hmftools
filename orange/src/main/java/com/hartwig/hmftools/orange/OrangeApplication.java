@@ -49,8 +49,7 @@ public class OrangeApplication {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
         OrangeReport report = algo.run(config);
 
-        LOGGER.info("Writing report");
-        ReportWriter writer = new ReportWriter(true, config.outputDir(), config.reportGermline());
+        ReportWriter writer = new ReportWriter(true, config.outputDir(), config.reportGermline(), config.reportCAndDEvidence());
         writer.write(report);
 
         LOGGER.info("Done!");

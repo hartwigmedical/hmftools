@@ -295,12 +295,16 @@ public class FrontPageChapter implements ReportChapter {
             }
         }
 
-        StringJoiner joiner = new StringJoiner(", ");
-        for (EvidenceLevel level : levels) {
-            joiner.add(level.toString());
-        }
+        if (treatments.isEmpty()) {
+            return "None";
+        } else {
+            StringJoiner joiner = new StringJoiner(", ");
+            for (EvidenceLevel level : levels) {
+                joiner.add(level.toString());
+            }
 
-        return treatments.size() + " (" + joiner.toString() + ")";
+            return treatments.size() + " (" + joiner.toString() + ")";
+        }
     }
 
     @NotNull

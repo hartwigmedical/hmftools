@@ -3,10 +3,10 @@ package com.hartwig.hmftools.serve.extraction.codon.tools;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
-import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

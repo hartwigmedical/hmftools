@@ -8,13 +8,13 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
-import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
