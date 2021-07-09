@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.coverage.GeneCoverage.populateCoverageBuckets;
@@ -150,11 +148,10 @@ public class SageApplication implements AutoCloseable
     }
 
     private ChromosomePipeline createChromosomePipeline(
-            final String contig, @NotNull final Coverage coverage,
-            Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException
+            final String chromosome, final Coverage coverage, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
         return new ChromosomePipeline(
-                contig, mConfig, mExecutorService, mRefData, qualityRecalibrationMap, coverage, this::writeVariant);
+                chromosome, mConfig, mExecutorService, mRefData, qualityRecalibrationMap, coverage, this::writeVariant);
     }
 
     public void writeVariant(final SageVariant variant)

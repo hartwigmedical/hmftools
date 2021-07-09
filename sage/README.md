@@ -165,7 +165,7 @@ The optional [base quality recalibration](#optional-base-quality-recalibration-a
 Minimum set of arguments:
 
 ```
-java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication \
+java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.apps.SageAppendApplication \
     -reference COLO829v003RNA -reference_bam /path/to/COLO829v003RNA.bam \
     -ref_genome /path/to/refGenome.fasta \
     -input_vcf /path/to/COLO829v003.sage.vcf.gz

@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MNV;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_THREADS;
+import static com.hartwig.hmftools.sage.SageConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.sage.SageConstants.SUB_ITEM_DELIM;
 
 import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
 
@@ -22,11 +24,13 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -55,6 +59,7 @@ public class SageConfig
     public final QualityConfig Quality;
     public final QualityRecalibrationConfig QualityRecalibration;
     public final Set<String> Chromosomes;
+    public final List<BaseRegion> SpecificRegions;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxRealignmentDepth;
@@ -102,7 +107,8 @@ public class SageConfig
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     private static final String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
     private static final String REF_GENOME_VERSION = "ref_genome_version";
-    private static final String CHR = "chr";
+    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+    private static final String SPECIFIC_REGIONS = "specific_regions";
     private static final String SLICE_SIZE = "slice_size";
     private static final String MNV = "mnv_enabled";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
@@ -148,10 +154,37 @@ public class SageConfig
         }
 
         Chromosomes = Sets.newHashSet();
-        final String chromosomeList = cmd.getOptionValue(CHR, Strings.EMPTY);
-        if(!chromosomeList.isEmpty())
+        SpecificRegions = Lists.newArrayList();
+
+        if(cmd.hasOption(SPECIFIC_REGIONS))
         {
-            Chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
+            final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+            for(String regionStr : regionStrs)
+            {
+                final String[] items = regionStr.split(SUB_ITEM_DELIM);
+                if(items.length == 3)
+                {
+                    BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+
+                    if(!region.isValid())
+                    {
+                        SG_LOGGER.error("invalid specific region: {}", region);
+                        continue;
+                    }
+
+                    SG_LOGGER.info("filtering for specific region: {}", region);
+                    SpecificRegions.add(region);
+                    Chromosomes.add(region.Chromosome);
+                }
+            }
+        }
+        else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        {
+            final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
+            if(!chromosomeList.isEmpty())
+            {
+                Chromosomes.addAll(Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
+            }
         }
 
         OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
@@ -294,7 +327,7 @@ public class SageConfig
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(LOG_LEVEL, false, "Log level");
+        options.addOption(LOG_LEVEL, true, "Log level");
 
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
@@ -321,7 +354,8 @@ public class SageConfig
         options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
-        options.addOption(CHR, true, "Run for single chromosome");
+        options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
+        options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
@@ -361,6 +395,7 @@ public class SageConfig
         Quality = new QualityConfig();
         QualityRecalibration = new QualityRecalibrationConfig();
         Chromosomes = Sets.newHashSet();
+        SpecificRegions = Lists.newArrayList();
         RegionSliceSize = 500_000;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxRealignmentDepth = DEFAULT_MAX_REALIGNMENT_DEPTH;

@@ -112,7 +112,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
         return mnvCodonDifferences > snvCodonDifferences;
     }
 
-    static int codonDifferences(@NotNull final GenomeRegion codon, @NotNull final VariantHotspot variant)
+    public static int codonDifferences(@NotNull final GenomeRegion codon, @NotNull final VariantHotspot variant)
     {
         if(codon.start() > variant.end() || variant.position() > codon.end())
         {
