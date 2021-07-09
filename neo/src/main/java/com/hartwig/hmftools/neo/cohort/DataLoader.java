@@ -34,6 +34,7 @@ public class DataLoader
             int alleleIndex = fieldsIndexMap.get("Allele");
             int tumorCnIndex = fieldsIndexMap.get("TumorCopyNumber");
 
+            // only select the somatic mutations which are predicted to silence/disable the allele
             List<Integer> somVariantIndices = Lists.newArrayList(
                     fieldsIndexMap.get("SomaticMissense"),
                     fieldsIndexMap.get("SomaticSplice"),

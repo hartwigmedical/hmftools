@@ -4,9 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
-import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -54,11 +51,12 @@ public class SamplePeptidePredictions
 
     private BufferedWriter mSummaryWriter;
     private BufferedWriter mPeptideWriter;
+    private final boolean mWriteAlleleFrequencies;
 
     private final double mAffinitySumFactor;
     private final int mAffinityLowCountThreshold;
     private final int mAffinityMediumCountThreshold;
-    private final double mWritePeptideAffinityThreshold;
+    private final double mPeptideAffinityThreshold;
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String NEO_DATA_DIR = "neo_data_dir";
@@ -70,6 +68,7 @@ public class SamplePeptidePredictions
     private static final String AFF_MED_THRESHOLD = "affinity_med_threshold";
 
     private static final String WRITE_PEPTIDES = "write_peptides";
+    private static final String WRITE_ALLELE_FREQ = "write_allele_freq";
     private static final String WRITE_PEPTIDE_AFF_THRESHOLD = "write_pep_aff_threshold";
 
     // constants
@@ -87,7 +86,7 @@ public class SamplePeptidePredictions
         mAffinityLowCountThreshold = Integer.parseInt(cmd.getOptionValue(AFF_LOW_THRESHOLD, "25"));
         mAffinityMediumCountThreshold = Integer.parseInt(cmd.getOptionValue(AFF_MED_THRESHOLD, "50"));
         mAffinitySumFactor = Double.parseDouble(cmd.getOptionValue(AFF_SUM_FACTOR, "2"));
-        mWritePeptideAffinityThreshold = Double.parseDouble(cmd.getOptionValue(WRITE_PEPTIDE_AFF_THRESHOLD, "0"));
+        mPeptideAffinityThreshold = Double.parseDouble(cmd.getOptionValue(WRITE_PEPTIDE_AFF_THRESHOLD, "0"));
 
         mAllelePredictions = Maps.newHashMap();
 
@@ -99,6 +98,8 @@ public class SamplePeptidePredictions
 
         if(cmd.hasOption(WRITE_PEPTIDES))
             initialisePeptideWriter();
+
+        mWriteAlleleFrequencies = cmd.hasOption(WRITE_ALLELE_FREQ);
     }
 
     public void run()
@@ -124,7 +125,8 @@ public class SamplePeptidePredictions
             }
         }
 
-        writeAllelePredictions();
+        if(mWriteAlleleFrequencies)
+            writeAllelePredictions();
 
         closeBufferedWriter(mSummaryWriter);
         closeBufferedWriter(mPeptideWriter);
@@ -406,7 +408,7 @@ public class SamplePeptidePredictions
         if(mPeptideWriter == null)
             return;
 
-        if(mWritePeptideAffinityThreshold > 0 &&  Arrays.stream(scores.Affinity).noneMatch(x -> x < mWritePeptideAffinityThreshold))
+        if(mPeptideAffinityThreshold > 0 &&  Arrays.stream(scores.Affinity).noneMatch(x -> x < mPeptideAffinityThreshold))
             return;
 
         try
@@ -440,6 +442,7 @@ public class SamplePeptidePredictions
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(WRITE_PEPTIDES, false, "Write all peptide scores");
+        options.addOption(WRITE_ALLELE_FREQ, false, "Write allele frequencies");
 
         options.addOption(AFF_SUM_FACTOR, true, "Affinity sum factor");
         options.addOption(AFF_LOW_THRESHOLD, true, "Affinity low count threshold");
