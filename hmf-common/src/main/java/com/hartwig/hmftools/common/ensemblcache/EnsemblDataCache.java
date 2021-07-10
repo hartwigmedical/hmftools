@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -60,7 +61,7 @@ public class EnsemblDataCache
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {
-        mDataPath = dataPath.endsWith(File.separator) ? dataPath : dataPath + File.separator;
+        mDataPath = checkAddDirSeparator(dataPath);
         mRefGenomeVersion = refGenomeVersion;
 
         mTranscriptDataMap = Maps.newHashMap();

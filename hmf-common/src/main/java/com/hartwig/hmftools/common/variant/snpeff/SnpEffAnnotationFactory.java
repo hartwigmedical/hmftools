@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
-import static com.hartwig.hmftools.common.variant.VariantConsequence.sufferConsequences;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -13,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,8 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public final class SnpEffAnnotationFactory {
-
+public final class SnpEffAnnotationFactory
+{
     private static final Logger LOGGER = LogManager.getLogger(SnpEffAnnotationFactory.class);
 
     public static final String SNPEFF_IDENTIFIER = "ANN";
@@ -34,12 +34,15 @@ public final class SnpEffAnnotationFactory {
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
 
-    private SnpEffAnnotationFactory() {
+    private SnpEffAnnotationFactory()
+    {
     }
 
     @NotNull
-    public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context) {
-        if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
+    public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context)
+    {
+        if(context.hasAttribute(SNPEFF_IDENTIFIER))
+        {
             return fromAnnotationList(context, context.getAttributeAsStringList(SNPEFF_IDENTIFIER, ""));
         }
         return Collections.emptyList();
@@ -47,7 +50,8 @@ public final class SnpEffAnnotationFactory {
 
     @NotNull
     private static List<SnpEffAnnotation> fromAnnotationList(@NotNull final VariantContext context,
-            @NotNull final List<String> annotation) {
+            @NotNull final List<String> annotation)
+    {
         return annotation.stream()
                 .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
                 .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
@@ -55,8 +59,10 @@ public final class SnpEffAnnotationFactory {
                 .collect(Collectors.toList());
     }
 
-    private static boolean isCorrectNumberOfParts(@NotNull String[] parts) {
-        if (parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION) {
+    private static boolean isCorrectNumberOfParts(@NotNull String[] parts)
+    {
+        if(parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION)
+        {
             return true;
         }
 
@@ -68,7 +74,8 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    private static SnpEffAnnotation fromParts(@NotNull VariantContext context, @NotNull String[] parts) {
+    private static SnpEffAnnotation fromParts(@NotNull VariantContext context, @NotNull String[] parts)
+    {
         String effects = effect(context, parts);
 
         return ImmutableSnpEffAnnotation.builder()
@@ -92,48 +99,84 @@ public final class SnpEffAnnotationFactory {
                 .build();
     }
 
+    private static List<VariantConsequence> sufferConsequences(@NotNull final List<String> effects)
+    {
+        final List<VariantConsequence> consequences = Lists.newArrayList();
+        for(final String part : effects)
+        {
+            boolean found = false;
+            for(final VariantConsequence consequence : VariantConsequence.values())
+            {
+                if(consequence.isParentTypeOf(part))
+                {
+                    found = true;
+                    consequences.add(consequence);
+                }
+            }
+            if(!found)
+            {
+                consequences.add(VariantConsequence.OTHER);
+            }
+        }
+        return consequences;
+    }
+
     @NotNull
-    static String effect(@NotNull VariantContext variant, @NotNull String[] parts) {
+    static String effect(@NotNull VariantContext variant, @NotNull String[] parts)
+    {
         String hgvsCoding = parts[9];
         String effects = parts[1];
-        if (!effects.contains("splice")) {
+        if(!effects.contains("splice"))
+        {
             return effects;
         }
 
         // Below is to support additional donor annotation for variants affecting +5 base. See also DEV-1650
         // Note, no longer strictly necessary to do here as have also got this in CodingEffectFactory.java
         boolean indel = variant.isIndel();
-        if (!indel) {
+        if(!indel)
+        {
             return hgvsCoding.contains("+5") ? SPLICE_DONOR_VARIANT + CONSEQUENCE_SEPARATOR + effects : effects;
         }
 
         final String hgvsCodingType;
-        if (hgvsCoding.contains("ins")) {
+        if(hgvsCoding.contains("ins"))
+        {
             hgvsCodingType = "ins";
-        } else if (hgvsCoding.contains("del")) {
+        }
+        else if(hgvsCoding.contains("del"))
+        {
             hgvsCodingType = "del";
-        } else if (hgvsCoding.contains("dup")) {
+        }
+        else if(hgvsCoding.contains("dup"))
+        {
             hgvsCodingType = "dup";
-        } else {
+        }
+        else
+        {
             return effects;
         }
 
         int initialSpliceBase = initialIndelSpliceBase(hgvsCodingType.equals("ins"), hgvsCoding);
-        if (initialSpliceBase == -1) {
+        if(initialSpliceBase == -1)
+        {
             return effects;
         }
 
         final int adjustedSpliceBase;
         final String ref = variant.getReference().getBaseString();
         final String alt = variant.getAlternateAllele(0).getBaseString();
-        if (isPositiveStrand(ref, alt, hgvsCoding)) {
+        if(isPositiveStrand(ref, alt, hgvsCoding))
+        {
             final String variantBases = ref.length() > alt.length() ? ref.substring(1) : alt.substring(1);
             final int microhomologyAdditionalBases = variant.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY).length();
             final String repeatSequence = variant.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY);
             final int repeatCount = variant.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
             final int repeatCountAdditionalBases = variantBases.equals(repeatSequence) ? repeatCount * repeatSequence.length() : 0;
             adjustedSpliceBase = initialSpliceBase + Math.max(microhomologyAdditionalBases, repeatCountAdditionalBases);
-        } else {
+        }
+        else
+        {
             adjustedSpliceBase = initialSpliceBase;
         }
 
@@ -141,23 +184,28 @@ public final class SnpEffAnnotationFactory {
     }
 
     @VisibleForTesting
-    static int initialIndelSpliceBase(final boolean isInsert, final String hgvsCoding) {
+    static int initialIndelSpliceBase(final boolean isInsert, final String hgvsCoding)
+    {
         int firstIndexOfPlus = hgvsCoding.indexOf("+");
-        if (firstIndexOfPlus < 0) {
+        if(firstIndexOfPlus < 0)
+        {
             return -1;
         }
 
-        try {
+        try
+        {
             int spliceLocation = Integer.parseInt(hgvsCoding.substring(firstIndexOfPlus + 1, firstIndexOfPlus + 2));
             int result = isInsert ? spliceLocation + 1 : spliceLocation;
             return result <= 5 ? result : -1;
 
-        } catch (NumberFormatException e) {
+        } catch(NumberFormatException e)
+        {
             return -1;
         }
     }
 
-    private static boolean isPositiveStrand(@NotNull final String ref, final String alt, final String hgvsCoding) {
+    private static boolean isPositiveStrand(@NotNull final String ref, final String alt, final String hgvsCoding)
+    {
         char lastBaseOfCoding = hgvsCoding.charAt(hgvsCoding.length() - 1);
         return ref.length() > alt.length()
                 ? ref.charAt(ref.length() - 1) == lastBaseOfCoding
@@ -165,12 +213,17 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    private static String[] enforceMinLength(@NotNull String[] parts, int minSize) {
-        if (parts.length > minSize) {
+    private static String[] enforceMinLength(@NotNull String[] parts, int minSize)
+    {
+        if(parts.length > minSize)
+        {
             return parts;
-        } else {
+        }
+        else
+        {
             final String[] values = new String[minSize];
-            for (int i = 0; i < minSize; i++) {
+            for(int i = 0; i < minSize; i++)
+            {
                 values[i] = i < parts.length ? parts[i] : Strings.EMPTY;
             }
             System.arraycopy(parts, 0, values, 0, parts.length);
@@ -180,7 +233,8 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    private static List<String> toEffects(@NotNull final String effectString) {
+    private static List<String> toEffects(@NotNull final String effectString)
+    {
         return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
     }
 }

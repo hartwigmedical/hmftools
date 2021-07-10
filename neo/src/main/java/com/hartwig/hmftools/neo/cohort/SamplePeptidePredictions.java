@@ -224,7 +224,7 @@ public class SamplePeptidePredictions
 
         if(!allValid)
         {
-            NE_LOGGER.warn("sampleId({}) has consistent allele coverage vs prediction alleles", sampleId);
+            NE_LOGGER.warn("sampleId({}) has inconsistent allele coverage vs prediction alleles", sampleId);
             return;
         }
 
@@ -259,6 +259,9 @@ public class SamplePeptidePredictions
 
     private void addAllelePrediction(PredictionData predData)
     {
+        if(!mWriteAlleleFrequencies)
+            return;
+
         AllelePredictions predictions = mAllelePredictions.get(predData.Allele);
 
         if(predictions == null)
@@ -268,6 +271,12 @@ public class SamplePeptidePredictions
         }
 
         predictions.addPeptide(predData.Peptide, predData.Affinity);
+
+        int totalPepetideCount = mAllelePredictions.values().stream().mapToInt(x -> x.getPepetideCount()).sum();
+        if(totalPepetideCount > 0 && (totalPepetideCount % 1000) == 0)
+        {
+            NE_LOGGER.debug("total distinct allele peptide count({})", totalPepetideCount);
+        }
     }
 
     private void initialiseSampleWriter()

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.VariantImpact;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,12 +9,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface SnpEffSummary {
-
+public interface SnpEffSummary
+{
     @NotNull
-    default String gene() {
-        return canonicalGene().isEmpty() ? worstGene() : canonicalGene();
-    }
+    default String gene() { return canonicalGene().isEmpty() ? worstGene() : canonicalGene();}
 
     int genesAffected();
 
@@ -46,5 +45,14 @@ public interface SnpEffSummary {
 
     @NotNull
     CodingEffect worstCodingEffect();
+
+    // probably temporary
+    static VariantImpact toImpact(final SnpEffSummary summary)
+    {
+        return new VariantImpact(
+                summary.genesAffected(), summary.canonicalGene(), summary.canonicalEffect(), summary.canonicalTranscript(),
+                summary.canonicalCodingEffect(), summary.canonicalHgvsCodingImpact(), summary.canonicalHgvsProteinImpact(),
+                summary.worstGene(), summary.worstEffect(), summary.worstTranscript(), summary.worstCodingEffect());
+    }
 
 }

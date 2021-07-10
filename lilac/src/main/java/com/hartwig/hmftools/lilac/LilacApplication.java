@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.lilac.LilacConfig.LOG_LEVEL;
@@ -687,14 +688,7 @@ public class LilacApplication
         final Options options = LilacConfig.createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-        else if(cmd.hasOption(LOG_LEVEL))
-        {
-            Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
-        }
+        setLogLevel(cmd);
 
         LilacApplication lilac = new LilacApplication(new LilacConfig(cmd));
 

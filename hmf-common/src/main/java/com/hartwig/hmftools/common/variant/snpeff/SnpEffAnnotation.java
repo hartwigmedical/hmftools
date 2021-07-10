@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SnpEffAnnotation implements TranscriptAnnotation {
-
+public abstract class SnpEffAnnotation implements TranscriptAnnotation
+{
     private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     @NotNull
@@ -26,10 +26,13 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     public abstract List<VariantConsequence> consequences();
 
     @NotNull
-    public String consequenceString() {
+    public String consequenceString()
+    {
         final StringJoiner consequenceString = new StringJoiner("; ");
-        for (final VariantConsequence consequence : consequences()) {
-            if (!consequence.readableSequenceOntologyTerm().isEmpty()) {
+        for(final VariantConsequence consequence : consequences())
+        {
+            if(!consequence.readableSequenceOntologyTerm().isEmpty())
+            {
                 consequenceString.add(consequence.readableSequenceOntologyTerm());
             }
         }
@@ -83,17 +86,22 @@ public abstract class SnpEffAnnotation implements TranscriptAnnotation {
     // but this mapping may not hold for every single snpeff annotation!
     @Override
     @NotNull
-    public String transcript() {
+    public String transcript()
+    {
         String transcript = featureID();
         // In case transcripts appear with their version (eg ENST001.1) we strip the version part out.
-        if (transcript.contains(".")) {
+        if(transcript.contains("."))
+        {
             return transcript.substring(0, transcript.indexOf("."));
-        } else {
+        }
+        else
+        {
             return transcript;
         }
     }
 
-    public boolean isTranscriptFeature() {
+    public boolean isTranscriptFeature()
+    {
         return featureType().equals(FEATURE_TYPE_TRANSCRIPT);
     }
 }

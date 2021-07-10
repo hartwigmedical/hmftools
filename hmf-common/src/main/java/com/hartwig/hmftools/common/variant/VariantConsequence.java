@@ -81,22 +81,4 @@ public enum VariantConsequence {
         return parentSequenceOntologyTerm;
     }
 
-    @NotNull
-    public static List<VariantConsequence> sufferConsequences(@NotNull final List<String> effects) {
-        final List<VariantConsequence> consequences = Lists.newArrayList();
-        for (final String part : effects) {
-            boolean found = false;
-            for (final VariantConsequence consequence : VariantConsequence.values()) {
-                if (consequence.isParentTypeOf(part)) {
-                    found = true;
-                    consequences.add(consequence);
-                }
-            }
-            if (!found) {
-                consequences.add(VariantConsequence.OTHER);
-            }
-        }
-        return consequences;
-    }
-
 }

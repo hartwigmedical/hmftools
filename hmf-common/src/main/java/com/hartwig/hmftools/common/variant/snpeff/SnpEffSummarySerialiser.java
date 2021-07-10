@@ -8,16 +8,20 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class SnpEffSummarySerialiser {
+public final class SnpEffSummarySerialiser
+{
 
-    private SnpEffSummarySerialiser() {
+    private SnpEffSummarySerialiser()
+    {
     }
 
     @NotNull
-    public static SnpEffSummary fromDetails(@NotNull final List<String> worst, @NotNull final List<String> canonical) {
+    public static SnpEffSummary fromDetails(@NotNull final List<String> worst, @NotNull final List<String> canonical)
+    {
         final ImmutableSnpEffSummary.Builder builder = createBuilder();
 
-        if (worst.size() == 5) {
+        if(worst.size() == 5)
+        {
             builder.worstGene(worst.get(0))
                     .worstTranscript(worst.get(1))
                     .worstEffect(readEffect(worst.get(2)))
@@ -25,7 +29,8 @@ public final class SnpEffSummarySerialiser {
                     .genesAffected(Integer.parseInt(worst.get(4)));
         }
 
-        if (canonical.size() == 6) {
+        if(canonical.size() == 6)
+        {
             builder.canonicalGene(canonical.get(0))
                     .canonicalTranscript(canonical.get(1))
                     .canonicalEffect(canonical.get(2))
@@ -38,7 +43,8 @@ public final class SnpEffSummarySerialiser {
     }
 
     @NotNull
-    public static List<String> worstDetails(@NotNull final SnpEffSummary summary) {
+    public static List<String> worstDetails(@NotNull final SnpEffSummary summary)
+    {
         return Lists.newArrayList(summary.worstGene(),
                 summary.worstTranscript(),
                 writeEffect(summary.worstEffect()),
@@ -47,7 +53,8 @@ public final class SnpEffSummarySerialiser {
     }
 
     @NotNull
-    public static List<String> canonicalDetails(@NotNull final SnpEffSummary summary) {
+    public static List<String> canonicalDetails(@NotNull final SnpEffSummary summary)
+    {
         return Lists.newArrayList(summary.canonicalGene(),
                 summary.canonicalTranscript(),
                 writeEffect(summary.canonicalEffect()),
@@ -57,17 +64,20 @@ public final class SnpEffSummarySerialiser {
     }
 
     @NotNull
-    private static String writeEffect(@NotNull String effect) {
+    private static String writeEffect(@NotNull String effect)
+    {
         return effect.replace("; ", "&").replace(" ", "_");
     }
 
     @NotNull
-    private static String readEffect(@NotNull String effect) {
+    private static String readEffect(@NotNull String effect)
+    {
         return effect.replace("&", "; ").replace("_", " ");
     }
 
     @NotNull
-    static ImmutableSnpEffSummary.Builder createBuilder() {
+    static ImmutableSnpEffSummary.Builder createBuilder()
+    {
         return ImmutableSnpEffSummary.builder()
                 .genesAffected(0)
                 .worstGene(Strings.EMPTY)

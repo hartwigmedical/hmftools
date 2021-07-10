@@ -17,25 +17,29 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SnpEffSummaryFactory {
+public class SnpEffSummaryFactory
+{
 
     private final CanonicalAnnotation canonicalAnnotationFactory;
     private final CodingEffectFactory codingEffectFactory;
 
-    public SnpEffSummaryFactory(@NotNull final Set<String> driverGenes, @NotNull final List<HmfTranscriptRegion> transcripts) {
+    public SnpEffSummaryFactory(@NotNull final Set<String> driverGenes, @NotNull final List<HmfTranscriptRegion> transcripts)
+    {
         this.canonicalAnnotationFactory = new CanonicalAnnotation(driverGenes, transcripts);
         this.codingEffectFactory = new CodingEffectFactory(transcripts);
     }
 
     @NotNull
-    public static SnpEffSummary fromSnpEffEnrichment(@NotNull final VariantContext context) {
+    public static SnpEffSummary fromSnpEffEnrichment(@NotNull final VariantContext context)
+    {
         final List<String> worst = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_WORST, Strings.EMPTY);
         final List<String> canonical = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_CANONICAL, Strings.EMPTY);
         return SnpEffSummarySerialiser.fromDetails(worst, canonical);
     }
 
     @NotNull
-    public SnpEffSummary fromSnpEffAnnotations(@NotNull final VariantContext context) {
+    public SnpEffSummary fromSnpEffAnnotations(@NotNull final VariantContext context)
+    {
         final boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
         return fromSnpEffAnnotations(context, phasedInframeIndel, allAnnotations);
@@ -43,12 +47,14 @@ public class SnpEffSummaryFactory {
 
     @NotNull
     private SnpEffSummary fromSnpEffAnnotations(@NotNull final VariantContext context, boolean phasedInframeIndel,
-            @NotNull final List<SnpEffAnnotation> allAnnotations) {
+            @NotNull final List<SnpEffAnnotation> allAnnotations)
+    {
         final ImmutableSnpEffSummary.Builder builder = SnpEffSummarySerialiser.createBuilder();
 
         final List<SnpEffAnnotation> transcriptAnnotations =
                 allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
-        if (!transcriptAnnotations.isEmpty()) {
+        if(!transcriptAnnotations.isEmpty())
+        {
             final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
             builder.worstGene(worstAnnotation.gene());
             builder.worstEffect(worstAnnotation.consequenceString());
@@ -57,7 +63,8 @@ public class SnpEffSummaryFactory {
         }
 
         final Optional<SnpEffAnnotation> canonicalAnnotation = canonicalAnnotationFactory.canonicalSnpEffAnnotation(transcriptAnnotations);
-        if (canonicalAnnotation.isPresent()) {
+        if(canonicalAnnotation.isPresent())
+        {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
             builder.canonicalGene(annotation.gene());
             builder.canonicalEffect(annotation.consequenceString());
@@ -78,7 +85,8 @@ public class SnpEffSummaryFactory {
 
     @NotNull
     private CodingEffect codingEffect(@NotNull final VariantContext context, boolean phasedInframeIndel,
-            @NotNull final SnpEffAnnotation annotation) {
+            @NotNull final SnpEffAnnotation annotation)
+    {
         CodingEffect effect = codingEffectFactory.effect(context, annotation);
         return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT) ? CodingEffect.MISSENSE : effect;
     }

@@ -1,22 +1,25 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.common.codon;
 
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
-// Class is no longer used in production but like to keep around nonetheless for having the AA table somewhere.
+// TODO - reconcile with AminoAcidFunctions
 // Do note that according to http://www.hgvs.org/mutnomen/standards.html there are also 2 "dubious" mappings (not included below).
-final class SnpEffHgvsFormatter {
+public final class HgvsFormatter
+{
 
     private static final String HGVS_CODING_PREFIX_TO_REMOVE = "c.";
     private static final String HGVS_PROTEIN_PREFIX_TO_REMOVE = "p.";
 
     private static final Map<String, String> ONE_TO_THREE_AMINO_ACID_MAPPING = Maps.newHashMap();
 
-    static {
+    static
+    {
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("A", "Ala"); // Alanine (GCA, GCC, GCG, GCT)
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("C", "Cys"); // Cysteine (TGC, TGT)
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("D", "Asp"); // Aspartic acid (GAC, GAT)
@@ -42,31 +45,33 @@ final class SnpEffHgvsFormatter {
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("Y", "Tyr"); // Tyrosine (TAC, TAT)
     }
 
-    private SnpEffHgvsFormatter() {
-    }
-
     @NotNull
-    @VisibleForTesting
-    static String formattedHgvsCoding(@NotNull SnpEffAnnotation annotation) {
+    public static String formattedHgvsCoding(@NotNull SnpEffAnnotation annotation)
+    {
         String hgvsCoding = annotation.hgvsCoding();
 
-        if (hgvsCoding.startsWith(HGVS_CODING_PREFIX_TO_REMOVE)) {
+        if(hgvsCoding.startsWith(HGVS_CODING_PREFIX_TO_REMOVE))
+        {
             return hgvsCoding.substring(HGVS_CODING_PREFIX_TO_REMOVE.length());
-        } else {
+        }
+        else
+        {
             return hgvsCoding;
         }
     }
 
     @NotNull
-    @VisibleForTesting
-    static String formattedHgvsProtein(@NotNull SnpEffAnnotation annotation) {
+    public static String formattedHgvsProtein(@NotNull SnpEffAnnotation annotation)
+    {
         String hgvsProtein = annotation.hgvsProtein();
 
-        if (hgvsProtein.startsWith(HGVS_PROTEIN_PREFIX_TO_REMOVE)) {
+        if(hgvsProtein.startsWith(HGVS_PROTEIN_PREFIX_TO_REMOVE))
+        {
             hgvsProtein = hgvsProtein.substring(HGVS_PROTEIN_PREFIX_TO_REMOVE.length());
         }
 
-        for (Map.Entry<String, String> mappingEntry : ONE_TO_THREE_AMINO_ACID_MAPPING.entrySet()) {
+        for(Map.Entry<String, String> mappingEntry : ONE_TO_THREE_AMINO_ACID_MAPPING.entrySet())
+        {
             hgvsProtein = hgvsProtein.replaceAll(mappingEntry.getValue(), mappingEntry.getKey());
         }
 
