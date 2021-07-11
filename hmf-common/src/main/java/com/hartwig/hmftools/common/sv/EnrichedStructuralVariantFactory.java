@@ -1,8 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural;
-
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader.PURPLE_AF_INFO;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader.PURPLE_CN_CHANGE_INFO;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader.PURPLE_CN_INFO;
+package com.hartwig.hmftools.common.sv;
 
 import java.util.Collections;
 import java.util.List;
@@ -61,13 +57,13 @@ public final class EnrichedStructuralVariantFactory {
     private ImmutableEnrichedStructuralVariantLeg createBuilder(@NotNull final VariantContext context,
             @NotNull final StructuralVariantLeg leg) {
         final List<Double> purpleAF =
-                context.hasAttribute(PURPLE_AF_INFO) ? context.getAttributeAsDoubleList(PURPLE_AF_INFO, 0.0) : Collections.emptyList();
+                context.hasAttribute(StructuralVariantHeader.PURPLE_AF_INFO) ? context.getAttributeAsDoubleList(StructuralVariantHeader.PURPLE_AF_INFO, 0.0) : Collections.emptyList();
 
         final List<Double> purpleCN =
-                context.hasAttribute(PURPLE_CN_INFO) ? context.getAttributeAsDoubleList(PURPLE_CN_INFO, 0.0) : Collections.emptyList();
+                context.hasAttribute(StructuralVariantHeader.PURPLE_CN_INFO) ? context.getAttributeAsDoubleList(StructuralVariantHeader.PURPLE_CN_INFO, 0.0) : Collections.emptyList();
 
         final List<Double> purpleCNChange =
-                context.hasAttribute(PURPLE_CN_CHANGE_INFO) ? context.getAttributeAsDoubleList(PURPLE_CN_CHANGE_INFO, 0.0) : Collections.emptyList();
+                context.hasAttribute(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO) ? context.getAttributeAsDoubleList(StructuralVariantHeader.PURPLE_CN_CHANGE_INFO, 0.0) : Collections.emptyList();
 
         final ImmutableEnrichedStructuralVariantLeg.Builder builder = ImmutableEnrichedStructuralVariantLeg.builder()
                 .from(leg)

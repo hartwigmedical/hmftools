@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

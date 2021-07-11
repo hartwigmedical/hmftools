@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.common.variant.structural.linx;
+package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType.NA;
-import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.INFRAME;
-import static com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType.OUT_OF_FRAME;
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType.NA;
+import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.INFRAME;
+import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.OUT_OF_FRAME;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +85,7 @@ public abstract class LinxFusion
 
         if(!header.contains("likelihood"))
         {
-            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header,DELIMITER);
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header, LinxCluster.DELIMITER);
             return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
         }
         else
@@ -98,7 +97,7 @@ public abstract class LinxFusion
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add("fivePrimeBreakendId")
                 .add("threePrimeBreakendId")
                 .add("name")
@@ -128,7 +127,7 @@ public abstract class LinxFusion
     @NotNull
     private static String toString(@NotNull final LinxFusion fusion)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(fusion.fivePrimeBreakendId()))
                 .add(String.valueOf(fusion.threePrimeBreakendId()))
                 .add(String.valueOf(fusion.name()))
@@ -158,7 +157,7 @@ public abstract class LinxFusion
     @NotNull
     private static LinxFusion fromString(@NotNull final String fusion)
     {
-        String[] values = fusion.split(DELIMITER, -1);
+        String[] values = fusion.split(LinxCluster.DELIMITER, -1);
         int index = 0;
 
         return ImmutableLinxFusion.builder()
@@ -191,7 +190,7 @@ public abstract class LinxFusion
     @NotNull
     private static LinxFusion fromString_v1_10(@NotNull final String fusion, final Map<String,Integer> fieldIndexMap)
     {
-        String[] values = fusion.split(DELIMITER, -1);
+        String[] values = fusion.split(LinxCluster.DELIMITER, -1);
 
         return ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(Integer.parseInt(values[fieldIndexMap.get("FivePrimeBreakendId")]))

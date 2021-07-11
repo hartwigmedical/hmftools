@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural.linx;
+package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
 

@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxFusion.context;
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxFusion.fusionJcn;
+import static com.hartwig.hmftools.common.sv.linx.LinxFusion.context;
+import static com.hartwig.hmftools.common.sv.linx.LinxFusion.fusionJcn;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedWriter;
@@ -18,10 +18,10 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
 public class FusionWriter
 {

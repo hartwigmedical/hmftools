@@ -3,18 +3,14 @@ package com.hartwig.hmftools.compar.purple;
 import static com.hartwig.hmftools.compar.Category.PURITY;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
-import com.hartwig.hmftools.compar.driver.DriverData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.compress.utils.Lists;

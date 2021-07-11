@@ -13,14 +13,14 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxDriver;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxCluster;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxDriver;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxSvAnnotation;
+import com.hartwig.hmftools.common.sv.linx.LinxCluster;
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.common.sv.linx.LinxLink;
+import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

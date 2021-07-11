@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.purple.recovery;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_FILTER;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.RECOVERY_METHOD;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.SVTYPE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERY_FILTER;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.RECOVERY_METHOD;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC;
@@ -37,8 +37,8 @@ import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFacto
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

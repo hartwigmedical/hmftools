@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.linx.types;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PON_FILTER_PON;
-
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;

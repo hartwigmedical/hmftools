@@ -3,14 +3,14 @@ package com.hartwig.hmftools.svtools.mult_biopsy;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public class MultiBiopsyData
 {

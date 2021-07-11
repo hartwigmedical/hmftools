@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

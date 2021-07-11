@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.common.variant.structural;
+package com.hartwig.hmftools.common.sv;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 
 import java.io.File;
 import java.io.IOException;

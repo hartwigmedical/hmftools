@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.recovery;
 
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.common.variant.structural.linx;
+package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxCluster.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +75,7 @@ public abstract class LinxDriver
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add("clusterId")
                 .add("gene")
                 .add("eventType")
@@ -87,7 +85,7 @@ public abstract class LinxDriver
     @NotNull
     private static String toString(@NotNull final LinxDriver driver)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(driver.clusterId()))
                 .add(String.valueOf(driver.gene()))
                 .add(String.valueOf(driver.eventType()))
@@ -97,7 +95,7 @@ public abstract class LinxDriver
     @NotNull
     private static LinxDriver fromString(@NotNull final String clusterData)
     {
-        String[] values = clusterData.split(DELIMITER);
+        String[] values = clusterData.split(LinxCluster.DELIMITER);
 
         int index = 0;
 

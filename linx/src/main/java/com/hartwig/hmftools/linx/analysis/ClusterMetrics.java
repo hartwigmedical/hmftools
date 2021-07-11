@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.analysis;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;

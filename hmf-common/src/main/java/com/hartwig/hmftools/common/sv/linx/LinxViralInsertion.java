@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.common.variant.structural.linx;
+package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxCluster.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +64,7 @@ public class LinxViralInsertion
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add("SampleId")
                 .add("SvId")
                 .add("VirusId")
@@ -77,7 +75,7 @@ public class LinxViralInsertion
     @NotNull
     private static String toString(@NotNull final LinxViralInsertion virus)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(virus.SampleId))
                 .add(String.valueOf(virus.SvId))
                 .add(String.valueOf(virus.VirusId))
@@ -88,7 +86,7 @@ public class LinxViralInsertion
     @NotNull
     private static LinxViralInsertion fromString(@NotNull final String virus)
     {
-        String[] values = virus.split(DELIMITER);
+        String[] values = virus.split(LinxCluster.DELIMITER);
 
         int index = 0;
 

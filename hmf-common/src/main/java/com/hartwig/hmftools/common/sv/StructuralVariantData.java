@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural;
+package com.hartwig.hmftools.common.sv;
 
 import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;

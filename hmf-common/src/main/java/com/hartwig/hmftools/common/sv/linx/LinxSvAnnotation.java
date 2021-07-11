@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.common.variant.structural.linx;
+package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxCluster.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +78,7 @@ public abstract class LinxSvAnnotation
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add("vcfId")
                 .add("svId")
                 .add("clusterId")
@@ -108,7 +106,7 @@ public abstract class LinxSvAnnotation
     @NotNull
     private static String toString(@NotNull final LinxSvAnnotation svData) 
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(LinxCluster.DELIMITER)
                 .add(String.valueOf(svData.vcfId()))
                 .add(String.valueOf(svData.svId()))
                 .add(String.valueOf(svData.clusterId()))
@@ -136,7 +134,7 @@ public abstract class LinxSvAnnotation
     @NotNull
     private static LinxSvAnnotation fromString(@NotNull final String svData)
     {
-        String[] values = svData.split(DELIMITER);
+        String[] values = svData.split(LinxCluster.DELIMITER);
 
         int index = 0;
 
