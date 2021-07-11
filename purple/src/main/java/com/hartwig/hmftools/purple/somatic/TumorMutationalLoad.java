@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
@@ -30,9 +30,9 @@ public class TumorMutationalLoad
         {
             mBurden++;
 
-            final SnpEffSummary snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
+            final VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(context);
 
-            if (snpEffSummary.worstCodingEffect().equals(CodingEffect.MISSENSE))
+            if (variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
                 mLoad++;
         }
     }

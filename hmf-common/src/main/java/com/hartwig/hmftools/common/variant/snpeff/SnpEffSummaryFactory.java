@@ -29,6 +29,7 @@ public class SnpEffSummaryFactory
     }
 
     @NotNull
+    // now only used in unit test
     public static SnpEffSummary fromSnpEffEnrichment(@NotNull final VariantContext context)
     {
         final List<String> worst = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_WORST, Strings.EMPTY);

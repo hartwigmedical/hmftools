@@ -1,15 +1,6 @@
 package com.hartwig.hmftools.common.variant.impact;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.snpeff.ImmutableSnpEffSummary;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VariantImpact
 {
