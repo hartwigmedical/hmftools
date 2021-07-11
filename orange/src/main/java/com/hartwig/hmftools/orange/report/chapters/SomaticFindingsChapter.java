@@ -49,7 +49,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         DocumentUtil.addCheckedTable(document, driverVariantTableTitle, driverVariantTable);
 
         List<ReportableVariant> nonDriverVariants = extractInterestingNonDrivers(report.purple().unreportedSomaticVariants());
-        String nonDriverVariantTableTitle = "Other relevant coding variants (" + nonDriverVariants.size() + ")";
+        String nonDriverVariantTableTitle = "Other potentially relevant coding variants (" + nonDriverVariants.size() + ")";
         Table nonDriverVariantTable = SomaticVariantTable.build(nonDriverVariantTableTitle, nonDriverVariants);
         DocumentUtil.addCheckedTable(document, nonDriverVariantTableTitle, nonDriverVariantTable);
 
