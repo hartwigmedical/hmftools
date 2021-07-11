@@ -10,7 +10,6 @@ import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.CodingEffectFactory;
-import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -87,7 +86,7 @@ public class SnpEffSummaryFactory
     private CodingEffect codingEffect(@NotNull final VariantContext context, boolean phasedInframeIndel,
             @NotNull final SnpEffAnnotation annotation)
     {
-        CodingEffect effect = codingEffectFactory.effect(context, annotation);
+        CodingEffect effect = codingEffectFactory.effect(context, annotation.gene(), annotation.consequences());
         return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT) ? CodingEffect.MISSENSE : effect;
     }
 }

@@ -2,9 +2,7 @@ package com.hartwig.hmftools.common.codon;
 
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,29 +44,21 @@ public final class HgvsFormatter
     }
 
     @NotNull
-    public static String formattedHgvsCoding(@NotNull SnpEffAnnotation annotation)
+    public static String formattedHgvsCoding(final String hgvsCoding)
     {
-        String hgvsCoding = annotation.hgvsCoding();
-
         if(hgvsCoding.startsWith(HGVS_CODING_PREFIX_TO_REMOVE))
-        {
             return hgvsCoding.substring(HGVS_CODING_PREFIX_TO_REMOVE.length());
-        }
         else
-        {
             return hgvsCoding;
-        }
     }
 
     @NotNull
-    public static String formattedHgvsProtein(@NotNull SnpEffAnnotation annotation)
+    public static String formattedHgvsProtein(final String hgvsProteinRaw)
     {
-        String hgvsProtein = annotation.hgvsProtein();
+        String hgvsProtein = hgvsProteinRaw;
 
         if(hgvsProtein.startsWith(HGVS_PROTEIN_PREFIX_TO_REMOVE))
-        {
             hgvsProtein = hgvsProtein.substring(HGVS_PROTEIN_PREFIX_TO_REMOVE.length());
-        }
 
         for(Map.Entry<String, String> mappingEntry : ONE_TO_THREE_AMINO_ACID_MAPPING.entrySet())
         {

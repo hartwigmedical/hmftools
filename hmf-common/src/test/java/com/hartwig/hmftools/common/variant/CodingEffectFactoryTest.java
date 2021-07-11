@@ -169,7 +169,7 @@ public class CodingEffectFactoryTest {
     private void assertEffect(@NotNull CodingEffect expected, @NotNull String line) {
         VariantContext variant = VariantContextFromString.decode(line);
         SnpEffAnnotation snpEffSummary = SnpEffAnnotationFactory.fromContext(variant).get(0);
-        CodingEffect codingEffect = victim.effect(variant, snpEffSummary);
+        CodingEffect codingEffect = victim.effect(variant, snpEffSummary.gene(), snpEffSummary.consequences());
         assertEquals(expected, codingEffect);
     }
 

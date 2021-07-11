@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment;
-import com.hartwig.hmftools.common.variant.enrich.SnpEffEnrichment;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;

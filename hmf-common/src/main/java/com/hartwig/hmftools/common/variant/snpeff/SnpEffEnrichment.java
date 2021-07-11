@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.common.variant.snpeff;
 
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummarySerialiser;
@@ -16,7 +17,8 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class SnpEffEnrichment implements VariantContextEnrichment {
+public class SnpEffEnrichment implements VariantContextEnrichment
+{
 
     public static final String SNPEFF_WORST = "SEW";
     public static final String SNPEFF_CANONICAL = "SEC";

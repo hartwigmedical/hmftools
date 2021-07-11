@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
