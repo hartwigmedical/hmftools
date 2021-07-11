@@ -13,9 +13,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTes
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffEnrichment;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +61,7 @@ public class SnpEffEnrichmentTest {
                         + "3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
         final VariantContext variantContext = codec.decode(line);
         victim.accept(variantContext);
-        final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
+        final VariantImpact summary = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(0));
         assertEquals("RP11-307N16.6", summary.gene());
     }
 
@@ -75,7 +75,7 @@ public class SnpEffEnrichmentTest {
                         + "3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
         final VariantContext variantContext = codec.decode(line);
         victim.accept(variantContext);
-        final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
+        final VariantImpact summary = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(0));
         assertEquals("SPATA13", summary.gene());
     }
 
@@ -90,12 +90,12 @@ public class SnpEffEnrichmentTest {
                         + "1/7|c.78G>A|p.Ser26Ser|170/653|78/504|26/167||\tGT:AD:DP\t0/1:57,49:108";
         final VariantContext variantContext = codec.decode(line);
         victim.accept(variantContext);
-        final SnpEffSummary summary = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
+        final VariantImpact summary = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(0));
 
         assertEquals("SPATA19", summary.gene());
-        assertEquals(CodingEffect.SPLICE, summary.canonicalCodingEffect());
-        assertEquals("c.78G>A", summary.canonicalHgvsCodingImpact());
-        assertEquals("p.Ser26Ser", summary.canonicalHgvsProteinImpact());
+        assertEquals(CodingEffect.SPLICE, summary.CanonicalCodingEffect);
+        assertEquals("c.78G>A", summary.CanonicalHgvsCodingImpact);
+        assertEquals("p.Ser26Ser", summary.CanonicalHgvsProteinImpact);
     }
 
     @Test
@@ -125,10 +125,10 @@ public class SnpEffEnrichmentTest {
         final VariantContext variantContext2 = codec.decode(line2);
         victim.accept(variantContext1);
         victim.accept(variantContext2);
-        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
-        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(1));
-        assertEquals(CodingEffect.NONE, summary1.canonicalCodingEffect());
-        assertEquals(CodingEffect.NONE, summary2.canonicalCodingEffect());
+        final VariantImpact summary1 = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(0));
+        final VariantImpact summary2 = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(1));
+        assertEquals(CodingEffect.NONE, summary1.CanonicalCodingEffect);
+        assertEquals(CodingEffect.NONE, summary2.CanonicalCodingEffect);
     }
 
     @Test
@@ -168,9 +168,9 @@ public class SnpEffEnrichmentTest {
         final VariantContext variantContext2 = codec.decode(line2);
         victim.accept(variantContext1);
         victim.accept(variantContext2);
-        final SnpEffSummary summary1 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(0));
-        final SnpEffSummary summary2 = SnpEffSummaryFactory.fromSnpEffEnrichment(capture.get(1));
-        assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, summary1.canonicalCodingEffect());
-        assertEquals(CodingEffect.MISSENSE, summary2.canonicalCodingEffect());
+        final VariantImpact summary1 = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(0));
+        final VariantImpact summary2 = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(1));
+        assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, summary1.CanonicalCodingEffect);
+        assertEquals(CodingEffect.MISSENSE, summary2.CanonicalCodingEffect);
     }
 }

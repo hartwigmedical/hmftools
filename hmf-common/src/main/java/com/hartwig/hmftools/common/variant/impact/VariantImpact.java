@@ -20,9 +20,8 @@ public class VariantImpact
 
     public VariantImpact(
             final int genesAffected, final String canonicalGene, final String canonicalEffect,
-            final String canonicalTranscript,
-            final CodingEffect canonicalCodingEffect, final String canonicalHgvsCodingImpact, final String canonicalHgvsProteinImpact,
-            final String worstGene,
+            final String canonicalTranscript, final CodingEffect canonicalCodingEffect, final String canonicalHgvsCodingImpact,
+            final String canonicalHgvsProteinImpact, final String worstGene,
             final String worstEffect, final String worstTranscript, final CodingEffect worstCodingEffect)
     {
         GenesAffected = genesAffected;

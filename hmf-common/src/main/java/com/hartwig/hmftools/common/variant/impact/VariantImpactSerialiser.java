@@ -7,7 +7,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffEnrichment;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummarySerialiser;
 
 import org.apache.logging.log4j.util.Strings;
 

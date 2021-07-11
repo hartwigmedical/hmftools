@@ -24,17 +24,20 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class SnpEffAnnotationFactoryTest {
+public class SnpEffAnnotationFactoryTest
+{
 
     private VCFCodec codec;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         codec = createTestCodec();
     }
 
     @Test
-    public void testInitialSpliceBase() {
+    public void testInitialSpliceBase()
+    {
         assertEquals(4, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.5667+4_5667+9delAAGGGG"));
         assertEquals(3, SnpEffAnnotationFactory.initialIndelSpliceBase(true, "c.1023+2_1023+3insA"));
         assertEquals(5, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.865+5dupT"));
@@ -43,7 +46,8 @@ public class SnpEffAnnotationFactoryTest {
     }
 
     @Test
-    public void testSnvSpliceDonorPlus5() {
+    public void testSnvSpliceDonorPlus5()
+    {
         assertEffect("splice_region_variant",
                 "G",
                 "T",
@@ -74,7 +78,8 @@ public class SnpEffAnnotationFactoryTest {
     }
 
     @Test
-    public void testForwardStrandInsert() {
+    public void testForwardStrandInsert()
+    {
         assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
 
         assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
@@ -89,7 +94,8 @@ public class SnpEffAnnotationFactoryTest {
     }
 
     @Test
-    public void testReverseStrandInsert() {
+    public void testReverseStrandInsert()
+    {
         assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
 
         assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
@@ -101,7 +107,8 @@ public class SnpEffAnnotationFactoryTest {
     }
 
     private void assertEffect(@NotNull String expectedStart, @NotNull String ref, @NotNull String alt, @NotNull String mh,
-            @NotNull String repeat, int repeatCount, String effects, @NotNull String hgvs) {
+            @NotNull String repeat, int repeatCount, String effects, @NotNull String hgvs)
+    {
         VariantContext context = create(ref, alt, mh, repeat, repeatCount, effects, hgvs);
         List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(context);
         assertEquals(1, annotations.size());
@@ -110,14 +117,17 @@ public class SnpEffAnnotationFactoryTest {
 
     @NotNull
     private VariantContext create(@NotNull String ref, @NotNull String alt, @NotNull String mh, @NotNull String repeat, int repeatCount,
-            @NotNull String effects, @NotNull String hgvs) {
+            @NotNull String effects, @NotNull String hgvs)
+    {
         final String annotation = String.format("A|%s|LOW|GENE|GENEID|transcript|TRANSCIPTID|protein_coding|4/10|%s||||||", effects, hgvs);
 
         final StringJoiner infoJoiner = new StringJoiner(";").add(SNPEFF_IDENTIFIER + "=" + annotation);
-        if (!mh.isEmpty()) {
+        if(!mh.isEmpty())
+        {
             infoJoiner.add(MICROHOMOLOGY_FLAG + "=" + mh);
         }
-        if (repeatCount > 0) {
+        if(repeatCount > 0)
+        {
             infoJoiner.add(REPEAT_COUNT_FLAG + "=" + repeatCount);
             infoJoiner.add(REPEAT_SEQUENCE_FLAG + "=" + repeat);
         }
@@ -129,7 +139,8 @@ public class SnpEffAnnotationFactoryTest {
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("SAMPLE"));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);

@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
+// interprets SnpEff annotations
 public final class SnpEffAnnotationFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(SnpEffAnnotationFactory.class);
@@ -33,10 +34,6 @@ public final class SnpEffAnnotationFactory
     static final String CONSEQUENCE_SEPARATOR = "&";
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
-
-    private SnpEffAnnotationFactory()
-    {
-    }
 
     @NotNull
     public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context)
@@ -76,7 +73,7 @@ public final class SnpEffAnnotationFactory
     @NotNull
     private static SnpEffAnnotation fromParts(@NotNull VariantContext context, @NotNull String[] parts)
     {
-        String effects = effect(context, parts);
+        String effects = extractAnnotationEffects(context, parts);
 
         return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
@@ -122,7 +119,7 @@ public final class SnpEffAnnotationFactory
     }
 
     @NotNull
-    static String effect(@NotNull VariantContext variant, @NotNull String[] parts)
+    private static String extractAnnotationEffects(@NotNull VariantContext variant, @NotNull String[] parts)
     {
         String hgvsCoding = parts[9];
         String effects = parts[1];
@@ -212,7 +209,6 @@ public final class SnpEffAnnotationFactory
                 : alt.charAt(alt.length() - 1) == lastBaseOfCoding;
     }
 
-    @NotNull
     private static String[] enforceMinLength(@NotNull String[] parts, int minSize)
     {
         if(parts.length > minSize)
@@ -232,7 +228,6 @@ public final class SnpEffAnnotationFactory
         }
     }
 
-    @NotNull
     private static List<String> toEffects(@NotNull final String effectString)
     {
         return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
