@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.impact;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 public class VariantData
 {
@@ -12,7 +11,7 @@ public class VariantData
     public final String Ref;
     public final String Alt;
 
-    private final List<VariantImpact> mImpacts;
+    private final List<VariantTransImpact> mImpacts;
 
     public VariantData(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -24,9 +23,9 @@ public class VariantData
         mImpacts = Lists.newArrayList();
     }
 
-    public List<VariantImpact> getImpacts() { return mImpacts; }
+    public List<VariantTransImpact> getImpacts() { return mImpacts; }
 
-    public void addImpacts(final VariantImpact impact)
+    public void addImpacts(final VariantTransImpact impact)
     {
         if(mImpacts.stream().anyMatch(x -> x.TransData.TransId == impact.TransData.TransId))
             return;
@@ -34,12 +33,12 @@ public class VariantData
         mImpacts.add(impact);
     }
 
-    public VariantImpact getWorstImpact()
+    public VariantTransImpact getWorstImpact()
     {
-
+        return null;
     }
 
-    public VariantImpact getCanonicalImpact()
+    public VariantTransImpact getCanonicalImpact()
     {
         return mImpacts.stream().filter(x -> x.TransData.IsCanonical).findFirst().orElse(null);
     }

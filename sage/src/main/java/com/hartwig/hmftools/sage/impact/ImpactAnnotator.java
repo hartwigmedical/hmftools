@@ -78,7 +78,6 @@ public class ImpactAnnotator
                     continue;
 
                 // extract SnpEff data for comparison sake
-                // SnpEffSummary
                 // SnpEffAnnotation - per transcript
 
                 final SomaticVariant variant = variantFactory.createVariant(mConfig.SampleId, variantContext).orElse(null);

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -24,13 +25,13 @@ public class TumorMutationalLoad
         return mBurden / MicrosatelliteIndels.NUMBER_OF_MB_PER_GENOME;
     }
 
-    public void processVariant(final VariantContext context)
+    public void processVariant(VariantContextDecorator variant)
     {
-        if (PASS.test(context))
+        if(variant.isPass())
         {
             mBurden++;
 
-            final VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(context);
+            final VariantImpact variantImpact = variant.variantImpact();
 
             if (variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
                 mLoad++;

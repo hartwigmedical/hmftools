@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.impact;
 
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.sage.impact.VariantImpact;
 
 public class ImpactClassifier
 {
@@ -13,7 +12,7 @@ public class ImpactClassifier
         mRefGenome = refGenome;
     }
 
-    public VariantImpact classifyVariant(
+    public VariantTransImpact classifyVariant(
             final TranscriptData transData)
     {
         return null;
