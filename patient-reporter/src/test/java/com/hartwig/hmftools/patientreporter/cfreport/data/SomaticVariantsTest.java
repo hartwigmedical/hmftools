@@ -62,6 +62,7 @@ public class SomaticVariantsTest {
                 .alleleReadCount(0)
                 .totalCopyNumber(0)
                 .alleleCopyNumber(0D)
+                .minorAlleleCopyNumber(0D)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)

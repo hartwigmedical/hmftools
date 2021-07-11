@@ -83,7 +83,7 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    private static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant,
+    public static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant,
             @NotNull ReportableVariantSource source) {
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
@@ -100,6 +100,7 @@ public final class ReportableVariantFactory {
                 .totalReadCount(variant.totalReadCount())
                 .alleleReadCount(variant.alleleReadCount())
                 .totalCopyNumber(variant.adjustedCopyNumber())
+                .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .alleleCopyNumber(calcAlleleCopyNumber(variant.adjustedCopyNumber(), variant.adjustedVAF()))
                 .hotspot(variant.hotspot())
                 .clonalLikelihood(variant.clonalLikelihood())

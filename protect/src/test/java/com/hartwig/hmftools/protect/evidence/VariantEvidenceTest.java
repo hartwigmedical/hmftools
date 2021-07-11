@@ -207,10 +207,10 @@ public class VariantEvidenceTest {
                 .alleleReadCount(0)
                 .totalCopyNumber(0)
                 .alleleCopyNumber(0D)
+                .minorAlleleCopyNumber(0D)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
                 .biallelic(false);
     }
-
 }

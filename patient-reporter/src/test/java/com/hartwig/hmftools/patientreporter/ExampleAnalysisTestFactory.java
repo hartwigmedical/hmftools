@@ -38,6 +38,10 @@ import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
@@ -45,10 +49,6 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
@@ -817,6 +817,7 @@ public final class ExampleAnalysisTestFactory {
                 .totalReadCount(221)
                 .alleleCopyNumber(4.09281)
                 .totalCopyNumber(6.01)
+                .minorAlleleCopyNumber(Double.NaN)
                 .hotspot(Hotspot.HOTSPOT)
                 .driverLikelihood(1D)
                 .clonalLikelihood(1D)
@@ -839,6 +840,7 @@ public final class ExampleAnalysisTestFactory {
                 .alleleReadCount(99)
                 .totalReadCount(99)
                 .alleleCopyNumber(2)
+                .minorAlleleCopyNumber(Double.NaN)
                 .totalCopyNumber(2)
                 .hotspot(Hotspot.NEAR_HOTSPOT)
                 .clonalLikelihood(1D)
@@ -862,6 +864,7 @@ public final class ExampleAnalysisTestFactory {
                 .alleleReadCount(56)
                 .totalReadCount(65)
                 .alleleCopyNumber(1.7404)
+                .minorAlleleCopyNumber(Double.NaN)
                 .totalCopyNumber(2.0)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
@@ -885,6 +888,7 @@ public final class ExampleAnalysisTestFactory {
                 .alleleReadCount(74)
                 .totalReadCount(111)
                 .alleleCopyNumber(2.026722)
+                .minorAlleleCopyNumber(Double.NaN)
                 .totalCopyNumber(3.02)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)
@@ -908,6 +912,7 @@ public final class ExampleAnalysisTestFactory {
                 .alleleReadCount(47)
                 .totalReadCount(112)
                 .alleleCopyNumber(1.678764)
+                .minorAlleleCopyNumber(Double.NaN)
                 .totalCopyNumber(3.98)
                 .hotspot(Hotspot.NON_HOTSPOT)
                 .clonalLikelihood(1D)

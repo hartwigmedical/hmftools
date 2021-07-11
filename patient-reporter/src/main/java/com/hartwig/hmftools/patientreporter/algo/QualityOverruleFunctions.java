@@ -86,6 +86,7 @@ public final class QualityOverruleFunctions {
                 .from(variant)
                 .totalCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? variant.alleleCopyNumber() : Double.NaN)
+                .minorAlleleCopyNumber(hasReliablePurity ? variant.minorAlleleCopyNumber() : Double.NaN)
                 .biallelic(hasReliablePurity && roundedCopyNumber >= 1 ? variant.biallelic() : null)
                 .build();
     }

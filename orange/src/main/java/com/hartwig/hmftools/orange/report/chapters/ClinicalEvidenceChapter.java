@@ -15,7 +15,8 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.components.TableUtil;
+import com.hartwig.hmftools.orange.report.util.DocumentUtil;
+import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
@@ -65,26 +66,14 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
         List<ProtectEvidence> noIclusion = noIclusion(report.protect());
         Table onLabel = createTreatmentTable("On-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
-        if (onLabel == null) {
-            document.add(new Paragraph(" * No on-label evidence found!").addStyle(ReportResources.tableContentStyle()));
-        } else {
-            document.add(onLabel);
-        }
-
         Table offLabel = createTreatmentTable("Off-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
-        if (offLabel == null) {
-            document.add(new Paragraph(" * No off-label evidence found!").addStyle(ReportResources.tableContentStyle()));
-        } else {
-            document.add(offLabel);
-        }
 
         List<ProtectEvidence> iclusion = iclusionOnly(report.protect());
         Table trials = createTreatmentTable("Trials", toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
-        if (trials == null) {
-            document.add(new Paragraph(" * No trials found!").addStyle(ReportResources.tableContentStyle()));
-        } else {
-            document.add(trials);
-        }
+
+        DocumentUtil.addCheckedTable(document, onLabel, "No on-label evidence found!");
+        DocumentUtil.addCheckedTable(document, offLabel, "No off-label evidence found!");
+        DocumentUtil.addCheckedTable(document, trials, "No trials found!");
     }
 
     @NotNull

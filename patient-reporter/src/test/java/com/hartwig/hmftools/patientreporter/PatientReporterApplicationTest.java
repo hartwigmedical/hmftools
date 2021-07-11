@@ -53,6 +53,7 @@ public class PatientReporterApplicationTest {
                 .alleleReadCount(0)
                 .totalReadCount(1)
                 .alleleCopyNumber(Double.NaN)
+                .minorAlleleCopyNumber(Double.NaN)
                 .totalCopyNumber(Double.NaN)
                 .hotspot(Hotspot.HOTSPOT)
                 .driverLikelihood(0D)

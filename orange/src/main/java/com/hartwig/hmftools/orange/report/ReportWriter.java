@@ -11,7 +11,7 @@ import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
-import com.hartwig.hmftools.orange.report.chapters.SomaticDriverChapter;
+import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -42,7 +42,7 @@ public class ReportWriter {
 
     public void write(@NotNull OrangeReport report) throws IOException {
         ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
-                new ClinicalEvidenceChapter(report, reportConfig), new SomaticDriverChapter(report),
+                new ClinicalEvidenceChapter(report, reportConfig), new SomaticFindingsChapter(report),
                 new GermlineFindingsChapter(report, reportConfig.reportGermline()), new DatabaseCompareChapter(report),
                 new QualityControlChapter(report) };
         writeReport(report, chapters);

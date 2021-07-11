@@ -66,6 +66,8 @@ public abstract class ReportableVariant implements Variant {
 
     public abstract double alleleCopyNumber();
 
+    public abstract double minorAlleleCopyNumber();
+
     @NotNull
     @Value.Derived
     public String tVAF() {

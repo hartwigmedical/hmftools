@@ -107,6 +107,7 @@ public class ConsentFilterFunctionsTest {
                 .alleleReadCount(0)
                 .totalCopyNumber(0)
                 .alleleCopyNumber(0D)
+                .minorAlleleCopyNumber(Double.NaN)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
