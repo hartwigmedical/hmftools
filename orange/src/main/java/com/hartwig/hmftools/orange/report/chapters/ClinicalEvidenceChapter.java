@@ -63,19 +63,50 @@ public class ClinicalEvidenceChapter implements ReportChapter {
                     + "'.'"));
         }
 
-        Table onLabel = createTreatmentTable("On-Label Evidence", toTreatmentMap(report.protect(), reportConfig.reportGermline(), true));
+        List<ProtectEvidence> noIclusion = noIclusion(report.protect());
+        Table onLabel = createTreatmentTable("On-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
         if (onLabel == null) {
             document.add(new Paragraph(" * No on-label evidence found!").addStyle(ReportResources.tableContentStyle()));
         } else {
             document.add(onLabel);
         }
 
-        Table offLabel = createTreatmentTable("Off-Label Evidence", toTreatmentMap(report.protect(), reportConfig.reportGermline(), false));
+        Table offLabel = createTreatmentTable("Off-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
         if (offLabel == null) {
             document.add(new Paragraph(" * No off-label evidence found!").addStyle(ReportResources.tableContentStyle()));
         } else {
             document.add(offLabel);
         }
+
+        List<ProtectEvidence> iclusion = iclusionOnly(report.protect());
+        Table trials = createTreatmentTable("Trials", toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
+        if (trials == null) {
+            document.add(new Paragraph(" * No trials found!").addStyle(ReportResources.tableContentStyle()));
+        } else {
+            document.add(trials);
+        }
+    }
+
+    @NotNull
+    private static List<ProtectEvidence> iclusionOnly(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.sources().contains(Knowledgebase.ICLUSION)) {
+                filtered.add(evidence);
+            }
+        }
+        return filtered;
+    }
+
+    @NotNull
+    private static List<ProtectEvidence> noIclusion(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (!evidence.sources().contains(Knowledgebase.ICLUSION)) {
+                filtered.add(evidence);
+            }
+        }
+        return filtered;
     }
 
     @NotNull
