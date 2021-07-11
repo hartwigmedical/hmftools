@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;

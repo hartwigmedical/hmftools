@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -108,7 +108,7 @@ public class GermlineVariantDAO {
         final AllelicDepth tumorDepth = decorator.allelicDepth(tumorSample);
         final AllelicDepth referenceDepth = decorator.allelicDepth(referenceSample);
         final AllelicDepth rnaDepth = decorator.allelicDepth(rnaSample);
-        final SnpEffSummary snpEffSummary = decorator.snpEffSummary();
+        final VariantImpact variantImpact = decorator.variantImpact();
         final PathogenicSummary pathogenicSummary = decorator.pathogenicSummary();
 
         inserter.values(timestamp,
@@ -137,15 +137,15 @@ public class GermlineVariantDAO {
                 pathogenicSummary.clinvarInfo(),
                 pathogenicSummary.pathogenicity().toString(),
                 decorator.isPathogenic(),
-                snpEffSummary.gene(),
-                snpEffSummary.genesAffected(),
-                snpEffSummary.worstEffect(),
-                snpEffSummary.worstCodingEffect() != CodingEffect.UNDEFINED ? snpEffSummary.worstCodingEffect() : Strings.EMPTY,
-                snpEffSummary.worstTranscript(),
-                snpEffSummary.canonicalEffect(),
-                snpEffSummary.canonicalCodingEffect() != CodingEffect.UNDEFINED ? snpEffSummary.canonicalCodingEffect() : Strings.EMPTY,
-                snpEffSummary.canonicalHgvsCodingImpact(),
-                snpEffSummary.canonicalHgvsProteinImpact(),
+                variantImpact.gene(),
+                variantImpact.GenesAffected,
+                variantImpact.WorstEffect,
+                variantImpact.WorstCodingEffect != CodingEffect.UNDEFINED ? variantImpact.WorstCodingEffect : Strings.EMPTY,
+                variantImpact.WorstTranscript,
+                variantImpact.CanonicalEffect,
+                variantImpact.CanonicalCodingEffect != CodingEffect.UNDEFINED ? variantImpact.CanonicalCodingEffect : Strings.EMPTY,
+                variantImpact.CanonicalHgvsCodingImpact,
+                variantImpact.CanonicalHgvsProteinImpact,
                 decorator.microhomology(),
                 decorator.repeatSequence(),
                 decorator.repeatCount(),

@@ -8,10 +8,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;

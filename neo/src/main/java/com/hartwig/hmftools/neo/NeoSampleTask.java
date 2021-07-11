@@ -113,10 +113,13 @@ public class NeoSampleTask implements Callable
     {
         List<PointMutationData> pointMutations = Lists.newArrayList();
 
+        List<String> validCodingEffects = Lists.newArrayList(NONSENSE_OR_FRAMESHIFT.toString(), MISSENSE.toString());
+
         final Result<Record> result = mDbAccess.context().select().from(Tables.SOMATICVARIANT)
                 .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mSampleData.Id))
                 .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
+                .and(Tables.SOMATICVARIANT.WORSTCODINGEFFECT.in(validCodingEffects))
                 .fetch();
 
         for (Record record : result)

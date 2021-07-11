@@ -20,8 +20,6 @@ import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndF
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
-import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
-import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FUSION;
 
 import java.util.List;
@@ -39,8 +37,8 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;

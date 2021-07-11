@@ -59,6 +59,7 @@ public class CommonUtils
 
             final CSVFormat format = new CSVFormat().header(true).delimiter('\t').nullString("").quoteString("");
             writer.write(records.formatCSV(format));
+            writer.close();
         }
         catch (final IOException e)
         {

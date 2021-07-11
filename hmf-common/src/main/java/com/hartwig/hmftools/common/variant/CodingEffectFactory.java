@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,13 +31,8 @@ public class CodingEffectFactory {
     }
 
     @NotNull
-    public CodingEffect effect(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation annotation) {
-        return effect(context, annotation.gene(), annotation.consequences());
-    }
-
-    @NotNull
-    public CodingEffect effect(@NotNull final VariantContext context, @NotNull final String gene,
-            @NotNull final List<VariantConsequence> consequences) {
+    public CodingEffect effect(
+            @NotNull final VariantContext context, @NotNull final String gene, @NotNull final List<VariantConsequence> consequences) {
         final VariantContextDecorator variant = new VariantContextDecorator(context);
         final String alt = variant.alt();
 

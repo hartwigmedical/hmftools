@@ -8,7 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
@@ -68,7 +68,7 @@ public class AnnotatedHotspotVCFChecker {
                 LOGGER.debug("Skipping non-coding hotspot on '{}'", formattedHotspot);
                 matchCount++;
             } else {
-                List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+                List<SnpEffAnnotation> annotations = SnpEffAnnotationParser.fromContext(variant);
                 MatchType match = determineMatch(inputTranscript, inputProteinAnnotation, annotations);
 
                 switch (match) {

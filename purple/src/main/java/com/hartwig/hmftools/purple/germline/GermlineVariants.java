@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantHeader;
-import com.hartwig.hmftools.common.variant.enrich.GermlineVariantEnrichment;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 

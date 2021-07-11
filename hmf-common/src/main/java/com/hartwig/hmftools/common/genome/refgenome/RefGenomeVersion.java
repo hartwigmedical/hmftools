@@ -23,12 +23,6 @@ public enum RefGenomeVersion
     @NotNull
     public static RefGenomeVersion from(@NotNull final String version)
     {
-        // TODO Remove handling of RG per 1st of july 2021
-        if (version.startsWith("RG"))
-        {
-            LOGGER.warn("Avoid using ref genome versions starting with RG: {}", version);
-        }
-
         if (version.equals(V37.toString()) || version.equals("RG_37") || version.equals("37") || version.equals("HG37"))
         {
             return V37;

@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 

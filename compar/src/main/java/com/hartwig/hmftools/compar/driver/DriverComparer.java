@@ -3,12 +3,10 @@ package com.hartwig.hmftools.compar.driver;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -18,7 +16,6 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 public class DriverComparer implements ItemComparer
 {

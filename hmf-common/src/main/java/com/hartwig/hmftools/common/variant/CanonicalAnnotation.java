@@ -42,7 +42,7 @@ public class CanonicalAnnotation {
 
     @VisibleForTesting
     @NotNull
-    <T extends TranscriptAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
+    <T extends SnpEffAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
         List<T> canonicalAnnotations = annotations.stream()
                 .filter(annotation -> canonicalTranscriptGeneMap.containsKey(trimEnsembleVersion(annotation.transcript())))
                 .collect(Collectors.toList());

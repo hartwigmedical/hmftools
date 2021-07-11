@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.purple.recovery;
 
-import static java.util.Comparator.comparingDouble;
-
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.create;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.createSingleBreakend;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.mateId;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.create;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.mateId;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_LENGTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_MATE_UNCERTAINTY;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PLOIDY;
@@ -13,7 +11,6 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.RECOVERY_MIN_PL
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -30,9 +27,9 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -18,7 +18,7 @@ import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
 import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.purple.segment.PurpleSegmentFactory;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.segment.PCFPositionsSupplier;
 

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANT;
@@ -14,9 +14,9 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

@@ -7,15 +7,12 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.count.EvictingArray;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.select.PanelSelector;
-
-import org.jetbrains.annotations.NotNull;
 
 public class RefContextFactory
 {
@@ -44,14 +41,12 @@ public class RefContextFactory
         mRollingCandidates = new EvictingArray<>(256, evictionHandler);
     }
 
-    @NotNull
     public RefContext refContext(final String chromosome, final long position)
     {
         int maxDepth = maxReadDepth(chromosome, position);
         return mRollingCandidates.computeIfAbsent(position, aLong -> new RefContext(mSample, chromosome, position, maxDepth));
     }
 
-    @NotNull
     public List<AltContext> altContexts()
     {
         mRollingCandidates.evictAll();

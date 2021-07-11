@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -21,16 +22,20 @@ public class ChromosomePartition
         mRefGenome = refGenome;
     }
 
-    @NotNull
-    public List<BaseRegion> partition(String contig)
+    public List<BaseRegion> partition(final String chromosome)
     {
-        return partition(contig, 1, mRefGenome.getSequence(contig).length());
+        if(!mConfig.SpecificRegions.isEmpty())
+        {
+            List<BaseRegion> chrRegions = mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
+            return partitionRegions(chrRegions);
+        }
+
+        return partition(chromosome, 1, mRefGenome.getSequence(chromosome).length());
     }
 
-    @NotNull
-    public List<BaseRegion> partition(String contig, int minPosition, int maxPosition)
+    public List<BaseRegion> partition(final String chromosome, int minPosition, int maxPosition)
     {
-        final List<BaseRegion> results = Lists.newArrayList();
+        final List<BaseRegion> partitions = Lists.newArrayList();
 
         int dynamicSliceSize = maxPosition / Math.min(mConfig.Threads, 4) + 1;
         int regionSliceSize = Math.min(dynamicSliceSize, mConfig.RegionSliceSize);
@@ -39,12 +44,53 @@ public class ChromosomePartition
         {
             int start = minPosition + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize - 1, maxPosition);
-            results.add(new BaseRegion(contig, start, end));
+            partitions.add(new BaseRegion(chromosome, start, end));
 
             if(end >= maxPosition)
                 break;
         }
-        return results;
+        return partitions;
+    }
+
+    public List<BaseRegion> partitionRegions(final List<BaseRegion> regions)
+    {
+        List<BaseRegion> partitions = Lists.newArrayList();
+
+        int totalRegionLength = regions.stream().mapToInt(x -> x.baseLength()).sum();
+        int dynamicSliceSize = totalRegionLength / Math.min(mConfig.Threads, 4) + 1;
+
+        for(BaseRegion region : regions)
+        {
+            if(region.baseLength() < mConfig.RegionSliceSize)
+            {
+                partitions.add(region);
+            }
+            else
+            {
+                int minPosition = region.start();
+                int maxPosition = region.end();
+                int regionSliceSize = Math.min(dynamicSliceSize, mConfig.RegionSliceSize);
+
+                for(int i = 0; ; i++)
+                {
+                    int start = minPosition + i * regionSliceSize;
+
+                    int end = start + regionSliceSize - 1;
+
+                    if(end > maxPosition)
+                        end = maxPosition;
+                    else if(maxPosition - end < 0.5 * regionSliceSize) // extend the last segment if within 50% of the end
+                        end = maxPosition;
+
+                    partitions.add(new BaseRegion(region.Chromosome, start, end));
+
+                    if(end >= maxPosition)
+                        break;
+                }
+            }
+        }
+
+        return partitions;
     }
 
 }

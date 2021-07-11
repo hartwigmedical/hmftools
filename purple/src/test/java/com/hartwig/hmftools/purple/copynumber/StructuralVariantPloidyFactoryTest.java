@@ -27,7 +27,7 @@ import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.ImmutableStructuralVariantLegs;
 import com.hartwig.hmftools.purple.copynumber.sv.ModifiableStructuralVariantLegPloidy;

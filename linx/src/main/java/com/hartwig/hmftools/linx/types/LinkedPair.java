@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 
 import java.util.List;
 

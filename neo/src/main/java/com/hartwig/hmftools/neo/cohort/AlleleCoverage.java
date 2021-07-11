@@ -31,7 +31,6 @@ public class AlleleCoverage
                 Allele, CopyNumber, VariantCount);
     }
 
-
     public static AlleleCoverage fromCsv(final String data, int alleleIndex, int tumorCnIndex, final List<Integer> somaticVariantIndices)
     {
         // SomaticMissense>0|SomaticNonsenseOrFrameshift>0|SomaticSplice>0|SomaticInframeIndel>0

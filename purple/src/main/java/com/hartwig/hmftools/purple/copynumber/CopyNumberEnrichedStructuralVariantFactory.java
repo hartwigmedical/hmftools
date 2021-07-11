@@ -12,12 +12,12 @@ import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberC
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegCopyNumberFactory;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.ImmutableEnrichedStructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

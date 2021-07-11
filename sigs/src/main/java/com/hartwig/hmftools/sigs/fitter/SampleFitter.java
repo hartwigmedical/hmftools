@@ -2,10 +2,7 @@ package com.hartwig.hmftools.sigs.fitter;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
-import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
-import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
@@ -23,7 +20,6 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleMatrixCounts;
 import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.POSITION_BUCKET_SIZE;
@@ -38,6 +34,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sigs.common.CommonUtils;
@@ -175,7 +172,7 @@ public class SampleFitter
                 if(mSampleIdsConfig.contains(".csv"))
                 {
                     // load from file
-                    mSampleIdList.addAll(loadSampleListFile(mSampleIdsConfig));
+                    mSampleIdList.addAll(ConfigUtils.loadSampleIdFile(mSampleIdsConfig));
                 }
                 else
                 {

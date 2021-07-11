@@ -32,7 +32,6 @@ public class RefContext implements GenomePosition
         mAlts = new HashMap<>();
     }
 
-    @NotNull
     public Collection<AltContext> alts()
     {
         return mAlts.values();
@@ -46,14 +45,12 @@ public class RefContext implements GenomePosition
     public void refRead(boolean sufficientMapQuality)
     {
         if(sufficientMapQuality)
-        {
             rawDepth++;
-        }
     }
 
-    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality, boolean sufficientMapQuality,
-            int numberOfEvents,
-            @Nullable final ReadContext readContext)
+    public void altRead(
+            final String ref, final String alt, int baseQuality, boolean sufficientMapQuality,
+            int numberOfEvents, final ReadContext readContext)
     {
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
@@ -68,7 +65,6 @@ public class RefContext implements GenomePosition
         }
     }
 
-    @NotNull
     @Override
     public String chromosome()
     {
@@ -86,7 +82,6 @@ public class RefContext implements GenomePosition
         return rawDepth;
     }
 
-    @NotNull
     public String sample()
     {
         return Sample;
@@ -116,8 +111,7 @@ public class RefContext implements GenomePosition
         return h;
     }
 
-    @NotNull
-    private AltContext altContext(@NotNull final String ref, @NotNull final String alt)
+    private AltContext altContext(final String ref, final String alt)
     {
         final String refAltKey = ref + "|" + alt;
         return mAlts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));

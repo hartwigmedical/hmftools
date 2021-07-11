@@ -44,9 +44,6 @@ public class CanonicalAnnotationTest {
         SnpEffAnnotation p14 = createSnpEffAnnotation("CDKN2A", CDKN2A_P14ARF, VariantConsequence.MISSENSE_VARIANT);
         SnpEffAnnotation other = createSnpEffAnnotation("CDKN2A", CDKN2A_OTHER, VariantConsequence.MISSENSE_VARIANT);
 
-        HmfTranscriptRegion cdk1 = transcripts.stream().filter(x -> x.gene().equals("CDKN2A")).findFirst().orElse(null);
-        HmfTranscriptRegion cdk2 = transcripts.stream().filter(x -> x.gene().equals("CDKN2Ap14ARF")).findFirst().orElse(null);
-
         List<SnpEffAnnotation> all = Lists.newArrayList(other, p14, p16);
 
         CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
@@ -56,20 +53,20 @@ public class CanonicalAnnotationTest {
 
     @Test
     public void favourDriverCatalogGenes() {
-        TranscriptAnnotation nonCanonicalDriverGene =
+        SnpEffAnnotation nonCanonicalDriverGene =
                 createSnpEffAnnotation("ATP1A1", "ENST00000295598", VariantConsequence.MISSENSE_VARIANT);
-        TranscriptAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
-        TranscriptAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
+        SnpEffAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
+        SnpEffAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
 
         CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
         assertEquals(Optional.empty(), victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene)));
 
-        Optional<TranscriptAnnotation> annotationSecond =
+        Optional<SnpEffAnnotation> annotationSecond =
                 victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene, noDriverGene));
         assertTrue(annotationSecond.isPresent());
         assertEquals(noDriverGene, annotationSecond.get());
 
-        Optional<TranscriptAnnotation> annotationThird =
+        Optional<SnpEffAnnotation> annotationThird =
                 victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene, noDriverGene, canonicalDriverGene));
         assertTrue(annotationThird.isPresent());
         assertEquals(canonicalDriverGene, annotationThird.get());

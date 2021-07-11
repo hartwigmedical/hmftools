@@ -6,7 +6,7 @@ public enum Category
     COPY_NUMBER,
     DRIVER,
     VIRUS,
-    HOTSPOT,
+    SOMATIC_VARIANT,
     LINX_DATA,
     FUSION,
     DISRUPTION;

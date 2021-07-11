@@ -10,8 +10,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantFile;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.jetbrains.annotations.NotNull;

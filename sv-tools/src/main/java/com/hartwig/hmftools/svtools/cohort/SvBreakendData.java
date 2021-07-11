@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 public class SvBreakendData
 {

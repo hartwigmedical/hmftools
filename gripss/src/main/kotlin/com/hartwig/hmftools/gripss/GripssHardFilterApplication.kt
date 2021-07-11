@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS
 import com.hartwig.hmftools.gripss.GripssConfig.Companion.requiredOption
 import com.hartwig.hmftools.gripss.GripssHardFilterApplication.Companion.logger
 import htsjdk.variant.variantcontext.VariantContext

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 

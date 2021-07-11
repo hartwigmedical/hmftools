@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 
 import org.immutables.value.Value;

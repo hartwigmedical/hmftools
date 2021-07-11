@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -156,7 +156,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context) {
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        final SnpEffSummary snpEffSummary = decorator.snpEffSummary();
+        final VariantImpact variantImpact = decorator.variantImpact();
 
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(decorator.qual())
@@ -182,16 +182,16 @@ public class SomaticVariantFactory implements VariantContextFilter {
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .reported(decorator.reported())
                 .biallelic(decorator.biallelic())
-                .worstEffect(snpEffSummary.worstEffect())
-                .worstCodingEffect(snpEffSummary.worstCodingEffect())
-                .worstEffectTranscript(snpEffSummary.worstTranscript())
-                .canonicalEffect(snpEffSummary.canonicalEffect())
-                .canonicalTranscript(snpEffSummary.canonicalTranscript())
-                .canonicalCodingEffect(snpEffSummary.canonicalCodingEffect())
-                .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
-                .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
-                .gene(snpEffSummary.gene())
-                .genesAffected(snpEffSummary.genesAffected())
+                .worstEffect(variantImpact.WorstEffect)
+                .worstCodingEffect(variantImpact.WorstCodingEffect)
+                .worstEffectTranscript(variantImpact.WorstTranscript)
+                .canonicalEffect(variantImpact.CanonicalEffect)
+                .canonicalTranscript(variantImpact.CanonicalTranscript)
+                .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)
+                .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCodingImpact)
+                .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProteinImpact)
+                .gene(variantImpact.gene())
+                .genesAffected(variantImpact.GenesAffected)
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))

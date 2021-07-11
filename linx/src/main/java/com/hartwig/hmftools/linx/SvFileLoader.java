@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
@@ -9,13 +9,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFile;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoader;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantFile;
+import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.linx.types.GermlineFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 

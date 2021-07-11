@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedSampleIdFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,33 +63,7 @@ public class NeoCommon
             return;
         }
 
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return;
-
-            if (fileContents.get(0).contains("SampleId"))
-                fileContents.remove(0);
-
-            for(String sampleData : fileContents)
-            {
-                if(sampleData.contains(DELIMITER))
-                {
-                    String[] items = sampleData.split(DELIMITER, -1);
-                    sampleIds.add(items[0]);
-                }
-                else
-                {
-                    sampleIds.add(sampleData);
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.warn("failed to load sampleId file({}): {}", filename, e.toString());
-        }
+        sampleIds.addAll(loadDelimitedSampleIdFile(filename, DELIMITER));
     }
 
     public static void loadSampleDataFile(final String filename, final List<SampleData> samples)

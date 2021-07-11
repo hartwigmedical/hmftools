@@ -18,4 +18,4 @@ and ((gene.seq_region_start >= karyotype.seq_region_start and gene.seq_region_st
 or (gene.seq_region_end >= karyotype.seq_region_start and gene.seq_region_end <= karyotype.seq_region_end))
 and seq_region.coord_system_id = COORD_SYSTEM
 group by GeneId, GeneName, EntrezId, ExtDbId, Chromosome, Strand, GeneStart, GeneEnd
-order by GeneName, ExtDbId desc;;
+order by GeneName, ExtDbId desc;

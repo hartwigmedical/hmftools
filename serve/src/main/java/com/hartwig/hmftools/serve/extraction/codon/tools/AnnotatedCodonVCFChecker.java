@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
 import org.apache.logging.log4j.Level;
@@ -51,7 +51,7 @@ public class AnnotatedCodonVCFChecker {
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             int inputCodon = Integer.parseInt(inputParts[2]);
 
-            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationParser.fromContext(variant);
             if (isMatch(inputGene, inputTranscript, inputCodon, annotations)) {
                 matchCount++;
             } else {

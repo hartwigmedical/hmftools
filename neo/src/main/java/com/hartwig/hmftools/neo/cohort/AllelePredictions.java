@@ -32,6 +32,7 @@ public class AllelePredictions
 
     public int[] getFrequencies() { return mFrequencies; }
     public int getTotal() { return mTotal; }
+    public int getPepetideCount() { return mPeptides.size(); }
 
     private int calcMaxBucket()
     {

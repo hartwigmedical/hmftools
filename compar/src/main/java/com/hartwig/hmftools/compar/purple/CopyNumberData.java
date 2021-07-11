@@ -1,23 +1,16 @@
 package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
-import static com.hartwig.hmftools.compar.Category.DRIVER;
-import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
-import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
-import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class CopyNumberData implements ComparableItem
 {

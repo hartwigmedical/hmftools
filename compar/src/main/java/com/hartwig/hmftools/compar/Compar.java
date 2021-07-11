@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.Category.PURITY;
+import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.BufferedWriter;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.compar.linx.FusionComparer;
 import com.hartwig.hmftools.compar.linx.LinxSvComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
+import com.hartwig.hmftools.compar.somatic.SomaticVariantComparer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -61,6 +63,9 @@ public class Compar
 
         if(mConfig.Categories.containsKey(DISRUPTION))
             mComparators.add(new DisruptionComparer(mConfig));
+
+        if(mConfig.Categories.containsKey(SOMATIC_VARIANT))
+            mComparators.add(new SomaticVariantComparer(mConfig));
 
         mDiffWriter = null;
     }

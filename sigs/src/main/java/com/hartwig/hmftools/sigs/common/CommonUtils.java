@@ -208,25 +208,4 @@ public class CommonUtils
 
         return currentAlloc;
     }
-
-    public static List<String> loadSampleListFile(final String filename)
-    {
-        try
-        {
-            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath());
-
-            if (sampleIds.get(0).equals("SampleId"))
-                sampleIds.remove(0);
-
-            SIG_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
-
-            return sampleIds;
-        }
-        catch (IOException exception)
-        {
-            SIG_LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
-            return Lists.newArrayList();
-        }
-    }
-
 }

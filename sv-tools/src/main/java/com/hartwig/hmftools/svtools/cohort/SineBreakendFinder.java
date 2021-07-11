@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -29,8 +29,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -66,22 +67,9 @@ public class SineBreakendFinder
 
     public SineBreakendFinder(final CommandLine cmd)
     {
-        mSampleIds = Lists.newArrayList();
-
-        if(cmd.hasOption(SAMPLE_ID_FILE))
-        {
-            try
-            {
-                mSampleIds.addAll(Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath()).stream()
-                        .filter(x -> !x.equals("SampleId")).collect(Collectors.toList()));
-
-                LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("failed to load ref genome: {}", e.toString());
-            }
-        }
+        String sampleIdsFile = cmd.getOptionValue(SAMPLE_ID_FILE);
+        mSampleIds = ConfigUtils.loadSampleIdFile(sampleIdsFile);
+        LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
 
         mRmTypes = Lists.newArrayList();
 

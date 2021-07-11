@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.CIPOS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.SVTYPE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SVTYPE;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,12 +21,12 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.enrich.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.purple.copynumber.CopyNumberEnrichedStructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantHeader;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
+import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
 import com.hartwig.hmftools.purple.sv.VariantContextCollectionDummy;

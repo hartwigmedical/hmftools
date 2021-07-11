@@ -188,7 +188,7 @@ public class SomaticStream implements Consumer<VariantContext>
 
         if(isValidChromosome)
         {
-            mTumorMutationalLoad.processVariant(context);
+            mTumorMutationalLoad.processVariant(variant);
             mMicrosatelliteIndels.processVariant(context);
             checkDrivers(context, variant);
         }
