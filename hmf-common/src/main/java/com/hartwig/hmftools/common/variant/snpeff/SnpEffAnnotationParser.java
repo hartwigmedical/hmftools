@@ -22,9 +22,9 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 
 // interprets SnpEff annotations
-public final class SnpEffAnnotationFactory
+public final class SnpEffAnnotationParser
 {
-    private static final Logger LOGGER = LogManager.getLogger(SnpEffAnnotationFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(SnpEffAnnotationParser.class);
 
     public static final String SNPEFF_IDENTIFIER = "ANN";
 
@@ -51,7 +51,7 @@ public final class SnpEffAnnotationFactory
     {
         return annotation.stream()
                 .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
-                .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
+                .filter(SnpEffAnnotationParser::isCorrectNumberOfParts)
                 .map(x -> fromParts(context, x))
                 .collect(Collectors.toList());
     }

@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffEnrichment;
+import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 

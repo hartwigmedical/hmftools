@@ -33,7 +33,7 @@ public class SnpEffVariantImpact
     public VariantImpact fromSnpEffAnnotations(@NotNull final VariantContext context)
     {
         boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
-        final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
+        final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationParser.fromContext(context);
         return fromSnpEffAnnotations(context, phasedInframeIndel, allAnnotations);
     }
 

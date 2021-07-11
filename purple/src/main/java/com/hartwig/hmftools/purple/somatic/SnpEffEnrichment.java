@@ -1,4 +1,7 @@
-package com.hartwig.hmftools.common.variant.snpeff;
+package com.hartwig.hmftools.purple.somatic;
+
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
 
 import java.util.List;
 import java.util.Set;
@@ -8,6 +11,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffVariantImpact;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,9 +22,6 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SnpEffEnrichment implements VariantContextEnrichment
 {
-    public static final String SNPEFF_WORST = "SEW";
-    public static final String SNPEFF_CANONICAL = "SEC";
-
     private final Consumer<VariantContext> mConsumer;
     private final SnpEffVariantImpact mSnpEffVariantImapct;
 

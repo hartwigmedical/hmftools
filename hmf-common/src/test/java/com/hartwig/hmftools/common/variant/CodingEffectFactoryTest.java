@@ -23,7 +23,7 @@ import static junit.framework.TestCase.assertEquals;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -168,7 +168,7 @@ public class CodingEffectFactoryTest {
 
     private void assertEffect(@NotNull CodingEffect expected, @NotNull String line) {
         VariantContext variant = VariantContextFromString.decode(line);
-        SnpEffAnnotation snpEffSummary = SnpEffAnnotationFactory.fromContext(variant).get(0);
+        SnpEffAnnotation snpEffSummary = SnpEffAnnotationParser.fromContext(variant).get(0);
         CodingEffect codingEffect = victim.effect(variant, snpEffSummary.gene(), snpEffSummary.consequences());
         assertEquals(expected, codingEffect);
     }

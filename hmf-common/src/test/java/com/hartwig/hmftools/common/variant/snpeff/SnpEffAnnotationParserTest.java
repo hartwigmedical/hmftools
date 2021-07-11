@@ -3,8 +3,8 @@ package com.hartwig.hmftools.common.variant.snpeff;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SNPEFF_IDENTIFIER;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.SPLICE_DONOR_VARIANT;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser.SNPEFF_IDENTIFIER;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser.SPLICE_DONOR_VARIANT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,7 +24,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class SnpEffAnnotationFactoryTest
+public class SnpEffAnnotationParserTest
 {
 
     private VCFCodec codec;
@@ -38,11 +38,11 @@ public class SnpEffAnnotationFactoryTest
     @Test
     public void testInitialSpliceBase()
     {
-        assertEquals(4, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.5667+4_5667+9delAAGGGG"));
-        assertEquals(3, SnpEffAnnotationFactory.initialIndelSpliceBase(true, "c.1023+2_1023+3insA"));
-        assertEquals(5, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.865+5dupT"));
+        assertEquals(4, SnpEffAnnotationParser.initialIndelSpliceBase(false, "c.5667+4_5667+9delAAGGGG"));
+        assertEquals(3, SnpEffAnnotationParser.initialIndelSpliceBase(true, "c.1023+2_1023+3insA"));
+        assertEquals(5, SnpEffAnnotationParser.initialIndelSpliceBase(false, "c.865+5dupT"));
 
-        assertEquals(-1, SnpEffAnnotationFactory.initialIndelSpliceBase(false, "c.2001+6_2001+40delAGCATTTATTTTAGGGGGAAAAAAAAAGTCGTACA"));
+        assertEquals(-1, SnpEffAnnotationParser.initialIndelSpliceBase(false, "c.2001+6_2001+40delAGCATTTATTTTAGGGGGAAAAAAAAAGTCGTACA"));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SnpEffAnnotationFactoryTest
             @NotNull String repeat, int repeatCount, String effects, @NotNull String hgvs)
     {
         VariantContext context = create(ref, alt, mh, repeat, repeatCount, effects, hgvs);
-        List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(context);
+        List<SnpEffAnnotation> annotations = SnpEffAnnotationParser.fromContext(context);
         assertEquals(1, annotations.size());
         assertTrue(annotations.get(0).effects().startsWith(expectedStart));
     }

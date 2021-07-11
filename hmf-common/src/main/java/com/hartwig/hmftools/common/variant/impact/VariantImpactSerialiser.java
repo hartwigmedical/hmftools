@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.common.variant.impact;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffEnrichment;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -28,8 +29,8 @@ public final class VariantImpactSerialiser
         }
 
         // revert to SnpEff until migration is complete
-        final List<String> worst = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_WORST, Strings.EMPTY);
-        final List<String> canonical = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_CANONICAL, Strings.EMPTY);
+        final List<String> worst = context.getAttributeAsStringList(SNPEFF_WORST, Strings.EMPTY);
+        final List<String> canonical = context.getAttributeAsStringList(SNPEFF_CANONICAL, Strings.EMPTY);
         return fromVcfAnnotation(worst, canonical);
     }
 

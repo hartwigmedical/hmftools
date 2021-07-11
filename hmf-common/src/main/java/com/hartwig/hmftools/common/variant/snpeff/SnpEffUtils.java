@@ -12,12 +12,15 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SnpEffUtils
 {
+    public static final String SNPEFF_WORST = "SEW";
+    public static final String SNPEFF_CANONICAL = "SEC";
+
     // now only used in unit test
     @NotNull
     public static VariantImpact fromSnpEffEnrichedVariant(@NotNull final VariantContext context)
     {
-        final List<String> worst = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_WORST, Strings.EMPTY);
-        final List<String> canonical = context.getAttributeAsStringList(SnpEffEnrichment.SNPEFF_CANONICAL, Strings.EMPTY);
+        final List<String> worst = context.getAttributeAsStringList(SNPEFF_WORST, Strings.EMPTY);
+        final List<String> canonical = context.getAttributeAsStringList(SNPEFF_CANONICAL, Strings.EMPTY);
 
         // return SnpEffSummarySerialiser.fromDetails(worst, canonical);
         return VariantImpactSerialiser.fromVcfAnnotation(worst, canonical);

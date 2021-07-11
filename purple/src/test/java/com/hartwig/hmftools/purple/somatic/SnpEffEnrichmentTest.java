@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.somatic;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,12 +9,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactoryTest;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffEnrichment;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils;
 
 import org.apache.commons.compress.utils.Lists;
@@ -27,24 +25,31 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class SnpEffEnrichmentTest {
+public class SnpEffEnrichmentTest
+{
 
     private final List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
-    private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
-    private final Set<String> driverGenes = genePanel.driverGenes().stream().map(DriverGene::gene).collect(Collectors.toSet());
+    private final Set<String> driverGenes = Sets.newHashSet();
     private VCFCodec codec;
     private SnpEffEnrichment victim;
     private List<VariantContext> capture;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         codec = createTestCodec();
         capture = Lists.newArrayList();
+        driverGenes.add("RP11-307N16.6");
+        driverGenes.add("SPATA13");
+        driverGenes.add("SPATA19");
+        driverGenes.add("CUX1");
+        driverGenes.add("CYLD");
         victim = new SnpEffEnrichment(driverGenes, transcripts, capture::add);
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("SAMPLE"));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
@@ -52,7 +57,8 @@ public class SnpEffEnrichmentTest {
     }
 
     @Test
-    public void useFirstGeneIfNonInCanonical() {
+    public void useFirstGeneIfNonInCanonical()
+    {
         final String line =
                 "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;"
                         + "TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|"
@@ -66,7 +72,8 @@ public class SnpEffEnrichmentTest {
     }
 
     @Test
-    public void favourCanonicalGeneWhenPossible() {
+    public void favourCanonicalGeneWhenPossible()
+    {
         final String line =
                 "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;"
                         + "TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|"
@@ -80,7 +87,8 @@ public class SnpEffEnrichmentTest {
     }
 
     @Test
-    public void canonicalFieldsUseTranscriptAnnotation() {
+    public void canonicalFieldsUseTranscriptAnnotation()
+    {
         final String line =
                 "11\t133715264\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=40;QSS_NT=40;SGT=CC->CT;SOMATIC;TQSS=1;"
                         + "TQSS_NT=1;set=snvs;ANN=T|sequence_feature|MODERATE|SPATA19|ENSG00000166118|modified-residue:Phosphoserine|"
@@ -99,7 +107,8 @@ public class SnpEffEnrichmentTest {
     }
 
     @Test
-    public void testInframeIndelIgnoredForUTR() {
+    public void testInframeIndelIgnoredForUTR()
+    {
         final String template =
                 "7\t101898665\t.\tCAA\tC\t767\tPASS\tANN=C|3_prime_UTR_variant|MODIFIER|CUX1|ENSG00000257923|transcript|ENST00000360264|"
                         + "protein_coding|24/24|c.*6344_*6345delAA|||||6344|,C|3_prime_UTR_variant|MODIFIER|CUX1|ENSG00000257923|"
@@ -132,7 +141,8 @@ public class SnpEffEnrichmentTest {
     }
 
     @Test
-    public void testInframeIndel() {
+    public void testInframeIndel()
+    {
         final String template =
                 "16\t50813650\t.\tCCTCCTGTGAACTCACT\tC\t143\tPASS\tANN=C|frameshift_variant|HIGH|CYLD|ENSG00000083799|transcript|"
                         + "ENST00000311559|protein_coding|10/20|c.1214_1229delCTCCTGTGAACTCACT|p.Pro405fs|1605/5371|1214/2871|405/956||,"
