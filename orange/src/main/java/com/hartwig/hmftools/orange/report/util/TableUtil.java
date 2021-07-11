@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.util;
 
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -18,6 +19,19 @@ public class TableUtil {
     private static final float TABLE_BOTTOM_MARGIN = 20;
 
     private TableUtil() {
+    }
+
+    @NotNull
+    public static Table createNoneReportTable(@NotNull String tableTitle) {
+        Cell headerCell =
+                new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(tableTitle).addStyle(ReportResources.chapterTitleStyle()));
+
+        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
+        table.setKeepTogether(true);
+        table.setMarginBottom(TABLE_BOTTOM_MARGIN);
+        table.addCell(TableUtil.createContentCell(new Paragraph(DataUtil.NONE_STRING)));
+
+        return table;
     }
 
     @NotNull

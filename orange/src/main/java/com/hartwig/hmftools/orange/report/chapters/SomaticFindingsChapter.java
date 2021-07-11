@@ -3,13 +3,16 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.text.DecimalFormat;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.tables.SomaticDriverTable;
+import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
+import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.util.DocumentUtil;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
@@ -41,21 +44,39 @@ public class SomaticFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph("Somatic Findings").addStyle(ReportResources.chapterTitleStyle()));
 
-        Table driverVariantTable = SomaticDriverTable.build("Driver Variants (" + report.purple().reportableSomaticVariants().size() + ")",
-                report.purple().reportableSomaticVariants());
-        DocumentUtil.addCheckedTable(document, driverVariantTable, "No driver variants found");
+        String driverVariantTableTitle = "Driver Variants (" + report.purple().reportableSomaticVariants().size() + ")";
+        Table driverVariantTable = SomaticVariantTable.build(driverVariantTableTitle, report.purple().reportableSomaticVariants());
+        DocumentUtil.addCheckedTable(document, driverVariantTableTitle, driverVariantTable);
 
         List<ReportableVariant> nonDriverVariants = extractInterestingNonDrivers(report.purple().unreportedSomaticVariants());
-        Table nonDriverVariantTable =
-                SomaticDriverTable.build("Other coding variants (" + report.purple().unreportedSomaticVariants().size() + ")",
-                        nonDriverVariants);
-        DocumentUtil.addCheckedTable(document, nonDriverVariantTable, "No interesting other coding variants found!");
+        String nonDriverVariantTableTitle = "Other relevant coding variants (" + nonDriverVariants.size() + ")";
+        Table nonDriverVariantTable = SomaticVariantTable.build(nonDriverVariantTableTitle, nonDriverVariants);
+        DocumentUtil.addCheckedTable(document, nonDriverVariantTableTitle, nonDriverVariantTable);
 
-        document.add(new Paragraph("TODO: Add Somatic AMPs/DELs").addStyle(ReportResources.tableContentStyle()));
+        String driverAmpsDelsTitle = "Driver amps/dels (" + report.purple().reportableGainsLosses().size() + ")";
+        Table driverAmpsDelsTable = GeneCopyNumberTable.build(driverAmpsDelsTitle, report.purple().reportableGainsLosses());
+        DocumentUtil.addCheckedTable(document, driverAmpsDelsTitle, driverAmpsDelsTable);
+
+        List<ReportableGainLoss> nonAllosomeUnreported = removeAllosomes(report.purple().unreportedGainsLosses());
+        String unreportedAmpsDelsTitle = "Other non-allosome amps/dels (" + nonAllosomeUnreported.size() + ")";
+        Table unreportedAmpsDelsTable = GeneCopyNumberTable.build(unreportedAmpsDelsTitle, nonAllosomeUnreported);
+        DocumentUtil.addCheckedTable(document, unreportedAmpsDelsTitle, unreportedAmpsDelsTable);
+
         document.add(new Paragraph("TODO: Add Somatic Disruptions").addStyle(ReportResources.tableContentStyle()));
         document.add(new Paragraph("TODO: Add Somatic Fusions").addStyle(ReportResources.tableContentStyle()));
         document.add(new Paragraph("TODO: Add Somatic Viral Presence").addStyle(ReportResources.tableContentStyle()));
         document.add(new Paragraph("TODO: Add LINX Visualisations").addStyle(ReportResources.tableContentStyle()));
+    }
+
+    @NotNull
+    private static List<ReportableGainLoss> removeAllosomes(@NotNull  List<ReportableGainLoss> ampsDels) {
+        List<ReportableGainLoss> filtered = Lists.newArrayList();
+        for (ReportableGainLoss ampDel : ampsDels) {
+            if (!HumanChromosome.fromString(ampDel.chromosome()).isAllosome()) {
+                filtered.add(ampDel);
+            }
+        }
+        return filtered;
     }
 
     @NotNull

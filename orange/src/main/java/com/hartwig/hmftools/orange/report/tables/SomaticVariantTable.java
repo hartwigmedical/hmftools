@@ -15,12 +15,12 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class SomaticDriverTable {
+public final class SomaticVariantTable {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
     private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
-    private SomaticDriverTable() {
+    private SomaticVariantTable() {
     }
 
     @Nullable

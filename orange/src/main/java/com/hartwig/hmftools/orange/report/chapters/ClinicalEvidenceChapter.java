@@ -65,15 +65,20 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
 
         List<ProtectEvidence> noIclusion = noIclusion(report.protect());
-        Table onLabel = createTreatmentTable("On-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
-        Table offLabel = createTreatmentTable("Off-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
+
+        String onLabelTitle = "On-Label Evidence";
+        Table onLabelTable = createTreatmentTable(onLabelTitle, toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
+
+        String offLabelTitle = "Off-Label Evidence";
+        Table offLabelTable = createTreatmentTable(offLabelTitle, toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
 
         List<ProtectEvidence> iclusion = iclusionOnly(report.protect());
-        Table trials = createTreatmentTable("Trials", toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
+        String trialTitle = "Trials";
+        Table trialTable = createTreatmentTable(trialTitle, toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
 
-        DocumentUtil.addCheckedTable(document, onLabel, "No on-label evidence found!");
-        DocumentUtil.addCheckedTable(document, offLabel, "No off-label evidence found!");
-        DocumentUtil.addCheckedTable(document, trials, "No trials found!");
+        DocumentUtil.addCheckedTable(document, onLabelTitle, onLabelTable);
+        DocumentUtil.addCheckedTable(document, offLabelTitle, offLabelTable);
+        DocumentUtil.addCheckedTable(document, trialTitle, trialTable);
     }
 
     @NotNull
