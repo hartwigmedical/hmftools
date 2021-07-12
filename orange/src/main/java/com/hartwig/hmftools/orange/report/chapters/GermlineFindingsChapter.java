@@ -33,7 +33,7 @@ public class GermlineFindingsChapter implements ReportChapter {
             document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableContentStyle()));
             document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableContentStyle()));
         } else {
-            document.add(new Paragraph("N/A").addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph("NA").addStyle(ReportResources.tableContentStyle()));
         }
     }
 }

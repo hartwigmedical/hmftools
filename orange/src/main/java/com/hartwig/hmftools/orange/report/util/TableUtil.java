@@ -22,7 +22,7 @@ public class TableUtil {
     }
 
     @NotNull
-    public static Table createNoneReportTable(@NotNull String tableTitle) {
+    public static Table createEmptyTable(@NotNull String tableTitle) {
         Cell headerCell =
                 new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(tableTitle).addStyle(ReportResources.tableTitleStyle()));
 

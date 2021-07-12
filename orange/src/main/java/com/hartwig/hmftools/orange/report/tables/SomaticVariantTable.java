@@ -13,7 +13,6 @@ import com.itextpdf.layout.element.Table;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class SomaticVariantTable {
 
@@ -23,10 +22,10 @@ public final class SomaticVariantTable {
     private SomaticVariantTable() {
     }
 
-    @Nullable
+    @NotNull
     public static Table build(@NotNull String title, @NotNull List<ReportableVariant> driverVariants) {
         if (driverVariants.isEmpty()) {
-            return null;
+            return TableUtil.createEmptyTable(title);
         }
 
         Table table = TableUtil.createReportContentTable(new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -40,7 +39,7 @@ public final class SomaticVariantTable {
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
-            table.addCell(TableUtil.createContentCell("N/A"));
+            table.addCell(TableUtil.createContentCell("NA"));
             table.addCell(TableUtil.createContentCell(variant.biallelic() ? "Yes" : "No"));
             table.addCell(TableUtil.createContentCell(hotspotField(variant)));
             table.addCell(TableUtil.createContentCell(driverLikelihoodField(variant)));

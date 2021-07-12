@@ -140,7 +140,7 @@ public class FrontPageChapter implements ReportChapter {
         if (reportGermline) {
             return variantDriverString(report.purple().reportableGermlineVariants());
         } else {
-            return "N/A";
+            return "NA";
         }
     }
 
