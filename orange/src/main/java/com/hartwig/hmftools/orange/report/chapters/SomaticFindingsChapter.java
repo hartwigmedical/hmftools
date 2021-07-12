@@ -19,9 +19,12 @@ import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
+import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.HorizontalAlignment;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -51,8 +54,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         addFusions(document);
         addViralPresence(document);
         addSomaticGeneDisruptions(document);
-
-        document.add(new Paragraph("TODO: Add LINX Visualisations").addStyle(ReportResources.tableContentStyle()));
+        addLinxDriverPlots(document);
     }
 
     private void addSomaticVariants(@NotNull Document document) {
@@ -104,12 +106,12 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(driverAmpsDelsTable);
 
         List<ReportableGainLoss> sortedGains = sortedGains(report.purple().unreportedGainsLosses());
-        String sortedGainsTitle = "Non-driver amps (" + sortedGains.size() + ")";
+        String sortedGainsTitle = "Other amps (" + sortedGains.size() + ")";
         Table sortedGainsTable = GeneCopyNumberTable.build(sortedGainsTitle, sortedGains.subList(0, Math.min(10, sortedGains.size())));
         document.add(sortedGainsTable);
 
         List<ReportableGainLoss> lossesNoAllosomes = lossesNoAllosomes(report.purple().unreportedGainsLosses());
-        String unreportedLossesTitle = "Non-driver dels on autosomes (" + lossesNoAllosomes.size() + ")";
+        String unreportedLossesTitle = "Other dels on autosomes (" + lossesNoAllosomes.size() + ")";
         Table unreportedLossesTable =
                 GeneCopyNumberTable.build(unreportedLossesTitle, lossesNoAllosomes.subList(0, Math.min(10, lossesNoAllosomes.size())));
         document.add(unreportedLossesTable);
@@ -147,7 +149,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(driverFusionTable);
 
         List<LinxFusion> inframes = inframe(report.linx().unreportedFusions());
-        String inframeNonDriverTitle = "Non-driver inframe fusions (" + inframes.size() + ")";
+        String inframeNonDriverTitle = "Other inframe fusions (" + inframes.size() + ")";
         Table inframeNonDriverTable = FusionTable.build(inframeNonDriverTitle, inframes.subList(0, Math.min(10, inframes.size())));
         document.add(inframeNonDriverTable);
     }
@@ -177,5 +179,15 @@ public class SomaticFindingsChapter implements ReportChapter {
         String geneDisruptionTitle = "Gene disruptions (" + report.linx().geneDisruptions().size() + ")";
         Table geneDisruptionTable = GeneDisruptionTable.build(geneDisruptionTitle, report.linx().geneDisruptions());
         document.add(geneDisruptionTable);
+    }
+
+    private void addLinxDriverPlots(@NotNull Document document) {
+        document.add(new Paragraph("Linx driver plots").addStyle(ReportResources.tableTitleStyle()));
+        for (String plot : report.plots().linxDriverPlots()) {
+            Image image = ImageUtil.build(plot);
+            image.setMaxHeight(300);
+            image.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            document.add(image);
+        }
     }
 }

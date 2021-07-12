@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
@@ -141,9 +142,18 @@ public class OrangeAlgo {
 
     @NotNull
     private static OrangePlots buildPlots(@NotNull OrangeConfig config) {
+        LOGGER.info("Loading plots");
+        String linxPlotDir = config.linxPlotDirectory();
+        List<String> linxDriverPlots = Lists.newArrayList();
+        for (String file : new File(linxPlotDir).list()) {
+            linxDriverPlots.add(linxPlotDir + File.separator + file);
+        }
+        LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
+
         return ImmutableOrangePlots.builder()
                 .purpleComprehensiveCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
                 .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
+                .linxDriverPlots(linxDriverPlots)
                 .build();
     }
 }

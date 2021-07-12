@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,4 +15,7 @@ public abstract class OrangePlots {
 
     @NotNull
     public abstract String purpleClonalityPlot();
+
+    @NotNull
+    public abstract List<String> linxDriverPlots();
 }
