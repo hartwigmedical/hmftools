@@ -2,8 +2,10 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -44,6 +46,16 @@ public class SomaticFindingsChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph("Somatic Findings").addStyle(ReportResources.chapterTitleStyle()));
 
+        addSomaticVariants(document);
+        addSomaticAmpDels(document);
+
+        document.add(new Paragraph("TODO: Add Somatic Disruptions").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add Somatic Fusions").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add Somatic Viral Presence").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add LINX Visualisations").addStyle(ReportResources.tableContentStyle()));
+    }
+
+    private void addSomaticVariants(@NotNull Document document) {
         String driverVariantTableTitle = "Driver Variants (" + report.purple().reportableSomaticVariants().size() + ")";
         Table driverVariantTable = SomaticVariantTable.build(driverVariantTableTitle, report.purple().reportableSomaticVariants());
         DocumentUtil.addCheckedTable(document, driverVariantTableTitle, driverVariantTable);
@@ -52,31 +64,49 @@ public class SomaticFindingsChapter implements ReportChapter {
         String nonDriverVariantTableTitle = "Other potentially relevant coding variants (" + nonDriverVariants.size() + ")";
         Table nonDriverVariantTable = SomaticVariantTable.build(nonDriverVariantTableTitle, nonDriverVariants);
         DocumentUtil.addCheckedTable(document, nonDriverVariantTableTitle, nonDriverVariantTable);
+    }
 
+    private void addSomaticAmpDels(@NotNull Document document) {
         String driverAmpsDelsTitle = "Driver amps/dels (" + report.purple().reportableGainsLosses().size() + ")";
         Table driverAmpsDelsTable = GeneCopyNumberTable.build(driverAmpsDelsTitle, report.purple().reportableGainsLosses());
         DocumentUtil.addCheckedTable(document, driverAmpsDelsTitle, driverAmpsDelsTable);
 
-        List<ReportableGainLoss> nonAllosomeUnreported = removeAllosomes(report.purple().unreportedGainsLosses());
-        String unreportedAmpsDelsTitle = "Other non-allosome amps/dels (" + nonAllosomeUnreported.size() + ")";
-        Table unreportedAmpsDelsTable = GeneCopyNumberTable.build(unreportedAmpsDelsTitle, nonAllosomeUnreported);
-        DocumentUtil.addCheckedTable(document, unreportedAmpsDelsTitle, unreportedAmpsDelsTable);
+        List<ReportableGainLoss> sortedGains = sortedGains(report.purple().unreportedGainsLosses());
+        String sortedGainsTitle = "Non-driver amps (" + sortedGains.size() + ")";
+        Table sortedGainsTable = GeneCopyNumberTable.build(sortedGainsTitle, sortedGains.subList(0, Math.min(10, sortedGains.size())));
+        DocumentUtil.addCheckedTable(document, sortedGainsTitle, sortedGainsTable);
 
-        document.add(new Paragraph("TODO: Add Somatic Disruptions").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add Somatic Fusions").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add Somatic Viral Presence").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add LINX Visualisations").addStyle(ReportResources.tableContentStyle()));
+        List<ReportableGainLoss> lossesNoAllosomes = lossesNoAllosomes(report.purple().unreportedGainsLosses());
+        String unreportedLossesTitle = "Non-driver dels on autosomes (" + lossesNoAllosomes.size() + ")";
+        Table unreportedLossesTable =
+                GeneCopyNumberTable.build(unreportedLossesTitle, lossesNoAllosomes.subList(0, Math.min(10, lossesNoAllosomes.size())));
+        DocumentUtil.addCheckedTable(document, unreportedLossesTitle, unreportedLossesTable);
     }
 
     @NotNull
-    private static List<ReportableGainLoss> removeAllosomes(@NotNull  List<ReportableGainLoss> ampsDels) {
-        List<ReportableGainLoss> filtered = Lists.newArrayList();
-        for (ReportableGainLoss ampDel : ampsDels) {
-            if (!HumanChromosome.fromString(ampDel.chromosome()).isAllosome()) {
-                filtered.add(ampDel);
+    private static List<ReportableGainLoss> sortedGains(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
+        List<ReportableGainLoss> gains = Lists.newArrayList();
+        for (ReportableGainLoss gainLoss : unreportedGainsLosses) {
+            if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
+                    || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
+                gains.add(gainLoss);
             }
         }
-        return filtered;
+
+        return gains.stream().sorted((o1, o2) -> (int) (o1.copies() - o2.copies())).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static List<ReportableGainLoss> lossesNoAllosomes(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
+        List<ReportableGainLoss> lossesNoAllosomes = Lists.newArrayList();
+        for (ReportableGainLoss gainLoss : unreportedGainsLosses) {
+            if (!HumanChromosome.fromString(gainLoss.chromosome()).isAllosome() && (
+                    gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
+                            || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS)) {
+                lossesNoAllosomes.add(gainLoss);
+            }
+        }
+        return lossesNoAllosomes;
     }
 
     @NotNull
@@ -106,6 +136,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         return false;
     }
 
+    @NotNull
     private static ReportableVariant toReportable(@NotNull SomaticVariant variant) {
         return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.SOMATIC).driverLikelihood(Double.NaN).build();
     }
