@@ -241,7 +241,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
             {
                 if (!sequence.consistentWith(phasedEvidence))
                 {
-                    LL_LOGGER.warn("Expected allele {} filtered by {}", sequence.Allele, phasedEvidence);
+                    LL_LOGGER.debug("actual allele {} filtered by {}", sequence.Allele, phasedEvidence);
                 }
             }
         }

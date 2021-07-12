@@ -22,12 +22,10 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -157,7 +155,7 @@ public class ReferenceData
         }
 
         // load and register configured and known alleles
-        mAlleleCache.rebuildProteinAlleles(mConfig.ExpectedAlleles);
+        mAlleleCache.rebuildProteinAlleles(mConfig.ActualAlleles);
         mAlleleCache.rebuildProteinAlleles(mConfig.RestrictedAlleles);
 
         // apply PON
@@ -253,7 +251,7 @@ public class ReferenceData
 
         if(!mConfig.RestrictedAlleles.isEmpty())
         {
-            if(mConfig.ExpectedAlleles.stream().anyMatch(x -> x.matches(allele4d)))
+            if(mConfig.ActualAlleles.stream().anyMatch(x -> x.matches(allele4d)))
                 return false;
 
             if(mConfig.RestrictedAlleles.stream().noneMatch(x -> x.matches(allele4d)))

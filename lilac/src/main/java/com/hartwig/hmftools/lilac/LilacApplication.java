@@ -2,8 +2,6 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.lilac.LilacConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
@@ -90,8 +88,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class LilacApplication
@@ -248,15 +244,14 @@ public class LilacApplication
         List<PhasedEvidence> cPhasedEvidence = phasedEvidenceFactory.evidence(hlaCContext, cCandidateFrags);
 
         // validate phasing against expected sequences
-        List<HlaSequenceLoci> expectedSequences = Lists.newArrayList();
-        if(!mConfig.ExpectedAlleles.isEmpty())
+        if(!mConfig.ActualAlleles.isEmpty() && LL_LOGGER.isDebugEnabled())
         {
-            expectedSequences.addAll(mRefData.AminoAcidSequences.stream()
-                    .filter(x -> mConfig.ExpectedAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList()));
+            List<HlaSequenceLoci> actualSequences = mRefData.AminoAcidSequences.stream()
+                    .filter(x -> mConfig.ActualAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-            PhasedEvidence.logInconsistentEvidence(GENE_A, aPhasedEvidence, expectedSequences);
-            PhasedEvidence.logInconsistentEvidence(GENE_B, bPhasedEvidence, expectedSequences);
-            PhasedEvidence.logInconsistentEvidence(GENE_C, cPhasedEvidence, expectedSequences);
+            PhasedEvidence.logInconsistentEvidence(GENE_A, aPhasedEvidence, actualSequences);
+            PhasedEvidence.logInconsistentEvidence(GENE_B, bPhasedEvidence, actualSequences);
+            PhasedEvidence.logInconsistentEvidence(GENE_C, cPhasedEvidence, actualSequences);
         }
 
         // gather up all phased candidates
@@ -289,12 +284,7 @@ public class LilacApplication
             }
         }
 
-        if(!mConfig.RestrictedAlleles.isEmpty())
-        {
-            // if using a set of restricted allels, make no concession for any missed or common alleles
-            mConfig.ExpectedAlleles.stream().filter(x -> !candidateAlleles.contains(x)).forEach(x -> candidateAlleles.add(x));
-        }
-        else
+        if(mConfig.RestrictedAlleles.isEmpty())
         {
             // add common alleles - either if supported or forced for inclusion
             List<HlaAllele> missedCommonAlleles = mRefData.CommonAlleles.stream()
@@ -312,11 +302,11 @@ public class LilacApplication
 
         candidateAlleles.addAll(recoveredAlleles);
 
-        List<HlaAllele> missingExpected = mConfig.ExpectedAlleles.stream().filter(x -> !candidateAlleles.contains(x)).collect(Collectors.toList());
+        List<HlaAllele> missingExpected = mConfig.ActualAlleles.stream().filter(x -> !candidateAlleles.contains(x)).collect(Collectors.toList());
 
         if (!missingExpected.isEmpty())
         {
-            LL_LOGGER.info("  including {} expected alleles as candidates: {}",
+            LL_LOGGER.info("  including {} known actual alleles as candidates: {}",
                     missingExpected.size(), HlaAllele.toString(missingExpected));
 
             candidateAlleles.addAll(missingExpected);
@@ -400,14 +390,35 @@ public class LilacApplication
             System.exit(1);
         }
 
-        if(!expectedSequences.isEmpty())
+        ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
+
+        if(!mConfig.ActualAlleles.isEmpty())
         {
-            ComplexCoverage expectedCoverage = ComplexBuilder.calcProteinCoverage(
-                    mRefFragAlleles, expectedSequences.stream().map(x -> x.Allele).collect(Collectors.toList()));
-            LL_LOGGER.info("expected allele coverage: {}", expectedCoverage);
+            // search amongst the ranked candidates otherwise manually compute coverage
+            ComplexCoverage actualAllelesCoverage = null;
+
+            for(ComplexCoverage rankedCoverage : mRankedComplexes)
+            {
+                if(rankedCoverage.getAlleles().size() != mConfig.ActualAlleles.size())
+                    continue;
+
+                if(rankedCoverage.getAlleles().stream().allMatch(x -> mConfig.ActualAlleles.contains(x)))
+                {
+                    actualAllelesCoverage = rankedCoverage;
+                    break;
+                }
+            }
+
+            if(actualAllelesCoverage == null)
+            {
+                actualAllelesCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, mConfig.ActualAlleles);
+
+            }
+
+            LL_LOGGER.info("forcing winning coverage to actual alleles");
+            winningRefCoverage = actualAllelesCoverage;
         }
 
-        ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
         winningRefCoverage.expandToSixAlleles();
 
         List<HlaAllele> winningAlleles = winningRefCoverage.getAlleles();

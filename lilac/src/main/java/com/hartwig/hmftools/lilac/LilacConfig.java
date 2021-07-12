@@ -70,8 +70,8 @@ public class LilacConfig
     public final boolean RunValidation;
     public final int MaxEliminationCandidates;
 
-    // pre-determined sample alleles, always kept and scored, primarily for testing
-    public final List<HlaAllele> ExpectedAlleles;
+    // optional: pre-determine sample alleles, forced to be the final solution so coverage can be reported
+    public final List<HlaAllele> ActualAlleles;
 
     // limit analysis from full data set to these + other configured alleles, for testing purposes
     public final List<HlaAllele> RestrictedAlleles;
@@ -100,7 +100,7 @@ public class LilacConfig
     private static final String TOP_SCORE_THRESHOLD = "top_score_threshold";
 
     // debug and technical config
-    private static final String EXPECTED_ALLELES = "expected_alleles";
+    private static final String ACTUAL_ALLELES = "actual_alleles";
     private static final String RESTRICTED_ALLELES = "restricted_alleles";
     private static final String THREADS = "threads";
     private static final String DEBUG_PHASING = "debug_phasing";
@@ -163,7 +163,7 @@ public class LilacConfig
 
         TopScoreThreshold = min(getConfigValue(cmd, TOP_SCORE_THRESHOLD, DEFAULT_TOP_SCORE_THRESHOLD), 0.5);
 
-        ExpectedAlleles = parseAlleleList(cmd.getOptionValue(EXPECTED_ALLELES));
+        ActualAlleles = parseAlleleList(cmd.getOptionValue(ACTUAL_ALLELES));
         RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
         MaxEliminationCandidates = Integer.parseInt(cmd.getOptionValue(MAX_ELIM_CANDIDATES, "0"));
 
@@ -230,9 +230,9 @@ public class LilacConfig
             LL_LOGGER.info("running validation routines");
         }
 
-        if(!ExpectedAlleles.isEmpty())
+        if(!ActualAlleles.isEmpty())
         {
-            LL_LOGGER.info("expected alleles: {}", HlaAllele.toString(ExpectedAlleles));
+            LL_LOGGER.info("expected alleles: {}", HlaAllele.toString(ActualAlleles));
         }
 
         if(!RestrictedAlleles.isEmpty())
@@ -268,7 +268,7 @@ public class LilacConfig
         CopyNumberFile = "";
         SomaticVariantsFile = "";
 
-        ExpectedAlleles = Lists.newArrayList();
+        ActualAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
         MaxEliminationCandidates = 0;
 
@@ -298,7 +298,7 @@ public class LilacConfig
         options.addOption(MIN_FRAGMENTS_PER_ALLELE, true,"MIN_FRAGMENTS_PER_ALLELE");
         options.addOption(MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"MIN_FRAGMENTS_TO_REMOVE_SINGLE");
         options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
-        options.addOption(EXPECTED_ALLELES, true,"Comma separated expected alleles for the sample");
+        options.addOption(ACTUAL_ALLELES, true,"Comma separated known actual alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(MAX_ELIM_CANDIDATES, true, "Revert to only common alleles if candidate allele count exceeds this after elimination");
         options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
