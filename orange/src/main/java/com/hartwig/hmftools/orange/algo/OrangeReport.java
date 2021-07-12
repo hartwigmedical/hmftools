@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
@@ -44,6 +45,9 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract List<ProtectEvidence> protect();
+
+    @NotNull
+    public abstract Map<String, Double> germlineMVLHPerGene();
 
     @NotNull
     public abstract OrangePlots plots();

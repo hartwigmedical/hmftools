@@ -10,30 +10,27 @@ import com.hartwig.hmftools.orange.report.util.VariantUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class SomaticVariantTable {
+public final class GermlineVariantTable {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#0.0");
-    private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
-    private SomaticVariantTable() {
+    private GermlineVariantTable() {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<ReportableVariant> driverVariants) {
-        if (driverVariants.isEmpty()) {
+    public static Table build(@NotNull String title, @NotNull List<ReportableVariant> variants) {
+        if (variants.isEmpty()) {
             return TableUtil.createEmptyTable(title);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(new float[] { 3, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("CN"), TableUtil.createHeaderCell("MACN"),
                         TableUtil.createHeaderCell("VCN"), TableUtil.createHeaderCell("RNA VAF"), TableUtil.createHeaderCell("Biallelic"),
-                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("DL"), TableUtil.createHeaderCell("CL"),
-                        TableUtil.createHeaderCell("Phase") });
+                        TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Genotype") });
 
-        for (ReportableVariant variant : VariantUtil.sort(driverVariants)) {
+        for (ReportableVariant variant : VariantUtil.sort(variants)) {
             table.addCell(TableUtil.createContentCell(VariantUtil.variantField(variant)));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
@@ -41,21 +38,9 @@ public final class SomaticVariantTable {
             table.addCell(TableUtil.createContentCell("NA"));
             table.addCell(TableUtil.createContentCell(variant.biallelic() ? "Yes" : "No"));
             table.addCell(TableUtil.createContentCell(VariantUtil.hotspotField(variant)));
-            table.addCell(TableUtil.createContentCell(driverLikelihoodField(variant)));
-            table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(variant.clonalLikelihood() * 100)));
-            table.addCell(TableUtil.createContentCell(
-                    variant.localPhaseSet() != null ? String.valueOf(variant.localPhaseSet()) : Strings.EMPTY));
+            table.addCell(TableUtil.createContentCell(variant.genotypeStatus().simplifiedDisplay()));
         }
 
         return TableUtil.createWrappingReportTable(table, title);
-    }
-
-    @NotNull
-    private static String driverLikelihoodField(@NotNull ReportableVariant variant) {
-        if (Double.isNaN(variant.driverLikelihood())) {
-            return Strings.EMPTY;
-        } else {
-            return PERCENTAGE_FORMAT.format(variant.driverLikelihood() * 100);
-        }
     }
 }

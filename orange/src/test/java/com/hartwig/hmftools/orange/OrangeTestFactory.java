@@ -17,6 +17,7 @@ public final class OrangeTestFactory {
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
+    private static final String SAGE_GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/sage_germline/ref_sample.sage.gene.coverage.tsv";
     private static final String PURPLE_PURITY_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = RUN_DIRECTORY + "/purple/tumor_sample.purple.qc";
     private static final String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/purple/tumor_sample.driver.catalog.somatic.tsv";
@@ -53,6 +54,7 @@ public final class OrangeTestFactory {
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
+                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleGeneCopyNumberTsv(PURPLE_GENE_COPY_NUMBER_TSV)
