@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -62,18 +62,20 @@ public class SomaticFindingsChapter implements ReportChapter {
         Table driverVariantTable = SomaticVariantTable.build(driverVariantTableTitle, report.purple().reportableSomaticVariants());
         document.add(driverVariantTable);
 
-        List<ReportableVariant> nonDriverVariants = extractInterestingNonDrivers(report.purple().unreportedSomaticVariants());
-        String nonDriverVariantTableTitle = "Other potentially relevant coding variants (" + nonDriverVariants.size() + ")";
-        Table nonDriverVariantTable = SomaticVariantTable.build(nonDriverVariantTableTitle, nonDriverVariants);
-        document.add(nonDriverVariantTable);
+        List<ReportableVariant> otherVariants = otherInterestingVariants(report.purple().unreportedSomaticVariants(), report.protect());
+        String otherVariantTableTitle = "Other potentially relevant coding variants (" + otherVariants.size() + ")";
+        Table otherVariantTable = SomaticVariantTable.build(otherVariantTableTitle, otherVariants);
+        document.add(otherVariantTable);
     }
 
     @NotNull
-    private static List<ReportableVariant> extractInterestingNonDrivers(@NotNull List<SomaticVariant> variants) {
+    private static List<ReportableVariant> otherInterestingVariants(@NotNull List<SomaticVariant> variants,
+            @NotNull List<ProtectEvidence> evidences) {
         List<ReportableVariant> filtered = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
             if (!variant.reported()) {
-                if (variant.isHotspot() || hasReportedVariantWithPhase(variants, variant.localPhaseSet())) {
+                if (variant.isHotspot() || hasReportedVariantWithPhase(variants, variant.localPhaseSet()) || hasEvidence(evidences,
+                        variant.genomicEvent())) {
                     filtered.add(toReportable(variant));
                 }
             }
@@ -144,25 +146,35 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addFusions(@NotNull Document document) {
-        String driverFusionTitle = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
-        Table driverFusionTable = FusionTable.build(driverFusionTitle, report.linx().reportableFusions());
+        String driverFusionTableTitle = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
+        Table driverFusionTable = FusionTable.build(driverFusionTableTitle, report.linx().reportableFusions());
         document.add(driverFusionTable);
 
-        List<LinxFusion> inframes = inframe(report.linx().unreportedFusions());
-        String inframeNonDriverTitle = "Other inframe fusions (" + inframes.size() + ")";
-        Table inframeNonDriverTable = FusionTable.build(inframeNonDriverTitle, inframes.subList(0, Math.min(10, inframes.size())));
-        document.add(inframeNonDriverTable);
+        List<LinxFusion> otherFusions = otherInterestingFusions(report.linx().unreportedFusions(), report.protect());
+        String otherFusionTableTitle = "Other potentially interesting fusions (" + otherFusions.size() + ")";
+        Table otherFusionTable = FusionTable.build(otherFusionTableTitle, otherFusions.subList(0, Math.min(10, otherFusions.size())));
+        document.add(otherFusionTable);
     }
 
     @NotNull
-    private static List<LinxFusion> inframe(@NotNull List<LinxFusion> fusions) {
+    private static List<LinxFusion> otherInterestingFusions(@NotNull List<LinxFusion> fusions, @NotNull List<ProtectEvidence> evidences) {
         List<LinxFusion> filtered = Lists.newArrayList();
         for (LinxFusion fusion : fusions) {
-            if (fusion.phased() == FusionPhasedType.INFRAME) {
+            if (!fusion.reportedType().equals("NONE") || hasEvidence(evidences, fusion.genomicEvent())) {
                 filtered.add(fusion);
             }
         }
         return filtered;
+    }
+
+    private static boolean hasEvidence(@NotNull List<ProtectEvidence> evidences, @NotNull String genomicEvent) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.genomicEvent().equals(genomicEvent)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void addViralPresence(@NotNull Document document) {

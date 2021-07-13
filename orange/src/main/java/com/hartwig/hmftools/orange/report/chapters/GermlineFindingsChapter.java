@@ -59,16 +59,26 @@ public class GermlineFindingsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell("")});
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell("") });
 
+        int count = 0;
         for (Map.Entry<String, Double> mvlhEntry : report.germlineMVLHPerGene().entrySet()) {
             double mvlh = mvlhEntry.getValue();
             if (mvlh > 0.01) {
+                count++;
                 table.addCell(TableUtil.createContentCell(mvlhEntry.getKey()));
                 table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(mvlh * 100)));
                 table.addCell(TableUtil.createContentCell(""));
             }
         }
+
+        // Make sure all rows are properly filled in case table is sparse.
+        if (count % 4 != 0) {
+            for (int i = 0; i < 12 - 3 * (count % 4); i++) {
+                table.addCell(TableUtil.createContentCell(""));
+            }
+        }
+
         document.add(TableUtil.createWrappingReportTable(table, "Genes with missed variant likelihood > 1%"));
     }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -105,7 +106,7 @@ public class FrontPageChapter implements ReportChapter {
 
         Image circosImage = ImageUtil.build(report.plots().purpleComprehensiveCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(300);
+        circosImage.setMaxHeight(280);
 
         topTable.addCell(summary);
         topTable.addCell(circosImage);
@@ -115,7 +116,7 @@ public class FrontPageChapter implements ReportChapter {
 
         Image clonalityImage = ImageUtil.build(report.plots().purpleClonalityPlot());
         clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        clonalityImage.setMaxHeight(300);
+        clonalityImage.setMaxHeight(280);
 
         table.addCell(clonalityImage);
         document.add(table);
@@ -140,7 +141,7 @@ public class FrontPageChapter implements ReportChapter {
         if (variants.isEmpty()) {
             return "None";
         } else {
-            Set<String> highDriverGenes = Sets.newTreeSet();
+            Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
             for (ReportableVariant variant : variants) {
                 if (variant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH) {
                     highDriverGenes.add(variant.gene());
@@ -200,7 +201,7 @@ public class FrontPageChapter implements ReportChapter {
         if (report.virusInterpreter().reportableViruses().isEmpty()) {
             return "None";
         } else {
-            Set<String> viruses = Sets.newTreeSet();
+            Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
             for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
                 if (virus.interpretation() != null) {
                     viruses.add(virus.interpretation().toString());
@@ -272,7 +273,7 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel, boolean reportGermline) {
-        Set<EvidenceLevel> levels = Sets.newTreeSet();
+        Set<EvidenceLevel> levels = Sets.newTreeSet(Comparator.naturalOrder());
         Set<String> treatments = Sets.newHashSet();
         for (ProtectEvidence evidence : evidences) {
             if (evidence.onLabel() == requireOnLabel && (reportGermline || !evidence.germline())) {
