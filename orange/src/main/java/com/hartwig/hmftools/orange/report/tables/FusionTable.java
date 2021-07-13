@@ -29,8 +29,8 @@ public final class FusionTable {
         Table table = TableUtil.createReportContentTable(new float[] { 2, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' End"),
                         TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("CN"),
-                        TableUtil.createHeaderCell("Phased"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Links"),
-                        TableUtil.createHeaderCell("Term.")});
+                        TableUtil.createHeaderCell("Phased"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Chain"),
+                        TableUtil.createHeaderCell("Terminated")});
 
         for (LinxFusion fusion : sort(fusions)) {
             table.addCell(TableUtil.createContentCell(fusion.name()));

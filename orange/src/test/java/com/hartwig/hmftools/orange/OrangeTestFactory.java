@@ -46,7 +46,7 @@ public final class OrangeTestFactory {
 
     @NotNull
     public static OrangeConfig createTestOrangeConfig() {
-        ReportConfig reportConfig = ImmutableReportConfig.builder().reportGermline(true).maxReportingLevel(EvidenceLevel.B).build();
+        ReportConfig reportConfig = ImmutableReportConfig.builder().reportGermline(true).maxEvidenceLevel(EvidenceLevel.B).build();
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)

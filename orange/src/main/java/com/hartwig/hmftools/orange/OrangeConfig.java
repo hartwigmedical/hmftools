@@ -64,7 +64,7 @@ public interface OrangeConfig {
 
     // Some additional optional params and flags
     String DISABLE_GERMLINE = "disable_germline";
-    String MAX_REPORTING_LEVEL = "max_reporting_level";
+    String MAX_EVIDENCE_LEVEL = "max_evidence_level";
     String LOG_DEBUG = "log_debug";
 
     @NotNull
@@ -103,7 +103,7 @@ public interface OrangeConfig {
 
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(DISABLE_GERMLINE, false, "If provided, germline results are not added to the report");
-        options.addOption(MAX_REPORTING_LEVEL, true, "If provided, only evidence up to provided maximum level are reported");
+        options.addOption(MAX_EVIDENCE_LEVEL, true, "If provided, only evidence up to provided maximum level are added to report");
 
         return options;
     }
@@ -201,8 +201,8 @@ public interface OrangeConfig {
 
         ReportConfig report = ImmutableReportConfig.builder()
                 .reportGermline(!cmd.hasOption(DISABLE_GERMLINE))
-                .maxReportingLevel(cmd.hasOption(MAX_REPORTING_LEVEL)
-                        ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_REPORTING_LEVEL))
+                .maxEvidenceLevel(cmd.hasOption(MAX_EVIDENCE_LEVEL)
+                        ? EvidenceLevel.valueOf(cmd.getOptionValue(MAX_EVIDENCE_LEVEL))
                         : null)
                 .build();
 
@@ -210,8 +210,8 @@ public interface OrangeConfig {
             LOGGER.info("Germline reporting has been disabled");
         }
 
-        if (report.maxReportingLevel() != null) {
-            LOGGER.info("Max reporting level configured to '{}'", report.maxReportingLevel());
+        if (report.maxEvidenceLevel() != null) {
+            LOGGER.info("Max reporting level configured to '{}'", report.maxEvidenceLevel());
         }
 
         return ImmutableOrangeConfig.builder()

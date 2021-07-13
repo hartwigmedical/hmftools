@@ -13,6 +13,6 @@ public interface ReportConfig {
     boolean reportGermline();
 
     @Nullable
-    EvidenceLevel maxReportingLevel();
+    EvidenceLevel maxEvidenceLevel();
 
 }
