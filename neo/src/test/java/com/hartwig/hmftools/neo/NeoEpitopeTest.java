@@ -11,16 +11,16 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.STOP_LOST;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.neo.NeoEpitopeUtilsTest.CHR_1;
-import static com.hartwig.hmftools.neo.NeoEpitopeUtilsTest.GENE_ID_1;
-import static com.hartwig.hmftools.neo.NeoEpitopeUtilsTest.TRANS_ID_1;
-import static com.hartwig.hmftools.neo.NeoEpitopeUtilsTest.generateRandomBases;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,7 +28,7 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
@@ -43,7 +43,6 @@ public class NeoEpitopeTest
         final MockRefGenome refGenome = new MockRefGenome();
 
         final String chr1Bases = generateRandomBases(120);
-
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         // tests: SNP, delete, insertion

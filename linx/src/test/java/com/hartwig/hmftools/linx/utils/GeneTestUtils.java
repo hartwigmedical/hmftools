@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.generateExonStarts;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.generateExonStarts;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;

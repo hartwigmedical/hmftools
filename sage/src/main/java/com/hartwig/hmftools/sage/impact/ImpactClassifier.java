@@ -1,14 +1,26 @@
 package com.hartwig.hmftools.sage.impact;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.sage.impact.SpliceClassifier.isWithinSpliceRegion;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.codon.AminoAcidConverter;
+import com.hartwig.hmftools.common.codon.Codons;
+import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class ImpactClassifier
@@ -106,13 +118,86 @@ public class ImpactClassifier
 
     private VariantTransImpact classifyExonicPosition(final VariantData variant, final TranscriptData transData, final ExonData exon)
     {
-        //
+        if(variant.isIndel())
+        {
+            // for a DEL on the reverse strand this is position + baseDiff - 1
+            // for an insert on the reverse strand this is position + 1
 
+            // final CodingBaseData cbData = calcCodingBases(transData, position);
 
+            if((variant.baseDiff() % 3) == 0)
+            {
+                // could use phasing info to set conservative vs disruptive type
+                if(variant.isDeletion())
+                    return new VariantTransImpact(transData, INFRAME_DELETION);
+                else
+                    return new VariantTransImpact(transData, INFRAME_INSERTION);
+            }
+            else
+            {
+                return new VariantTransImpact(transData, FRAMESHIFT_VARIANT);
+            }
+        }
+        else
+        {
+            // determine phase at upstream start of variant, then get whole codons of
+            int varLength = variant.Ref.length();
+            int upstreamStartPos = transData.Strand == POS_STRAND ? variant.Position : variant.Position + varLength - 1;
+            final CodingBaseData cbData = calcCodingBases(transData, upstreamStartPos);
 
-        // TEMP:
-        return new VariantTransImpact(transData, MISSENSE_VARIANT);
+            int openCodonBases = TranscriptUtils.getUpstreamOpenCodonBases(cbData.Phase, transData.Strand, variant.baseDiff());
+            // int downOpenCodingBases = TranscriptUtils.getDownstreamOpenCodonBases(cbData.Phase, transData.Strand, variant.baseDiff(), variant.Alt);
 
-        // return null;
+            int codingBaseLen = (int)(Math.ceil((openCodonBases + varLength) / 3.0)) * 3;
+
+            boolean searchUp = transData.Strand == POS_STRAND;
+
+            List<int[]> codingRanges = getCodingBaseRanges(transData, upstreamStartPos, searchUp, codingBaseLen);
+            String refCodingBases = mRefGenome.getBaseString(variant.Chromosome,codingRanges);
+
+            String altCodingBases;
+            String refAminoAcids;
+            String altAminoAcids;
+
+            if(transData.Strand == POS_STRAND)
+            {
+                if(openCodonBases > 0)
+                {
+                    altCodingBases = refCodingBases.substring(0, openCodonBases) + variant.Alt
+                            + refCodingBases.substring(openCodonBases + varLength);
+                }
+                else
+                {
+                    altCodingBases = variant.Alt + refCodingBases.substring(varLength);
+                }
+
+                refAminoAcids = Codons.aminoAcids(refCodingBases);
+                altAminoAcids = Codons.aminoAcids(altCodingBases);
+            }
+            else
+            {
+                if(openCodonBases > 0)
+                {
+                    altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength - openCodonBases) + variant.Alt
+                            + refCodingBases.substring(codingBaseLen - openCodonBases);
+                }
+                else
+                {
+                    altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength) + variant.Alt;
+                }
+
+                refAminoAcids = AminoAcidConverter.reverseStrandBases(Codons.aminoAcids(refCodingBases));
+                altAminoAcids = AminoAcidConverter.reverseStrandBases(Codons.aminoAcids(altCodingBases));
+            }
+
+            if(refAminoAcids.equals(altAminoAcids))
+            {
+                return new VariantTransImpact(transData, SYNONYMOUS_VARIANT);
+            }
+            else
+            {
+                return new VariantTransImpact(transData, MISSENSE_VARIANT);
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.isofox.novel.cohort.AcceptorDonorType.DONOR;
 
 import static junit.framework.TestCase.assertTrue;
 
-import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariant;
 
 import org.junit.Test;

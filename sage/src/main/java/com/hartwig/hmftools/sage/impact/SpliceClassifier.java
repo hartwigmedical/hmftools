@@ -38,9 +38,9 @@ public class SpliceClassifier
             exonEndSpliceRegionStart = exon.End - SPLICE_ACCEPTOR_BASES;
         }
 
-        if(exonStartSpliceRegionStart >= variant.Position && variant.Position <= exonStartSpliceRegionEnd)
+        if(exonStartSpliceRegionStart <= variant.Position && variant.Position <= exonStartSpliceRegionEnd)
             return true;
-        else if(exonEndSpliceRegionStart >= variant.Position && variant.Position <= exonEndSpliceRegionEnd)
+        else if(exonEndSpliceRegionStart <= variant.Position && variant.Position <= exonEndSpliceRegionEnd)
             return true;
         else
             return false;

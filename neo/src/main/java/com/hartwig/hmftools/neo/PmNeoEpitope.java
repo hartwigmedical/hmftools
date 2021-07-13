@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
+import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
@@ -124,9 +125,12 @@ public class PmNeoEpitope extends NeoEpitope
     }
 
     private boolean posStrand() { return TransData[FS_UP].Strand == POS_STRAND; }
+
+    private boolean isBaseChange() { return mIndelBaseDiff == 0; }
+    private boolean isIndel() { return mIndelBaseDiff != 0; }
     private boolean isInsert() { return mIndelBaseDiff > 0; }
     private boolean isDeletion() { return mIndelBaseDiff < 0; }
-    private boolean isBaseChange() { return mIndelBaseDiff == 0; }
+
     public int unsplicedDistance() { return 0; }
     public int skippedAcceptors() { return 0; }
     public int skippedDonors() { return 0; }
@@ -162,57 +166,13 @@ public class PmNeoEpitope extends NeoEpitope
 
     private int getUpstreamOpenCodonBases()
     {
-        int phase = getUpstreamStartPhase();
-
-        // return the number of open codon bases up to but not including the PM's position
-        if(posStrand() || isBaseChange())
-        {
-            if(phase == PHASE_1)
-                return 0;
-            else if(phase == PHASE_2)
-                return 1;
-            else
-                return isBaseChange() ? 2 : 0; // INDEL leaves the mutation base unchanged, so if it ends a codon, it's not novel
-        }
-        else
-        {
-            if(phase == PHASE_1)
-                return 1;
-            else if(phase == PHASE_2)
-                return 2;
-            else
-                return isBaseChange() ? 2 : 0;
-        }
+        return TranscriptUtils.getUpstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, mIndelBaseDiff);
     }
 
     private int getDownstreamOpenCodonBases()
     {
         // determine the phase at the base after the mutation - last base of an MNV/SNV, and next base for an INS or DEL
-        int mutationTicks;
-
-        if(posStrand())
-        {
-            mutationTicks = isDeletion() ? 1 : mPointMutation.Alt.length();
-        }
-        else
-        {
-            // need to go to the phase (prior to?) the ALT
-            if(isBaseChange())
-                mutationTicks = mPointMutation.Alt.length();
-            else if(isInsert())
-                mutationTicks = mPointMutation.Alt.length() + 1;
-            else
-                mutationTicks = 2;
-        }
-
-        int postMutationPhase = tickPhaseForward(Phases[FS_UP], mutationTicks);
-
-        if(postMutationPhase == PHASE_0)
-            return 1;
-        else if(postMutationPhase == PHASE_1)
-            return 0;
-        else
-            return 2;
+        return TranscriptUtils.getDownstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, mIndelBaseDiff, mPointMutation.Alt);
     }
 
     public void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids)

@@ -28,7 +28,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.GeneTestUtils;
+import com.hartwig.hmftools.common.test.GeneTestUtils;
 
 import org.junit.Test;
 

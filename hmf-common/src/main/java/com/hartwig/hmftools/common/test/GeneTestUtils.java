@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.gene;
+package com.hartwig.hmftools.common.test;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -15,10 +15,28 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public final class GeneTestUtils
 {
+    public static final String CHR_1 = "1";
+    public static final String CHR_2 = "2";
+    public static final String CHR_3 = "3";
+
+    public static final String GENE_ID_1 = "ENSG001";
+    public static final String GENE_ID_2 = "ENSG002";
+    public static final String GENE_ID_3 = "ENSG003";
+    public static final String GENE_NAME_1 = "GENE_1";
+    public static final String GENE_NAME_2 = "GENE_2";
+    public static final String GENE_NAME_3 = "GENE_3";
+
+    public static final int TRANS_ID_1 = 1;
+    public static final int TRANS_ID_2 = 2;
+    public static final int TRANS_ID_3 = 3;
+
     public static BreakendGeneData createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
             final String chromosome, int position, int orientation)
     {

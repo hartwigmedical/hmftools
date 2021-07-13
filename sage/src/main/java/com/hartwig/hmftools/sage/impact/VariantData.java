@@ -27,6 +27,8 @@ public class VariantData
     public final String Ref;
     public final String Alt;
 
+    private final int mIndelBaseDiff;
+
     private final List<VariantTransImpact> mImpacts;
 
     private final List<SnpEffAnnotation> mSnpEffAnnotations;
@@ -37,6 +39,8 @@ public class VariantData
         Position = position;
         Ref = ref;
         Alt = alt;
+
+        mIndelBaseDiff = Alt.length() - Ref.length();
 
         mImpacts = Lists.newArrayList();
         mSnpEffAnnotations = Lists.newArrayList();
@@ -55,11 +59,17 @@ public class VariantData
 
     public VariantType type()
     {
-        if(Ref.equals(Alt))
+        if(mIndelBaseDiff == 0)
             return Ref.length() == 1 ? SNP : MNP;
 
         return INDEL;
     }
+
+    public int baseDiff() { return mIndelBaseDiff; }
+    public boolean isBaseChange() { return mIndelBaseDiff == 0; }
+    public boolean isIndel() { return mIndelBaseDiff != 0; }
+    public boolean isInsert() { return mIndelBaseDiff > 0; }
+    public boolean isDeletion() { return mIndelBaseDiff < 0; }
 
     public List<VariantTransImpact> getImpacts() { return mImpacts; }
 

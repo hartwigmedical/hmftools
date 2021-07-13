@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.neo;
 
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
@@ -17,17 +21,13 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class NeoEpitopeUtilsTest
 {
-    public static final String CHR_1 = "";
-    public static final String GENE_ID_1 = "ENSG001";
-    public static final int TRANS_ID_1 = 1;
-
     @Test
     public void testDnaRnaRoutines()
     {
@@ -41,25 +41,6 @@ public class NeoEpitopeUtilsTest
         Assert.assertTrue(reverseStrandDna.equals("AGTCGAAGCT"));
 
         Assert.assertTrue(dnaBases.equals(reverseStrandBases(reverseStrandDna)));
-    }
-
-    public static String generateRandomBases(int length)
-    {
-        char[] str = new char[length];
-        String bases = "ACGT";
-
-        int baseIndex = 0;
-        for(int i = 0; i < length; ++i)
-        {
-            str[i] = bases.charAt(baseIndex);
-
-            if(baseIndex == 3)
-                baseIndex = 0;
-            else
-                ++baseIndex;
-        }
-
-        return String.valueOf(str);
     }
 
     @Test

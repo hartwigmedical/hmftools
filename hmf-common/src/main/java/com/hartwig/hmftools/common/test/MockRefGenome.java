@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.common.genome.refgenome;
+package com.hartwig.hmftools.common.test;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 // test implementation of the ref genome
 public class MockRefGenome implements RefGenomeInterface
@@ -41,6 +42,41 @@ public class MockRefGenome implements RefGenomeInterface
                 .forEach(x -> chrBases.substring(x[0], x[1] + 1));
 
         return refBases.toString();
+    }
+
+    public static final char[] DNA_BASES = {'A', 'C', 'G', 'T'};
+
+    public static String generateRandomBases(int length)
+    {
+        char[] str = new char[length];
+
+        int baseIndex = 0;
+        for(int i = 0; i < length; ++i)
+        {
+            str[i] = DNA_BASES[baseIndex];
+
+            if(baseIndex == DNA_BASES.length - 1)
+                baseIndex = 0;
+            else
+                ++baseIndex;
+        }
+
+        return String.valueOf(str);
+    }
+
+    public static String getNextBase(final String base) { return String.valueOf(getNextBase(base.charAt(0))); }
+
+    public static char getNextBase(final char base)
+    {
+        for(int i = 0; i < DNA_BASES.length; ++i)
+        {
+            if(DNA_BASES[i] == base)
+            {
+                return i == DNA_BASES.length - 1 ? DNA_BASES[0] : DNA_BASES[i + 1];
+            }
+        }
+
+        return base;
     }
 
 }

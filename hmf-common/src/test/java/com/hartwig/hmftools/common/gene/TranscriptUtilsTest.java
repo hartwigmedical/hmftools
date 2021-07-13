@@ -15,6 +15,8 @@ import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.test.GeneTestUtils;
+
 import org.junit.Test;
 
 public class TranscriptUtilsTest
