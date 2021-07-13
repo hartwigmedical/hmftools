@@ -157,7 +157,7 @@ public final class Codons
     }
 
     @NotNull
-    public static String aminoAcids(@NotNull String dna)
+    public static String formAminoAcids(@NotNull String dna)
     {
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < dna.length() - 2; i += 3)

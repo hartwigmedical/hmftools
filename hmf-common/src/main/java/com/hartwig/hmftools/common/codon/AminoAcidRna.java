@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.codon.Codons.DNA_STOP_CODON_3;
 import static com.hartwig.hmftools.common.codon.Codons.aminoAcid;
 import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 
-public class AminoAcidConverter
+public class AminoAcidRna
 {
     private static final String RNA_STOP_CODON_1 = swapDnaToRna(DNA_STOP_CODON_1);
     private static final String RNA_STOP_CODON_2 = swapDnaToRna(DNA_STOP_CODON_2);
@@ -21,15 +21,6 @@ public class AminoAcidConverter
     public static boolean isRnaStopCodon(final String rnaCodon)
     {
         return rnaCodon.equals(RNA_STOP_CODON_1) || rnaCodon.equals(RNA_STOP_CODON_2) || rnaCodon.equals(RNA_STOP_CODON_3);
-    }
-
-    public static char swapDnaBase(final char base)
-    {
-        if(base == 'A') return 'T';
-        if(base == 'T') return 'A';
-        if(base == 'C') return 'G';
-        if(base == 'G') return 'C';
-        return base;
     }
 
     public static char swapRnaBase(final char base)
@@ -49,18 +40,6 @@ public class AminoAcidConverter
     public static String swapRnaToDna(final String bases)
     {
         return bases.replaceAll("U", "T");
-    }
-
-    public static String reverseStrandBases(final String bases)
-    {
-        // reverse and swap base pairs
-        String newBases = "";
-        for(int i = 0; i < bases.length(); ++i)
-        {
-            newBases += swapDnaBase(bases.charAt(bases.length() - i - 1));
-        }
-
-        return newBases;
     }
 
     public static String convertDnaCodonToAminoAcid(final String codon)

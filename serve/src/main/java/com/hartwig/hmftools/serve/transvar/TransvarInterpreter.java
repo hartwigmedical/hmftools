@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.transvar;
 
-import static com.hartwig.hmftools.common.codon.AminoAcidFunctions.reverseAndFlip;
+import static com.hartwig.hmftools.common.codon.AminoAcids.reverseAndFlip;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
@@ -195,7 +195,7 @@ class TransvarInterpreter {
         // We assume inserts of length 3 are always (inframe) amino acid inserts,
         //  and we know the inserted bases match the proteins inserted.
         if (insertion.insertedBases().length() == 3) {
-            for (String trinucleotide : AminoAcidFunctions.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
+            for (String trinucleotide : AminoAcids.allTrinucleotidesForSameAminoAcid(insertion.insertedBases(), strand)) {
                 hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
             }
         } else {
@@ -294,7 +294,7 @@ class TransvarInterpreter {
             }
             String referenceCodon = refSequence(record.chromosome(), posPriorToCodon + 1, posPriorToCodon + 3);
             String refAminoAcid =
-                    AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
+                    AminoAcids.findAminoAcidForCodon(strand == Strand.FORWARD ? referenceCodon : reverseAndFlip(referenceCodon));
 
             if (refAminoAcid == null) {
                 LOGGER.warn("Could not resolve a valid ref amino acid for '{}' based on reference codon {}. Skipping hotspot generation.",
@@ -341,7 +341,7 @@ class TransvarInterpreter {
                     newRefCodon = refBase1 + refBase2 + base;
                 }
                 String newAminoAcid =
-                        AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+                        AminoAcids.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
                 if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                     hotspots.add(builder.alt(ref + base).build());
@@ -388,7 +388,7 @@ class TransvarInterpreter {
                 }
             }
             String newAminoAcid =
-                    AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+                    AminoAcids.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                 long pos = posPriorToCodon + i;
@@ -430,7 +430,7 @@ class TransvarInterpreter {
             }
 
             String newAminoAcid =
-                    AminoAcidFunctions.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
+                    AminoAcids.findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseAndFlip(newRefCodon));
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
                 long pos = posPriorToCodon + i;

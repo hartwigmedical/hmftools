@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.swapDnaToRna;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.swapRnaToDna;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.swapDnaToRna;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.swapRnaToDna;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;

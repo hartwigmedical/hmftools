@@ -16,14 +16,14 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.AA_SELENOCYSTEINE;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.convertDnaCodonToAminoAcid;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.convertDnaCodonToAminoAcid;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 
 import java.util.List;
 import java.util.Set;

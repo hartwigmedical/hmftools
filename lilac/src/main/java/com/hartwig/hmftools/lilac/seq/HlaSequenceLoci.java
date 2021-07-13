@@ -269,7 +269,7 @@ public class HlaSequenceLoci
             if(first.equals(DEL_STR) || third.equals(DEL_STR) || third.equals(DEL_STR))
                 sequence += DEL_STR;
             else
-                sequence += Codons.aminoAcids(first + second + third);
+                sequence += Codons.formAminoAcids(first + second + third);
         }
 
         return HlaSequenceLoci.create(nucSequence.Allele.asFourDigit(), sequence, sequenceTemplate.sequence());

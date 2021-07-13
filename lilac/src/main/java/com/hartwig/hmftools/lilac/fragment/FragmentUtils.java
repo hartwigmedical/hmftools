@@ -131,7 +131,7 @@ public class FragmentUtils
         if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
             return DEL_STR;
 
-        return Codons.aminoAcids(first + second + third);
+        return Codons.formAminoAcids(first + second + third);
     }
 
     public static List<Integer> calcAminoAcidIndices(int nucStartIndex, int nucEndIndex)

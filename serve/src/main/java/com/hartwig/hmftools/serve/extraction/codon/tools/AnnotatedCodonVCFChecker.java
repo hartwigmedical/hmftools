@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.extraction.codon.tools;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
@@ -113,7 +113,7 @@ public class AnnotatedCodonVCFChecker {
     }
 
     private static int extractCodon(@NotNull String hgvsProteinAnnotation) {
-        String singleLetterAA = AminoAcidFunctions.forceSingleLetterProteinAnnotation(hgvsProteinAnnotation);
+        String singleLetterAA = AminoAcids.forceSingleLetterProteinAnnotation(hgvsProteinAnnotation);
         // The single letter AA should always start with "p.{A}"
         return Integer.parseInt(singleLetterAA.substring(3, singleLetterAA.length() - 1));
     }

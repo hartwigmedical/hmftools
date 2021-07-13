@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.AA_SELENOCYSTEINE;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;

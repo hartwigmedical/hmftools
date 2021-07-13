@@ -15,8 +15,9 @@ import static com.hartwig.hmftools.sage.impact.SpliceClassifier.isWithinSpliceRe
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.codon.AminoAcidConverter;
+import com.hartwig.hmftools.common.codon.AminoAcidRna;
 import com.hartwig.hmftools.common.codon.Codons;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -171,8 +172,8 @@ public class ImpactClassifier
                     altCodingBases = variant.Alt + refCodingBases.substring(varLength);
                 }
 
-                refAminoAcids = Codons.aminoAcids(refCodingBases);
-                altAminoAcids = Codons.aminoAcids(altCodingBases);
+                refAminoAcids = Codons.formAminoAcids(refCodingBases);
+                altAminoAcids = Codons.formAminoAcids(altCodingBases);
             }
             else
             {
@@ -186,8 +187,8 @@ public class ImpactClassifier
                     altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength) + variant.Alt;
                 }
 
-                refAminoAcids = AminoAcidConverter.reverseStrandBases(Codons.aminoAcids(refCodingBases));
-                altAminoAcids = AminoAcidConverter.reverseStrandBases(Codons.aminoAcids(altCodingBases));
+                refAminoAcids = Nucleotides.reverseStrandBases(Codons.formAminoAcids(refCodingBases));
+                altAminoAcids = Nucleotides.reverseStrandBases(Codons.formAminoAcids(altCodingBases));
             }
 
             if(refAminoAcids.equals(altAminoAcids))

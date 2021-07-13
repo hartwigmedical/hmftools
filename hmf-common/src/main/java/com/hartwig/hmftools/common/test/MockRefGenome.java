@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.test;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
+
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +45,6 @@ public class MockRefGenome implements RefGenomeInterface
 
         return refBases.toString();
     }
-
-    public static final char[] DNA_BASES = {'A', 'C', 'G', 'T'};
 
     public static String generateRandomBases(int length)
     {

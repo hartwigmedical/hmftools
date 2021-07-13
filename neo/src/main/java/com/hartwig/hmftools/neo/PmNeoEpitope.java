@@ -4,15 +4,13 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.FRAMESHIFT;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_DELETION;
@@ -23,7 +21,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 
 import java.util.List;
 

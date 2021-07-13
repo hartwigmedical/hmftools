@@ -72,7 +72,7 @@ public class NucleotideFragmentFactory
             int firstAAIndex = aminoAcidIndices.get(0);
             int nucleotideStartLoci = firstAAIndex * 3;
             String sequence = String.valueOf(codingRegionRead);
-            String aminoAcids = Codons.aminoAcids(sequence.substring(nucleotideStartLoci - samCodingStartLoci));
+            String aminoAcids = Codons.formAminoAcids(sequence.substring(nucleotideStartLoci - samCodingStartLoci));
 
             if(!aminoAcids.isEmpty())
             {

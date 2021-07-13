@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.util;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +49,7 @@ public final class VariantUtil {
     @NotNull
     public static String variantField(@NotNull ReportableVariant variant) {
         String consequence = !variant.canonicalHgvsProteinImpact().isEmpty()
-                ? AminoAcidFunctions.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact())
+                ? AminoAcids.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact())
                 : variant.canonicalHgvsCodingImpact();
         return variant.gene() + " " + consequence;
     }

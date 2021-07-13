@@ -20,10 +20,10 @@ public class CodonsTest {
 
     @Test
     public void testAsCodonString() {
-        assertEquals("Y", Codons.aminoAcids("TAT"));
-        assertEquals("Y", Codons.aminoAcids("TATG"));
-        assertEquals("Y", Codons.aminoAcids("TATGA"));
-        assertEquals("YD", Codons.aminoAcids("TATGAT"));
+        assertEquals("Y", Codons.formAminoAcids("TAT"));
+        assertEquals("Y", Codons.formAminoAcids("TATG"));
+        assertEquals("Y", Codons.formAminoAcids("TATGA"));
+        assertEquals("YD", Codons.formAminoAcids("TATGAT"));
     }
 
     @Test

@@ -7,7 +7,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -212,7 +212,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     private static String display(@NotNull ProtectEvidence evidence) {
         String event = evidence.genomicEvent();
         if (event.contains("p.")) {
-            event = AminoAcidFunctions.forceSingleLetterProteinAnnotation(event);
+            event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }
         StringJoiner sources = new StringJoiner(", ");
         for (Knowledgebase source : evidence.sources()) {

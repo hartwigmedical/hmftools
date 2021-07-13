@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
@@ -130,7 +130,7 @@ public class AnnotatedHotspotVCFChecker {
     @NotNull
     private MatchType matchOnSpecificAnnotation(@NotNull String inputTranscript, @NotNull String inputProteinAnnotation,
             @NotNull SnpEffAnnotation specificAnnotation) {
-        String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(specificAnnotation.hgvsProtein());
+        String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(specificAnnotation.hgvsProtein());
         return matchAnnotation(inputTranscript, inputProteinAnnotation, snpeffProteinAnnotation);
     }
 
@@ -140,7 +140,7 @@ public class AnnotatedHotspotVCFChecker {
         for (SnpEffAnnotation annotation : annotations) {
             // We only want to consider transcript features with coding impact.
             if (annotation.isTranscriptFeature() && !annotation.hgvsProtein().isEmpty()) {
-                String snpeffProteinAnnotation = AminoAcidFunctions.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
+                String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(annotation.hgvsProtein());
                 MatchType match = matchAnnotation(annotation.transcript(), inputProteinAnnotation, snpeffProteinAnnotation);
                 if (match != MatchType.NO_MATCH && matchedMatchType == MatchType.NO_MATCH) {
                     matchedMatchType = match;

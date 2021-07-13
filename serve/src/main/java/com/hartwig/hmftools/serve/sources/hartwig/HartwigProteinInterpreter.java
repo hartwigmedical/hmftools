@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.serve.sources.hartwig;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +25,6 @@ final class HartwigProteinInterpreter {
             interpretedProteinAnnotation = interpretedProteinAnnotation.substring(2);
         }
 
-        return AminoAcidFunctions.forceSingleLetterProteinAnnotation(interpretedProteinAnnotation);
+        return AminoAcids.forceSingleLetterProteinAnnotation(interpretedProteinAnnotation);
     }
 }

@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.AminoAcidFunctions;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
@@ -59,7 +59,7 @@ public class AnnotatedHotspotVCFPrinter {
                     .add(canonical.map(SnpEffAnnotation::transcript).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::consequenceString).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::hgvsCoding).orElse(Strings.EMPTY))
-                    .add(AminoAcidFunctions.forceSingleLetterProteinAnnotation(canonicalProtein));
+                    .add(AminoAcids.forceSingleLetterProteinAnnotation(canonicalProtein));
 
             Object input = variant.getAttribute(VCFWriterFactory.INPUT_FIELD);
             if (input != null) {

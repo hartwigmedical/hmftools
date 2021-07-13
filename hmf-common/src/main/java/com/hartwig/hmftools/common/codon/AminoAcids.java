@@ -15,14 +15,16 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class AminoAcidFunctions {
+public final class AminoAcids
+{
 
-    private static final Logger LOGGER = LogManager.getLogger(AminoAcidFunctions.class);
+    private static final Logger LOGGER = LogManager.getLogger(AminoAcids.class);
 
     private static final Map<String, Set<String>> AMINO_ACID_TO_TRINUCLEOTIDES_MAP = Maps.newHashMap();
     private static final Map<String, String> TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER = Maps.newHashMap();
 
-    static {
+    static
+    {
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ala", "A"); // Alanine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Cys", "C"); // Cysteine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Asp", "D"); // Aspartic Acid
@@ -73,14 +75,18 @@ public final class AminoAcidFunctions {
     }
 
     @Nullable
-    public static String findAminoAcidForCodon(@NotNull String codon) {
-        if (codon.length() != 3) {
+    public static String findAminoAcidForCodon(@NotNull String codon)
+    {
+        if(codon.length() != 3)
+        {
             LOGGER.warn("Cannot look up amino acids for non-codons: {}", codon);
             return null;
         }
 
-        for (Map.Entry<String, Set<String>> entrySet : AMINO_ACID_TO_TRINUCLEOTIDES_MAP.entrySet()) {
-            if (entrySet.getValue().contains(codon)) {
+        for(Map.Entry<String, Set<String>> entrySet : AMINO_ACID_TO_TRINUCLEOTIDES_MAP.entrySet())
+        {
+            if(entrySet.getValue().contains(codon))
+            {
                 return entrySet.getKey();
             }
         }
@@ -88,8 +94,10 @@ public final class AminoAcidFunctions {
     }
 
     @NotNull
-    public static List<String> allTrinucleotidesForSameAminoAcid(@NotNull String trinucleotideToFind, @NotNull Strand strand) {
-        if (trinucleotideToFind.length() != 3) {
+    public static List<String> allTrinucleotidesForSameAminoAcid(@NotNull String trinucleotideToFind, @NotNull Strand strand)
+    {
+        if(trinucleotideToFind.length() != 3)
+        {
             LOGGER.warn("Cannot look up amino acids for non-trinucleotides: {}", trinucleotideToFind);
             return Lists.newArrayList();
         }
@@ -98,12 +106,15 @@ public final class AminoAcidFunctions {
 
         List<String> allTrinucleotides = Lists.newArrayList();
         Set<String> trinucleotides = AMINO_ACID_TO_TRINUCLEOTIDES_MAP.get(aminoAcid);
-        if (trinucleotides != null) {
-            for (String trinucleotide : trinucleotides) {
+        if(trinucleotides != null)
+        {
+            for(String trinucleotide : trinucleotides)
+            {
                 allTrinucleotides.add(strand == Strand.FORWARD ? trinucleotide : reverseAndFlip(trinucleotide));
             }
         }
-        else {
+        else
+        {
             LOGGER.warn("Could not find amino acid for trinucleotide '{}' on {} strand", trinucleotideToFind, strand);
         }
 
@@ -111,9 +122,11 @@ public final class AminoAcidFunctions {
     }
 
     @NotNull
-    public static String forceSingleLetterProteinAnnotation(@NotNull String proteinAnnotation) {
+    public static String forceSingleLetterProteinAnnotation(@NotNull String proteinAnnotation)
+    {
         String convertedProteinAnnotation = proteinAnnotation;
-        for (Map.Entry<String, String> mapping : TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.entrySet()) {
+        for(Map.Entry<String, String> mapping : TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.entrySet())
+        {
             convertedProteinAnnotation = convertedProteinAnnotation.replaceAll(mapping.getKey(), mapping.getValue());
         }
         return convertedProteinAnnotation;
@@ -121,21 +134,26 @@ public final class AminoAcidFunctions {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, Set<String>> aminoAcidToTrinucleotidesMap() {
+    static Map<String, Set<String>> aminoAcidToTrinucleotidesMap()
+    {
         return AMINO_ACID_TO_TRINUCLEOTIDES_MAP;
     }
 
     @NotNull
-    public static String reverseAndFlip(@NotNull String string) {
+    public static String reverseAndFlip(@NotNull String string)
+    {
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = string.length() - 1; i >= 0; i--) {
+        for(int i = string.length() - 1; i >= 0; i--)
+        {
             stringBuilder.append(flipBase(string.charAt(i)));
         }
         return stringBuilder.toString();
     }
 
-    private static char flipBase(char base) {
-        switch (base) {
+    private static char flipBase(char base)
+    {
+        switch(base)
+        {
             case 'A':
                 return 'T';
             case 'T':

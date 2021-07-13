@@ -3,7 +3,7 @@ package com.hartwig.hmftools.neo;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
