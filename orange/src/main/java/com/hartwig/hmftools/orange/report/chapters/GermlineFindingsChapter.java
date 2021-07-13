@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
-import java.util.Map;
+import java.util.Comparator;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -62,11 +64,13 @@ public class GermlineFindingsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell("") });
 
         int count = 0;
-        for (Map.Entry<String, Double> mvlhEntry : report.germlineMVLHPerGene().entrySet()) {
-            double mvlh = mvlhEntry.getValue();
+        Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
+        genes.addAll(report.germlineMVLHPerGene().keySet());
+        for (String gene : genes) {
+            double mvlh = report.germlineMVLHPerGene().get(gene);
             if (mvlh > 0.01) {
                 count++;
-                table.addCell(TableUtil.createContentCell(mvlhEntry.getKey()));
+                table.addCell(TableUtil.createContentCell(gene));
                 table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(mvlh * 100)));
                 table.addCell(TableUtil.createContentCell(""));
             }

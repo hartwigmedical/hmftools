@@ -167,8 +167,15 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
 
         return ImmutableOrangePlots.builder()
-                .purpleComprehensiveCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
+                .sageReferenceBQRPlot(config.sageSomaticRefSampleBQRPlot())
+                .sageTumorBQRPlot(config.sageSomaticTumorSampleBQRPlot())
+                .purpleInputPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".input.png")
+                .purpleFinalCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
                 .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
+                .purpleCopyNumberPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".copynumber.png")
+                .purpleVariantCopyNumberPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.png")
+                .purplePurityRangePlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".purity.range.png")
+                .purpleKataegisPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.rainfall.png")
                 .linxDriverPlots(linxDriverPlots)
                 .build();
     }

@@ -66,7 +66,7 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addDetailsAndPlots(@NotNull Document document) {
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE - 5);
+        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         summary.addCell(TableUtil.createKeyCell("Purity:"));
@@ -104,14 +104,14 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createKeyCell("Off-label treatments:"));
         summary.addCell(TableUtil.createValueCell(offLabelTreatmentString()));
 
-        Image circosImage = ImageUtil.build(report.plots().purpleComprehensiveCircosPlot());
+        Image circosImage = ImageUtil.build(report.plots().purpleFinalCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         circosImage.setMaxHeight(280);
 
         topTable.addCell(summary);
         topTable.addCell(circosImage);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE).setPadding(0);
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH).setPadding(0);
         table.addCell(topTable);
 
         Image clonalityImage = ImageUtil.build(report.plots().purpleClonalityPlot());

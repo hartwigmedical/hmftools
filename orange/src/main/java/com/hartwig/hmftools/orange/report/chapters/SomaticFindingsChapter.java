@@ -20,6 +20,7 @@ import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
+import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
@@ -50,6 +51,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(new Paragraph("Somatic Findings").addStyle(ReportResources.chapterTitleStyle()));
 
         addSomaticVariants(document);
+        addKataegisPlot(document);
         addSomaticAmpDels(document);
         addFusions(document);
         addViralPresence(document);
@@ -100,6 +102,14 @@ public class SomaticFindingsChapter implements ReportChapter {
     @NotNull
     private static ReportableVariant toReportable(@NotNull SomaticVariant variant) {
         return ReportableVariantFactory.fromVariant(variant, ReportableVariantSource.SOMATIC).driverLikelihood(Double.NaN).build();
+    }
+
+    private void addKataegisPlot(@NotNull Document document) {
+        document.add(new Paragraph("Kataegis plot").addStyle(ReportResources.tableTitleStyle()));
+        Image image = ImageUtil.build(report.plots().purpleKataegisPlot());
+        image.setMaxWidth(ReportResources.CONTENT_WIDTH);
+        image.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        document.add(image);
     }
 
     private void addSomaticAmpDels(@NotNull Document document) {
@@ -195,11 +205,18 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addLinxDriverPlots(@NotNull Document document) {
         document.add(new Paragraph("Linx driver plots").addStyle(ReportResources.tableTitleStyle()));
+        Table table = new Table(2);
         for (String plot : report.plots().linxDriverPlots()) {
             Image image = ImageUtil.build(plot);
-            image.setMaxHeight(300);
+            image.setMaxWidth(Math.round(ReportResources.CONTENT_WIDTH / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            document.add(image);
+            table.addCell(TableUtil.createImageCell(image));
         }
+
+        if (report.plots().linxDriverPlots().size() % 2 == 1) {
+            table.addCell(TableUtil.createContentCell(""));
+        }
+
+        document.add(table);
     }
 }

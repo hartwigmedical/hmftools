@@ -11,10 +11,31 @@ import org.jetbrains.annotations.Nullable;
 public abstract class OrangePlots {
 
     @NotNull
-    public abstract String purpleComprehensiveCircosPlot();
+    public abstract String sageReferenceBQRPlot();
+
+    @NotNull
+    public abstract String sageTumorBQRPlot();
+
+    @NotNull
+    public abstract String purpleInputPlot();
+
+    @NotNull
+    public abstract String purpleFinalCircosPlot();
 
     @NotNull
     public abstract String purpleClonalityPlot();
+
+    @NotNull
+    public abstract String purpleCopyNumberPlot();
+
+    @NotNull
+    public abstract String purpleVariantCopyNumberPlot();
+
+    @NotNull
+    public abstract String purplePurityRangePlot();
+
+    @NotNull
+    public abstract String purpleKataegisPlot();
 
     @NotNull
     public abstract List<String> linxDriverPlots();

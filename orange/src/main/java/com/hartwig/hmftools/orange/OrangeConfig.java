@@ -41,6 +41,8 @@ public interface OrangeConfig {
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
     String SAGE_GERMLINE_GENE_COVERAGE_TSV = "sage_germline_gene_coverage_tsv";
+    String SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT = "sage_somatic_ref_sample_bqr_plot";
+    String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = "sage_somatic_tumor_sample_bqr_plot";
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
@@ -78,6 +80,8 @@ public interface OrangeConfig {
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(SAGE_GERMLINE_GENE_COVERAGE_TSV, true, "Path towards the SAGE germline gene coverage TSV.");
+        options.addOption(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic ref sample BQR plot.");
+        options.addOption(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic tumor sample BQR plot.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
@@ -127,6 +131,12 @@ public interface OrangeConfig {
 
     @NotNull
     String sageGermlineGeneCoverageTsv();
+
+    @NotNull
+    String sageSomaticRefSampleBQRPlot();
+
+    @NotNull
+    String sageSomaticTumorSampleBQRPlot();
 
     @NotNull
     String purplePurityTsv();
@@ -213,6 +223,8 @@ public interface OrangeConfig {
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .pipelineVersionFile(nonOptionalFile(cmd, PIPELINE_VERSION_FILE))
                 .sageGermlineGeneCoverageTsv(nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
+                .sageSomaticRefSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
+                .sageSomaticTumorSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
