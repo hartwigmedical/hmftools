@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.net.MalformedURLException;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Set;
@@ -19,9 +18,8 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
-import com.itextpdf.io.IOException;
-import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
@@ -105,13 +103,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createKeyCell("Off-label treatments:"));
         summary.addCell(TableUtil.createValueCell(offLabelTreatmentString()));
 
-        String circosPath = report.plots().purpleComprehensiveCircosPlot();
-        Image circosImage;
-        try {
-            circosImage = new Image(ImageDataFactory.create(circosPath));
-        } catch (MalformedURLException e) {
-            throw new IOException("Could not read circos from " + circosPath);
-        }
+        Image circosImage = ImageUtil.build(report.plots().purpleComprehensiveCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         circosImage.setMaxHeight(300);
 
@@ -121,13 +113,7 @@ public class FrontPageChapter implements ReportChapter {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE).setPadding(0);
         table.addCell(topTable);
 
-        String clonalityPath = report.plots().purpleClonalityPlot();
-        Image clonalityImage;
-        try {
-            clonalityImage = new Image(ImageDataFactory.create(clonalityPath));
-        } catch (MalformedURLException e) {
-            throw new IOException("Could not read clonality image from " + clonalityPath);
-        }
+        Image clonalityImage = ImageUtil.build(report.plots().purpleClonalityPlot());
         clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         clonalityImage.setMaxHeight(300);
 
@@ -140,7 +126,7 @@ public class FrontPageChapter implements ReportChapter {
         if (reportGermline) {
             return variantDriverString(report.purple().reportableGermlineVariants());
         } else {
-            return "N/A";
+            return "NA";
         }
     }
 

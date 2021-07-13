@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.util.DocumentUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -26,7 +25,6 @@ import com.itextpdf.layout.element.Table;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class ClinicalEvidenceChapter implements ReportChapter {
 
@@ -66,19 +64,15 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
         List<ProtectEvidence> noIclusion = noIclusion(report.protect());
 
-        String onLabelTitle = "On-Label Evidence";
-        Table onLabelTable = createTreatmentTable(onLabelTitle, toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
+        Table onLabelTable = createTreatmentTable("On-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
+        document.add(onLabelTable);
 
-        String offLabelTitle = "Off-Label Evidence";
-        Table offLabelTable = createTreatmentTable(offLabelTitle, toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
+        Table offLabelTable = createTreatmentTable("Off-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
+        document.add(offLabelTable);
 
         List<ProtectEvidence> iclusion = iclusionOnly(report.protect());
-        String trialTitle = "Trials";
-        Table trialTable = createTreatmentTable(trialTitle, toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
-
-        DocumentUtil.addCheckedTable(document, onLabelTitle, onLabelTable);
-        DocumentUtil.addCheckedTable(document, offLabelTitle, offLabelTable);
-        DocumentUtil.addCheckedTable(document, trialTitle, trialTable);
+        Table trialTable = createTreatmentTable("Trials", toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
+        document.add(trialTable);
     }
 
     @NotNull
@@ -141,10 +135,10 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         return false;
     }
 
-    @Nullable
+    @NotNull
     private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap) {
         if (treatmentMap.isEmpty()) {
-            return null;
+            return TableUtil.createEmptyTable(title);
         }
 
         Table treatmentTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1 },

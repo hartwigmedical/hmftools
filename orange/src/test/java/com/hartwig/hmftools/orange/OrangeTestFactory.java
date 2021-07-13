@@ -17,6 +17,7 @@ public final class OrangeTestFactory {
 
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
+    private static final String SAGE_GERMLINE_GENE_COVERAGE = RUN_DIRECTORY + "/sage_germline/ref_sample.sage.gene.coverage.tsv";
     private static final String PURPLE_PURITY_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.purity.tsv";
     private static final String PURPLE_QC_FILE = RUN_DIRECTORY + "/purple/tumor_sample.purple.qc";
     private static final String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/purple/tumor_sample.driver.catalog.somatic.tsv";
@@ -28,6 +29,7 @@ public final class OrangeTestFactory {
     private static final String LINX_FUSIONS_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.breakend.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.driver.catalog.tsv";
+    private static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA_CONCLUSION_TXT = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa.conclusion.txt";
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
@@ -52,6 +54,7 @@ public final class OrangeTestFactory {
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
+                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
                 .purpleQcFile(PURPLE_QC_FILE)
                 .purpleGeneCopyNumberTsv(PURPLE_GENE_COPY_NUMBER_TSV)
@@ -63,6 +66,7 @@ public final class OrangeTestFactory {
                 .linxFusionTsv(LINX_FUSIONS_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
+                .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaConclusionTxt(CUPPA_CONCLUSION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)

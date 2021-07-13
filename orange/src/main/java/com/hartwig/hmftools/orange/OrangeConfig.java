@@ -40,6 +40,7 @@ public interface OrangeConfig {
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
+    String SAGE_GERMLINE_GENE_COVERAGE_TSV = "sage_germline_gene_coverage_tsv";
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
     String PURPLE_GENE_COPY_NUMBER_TSV = "purple_gene_copy_number_tsv";
@@ -51,6 +52,7 @@ public interface OrangeConfig {
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
+    String LINX_PLOT_DIRECTORY = "linx_plot_directory";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
@@ -75,6 +77,7 @@ public interface OrangeConfig {
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
+        options.addOption(SAGE_GERMLINE_GENE_COVERAGE_TSV, true, "Path towards the SAGE germline gene coverage TSV.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_COPY_NUMBER_TSV, true, "Path towards the purple gene copynumber TSV.");
@@ -86,6 +89,7 @@ public interface OrangeConfig {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
+        options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the Cuppa conclusion TXT.");
         options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
@@ -122,6 +126,9 @@ public interface OrangeConfig {
     String pipelineVersionFile();
 
     @NotNull
+    String sageGermlineGeneCoverageTsv();
+
+    @NotNull
     String purplePurityTsv();
 
     @NotNull
@@ -153,6 +160,9 @@ public interface OrangeConfig {
 
     @NotNull
     String linxDriverCatalogTsv();
+
+    @NotNull
+    String linxPlotDirectory();
 
     @NotNull
     String chordPredictionTxt();
@@ -202,6 +212,7 @@ public interface OrangeConfig {
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .pipelineVersionFile(nonOptionalFile(cmd, PIPELINE_VERSION_FILE))
+                .sageGermlineGeneCoverageTsv(nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
@@ -213,6 +224,7 @@ public interface OrangeConfig {
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
+                .linxPlotDirectory(nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .cuppaConclusionTxt(nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
                 .cuppaResultCsv(nonOptionalFile(cmd, CUPPA_RESULT_CSV))

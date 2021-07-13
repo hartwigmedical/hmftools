@@ -2,9 +2,13 @@ package com.hartwig.hmftools.orange.algo;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
@@ -59,6 +63,7 @@ public class OrangeAlgo {
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .protect(loadProtectData(config))
+                .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .plots(buildPlots(config))
                 .build();
     }
@@ -140,10 +145,31 @@ public class OrangeAlgo {
     }
 
     @NotNull
+    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
+        Map<String, Double> mvlhPerGene = Maps.newHashMap();
+        List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] values = line.split("\t");
+            double mvlh = Double.parseDouble(values[1].substring(0, values[1].length() -1)) / 100D;
+            mvlhPerGene.put(values[0], mvlh);
+        }
+        return mvlhPerGene;
+    }
+
+    @NotNull
     private static OrangePlots buildPlots(@NotNull OrangeConfig config) {
+        LOGGER.info("Loading plots");
+        String linxPlotDir = config.linxPlotDirectory();
+        List<String> linxDriverPlots = Lists.newArrayList();
+        for (String file : new File(linxPlotDir).list()) {
+            linxDriverPlots.add(linxPlotDir + File.separator + file);
+        }
+        LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
+
         return ImmutableOrangePlots.builder()
                 .purpleComprehensiveCircosPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".circos.png")
                 .purpleClonalityPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.clonality.png")
+                .linxDriverPlots(linxDriverPlots)
                 .build();
     }
 }

@@ -22,9 +22,9 @@ public class TableUtil {
     }
 
     @NotNull
-    public static Table createNoneReportTable(@NotNull String tableTitle) {
+    public static Table createEmptyTable(@NotNull String tableTitle) {
         Cell headerCell =
-                new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(tableTitle).addStyle(ReportResources.chapterTitleStyle()));
+                new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(tableTitle).addStyle(ReportResources.tableTitleStyle()));
 
         Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
