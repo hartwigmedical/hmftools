@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -35,8 +35,8 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -261,7 +261,7 @@ public class NeoSampleTask implements Callable
     {
         for(PointMutationData pointMutation : pointMutations)
         {
-            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(pointMutation.Gene);
+            final GeneData geneData = mGeneTransCache.getGeneDataByName(pointMutation.Gene);
 
             final List<NeoEpitope> neDataList = Lists.newArrayList();
 

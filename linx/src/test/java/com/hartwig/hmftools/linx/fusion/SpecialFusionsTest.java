@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateTransName;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.generateExonStarts;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.generateTransName;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
@@ -38,8 +38,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
@@ -48,8 +48,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class SpecialFusionsTest
@@ -163,7 +161,7 @@ public class SpecialFusionsTest
 
         // test again with exon skipping as long as the skipping occurs within the bounds specified for the exon DEL-DUP
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         final String geneId = "ENSG0010";
         int geneStart = 30000;
         geneList.add(createEnsemblGeneData(geneId, geneId, CHR_1, POS_STRAND, geneStart, geneStart + 15 * 200));
@@ -232,7 +230,7 @@ public class SpecialFusionsTest
 
         byte strand = POS_STRAND;
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1500));
         geneList.add(createEnsemblGeneData(geneId2, geneName2, chromosome, strand, 10000, 11500));
         geneList.add(createEnsemblGeneData(geneId3, geneName3, chromosome, strand, 20000, 21500));
@@ -536,7 +534,7 @@ public class SpecialFusionsTest
 
         byte strand = POS_STRAND;
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(igGeneId, igGeneName, CHR_4, strand, 100, 1500));
 
         addGeneData(geneTransCache, CHR_4, geneList);

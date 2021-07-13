@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -200,7 +200,7 @@ public class FusionDisruptionAnalyser
         {
             if(kfData.downstreamDistance(FS_UP) > 0)
             {
-                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.FiveGene);
+                final GeneData geneData = mGeneDataCache.getGeneDataByName(kfData.FiveGene);
                 if(geneData != null)
                 {
                     mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_UP));
@@ -209,7 +209,7 @@ public class FusionDisruptionAnalyser
 
             if(kfData.downstreamDistance(FS_DOWN) > 0)
             {
-                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
+                final GeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
                 if(geneData != null)
                 {
                     mGeneDataCache.addDownstreamGeneAnnotations(geneData, kfData.downstreamDistance(FS_DOWN));
@@ -218,7 +218,7 @@ public class FusionDisruptionAnalyser
 
             if(!kfData.getThreeGeneAltRegions().isEmpty())
             {
-                final EnsemblGeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
+                final GeneData geneData = mGeneDataCache.getGeneDataByName(kfData.ThreeGene);
 
                 if(geneData != null)
                 {
@@ -227,7 +227,7 @@ public class FusionDisruptionAnalyser
 
                     for(final BaseRegion altRegion : kfData.getThreeGeneAltRegions())
                     {
-                        mGeneDataCache.getAlternativeGeneData().add(new EnsemblGeneData(
+                        mGeneDataCache.getAlternativeGeneData().add(new GeneData(
                                 geneData.GeneId, geneData.GeneName, altRegion.Chromosome, geneData.Strand, altRegion.start(), altRegion.end(), ""));
                     }
                 }

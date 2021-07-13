@@ -16,8 +16,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -136,7 +136,7 @@ public class ImpactAnnotator
         List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext);
         variant.setSnpEffAnnotations(snpEffAnnotations);
 
-        List<EnsemblGeneData> geneCandidates = mGeneDataCache.findGenes(variant.Chromosome, variant.Position);
+        List<GeneData> geneCandidates = mGeneDataCache.findGenes(variant.Chromosome, variant.Position);
 
         if(geneCandidates.isEmpty())
         {
@@ -152,7 +152,7 @@ public class ImpactAnnotator
                     if(geneId.isEmpty())
                         continue;
 
-                    EnsemblGeneData geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(geneId);
+                    GeneData geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(geneId);
 
                     if(geneData == null)
                     {
@@ -173,7 +173,7 @@ public class ImpactAnnotator
         }
 
         // analyse against each of the genes and their transcripts
-        for(EnsemblGeneData geneData : geneCandidates)
+        for(GeneData geneData : geneCandidates)
         {
             List<TranscriptData> transDataList = mGeneDataCache.findTranscripts(geneData.GeneId, variant.Position);
 
@@ -224,7 +224,7 @@ public class ImpactAnnotator
         }
     }
 
-    private void writeVariantCsvData(final VariantData variant, final EnsemblGeneData geneData)
+    private void writeVariantCsvData(final VariantData variant, final GeneData geneData)
     {
         try
         {

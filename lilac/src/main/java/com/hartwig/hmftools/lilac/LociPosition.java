@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.lilac;
 
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 

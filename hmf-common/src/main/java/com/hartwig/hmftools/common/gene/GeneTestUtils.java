@@ -1,18 +1,19 @@
-package com.hartwig.hmftools.common.ensemblcache;
+package com.hartwig.hmftools.common.gene;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.codingBasesToPhase;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBasesToPhase;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
@@ -34,9 +35,9 @@ public final class GeneTestUtils
     {
         return new EnsemblDataCache("", RefGenomeVersion.V37);
     }
-    public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, int geneStart, int geneEnd)
+    public static GeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, int geneStart, int geneEnd)
     {
-        return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd,  "");
+        return new GeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd,  "");
     }
 
     public static void addTransExonData(EnsemblDataCache geneTransCache, final String geneId, List<TranscriptData> transDataList)
@@ -44,7 +45,7 @@ public final class GeneTestUtils
         geneTransCache.getTranscriptDataMap().put(geneId, transDataList);
     }
 
-    public static void addGeneData(EnsemblDataCache geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
+    public static void addGeneData(EnsemblDataCache geneTransCache, final String chromosome, List<GeneData> geneDataList)
     {
         geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
     }

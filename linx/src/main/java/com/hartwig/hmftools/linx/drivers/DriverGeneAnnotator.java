@@ -24,8 +24,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxDriver;
@@ -125,7 +125,7 @@ public class DriverGeneAnnotator
             if(!driverTypeHandled(driverGene))
                 continue;
 
-            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(driverGene.gene());
+            final GeneData geneData = mGeneTransCache.getGeneDataByName(driverGene.gene());
 
             if (geneData == null)
             {
@@ -280,7 +280,7 @@ public class DriverGeneAnnotator
             BufferedWriter writer = mFileWriter;
 
             final DriverCatalog driverGene = dgData.DriverData;
-            final EnsemblGeneData geneData = dgData.GeneData;
+            final GeneData geneData = dgData.GeneData;
 
             final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
 

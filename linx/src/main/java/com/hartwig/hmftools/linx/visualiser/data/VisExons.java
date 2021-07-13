@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
@@ -119,7 +119,7 @@ public class VisExons
     }
 
     @NotNull
-    public static List<Exon> extractExonList(final String sampleId, int clusterId, final EnsemblGeneData geneData, final TranscriptData transcript)
+    public static List<Exon> extractExonList(final String sampleId, int clusterId, final GeneData geneData, final TranscriptData transcript)
     {
         final List<Exon> result = Lists.newArrayList();
 

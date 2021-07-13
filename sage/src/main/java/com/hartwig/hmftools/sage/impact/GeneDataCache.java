@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.compress.utils.Lists;
@@ -19,7 +19,7 @@ public class GeneDataCache
     private final EnsemblDataCache mEnsemblDataCache;
 
     private String mCurrentChromosome;
-    private List<EnsemblGeneData> mCurrentGeneList;
+    private List<GeneData> mCurrentGeneList;
     private int mCurrentGeneIndex;
 
     public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenomeVersion)
@@ -54,9 +54,9 @@ public class GeneDataCache
                 .collect(Collectors.toList());
     }
 
-    public List<EnsemblGeneData> findGenes(final String chromosome, int position)
+    public List<GeneData> findGenes(final String chromosome, int position)
     {
-        List<EnsemblGeneData> genes = Lists.newArrayList();
+        List<GeneData> genes = Lists.newArrayList();
 
         if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
         {
@@ -75,7 +75,7 @@ public class GeneDataCache
 
         for(; mCurrentGeneIndex < mCurrentGeneList.size(); ++mCurrentGeneIndex)
         {
-            EnsemblGeneData geneData = mCurrentGeneList.get(mCurrentGeneIndex);
+            GeneData geneData = mCurrentGeneList.get(mCurrentGeneIndex);
 
             if(isWithinGeneRange(geneData, position))
             {
@@ -97,7 +97,7 @@ public class GeneDataCache
         return genes;
     }
 
-    private boolean isWithinGeneRange(final EnsemblGeneData geneData, int position)
+    private boolean isWithinGeneRange(final GeneData geneData, int position)
     {
         if(geneData.Strand == POS_STRAND)
             return position >= geneData.GeneStart - GENE_UPSTREAM_DISTANCE && position <= geneData.GeneEnd;

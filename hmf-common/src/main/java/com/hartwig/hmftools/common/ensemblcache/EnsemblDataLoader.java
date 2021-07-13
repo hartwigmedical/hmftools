@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,13 +32,13 @@ public final class EnsemblDataLoader
     public static final String ENSEMBL_DELIM = ",";
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version)
+            final Map<String, List<GeneData>> chrGeneDataMap, RefGenomeVersion version)
     {
         return loadEnsemblGeneData(dataPath, restrictedGeneIds, chrGeneDataMap, version, false);
     }
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
+            final Map<String, List<GeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
     {
         String filename = dataPath;
 
@@ -69,7 +73,7 @@ public final class EnsemblDataLoader
 
             line = fileReader.readLine(); // skip header
 
-            List<EnsemblGeneData> geneList = null;
+            List<GeneData> geneList = null;
             String currentChr = "";
             int geneCount = 0;
 
@@ -87,7 +91,7 @@ public final class EnsemblDataLoader
 
                 final String chromosome = version.versionedChromosome(items[chromosomeIndex]);
 
-                EnsemblGeneData geneData = new EnsemblGeneData(
+                GeneData geneData = new GeneData(
                         geneId, items[geneNameIndex], chromosome, Byte.parseByte(items[strandIndex]),
                         Integer.parseInt(items[geneStartIndex]), Integer.parseInt(items[geneEndIndex]), items[karyotypeBandIndex]);
 

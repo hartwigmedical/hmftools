@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_ACCEPTOR_B
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_DONOR_EXON_BASES;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_REGION_DISTANCE;
 
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 

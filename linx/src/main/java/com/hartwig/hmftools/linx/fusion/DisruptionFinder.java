@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -25,9 +25,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.LinxConfig;
@@ -477,12 +477,12 @@ public class DisruptionFinder
         int lowerPos = pair.getBreakend(true).position();
         int upperPos = pair.getBreakend(false).position();
 
-        List<EnsemblGeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(pair.chromosome());
+        List<GeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(pair.chromosome());
 
         if(geneDataList == null)
             return false;
 
-        for(EnsemblGeneData geneData : geneDataList)
+        for(GeneData geneData : geneDataList)
         {
             if(lowerPos > geneData.GeneEnd)
                 continue;

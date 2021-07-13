@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.generateExonStarts;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 
@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 
@@ -57,7 +57,7 @@ public class GeneTestUtils
 
     public static void addTestGenes(EnsemblDataCache geneTransCache)
     {
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, GENE_START_1, GENE_START_1 + 1000));
         geneList.add(createEnsemblGeneData(GENE_ID_2, GENE_NAME_2, CHR_1, POS_STRAND, GENE_START_2, GENE_START_2 + 1000));
         geneList.add(createEnsemblGeneData(GENE_ID_3, GENE_NAME_3, CHR_1, NEG_STRAND, GENE_START_3, GENE_START_3 + 1000));

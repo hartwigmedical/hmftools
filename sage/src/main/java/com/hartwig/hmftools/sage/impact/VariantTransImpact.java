@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.impact;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 

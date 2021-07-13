@@ -32,7 +32,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.LinxConfig;
@@ -518,13 +518,13 @@ public class DoubleMinuteFinder
         {
             String chromosome = pair.chromosome();
 
-            List<EnsemblGeneData> genesList = mGeneTransCache.findGenesByRegion(
+            List<GeneData> genesList = mGeneTransCache.findGenesByRegion(
                     chromosome, pair.getBreakend(true).position(), pair.getBreakend(false).position());
 
             if(genesList.isEmpty())
                 continue;
 
-            for(final EnsemblGeneData geneData : genesList)
+            for(final GeneData geneData : genesList)
             {
                 genesStr = appendStr(genesStr, geneData.GeneName, ';');
             }

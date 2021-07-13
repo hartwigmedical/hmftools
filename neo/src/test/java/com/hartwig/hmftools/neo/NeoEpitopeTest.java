@@ -1,21 +1,21 @@
 package com.hartwig.hmftools.neo;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.STOP_LOST;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.neo.NeoEpitopeUtilsTest.CHR_1;
 import static com.hartwig.hmftools.neo.NeoEpitopeUtilsTest.GENE_ID_1;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;

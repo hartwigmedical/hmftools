@@ -16,8 +16,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 // matches an exon from or more transcripts in a gene

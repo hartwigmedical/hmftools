@@ -25,7 +25,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -174,7 +174,7 @@ public class NeoEpitopeReader
     {
         mCurrentGenes = null;
 
-        final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
+        final GeneData geneData = mGeneTransCache.getGeneDataById(geneId);
 
         if(geneData == null)
         {

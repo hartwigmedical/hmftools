@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -56,7 +56,7 @@ public class NovelJunctionsTest
         String chromosome = CHR_1;
         String geneId = GENE_ID_1;
 
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
+        GeneData geneData = new GeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
 
         int transId1 = 1;
         String transName1 = "TRANS01";
@@ -267,7 +267,7 @@ public class NovelJunctionsTest
         String chromosome = CHR_1;
         String geneId = GENE_ID_1;
 
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
+        GeneData geneData = new GeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
 
         int transId1 = 1;
         String transName1 = "TRANS01";

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_LINC_RNA;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_RETAINED_INTRON;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_LINC_RNA;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_RETAINED_INTRON;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.util.List;

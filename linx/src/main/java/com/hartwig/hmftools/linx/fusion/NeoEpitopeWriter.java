@@ -5,7 +5,7 @@ import static java.lang.Math.getExponent;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;

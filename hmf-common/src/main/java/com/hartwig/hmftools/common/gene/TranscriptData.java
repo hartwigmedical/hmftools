@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.ensemblcache;
+package com.hartwig.hmftools.common.gene;
 
 import java.util.List;
 

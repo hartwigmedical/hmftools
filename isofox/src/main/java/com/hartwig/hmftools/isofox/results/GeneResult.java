@@ -9,13 +9,12 @@ import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 
 public class GeneResult
 {
-    public final EnsemblGeneData GeneData;
+    public final com.hartwig.hmftools.common.gene.GeneData GeneData;
     public final String CollectionId;
     public final int IntronicLength;
     public final int TransCount;

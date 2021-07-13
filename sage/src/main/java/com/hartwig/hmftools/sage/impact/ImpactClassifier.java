@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GE
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.sage.impact.SpliceClassifier.isWithinSpliceRegion;
 
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class ImpactClassifier
@@ -106,6 +106,10 @@ public class ImpactClassifier
 
     private VariantTransImpact classifyExonicPosition(final VariantData variant, final TranscriptData transData, final ExonData exon)
     {
+        //
+
+
+
         // TEMP:
         return new VariantTransImpact(transData, MISSENSE_VARIANT);
 

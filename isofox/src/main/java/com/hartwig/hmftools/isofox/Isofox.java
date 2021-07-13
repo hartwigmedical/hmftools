@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.BamFragmentReader.PERF_FIT;
@@ -36,7 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -63,8 +61,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class Isofox
@@ -115,7 +111,7 @@ public class Isofox
         }
 
         // all other routines split work by chromosome
-        final Map<String,List<EnsemblGeneData>> chrGeneMap = getChromosomeGeneLists();
+        final Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
 
         if(chrGeneMap.isEmpty())
         {
@@ -156,7 +152,7 @@ public class Isofox
         return true;
     }
 
-    private boolean allocateBamFragments(final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    private boolean allocateBamFragments(final Map<String,List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("sample({}) running RNA analysis", mConfig.SampleId);
 
@@ -194,7 +190,7 @@ public class Isofox
 
         for(String chromosome : chromosomes)
         {
-            List<EnsemblGeneData> geneDataList = chrGeneMap.get(chromosome);
+            List<GeneData> geneDataList = chrGeneMap.get(chromosome);
 
             if(geneDataList == null)
                 continue;
@@ -326,12 +322,12 @@ public class Isofox
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
-    private Map<String,List<EnsemblGeneData>> getChromosomeGeneLists()
+    private Map<String,List<GeneData>> getChromosomeGeneLists()
     {
         if(mConfig.SpecificRegions.isEmpty() && mConfig.SpecificChromosomes.isEmpty())
             return mGeneTransCache.getChrGeneDataMap();
 
-        final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
+        final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
         if(mConfig.SpecificRegions.isEmpty())
         {
@@ -344,9 +340,9 @@ public class Isofox
         {
             for(final BaseRegion region : mConfig.SpecificRegions)
             {
-                List<EnsemblGeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
+                List<GeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
 
-                List<EnsemblGeneData> regionGeneList = geneDataList.stream()
+                List<GeneData> regionGeneList = geneDataList.stream()
                         .filter(x -> positionsOverlap(region.start(), region.end(), x.GeneStart, x.GeneEnd))
                         .collect(Collectors.toList());
 
@@ -357,13 +353,13 @@ public class Isofox
         return chrGeneMap;
     }
 
-    private void calcFragmentLengths(final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    private void calcFragmentLengths(final Map<String,List<GeneData>> chrGeneMap)
     {
         int requiredFragCount = mConfig.FragmentLengthSamplingCount / chrGeneMap.size(); // split evenly amongst chromosomes
 
         final List<FragmentSizeCalcs> fragSizeCalcs = Lists.newArrayList();
 
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
             FragmentSizeCalcs fragSizeCalc = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
             fragSizeCalc.initialise(entry.getKey(), entry.getValue(), requiredFragCount);
@@ -404,7 +400,7 @@ public class Isofox
         combinedPc.logStats();
     }
 
-    private boolean generateGcRatios(final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    private boolean generateGcRatios(final Map<String,List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("generating GC counts cache");
 
@@ -414,7 +410,7 @@ public class Isofox
 
         mGcTranscriptCalcs.initialiseWriter();
 
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
             GcTranscriptCalculator gcCalcs = new GcTranscriptCalculator(mConfig, mGeneTransCache);
             gcCalcs.initialise(entry.getKey(), entry.getValue(), mGcTranscriptCalcs.getWriter());
@@ -427,14 +423,14 @@ public class Isofox
         return taskStatus;
     }
 
-    private boolean generateExpectedCounts(final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    private boolean generateExpectedCounts(final Map<String,List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("generating expected transcript counts cache");
 
         final List<ExpressionCacheTask> taskList = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
 
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
             ExpressionCacheTask expressionTask = new ExpressionCacheTask(mConfig, mGeneTransCache, mResultsWriter);
             expressionTask.initialise(entry.getKey(), entry.getValue());
@@ -445,14 +441,14 @@ public class Isofox
         return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
-    private boolean countBamReads(final Map<String,List<EnsemblGeneData>> chrGeneMap)
+    private boolean countBamReads(final Map<String,List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("basic BAM read counts");
 
         final List<BamReadCounter> taskList = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
 
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
             BamReadCounter bamReaderTask = new BamReadCounter(mConfig);
             bamReaderTask.initialise(entry.getKey(), entry.getValue());

@@ -3,15 +3,15 @@ package com.hartwig.hmftools.neo;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.codon.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.FRAMESHIFT;
@@ -27,13 +27,12 @@ import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrand
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.CodingBaseData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;

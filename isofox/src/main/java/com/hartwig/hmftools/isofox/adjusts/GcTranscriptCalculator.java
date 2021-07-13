@@ -28,9 +28,9 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 
@@ -42,7 +42,7 @@ public class GcTranscriptCalculator implements Callable
     private final EnsemblDataCache mGeneTransCache;
 
     private String mChromosome;
-    private final List<EnsemblGeneData> mGeneDataList;
+    private final List<GeneData> mGeneDataList;
 
     private final Map<String,GcRatioCounts> mTranscriptGcRatioCache;
 
@@ -73,7 +73,7 @@ public class GcTranscriptCalculator implements Callable
         mTotalExpectedCounts = mConfig.runFunction(EXPECTED_GC_COUNTS) ? new double[mTranscriptFitGcCounts.size()] : null;
     }
 
-    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList, final BufferedWriter writer)
+    public void initialise(final String chromosome, final List<GeneData> geneDataList, final BufferedWriter writer)
     {
         mChromosome = chromosome;
         mWriter = writer;
@@ -135,7 +135,7 @@ public class GcTranscriptCalculator implements Callable
         int genesProcessed = 0;
         int nextLogCount = 100;
 
-        for(final EnsemblGeneData geneData : mGeneDataList)
+        for(final GeneData geneData : mGeneDataList)
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -160,7 +160,7 @@ public class GcTranscriptCalculator implements Callable
         ISF_LOGGER.info("chromosome({}) GC ratio generation complete", mChromosome);
     }
 
-    private void generateExpectedGeneCounts(final EnsemblGeneData geneData)
+    private void generateExpectedGeneCounts(final GeneData geneData)
     {
         GcRatioCounts gcRatioCounts = new GcRatioCounts();
         int readLength = mConfig.ReadLength;
@@ -207,7 +207,7 @@ public class GcTranscriptCalculator implements Callable
         writeExpectedGcRatios(mWriter, geneData.GeneId, gcRatioCounts.getCounts());
     }
 
-    private String getRefBaseString(final EnsemblGeneData geneData)
+    private String getRefBaseString(final GeneData geneData)
     {
         try
         {

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
@@ -24,8 +24,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -108,7 +108,7 @@ public class DisruptionTest
     {
         byte strand = 1;
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneId, chromosome, strand, 10000, 120000));
         addGeneData(geneTransCache, chromosome, geneList);
 

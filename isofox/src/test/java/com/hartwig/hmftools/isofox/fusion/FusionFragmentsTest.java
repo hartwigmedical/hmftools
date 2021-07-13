@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;

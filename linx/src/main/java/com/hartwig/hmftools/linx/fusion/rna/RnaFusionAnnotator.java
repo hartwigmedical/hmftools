@@ -17,9 +17,9 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR
 import static com.hartwig.hmftools.linx.fusion.rna.RnaJunctionType.KNOWN;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
@@ -167,7 +167,7 @@ public class RnaFusionAnnotator
             // check that gene names match Ensembl - applicable for StarFusion
             geneNames[fs] = checkAlternateGeneName(geneNames[fs]);
 
-            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(geneNames[fs]);
+            final GeneData geneData = mGeneTransCache.getGeneDataByName(geneNames[fs]);
 
             if(geneData == null)
             {

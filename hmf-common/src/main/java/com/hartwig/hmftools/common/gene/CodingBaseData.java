@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.fusion;
+package com.hartwig.hmftools.common.gene;
 
 public class CodingBaseData
 {

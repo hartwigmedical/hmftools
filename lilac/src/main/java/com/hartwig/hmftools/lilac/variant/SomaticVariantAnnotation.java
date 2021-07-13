@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;

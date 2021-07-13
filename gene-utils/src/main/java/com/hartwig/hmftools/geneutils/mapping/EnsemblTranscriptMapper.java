@@ -3,35 +3,25 @@ package com.hartwig.hmftools.geneutils.mapping;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData.SYNONYM_DELIM;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.mapping.MappingType.GENE_ID;
-import static com.hartwig.hmftools.geneutils.mapping.MappingType.GENE_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.CodingBaseData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -112,7 +102,7 @@ public class EnsemblTranscriptMapper
             if(!mSpecificGeneIds.isEmpty() && !mSpecificGeneIds.contains(geneId))
                 continue;
 
-            EnsemblGeneData geneData = mGeneCacheSrc.getGeneDataById(geneId);
+            GeneData geneData = mGeneCacheSrc.getGeneDataById(geneId);
 
             TranscriptData canonicalTransDataSrc = srcTrans.get(geneId).stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
 
@@ -145,7 +135,7 @@ public class EnsemblTranscriptMapper
         GU_LOGGER.info("Ensembl transcript mapping complete");
     }
 
-    private void mapTranscripts(final EnsemblGeneData geneData, final TranscriptData transDataSrc, final List<TranscriptData> transDataDests)
+    private void mapTranscripts(final GeneData geneData, final TranscriptData transDataSrc, final List<TranscriptData> transDataDests)
     {
         // find any transcript which matches coding regions exactly
         int codingStart = transDataSrc.CodingStart;
@@ -234,7 +224,7 @@ public class EnsemblTranscriptMapper
     }
 
     private void writeMappingData(
-            final EnsemblGeneData geneData, final TranscriptData transDataSrc,
+            final GeneData geneData, final TranscriptData transDataSrc,
             final List<TranscriptData> transDataDests, final String matchInfo)
     {
         try

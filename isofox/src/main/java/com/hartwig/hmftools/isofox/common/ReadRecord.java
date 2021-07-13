@@ -21,8 +21,6 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNKNOWN;
 
-import static htsjdk.samtools.CigarOperator.D;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,13 +30,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;

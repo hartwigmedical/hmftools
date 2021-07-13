@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
@@ -50,7 +50,7 @@ public class GenerateBedRegions
     private final RefGenomeVersion mRefGenVersion;
     private final EnsemblDataCache mEnsemblDataCache;
     
-    private final List<EnsemblGeneData> mCodingGenes;
+    private final List<GeneData> mCodingGenes;
     private final List<RegionData> mSpecificRegions;
     private final List<String> mComparisonFiles;
     private final List<Integer> mTranscriptValidTSLs;
@@ -133,7 +133,7 @@ public class GenerateBedRegions
                 mCodingGenes.size(), mSpecificRegions.size());
 
         // first form non-overlapping coding regions from the genes
-        for(EnsemblGeneData geneData : mCodingGenes)
+        for(GeneData geneData : mCodingGenes)
         {
             formGeneCodingRegions(geneData);
         }
@@ -158,7 +158,7 @@ public class GenerateBedRegions
         writeMissingComparisonRegions();
     }
 
-    private void formGeneCodingRegions(final EnsemblGeneData geneData)
+    private void formGeneCodingRegions(final GeneData geneData)
     {
         final List<TranscriptData> transcripts = mEnsemblDataCache.getTranscripts(geneData.GeneId);
 

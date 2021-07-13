@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
@@ -329,7 +329,7 @@ public class AltSpliceJunction
         return AltSpliceJunctionFile.csvHeader() + ",NearestStartExon,NearestEndExon,InitialReadId";
     }
 
-    public String toCsv(final EnsemblGeneData geneData)
+    public String toCsv(final GeneData geneData)
     {
         AltSpliceJunctionFile asjFile = new AltSpliceJunctionFile(
                 mGeneId, geneData.GeneName, Chromosome, SpliceJunction, mType,

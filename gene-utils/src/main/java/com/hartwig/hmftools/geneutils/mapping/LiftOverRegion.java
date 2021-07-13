@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-
 public class LiftOverRegion
 {
     public final String GeneId;

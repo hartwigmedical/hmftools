@@ -16,16 +16,15 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -71,7 +70,7 @@ public class GenerateEnsemblDataCache
     }
 
     private static void createTranscriptPreGenePositionData(
-            final Map<String, List<EnsemblGeneData>> chrGeneDataMap, final Map<String, List<TranscriptData>> transcriptDataMap,
+            final Map<String, List<GeneData>> chrGeneDataMap, final Map<String, List<TranscriptData>> transcriptDataMap,
             int preGenePromotorDistance, final String outputDir)
     {
         // generate a cache file of the nearest upstream splice acceptor from another gene for each transcript
@@ -85,15 +84,15 @@ public class GenerateEnsemblDataCache
             writer.newLine();
 
             // for each gene, collect up any gene which overlaps it or is within the specified distance upstream from it
-            for (Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneDataMap.entrySet())
+            for (Map.Entry<String, List<GeneData>> entry : chrGeneDataMap.entrySet())
             {
                 final String chromosome = entry.getKey();
 
                 GU_LOGGER.debug("calculating pre-gene positions for chromosome({})", chromosome);
 
-                final List<EnsemblGeneData> geneList = entry.getValue();
+                final List<GeneData> geneList = entry.getValue();
 
-                for (final EnsemblGeneData gene : geneList)
+                for (final GeneData gene : geneList)
                 {
                     List<String> proximateGenes = Lists.newArrayList();
 
@@ -111,7 +110,7 @@ public class GenerateEnsemblDataCache
                         geneRangeEnd = gene.GeneEnd + preGenePromotorDistance;
                     }
 
-                    for (final EnsemblGeneData otherGene : geneList)
+                    for (final GeneData otherGene : geneList)
                     {
                         if (otherGene.Strand != gene.Strand)
                             continue;

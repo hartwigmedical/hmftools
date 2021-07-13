@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
@@ -14,10 +14,9 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.ENHANCER;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.checkProteinDomains;
@@ -33,14 +32,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
-import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
+import com.hartwig.hmftools.common.gene.TranscriptProteinData;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

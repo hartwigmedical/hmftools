@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -328,8 +328,8 @@ public class FusionLikelihood
                     final String geneIdLower = genePair[0];
                     final String geneIdUpper = genePair[1];
 
-                    EnsemblGeneData geneUp = null;
-                    EnsemblGeneData geneDown = null;
+                    GeneData geneUp = null;
+                    GeneData geneDown = null;
 
                     Map<Integer,Long> bucketLengthCounts = entry.getValue();
 
@@ -349,8 +349,8 @@ public class FusionLikelihood
 
                         if(geneUp == null && geneDown == null)
                         {
-                            EnsemblGeneData geneLower = mGeneTransCache.getGeneDataById(geneIdLower);
-                            EnsemblGeneData geneUpper = mGeneTransCache.getGeneDataById(geneIdUpper);
+                            GeneData geneLower = mGeneTransCache.getGeneDataById(geneIdLower);
+                            GeneData geneUpper = mGeneTransCache.getGeneDataById(geneIdUpper);
                             boolean isForwardStrand = (geneLower.Strand == 1);
 
                             geneUp = (isDel == isForwardStrand) ? geneLower : geneUpper;

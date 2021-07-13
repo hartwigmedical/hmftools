@@ -2,11 +2,11 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DEL_DISRUPTION;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTION;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createDriverGene;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -20,8 +20,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -51,7 +51,7 @@ public class HomDisruptionsTest
         int transStart = 10000;
         int transEnd = 130000;
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
 
         tester.Config.DriverGenes.add(createDriverGene(geneName));
@@ -123,7 +123,7 @@ public class HomDisruptionsTest
         int transStart = 10000;
         int transEnd = 55000;
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
 
         tester.Config.DriverGenes.add(createDriverGene(geneName));
@@ -223,7 +223,7 @@ public class HomDisruptionsTest
         int transStart = 10000;
         int transEnd = 55000;
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
 
         tester.Config.DriverGenes.add(createDriverGene(geneName));

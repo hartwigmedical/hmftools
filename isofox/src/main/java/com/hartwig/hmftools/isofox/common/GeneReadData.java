@@ -11,19 +11,18 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 
 public class GeneReadData
 {
-    public final EnsemblGeneData GeneData;
+    public final com.hartwig.hmftools.common.gene.GeneData GeneData;
 
     private final List<RegionReadData> mExonRegions; // set of unique exons ie with differing start and end positions
 
     private final List<TranscriptData> mTranscripts;
     private boolean mHasUnsplicedRegions;
 
-    public GeneReadData(final EnsemblGeneData geneData)
+    public GeneReadData(final com.hartwig.hmftools.common.gene.GeneData geneData)
     {
         GeneData = geneData;
 
@@ -113,11 +112,11 @@ public class GeneReadData
                 GeneData.GeneId, GeneData.GeneName, GeneData.Chromosome, GeneData.GeneStart, GeneData.GeneEnd, mTranscripts.size());
     }
 
-    public static List<GeneReadData> createGeneReadData(final List<EnsemblGeneData> geneDataList, final EnsemblDataCache geneTransCache)
+    public static List<GeneReadData> createGeneReadData(final List<com.hartwig.hmftools.common.gene.GeneData> geneDataList, final EnsemblDataCache geneTransCache)
     {
         final List<GeneReadData> geneReadDataList = Lists.newArrayList();
 
-        for(EnsemblGeneData geneData : geneDataList)
+        for(com.hartwig.hmftools.common.gene.GeneData geneData : geneDataList)
         {
             GeneReadData geneReadData = new GeneReadData(geneData);
 

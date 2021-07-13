@@ -2,14 +2,14 @@ package com.hartwig.hmftools.neo;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.OUT_OF_FRAME_FUSION;
@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData.SYNONYM_DELIM;
+import static com.hartwig.hmftools.common.gene.GeneData.SYNONYM_DELIM;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -18,13 +17,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -80,19 +78,19 @@ public class EnsemblGeneMapper
     {
         GU_LOGGER.info("running Ensembl gene mapping");
 
-        for(Map.Entry<String,List<EnsemblGeneData>> chrEntry : mGeneCache37.getChrGeneDataMap().entrySet())
+        for(Map.Entry<String,List<GeneData>> chrEntry : mGeneCache37.getChrGeneDataMap().entrySet())
         {
             String chromosome = chrEntry.getKey();
-            List<EnsemblGeneData> geneList37 = chrEntry.getValue();
+            List<GeneData> geneList37 = chrEntry.getValue();
 
             String chr38 = enforceChrPrefix(chromosome);
 
-            List<EnsemblGeneData> geneList38 = mGeneCache38.getChrGeneDataMap().get(chr38);
+            List<GeneData> geneList38 = mGeneCache38.getChrGeneDataMap().get(chr38);
             List<LiftOverRegion> liftOverRegions = mLiftOverRegions.get(chr38);
 
-            for(EnsemblGeneData geneData37 : geneList37)
+            for(GeneData geneData37 : geneList37)
             {
-                EnsemblGeneData geneData38 = mGeneCache38.getGeneDataById(geneData37.GeneId);
+                GeneData geneData38 = mGeneCache38.getGeneDataById(geneData37.GeneId);
 
                 if(geneData38 != null)
                 {
@@ -119,7 +117,7 @@ public class EnsemblGeneMapper
 
                 boolean found = false;
 
-                for(EnsemblGeneData gene38 : geneList38)
+                for(GeneData gene38 : geneList38)
                 {
                     if(matchOnSynonyms(geneData37, gene38))
                     {
@@ -151,7 +149,7 @@ public class EnsemblGeneMapper
         GU_LOGGER.info("Ensembl gene mapping complete");
     }
 
-    private boolean matchOnSynonyms(final EnsemblGeneData gene37, final EnsemblGeneData gene38)
+    private boolean matchOnSynonyms(final GeneData gene37, final GeneData gene38)
     {
         if(gene37.getSynonyms().isEmpty() || gene38.getSynonyms().isEmpty())
             return false;
@@ -242,7 +240,7 @@ public class EnsemblGeneMapper
         }
     }
 
-    private void writeMappingData(final EnsemblGeneData geneData37, final EnsemblGeneData geneData38, MappingType type)
+    private void writeMappingData(final GeneData geneData37, final GeneData geneData38, MappingType type)
     {
         try
         {

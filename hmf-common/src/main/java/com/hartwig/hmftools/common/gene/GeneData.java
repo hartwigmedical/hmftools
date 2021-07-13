@@ -1,6 +1,9 @@
-package com.hartwig.hmftools.common.ensemblcache;
+package com.hartwig.hmftools.common.gene;
 
-public class EnsemblGeneData
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+
+public class GeneData
 {
     public final String GeneId; // aka StableId
     public final String GeneName;
@@ -14,7 +17,7 @@ public class EnsemblGeneData
 
     public static final String SYNONYM_DELIM = ";";
 
-    public EnsemblGeneData(
+    public GeneData(
             String geneId, String geneName, String chromosome, byte strand, int geneStart, int geneEnd, String karyotypeBand)
     {
         GeneId = geneId;
@@ -27,8 +30,8 @@ public class EnsemblGeneData
         mSynonyms = "";
     }
 
-    public boolean forwardStrand() { return Strand == 1; }
-    public boolean reverseStrand() { return Strand == -1; }
+    public boolean forwardStrand() { return Strand == POS_STRAND; }
+    public boolean reverseStrand() { return Strand == NEG_STRAND; }
 
     public void addSynonyms(final String synonyms) { mSynonyms = synonyms; }
     public boolean hasSynonym(final String name) { return mSynonyms.contains(name); }

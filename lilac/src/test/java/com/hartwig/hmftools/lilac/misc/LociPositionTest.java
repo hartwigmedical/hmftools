@@ -14,9 +14,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.lilac.LociPosition;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.junit.Test;
 

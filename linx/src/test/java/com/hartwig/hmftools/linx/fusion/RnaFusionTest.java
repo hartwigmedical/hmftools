@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -20,8 +20,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -40,7 +40,7 @@ public class RnaFusionTest
         String geneId = "ENSG0001";
         String chromosome = "1";
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, 1, 10000, 20000));
 
         // one on the negative strand

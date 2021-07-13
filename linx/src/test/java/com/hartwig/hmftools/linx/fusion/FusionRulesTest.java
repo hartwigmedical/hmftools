@@ -1,28 +1,27 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.getCodingBases;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.REQUIRED_BIOTYPES;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
@@ -44,16 +43,14 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Test;
-
-import junit.framework.TestCase;
 
 public class FusionRulesTest
 {
@@ -413,7 +410,7 @@ public class FusionRulesTest
         EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, 100, 1000));
 
         int[] exonStarts = new int[]{100, 300, 500, 700, 900};

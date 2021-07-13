@@ -34,8 +34,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
@@ -554,7 +554,7 @@ public class RnaFusionMapper
             if(rnaFusion.GeneIds[fs].isEmpty())
                 continue;
 
-            EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(rnaFusion.GeneIds[fs]);
+            GeneData geneData = mGeneTransCache.getGeneDataById(rnaFusion.GeneIds[fs]);
 
             if(geneData == null)
             {

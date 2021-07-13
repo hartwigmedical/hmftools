@@ -13,10 +13,6 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -28,18 +24,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.jooq.CSVFormat;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
-import org.jooq.tools.StringUtils;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
 
@@ -177,7 +171,7 @@ public class EnsemblDAO
             // GU_LOGGER.debug("gene query: {}", queryStr);
             Result<Record> results = mDbContext.fetch(queryStr);
 
-            final Map<String,List<EnsemblGeneData>> chrGeneMap = Maps.newHashMap();
+            final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
             final Set<String> geneNames = Sets.newHashSet();
 
@@ -203,13 +197,13 @@ public class EnsemblDAO
                     geneName = (String) entrezId;
                 }
 
-                EnsemblGeneData geneData = new EnsemblGeneData(
+                GeneData geneData = new GeneData(
                         geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(),
                         record.get("KaryotypeBand").toString());
 
                 geneData.addSynonyms(record.get("Synonyms").toString());
 
-                List<EnsemblGeneData> geneList = chrGeneMap.get(chromosome);
+                List<GeneData> geneList = chrGeneMap.get(chromosome);
 
                 if(geneList == null)
                 {
@@ -231,9 +225,9 @@ public class EnsemblDAO
                 }
             }
 
-            for(Map.Entry<String,List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
+            for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
             {
-                for(EnsemblGeneData geneData : entry.getValue())
+                for(GeneData geneData : entry.getValue())
                 {
                     writer.write(String.format("%s,%s,%s,%d,%d,%d,%s,%s",
                             geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneData.Strand,

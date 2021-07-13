@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
 
 import org.junit.Assert;

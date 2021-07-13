@@ -2,26 +2,13 @@ package com.hartwig.hmftools.linx.gene;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MAX;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.getProteinDomainPositions;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,12 +17,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.GeneTestUtils;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.GeneTestUtils;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 
 import org.junit.Test;
 
@@ -50,7 +35,7 @@ public class GeneCollectionTest
         String geneId = "ENSG0001";
         String chromosome = "1";
 
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, chromosome, 1, 10000, 20000));
         GeneTestUtils.addGeneData(geneTransCache, chromosome, geneList);
 

@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
@@ -35,9 +35,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
@@ -153,16 +153,16 @@ public class CohortExpFusions
             - finally determine global fusion rates
         */
 
-        final Map<String, List<EnsemblGeneData>> chrGeneDataMap = geneTransCache.getChrGeneDataMap();
+        final Map<String, List<GeneData>> chrGeneDataMap = geneTransCache.getChrGeneDataMap();
 
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : chrGeneDataMap.entrySet())
         {
             final String chromosome = entry.getKey();
 
             if(!restrictedChromosomes.isEmpty() && !restrictedChromosomes.contains(chromosome))
                 continue;
 
-            final List<EnsemblGeneData> chrGenes = entry.getValue();
+            final List<GeneData> chrGenes = entry.getValue();
 
             if(chrGenes.isEmpty())
                 continue;
@@ -175,7 +175,7 @@ public class CohortExpFusions
 
             ChromosomeArm currentArm = UNKNOWN;
 
-            for(final EnsemblGeneData geneData : chrGenes)
+            for(final GeneData geneData : chrGenes)
             {
                 if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneData.GeneId))
                     continue;
@@ -320,7 +320,7 @@ public class CohortExpFusions
     }
 
     public static List<GenePhaseRegion> createPhaseRegionsFromTranscript(
-            final EnsemblGeneData geneData, final TranscriptData transcript, int precSpliceAcceptorPos)
+            final GeneData geneData, final TranscriptData transcript, int precSpliceAcceptorPos)
     {
         // 5-prime rules - must be post-promotor
         // 3-prime rules: must be coding and > 1 exon, needs to find first splice acceptor and then uses its phasing
@@ -843,7 +843,7 @@ public class CohortExpFusions
 
         for(final String geneId : geneIds)
         {
-            final EnsemblGeneData geneData = geneTransCache.getGeneDataById(geneId);
+            final GeneData geneData = geneTransCache.getGeneDataById(geneId);
 
             if(geneData == null)
             {

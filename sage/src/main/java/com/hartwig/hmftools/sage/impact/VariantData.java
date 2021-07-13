@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
@@ -105,7 +105,7 @@ public class VariantData
         return sj.toString();
     }
 
-    public String csvData(final EnsemblGeneData geneData)
+    public String csvData(final GeneData geneData)
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add(csvCommonData(geneData));
@@ -120,7 +120,7 @@ public class VariantData
         return sj.toString();
     }
 
-    private String csvCommonData(final EnsemblGeneData geneData)
+    private String csvCommonData(final GeneData geneData)
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add(Chromosome);
@@ -153,7 +153,7 @@ public class VariantData
         return sj.toString();
     }
 
-    public List<String> csvTranscriptData(final EnsemblGeneData geneData)
+    public List<String> csvTranscriptData(final GeneData geneData)
     {
         List<String> transcriptLines = Lists.newArrayList();
 

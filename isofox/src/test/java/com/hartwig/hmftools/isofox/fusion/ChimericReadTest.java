@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
@@ -19,10 +19,8 @@ import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
-import static com.hartwig.hmftools.isofox.TestUtils.createSupplementaryReadPair;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.setHasMultipleKnownSpliceGenes;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +33,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -126,7 +124,7 @@ public class ChimericReadTest
         int gcId = 0;
 
         // test with 2 overlapping genes
-        List<EnsemblGeneData> geneDataList = Lists.newArrayList(
+        List<GeneData> geneDataList = Lists.newArrayList(
                 geneTransCache.getGeneDataById(GENE_ID_1), geneTransCache.getGeneDataById(GENE_ID_2));
 
         final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, geneDataList);

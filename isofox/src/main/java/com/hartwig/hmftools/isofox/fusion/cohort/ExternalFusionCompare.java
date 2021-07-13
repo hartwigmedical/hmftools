@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
@@ -273,7 +273,7 @@ public class ExternalFusionCompare
             final String[] geneIds = {"", ""};
             for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
-                EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(extFusion.GeneNames[fs]);
+                GeneData geneData = mGeneTransCache.getGeneDataByName(extFusion.GeneNames[fs]);
 
                 if(geneData == null)
                 {

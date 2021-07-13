@@ -18,8 +18,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -178,7 +178,7 @@ public class DriverDataCache
 
         mDriverCatalog.add(driverRecord);
 
-        final EnsemblGeneData geneData = GeneTransCache.getGeneDataByName(gene.GeneName);
+        final GeneData geneData = GeneTransCache.getGeneDataByName(gene.GeneName);
 
         if (geneData == null)
         {

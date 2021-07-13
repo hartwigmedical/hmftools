@@ -1,23 +1,25 @@
 package com.hartwig.hmftools.common.fusion;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.NON_CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_3P;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.UTR_5P;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.DOWNSTREAM;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.INTRONIC;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UNKNOWN;
-import static com.hartwig.hmftools.common.fusion.TranscriptRegionType.UPSTREAM;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.tickPhaseForward;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UNKNOWN;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 import org.jetbrains.annotations.NotNull;
 

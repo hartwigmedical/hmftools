@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo;
 
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -19,9 +19,9 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.fusion.TranscriptCodingType;
-import com.hartwig.hmftools.common.fusion.TranscriptRegionType;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
