@@ -35,7 +35,7 @@ public class GermlineFindingsChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Germline Findings"));
+        document.add(new Paragraph("Germline Findings").addStyle(ReportResources.chapterTitleStyle()));
         if (reportGermline) {
             addGermlineVariants(document);
             addMVLHAnalysis(document);

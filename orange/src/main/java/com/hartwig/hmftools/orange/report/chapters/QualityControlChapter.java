@@ -24,7 +24,7 @@ public class QualityControlChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Quality Control"));
+        document.add(new Paragraph("Quality Control").addStyle(ReportResources.chapterTitleStyle()));
         document.add(new Paragraph("TODO: Add Purple Plots").addStyle(ReportResources.tableContentStyle()));
         document.add(new Paragraph("TODO: Add BQR plots").addStyle(ReportResources.tableContentStyle()));
         document.add(new Paragraph("TODO: Add Metrics / Flagstats").addStyle(ReportResources.tableContentStyle()));
