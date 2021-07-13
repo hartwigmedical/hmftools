@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.genome.refgenome;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,14 @@ public class RefGenomeSource implements RefGenomeInterface
     public String getBaseString(final String chromosome, int posStart, int posEnd)
     {
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBaseString();
+    }
+
+    @Override
+    public String getBaseString(final String chromosome, final List<int[]> baseRanges)
+    {
+        StringBuilder refBases = new StringBuilder();
+        baseRanges.forEach(x -> refBases.append(mRefGenome.getSubsequenceAt(chromosome, x[0], x[1]).getBaseString()));
+        return refBases.toString();
     }
 
     public static RefGenomeSource loadRefGenome(final String filename)

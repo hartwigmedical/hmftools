@@ -1,48 +1,27 @@
 package com.hartwig.hmftools.common.gene;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.common.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
-import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-
-import static org.junit.Assert.assertTrue;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
 
 import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
-
-import org.junit.Assert;
 import org.junit.Test;
 
 public class TranscriptUtilsTest
 {
     private static final int TRANS_ID_1 = 1;
     private static final String TRANS_NAME_1 = "TRANS001";
-    private static final String GENE_NAME_1 = "GENE_1";
-    private static final String GENE_NAME_2 = "GENE_2";
     private static final String GENE_ID_1 = "GENE001";
-    private static final String GENE_ID_2 = "GENE002";
-    private static final String CHR_1 = "1";
 
     @Test
     public void testExonicCodingPhase()
@@ -236,7 +215,7 @@ public class TranscriptUtilsTest
     @Test
     public void testTranscriptDataCreation()
     {
-        int[] exonStarts = {10, 30, 50};
+        int[] exonStarts = { 10, 30, 50 };
         Integer codingStart = 15;
         Integer codingEnd = 55;
 
@@ -282,5 +261,62 @@ public class TranscriptUtilsTest
 
         assertEquals(PHASE_0, transData.exons().get(2).PhaseStart);
         assertEquals(PHASE_2, transData.exons().get(2).PhaseEnd);
+    }
+
+    @Test
+    public void testCodingRanges()
+    {
+        Integer codingStart = 35;
+        Integer codingEnd = 75;
+
+        TranscriptData transData = new TranscriptData(
+                TRANS_ID_1, TRANS_NAME_1, GENE_ID_1, false, POS_STRAND,
+                10, 80, codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+
+        transData.exons().add(new ExonData(TRANS_ID_1, 10, 20, 1, PHASE_NONE, PHASE_NONE));
+        transData.exons().add(new ExonData(TRANS_ID_1, 30, 40, 2, PHASE_NONE, PHASE_0));
+        transData.exons().add(new ExonData(TRANS_ID_1, 50, 60, 2, PHASE_0, PHASE_2));
+        transData.exons().add(new ExonData(TRANS_ID_1, 70, 80, 2, PHASE_2, PHASE_NONE));
+
+        List<int[]> codingRanges = getCodingBaseRanges(transData, 35, true, 6);
+
+        assertEquals(1, codingRanges.size());
+        assertEquals(35, codingRanges.get(0)[0]);
+        assertEquals(40, codingRanges.get(0)[1]);
+
+        codingRanges = getCodingBaseRanges(transData, 39, true, 8);
+
+        assertEquals(2, codingRanges.size());
+        assertEquals(39, codingRanges.get(0)[0]);
+        assertEquals(40, codingRanges.get(0)[1]);
+
+        assertEquals(50, codingRanges.get(1)[0]);
+        assertEquals(55, codingRanges.get(1)[1]);
+
+        codingRanges = getCodingBaseRanges(transData, 40, true, 23);
+
+        assertEquals(3, codingRanges.size());
+        assertEquals(40, codingRanges.get(0)[0]);
+        assertEquals(40, codingRanges.get(0)[1]);
+
+        assertEquals(50, codingRanges.get(1)[0]);
+        assertEquals(60, codingRanges.get(1)[1]);
+
+        assertEquals(70, codingRanges.get(2)[0]);
+        assertEquals(75, codingRanges.get(2)[1]);
+
+        // reverse direction
+        codingRanges = getCodingBaseRanges(transData, 70, false, 13);
+
+        assertEquals(3, codingRanges.size());
+
+        assertEquals(40, codingRanges.get(0)[0]);
+        assertEquals(40, codingRanges.get(0)[1]);
+
+        assertEquals(50, codingRanges.get(1)[0]);
+        assertEquals(60, codingRanges.get(1)[1]);
+
+        assertEquals(70, codingRanges.get(2)[0]);
+        assertEquals(70, codingRanges.get(2)[1]);
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -24,4 +25,22 @@ public class MockRefGenome implements RefGenomeInterface
         else
             return "";
     }
+
+    @Override
+    public String getBaseString(final String chromosome, final List<int[]> baseRanges)
+    {
+        String chrBases = RefGenomeMap.get(chromosome);
+
+        if(chrBases == null)
+            return "";
+
+        StringBuilder refBases = new StringBuilder();
+
+        baseRanges.stream()
+                .filter(x -> x[0] >= 0 && x[1] < chrBases.length())
+                .forEach(x -> chrBases.substring(x[0], x[1] + 1));
+
+        return refBases.toString();
+    }
+
 }

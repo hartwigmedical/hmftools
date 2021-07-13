@@ -11,6 +11,14 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
+import java.util.List;
+
+import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+
 public class TranscriptUtils
 {
     public static int codingBasesToPhase(int codingBases, int startPhase)
@@ -192,4 +200,87 @@ public class TranscriptUtils
         return cbData;
     }
 
+    public static List<int[]> getCodingBaseRanges(final TranscriptData transData, int startPosition, boolean searchUp, int requiredBases)
+    {
+        // returns ranges of coding bases starting from a given position for a specified number of bases up or down from there
+        final List<int[]> codingBaseRanges = Lists.newArrayList();
+
+        if(transData.CodingStart == null)
+            return codingBaseRanges;
+
+        if(startPosition < transData.CodingStart || startPosition > transData.CodingEnd)
+            return codingBaseRanges;
+
+        final List<ExonData> exonDataList = transData.exons();
+
+        if(searchUp)
+        {
+            for (int i = 0; i < exonDataList.size(); ++i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(startPosition > exon.End)
+                    continue;
+
+                if(exon.Start > transData.CodingEnd)
+                    break; // no more coding bases
+
+                int exonBaseStart = max(exon.Start, startPosition);
+                int exonBaseEnd = min(transData.CodingEnd, exon.End);
+
+                int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
+
+                if(requiredBases >= exonBaseCount)
+                {
+                    // take them all
+                    requiredBases -= exonBaseCount;
+                }
+                else
+                {
+                    exonBaseEnd = exonBaseStart + requiredBases - 1;
+                    requiredBases = 0;
+                }
+
+                codingBaseRanges.add(new int[] {exonBaseStart, exonBaseEnd});
+
+                if (requiredBases <= 0)
+                    break;
+            }
+        }
+        else
+        {
+            for(int i = exonDataList.size() - 1; i >= 0; --i)
+            {
+                final ExonData exon = exonDataList.get(i);
+
+                if(startPosition < exon.Start)
+                    continue;
+
+                if(exon.End < transData.CodingStart)
+                    break;
+
+                int exonBaseEnd = min(exon.End, startPosition);
+                int exonBaseStart = max(transData.CodingStart, exon.Start);
+
+                int exonBaseCount = exonBaseEnd - exonBaseStart + 1;
+
+                if(requiredBases >= exonBaseCount)
+                {
+                    requiredBases -= exonBaseCount;
+                }
+                else
+                {
+                    exonBaseStart = exonBaseEnd - requiredBases + 1;
+                    requiredBases = 0;
+                }
+
+                codingBaseRanges.add(0, new int[] {exonBaseStart, exonBaseEnd});
+
+                if (requiredBases <= 0)
+                    break;
+            }
+        }
+
+        return codingBaseRanges;
+    }
 }

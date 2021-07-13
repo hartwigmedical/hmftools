@@ -15,21 +15,15 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import static org.junit.Assert.assertTrue;
 
-import static junit.framework.TestCase.assertEquals;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.CodingBaseData;
-import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.GeneTestUtils;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -39,8 +33,6 @@ import org.junit.Test;
 
 public class FusionTranscriptTest
 {
-    private static final int TRANS_ID_1 = 1;
-    private static final String TRANS_NAME_1 = "TRANS001";
     private static final String GENE_NAME_1 = "GENE_1";
     private static final String GENE_NAME_2 = "GENE_2";
     private static final String GENE_ID_1 = "GENE001";
