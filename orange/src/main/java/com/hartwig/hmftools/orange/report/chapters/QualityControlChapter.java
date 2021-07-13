@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import java.text.DecimalFormat;
+import java.util.StringJoiner;
+
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
@@ -13,6 +18,8 @@ import com.itextpdf.layout.property.HorizontalAlignment;
 import org.jetbrains.annotations.NotNull;
 
 public class QualityControlChapter implements ReportChapter {
+
+    private static final DecimalFormat PERCENTAGE_FORMAT = ReportResources.decimalFormat("#'%'");
 
     @NotNull
     private final OrangeReport report;
@@ -38,11 +45,31 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addKeyQC(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add Key QC & Contamination").addStyle(ReportResources.tableContentStyle()));
+        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 1 },
+                new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Amber Mean Depth"),
+                        TableUtil.createHeaderCell("Contamination"), TableUtil.createHeaderCell("Uns. CN segments"),
+                        TableUtil.createHeaderCell("Deleted Genes") });
+
+        table.addCell(TableUtil.createContentCell(purpleQCString()));
+        table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().amberMeanDepth())));
+        table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(report.purple().qc().contamination() * 100)));
+        table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().unsupportedCopyNumberSegments())));
+        table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().deletedGenes())));
+
+        document.add(TableUtil.createWrappingReportTable(table));
+    }
+
+    @NotNull
+    private String purpleQCString() {
+        StringJoiner joiner = new StringJoiner(", ");
+        for (PurpleQCStatus status : report.purple().qc().status()) {
+            joiner.add(status.toString());
+        }
+        return joiner.toString();
     }
 
     private void addMetricsFlagstats(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add Metrics / Flagstats").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add Metrics / Flagstats").addStyle(ReportResources.tableTitleStyle()));
     }
 
     private void addSageBQRPlots(@NotNull Document document) {

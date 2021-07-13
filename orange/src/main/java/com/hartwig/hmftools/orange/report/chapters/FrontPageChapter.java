@@ -56,13 +56,13 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addSummaryTable(@NotNull Document document) {
-        Table primaryTumorTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(new float[] { 2, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor"),
                         TableUtil.createHeaderCell("QC") });
-        primaryTumorTable.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
-        primaryTumorTable.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
-        primaryTumorTable.addCell(TableUtil.createContentCell(purpleQCString()));
-        document.add(TableUtil.createWrappingReportTable(primaryTumorTable));
+        table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
+        table.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
+        table.addCell(TableUtil.createContentCell(purpleQCString()));
+        document.add(TableUtil.createWrappingReportTable(table));
     }
 
     private void addDetailsAndPlots(@NotNull Document document) {
@@ -75,8 +75,6 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(ploidyString()));
         summary.addCell(TableUtil.createKeyCell("Fit method:"));
         summary.addCell(TableUtil.createValueCell(report.purple().fittedPurityMethod().toString()));
-        summary.addCell(TableUtil.createKeyCell("Whole genome duplicated:"));
-        summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
         summary.addCell(TableUtil.createKeyCell("Somatic variant drivers:"));
         summary.addCell(TableUtil.createValueCell(somaticDriverString()));
         summary.addCell(TableUtil.createKeyCell("Germline variant drivers:"));
@@ -89,6 +87,8 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(fusionDriverString()));
         summary.addCell(TableUtil.createKeyCell("Viral presence:"));
         summary.addCell(TableUtil.createValueCell(virusString()));
+        summary.addCell(TableUtil.createKeyCell("Whole genome duplicated:"));
+        summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
         summary.addCell(TableUtil.createKeyCell("Microsatellite indels per Mb:"));
         summary.addCell(TableUtil.createValueCell(msiString()));
         summary.addCell(TableUtil.createKeyCell("Tumor mutational load:"));
@@ -221,7 +221,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String purpleQCString() {
         StringJoiner joiner = new StringJoiner(", ");
-        for (PurpleQCStatus status : report.purple().purpleQC()) {
+        for (PurpleQCStatus status : report.purple().qc().status()) {
             joiner.add(status.toString());
         }
         return joiner.toString();

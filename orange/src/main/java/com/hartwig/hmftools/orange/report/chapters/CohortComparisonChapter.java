@@ -26,8 +26,8 @@ public class CohortComparisonChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph("Cohort Comparison").addStyle(ReportResources.chapterTitleStyle()));
         document.add(new Paragraph("TODO: Add cohort predictions for genomic position, signature, driver, expression and alternate splicing")
-                .addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add detailed cohort incidence per driver").addStyle(ReportResources.tableContentStyle()));
-        document.add(new Paragraph("TODO: Add detailed cohort incidence per signature").addStyle(ReportResources.tableContentStyle()));
+                .addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("TODO: Add detailed cohort incidence per driver").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("TODO: Add detailed cohort incidence per signature").addStyle(ReportResources.tableTitleStyle()));
     }
 }

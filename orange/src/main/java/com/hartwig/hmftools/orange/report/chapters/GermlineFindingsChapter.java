@@ -53,7 +53,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         Table germlineDriversTable = GermlineVariantTable.build(germlineDriversTitle, report.purple().reportableGermlineVariants());
         document.add(germlineDriversTable);
 
-        document.add(new Paragraph("TODO: Add other potentially other germline variants").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add other potentially other germline variants").addStyle(ReportResources.tableTitleStyle()));
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
@@ -87,11 +87,11 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineCNAberrations(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableTitleStyle()));
     }
 
     private void addPEACH(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableContentStyle()));
+        document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableTitleStyle()));
     }
 
 }

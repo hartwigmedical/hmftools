@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 public interface PurpleData {
 
     @NotNull
-    Set<PurpleQCStatus> purpleQC();
+    PurpleQC qc();
 
     boolean hasReliableQuality();
 

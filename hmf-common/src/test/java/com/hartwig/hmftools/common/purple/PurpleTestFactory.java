@@ -29,7 +29,7 @@ public final class PurpleTestFactory {
     @NotNull
     public static ImmutablePurpleData.Builder testPurpleDataBuilder() {
         return ImmutablePurpleData.builder()
-                .addPurpleQC(PurpleQCStatus.PASS)
+                .qc(qcPass())
                 .fittedPurityMethod(FittedPurityMethod.NORMAL)
                 .wholeGenomeDuplication(false)
                 .purity(0D)
@@ -46,5 +46,20 @@ public final class PurpleTestFactory {
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0);
+    }
+
+    @NotNull
+    private static PurpleQC qcPass() {
+        return ImmutablePurpleQC.builder()
+                .method(FittedPurityMethod.NORMAL)
+                .amberMeanDepth(0)
+                .copyNumberSegments(1)
+                .unsupportedCopyNumberSegments(0)
+                .deletedGenes(0)
+                .purity(0.5)
+                .contamination(0D)
+                .cobaltGender(Gender.FEMALE)
+                .amberGender(Gender.FEMALE)
+                .build();
     }
 }
