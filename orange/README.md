@@ -1,5 +1,7 @@
 # Oncogenic Results of Analyzing the Genome
 
-In development
+ORANGE summarizes the key outputs from all algo's in the Hartwig suite into a single PDF.
 
-Tool will provide an extensive visualization of all potentially relevant genomic findings from Hartwig pipeline
+Example can be found [here](src/main/resources/Test.orange.pdf).
+
+NOTE: This tool is still currently in development! 
