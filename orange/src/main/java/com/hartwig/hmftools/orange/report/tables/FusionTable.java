@@ -26,21 +26,21 @@ public final class FusionTable {
             return TableUtil.createEmptyTable(title);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 40 },
-                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
-                        TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies"),
-                        TableUtil.createHeaderCell("Phasing"), TableUtil.createHeaderCell("Driver") });
+        Table table = TableUtil.createReportContentTable(new float[] { 2, 1, 1, 1, 1, 1, 1, 1 },
+                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' End"),
+                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("CN"),
+                        TableUtil.createHeaderCell("Phased"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Chain"),
+                        TableUtil.createHeaderCell("Terminated")});
 
         for (LinxFusion fusion : sort(fusions)) {
             table.addCell(TableUtil.createContentCell(fusion.name()));
-            table.addCell(TableUtil.createContentCell(fusion.geneTranscriptStart()));
-            table.addCell(TableUtil.createContentCell(fusion.geneTranscriptEnd()));
             table.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
             table.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
             table.addCell(TableUtil.createContentCell(fusion.phased().display()));
-            table.addCell(TableUtil.createContentCell(fusion.likelihood().display()));
+            table.addCell(TableUtil.createContentCell(fusion.reportedType()));
+            table.addCell(TableUtil.createContentCell(String.valueOf(fusion.chainLinks())));
+            table.addCell(TableUtil.createContentCell(fusion.chainTerminated() ? "Yes" : "No"));
         }
 
         return TableUtil.createWrappingReportTable(table, title);

@@ -124,7 +124,7 @@ public final class PurpleDataLoader {
         LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVariantVcf);
 
         return ImmutablePurpleData.builder()
-                .purpleQC(purityContext.qc().status())
+                .qc(purityContext.qc())
                 .hasReliableQuality(purityContext.qc().pass())
                 .fittedPurityMethod(purityContext.method())
                 .wholeGenomeDuplication(purityContext.wholeGenomeDuplication())

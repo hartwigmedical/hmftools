@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -55,17 +56,17 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addSummaryTable(@NotNull Document document) {
-        Table primaryTumorTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(new float[] { 2, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor"),
                         TableUtil.createHeaderCell("QC") });
-        primaryTumorTable.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
-        primaryTumorTable.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
-        primaryTumorTable.addCell(TableUtil.createContentCell(purpleQCString()));
-        document.add(TableUtil.createWrappingReportTable(primaryTumorTable));
+        table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
+        table.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
+        table.addCell(TableUtil.createContentCell(purpleQCString()));
+        document.add(TableUtil.createWrappingReportTable(table));
     }
 
     private void addDetailsAndPlots(@NotNull Document document) {
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE - 5);
+        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         summary.addCell(TableUtil.createKeyCell("Purity:"));
@@ -74,8 +75,6 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(ploidyString()));
         summary.addCell(TableUtil.createKeyCell("Fit method:"));
         summary.addCell(TableUtil.createValueCell(report.purple().fittedPurityMethod().toString()));
-        summary.addCell(TableUtil.createKeyCell("Whole genome duplicated:"));
-        summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
         summary.addCell(TableUtil.createKeyCell("Somatic variant drivers:"));
         summary.addCell(TableUtil.createValueCell(somaticDriverString()));
         summary.addCell(TableUtil.createKeyCell("Germline variant drivers:"));
@@ -88,6 +87,8 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(fusionDriverString()));
         summary.addCell(TableUtil.createKeyCell("Viral presence:"));
         summary.addCell(TableUtil.createValueCell(virusString()));
+        summary.addCell(TableUtil.createKeyCell("Whole genome duplicated:"));
+        summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
         summary.addCell(TableUtil.createKeyCell("Microsatellite indels per Mb:"));
         summary.addCell(TableUtil.createValueCell(msiString()));
         summary.addCell(TableUtil.createKeyCell("Tumor mutational load:"));
@@ -103,19 +104,19 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createKeyCell("Off-label treatments:"));
         summary.addCell(TableUtil.createValueCell(offLabelTreatmentString()));
 
-        Image circosImage = ImageUtil.build(report.plots().purpleComprehensiveCircosPlot());
+        Image circosImage = ImageUtil.build(report.plots().purpleFinalCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        circosImage.setMaxHeight(300);
+        circosImage.setMaxHeight(280);
 
         topTable.addCell(summary);
         topTable.addCell(circosImage);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH_WIDE).setPadding(0);
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH).setPadding(0);
         table.addCell(topTable);
 
         Image clonalityImage = ImageUtil.build(report.plots().purpleClonalityPlot());
         clonalityImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        clonalityImage.setMaxHeight(300);
+        clonalityImage.setMaxHeight(280);
 
         table.addCell(clonalityImage);
         document.add(table);
@@ -140,7 +141,7 @@ public class FrontPageChapter implements ReportChapter {
         if (variants.isEmpty()) {
             return "None";
         } else {
-            Set<String> highDriverGenes = Sets.newTreeSet();
+            Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
             for (ReportableVariant variant : variants) {
                 if (variant.driverLikelihoodInterpretation() == DriverInterpretation.HIGH) {
                     highDriverGenes.add(variant.gene());
@@ -200,7 +201,7 @@ public class FrontPageChapter implements ReportChapter {
         if (report.virusInterpreter().reportableViruses().isEmpty()) {
             return "None";
         } else {
-            Set<String> viruses = Sets.newTreeSet();
+            Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
             for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
                 if (virus.interpretation() != null) {
                     viruses.add(virus.interpretation().toString());
@@ -220,7 +221,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String purpleQCString() {
         StringJoiner joiner = new StringJoiner(", ");
-        for (PurpleQCStatus status : report.purple().purpleQC()) {
+        for (PurpleQCStatus status : report.purple().qc().status()) {
             joiner.add(status.toString());
         }
         return joiner.toString();
@@ -272,7 +273,7 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel, boolean reportGermline) {
-        Set<EvidenceLevel> levels = Sets.newTreeSet();
+        Set<EvidenceLevel> levels = Sets.newTreeSet(Comparator.naturalOrder());
         Set<String> treatments = Sets.newHashSet();
         for (ProtectEvidence evidence : evidences) {
             if (evidence.onLabel() == requireOnLabel && (reportGermline || !evidence.germline())) {

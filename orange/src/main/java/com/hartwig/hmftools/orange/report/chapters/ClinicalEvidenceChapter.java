@@ -57,8 +57,8 @@ public class ClinicalEvidenceChapter implements ReportChapter {
             document.add(note(" * Evidence from germline events is filtered"));
         }
 
-        if (reportConfig.maxReportingLevel() != null) {
-            document.add(note(" * Treatments are reported up to a maximum evidence level of '" + reportConfig.maxReportingLevel().toString()
+        if (reportConfig.maxEvidenceLevel() != null) {
+            document.add(note(" * Treatments are reported up to a maximum evidence level of '" + reportConfig.maxEvidenceLevel().toString()
                     + "'.'"));
         }
 
@@ -137,28 +137,32 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     @NotNull
     private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap) {
-        if (treatmentMap.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
-        }
-
         Table treatmentTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment"), TableUtil.createHeaderCell("Responsive Evidence"),
                         TableUtil.createHeaderCell("Resistance Evidence") });
 
-        EvidenceLevel maxReportingLevel = reportConfig.maxReportingLevel();
+        EvidenceLevel maxReportingLevel = reportConfig.maxEvidenceLevel();
 
+        boolean hasEvidence = false;
         for (EvidenceLevel level : EvidenceLevel.values()) {
             if (maxReportingLevel == null || !maxReportingLevel.isHigher(level)) {
-                addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level);
+                if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level)) {
+                    hasEvidence = true;
+                }
             }
         }
 
-        return TableUtil.createWrappingReportTable(treatmentTable, title);
+        if (hasEvidence) {
+            return TableUtil.createWrappingReportTable(treatmentTable, title);
+        } else {
+            return TableUtil.createEmptyTable(title);
+        }
     }
 
-    private static void addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
+    private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel) {
         Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
+        boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
             if (allowedHighestLevel == highestEvidence(treatmentMap.get(treatment))) {
@@ -185,8 +189,11 @@ public class ClinicalEvidenceChapter implements ReportChapter {
                     resistantTable.addCell(cell);
                 }
                 table.addCell(TableUtil.createContentCell(resistantTable));
+                hasEvidence = true;
             }
         }
+
+        return hasEvidence;
     }
 
     @NotNull

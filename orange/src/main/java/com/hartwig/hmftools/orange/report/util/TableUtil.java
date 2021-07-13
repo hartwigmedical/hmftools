@@ -6,6 +6,7 @@ import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.IBlockElement;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
@@ -36,7 +37,7 @@ public class TableUtil {
 
     @NotNull
     public static Table createReportContentTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE);
+        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH);
         table.setFixedLayout();
 
         for (Cell headerCell : headerCells) {
@@ -125,6 +126,17 @@ public class TableUtil {
         cell.addStyle(ReportResources.tableContentStyle());
         cell.setKeepTogether(true);
         cell.add(element);
+        return cell;
+    }
+
+    @NotNull
+    public static Cell createImageCell(@NotNull Image image) {
+        Cell cell = new Cell();
+        cell.setBorder(Border.NO_BORDER);
+        cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
+        cell.addStyle(ReportResources.tableContentStyle());
+        cell.setKeepTogether(true);
+        cell.add(image);
         return cell;
     }
 
