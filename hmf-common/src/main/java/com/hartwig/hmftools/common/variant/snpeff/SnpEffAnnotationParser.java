@@ -78,7 +78,7 @@ public final class SnpEffAnnotationParser
         return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
                 .effects(effects)
-                .consequences(sufferConsequences(toEffects(effects)))
+                .consequences(VariantConsequence.convertFromEffects(toEffects(effects)))
                 .severity(parts[2])
                 .gene(parts[3])
                 .geneID(parts[4])
@@ -94,28 +94,6 @@ public final class SnpEffAnnotationParser
                 .distance(parts[14])
                 .addition(parts[15])
                 .build();
-    }
-
-    private static List<VariantConsequence> sufferConsequences(@NotNull final List<String> effects)
-    {
-        final List<VariantConsequence> consequences = Lists.newArrayList();
-        for(final String part : effects)
-        {
-            boolean found = false;
-            for(final VariantConsequence consequence : VariantConsequence.values())
-            {
-                if(consequence.isParentTypeOf(part))
-                {
-                    found = true;
-                    consequences.add(consequence);
-                }
-            }
-            if(!found)
-            {
-                consequences.add(VariantConsequence.OTHER);
-            }
-        }
-        return consequences;
     }
 
     @NotNull

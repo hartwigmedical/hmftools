@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public enum VariantConsequence {
+public enum VariantConsequence
+{
     // See also http://sequenceontology.org
     TRANSCRIPT("transcript"),
     NON_CODING_TRANSCRIPT_VARIANT("non_coding_transcript_variant", "non_coding_transcript_exon_variant"),
@@ -56,23 +58,57 @@ public enum VariantConsequence {
     UPSTREAM_GENE_VARIANT("upstream_gene_variant"),
     OTHER(Strings.EMPTY);
 
-    @NotNull
     private final String parentSequenceOntologyTerm;
-    @NotNull
     private final List<String> sequenceOntologySubTerms;
 
-    VariantConsequence(@NotNull final String parentSequenceOntologyTerm,
-            @NotNull final String... sequenceOntologySubTerms) {
+    VariantConsequence(final String parentSequenceOntologyTerm, final String... sequenceOntologySubTerms)
+    {
         this.parentSequenceOntologyTerm = parentSequenceOntologyTerm;
         this.sequenceOntologySubTerms = Lists.newArrayList(sequenceOntologySubTerms);
     }
 
-    public boolean isParentTypeOf(@NotNull final String annotation) {
+    public static List<VariantConsequence> convertFromEffects(@NotNull final List<String> effects)
+    {
+        final List<VariantConsequence> consequences = Lists.newArrayList();
+
+        effects.forEach(x -> consequences.add(fromEffect(x)));
+        return consequences;
+    }
+
+    public static VariantConsequence fromEffect(@NotNull final String effect)
+    {
+        for(final VariantConsequence consequence : VariantConsequence.values())
+        {
+            if(consequence.isParentTypeOf(effect))
+                return consequence;
+        }
+
+        return VariantConsequence.OTHER;
+    }
+
+    public static String consequencesToString(final List<VariantConsequence> consequences, final String delim)
+    {
+        StringJoiner sj = new StringJoiner(delim);
+        consequences.forEach(x -> sj.add(x.toString()));
+        return sj.toString();
+    }
+
+    public boolean isParentTypeOf(@NotNull final String annotation)
+    {
         return annotation.equals(parentSequenceOntologyTerm) || sequenceOntologySubTerms.contains(annotation);
     }
 
+    public String description()
+    {
+        if(!sequenceOntologySubTerms.isEmpty())
+            return sequenceOntologySubTerms.get(0);
+
+        return parentSequenceOntologyTerm;
+    }
+
     @NotNull
-    public String readableSequenceOntologyTerm() {
+    public String readableSequenceOntologyTerm()
+    {
         return parentSequenceOntologyTerm.replace("_", " ");
     }
 }

@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.impact;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,16 +28,20 @@ public class GeneDataCache
 
         mCurrentChromosome = null;
         mCurrentGeneList = null;
-        mCurrentGeneIndex = -1;
+        mCurrentGeneIndex = 0;
 
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
 
-    public void loadCache()
+    public boolean loadCache()
     {
         mEnsemblDataCache.setRequiredData(true, false, false, false);
-        mEnsemblDataCache.load(false);
+        if(!mEnsemblDataCache.load(false))
+            return false;
+
+        mEnsemblDataCache.createGeneIdDataMap();
+        return true;
     }
 
     public List<TranscriptData> findTranscripts(final String geneId, int position)
@@ -48,6 +56,8 @@ public class GeneDataCache
 
     public List<EnsemblGeneData> findGenes(final String chromosome, int position)
     {
+        List<EnsemblGeneData> genes = Lists.newArrayList();
+
         if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
         {
             mCurrentChromosome = chromosome;
@@ -55,32 +65,44 @@ public class GeneDataCache
             mCurrentGeneIndex = 0;
         }
 
-        // setGeneIndex(position);
+        if(mCurrentGeneList == null)
+        {
+            SG_LOGGER.error("invalid chromosome({})", chromosome);
+            return genes;
+        }
 
-        List<EnsemblGeneData> genes = Lists.newArrayList();
+        // setGeneIndex(position);
 
         for(; mCurrentGeneIndex < mCurrentGeneList.size(); ++mCurrentGeneIndex)
         {
             EnsemblGeneData geneData = mCurrentGeneList.get(mCurrentGeneIndex);
 
-            if(position > geneData.GeneEnd)
-            {
-                ++mCurrentGeneIndex;
-                continue;
-            }
-
-            if(geneData.GeneStart <= position && geneData.GeneEnd >= position)
+            if(isWithinGeneRange(geneData, position))
             {
                 genes.add(geneData);
             }
+            else if(position > geneData.GeneEnd)
+            {
+                continue;
+            }
             else if(geneData.GeneStart > position)
             {
-                --mCurrentGeneIndex;
+                if(mCurrentGeneIndex > 0)
+                    --mCurrentGeneIndex;
+
                 break;
             }
         }
 
         return genes;
+    }
+
+    private boolean isWithinGeneRange(final EnsemblGeneData geneData, int position)
+    {
+        if(geneData.Strand == POS_STRAND)
+            return position >= geneData.GeneStart - GENE_UPSTREAM_DISTANCE && position <= geneData.GeneEnd;
+        else
+            return position >= geneData.GeneStart && position <= geneData.GeneEnd + GENE_UPSTREAM_DISTANCE;
     }
 
     /*
