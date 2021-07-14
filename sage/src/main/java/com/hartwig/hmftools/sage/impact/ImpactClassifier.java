@@ -51,12 +51,14 @@ public class ImpactClassifier
             return transImpact;
 
         // check intron variant
-        for(int i = 0; i < transData.exons().size() - 1; ++i)
+        int exonCount = transData.exons().size();
+        for(int i = 0; i < exonCount; ++i)
         {
             ExonData exon = transData.exons().get(i);
-            ExonData nextExon = transData.exons().get(i + 1);
 
-            if(isWithinSpliceRegion(variant, transData, exon) || isWithinSpliceRegion(variant, transData, nextExon))
+            ExonData nextExon = i < exonCount - 1 ? transData.exons().get(i + 1) : null;
+
+            if(isWithinSpliceRegion(variant, transData, exon) || (nextExon != null && isWithinSpliceRegion(variant, transData, nextExon)))
             {
                 return mSpliceClassifier.classifyVariant(variant, transData, exon);
             }
@@ -66,7 +68,7 @@ public class ImpactClassifier
                 return classifyExonicPosition(variant, transData, exon);
             }
 
-            if(position > exon.End && position < nextExon.Start)
+            if(nextExon != null && position > exon.End && position < nextExon.Start)
             {
                 return new VariantTransImpact(transData, INTRON_VARIANT);
             }
@@ -77,7 +79,7 @@ public class ImpactClassifier
 
     private boolean isOutsideTransRange(final TranscriptData transData, int position)
     {
-        if(transData.Strand == POS_STRAND)
+        if(transData.posStrand())
             return position < transData.TransStart - GENE_UPSTREAM_DISTANCE || position > transData.TransEnd;
         else
             return position < transData.TransStart || position > transData.TransEnd + GENE_UPSTREAM_DISTANCE;
@@ -87,7 +89,7 @@ public class ImpactClassifier
     {
         int position = variant.Position;
 
-        if(transData.Strand == POS_STRAND)
+        if(transData.posStrand())
         {
             // check pre-gene region
             if(position >= transData.TransStart - GENE_UPSTREAM_DISTANCE && position < transData.TransStart)
@@ -103,7 +105,7 @@ public class ImpactClassifier
         }
         else
         {
-            if(position > transData.TransEnd && position <= transData.TransEnd)
+            if(position > transData.TransEnd && position <= transData.TransEnd + GENE_UPSTREAM_DISTANCE)
                 return new VariantTransImpact(transData, UPSTREAM_GENE_VARIANT);
 
             if(position >= transData.TransStart && position < transData.CodingStart)
@@ -123,8 +125,6 @@ public class ImpactClassifier
             // for a DEL on the reverse strand this is position + baseDiff - 1
             // for an insert on the reverse strand this is position + 1
 
-            // final CodingBaseData cbData = calcCodingBases(transData, position);
-
             if((variant.baseDiff() % 3) == 0)
             {
                 // could use phasing info to set conservative vs disruptive type
@@ -140,26 +140,28 @@ public class ImpactClassifier
         }
         else
         {
-            // determine phase at upstream start of variant, then get whole codons of
+            // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
             int varLength = variant.Ref.length();
-            int upstreamStartPos = transData.Strand == POS_STRAND ? variant.Position : variant.Position + varLength - 1;
+            boolean posStrand = transData.posStrand();
+
+            int upstreamStartPos = posStrand ? variant.Position : variant.Position + varLength - 1;
             final CodingBaseData cbData = calcCodingBases(transData, upstreamStartPos);
 
+            // this is 0 if the variant starts on the first base of a codon (phase=1), 1 if it starts on the 2nd, and 2 if on the 3rd/last
             int openCodonBases = TranscriptUtils.getUpstreamOpenCodonBases(cbData.Phase, transData.Strand, variant.baseDiff());
-            // int downOpenCodingBases = TranscriptUtils.getDownstreamOpenCodonBases(cbData.Phase, transData.Strand, variant.baseDiff(), variant.Alt);
 
             int codingBaseLen = (int)(Math.ceil((openCodonBases + varLength) / 3.0)) * 3;
 
-            boolean searchUp = transData.Strand == POS_STRAND;
+            int codonStartPos = posStrand ? upstreamStartPos - openCodonBases : upstreamStartPos + openCodonBases;
 
-            List<int[]> codingRanges = getCodingBaseRanges(transData, upstreamStartPos, searchUp, codingBaseLen);
-            String refCodingBases = mRefGenome.getBaseString(variant.Chromosome,codingRanges);
+            List<int[]> codingRanges = getCodingBaseRanges(transData, codonStartPos, posStrand, codingBaseLen);
+            String refCodingBases = mRefGenome.getBaseString(variant.Chromosome, codingRanges);
 
             String altCodingBases;
             String refAminoAcids;
             String altAminoAcids;
 
-            if(transData.Strand == POS_STRAND)
+            if(posStrand)
             {
                 if(openCodonBases > 0)
                 {
@@ -186,8 +188,8 @@ public class ImpactClassifier
                     altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength) + variant.Alt;
                 }
 
-                refAminoAcids = Nucleotides.reverseStrandBases(Codons.aminoAcidFromBases(refCodingBases));
-                altAminoAcids = Nucleotides.reverseStrandBases(Codons.aminoAcidFromBases(altCodingBases));
+                refAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(refCodingBases));
+                altAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(altCodingBases));
             }
 
             if(refAminoAcids.equals(altAminoAcids))

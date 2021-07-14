@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.test;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
@@ -40,8 +42,8 @@ public class MockRefGenome implements RefGenomeInterface
         StringBuilder refBases = new StringBuilder();
 
         baseRanges.stream()
-                .filter(x -> x[0] >= 0 && x[1] < chrBases.length())
-                .forEach(x -> chrBases.substring(x[0], x[1] + 1));
+                .filter(x -> x[SE_START] >= 0 && x[SE_END] < chrBases.length())
+                .forEach(x -> refBases.append(chrBases.substring(x[SE_START], x[SE_END] + 1)));
 
         return refBases.toString();
     }

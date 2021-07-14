@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.gene;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -39,6 +41,7 @@ public class TranscriptData
     public List<ExonData> exons() { return mExons; }
 
     public int length() { return TransEnd - TransStart; }
+    public boolean posStrand() { return Strand == POS_STRAND; }
 
     public String toString()
     {
