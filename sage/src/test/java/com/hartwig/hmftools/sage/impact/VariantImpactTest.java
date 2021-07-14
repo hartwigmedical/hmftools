@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
@@ -105,7 +107,7 @@ public class VariantImpactTest
     }
 
     @Test
-    public void testSynonymousImpacts()
+    public void testSynonymousMissenseImpacts()
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
@@ -150,6 +152,15 @@ public class VariantImpactTest
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
         assertEquals(SYNONYMOUS_VARIANT, impact.Consequence);
 
+        // now missense
+        pos = 41;
+        ref = chr1Bases.substring(pos, pos + 1);
+        alt = "T";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPosStrand);
+        assertEquals(MISSENSE_VARIANT, impact.Consequence);
+
         // first base of a codon changes
         codonPos = 46;
         codon = chr1Bases.substring(codonPos, codonPos + 3);
@@ -175,6 +186,13 @@ public class VariantImpactTest
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
         assertEquals(SYNONYMOUS_VARIANT, impact.Consequence);
+
+        // now missense by change middle codon
+        alt = "G" + "AAT" + "C";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPosStrand);
+        assertEquals(MISSENSE_VARIANT, impact.Consequence);
 
         // test reverse strand
         TranscriptData transDataNegStrand = createTransExons(
@@ -202,6 +220,16 @@ public class VariantImpactTest
         impact = classifier.classifyVariant(var, transDataNegStrand);
         assertEquals(SYNONYMOUS_VARIANT, impact.Consequence);
 
+        // now missense
+        pos = 243;
+        ref = chr1Bases.substring(pos, pos + 1);
+        alt = "T";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNegStrand);
+        assertEquals(MISSENSE_VARIANT, impact.Consequence);
+
+
         // test a MNV spanning 3 codons as before
         pos = 241;
         ref = chr1Bases.substring(pos, pos + 5);
@@ -210,11 +238,17 @@ public class VariantImpactTest
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
         assertEquals(SYNONYMOUS_VARIANT, impact.Consequence);
+
+        // and missense
+        alt = reverseStrandBases("G" + "AAT" + "C");
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNegStrand);
+        assertEquals(MISSENSE_VARIANT, impact.Consequence);
     }
 
-    /*
     @Test
-    public void testMissenseImpacts()
+    public void testInframeIndelImpacts()
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
@@ -231,19 +265,40 @@ public class VariantImpactTest
 
         ImpactClassifier classifier = new ImpactClassifier(refGenome);
 
-        int pos = 28;
-        String ref = chr1Bases.substring(pos, pos + 1);
-        String alt = "G";
-        VariantData var = new VariantData(CHR_1, 28, ref, alt);
+        // inframe conservative deletion of 2 codons (ie 3 -> 1)
+        int pos = 46; // first base of codon
+        String ref = chr1Bases.substring(pos, pos + 9);
+        String alt = chr1Bases.substring(pos, pos + 3);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(MISSENSE_VARIANT, impact.Consequence);
+        assertEquals(INFRAME_DELETION, impact.Consequence);
 
-    }
-     */
+        // inframe disruptive (spans first and last codon boundaries) deletion of 3 codons (ie 4 -> 1)
+        pos = 45; // first base of codon
+        ref = chr1Bases.substring(pos, pos + 12);
+        alt = chr1Bases.substring(pos, pos + 3);
+        var = new VariantData(CHR_1, pos, ref, alt);
 
-    private String findMissenseBase()
-    {
-        return "";
+        impact = classifier.classifyVariant(var, transDataPosStrand);
+        assertEquals(INFRAME_DELETION, impact.Consequence);
+
+        // conservative insertion of 2 codons
+        pos = 46; // first base of codon
+        ref = chr1Bases.substring(pos, pos + 1);
+        alt = ref + generateRandomBases(6);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPosStrand);
+        assertEquals(INFRAME_INSERTION, impact.Consequence);
+
+        // disruptive insertion of 3 codons
+        pos = 45; // first base of codon
+        ref = chr1Bases.substring(pos, pos + 1);
+        alt = ref + generateRandomBases(9);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPosStrand);
+        assertEquals(INFRAME_INSERTION, impact.Consequence);
     }
 }
