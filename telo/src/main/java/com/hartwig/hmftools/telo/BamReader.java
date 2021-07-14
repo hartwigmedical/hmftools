@@ -1,55 +1,112 @@
 package com.hartwig.hmftools.telo;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
-import static com.hartwig.hmftools.telo.TeloConstants.CANONICAL_TELOMERE_SEQ;
-import static com.hartwig.hmftools.telo.TeloConstants.CANONICAL_TELOMERE_SEQ_REV;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class BamReader
+public class BamReader implements Callable
 {
     private final TeloConfig mConfig;
 
-    private final SamReader mSamReader;
-    // private final BamSlicer mBamSlicer;
+    private BaseRegion mBaseRegion;
 
-    private final BufferedWriter mReadWriter;
+    private final SamReader mSamReader;
+    private final BamRecordWriter mWriter;
+
+    private final Map<String,ReadGroup> mIncompleteReadGroups;
+    private int mCompletedGroups;
+
+    // metrics
     private int mReadCount;
 
-    public BamReader(final TeloConfig config)
+    public BamReader(final TeloConfig config, final BamRecordWriter writer)
     {
         mConfig = config;
+        mBaseRegion = null;
 
         mSamReader = mConfig.SampleBamFile != null ?
-                SamReaderFactory.makeDefault()
-                        .referenceSequence(new File(mConfig.RefGenomeFile))
-                        .open(new File(mConfig.SampleBamFile)) : null;
+                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.SampleBamFile)) : null;
 
-        // mBamSlicer = new BamSlicer(1, true, true, false);
+        mWriter = writer;
 
-        mReadWriter = createReadDataWriter(mConfig);
+        mIncompleteReadGroups = Maps.newHashMap();
         mReadCount = 0;
+        mCompletedGroups = 0;
+    }
+
+    public void setBaseRegion(final BaseRegion baseRegion)
+    {
+        mBaseRegion = baseRegion;
+    }
+
+    public void setIncompleteReadGroups(final Map<String,ReadGroup> incompleteReadGroups)
+    {
+        mIncompleteReadGroups.clear();
+        incompleteReadGroups.putAll(incompleteReadGroups);
+    }
+
+    public Map<String,ReadGroup> getIncompleteReadGroups() { return mIncompleteReadGroups; }
+
+    @Override
+    public Long call()
+    {
+        findTelomereContent();
+        return (long)0;
     }
 
     public void findTelomereContent()
     {
-        // final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
+        mCompletedGroups = 0;
 
-        try (final SAMRecordIterator iterator = mSamReader.iterator()) // or mSamReader.queryUnmapped()
+        if(mBaseRegion != null)
+        {
+            processBamByRegion();
+        }
+        else
+        {
+            processUnmappedReads();
+            processIncompleteReadGroups();
+        }
+    }
+
+    private void processBamByRegion()
+    {
+        TE_LOGGER.info("processing region({})", mBaseRegion.toString());
+
+        BamSlicer bamSlicer = new BamSlicer(1, false, false, false);
+        bamSlicer.slice(mSamReader, Lists.newArrayList(mBaseRegion), this::processReadRecord);
+
+        TE_LOGGER.info("processed region({}) reads(complete={} incomplete={})",
+                mBaseRegion.toString(), mCompletedGroups, mIncompleteReadGroups.size());
+    }
+
+    private void processUnmappedReads()
+    {
+        TE_LOGGER.info("processing unmapped reads");
+
+        int readCount = 0;
+
+        try (final SAMRecordIterator iterator = mSamReader.queryUnmapped())
         {
             while (iterator.hasNext())
             {
                 final SAMRecord record = iterator.next();
+                ++readCount;
 
                 if (passesFilters(record))
                 {
@@ -58,7 +115,41 @@ public class BamReader
             }
         }
 
-        TE_LOGGER.info("processed {} reads", mReadCount);
+        TE_LOGGER.info("processed {} unmapped reads(complete={} incomplete={})",
+                readCount, mCompletedGroups, mIncompleteReadGroups.size());
+    }
+
+    private void processIncompleteReadGroups()
+    {
+        TE_LOGGER.info("processing {} incomplete reads", mIncompleteReadGroups.size());
+
+        // TODO - consider organising these into chromosomes and merging any close positions into a single region
+        List<BaseRegion> mateRegions = Lists.newArrayList();
+        for(ReadGroup readGroup : mIncompleteReadGroups.values())
+        {
+            // TODO - are these supplementary? if so should merge their
+            for(ReadRecord read : readGroup.Reads)
+            {
+                if(HumanChromosome.contains(read.mateChromosome()) && read.mateStartPosition() > 0)
+                {
+                    mateRegions.add(new BaseRegion(read.mateChromosome(), read.mateStartPosition(), read.mateStartPosition() + 1));
+                    break;
+                }
+            }
+        }
+
+        if(!mateRegions.isEmpty())
+        {
+            TE_LOGGER.info("processing {} mate regions", mIncompleteReadGroups.size());
+
+            BamSlicer bamSlicer = new BamSlicer(1, false, false, false);
+            mateRegions.forEach(x -> bamSlicer.slice(mSamReader, Lists.newArrayList(x), this::processIncompleteReadRecord));
+        }
+    }
+
+    private boolean hasTelomericContent(final SAMRecord record)
+    {
+        return TeloUtils.hasTelomericContent(record.getReadString());
     }
 
     private boolean passesFilters(final SAMRecord record)
@@ -85,66 +176,56 @@ public class BamReader
 
     private void processReadRecord(final SAMRecord record)
     {
-        // analyse telomeric content..
         ++mReadCount;
 
-        writeReadData(record);
-    }
-
-    private static BufferedWriter createReadDataWriter(final TeloConfig config)
-    {
-        if(!config.WriteReads)
-            return null;
-
-        try
-        {
-            final String outputFileName = config.OutputDir + "telo_read_data.csv";
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("ReadIndex,ReadId,Chromosome,PosStart,PosEnd,MateChr,MatePosStart,HasTeloContent");
-            writer.write(",Cigar,InsertSize,FirstInPair,Unmapped,ReadReversed,Flags,SuppData,ReadBases");
-            writer.newLine();
-            return writer;
-        }
-        catch (IOException e)
-        {
-            TE_LOGGER.error("failed to create read data writer: {}", e.toString());
-            return null;
-        }
-    }
-
-    private void writeReadData(final SAMRecord record)
-    {
-        if(mReadWriter == null)
+        if(!hasTelomericContent(record))
             return;
 
-        try
+        // look up any existing reads with the same ID
+        ReadRecord readRecord = ReadRecord.from(record);
+        readRecord.setTeloContent(true);
+
+        ReadGroup readGroup = mIncompleteReadGroups.get(readRecord.Id);
+
+        if(readGroup == null)
         {
-            final String readBases = record.getReadString();
-            boolean hasTeloContent = readBases.contains(CANONICAL_TELOMERE_SEQ) || readBases.contains(CANONICAL_TELOMERE_SEQ_REV);
-
-            mReadWriter.write(String.format("%d,%s,%s,%d,%d,%s,%d,%s",
-                    mReadCount, record.getReadName(), record.getReferenceName(), record.getAlignmentStart(), record.getAlignmentEnd(),
-                    record.getMateReferenceName(), record.getMateAlignmentStart(), hasTeloContent));
-
-            String suppAlignmentData = record.hasAttribute("SA") ? record.getStringAttribute("SA") : "";
-            suppAlignmentData = suppAlignmentData.replace(",",";");
-
-            mReadWriter.write(String.format(",%s,%d,%s,%s,%s,%d",
-                    record.getCigarString(), record.getInferredInsertSize(), record.getFirstOfPairFlag(),
-                    record.getReadUnmappedFlag(), record.getReadNegativeStrandFlag(), record.getFlags()));
-
-            mReadWriter.write(String.format(",%s,%s",
-                    suppAlignmentData, readBases));
-
-            mReadWriter.newLine();
+            // cache if new
+            readGroup = new ReadGroup(readRecord);
+            mIncompleteReadGroups.put(readRecord.Id, readGroup);
         }
-        catch(IOException e)
+        else
         {
-            TE_LOGGER.error("failed to write read data file: {}", e.toString());
+            // otherwise log details and discard if now complete
+            readGroup.Reads.add(ReadRecord.from(record));
+
+            if(readGroup.isComplete())
+                processCompleteReadGroup(readGroup);
         }
     }
 
+    private void processIncompleteReadRecord(final SAMRecord record)
+    {
+        ReadGroup readGroup = mIncompleteReadGroups.get(record.getReadName());
 
+        if(readGroup == null)
+            return;
 
+        ReadRecord readRecord = ReadRecord.from(record);
+        readRecord.setTeloContent(hasTelomericContent(record));
+
+        readGroup.Reads.add(readRecord);
+
+        if(readGroup.isComplete())
+            processCompleteReadGroup(readGroup);
+    }
+
+    private void processCompleteReadGroup(final ReadGroup readGroup)
+    {
+        mIncompleteReadGroups.remove(readGroup.id());
+
+        readGroup.Reads.forEach(x -> x.markCompleteGroup());
+        mWriter.writeReadGroup(readGroup);
+
+        ++mCompletedGroups;
+    }
 }
