@@ -77,12 +77,12 @@ public class VariantImpactTest
         return new VariantData(CHR_1, position, ref, alt);
     }
 
-    /*
     @Test
     public void testMissenseImpacts()
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
+        /*
         final String chr1Bases = generateRandomBases(120);
 
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
@@ -103,12 +103,11 @@ public class VariantImpactTest
 
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
         assertEquals(MISSENSE_VARIANT, impact.Consequence);
-
+        */
     }
 
     private String findMissenseBase()
     {
         return "";
     }
-    */
 }
