@@ -84,10 +84,8 @@ public class ReadRecord
     public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
-    public boolean isMateNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
     public boolean isUnmapped() { return (mFlags & SAMFlag.READ_UNMAPPED.intValue()) != 0; }
     public boolean isMateUnmapped() { return (mFlags & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
-    public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.SECONDARY_ALIGNMENT.intValue()) != 0; }
 
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }

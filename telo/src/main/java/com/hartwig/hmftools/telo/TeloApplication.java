@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.telo;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
 import static com.hartwig.hmftools.telo.TeloUtils.createPartitions;
 
@@ -30,12 +31,15 @@ public class TeloApplication
 
     private final BamRecordWriter mWriter;
 
-    public TeloApplication(final Options options, final String... args) throws ParseException, IOException
+    public TeloApplication(final Options options, final String... args) throws ParseException
     {
         VersionInfo versionInfo = new VersionInfo("telo.version");
         TE_LOGGER.info("Telo version: {}", versionInfo.version());
 
         final CommandLine cmd = createCommandLine(args, options);
+
+        setLogLevel(cmd);
+
         mConfig = new TeloConfig(cmd);
 
         mWriter = new BamRecordWriter(mConfig);
@@ -49,13 +53,13 @@ public class TeloApplication
             System.exit(1);
         }
 
-        TE_LOGGER.info("starting Telo");
+        TE_LOGGER.info("starting telomeric analysis");
 
         processBam();
 
         mWriter.close();
 
-        TE_LOGGER.info("telo run complete");
+        TE_LOGGER.info("Telo run complete");
     }
 
     private void processBam()

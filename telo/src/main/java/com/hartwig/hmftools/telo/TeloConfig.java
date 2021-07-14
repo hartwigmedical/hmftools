@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.telo;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
@@ -89,6 +90,7 @@ public class TeloConfig
         options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
         options.addOption(SPECIFIC_CHR, true, "Optional: list of chromosomes separated by ;");
         options.addOption(WRITE_READS, false, "Write BAM read data to CSV file");
+        options.addOption(LOG_DEBUG, false, "Log verbose");
 
         return options;
     }

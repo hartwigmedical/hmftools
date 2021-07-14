@@ -21,27 +21,14 @@ public class ReadGroup
         Reads.add(read);
     }
 
-    public ReadGroup(final ReadRecord read1, final ReadRecord read2)
-    {
-        Reads = Lists.newArrayListWithCapacity(3);
-        Reads.add(read1);
-        Reads.add(read2);
-    }
-
     public final String id() { return Reads.get(0).Id; }
 
-    public int size() { return Reads.size(); }
-
     public boolean isComplete() { return Reads.size() == 3 || (Reads.size() == 2 && !hasSuppAlignment(Reads)); }
-
-    public boolean hasSuppAlignment() { return hasSuppAlignment(Reads); }
 
     public static boolean hasSuppAlignment(final List<ReadRecord> reads)
     {
         return reads.stream().anyMatch(x -> x.hasSuppAlignment());
     }
-
-    public boolean isDuplicate() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
 
     public void merge(final ReadGroup other)
     {

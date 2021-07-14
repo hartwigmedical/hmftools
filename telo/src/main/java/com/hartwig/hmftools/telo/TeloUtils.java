@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
 
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-
 public class TeloUtils
 {
     public static boolean hasTelomericContent(final String readBases)
@@ -47,7 +45,6 @@ public class TeloUtils
         RefGenomeCoordinates refGenomeCoords = RefGenomeCoordinates.COORDS_37;
 
         List<BaseRegion> partitions = Lists.newArrayList();
-        // DEFAULT_PARTITION_SIZE
 
         int partitionSize = DEFAULT_PARTITION_SIZE;
 

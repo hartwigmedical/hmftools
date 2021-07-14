@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -31,9 +30,6 @@ public class BamReader implements Callable
     private final Map<String,ReadGroup> mIncompleteReadGroups;
     private int mCompletedGroups;
 
-    // metrics
-    private int mReadCount;
-
     public BamReader(final TeloConfig config, final BamRecordWriter writer)
     {
         mConfig = config;
@@ -45,7 +41,6 @@ public class BamReader implements Callable
         mWriter = writer;
 
         mIncompleteReadGroups = Maps.newHashMap();
-        mReadCount = 0;
         mCompletedGroups = 0;
     }
 
@@ -121,8 +116,6 @@ public class BamReader implements Callable
 
     private void processIncompleteReadGroups()
     {
-        TE_LOGGER.info("processing {} incomplete reads", mIncompleteReadGroups.size());
-
         // TODO - consider organising these into chromosomes and merging any close positions into a single region
         List<BaseRegion> mateRegions = Lists.newArrayList();
         for(ReadGroup readGroup : mIncompleteReadGroups.values())
@@ -176,16 +169,15 @@ public class BamReader implements Callable
 
     private void processReadRecord(final SAMRecord record)
     {
-        ++mReadCount;
+        ReadGroup readGroup = mIncompleteReadGroups.get(record.getReadName());
+        boolean hasTeloContent = hasTelomericContent(record);
 
-        if(!hasTelomericContent(record))
+        if(!hasTeloContent && readGroup == null)
             return;
 
         // look up any existing reads with the same ID
         ReadRecord readRecord = ReadRecord.from(record);
-        readRecord.setTeloContent(true);
-
-        ReadGroup readGroup = mIncompleteReadGroups.get(readRecord.Id);
+        readRecord.setTeloContent(hasTeloContent);
 
         if(readGroup == null)
         {
