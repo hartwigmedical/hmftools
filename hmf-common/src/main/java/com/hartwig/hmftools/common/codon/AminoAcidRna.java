@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.common.codon;
 
-import static com.hartwig.hmftools.common.codon.Codons.DNA_STOP_CODON_1;
-import static com.hartwig.hmftools.common.codon.Codons.DNA_STOP_CODON_2;
-import static com.hartwig.hmftools.common.codon.Codons.DNA_STOP_CODON_3;
-import static com.hartwig.hmftools.common.codon.Codons.aminoAcid;
+import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
+import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_2;
+import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_3;
+import static com.hartwig.hmftools.common.codon.Codons.codonToAminoAcid;
 import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 
 public class AminoAcidRna
 {
-    private static final String RNA_STOP_CODON_1 = swapDnaToRna(DNA_STOP_CODON_1);
-    private static final String RNA_STOP_CODON_2 = swapDnaToRna(DNA_STOP_CODON_2);
-    private static final String RNA_STOP_CODON_3 = swapDnaToRna(DNA_STOP_CODON_3);
+    private static final String RNA_STOP_CODON_1 = swapDnaToRna(STOP_CODON_1);
+    private static final String RNA_STOP_CODON_2 = swapDnaToRna(STOP_CODON_2);
+    private static final String RNA_STOP_CODON_3 = swapDnaToRna(STOP_CODON_3);
 
     public static final String STOP_SYMBOL = "_";
 
@@ -47,7 +47,7 @@ public class AminoAcidRna
         if(isStopCodon(codon))
             return STOP_SYMBOL;
 
-        return String.valueOf(aminoAcid(codon));
+        return String.valueOf(codonToAminoAcid(codon));
     }
 
     public static String convertRnaCodonToAminoAcid(final String codon)
@@ -55,6 +55,6 @@ public class AminoAcidRna
         if(isRnaStopCodon(codon))
             return STOP_SYMBOL;
 
-        return String.valueOf(aminoAcid(swapRnaToDna(codon)));
+        return String.valueOf(codonToAminoAcid(swapRnaToDna(codon)));
     }
 }

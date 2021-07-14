@@ -3,12 +3,8 @@ package com.hartwig.hmftools.lilac.fragment;
 import static junit.framework.TestCase.assertEquals;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.seq.HlaSequence;
 
 import org.junit.Test;
-
-import htsjdk.samtools.SAMRecord;
 
 public class NucleotideFragmentFactoryTest
 {

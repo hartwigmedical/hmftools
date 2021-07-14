@@ -1,28 +1,30 @@
 package com.hartwig.hmftools.common.codon;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class Codons
 {
-    public static final String DNA_START_CODON = "ATG";
+    public static final String START_CODON = "ATG";
 
-    public static final String DNA_STOP_CODON_1 = "TAA";
-    public static final String DNA_STOP_CODON_2 = "TAG";
-    public static final String DNA_STOP_CODON_3 = "TGA";
+    public static final String STOP_CODON_1 = "TAA";
+    public static final String STOP_CODON_2 = "TAG";
+    public static final String STOP_CODON_3 = "TGA";
 
     public static final char UNKNOWN = '.';
 
     public static boolean isStopCodon(final String codon)
     {
-        return codon.equals(DNA_STOP_CODON_1) || codon.equals(DNA_STOP_CODON_2) || codon.equals(DNA_STOP_CODON_3);
+        return codon.equals(STOP_CODON_1) || codon.equals(STOP_CODON_2) || codon.equals(STOP_CODON_3);
     }
 
     public static boolean isStartCodon(final String codon)
     {
-        return codon.equals(DNA_START_CODON);
+        return codon.equals(START_CODON);
     }
 
-    public static char aminoAcid(final String codon)
+    public static char codonToAminoAcid(final String codon)
     {
         if(isStopCodon(codon))
             return 'X';
@@ -125,44 +127,44 @@ public final class Codons
         return UNKNOWN;
     }
 
-    public static String codons(@NotNull String aminoAcids)
+    public static String aminoAcidsToCodons(@NotNull String aminoAcids)
     {
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < aminoAcids.length(); i++)
         {
-            builder.append(codon(aminoAcids.charAt(i)));
+            builder.append(aminoAcidToCodon(aminoAcids.charAt(i)));
         }
         return builder.toString();
     }
 
     @NotNull
-    public static String codon(char aminoAcid)
+    public static String aminoAcidToCodon(char aminoAcid)
     {
-        final char[] bases = new char[] { 'G', 'A', 'T', 'C' };
-        for(final char firstBase : bases)
+        for(final char firstBase : DNA_BASES)
         {
-            for(final char secondBase : bases)
+            for(final char secondBase : DNA_BASES)
             {
-                for(final char thirdBase : bases)
+                for(final char thirdBase : DNA_BASES)
                 {
                     final String codon = String.valueOf(firstBase) + secondBase + thirdBase;
-                    if(aminoAcid(codon) == aminoAcid)
+                    if(codonToAminoAcid(codon) == aminoAcid)
                     {
                         return codon;
                     }
                 }
             }
         }
+
         throw new IllegalArgumentException("Unknown amino acid " + aminoAcid);
     }
 
     @NotNull
-    public static String formAminoAcids(@NotNull String dna)
+    public static String aminoAcidFromBases(@NotNull String dna)
     {
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < dna.length() - 2; i += 3)
         {
-            builder.append(aminoAcid(dna.substring(i, i + 3)));
+            builder.append(codonToAminoAcid(dna.substring(i, i + 3)));
         }
 
         return builder.toString();

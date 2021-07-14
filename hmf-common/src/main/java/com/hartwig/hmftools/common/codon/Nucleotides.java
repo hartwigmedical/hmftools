@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.common.codon;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class Nucleotides
 {
-    public static final char[] DNA_BASES = {'A', 'C', 'G', 'T'};
+    public static final char[] DNA_BASES = {'G', 'A', 'T', 'C'};
+    public static final List<String> DNA_BASE_LIST = Lists.newArrayList("G", "A", "T", "C");
 
     public static char swapDnaBase(final char base)
     {
@@ -16,14 +21,14 @@ public class Nucleotides
     public static String reverseStrandBases(final String bases)
     {
         // reverse and swap base pairs
-        String newBases = "";
-        for(int i = 0; i < bases.length(); ++i)
+        StringBuilder newBases = new StringBuilder();
+
+        for(int i = bases.length() - 1; i >= 0; i--)
         {
-            newBases += swapDnaBase(bases.charAt(bases.length() - i - 1));
+            newBases.append(swapDnaBase(bases.charAt(i)));
         }
 
-        return newBases;
+        return newBases.toString();
     }
-
 
 }

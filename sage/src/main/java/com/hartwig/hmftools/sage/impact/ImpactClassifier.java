@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.sage.impact.SpliceClassifier.isWithinSpliceRe
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.codon.AminoAcidRna;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
@@ -172,8 +171,8 @@ public class ImpactClassifier
                     altCodingBases = variant.Alt + refCodingBases.substring(varLength);
                 }
 
-                refAminoAcids = Codons.formAminoAcids(refCodingBases);
-                altAminoAcids = Codons.formAminoAcids(altCodingBases);
+                refAminoAcids = Codons.aminoAcidFromBases(refCodingBases);
+                altAminoAcids = Codons.aminoAcidFromBases(altCodingBases);
             }
             else
             {
@@ -187,8 +186,8 @@ public class ImpactClassifier
                     altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength) + variant.Alt;
                 }
 
-                refAminoAcids = Nucleotides.reverseStrandBases(Codons.formAminoAcids(refCodingBases));
-                altAminoAcids = Nucleotides.reverseStrandBases(Codons.formAminoAcids(altCodingBases));
+                refAminoAcids = Nucleotides.reverseStrandBases(Codons.aminoAcidFromBases(refCodingBases));
+                altAminoAcids = Nucleotides.reverseStrandBases(Codons.aminoAcidFromBases(altCodingBases));
             }
 
             if(refAminoAcids.equals(altAminoAcids))
