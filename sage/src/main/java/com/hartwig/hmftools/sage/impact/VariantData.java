@@ -77,7 +77,7 @@ public class VariantData
     {
         if(impact.TransData == null)
         {
-            if(mImpacts.stream().anyMatch(x -> x.Consequence == impact.Consequence))
+            if(mImpacts.stream().anyMatch(x -> x.consequence() == impact.consequence()))
                 return;
         }
         else
@@ -159,7 +159,9 @@ public class VariantData
         sj.add(csvCommonHeader());
         sj.add("TransId");
         sj.add("Consequence");
+        sj.add("ConsequenceEffect");
         sj.add("SeConsequence");
+        sj.add("SeConsequenceEffect");
         return sj.toString();
     }
 
@@ -180,11 +182,13 @@ public class VariantData
             sj.add(csvCommonData(geneData));
 
             sj.add(impact.TransData.TransName);
-            sj.add(String.valueOf(impact.Consequence));
+            sj.add(String.valueOf(impact.consequencesStr()));
+            sj.add(String.valueOf(impact.effectsStr()));
 
             if(annotation != null)
             {
                 sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
+                sj.add(annotation.effects());
                 matchedAnnotations.add(annotation);
             }
             else

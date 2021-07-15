@@ -12,6 +12,9 @@ public final class Codons
     public static final String STOP_CODON_2 = "TAG";
     public static final String STOP_CODON_3 = "TGA";
 
+    public static final char START_AMINO_ACID = 'M';
+    public static final char STOP_AMINO_ACID = 'X';
+
     public static final char UNKNOWN = '.';
 
     public static boolean isStopCodon(final String codon)
@@ -27,10 +30,10 @@ public final class Codons
     public static char codonToAminoAcid(final String codon)
     {
         if(isStopCodon(codon))
-            return 'X';
+            return STOP_AMINO_ACID;
 
         if(isStartCodon(codon))
-            return 'M';
+            return START_AMINO_ACID;
 
         switch(codon)
         {

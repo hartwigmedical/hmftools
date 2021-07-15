@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.impact;
 
+import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
+import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
+import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
+import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
@@ -8,6 +12,9 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DEL
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
@@ -22,6 +29,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 public class ImpactClassifier
 {
@@ -50,6 +58,8 @@ public class ImpactClassifier
         if(transImpact != null)
             return transImpact;
 
+        boolean inSpliceRegion = false;
+
         // check intron variant
         int exonCount = transData.exons().size();
         for(int i = 0; i < exonCount; ++i)
@@ -60,21 +70,35 @@ public class ImpactClassifier
 
             if(isWithinSpliceRegion(variant, transData, exon) || (nextExon != null && isWithinSpliceRegion(variant, transData, nextExon)))
             {
-                return mSpliceClassifier.classifyVariant(variant, transData, exon);
+                inSpliceRegion = true;
+                transImpact = mSpliceClassifier.classifyVariant(variant, transData, exon);
+
+                if(transImpact != null)
+                    break;
             }
 
             if(exon.Start <= position && position <= exon.End)
             {
-                return classifyExonicPosition(variant, transData, exon);
+                transImpact = classifyExonicPosition(variant, transData, exon);
+                break;
             }
 
             if(nextExon != null && position > exon.End && position < nextExon.Start)
             {
-                return new VariantTransImpact(transData, INTRON_VARIANT);
+                transImpact = new VariantTransImpact(transData, INTRON_VARIANT);
+                break;
             }
         }
 
-        return null;
+        if(transImpact != null)
+        {
+            if(inSpliceRegion)
+                transImpact.markSpliceRegion();
+
+            checkStopStartCodons(transImpact);
+        }
+
+        return transImpact;
     }
 
     private boolean isOutsideTransRange(final TranscriptData transData, int position)
@@ -192,14 +216,59 @@ public class ImpactClassifier
                 altAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(altCodingBases));
             }
 
-            if(refAminoAcids.equals(altAminoAcids))
+            VariantConsequence consequence = refAminoAcids.equals(altAminoAcids) ? SYNONYMOUS_VARIANT : MISSENSE_VARIANT;
+            VariantTransImpact transImpact = new VariantTransImpact(transData, consequence);
+            transImpact.setAminoAcids("", refAminoAcids, altAminoAcids, "");
+            return transImpact;
+        }
+    }
+
+    private void checkStopStartCodons(final VariantTransImpact transImpact)
+    {
+        if(transImpact.wildtypeAA().isEmpty() || transImpact.novelAA().isEmpty())
+            return;
+
+        VariantConsequence ssConsequence = checkStopStartCodons(transImpact.wildtypeAA(), transImpact.novelAA());
+
+        if(ssConsequence != null)
+        {
+            transImpact.addConsequence(ssConsequence.description());
+        }
+    }
+
+    public static VariantConsequence checkStopStartCodons(final String refAminoAcids, final String altAminoAcids)
+    {
+        if(refAminoAcids.isEmpty() || altAminoAcids.isEmpty())
+            return null;
+
+        if(refAminoAcids.charAt(0) == START_AMINO_ACID && altAminoAcids.charAt(0) != START_AMINO_ACID)
+            return START_LOST;
+
+        if(refAminoAcids.charAt(refAminoAcids.length() - 1) != STOP_AMINO_ACID)
+        {
+            // has the alt gained a stop codon anywhere
+            for(int i = 0; i < altAminoAcids.length(); ++i)
             {
-                return new VariantTransImpact(transData, SYNONYMOUS_VARIANT);
-            }
-            else
-            {
-                return new VariantTransImpact(transData, MISSENSE_VARIANT);
+                if(altAminoAcids.charAt(i) == STOP_AMINO_ACID)
+                    return STOP_GAINED;
             }
         }
+        else
+        {
+            boolean hasStopCodon = false;
+            for(int i = 0; i < altAminoAcids.length(); ++i)
+            {
+                if(altAminoAcids.charAt(i) == STOP_AMINO_ACID)
+                {
+                    hasStopCodon = true;
+                    break;
+                }
+            }
+
+            if(!hasStopCodon)
+                return STOP_LOST;
+        }
+
+        return null;
     }
 }
