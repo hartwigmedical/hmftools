@@ -7,11 +7,14 @@ import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.THREE_PRIME_UTR_EFFECT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_REGION_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
@@ -93,7 +96,10 @@ public class ImpactClassifier
         if(transImpact != null)
         {
             if(inSpliceRegion)
+            {
                 transImpact.markSpliceRegion();
+                transImpact.addConsequence(SPLICE_REGION_VARIANT.description());
+            }
 
             checkStopStartCodons(transImpact);
         }
@@ -121,10 +127,10 @@ public class ImpactClassifier
 
             // check 5' and 3' UTR
             if(position >= transData.TransStart && position < transData.CodingStart)
-                return new VariantTransImpact(transData, "5_prime_UTR_variant");
+                return new VariantTransImpact(transData, FIVE_PRIME_UTR_EFFECT);
 
             if(position > transData.CodingEnd && position <= transData.TransEnd)
-                return new VariantTransImpact(transData, "3_prime_UTR_variant");
+                return new VariantTransImpact(transData, THREE_PRIME_UTR_EFFECT);
 
         }
         else
@@ -133,10 +139,10 @@ public class ImpactClassifier
                 return new VariantTransImpact(transData, UPSTREAM_GENE_VARIANT);
 
             if(position >= transData.TransStart && position < transData.CodingStart)
-                return new VariantTransImpact(transData, "3_prime_UTR_variant");
+                return new VariantTransImpact(transData, THREE_PRIME_UTR_EFFECT);
 
             if(position > transData.CodingEnd && position <= transData.TransEnd)
-                return new VariantTransImpact(transData, "5_prime_UTR_variant");
+                return new VariantTransImpact(transData, FIVE_PRIME_UTR_EFFECT);
         }
 
         return null;

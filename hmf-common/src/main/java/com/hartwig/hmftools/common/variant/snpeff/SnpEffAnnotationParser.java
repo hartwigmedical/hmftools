@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.addEffect;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.toEffects;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -11,7 +14,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,10 +30,7 @@ public final class SnpEffAnnotationParser
 
     public static final String SNPEFF_IDENTIFIER = "ANN";
 
-    static final String SPLICE_DONOR_VARIANT = "splice_donor_variant";
-
     private static final String FIELD_SEPARATOR = "\\|";
-    static final String CONSEQUENCE_SEPARATOR = "&";
 
     private static final int EXPECTED_FIELD_SIZE_PER_ANNOTATION = 16;
 
@@ -111,7 +110,7 @@ public final class SnpEffAnnotationParser
         boolean indel = variant.isIndel();
         if(!indel)
         {
-            return hgvsCoding.contains("+5") ? SPLICE_DONOR_VARIANT + CONSEQUENCE_SEPARATOR + effects : effects;
+            return hgvsCoding.contains("+5") ? addEffect(SPLICE_DONOR_EFFECT, effects, true) : effects;
         }
 
         final String hgvsCodingType;
@@ -155,7 +154,7 @@ public final class SnpEffAnnotationParser
             adjustedSpliceBase = initialSpliceBase;
         }
 
-        return adjustedSpliceBase <= 5 ? SPLICE_DONOR_VARIANT + CONSEQUENCE_SEPARATOR + effects : effects;
+        return adjustedSpliceBase <= 5 ? addEffect(SPLICE_DONOR_EFFECT, effects, true) : effects;
     }
 
     @VisibleForTesting
@@ -204,10 +203,5 @@ public final class SnpEffAnnotationParser
 
             return values;
         }
-    }
-
-    private static List<String> toEffects(@NotNull final String effectString)
-    {
-        return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
     }
 }

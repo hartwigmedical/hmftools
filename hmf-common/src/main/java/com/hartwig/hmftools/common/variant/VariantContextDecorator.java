@@ -60,12 +60,22 @@ public class VariantContextDecorator implements GenomePosition {
         this.context = context;
         this.filter = displayFilter(context);
         this.type = VariantType.type(context);
-        this.ref = context.getReference().getBaseString();
-        this.alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
+        this.ref = getRef(context);
+        this.alt = getAlt(context);
         this.tier = VariantTier.fromContext(context);
         this.variantImpact = null;
         this.impact = null;
         this.clinvarPathogenicSummary = null;
+    }
+
+    public static String getRef(final VariantContext context)
+    {
+        return context.getReference().getBaseString();
+    }
+
+    public static String getAlt(final VariantContext context)
+    {
+        return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
 
     public boolean isPass() {

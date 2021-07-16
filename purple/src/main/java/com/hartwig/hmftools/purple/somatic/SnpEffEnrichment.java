@@ -46,7 +46,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
     @Override
     public void accept(@NotNull final VariantContext context)
     {
-        final VariantImpact variantImpact = formSnpEffAnnotations(context);
+        final VariantImpact variantImpact = formVariantImpact(context);
 
         if(!variantImpact.WorstGene.isEmpty())
         {
@@ -76,7 +76,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
         return header;
     }
 
-    private VariantImpact formSnpEffAnnotations(@NotNull final VariantContext context)
+    private VariantImpact formVariantImpact(@NotNull final VariantContext context)
     {
         boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
 

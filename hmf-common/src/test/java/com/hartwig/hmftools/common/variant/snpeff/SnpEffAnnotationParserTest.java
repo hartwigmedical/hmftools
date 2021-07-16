@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser.SNPEFF_IDENTIFIER;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser.SPLICE_DONOR_VARIANT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -56,8 +56,8 @@ public class SnpEffAnnotationParserTest
                 0,
                 "splice_region_variant&intron_variant",
                 "c.375+4G>T");
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+5G>T");
-        assertEffect(SPLICE_DONOR_VARIANT,
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "T", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant&intron_variant", "c.375+5G>T");
+        assertEffect(SPLICE_DONOR_EFFECT,
                 "GG",
                 "TT",
                 Strings.EMPTY,
@@ -80,30 +80,30 @@ public class SnpEffAnnotationParserTest
     @Test
     public void testForwardStrandInsert()
     {
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TA", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
 
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", "GG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TA", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TA", "GG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
         assertEffect("splice_region_variant", "G", "TA", "GGG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
 
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, "A", 2, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TA", Strings.EMPTY, "A", 2, "splice_region_variant", "c.1023+2_1023+3insA");
         assertEffect("splice_region_variant", "G", "TA", Strings.EMPTY, "A", 3, "splice_region_variant", "c.1023+2_1023+3insA");
 
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TA", Strings.EMPTY, "T", 24, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TA", Strings.EMPTY, "T", 24, "splice_region_variant", "c.1023+2_1023+3insA");
         assertEffect("splice_region_variant", "G", "TTA", Strings.EMPTY, "TA", 24, "splice_region_variant", "c.1023+2_1023+3insTA");
     }
 
     @Test
     public void testReverseStrandInsert()
     {
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TT", Strings.EMPTY, Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
 
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "GG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", "GGG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TT", "G", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TT", "GG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TT", "GGG", Strings.EMPTY, 0, "splice_region_variant", "c.1023+2_1023+3insA");
 
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, "A", 2, "splice_region_variant", "c.1023+2_1023+3insA");
-        assertEffect(SPLICE_DONOR_VARIANT, "G", "TT", Strings.EMPTY, "A", 3, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TT", Strings.EMPTY, "A", 2, "splice_region_variant", "c.1023+2_1023+3insA");
+        assertEffect(SPLICE_DONOR_EFFECT, "G", "TT", Strings.EMPTY, "A", 3, "splice_region_variant", "c.1023+2_1023+3insA");
     }
 
     private void assertEffect(@NotNull String expectedStart, @NotNull String ref, @NotNull String alt, @NotNull String mh,

@@ -55,14 +55,19 @@ public class VariantTransImpact
     {
         VariantConsequence consequence = VariantConsequence.fromEffect(consequenceEffect);
 
-        if(consequences().contains(consequence))
+        List<VariantConsequence> consequences = consequences();
+
+        if(consequences.contains(consequence))
             return;
 
-        // apply any ordering / prioritisation
-        if(consequence == STOP_GAINED || consequence == STOP_LOST)
-            mConsequenceEffects.add(0, consequenceEffect);
-        else
-            mConsequenceEffects.add(consequenceEffect);
+        int index = 0;
+        while(index < consequences.size())
+        {
+            if(consequence.rank() > consequences.get(index).rank())
+                break;
+        }
+
+        mConsequenceEffects.add(index, consequenceEffect);
     }
 
     public VariantConsequence consequence() { return VariantConsequence.fromEffect(mConsequenceEffects.get(0)); };
