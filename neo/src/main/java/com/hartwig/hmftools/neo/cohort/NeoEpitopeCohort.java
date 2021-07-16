@@ -223,7 +223,6 @@ public class NeoEpitopeCohort
             NE_LOGGER.warn("failed to load sample predictions: {}", e.toString());
         }
 
-
         return predictionSummary;
     }
 
