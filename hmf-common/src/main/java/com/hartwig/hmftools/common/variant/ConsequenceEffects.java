@@ -8,9 +8,11 @@ public final class ConsequenceEffects
 {
     public static final String EFFECTS_SEPARATOR = "&";
 
-    public static final String SPLICE_DONOR_EFFECT = "splice_donor_variant";
     public static final String FIVE_PRIME_UTR_EFFECT = "5_prime_UTR_variant";
     public static final String THREE_PRIME_UTR_EFFECT = "3_prime_UTR_variant";
+    public static final String SPLICE_ACCEPTOR_EFFECT = "splice_acceptor_variant";
+    public static final String SPLICE_DONOR_EFFECT = "splice_donor_variant";
+    public static final String SPLICE_REGION_EFFECT = "splice_region_variant";
 
     public static List<String> toEffects(final String effectString)
     {

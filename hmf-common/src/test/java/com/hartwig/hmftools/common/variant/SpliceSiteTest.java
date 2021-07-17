@@ -1,18 +1,20 @@
-package com.hartwig.hmftools.common.genome.region;
+package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isAcceptorPlusThree;
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isDonorMinusOne;
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isDonorPlusFive;
+import static com.hartwig.hmftools.common.variant.SpliceSites.isAcceptorPlusThree;
+import static com.hartwig.hmftools.common.variant.SpliceSites.isDonorMinusOne;
+import static com.hartwig.hmftools.common.variant.SpliceSites.isDonorPlusFive;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.junit.Test;
 
 public class SpliceSiteTest {
 
+    // TODO - simplify, so unnecssary
     @Test
     public void testDonorMinusOneForward() {
         final HmfTranscriptRegion transcript = HmfGenePanelSupplier.allGenesMap37().get("AR");

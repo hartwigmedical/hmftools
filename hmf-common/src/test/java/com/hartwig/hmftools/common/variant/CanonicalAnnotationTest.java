@@ -76,23 +76,15 @@ public class CanonicalAnnotationTest {
     private static SnpEffAnnotation createSnpEffAnnotation(@NotNull final String gene, @NotNull final String transcript,
             @NotNull VariantConsequence consequence) {
         return ImmutableSnpEffAnnotation.builder()
-                .allele(Strings.EMPTY)
                 .effects(Strings.EMPTY)
                 .consequences(Lists.newArrayList(consequence))
-                .severity(Strings.EMPTY)
                 .gene(gene)
                 .geneID(gene)
                 .featureType("transcript")
                 .featureID(transcript)
-                .transcriptBioType(Strings.EMPTY)
                 .rank(Strings.EMPTY)
                 .hgvsCoding(Strings.EMPTY)
                 .hgvsProtein(Strings.EMPTY)
-                .cDNAPosAndLength(Strings.EMPTY)
-                .cdsPosAndLength(Strings.EMPTY)
-                .aaPosAndLength(Strings.EMPTY)
-                .distance(Strings.EMPTY)
-                .addition(Strings.EMPTY)
                 .build();
     }
 }

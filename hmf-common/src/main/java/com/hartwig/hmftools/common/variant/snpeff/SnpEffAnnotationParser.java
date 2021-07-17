@@ -75,23 +75,15 @@ public final class SnpEffAnnotationParser
         String effects = extractAnnotationEffects(context, parts);
 
         return ImmutableSnpEffAnnotation.builder()
-                .allele(parts[0])
                 .effects(effects)
                 .consequences(VariantConsequence.convertFromEffects(toEffects(effects)))
-                .severity(parts[2])
                 .gene(parts[3])
                 .geneID(parts[4])
                 .featureType(parts[5])
                 .featureID(parts[6])
-                .transcriptBioType(parts[7])
                 .rank(parts[8])
                 .hgvsCoding(parts[9])
                 .hgvsProtein(parts[10])
-                .cDNAPosAndLength(parts[11])
-                .cdsPosAndLength(parts[12])
-                .aaPosAndLength(parts[13])
-                .distance(parts[14])
-                .addition(parts[15])
                 .build();
     }
 

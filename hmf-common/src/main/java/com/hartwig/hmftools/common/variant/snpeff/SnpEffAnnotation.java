@@ -19,9 +19,6 @@ public abstract class SnpEffAnnotation
     public abstract String gene();
 
     @NotNull
-    public abstract String allele();
-
-    @NotNull
     public abstract String effects();
 
     @NotNull
@@ -42,9 +39,6 @@ public abstract class SnpEffAnnotation
     }
 
     @NotNull
-    public abstract String severity();
-
-    @NotNull
     public abstract String geneID();
 
     @NotNull
@@ -54,9 +48,6 @@ public abstract class SnpEffAnnotation
     public abstract String featureID();
 
     @NotNull
-    abstract String transcriptBioType();
-
-    @NotNull
     public abstract String rank();
 
     @NotNull
@@ -64,21 +55,6 @@ public abstract class SnpEffAnnotation
 
     @NotNull
     public abstract String hgvsProtein();
-
-    @NotNull
-    abstract String cDNAPosAndLength();
-
-    @NotNull
-    abstract String cdsPosAndLength();
-
-    @NotNull
-    public abstract String aaPosAndLength();
-
-    @NotNull
-    abstract String distance();
-
-    @NotNull
-    abstract String addition();
 
     // when we use the feature ID it is in practice always a transcript, but this mapping may not hold for every single snpeff annotation!
     public String transcript()

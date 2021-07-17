@@ -112,6 +112,7 @@ public class HmfTranscriptRegionUtils
     @NotNull
     public static List<GenomeRegion> codonRangeAtGenomicPosition(final HmfTranscriptRegion transcript, long position)
     {
+        // TODO - remove this function, is a more complicated duplicate of TranscriptUtils::getCodingBaseRanges()
         final List<GenomeRegion> codonRegions = Lists.newArrayList();
 
         if(position < transcript.codingStart() || position > transcript.codingEnd())
@@ -174,73 +175,4 @@ public class HmfTranscriptRegionUtils
 
         return codonRegions;
     }
-
-    public static boolean isDonorMinusOne(final HmfTranscriptRegion transcript, long position) {
-        return isDonorPlusOne(transcript, -1, position);
-    }
-
-    public static boolean isDonorPlusFive(final HmfTranscriptRegion transcript, long position) {
-        return isDonorPlusOne(transcript, 4, position);
-    }
-
-    public static boolean isAcceptorPlusThree(final HmfTranscriptRegion transcript, long position) {
-        return isAcceptorPlusOne(transcript, 2, position);
-    }
-
-    private static boolean isDonorPlusOne(final HmfTranscriptRegion transcript, int offset, long position) {
-        if (transcript.codingStart() == 0) {
-            return false;
-        }
-
-        if (position < transcript.codingStart() || position > transcript.codingEnd()) {
-            return false;
-        }
-
-        if (transcript.strand() == Strand.FORWARD) {
-            for (int i = 0; i < transcript.exome().size() - 1; i++) {
-                long donorSite = transcript.exome().get(i).end() + 1;
-                if (position == donorSite + offset) {
-                    return true;
-                }
-            }
-        } else {
-            for (int i = 1; i < transcript.exome().size(); i++) {
-                long donorSite = transcript.exome().get(i).start() - 1;
-                if (position == donorSite - offset) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean isAcceptorPlusOne(final HmfTranscriptRegion transcript, int offset, long position) {
-        if (transcript.codingStart() == 0) {
-            return false;
-        }
-
-        if (position < transcript.codingStart() || position > transcript.codingEnd()) {
-            return false;
-        }
-
-        if (transcript.strand() == Strand.FORWARD) {
-            for (int i = 1; i < transcript.exome().size(); i++) {
-                long acceptorSide = transcript.exome().get(i).start() - 1;
-                if (position == acceptorSide - offset) {
-                    return true;
-                }
-            }
-        } else {
-            for (int i = 0; i < transcript.exome().size() - 1; i++) {
-                long donorSite = transcript.exome().get(i).end() + 1;
-                if (position == donorSite + offset) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
 }

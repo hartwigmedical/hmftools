@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCEPTOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_REGION_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.THREE_PRIME_UTR_EFFECT;
 
 import java.util.List;
@@ -16,9 +18,9 @@ public enum VariantConsequence
 {
     // See also http://sequenceontology.org
     // starting with the ones used by HMF
-    SPLICE_ACCEPTOR_VARIANT("splice_acceptor_variant"),
+    SPLICE_ACCEPTOR_VARIANT(SPLICE_ACCEPTOR_EFFECT),
     SPLICE_DONOR_VARIANT(SPLICE_DONOR_EFFECT),
-    SPLICE_REGION_VARIANT("splice_region_variant",
+    SPLICE_REGION_VARIANT(SPLICE_REGION_EFFECT,
             "exonic_splice_region_variant", "non_coding_transcript_splice_region_variant"),
     STOP_GAINED("stop_gained"),
     STOP_LOST("stop_lost"),

@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isAcceptorPlusThree;
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isDonorMinusOne;
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.isDonorPlusFive;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
+import static com.hartwig.hmftools.common.variant.SpliceSites.isAcceptorPlusThree;
+import static com.hartwig.hmftools.common.variant.SpliceSites.isDonorMinusOne;
+import static com.hartwig.hmftools.common.variant.SpliceSites.isDonorPlusFive;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_REGION_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantContextDecorator.getAlt;
 
