@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.common.gene;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Strand.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Strand.REVERSE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Strand;
 
 public class TranscriptData
 {
@@ -42,6 +45,7 @@ public class TranscriptData
 
     public int length() { return TransEnd - TransStart; }
     public boolean posStrand() { return Strand == POS_STRAND; }
+    public Strand strand() { return Strand == POS_STRAND ? FORWARD : REVERSE;  }
 
     public String toString()
     {

@@ -42,7 +42,7 @@ public class ImpactClassifier
     public ImpactClassifier(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
-        mSpliceClassifier = new SpliceClassifier(mRefGenome);
+        mSpliceClassifier = new SpliceClassifier();
     }
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)

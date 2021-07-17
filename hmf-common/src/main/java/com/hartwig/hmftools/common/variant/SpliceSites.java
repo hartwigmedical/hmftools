@@ -1,10 +1,30 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.genome.region.Strand.FORWARD;
+
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 
-public class SpliceSites
+public final class SpliceSites
 {
+    public static int getDonorPosition(int position, int exonEnd, Strand strand)
+    {
+        // zero is the first base after the exon, so pos of 101, exon end of 100, is position zero
+        if(strand == FORWARD)
+            return position - exonEnd - 1;
+        else
+            return exonEnd - position - 1; // pos of 99, exon end of 100, is position zero
+    }
+
+    public static int getAcceptorPosition(int position, int exonEnd, Strand strand)
+    {
+        // zero is the first base before the exon, so pos of 99, exon end of 100, is position zero
+        if(strand == FORWARD)
+            return exonEnd - position - 1;
+        else
+            return position - exonEnd - 1; // pos of 101, exon end of 100, is position zero
+    }
+
     public static boolean isDonorMinusOne(final HmfTranscriptRegion transcript, long position)
     {
         // check if the position matches the last exon base at a donor site
@@ -23,6 +43,7 @@ public class SpliceSites
         return isAcceptorWithOffset(transcript, 2, position);
     }
 
+    // TODO - combine these methods when HmfTranscriptRegion is removed
     private static boolean isDonorWithOffset(final HmfTranscriptRegion transcript, int offset, long position)
     {
         // returns true if the position matches the donor site of the exon (where offset = 0 means first base after the exon)
@@ -32,7 +53,7 @@ public class SpliceSites
         if(position < transcript.codingStart() || position > transcript.codingEnd())
             return false;
 
-        if(transcript.strand() == Strand.FORWARD)
+        if(transcript.strand() == FORWARD)
         {
             for(int i = 0; i < transcript.exome().size() - 1; i++)
             {
@@ -65,7 +86,7 @@ public class SpliceSites
         if(position < transcript.codingStart() || position > transcript.codingEnd())
             return false;
 
-        if(transcript.strand() == Strand.FORWARD)
+        if(transcript.strand() == FORWARD)
         {
             for(int i = 1; i < transcript.exome().size(); i++)
             {

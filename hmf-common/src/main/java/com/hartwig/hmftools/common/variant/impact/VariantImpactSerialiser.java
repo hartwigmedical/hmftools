@@ -10,14 +10,45 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 // methods for reading from and writing to VCFs
 public final class VariantImpactSerialiser
 {
     public static final String VAR_IMPACT_WORST = "VI_WORST";
     public static final String VAR_IMPACT_CANONICAL = "VI_CANON";
+
+    public static VCFHeader writeHeader(final VCFHeader header, final String canonicalTag, final String worstTag)
+    {
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                worstTag, 5, VCFHeaderLineType.String,
+                "Worst transcript summary [Gene, Transcript, Effect, CodingEffect, GenesAffected]"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                canonicalTag, 6, VCFHeaderLineType.String,
+                "Canonical transcript summary [Gene, Transcript, Effect, CodingEffect, HgvsCodingImpact, HgvsProteinImpact]"));
+
+        return header;
+    }
+
+    public static void writeImpactDetails(
+            final VariantContext context, final VariantImpact variantImpact, final String canonicalTag, final String worstTag)
+    {
+        if(!variantImpact.WorstGene.isEmpty())
+        {
+            context.getCommonInfo().putAttribute(worstTag, VariantImpactSerialiser.worstDetails(variantImpact), true);
+        }
+
+        if(!variantImpact.CanonicalGene.isEmpty())
+        {
+            context.getCommonInfo().putAttribute(canonicalTag, VariantImpactSerialiser.canonicalDetails(variantImpact), true);
+        }
+    }
 
     public static VariantImpact fromVariantContext(final VariantContext context)
     {

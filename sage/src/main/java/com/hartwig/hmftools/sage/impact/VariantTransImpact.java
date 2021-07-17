@@ -77,6 +77,8 @@ public class VariantTransImpact
         return mConsequenceEffects.stream().map(x -> VariantConsequence.fromEffect(x)).collect(Collectors.toList());
     }
 
+    public int topRank() { return consequences().stream().mapToInt(x -> x.rank()).max().orElse(-1); }
+
     public String upstreamAA() { return mUpstreamAA; }
     public String wildtypeAA() { return mWildtypeAA; }
     public String novelAA() { return mNovelAA; }
@@ -102,8 +104,8 @@ public class VariantTransImpact
     public void markSpliceRegion() { mInSpliceRegion = true; }
     public boolean inSpliceRegion() { return mInSpliceRegion; }
 
-    public String codingChange() { return ""; }
-    public String proteinChange() { return ""; }
+    public String hgvsCodingChange() { return ""; }
+    public String hgvsProteinChange() { return ""; }
 
     public SnpEffAnnotation findMatchingAnnotation(final List<SnpEffAnnotation> annotations)
     {

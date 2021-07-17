@@ -89,16 +89,6 @@ public class VariantData
         mImpacts.add(impact);
     }
 
-    public VariantTransImpact getWorstImpact()
-    {
-        return null;
-    }
-
-    public VariantTransImpact getCanonicalImpact()
-    {
-        return mImpacts.stream().filter(x -> x.TransData.IsCanonical).findFirst().orElse(null);
-    }
-
     public void setSnpEffAnnotations(final List<SnpEffAnnotation> annotations) { mSnpEffAnnotations.addAll(annotations); };
 
     public String toString()
@@ -160,8 +150,10 @@ public class VariantData
         sj.add("TransId");
         sj.add("Consequence");
         sj.add("ConsequenceEffect");
+        sj.add("CodingEffect");
         sj.add("SeConsequence");
         sj.add("SeConsequenceEffect");
+        sj.add("SeCodingEffect");
         return sj.toString();
     }
 

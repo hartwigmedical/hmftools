@@ -25,20 +25,6 @@ public abstract class SnpEffAnnotation
     public abstract List<VariantConsequence> consequences();
 
     @NotNull
-    public String consequenceString()
-    {
-        final StringJoiner consequenceString = new StringJoiner("; ");
-        for(final VariantConsequence consequence : consequences())
-        {
-            if(!consequence.readableSequenceOntologyTerm().isEmpty())
-            {
-                consequenceString.add(consequence.readableSequenceOntologyTerm());
-            }
-        }
-        return consequenceString.toString();
-    }
-
-    @NotNull
     public abstract String geneID();
 
     @NotNull
@@ -55,6 +41,12 @@ public abstract class SnpEffAnnotation
 
     @NotNull
     public abstract String hgvsProtein();
+
+    @NotNull
+    public String consequenceString()
+    {
+        return VariantConsequence.consequenceString(consequences());
+    }
 
     // when we use the feature ID it is in practice always a transcript, but this mapping may not hold for every single snpeff annotation!
     public String transcript()

@@ -92,6 +92,19 @@ public enum VariantConsequence
         return sj.toString();
     }
 
+    public static String consequenceString(final List<VariantConsequence> consequences)
+    {
+        final StringJoiner consequenceString = new StringJoiner("; ");
+        for(final VariantConsequence consequence : consequences)
+        {
+            if(!consequence.readableSequenceOntologyTerm().isEmpty())
+            {
+                consequenceString.add(consequence.readableSequenceOntologyTerm());
+            }
+        }
+        return consequenceString.toString();
+    }
+
     public boolean isParentTypeOf(@NotNull final String annotation)
     {
         return annotation.equals(mParentSequenceOntologyTerm) || mSequenceOntologySubTerms.contains(annotation);

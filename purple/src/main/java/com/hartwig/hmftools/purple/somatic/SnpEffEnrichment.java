@@ -25,8 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SnpEffEnrichment implements VariantContextEnrichment
 {
@@ -47,17 +45,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
     public void accept(@NotNull final VariantContext context)
     {
         final VariantImpact variantImpact = formVariantImpact(context);
-
-        if(!variantImpact.WorstGene.isEmpty())
-        {
-            context.getCommonInfo().putAttribute(SNPEFF_WORST, VariantImpactSerialiser.worstDetails(variantImpact), true);
-        }
-
-        if(!variantImpact.CanonicalGene.isEmpty())
-        {
-            context.getCommonInfo().putAttribute(SNPEFF_CANONICAL, VariantImpactSerialiser.canonicalDetails(variantImpact), true);
-        }
-
+        VariantImpactSerialiser.writeImpactDetails(context, variantImpact, SNPEFF_CANONICAL, SNPEFF_WORST);
         mConsumer.accept(context);
     }
 
@@ -65,15 +53,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader header)
     {
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                SNPEFF_WORST, 5, VCFHeaderLineType.String,
-                "SnpEff worst transcript summary [Gene, Transcript, Effect, CodingEffect, GenesAffected]"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                SNPEFF_CANONICAL, 6, VCFHeaderLineType.String,
-                "SnpEff canonical transcript summary [Gene, Transcript, Effect, CodingEffect, HgvsCodingImpact, HgvsProteinImpact]"));
-
-        return header;
+        return VariantImpactSerialiser.writeHeader(header, SNPEFF_CANONICAL, SNPEFF_WORST);
     }
 
     private VariantImpact formVariantImpact(@NotNull final VariantContext context)

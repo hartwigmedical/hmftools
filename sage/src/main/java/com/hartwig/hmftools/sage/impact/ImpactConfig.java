@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.impact;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -52,6 +54,7 @@ public class ImpactConfig
         return true;
     }
 
+
     @NotNull
     public static Options createOptions()
     {
@@ -62,6 +65,7 @@ public class ImpactConfig
         options.addOption(REF_GENOME, true, "Path to ref genome fasta file");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         options.addOption(ENSEMBL_DATA_DIR, true, "Name of sample");
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 
         options.addOption(WRITE_CSV, false, "Write variant impacts to CSV");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");

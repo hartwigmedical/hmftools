@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.impact;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 
@@ -39,7 +41,9 @@ public class ImpactAnnotator
 {
     private final ImpactConfig mConfig;
     private final ImpactClassifier mImpactClassifier;
+    private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
+
     private BufferedWriter mCsvWriter;
     private BufferedWriter mCsvTranscriptWriter;
 
@@ -51,7 +55,10 @@ public class ImpactAnnotator
     {
         mConfig = new ImpactConfig(cmd);
 
-        mGeneDataCache = new GeneDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion);
+        mGeneDataCache = new GeneDataCache(
+                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+
+        mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
         RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
 
@@ -195,6 +202,8 @@ public class ImpactAnnotator
 
             writeVariantCsvData(variant, geneData);
         }
+
+        VariantImpact variantImpact = mImpactBuilder.createVariantImapct(variant, variantContext);
     }
 
     private void initialiseCsvWriters()
