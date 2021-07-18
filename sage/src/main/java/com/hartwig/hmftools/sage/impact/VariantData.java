@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import htsjdk.variant.variantcontext.Allele;
@@ -27,11 +28,14 @@ public class VariantData
     public final String Ref;
     public final String Alt;
 
+    // other key data
+    public boolean mPhasedInframeIndel;
+    public String mMicrohomology;
+    public String mRepeatSequence;
+
     private final int mIndelBaseDiff;
 
     private final List<VariantTransImpact> mImpacts;
-
-    private final List<SnpEffAnnotation> mSnpEffAnnotations;
 
     public VariantData(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -40,10 +44,13 @@ public class VariantData
         Ref = ref;
         Alt = alt;
 
+        mPhasedInframeIndel = false;
+        mMicrohomology = "";
+        mRepeatSequence = "";
+
         mIndelBaseDiff = Alt.length() - Ref.length();
 
         mImpacts = Lists.newArrayList();
-        mSnpEffAnnotations = Lists.newArrayList();
     }
 
     public static VariantData fromContext(final VariantContext variantContext)
@@ -71,7 +78,20 @@ public class VariantData
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
 
+    public boolean phasedInframeIndel() { return mPhasedInframeIndel; }
+
+    public void setVariantDetails(boolean piIndel, final String mh, final String reqSeq)
+    {
+        mPhasedInframeIndel = piIndel;
+        mMicrohomology = mh;
+        mRepeatSequence = reqSeq;
+    }
+
+    public String microhomology() { return mMicrohomology; }
+    public String repeatSequence() { return mRepeatSequence; }
+
     public List<VariantTransImpact> getImpacts() { return mImpacts; }
+    public void clearImpacts() { mImpacts.clear(); }
 
     public void addImpact(final VariantTransImpact impact)
     {
@@ -89,30 +109,12 @@ public class VariantData
         mImpacts.add(impact);
     }
 
-    public void setSnpEffAnnotations(final List<SnpEffAnnotation> annotations) { mSnpEffAnnotations.addAll(annotations); };
-
     public String toString()
     {
         return String.format("pos(%s:%d) variant(%s>%s)", Chromosome, Position, Ref, Alt);
     }
 
-    // output methods
-    public static String csvHeader()
-    {
-        StringJoiner sj = new StringJoiner(DELIM);
-        sj.add(csvCommonHeader());
-        // sj.add("Chromosome").add("Position").add("Type").add("Ref").add("Alt");
-        return sj.toString();
-    }
-
-    public String csvData(final GeneData geneData)
-    {
-        StringJoiner sj = new StringJoiner(DELIM);
-        sj.add(csvCommonData(geneData));
-        return sj.toString();
-    }
-
-    private static String csvCommonHeader()
+    public static String csvCommonHeader()
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add("Chromosome").add("Position").add("Type").add("Ref").add("Alt");
@@ -120,7 +122,7 @@ public class VariantData
         return sj.toString();
     }
 
-    private String csvCommonData(final GeneData geneData)
+    public String csvCommonData(final GeneData geneData)
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add(Chromosome);
@@ -143,72 +145,5 @@ public class VariantData
         return sj.toString();
     }
 
-    public static String csvTranscriptHeader()
-    {
-        StringJoiner sj = new StringJoiner(DELIM);
-        sj.add(csvCommonHeader());
-        sj.add("TransId");
-        sj.add("Consequence");
-        sj.add("ConsequenceEffect");
-        sj.add("CodingEffect");
-        sj.add("SeConsequence");
-        sj.add("SeConsequenceEffect");
-        sj.add("SeCodingEffect");
-        return sj.toString();
-    }
-
-    public List<String> csvTranscriptData(final GeneData geneData)
-    {
-        List<String> transcriptLines = Lists.newArrayList();
-
-        List<SnpEffAnnotation> matchedAnnotations = Lists.newArrayList();
-
-        for(VariantTransImpact impact : mImpacts)
-        {
-            if(impact.TransData == null)
-                continue;
-
-            SnpEffAnnotation annotation = impact.findMatchingAnnotation(mSnpEffAnnotations);
-
-            StringJoiner sj = new StringJoiner(DELIM);
-            sj.add(csvCommonData(geneData));
-
-            sj.add(impact.TransData.TransName);
-            sj.add(String.valueOf(impact.consequencesStr()));
-            sj.add(String.valueOf(impact.effectsStr()));
-
-            if(annotation != null)
-            {
-                sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
-                sj.add(annotation.effects());
-                matchedAnnotations.add(annotation);
-            }
-            else
-            {
-                sj.add("UNMATCHED");
-            }
-
-            transcriptLines.add(sj.toString());
-        }
-
-        for(SnpEffAnnotation annotation : mSnpEffAnnotations)
-        {
-            if(matchedAnnotations.contains(annotation))
-                continue;
-
-            if(annotation.consequences().contains(NON_CODING_TRANSCRIPT_VARIANT))
-                continue;
-
-            StringJoiner sj = new StringJoiner(DELIM);
-            sj.add(csvCommonData(geneData));
-
-            sj.add(annotation.featureID());
-            sj.add("UNMATCHED");
-            sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
-            transcriptLines.add(sj.toString());
-        }
-
-        return transcriptLines;
-    }
 
 }

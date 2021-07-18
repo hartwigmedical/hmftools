@@ -110,6 +110,8 @@ public enum VariantConsequence
         return annotation.equals(mParentSequenceOntologyTerm) || mSequenceOntologySubTerms.contains(annotation);
     }
 
+    public String parentTerm() { return mParentSequenceOntologyTerm; }
+
     public String description()
     {
         if(!mSequenceOntologySubTerms.isEmpty())

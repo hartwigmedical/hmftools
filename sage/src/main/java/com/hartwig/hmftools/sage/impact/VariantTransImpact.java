@@ -32,7 +32,7 @@ public class VariantTransImpact
 
     public VariantTransImpact(final TranscriptData transData, final VariantConsequence consequence)
     {
-        this(transData, consequence.description());
+        this(transData, consequence.parentTerm());
     }
 
     public VariantTransImpact(final TranscriptData transData, final String consequenceEffect)
@@ -65,6 +65,8 @@ public class VariantTransImpact
         {
             if(consequence.rank() > consequences.get(index).rank())
                 break;
+
+            ++index;
         }
 
         mConsequenceEffects.add(index, consequenceEffect);
@@ -126,5 +128,11 @@ public class VariantTransImpact
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
         mConsequenceEffects.forEach(x -> sj.add(x.toString()));
         return sj.toString();
+    }
+
+    public String toString()
+    {
+        return String.format("trans({}) conseq({}) effects({}) inSplice({})",
+                TransData.TransName, consequencesStr(), effectsStr(), mInSpliceRegion);
     }
 }

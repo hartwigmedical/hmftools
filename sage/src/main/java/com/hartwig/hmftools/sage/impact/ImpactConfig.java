@@ -6,10 +6,17 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -17,15 +24,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class ImpactConfig
 {
-    public final String SampleId;
-    public final String VcfFile;
+    public final List<String> SampleIds;
 
+    public final String VcfFile;
     public final RefGenomeVersion RefGenVersion;
+    public final DatabaseAccess DbAccess;
+
     public final String OutputDir;
     public final boolean WriteCsv;
     public final boolean WriteTranscriptCsv;
 
     private static final String SAMPLE = "sample";
+    public static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String VCF_FILE = "vcf_file";
     private static final String WRITE_CSV = "write_csv";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
@@ -34,11 +44,23 @@ public class ImpactConfig
 
     public ImpactConfig(final CommandLine cmd)
     {
-        SampleId = cmd.getOptionValue(SAMPLE);
+        SampleIds = Lists.newArrayList();
 
-        VcfFile = cmd.getOptionValue(VCF_FILE);
+        if(cmd.hasOption(SAMPLE))
+        {
+            SampleIds.add(cmd.getOptionValue(SAMPLE));
+            VcfFile = cmd.getOptionValue(VCF_FILE);
+            DbAccess = null;
+        }
+        else
+        {
+            SampleIds.addAll(loadSampleIdFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+            DbAccess = createDatabaseAccess(cmd);
+            VcfFile = null;
+        }
 
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+
 
         WriteCsv = cmd.hasOption(WRITE_CSV);
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
@@ -46,20 +68,36 @@ public class ImpactConfig
         OutputDir = parseOutputDir(cmd);
     }
 
-    public boolean isValid()
+    public boolean singleSample() { return SampleIds.size() == 1; }
+
+    public boolean singleSampleValid()
     {
-        if(SampleId == null || VcfFile == null)
+        if(SampleIds.isEmpty())
+            return false;
+
+        if(VcfFile == null)
             return false;
 
         return true;
     }
 
+    public boolean multiSampleValid()
+    {
+        if(SampleIds.isEmpty())
+            return false;
+
+        if(DbAccess == null)
+            return false;
+
+        return true;
+    }
 
     @NotNull
     public static Options createOptions()
     {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of sample");
+        options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
         options.addOption(VCF_FILE, true, "VCF input file");
 
         options.addOption(REF_GENOME, true, "Path to ref genome fasta file");
@@ -72,6 +110,8 @@ public class ImpactConfig
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
+
+        addDatabaseCmdLineArgs(options);
 
         return options;
     }

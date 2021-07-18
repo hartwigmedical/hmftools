@@ -6,12 +6,14 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAME
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -29,7 +31,7 @@ public class VariantImpactBuilder
         mGeneDataCache = geneDataCache;
     }
 
-    public VariantImpact createVariantImapct(final VariantData variant, final VariantContext context)
+    public VariantImpact createVariantImpact(final VariantData variant)
     {
         String canonicalGene = "";
         String canonicalEffect = "";
@@ -62,7 +64,7 @@ public class VariantImpactBuilder
         {
             worstGene = geneIdToNameMap.get(worstImpact.TransData.GeneId);
             worstEffect = VariantConsequence.consequenceString(worstImpact.consequences());
-            worstCodingEffect = determineCodingEffect(variant, worstImpact, context);
+            worstCodingEffect = determineCodingEffect(variant, worstImpact);
             worstTranscript = worstImpact.TransData.TransName;
         }
 
@@ -80,7 +82,7 @@ public class VariantImpactBuilder
 
             canonicalGene = geneIdToNameMap.get(canonicalImpact.TransData.GeneId);
             canonicalEffect = VariantConsequence.consequenceString(canonicalImpact.consequences());
-            canonicalCodingEffect = determineCodingEffect(variant, canonicalImpact, context);
+            canonicalCodingEffect = determineCodingEffect(variant, canonicalImpact);
             canonicalHgvsCodingImpact = canonicalImpact.hgvsCodingChange();
             canonicalHgvsProteinImpact = canonicalImpact.hgvsProteinChange();
             canonicalTranscript = canonicalImpact.TransData.TransName;
@@ -91,15 +93,13 @@ public class VariantImpactBuilder
                 canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
     }
 
-    private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact, final VariantContext context)
+    private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact)
     {
         final List<CodingEffect> simplifiedEffects = transImpact.consequences().stream().map(CodingEffect::effect).collect(Collectors.toList());
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
         {
-            boolean phasedInframeIndel = context.isIndel() && context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
-
-            if(phasedInframeIndel)
+            if(variant.phasedInframeIndel())
                 return MISSENSE;
 
             return NONSENSE_OR_FRAMESHIFT;
@@ -119,7 +119,15 @@ public class VariantImpactBuilder
 
     private String findGeneName(final TranscriptData transData)
     {
-        return mGeneDataCache.getEnsemblCache().getGeneDataByName(transData.GeneId).GeneName;
+        final GeneData geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(transData.GeneId);
+
+        if(geneData == null)
+        {
+            SG_LOGGER.warn("geneId({}) not found", transData.GeneId);
+            return "";
+        }
+
+        return geneData.GeneName;
     }
 
 }
