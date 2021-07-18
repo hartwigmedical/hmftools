@@ -71,7 +71,8 @@ public class SnpEffEnrichment implements VariantContextEnrichment
                 .distinct()
                 .count();
 
-        String canonicalGene = "";
+        String canonicalGeneName = "";
+        String canonicalGeneId = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = UNDEFINED;
@@ -95,7 +96,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
         if(canonicalAnnotation.isPresent())
         {
             final SnpEffAnnotation annotation = canonicalAnnotation.get();
-            canonicalGene = annotation.gene();
+            canonicalGeneName = annotation.gene();
             canonicalEffect = annotation.consequenceString();
             canonicalCodingEffect = codingEffect(context, phasedInframeIndel, annotation);
             canonicalHgvsCodingImpact = annotation.hgvsCoding();
@@ -104,7 +105,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
         }
 
         return new VariantImpact(
-                genesAffected, canonicalGene, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                genesAffected, canonicalGeneId, canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
     }
 

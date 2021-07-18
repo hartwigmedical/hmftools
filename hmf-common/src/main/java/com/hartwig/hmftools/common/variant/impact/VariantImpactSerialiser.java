@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
@@ -44,7 +43,7 @@ public final class VariantImpactSerialiser
             context.getCommonInfo().putAttribute(worstTag, VariantImpactSerialiser.worstDetails(variantImpact), true);
         }
 
-        if(!variantImpact.CanonicalGene.isEmpty())
+        if(!variantImpact.CanonicalGeneName.isEmpty())
         {
             context.getCommonInfo().putAttribute(canonicalTag, VariantImpactSerialiser.canonicalDetails(variantImpact), true);
         }
@@ -68,7 +67,8 @@ public final class VariantImpactSerialiser
     public static VariantImpact fromVcfAnnotation(final List<String> worst, final List<String> canonical)
     {
         int genesAffected = 0;
-        String canonicalGene = "";
+        String canonicalGeneId = "";
+        String canonicalGeneName = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = UNDEFINED;
@@ -90,7 +90,7 @@ public final class VariantImpactSerialiser
 
         if(canonical.size() == 6)
         {
-            canonicalGene = canonical.get(0);
+            canonicalGeneName = canonical.get(0);
             canonicalTranscript = canonical.get(1);
             canonicalEffect = canonical.get(2);
             canonicalCodingEffect = CodingEffect.valueOf(canonical.get(3));
@@ -99,7 +99,7 @@ public final class VariantImpactSerialiser
         }
 
         return new VariantImpact(
-                genesAffected, canonicalGene, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                genesAffected, canonicalGeneId, canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
     }
 
@@ -116,7 +116,7 @@ public final class VariantImpactSerialiser
     public static List<String> canonicalDetails(final VariantImpact impact)
     {
         return Lists.newArrayList(
-                impact.CanonicalGene,
+                impact.CanonicalGeneName,
                 impact.CanonicalTranscript,
                 writeEffect(impact.CanonicalEffect),
                 impact.CanonicalCodingEffect.toString(),

@@ -14,14 +14,13 @@ import org.junit.Test;
 
 public class VariantImpactSerialiserTest
 {
-
     @Test
     public void testSerialise()
     {
         Random random = new Random();
 
         VariantImpact variantImpact = new VariantImpact(
-                random.nextInt(), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()),
+                random.nextInt(), "", Integer.toString(random.nextInt()), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()),
                 CodingEffect.values()[random.nextInt(CodingEffect.values().length)], Integer.toString(random.nextInt()),
                 Integer.toString(random.nextInt()), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()),
                 Integer.toString(random.nextInt()), CodingEffect.values()[random.nextInt(CodingEffect.values().length)]);
@@ -40,7 +39,7 @@ public class VariantImpactSerialiserTest
         Random random = new Random();
 
         VariantImpact variantImpact = new VariantImpact(
-                random.nextInt(), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()),
+                random.nextInt(), "", Integer.toString(random.nextInt()), Integer.toString(random.nextInt()), Integer.toString(random.nextInt()),
                 CodingEffect.values()[random.nextInt(CodingEffect.values().length)], Integer.toString(random.nextInt()),
                 Integer.toString(random.nextInt()), Integer.toString(random.nextInt()), "multiple effects; with spaces",
                 Integer.toString(random.nextInt()), CodingEffect.values()[random.nextInt(CodingEffect.values().length)]);

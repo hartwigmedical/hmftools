@@ -9,10 +9,12 @@ import static com.hartwig.hmftools.sage.impact.ImpactConstants.DELIM;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.ITEM_DELIM;
 
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -35,7 +37,7 @@ public class VariantData
 
     private final int mIndelBaseDiff;
 
-    private final List<VariantTransImpact> mImpacts;
+    private final Map<String,List<VariantTransImpact>> mGeneImpacts;
 
     public VariantData(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -50,7 +52,7 @@ public class VariantData
 
         mIndelBaseDiff = Alt.length() - Ref.length();
 
-        mImpacts = Lists.newArrayList();
+        mGeneImpacts = Maps.newHashMap();
     }
 
     public static VariantData fromContext(final VariantContext variantContext)
@@ -90,23 +92,23 @@ public class VariantData
     public String microhomology() { return mMicrohomology; }
     public String repeatSequence() { return mRepeatSequence; }
 
-    public List<VariantTransImpact> getImpacts() { return mImpacts; }
-    public void clearImpacts() { mImpacts.clear(); }
+    public Map<String,List<VariantTransImpact>> getImpacts() { return mGeneImpacts; }
 
-    public void addImpact(final VariantTransImpact impact)
+    public void addImpact(final String geneName, final VariantTransImpact impact)
     {
-        if(impact.TransData == null)
+        List<VariantTransImpact> geneImpacts = mGeneImpacts.get(geneName);
+
+        if(geneImpacts == null)
         {
-            if(mImpacts.stream().anyMatch(x -> x.consequence() == impact.consequence()))
-                return;
-        }
-        else
-        {
-            if(mImpacts.stream().filter(x -> x.TransData != null) .anyMatch(x -> x.TransData.TransId == impact.TransData.TransId))
-                return;
+            geneImpacts = Lists.newArrayList(impact);
+            mGeneImpacts.put(geneName, geneImpacts);
+            return;
         }
 
-        mImpacts.add(impact);
+        if(geneImpacts.stream().filter(x -> x.TransData != null) .anyMatch(x -> x.TransData.TransId == impact.TransData.TransId))
+            return;
+
+        geneImpacts.add(impact);
     }
 
     public String toString()
@@ -118,11 +120,10 @@ public class VariantData
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add("Chromosome").add("Position").add("Type").add("Ref").add("Alt");
-        sj.add("GeneId").add("GeneName");
         return sj.toString();
     }
 
-    public String csvCommonData(final GeneData geneData)
+    public String toCsv()
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add(Chromosome);
@@ -130,17 +131,6 @@ public class VariantData
         sj.add(String.valueOf(type()));
         sj.add(Ref);
         sj.add(Alt);
-
-        if(geneData != null)
-        {
-            sj.add(geneData.GeneId);
-            sj.add(geneData.GeneName);
-        }
-        else
-        {
-            sj.add("NO_GENE");
-            sj.add("NO_GENE");
-        }
 
         return sj.toString();
     }

@@ -7,6 +7,7 @@ import static java.lang.Math.subtractExact;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCEPTOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
+import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_ACCEPTOR_BASES;
@@ -121,7 +122,7 @@ public class SpliceClassifier
                 }
                 else
                 {
-                    int acceptorPos = getDonorPosition(position, acceptorExonPos, transData.strand());
+                    int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
 
                     if(acceptorPos == 1 || acceptorPos == 2)
                         return new VariantTransImpact(transData, SPLICE_ACCEPTOR_EFFECT);

@@ -147,6 +147,8 @@ public enum VariantConsequence
             case UTR_VARIANT: return 20;
             case INTRON_VARIANT: return 20;
 
+            case NON_CODING_TRANSCRIPT_VARIANT: return 15;
+
             case UPSTREAM_GENE_VARIANT: return 10;
 
             default:

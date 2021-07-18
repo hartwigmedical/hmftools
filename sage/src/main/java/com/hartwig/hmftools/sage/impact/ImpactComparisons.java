@@ -7,17 +7,14 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.impact.ImpactAnnotator.findVariantImpacts;
 import static com.hartwig.hmftools.sage.impact.ImpactConfig.REF_GENOME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.List;
 
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -118,6 +115,7 @@ public class ImpactComparisons
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
                 .and(SOMATICVARIANT.GENE.isNotNull())
+                .orderBy(SOMATICVARIANT.CHROMOSOME,SOMATICVARIANT.POSITION)
                 .fetch();
 
         for (Record record : result)
@@ -134,50 +132,26 @@ public class ImpactComparisons
         ++mVariantCount;
 
         // generate variant impact data and then write comparison results to CSV file
-        List<GeneData> geneCandidates = mGeneDataCache.findGenes(somaticVariant.chromosome(), (int)somaticVariant.position());
-
-        if(geneCandidates.isEmpty())
-            return;
-
         VariantData variant = new VariantData(
                 somaticVariant.chromosome(), (int)somaticVariant.position(), somaticVariant.ref(), somaticVariant.alt());
 
         boolean phasedInframeIndel = somaticVariant.phasedInframeIndelIdentifier() != null && somaticVariant.phasedInframeIndelIdentifier() > 0;
         variant.setVariantDetails(phasedInframeIndel, somaticVariant.microhomology(), somaticVariant.repeatSequence());
 
-        // analyse against each of the genes and their transcripts
-        for(GeneData geneData : geneCandidates)
+        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
+
+        VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
+
+        if(SG_LOGGER.isDebugEnabled())
         {
-            variant.clearImpacts();
-
-            List<TranscriptData> transDataList = mGeneDataCache.findTranscripts(geneData.GeneId, variant.Position);
-
-            if(transDataList.isEmpty())
-                continue;
-
-            for(TranscriptData transData : transDataList)
+            if(variantImpact.CanonicalCodingEffect != somaticVariant.canonicalCodingEffect())
             {
-                VariantTransImpact transImpact = mImpactClassifier.classifyVariant(variant, transData);
-
-                if(transImpact != null)
-                    variant.addImpact(transImpact);
-
-                ++mTransVariantCount;
+                //SG_LOGGER.debug("sample({}) var({}) diff canonical coding: new({}) snpEff({})",
+                //        sampleId, variant.toString(), variantImpact.CanonicalCodingEffect, somaticVariant.canonicalCodingEffect());
             }
-
-            VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
-
-            if(SG_LOGGER.isDebugEnabled())
-            {
-                if(variantImpact.CanonicalCodingEffect != somaticVariant.canonicalCodingEffect())
-                {
-                    SG_LOGGER.debug("sample({}) var({}) diff canonical coding: new({}) snpEff({})",
-                            sampleId, variant.toString(), variantImpact.CanonicalCodingEffect, somaticVariant.canonicalCodingEffect());
-                }
-            }
-
-            writeVariantData(sampleId, variant, geneData, variantImpact, somaticVariant);
         }
+
+        writeVariantData(sampleId, variant, variantImpact, somaticVariant);
     }
 
     private void initialiseImpactWriter()
@@ -189,7 +163,8 @@ public class ImpactComparisons
 
             mCsvWriter.write("SampleId,");
             mCsvWriter.write(VariantData.csvCommonHeader());
-            mCsvWriter.write(",IsDriver,CanonEffect,CanonCodingEffect,WorstEffect,WorstCodingEffect,WorstTrans,GenesAffected");
+            mCsvWriter.write(",GeneId,GeneName,IsDriver,CanonEffect,CanonCodingEffect");
+            mCsvWriter.write(",WorstEffect,WorstCodingEffect,WorstTrans,GenesAffected");
             mCsvWriter.write(",SnpEffGeneName,SnpEffCanonEffect,SnpEffCanonCodingEffect");
             mCsvWriter.write(",SnpEffWorstEffect,SnpEffWorstCodingEffect,SnpEffWorstTrans,SnpEffGenesAffected");
             mCsvWriter.newLine();
@@ -202,16 +177,16 @@ public class ImpactComparisons
     }
 
     private void writeVariantData(
-            final String sampleId, final VariantData variant, final GeneData geneData,
-            final VariantImpact variantImpact, final SomaticVariant somaticVariant)
+            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final SomaticVariant somaticVariant)
     {
         try
         {
-            mCsvWriter.write(String.format("%s,%s", sampleId, variant.csvCommonData(geneData)));
+            mCsvWriter.write(String.format("%s,%s,%s,%s",
+                    sampleId, variant.toCsv(), variantImpact.CanonicalGeneId, variantImpact.CanonicalGeneName));
 
-            boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(geneData.GeneName);
+            boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(variantImpact.CanonicalGeneName);
 
-            if(!isDriver && !geneData.GeneName.equals(somaticVariant.gene()))
+            if(!isDriver && !variantImpact.CanonicalGeneName.equals(somaticVariant.gene()))
                 isDriver = mGeneDataCache.getDriverPanelGenes().contains(somaticVariant.gene());
 
             mCsvWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",

@@ -33,7 +33,62 @@ public class VariantImpactBuilder
 
     public VariantImpact createVariantImpact(final VariantData variant)
     {
-        String canonicalGene = "";
+        // find the canonical and worst transcript and their effects
+        // favour driver genes over others, otherwise take the gene with the highest impact
+
+        VariantTransImpact worstImpact = null;
+        int worstRank = -1;
+
+        VariantTransImpact worstCanonicalImpact = null;
+        int worstCanonicalRank = -1;
+        String worstGeneName = "";
+
+        boolean hasDriverGene = false;
+
+        for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
+        {
+            final String geneName = entry.getKey();
+
+            boolean isDriverGene = mGeneDataCache.getDriverPanelGenes().contains(geneName);
+
+            if(!hasDriverGene && isDriverGene)
+            {
+                // reset to ignore any prior non-driver gene
+                hasDriverGene = true;
+                worstImpact = null;
+                worstRank = -1;
+                worstCanonicalImpact = null;
+                worstCanonicalRank = -1;
+                worstGeneName = "";
+            }
+            else if(hasDriverGene && !isDriverGene)
+            {
+                continue;
+            }
+
+            final List<VariantTransImpact> geneImpacts = entry.getValue();
+
+            for(VariantTransImpact transImpact : geneImpacts)
+            {
+                int rank = transImpact.topRank();
+
+                if(rank > worstRank || (rank == worstRank && transImpact.TransData.IsCanonical))
+                {
+                    worstRank = rank;
+                    worstImpact = transImpact;
+                }
+
+                if(transImpact.TransData.IsCanonical && rank > worstCanonicalRank)
+                {
+                    worstCanonicalRank = rank;
+                    worstCanonicalImpact = transImpact;
+                    worstGeneName = geneName;
+                }
+            }
+        }
+
+        String canonicalGeneName = "";
+        String canonicalGeneId = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = UNDEFINED;
@@ -44,53 +99,28 @@ public class VariantImpactBuilder
         String worstTranscript = "";
         CodingEffect worstCodingEffect = UNDEFINED;
 
-        VariantTransImpact worstImpact = null;
-        int topRank = -1;
-        Map<String,String> geneIdToNameMap = Maps.newHashMap();
-
-        for(VariantTransImpact transImpact : variant.getImpacts())
-        {
-            int rank = transImpact.topRank();
-            geneIdToNameMap.put(transImpact.TransData.GeneId, findGeneName(transImpact.TransData));
-
-            if(rank > topRank || (rank == topRank && transImpact.TransData.IsCanonical))
-            {
-                topRank = rank;
-                worstImpact = transImpact;
-            }
-        }
-
         if(worstImpact != null)
         {
-            worstGene = geneIdToNameMap.get(worstImpact.TransData.GeneId);
+            worstGene = worstGeneName;
             worstEffect = VariantConsequence.consequenceString(worstImpact.consequences());
             worstCodingEffect = determineCodingEffect(variant, worstImpact);
             worstTranscript = worstImpact.TransData.TransName;
         }
 
-        List<VariantTransImpact> canonicalImpacts = variant.getImpacts().stream()
-                .filter(x -> x.TransData.IsCanonical).collect(Collectors.toList());
-
-        List<VariantTransImpact> canonicalDriverImpacts = canonicalImpacts.stream()
-                .filter(x -> mGeneDataCache.getDriverPanelGenes().contains(findGeneName(x.TransData)))
-                .collect(Collectors.toList());
-
-        if(!canonicalImpacts.isEmpty())
+        if(worstCanonicalImpact != null)
         {
-            VariantTransImpact canonicalImpact = !canonicalDriverImpacts.isEmpty() ?
-                    canonicalDriverImpacts.get(0) : canonicalImpacts.get(0);
-
-            canonicalGene = geneIdToNameMap.get(canonicalImpact.TransData.GeneId);
-            canonicalEffect = VariantConsequence.consequenceString(canonicalImpact.consequences());
-            canonicalCodingEffect = determineCodingEffect(variant, canonicalImpact);
-            canonicalHgvsCodingImpact = canonicalImpact.hgvsCodingChange();
-            canonicalHgvsProteinImpact = canonicalImpact.hgvsProteinChange();
-            canonicalTranscript = canonicalImpact.TransData.TransName;
+            canonicalGeneName = worstGeneName;
+            canonicalGeneId = worstCanonicalImpact.TransData.GeneId;
+            canonicalEffect = VariantConsequence.consequenceString(worstCanonicalImpact.consequences());
+            canonicalCodingEffect = determineCodingEffect(variant, worstCanonicalImpact);
+            canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCodingChange();
+            canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProteinChange();
+            canonicalTranscript = worstCanonicalImpact.TransData.TransName;
         }
 
         return new VariantImpact(
-                geneIdToNameMap.size(), canonicalGene, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
-                canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
+                variant.getImpacts().size(), canonicalGeneId, canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect,
+                canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
     }
 
     private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact)
@@ -115,19 +145,6 @@ public class VariantImpactBuilder
             return SYNONYMOUS;
 
         return NONE;
-    }
-
-    private String findGeneName(final TranscriptData transData)
-    {
-        final GeneData geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(transData.GeneId);
-
-        if(geneData == null)
-        {
-            SG_LOGGER.warn("geneId({}) not found", transData.GeneId);
-            return "";
-        }
-
-        return geneData.GeneName;
     }
 
 }

@@ -71,10 +71,18 @@ public class ImpactClassifier
 
             ExonData nextExon = i < exonCount - 1 ? transData.exons().get(i + 1) : null;
 
-            if(isWithinSpliceRegion(variant, transData, exon) || (nextExon != null && isWithinSpliceRegion(variant, transData, nextExon)))
+            if(isWithinSpliceRegion(variant, transData, exon))
             {
                 inSpliceRegion = true;
                 transImpact = mSpliceClassifier.classifyVariant(variant, transData, exon);
+
+                if(transImpact != null)
+                    break;
+            }
+            else if(nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
+            {
+                inSpliceRegion = true;
+                transImpact = mSpliceClassifier.classifyVariant(variant, transData, nextExon);
 
                 if(transImpact != null)
                     break;

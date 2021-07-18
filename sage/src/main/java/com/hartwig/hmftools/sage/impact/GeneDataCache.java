@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.impact;
 
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
@@ -11,13 +10,11 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.compress.utils.Lists;
 
 public class GeneDataCache
@@ -27,7 +24,8 @@ public class GeneDataCache
     private final List<String> mDriverGenes;
 
     private String mCurrentChromosome;
-    private List<GeneData> mCurrentGeneList;
+    private List<GeneData> mCurrentChromosomeGenes;
+    private List<GeneData> mCurrentGenes; // in the current vacinity
     private int mCurrentGeneIndex;
 
     public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenomeVersion, final String driverGenePanel)
@@ -38,8 +36,9 @@ public class GeneDataCache
         loadDriverGenes(driverGenePanel);
 
         mCurrentChromosome = null;
-        mCurrentGeneList = null;
+        mCurrentChromosomeGenes = null;
         mCurrentGeneIndex = 0;
+        mCurrentGenes = Lists.newArrayList();
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
@@ -83,30 +82,43 @@ public class GeneDataCache
 
     public List<GeneData> findGenes(final String chromosome, int position)
     {
-        List<GeneData> genes = Lists.newArrayList();
-
         if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
         {
             mCurrentChromosome = chromosome;
-            mCurrentGeneList = mEnsemblDataCache.getChrGeneDataMap().get(chromosome);
+            mCurrentChromosomeGenes = mEnsemblDataCache.getChrGeneDataMap().get(chromosome);
             mCurrentGeneIndex = 0;
+            mCurrentGenes.clear();
         }
 
-        if(mCurrentGeneList == null)
+        if(mCurrentChromosomeGenes == null)
         {
             SG_LOGGER.error("invalid chromosome({})", chromosome);
-            return genes;
+            return Lists.newArrayList();
         }
 
-        // setGeneIndex(position);
-
-        for(; mCurrentGeneIndex < mCurrentGeneList.size(); ++mCurrentGeneIndex)
+        // purge any gene where the position is now past its end
+        int index = 0;
+        while(index < mCurrentGenes.size())
         {
-            GeneData geneData = mCurrentGeneList.get(mCurrentGeneIndex);
+            if(mCurrentGenes.get(index).GeneEnd < position)
+                mCurrentGenes.remove(index);
+            else
+                ++index;
+        }
+
+        for(; mCurrentGeneIndex < mCurrentChromosomeGenes.size(); ++mCurrentGeneIndex)
+        {
+            GeneData geneData = mCurrentChromosomeGenes.get(mCurrentGeneIndex);
 
             if(isWithinGeneRange(geneData, position))
             {
-                genes.add(geneData);
+                if(mCurrentGenes.contains(geneData))
+                {
+                    SG_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, mCurrentGeneIndex);
+                    break;
+                }
+
+                mCurrentGenes.add(geneData);
             }
             else if(position > geneData.GeneEnd)
             {
@@ -114,14 +126,11 @@ public class GeneDataCache
             }
             else if(geneData.GeneStart > position)
             {
-                if(mCurrentGeneIndex > 0)
-                    --mCurrentGeneIndex;
-
                 break;
             }
         }
 
-        return genes;
+        return mCurrentGenes;
     }
 
     private boolean isWithinGeneRange(final GeneData geneData, int position)

@@ -19,7 +19,9 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -27,7 +29,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 
@@ -129,12 +130,12 @@ public class ImpactAnnotator
         // extract SnpEff data for comparison sake
         List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext);
 
-        List<GeneData> geneCandidates = mGeneDataCache.findGenes(variant.Chromosome, variant.Position);
+        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
-        if(geneCandidates.isEmpty())
+        if(variant.getImpacts().isEmpty())
         {
             // could skip these if sure that valid genes aren't being incorrectly missed
-            variant.addImpact(new VariantTransImpact(null, INTRAGENIC_VARIANT));
+            variant.addImpact("NONE", new VariantTransImpact(null, INTRAGENIC_VARIANT));
 
             if(!snpEffAnnotations.isEmpty())
             {
@@ -153,7 +154,7 @@ public class ImpactAnnotator
                     }
                     else
                     {
-                        writeVariantTranscriptData(variant, geneData, snpEffAnnotations);
+                        writeVariantTranscriptData(variant, geneData.GeneName, snpEffAnnotations);
                     }
                 }
             }
@@ -166,30 +167,48 @@ public class ImpactAnnotator
         }
 
         // analyse against each of the genes and their transcripts
-        for(GeneData geneData : geneCandidates)
+        for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
         {
-            List<TranscriptData> transDataList = mGeneDataCache.findTranscripts(geneData.GeneId, variant.Position);
+            final String geneName = entry.getKey();
+            final List<VariantTransImpact> geneImpacts = entry.getValue();
 
-            if(transDataList.isEmpty())
-            {
-                variant.addImpact(new VariantTransImpact(null, NON_CODING_TRANSCRIPT_VARIANT));
-                continue;
-            }
-
-            for(TranscriptData transData : transDataList)
-            {
-                VariantTransImpact transImpact = mImpactClassifier.classifyVariant(variant, transData);
-
-                if(transImpact != null)
-                    variant.addImpact(transImpact);
-
-                // ++mTransVariantCount;
-            }
-
-            writeVariantTranscriptData(variant, geneData, snpEffAnnotations);
+            writeVariantTranscriptData(
+                    variant, geneName,
+                    snpEffAnnotations.stream().filter(x -> x.gene().equals(geneName)).collect(Collectors.toList()));
         }
 
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
+
+        // write annotation details to VCF..
+
+        // write variant impact to VCF..
+    }
+
+    public static void findVariantImpacts(
+            final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
+    {
+        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position);
+
+        if(geneCandidates.isEmpty())
+            return;
+
+        // analyse against each of the genes and their transcripts
+        for(GeneData geneData : geneCandidates)
+        {
+            List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position);
+
+            // non-coding transcripts are skipped for now
+            if(transDataList.isEmpty())
+                continue;
+
+            for(TranscriptData transData : transDataList)
+            {
+                VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+
+                if(transImpact != null)
+                    variant.addImpact(geneData.GeneName, transImpact);
+            }
+        }
     }
 
     private void initialiseVcfWriter()
@@ -210,7 +229,7 @@ public class ImpactAnnotator
             mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
 
             mCsvTranscriptWriter.write(VariantData.csvCommonHeader());
-            mCsvTranscriptWriter.write(",Transcript,Consequence,ConsequenceEffect,SnpEffConsequence,SnpEffConsequenceEffect");
+            mCsvTranscriptWriter.write(",GeneId,GeneName,TransId,Consequence,ConsequenceEffect,SnpEffConsequence,SnpEffConsequenceEffect");
             mCsvTranscriptWriter.newLine();
         }
         catch(IOException e)
@@ -220,7 +239,7 @@ public class ImpactAnnotator
         }
     }
 
-    private void writeVariantTranscriptData(final VariantData variant, final GeneData geneData, final List<SnpEffAnnotation> annotations)
+    private void writeVariantTranscriptData(final VariantData variant, final String geneName, final List<SnpEffAnnotation> annotations)
     {
         if(mCsvTranscriptWriter == null)
             return;
@@ -231,7 +250,9 @@ public class ImpactAnnotator
 
             List<SnpEffAnnotation> matchedAnnotations = Lists.newArrayList();
 
-            for(VariantTransImpact impact : variant.getImpacts())
+            List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
+
+            for(VariantTransImpact impact : geneImpacts)
             {
                 if(impact.TransData == null)
                     continue;
@@ -239,7 +260,10 @@ public class ImpactAnnotator
                 SnpEffAnnotation annotation = impact.findMatchingAnnotation(annotations);
 
                 StringJoiner sj = new StringJoiner(DELIM);
-                sj.add(variant.csvCommonData(geneData));
+                sj.add(variant.toCsv());
+
+                sj.add(impact.TransData.GeneId);
+                sj.add(geneName);
 
                 sj.add(impact.TransData.TransName);
                 sj.add(String.valueOf(impact.consequencesStr()));
@@ -268,8 +292,9 @@ public class ImpactAnnotator
                     continue;
 
                 StringJoiner sj = new StringJoiner(DELIM);
-                sj.add(variant.csvCommonData(geneData));
-
+                sj.add(variant.toCsv());
+                sj.add(annotation.geneID());
+                sj.add(annotation.gene());
                 sj.add(annotation.featureID());
                 sj.add("UNMATCHED");
                 sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));

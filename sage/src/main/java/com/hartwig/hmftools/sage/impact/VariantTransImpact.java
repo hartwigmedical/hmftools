@@ -132,7 +132,7 @@ public class VariantTransImpact
 
     public String toString()
     {
-        return String.format("trans({}) conseq({}) effects({}) inSplice({})",
+        return String.format("trans(%s) conseq(%s) effects(%s) inSplice(%s)",
                 TransData.TransName, consequencesStr(), effectsStr(), mInSpliceRegion);
     }
 }
