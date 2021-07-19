@@ -173,7 +173,6 @@ public class PeptidePredictionAnalyser
         return neoDataMap;
     }
 
-
     private void initialisePeptideWriter()
     {
         try
