@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
@@ -120,7 +120,7 @@ public abstract class NeoEpitope
     {
         extractCodingBases(refGenome, reqAminoAcids);
 
-        NeoUtils.adjustCodingBasesForStrand(this);
+        EpitopeUtils.adjustCodingBasesForStrand(this);
 
         boolean isPhased = phaseMatched();
 
@@ -174,17 +174,17 @@ public abstract class NeoEpitope
             CodingBases[FS_UP] = CodingBases[FS_UP].substring(CodingBases[FS_UP].length() - requiredLength);
 
         NE_LOGGER.trace("ne({}) upBases({}) novelCodon({}) downBases({}) downNmdBases({})",
-                this, CodingBases[FS_UP], NeoUtils.checkTrimBases(NovelCodonBases),
-                NeoUtils.checkTrimBases(CodingBases[FS_DOWN]), NmdBasesMin);
+                this, CodingBases[FS_UP], EpitopeUtils.checkTrimBases(NovelCodonBases),
+                EpitopeUtils.checkTrimBases(CodingBases[FS_DOWN]), NmdBasesMin);
     }
 
     public void setNonsenseMediatedDecay()
     {
-        NmdBasesMin = NmdBasesMax = NeoUtils.calcNonMediatedDecayBases(this);
+        NmdBasesMin = NmdBasesMax = EpitopeUtils.calcNonMediatedDecayBases(this);
 
         // also record the bases from the start codon to the stop codon (or end of transcript if there is none)
-        int upstreamCodingBases = NeoUtils.calcStartCodonBases(this);
-        int downstreamCodingBases = NeoUtils.calcStopCodonBases(this);
+        int upstreamCodingBases = EpitopeUtils.calcStartCodonBases(this);
+        int downstreamCodingBases = EpitopeUtils.calcStopCodonBases(this);
 
         CodingBasesLengthMin = CodingBasesLengthMax = upstreamCodingBases + downstreamCodingBases;
     }
@@ -201,9 +201,9 @@ public abstract class NeoEpitope
 
     public void setAminoAcids(final RefGenomeInterface refGenome, int reqWildtypeAminoAcids)
     {
-        UpstreamAcids = NeoUtils.getAminoAcids(trimIncompleteCodons(CodingBases[FS_UP]), false);
-        NovelAcid = NeoUtils.getAminoAcids(NovelCodonBases, true);
-        DownstreamAcids = NeoUtils.getAminoAcids(CodingBases[FS_DOWN], true);
+        UpstreamAcids = EpitopeUtils.getAminoAcids(trimIncompleteCodons(CodingBases[FS_UP]), false);
+        NovelAcid = EpitopeUtils.getAminoAcids(NovelCodonBases, true);
+        DownstreamAcids = EpitopeUtils.getAminoAcids(CodingBases[FS_DOWN], true);
 
         // truncate the novel bases and AAs if a stop codon is encountered
         if(NovelAcid.endsWith(STOP_SYMBOL))
@@ -218,7 +218,7 @@ public abstract class NeoEpitope
         byte wtOrient = orientation(FS_UP) == POS_ORIENT ? NEG_ORIENT : POS_ORIENT;
         int requiredBases = CodingBases[FS_UP].length() + reqWildtypeAminoAcids * 3;
 
-        CodingBaseExcerpt wildTypeUpExcerpt = NeoUtils.getDownstreamCodingBaseExcerpt(
+        CodingBaseExcerpt wildTypeUpExcerpt = EpitopeUtils.getDownstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), upstreamAAPosStart, wtOrient,
                 requiredBases, true, false, false);
 
@@ -229,11 +229,11 @@ public abstract class NeoEpitope
             if(strand(FS_UP) == NEG_STRAND)
                 upWildtypeBases = reverseStrandBases(upWildtypeBases);
 
-            UpstreamWildTypeAcids = NeoUtils.getAminoAcids(trimIncompleteCodons(upWildtypeBases), true);
+            UpstreamWildTypeAcids = EpitopeUtils.getAminoAcids(trimIncompleteCodons(upWildtypeBases), true);
         }
 
         NE_LOGGER.trace("ne({}) upAA({}) novel({}) downAA({})",
-                this, UpstreamAcids, NeoUtils.checkTrimBases(NovelAcid), NeoUtils.checkTrimBases(DownstreamAcids));
+                this, UpstreamAcids, EpitopeUtils.checkTrimBases(NovelAcid), EpitopeUtils.checkTrimBases(DownstreamAcids));
 
         checkStopLost(refGenome, reqWildtypeAminoAcids);
     }

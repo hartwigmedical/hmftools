@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
-import static com.hartwig.hmftools.neo.NeoConfig.NEO_EPITOPE_FILE_ID;
+import static com.hartwig.hmftools.neo.epitope.NeoConfig.NEO_EPITOPE_FILE_ID;
 import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
 
 import java.io.BufferedWriter;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
-import com.hartwig.hmftools.neo.SampleData;
+import com.hartwig.hmftools.neo.epitope.SampleData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

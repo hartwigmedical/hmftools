@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -359,7 +359,7 @@ public class NeoEpitopeAnnotator
             if(isCohort)
                 writer.write(String.format("%s,", sampleData.Id));
 
-            final List<PeptideData> peptides = NeoUtils.generatePeptides(
+            final List<PeptideData> peptides = EpitopeUtils.generatePeptides(
                     neData.UpstreamAcids, neData.NovelAcid, neData.DownstreamAcids, config.PeptideLengths, config.PeptideFlanks);
 
             Set<String> uniqueHlaTypes = Sets.newHashSet();
@@ -371,7 +371,7 @@ public class NeoEpitopeAnnotator
 
                 uniqueHlaTypes.add(hlaType);
 
-                final String predictionHlaType = NeoUtils.convertHlaTypeForPredictions(hlaType);
+                final String predictionHlaType = EpitopeUtils.convertHlaTypeForPredictions(hlaType);
 
                 if(predictionHlaType == null)
                 {

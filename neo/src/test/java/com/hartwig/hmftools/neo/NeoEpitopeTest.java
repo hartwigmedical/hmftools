@@ -31,6 +31,11 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.neo.epitope.EpitopeUtils;
+import com.hartwig.hmftools.neo.epitope.NeoEpitope;
+import com.hartwig.hmftools.neo.epitope.PmNeoEpitope;
+import com.hartwig.hmftools.neo.epitope.PointMutationData;
+import com.hartwig.hmftools.neo.epitope.SvNeoEpitope;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -574,7 +579,7 @@ public class NeoEpitopeTest
 
         neData.setAminoAcids(refGenome, 3);
         String upWildtypeBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 61);
-        String upWildAAs = NeoUtils.getAminoAcids(upWildtypeBases, true);
+        String upWildAAs = EpitopeUtils.getAminoAcids(upWildtypeBases, true);
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // same again but allowing for enough coding bases upstream to satisfy the required count
@@ -663,7 +668,7 @@ public class NeoEpitopeTest
 
         neData.setAminoAcids(refGenome, 3);
         upWildtypeBases = chr1Bases.substring(30, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 66);
-        upWildAAs = NeoUtils.getAminoAcids(reverseStrandBases(upWildtypeBases), true);
+        upWildAAs = EpitopeUtils.getAminoAcids(reverseStrandBases(upWildtypeBases), true);
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // again but a base up
@@ -963,7 +968,7 @@ public class NeoEpitopeTest
 
         neData.setAminoAcids(refGenome, 3);
         String upWildtypeBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 50);
-        String upWildAAs = NeoUtils.getAminoAcids(upWildtypeBases, true);
+        String upWildAAs = EpitopeUtils.getAminoAcids(upWildtypeBases, true);
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // intronic to exonic - skips to next exon
@@ -1059,7 +1064,7 @@ public class NeoEpitopeTest
 
         neData.setAminoAcids(refGenome, 3);
         upWildtypeBases = chr1Bases.substring(25, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 61);
-        upWildAAs = NeoUtils.getAminoAcids(upWildtypeBases, true);
+        upWildAAs = EpitopeUtils.getAminoAcids(upWildtypeBases, true);
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
     }
 

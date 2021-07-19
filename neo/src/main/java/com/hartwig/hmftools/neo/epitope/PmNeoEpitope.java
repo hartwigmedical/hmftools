@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -144,16 +144,16 @@ public class PmNeoEpitope extends NeoEpitope
         // set the data for the lower part of the mutation
         int lowerStream = transData.Strand == POS_STRAND ? FS_UP : FS_DOWN;
 
-        NeoUtils.setTranscriptContext(this, transData, position(lowerStream), lowerStream);
+        EpitopeUtils.setTranscriptContext(this, transData, position(lowerStream), lowerStream);
 
-        NeoUtils.setTranscriptCodingData(this, transData, position(lowerStream), 0, lowerStream);
+        EpitopeUtils.setTranscriptCodingData(this, transData, position(lowerStream), 0, lowerStream);
 
         int upperStream = switchStream(lowerStream);
 
         // for DELs, set the downstream data as well since it can cross exon-boundaries and/or affect coding bases
-        NeoUtils.setTranscriptContext(this, transData, position(upperStream), upperStream);
+        EpitopeUtils.setTranscriptContext(this, transData, position(upperStream), upperStream);
 
-        NeoUtils.setTranscriptCodingData(this, transData, position(upperStream), 0, upperStream);
+        EpitopeUtils.setTranscriptCodingData(this, transData, position(upperStream), 0, upperStream);
     }
 
     private int getUpstreamStartPhase()
@@ -212,7 +212,7 @@ public class PmNeoEpitope extends NeoEpitope
             downPosition = mPointMutation.Position - 1; // since down pos on -ve strand is the mutation base
         }
 
-        CodingBaseExcerpt upExcerpt = NeoUtils.getUpstreamCodingBaseExcerpt(
+        CodingBaseExcerpt upExcerpt = EpitopeUtils.getUpstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), upPosition, orientation(FS_UP), upRequiredBases);
 
         if(upExcerpt == null)
@@ -227,7 +227,7 @@ public class PmNeoEpitope extends NeoEpitope
         boolean canStartInExon = true; // assumed true for now RegionType[FS_UPSTREAM] == TranscriptRegionType.EXONIC;
         int downRequiredBases = requiredAminoAcids * 3 + downExtraBases;
 
-        CodingBaseExcerpt downExcerpt = NeoUtils.getDownstreamCodingBaseExcerpt(
+        CodingBaseExcerpt downExcerpt = EpitopeUtils.getDownstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, false, !phaseMatched());
 
@@ -299,7 +299,7 @@ public class PmNeoEpitope extends NeoEpitope
             if(isDeletion())
                 downRequiredBases = (requiredAminoAcids * 2 + 1) * 3 - upCodingBases.length();
 
-            downExcerpt = NeoUtils.getDownstreamCodingBaseExcerpt(
+            downExcerpt = EpitopeUtils.getDownstreamCodingBaseExcerpt(
                     refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), downPosition, orientation(FS_DOWN),
                     downRequiredBases, canStartInExon, false, false);
         }
@@ -372,13 +372,13 @@ public class PmNeoEpitope extends NeoEpitope
         int upRequiredBases = requiredAminoAcids * 3 + upOpenCodonBases;
 
         byte upOrient = posStrand ? POS_ORIENT : NEG_ORIENT;
-        String upBases = NeoUtils.getUpstreamCodingBases(refGenome, transData, chromosome(FS_UP), mPointMutation.Position, upOrient, upRequiredBases);
+        String upBases = EpitopeUtils.getUpstreamCodingBases(refGenome, transData, chromosome(FS_UP), mPointMutation.Position, upOrient, upRequiredBases);
 
         byte downOrient = posStrand ? NEG_ORIENT : POS_ORIENT;
         int downPosition = posStrand ? mPointMutation.Position + 1 : mPointMutation.Position - 1;
         int downRequiredBases = requiredAminoAcids * 3 - upOpenCodonBases;
 
-        String downBases = NeoUtils.getDownstreamCodingBases(
+        String downBases = EpitopeUtils.getDownstreamCodingBases(
                 refGenome, transData, chromosome(FS_UP), downPosition, downOrient, downRequiredBases,
                 true, false, false);
 
@@ -394,8 +394,8 @@ public class PmNeoEpitope extends NeoEpitope
             upBases = upBases.substring(0, upBases.length() - upOpenCodonBases);
         }
 
-        final String upstreamAcids = NeoUtils.getAminoAcids(upBases, false);
-        final String downstreamAcids = NeoUtils.getAminoAcids(downBases, true);
+        final String upstreamAcids = EpitopeUtils.getAminoAcids(upBases, false);
+        final String downstreamAcids = EpitopeUtils.getAminoAcids(downBases, true);
         mWildtypeAcids = upstreamAcids + downstreamAcids;
     }
 

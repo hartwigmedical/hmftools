@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import htsjdk.samtools.Cigar;
 

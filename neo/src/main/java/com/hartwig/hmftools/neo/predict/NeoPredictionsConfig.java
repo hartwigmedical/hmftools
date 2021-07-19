@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.loadSampleDataFile;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.neo.SampleData;
+import com.hartwig.hmftools.neo.epitope.SampleData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;

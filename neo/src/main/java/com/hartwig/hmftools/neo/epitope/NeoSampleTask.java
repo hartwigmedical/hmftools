@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -17,10 +17,10 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAME
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.neo.NeoCommon.DOWNSTREAM_PRE_GENE_DISTANCE;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.initialiseNeoepitopeWriter;
-import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.initialisePeptideWriter;
-import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.writeNeoepitopes;
-import static com.hartwig.hmftools.neo.NeoEpitopeAnnotator.writePeptideHlaData;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialiseNeoepitopeWriter;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialisePeptideWriter;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.writeNeoepitopes;
+import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.writePeptideHlaData;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

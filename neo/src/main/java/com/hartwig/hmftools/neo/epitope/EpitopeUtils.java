@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -33,6 +33,9 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.neo.epitope.CodingBaseExcerpt;
+import com.hartwig.hmftools.neo.epitope.NeoEpitope;
+import com.hartwig.hmftools.neo.epitope.PeptideData;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -40,7 +43,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public class NeoUtils
+public class EpitopeUtils
 {
     public static void setTranscriptContext(final NeoEpitope neData, final TranscriptData transData, int position, int stream)
     {

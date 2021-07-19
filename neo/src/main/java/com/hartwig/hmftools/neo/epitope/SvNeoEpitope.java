@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo;
+package com.hartwig.hmftools.neo.epitope;
 
 import static java.lang.Math.abs;
 
@@ -96,16 +96,16 @@ public class SvNeoEpitope extends NeoEpitope
     public void setTranscriptData(final TranscriptData upTransData, final TranscriptData downTransData)
     {
         TransData[FS_UP] = upTransData;
-        NeoUtils.setTranscriptContext(this, TransData[FS_UP], position(FS_UP), FS_UP);
+        EpitopeUtils.setTranscriptContext(this, TransData[FS_UP], position(FS_UP), FS_UP);
         int insSeqLength = mSvFusion.InsertSequence.length();
-        NeoUtils.setTranscriptCodingData(this, TransData[FS_UP], position(FS_UP), insSeqLength, FS_UP);
+        EpitopeUtils.setTranscriptCodingData(this, TransData[FS_UP], position(FS_UP), insSeqLength, FS_UP);
 
         TransData[FS_DOWN] = downTransData;
 
         // if the upstream context is intronic, then skip past any downstream exonic section
 
-        NeoUtils.setTranscriptContext(this, TransData[FS_DOWN], position(FS_DOWN), FS_DOWN);
-        NeoUtils.setTranscriptCodingData(this, TransData[FS_DOWN], position(FS_DOWN), 0, FS_DOWN);
+        EpitopeUtils.setTranscriptContext(this, TransData[FS_DOWN], position(FS_DOWN), FS_DOWN);
+        EpitopeUtils.setTranscriptCodingData(this, TransData[FS_DOWN], position(FS_DOWN), 0, FS_DOWN);
 
         if(RegionType[FS_UP] == INTRONIC && RegionType[FS_DOWN] == EXONIC)
         {
@@ -159,7 +159,7 @@ public class SvNeoEpitope extends NeoEpitope
 
         int upRequiredBases = requiredAminoAcids * 3 + upExtraBases;
 
-        CodingBaseExcerpt cbExcerpt = NeoUtils.getUpstreamCodingBaseExcerpt(
+        CodingBaseExcerpt cbExcerpt = EpitopeUtils.getUpstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_UP], chromosome(FS_UP), position(FS_UP), orientation(FS_UP), upRequiredBases);
 
         RawCodingBases[FS_UP] = cbExcerpt.Bases;
@@ -198,7 +198,7 @@ public class SvNeoEpitope extends NeoEpitope
         boolean canStartInExon = RegionType[FS_UP] == TranscriptRegionType.EXONIC || upExtraBases > 0;
         int downRequiredBases = requiredAminoAcids * 3 + downExtraBases;
 
-        cbExcerpt = NeoUtils.getDownstreamCodingBaseExcerpt(
+        cbExcerpt = EpitopeUtils.getDownstreamCodingBaseExcerpt(
                 refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
                 downRequiredBases, canStartInExon, true, !phaseMatched());
 
@@ -213,7 +213,7 @@ public class SvNeoEpitope extends NeoEpitope
         // call again to get restricted downstream bases
         if(!phaseMatched())
         {
-            cbExcerpt = NeoUtils.getDownstreamCodingBaseExcerpt(
+            cbExcerpt = EpitopeUtils.getDownstreamCodingBaseExcerpt(
                     refGenome, TransData[FS_DOWN], chromosome(FS_DOWN), position(FS_DOWN), orientation(FS_DOWN),
                     downRequiredBases, canStartInExon, true, false);
         }
@@ -255,7 +255,7 @@ public class SvNeoEpitope extends NeoEpitope
             final List<TranscriptData> candidateTransDataList = transDataList.stream()
                     .filter(x -> x.TransId != TransData[stream].TransId).collect(Collectors.toList());
 
-            mSkippedSpliceAcceptorDonors[fs] = NeoUtils.findSkippedExonBoundaries(
+            mSkippedSpliceAcceptorDonors[fs] = EpitopeUtils.findSkippedExonBoundaries(
                     candidateTransDataList, positionBoundaries, findExonStart, fs == FS_DOWN);
         }
     }

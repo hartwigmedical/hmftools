@@ -2,37 +2,23 @@ package com.hartwig.hmftools.neo.cohort;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
-import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.getGeneStatus;
-import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
-import static com.hartwig.hmftools.neo.cohort.PredictionData.expandHomozygous;
-import static com.hartwig.hmftools.neo.cohort.StatusResults.NORMAL;
-import static com.hartwig.hmftools.neo.cohort.StatusResults.SIM_TUMOR;
-import static com.hartwig.hmftools.neo.cohort.StatusResults.STATUS_MAX;
-import static com.hartwig.hmftools.neo.cohort.StatusResults.TUMOR;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +27,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
-import com.hartwig.hmftools.neo.PeptideData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -50,7 +35,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.jetbrains.annotations.NotNull;
 
 public class PeptidePredictionAnalyser
