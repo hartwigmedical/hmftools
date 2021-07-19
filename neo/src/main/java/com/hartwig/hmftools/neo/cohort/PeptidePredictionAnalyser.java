@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -58,16 +59,18 @@ public class PeptidePredictionAnalyser
     private final String mNeoDataDir;
     private final String mPredictionsDataDir;
     private final List<String> mSampleIds;
+    private final List<String> mSpecificAlleles;
 
     private BufferedWriter mPeptideWriter;
 
-    private final double mPeptideAffinityThreshold;
+    private final int mPeptideAffinityThreshold;
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String PREDICTION_DATA_DIR = "prediction_data_dir";
 
     private static final String PEPTIDE_AFF_THRESHOLD = "pep_aff_threshold";
+    private static final String SPECIFIC_ALLELES = "specific_alleles";
 
     public PeptidePredictionAnalyser(final CommandLine cmd)
     {
@@ -77,7 +80,14 @@ public class PeptidePredictionAnalyser
         mNeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
         mPredictionsDataDir = cmd.getOptionValue(PREDICTION_DATA_DIR);
 
-        mPeptideAffinityThreshold = Double.parseDouble(cmd.getOptionValue(PEPTIDE_AFF_THRESHOLD, "0"));
+        mPeptideAffinityThreshold = Integer.parseInt(cmd.getOptionValue(PEPTIDE_AFF_THRESHOLD, "0"));
+        mSpecificAlleles = Lists.newArrayList();
+
+        if(cmd.hasOption(SPECIFIC_ALLELES))
+        {
+            Arrays.stream(cmd.getOptionValue(SPECIFIC_ALLELES).split(ITEM_DELIM, -1)).forEach(x -> mSpecificAlleles.add(x));
+            NE_LOGGER.info("filtering for {} alleles: {}", mSpecificAlleles.size(), mSpecificAlleles);
+        }
 
         mOutputDir = parseOutputDir(cmd);
         mPeptideWriter = null;
@@ -117,6 +127,9 @@ public class PeptidePredictionAnalyser
         for(int i = 0; i < predictions.size(); ++i)
         {
             PredictionData predData = predictions.get(i);
+
+            if(!mSpecificAlleles.isEmpty() && !mSpecificAlleles.contains(predData.Allele))
+                continue;
 
             if(predData.Affinity > mPeptideAffinityThreshold)
                 continue;
@@ -220,6 +233,7 @@ public class PeptidePredictionAnalyser
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(PEPTIDE_AFF_THRESHOLD, true, "Only write peptides with affinity less than this if > 0");
+        options.addOption(SPECIFIC_ALLELES, true, "Specific alleles to filter for, separated by ';'");
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
