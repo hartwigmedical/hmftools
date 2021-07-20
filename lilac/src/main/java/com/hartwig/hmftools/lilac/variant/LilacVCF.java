@@ -53,6 +53,6 @@ public class LilacVCF
 
     public void close()
     {
-        this.mWriter.close();
+        mWriter.close();
     }
 }

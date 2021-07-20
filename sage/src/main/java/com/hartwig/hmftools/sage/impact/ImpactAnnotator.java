@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sage.SageMetaData;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
@@ -51,6 +52,7 @@ public class ImpactAnnotator
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
 
+    private ImpactVcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
 
     public ImpactAnnotator(final CommandLine cmd)
@@ -65,6 +67,9 @@ public class ImpactAnnotator
         RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
 
         mImpactClassifier = new ImpactClassifier(refGenome);
+
+        mVcfWriter = null;
+        initialiseVcfWriter();
 
         if(mConfig.WriteTranscriptCsv)
             initialiseTranscriptWriter();
@@ -109,6 +114,7 @@ public class ImpactAnnotator
                 //    continue;
 
                 processVariant(variantContext);
+                ++variantCount;
             }
         }
         catch(IOException e)
@@ -117,6 +123,8 @@ public class ImpactAnnotator
         }
 
         SG_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
+
+        mVcfWriter.close();
     }
 
     private void processVariant(final VariantContext variantContext)
@@ -135,7 +143,7 @@ public class ImpactAnnotator
         if(variant.getImpacts().isEmpty())
         {
             // could skip these if sure that valid genes aren't being incorrectly missed
-            variant.addImpact("NONE", new VariantTransImpact(null, INTRAGENIC_VARIANT));
+            // variant.addImpact("NONE", new VariantTransImpact(null, INTRAGENIC_VARIANT));
 
             if(!snpEffAnnotations.isEmpty())
             {
@@ -179,9 +187,7 @@ public class ImpactAnnotator
 
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        // write annotation details to VCF..
-
-        // write variant impact to VCF..
+        mVcfWriter.writeVariant(variantContext, variant, variantImpact);
     }
 
     public static void findVariantImpacts(
@@ -213,12 +219,13 @@ public class ImpactAnnotator
 
     private void initialiseVcfWriter()
     {
-        // VariantImpactSerialiser.writeHeader();
-    }
+        final VersionInfo version = new VersionInfo("sage.version");
 
-    private void writeVcfData()
-    {
-        // VariantImpactSerialiser.writeImpactDetails();
+        String vcfFilename = mConfig.OverwriteVcf ?
+                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleIds.get(0) + ".sage.ann.vcf";
+
+        mVcfWriter = new ImpactVcfWriter(vcfFilename, mConfig.VcfFile);
+        mVcfWriter.writeHeader(version.version());
     }
 
     private void initialiseTranscriptWriter()
@@ -252,35 +259,38 @@ public class ImpactAnnotator
 
             List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
 
-            for(VariantTransImpact impact : geneImpacts)
+            if(geneImpacts != null)
             {
-                if(impact.TransData == null)
-                    continue;
-
-                SnpEffAnnotation annotation = impact.findMatchingAnnotation(annotations);
-
-                StringJoiner sj = new StringJoiner(DELIM);
-                sj.add(variant.toCsv());
-
-                sj.add(impact.TransData.GeneId);
-                sj.add(geneName);
-
-                sj.add(impact.TransData.TransName);
-                sj.add(String.valueOf(impact.consequencesStr()));
-                sj.add(String.valueOf(impact.effectsStr()));
-
-                if(annotation != null)
+                for(VariantTransImpact impact : geneImpacts)
                 {
-                    sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
-                    sj.add(annotation.effects());
-                    matchedAnnotations.add(annotation);
-                }
-                else
-                {
-                    sj.add("UNMATCHED");
-                }
+                    if(impact.TransData == null)
+                        continue;
 
-                transcriptLines.add(sj.toString());
+                    SnpEffAnnotation annotation = impact.findMatchingAnnotation(annotations);
+
+                    StringJoiner sj = new StringJoiner(DELIM);
+                    sj.add(variant.toCsv());
+
+                    sj.add(impact.TransData.GeneId);
+                    sj.add(geneName);
+
+                    sj.add(impact.TransData.TransName);
+                    sj.add(String.valueOf(impact.consequencesStr()));
+                    sj.add(String.valueOf(impact.effectsStr()));
+
+                    if(annotation != null)
+                    {
+                        sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
+                        sj.add(annotation.effects());
+                        matchedAnnotations.add(annotation);
+                    }
+                    else
+                    {
+                        sj.add("UNMATCHED");
+                    }
+
+                    transcriptLines.add(sj.toString());
+                }
             }
 
             for(SnpEffAnnotation annotation : annotations)

@@ -31,13 +31,13 @@ public class ImpactConfig
     public final DatabaseAccess DbAccess;
 
     public final String OutputDir;
-    public final boolean WriteCsv;
+    public final boolean OverwriteVcf;
     public final boolean WriteTranscriptCsv;
 
     private static final String SAMPLE = "sample";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String VCF_FILE = "vcf_file";
-    private static final String WRITE_CSV = "write_csv";
+    private static final String OVERWRITE_VCF = "overwrite_vcf";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
     public static final String REF_GENOME = "ref_genome";
@@ -61,8 +61,7 @@ public class ImpactConfig
 
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
-
-        WriteCsv = cmd.hasOption(WRITE_CSV);
+        OverwriteVcf = cmd.hasOption(OVERWRITE_VCF);
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
 
         OutputDir = parseOutputDir(cmd);
@@ -99,13 +98,13 @@ public class ImpactConfig
         options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
         options.addOption(VCF_FILE, true, "VCF input file");
+        options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
 
         options.addOption(REF_GENOME, true, "Path to ref genome fasta file");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         options.addOption(ENSEMBL_DATA_DIR, true, "Name of sample");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 
-        options.addOption(WRITE_CSV, false, "Write variant impacts to CSV");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");

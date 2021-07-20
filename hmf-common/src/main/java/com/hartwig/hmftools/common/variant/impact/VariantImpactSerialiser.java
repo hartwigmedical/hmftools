@@ -124,12 +124,12 @@ public final class VariantImpactSerialiser
                 impact.CanonicalHgvsProteinImpact);
     }
 
-    public static String writeEffect(final String effect)
+    private static String writeEffect(final String effect)
     {
         return effect.replace("; ", "&").replace(" ", "_");
     }
 
-    public static String readEffect(final String effect)
+    private static String readEffect(final String effect)
     {
         return effect.replace("&", "; ").replace("_", " ");
     }

@@ -74,6 +74,8 @@ public class VariantTransImpact
 
     public VariantConsequence consequence() { return VariantConsequence.fromEffect(mConsequenceEffects.get(0)); };
 
+    public List<String> consequenceEffects() { return mConsequenceEffects; }
+
     public List<VariantConsequence> consequences()
     {
         return mConsequenceEffects.stream().map(x -> VariantConsequence.fromEffect(x)).collect(Collectors.toList());
