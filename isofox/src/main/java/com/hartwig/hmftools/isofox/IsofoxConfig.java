@@ -2,6 +2,8 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -72,7 +74,6 @@ public class IsofoxConfig
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
 
-    public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String DROP_DUPLICATES = "drop_dups";
@@ -547,7 +548,7 @@ public class IsofoxConfig
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
         options.addOption(GENE_READ_LIMIT, true, "Per-gene limit on max reads processed (default=0, not applied)");
-        options.addOption(REF_GENOME, true, "Ref genome file location");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");

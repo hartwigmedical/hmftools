@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
@@ -93,7 +95,6 @@ public class SageConfig
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
-    private static final String REF_GENOME = "ref_genome";
     private static final String OUTPUT_VCF = "out";
     private static final String INPUT_VCF = "input_vcf";
     private static final String WRITE_CSV = "write_csv";
@@ -349,7 +350,7 @@ public class SageConfig
         options.addOption(RESOURCE_DIR, true, "Resource files");
         options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
         options.addOption(REFERENCE_BAM, true, "Reference bam file");
-        options.addOption(REF_GENOME, true, "Indexed ref genome fasta file");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cobalt;
 
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
@@ -48,7 +49,6 @@ public class CobaltConfig
     private static String THREADS = "threads";
     private static String REFERENCE_BAM = "reference_bam";
     private static String TUMOR_BAM = "tumor_bam";
-    private static String REF_GENOME = "ref_genome";
     private static String GC_PROFILE = "gc_profile";
     private static String MIN_MAPPING_QUALITY = "min_quality";
     private static String VALIDATION_STRINGENCY = "validation_stringency";

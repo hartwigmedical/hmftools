@@ -11,6 +11,9 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefGenomeSource implements RefGenomeInterface
 {
+    public static final String REF_GENOME = "ref_genome";
+    public static final String REF_GENOME_CFG_DESC = "Path to reference genome fasta files";
+
     private final IndexedFastaSequenceFile mRefGenome;
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeSource.class);

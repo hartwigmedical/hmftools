@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
@@ -65,7 +67,6 @@ public class ReferenceData
 
     private boolean mIsValid;
 
-    private static final String REF_GENOME = "ref_genome";
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
     private static final String GC_PROFILE = "gc_profile";
@@ -75,7 +76,7 @@ public class ReferenceData
 
     public static void addOptions(final Options options)
     {
-        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file.");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37 (default) or V38");
 
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");

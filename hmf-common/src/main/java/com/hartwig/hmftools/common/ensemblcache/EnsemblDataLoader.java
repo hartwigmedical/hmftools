@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -26,6 +27,7 @@ public final class EnsemblDataLoader
     public static final String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
     public static final String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
     public static final String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
+    public static final String ENSEMBL_TRANS_AMINO_ACIDS_FILE = "ensembl_trans_amino_acids.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(EnsemblDataLoader.class);
 
@@ -382,6 +384,68 @@ public final class EnsemblDataLoader
         catch(IOException e)
         {
             LOGGER.warn("failed to load transcript splice data({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean loadTranscriptAminoAcidData(
+            final String dataPath, Map<String, TranscriptAminoAcids> transAminoAcidMap, final List<String> restrictedGeneIds)
+    {
+        String filename = dataPath;
+
+        filename += ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
+                return false;
+            }
+
+            // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
+            int geneIdIndex = fieldsIndexMap.get("GeneId");
+            int geneNameIndex = fieldsIndexMap.get("GeneName");
+            int transIndex = fieldsIndexMap.get("TransName");
+            int aaIndex = fieldsIndexMap.get("AminoAcids");
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                String[] items = line.split(ENSEMBL_DELIM);
+
+                String geneId = items[geneIdIndex];
+
+                if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId))
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
+
+                String transName = items[transIndex];
+
+                transAminoAcidMap.put(transName, new TranscriptAminoAcids(geneId, items[geneNameIndex], transName, items[aaIndex]));
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} trans amino-acid records", transAminoAcidMap.size());
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load transcript amino-acid data({}): {}", filename, e.toString());
             return false;
         }
 

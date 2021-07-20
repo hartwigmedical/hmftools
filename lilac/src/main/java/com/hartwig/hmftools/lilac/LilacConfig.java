@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
@@ -78,7 +80,6 @@ public class LilacConfig
 
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
-    private static final String REF_GENOME = "ref_genome";
 
     private static final String SAMPLE = "sample";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -289,7 +290,7 @@ public class LilacConfig
         options.addOption(RUN_ID, true,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
         options.addOption(OUTPUT_DIR, true,"Path to output");
-        options.addOption(REF_GENOME, true,"Optional path to reference genome fasta file");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true,"Ref genome version V37 (default) or V38");
         options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
         options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");

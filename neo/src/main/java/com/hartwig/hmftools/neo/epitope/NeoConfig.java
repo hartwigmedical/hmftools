@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.epitope;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -55,7 +57,6 @@ public class NeoConfig
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
     public static final String GENE_ID_FILE = "gene_id_file";
-    public static final String REF_GENOME = "ref_genome";
     public static final String CANCER_TPM_FILE = "cancer_tpm_file";
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
     public static final String WRITE_TRANS_DATA = "write_trans_data";
@@ -177,7 +178,7 @@ public class NeoConfig
         options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
-        options.addOption(REF_GENOME, true, "Ref genome");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(SV_FUSION_DATA_DIR, true, "SV fusion file (single sample or cohort)");
         options.addOption(CANCER_TPM_FILE, true, "TPM per cancer type and pan-cancer");
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");

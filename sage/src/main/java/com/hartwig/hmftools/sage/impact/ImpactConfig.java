@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.impact;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
@@ -39,8 +41,6 @@ public class ImpactConfig
     private static final String VCF_FILE = "vcf_file";
     private static final String OVERWRITE_VCF = "overwrite_vcf";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
-
-    public static final String REF_GENOME = "ref_genome";
 
     public ImpactConfig(final CommandLine cmd)
     {
@@ -100,7 +100,7 @@ public class ImpactConfig
         options.addOption(VCF_FILE, true, "VCF input file");
         options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
 
-        options.addOption(REF_GENOME, true, "Path to ref genome fasta file");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         options.addOption(ENSEMBL_DATA_DIR, true, "Name of sample");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
