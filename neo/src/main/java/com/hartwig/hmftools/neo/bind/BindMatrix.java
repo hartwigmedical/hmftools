@@ -35,7 +35,18 @@ public class BindMatrix
 
         mBindingTotals = new double[mAminoAcidCount][mPeptideCount];
         mBindingCounts = new int[mAminoAcidCount][mPeptideCount];
+    }
 
+    public void clear()
+    {
+        for(int aa = 0; aa < mAminoAcidCount; ++aa)
+        {
+            for(int p = 0; p < mPeptideCount; ++p)
+            {
+                mBindingCounts[aa][p] = 0;
+                mBindingTotals[aa][p] = 0;
+            }
+        }
     }
 
     public void processBindData(final BindData bindData, double levelScore)
@@ -62,17 +73,30 @@ public class BindMatrix
         return index != null ? index : -1;
     }
 
-    public void writeFrequencyData(final String filename)
+    public static BufferedWriter initialiseFrequencyWriter(final String filename)
     {
-        NE_LOGGER.info("writing frequency file({})", filename);
-
         try
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("AminoAcid,Peptide,Count,Score,TotalScore");
+            writer.write("Allele,AminoAcid,Peptide,Count,Score,TotalScore");
             writer.newLine();
 
+            return writer;
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to initialise frequency data file({}): {}", filename, e.toString());
+            return null;
+        }
+    }
+
+    public void writeFrequencyData(final String allele, final BufferedWriter writer)
+    {
+        NE_LOGGER.info("writing allele({}) frequency", allele);
+
+        try
+        {
             for(int aa = 0; aa < mAminoAcidCount; ++aa)
             {
                 char aminoAcid = AMINO_ACIDS.get(aa);
@@ -83,18 +107,16 @@ public class BindMatrix
                     double totalScore = mBindingTotals[aa][p];
                     double avgScore = freq > 0 ? totalScore / freq : 0;
 
-                    writer.write(String.format("%s,%s,%d,%.1f,%.1f",
-                            aminoAcid, p + 1, freq, avgScore, totalScore));
+                    writer.write(String.format("%s,%s,%s,%d,%.4f,%.4f",
+                            allele, aminoAcid, p + 1, freq, avgScore, totalScore));
 
                     writer.newLine();
                 }
             }
-
-            closeBufferedWriter(writer);
         }
         catch (IOException e)
         {
-            NE_LOGGER.error("failed to write matrix data file({}): {}", filename, e.toString());
+            NE_LOGGER.error("failed to write frequency data: {}", e.toString());
         }
     }
 

@@ -7,6 +7,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MAX_PEPTIDE_POSITIONS;
+import static com.hartwig.hmftools.neo.bind.BindMatrix.initialiseFrequencyWriter;
+
+import static org.apache.commons.math3.util.FastMath.log;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,6 +21,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -30,12 +34,12 @@ public class NeoBinder
 {
     private final BinderConfig mConfig;
 
-    private final List<BindData> mBindDataList;
+    private final Map<String,List<BindData>> mAlleleBindData;
 
     public NeoBinder(final CommandLine cmd)
     {
         mConfig = new BinderConfig(cmd);
-        mBindDataList = Lists.newArrayList();
+        mAlleleBindData = Maps.newHashMap();
     }
 
     public void run()
@@ -52,28 +56,46 @@ public class NeoBinder
 
     private void processingBindingData()
     {
+        String filename = mConfig.formFilename("freq_score");
+        BufferedWriter freqWriter = initialiseFrequencyWriter(filename);
+
         BindMatrix simpleMatrix = new BindMatrix(MAX_PEPTIDE_POSITIONS);
 
-        for(BindData bindData : mBindDataList)
+        for(Map.Entry<String,List<BindData>> entry : mAlleleBindData.entrySet())
         {
-            double levelScore = deriveLevelScore(bindData.Affinity);
-            simpleMatrix.processBindData(bindData, levelScore);
+            String allele = entry.getKey();
+
+            for(BindData bindData : entry.getValue())
+            {
+                double levelScore = deriveLevelScore(bindData.Affinity);
+                simpleMatrix.processBindData(bindData, levelScore);
+            }
+
+            // write results
+
+            simpleMatrix.writeFrequencyData(allele, freqWriter);
         }
 
-        // write results
-        String filename = mConfig.formFilename("freq_score");
-        simpleMatrix.writeFrequencyData(filename);
+        closeBufferedWriter(freqWriter);
     }
 
     private double deriveLevelScore(final double affinity)
     {
-        for(double[] levelScore : mConfig.BindingLevelScores)
+        if(!mConfig.BindingLevelScores.isEmpty())
         {
-            if(affinity < levelScore[0])
-                return levelScore[1];
+            for(double[] levelScore : mConfig.BindingLevelScores)
+            {
+                if(affinity < levelScore[0])
+                    return levelScore[1];
+            }
+
+            return mConfig.BindingLevelScores.get(mConfig.BindingLevelScores.size() - 1)[1];
         }
 
-        return mConfig.BindingLevelScores.get(mConfig.BindingLevelScores.size() - 1)[1];
+        if(affinity >= mConfig.BindingLevelExponent)
+            return 0;
+
+        return 1 - log(mConfig.BindingLevelExponent, affinity);
     }
 
     private boolean loadTrainingData(final String filename)
@@ -90,19 +112,38 @@ public class NeoBinder
             int affinityIndex = fieldsIndexMap.get("Affinity");
             int otherInfoIndex = fieldsIndexMap.get("OtherInfo");
 
+            String currentAllele = "";
+            List<BindData> currentBindList = null;
+
             for(String line : lines)
             {
                 final String[] items = line.split(DELIMITER, -1);
 
+                String allele = items[alleleIndex];
+
+                if(!mConfig.SpecificAlleles.isEmpty() && !mConfig.SpecificAlleles.contains(allele))
+                {
+                    if(mConfig.SpecificAlleles.size() == mAlleleBindData.size())
+                        break;
+
+                    continue;
+                }
+
                 BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, otherInfoIndex);
 
-                if(!mConfig.SpecificAlleles.isEmpty() && !mConfig.SpecificAlleles.contains(bindData.Allele))
-                    continue;
 
-                mBindDataList.add(bindData);
+                if(!allele.equals(currentAllele))
+                {
+                    currentAllele = allele;
+                    currentBindList = Lists.newArrayList();
+                    mAlleleBindData.put(allele, currentBindList);
+                }
+
+                currentBindList.add(bindData);
             }
 
-            NE_LOGGER.info("loaded {} training data items from file({})", mBindDataList.size(), filename);
+            NE_LOGGER.info("loaded {} alleles with {} training data items from file({})",
+                    mAlleleBindData.size(), mAlleleBindData.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
         catch(IOException e)
         {

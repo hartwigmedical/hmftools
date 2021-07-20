@@ -23,12 +23,14 @@ public class BinderConfig
     public final List<String> SpecificAlleles;
 
     public final List<double[]> BindingLevelScores;
+    public final double BindingLevelExponent;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String OUTPUT_ID = "output_id";
 
     private static final String BIND_LEVEL_SCORES = "binding_level_scores";
+    private static final String BIND_LEVEL_EXPONENT = "binding_level_exp";
 
     public BinderConfig(final CommandLine cmd)
     {
@@ -38,15 +40,20 @@ public class BinderConfig
 
         BindingLevelScores = Lists.newArrayList();
 
-        String[] levelScores = cmd.getOptionValue(BIND_LEVEL_SCORES).split(ITEM_DELIM, -1);
-
-        for(String levelScore :levelScores)
+        if(cmd.hasOption(BIND_LEVEL_SCORES))
         {
-            String[] item = levelScore.split("=", -1);
-            int level = Integer.parseInt(item[0]);
-            double score = Double.parseDouble(item[1]);
-            BindingLevelScores.add(new double[] {level, score});
+            String[] levelScores = cmd.getOptionValue(BIND_LEVEL_SCORES).split(ITEM_DELIM, -1);
+
+            for(String levelScore : levelScores)
+            {
+                String[] item = levelScore.split("=", -1);
+                int level = Integer.parseInt(item[0]);
+                double score = Double.parseDouble(item[1]);
+                BindingLevelScores.add(new double[] { level, score });
+            }
         }
+
+        BindingLevelExponent = Double.parseDouble(cmd.getOptionValue(BIND_LEVEL_EXPONENT, "50000"));
 
         SpecificAlleles = Lists.newArrayList();
 
@@ -70,6 +77,7 @@ public class BinderConfig
         options.addOption(TRAINING_DATA_FILE, true, "Directory for sample prediction result files");
         options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
         options.addOption(BIND_LEVEL_SCORES, true, "Affinities below the level deemed to bind");
+        options.addOption(BIND_LEVEL_EXPONENT, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");
