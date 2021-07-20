@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.neo.utils;
 
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -11,9 +13,11 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,16 +59,19 @@ public class RandomPeptides
     private final Map<String, TranscriptAminoAcids > mTransAminoAcidMap;
 
     private final Random mRandom;
+    private final int mMaxPeptidesPerGene;
     private final int mPeptideBaseGap;
 
     private int mPeptitdeLengthIndex;
     private int mAlleleIndex;
 
+    private final String mOutputFile;
     private BufferedWriter mWriter;
 
     private static final String REQ_PEPTIDES = "req_peptides";
     private static final String PEPTIDES_LENGTHS = "peptide_lengths";
     private static final String ALLELES_FILE = "alleles_file";
+    private static final String OUTPUT_FILE = "output_file";
 
     private static final int MAX_PER_GENE = 10;
 
@@ -79,11 +86,9 @@ public class RandomPeptides
         mTransAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList());
 
-        mRandom = new Random();
-        mPeptideBaseGap = 10;
+        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
 
         mPeptitdeLengthIndex = 0;
-        mAlleleIndex = 0;
 
         mRequiredPeptides = Integer.parseInt(cmd.getOptionValue(REQ_PEPTIDES));
 
@@ -100,21 +105,43 @@ public class RandomPeptides
         }
 
         mAlleles = Lists.newArrayList();
+        loadAlleleFrequencies(cmd.getOptionValue(ALLELES_FILE));
 
+        mRandom = new Random();
+        mPeptideBaseGap = MAX_PER_GENE - (int)round(log10(mRequiredPeptides)); // smaller gaps when more peptides are required
+        mMaxPeptidesPerGene = (int)max(mRequiredPeptides / 20000.0 * 3, MAX_PER_GENE); // from about 20K coding canonical trans
+
+        mWriter = initialiseWriter(parseOutputDir(cmd));
+    }
+
+    private void loadAlleleFrequencies(final String filename)
+    {
         try
         {
-            String allelesFile = cmd.getOptionValue(ALLELES_FILE);
-            final List<String> fileContents = Files.readAllLines(new File(allelesFile).toPath());
-            fileContents.stream().filter(x -> !x.contains("Allele")).forEach(x -> mAlleles.add(x));
+            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(fileContents.get(0), DELIM);
+            fileContents.remove(0);
+            int alleleIndex = fieldsIndexMap.get("Allele");
+            int freqIndex = fieldsIndexMap.get("AlleleFreq");
 
-            NE_LOGGER.info("loaded {} alleles", mAlleles.size());
+            for(String data : fileContents)
+            {
+                String[] items = data.split(DELIM);
+                String allele = items[alleleIndex];
+                int freq = Integer.parseInt(items[freqIndex]);
+
+                for(int i = 0; i < freq; ++i)
+                {
+                    mAlleles.add(allele);
+                }
+            }
+
+            NE_LOGGER.info("loaded {} alleles", fileContents.size());
         }
         catch (IOException e)
         {
             NE_LOGGER.warn("failed to load alleles file: {}", e.toString());
         }
-
-        mWriter = initialiseWriter(parseOutputDir(cmd));
     }
 
     public void run()
@@ -123,7 +150,8 @@ public class RandomPeptides
 
         int totalPeptideCount = 0;
         int transCodingCount = 0;
-        int maxPerGene = (int)max(mRequiredPeptides / 25000.0 * 5, MAX_PER_GENE);
+
+        final String stopAminoAcid = String.valueOf(Codons.STOP_AMINO_ACID);
 
         for(Map.Entry<String,List<GeneData>> entry : mEnsemblDataCache.getChrGeneDataMap().entrySet())
         {
@@ -159,13 +187,16 @@ public class RandomPeptides
                 {
                     String peptide = aminoAcids.substring(startPos, endPos);
 
-                    writeData(chromosome, geneData.GeneName, startPos, endPos, peptide);
+                    if(!peptide.contains(stopAminoAcid))
+                    {
+                        writeData(chromosome, geneData.GeneName, startPos, endPos, peptide);
 
-                    ++genePeptideCount;
-                    ++totalPeptideCount;
+                        ++genePeptideCount;
+                        ++totalPeptideCount;
 
-                    if(genePeptideCount >= maxPerGene || totalPeptideCount >= mRequiredPeptides)
-                        break;
+                        if(genePeptideCount >= mMaxPeptidesPerGene || totalPeptideCount >= mRequiredPeptides)
+                            break;
+                    }
 
                     startPos = mPeptideBaseGap > 0 ? endPos + mRandom.nextInt(mPeptideBaseGap) : startPos + 1;
                     reqPeptideLength = getPeptideLength();
@@ -197,20 +228,24 @@ public class RandomPeptides
 
     private String getAllele()
     {
+        int index = mRandom.nextInt(mAlleles.size());
+        return mAlleles.get(index);
+
+        /*
         if(mAlleleIndex >= mAlleles.size())
             mAlleleIndex = 0;
 
         String allele = mAlleles.get(mAlleleIndex);
         ++mAlleleIndex;
         return allele;
+        */
     }
 
-    private static BufferedWriter initialiseWriter(final String outputDir)
+    private BufferedWriter initialiseWriter(final String outputDir)
     {
         try
         {
-            String filename = outputDir + "ref_genome_peptides.csv";
-            BufferedWriter writer = createBufferedWriter(filename, false);
+            BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
             writer.write("Allele,Peptide,Chromosome,GeneName,PosStart,PosEnd");
             writer.newLine();
@@ -241,8 +276,9 @@ public class RandomPeptides
     {
         final Options options = new Options();
         options.addOption(ENSEMBL_DATA_DIR, true, "Ensembl data dir");
-        options.addOption(REQ_PEPTIDES, true, "Output directory");
-        options.addOption(PEPTIDES_LENGTHS, true, "Output directory");
+        options.addOption(OUTPUT_FILE, true, "Output filename");
+        options.addOption(REQ_PEPTIDES, true, "Number of peptides to find randomly from the proteome");
+        options.addOption(PEPTIDES_LENGTHS, true, "Peptide lengths, separated by ';'");
         options.addOption(ALLELES_FILE, true, "File with alleles to assign");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");

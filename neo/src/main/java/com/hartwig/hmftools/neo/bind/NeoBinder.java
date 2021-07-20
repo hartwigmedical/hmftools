@@ -131,7 +131,6 @@ public class NeoBinder
 
                 BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, otherInfoIndex);
 
-
                 if(!allele.equals(currentAllele))
                 {
                     currentAllele = allele;
