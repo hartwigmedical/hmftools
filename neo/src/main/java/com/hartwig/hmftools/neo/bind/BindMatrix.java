@@ -119,10 +119,4 @@ public class BindMatrix
             NE_LOGGER.error("failed to write frequency data: {}", e.toString());
         }
     }
-
-    public void writeMatrixResults(final String outputDir, final String filename)
-    {
-
-    }
-
 }

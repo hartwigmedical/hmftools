@@ -3,7 +3,6 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MAX_PEPTIDE_POSITIONS;
@@ -15,10 +14,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -94,6 +91,9 @@ public class NeoBinder
 
         if(affinity >= mConfig.BindingLevelExponent)
             return 0;
+
+        if(affinity <= 0)
+            return 1;
 
         return 1 - log(mConfig.BindingLevelExponent, affinity);
     }
