@@ -6,7 +6,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MAX_PEPTIDE_POSITIONS;
-import static com.hartwig.hmftools.neo.bind.BindMatrix.initialiseFrequencyWriter;
+import static com.hartwig.hmftools.neo.bind.BindMatrix.initCombProbabilityWriter;
+import static com.hartwig.hmftools.neo.bind.BindMatrix.initFrequencyWriter;
 
 import static org.apache.commons.math3.util.FastMath.log;
 
@@ -33,10 +34,14 @@ public class NeoBinder
 
     private final Map<String,List<BindData>> mAlleleBindData;
 
+    private final int mBindAffinityThreshold;
+
     public NeoBinder(final CommandLine cmd)
     {
         mConfig = new BinderConfig(cmd);
         mAlleleBindData = Maps.newHashMap();
+
+        mBindAffinityThreshold = 500;
     }
 
     public void run()
@@ -53,27 +58,28 @@ public class NeoBinder
 
     private void processingBindingData()
     {
-        String filename = mConfig.formFilename("freq_score");
-        BufferedWriter freqWriter = initialiseFrequencyWriter(filename);
-
-        BindMatrix simpleMatrix = new BindMatrix(MAX_PEPTIDE_POSITIONS);
+        BufferedWriter freqWriter = initFrequencyWriter(mConfig.formFilename("freq_score"));
+        BufferedWriter probWriter = initCombProbabilityWriter(mConfig.formFilename("pois_prob"));
 
         for(Map.Entry<String,List<BindData>> entry : mAlleleBindData.entrySet())
         {
             String allele = entry.getKey();
+            BindMatrix simpleMatrix = new BindMatrix(allele, MAX_PEPTIDE_POSITIONS);
 
             for(BindData bindData : entry.getValue())
             {
                 double levelScore = deriveLevelScore(bindData.Affinity);
-                simpleMatrix.processBindData(bindData, levelScore);
+                simpleMatrix.processBindData(bindData, levelScore, bindData.Affinity < mBindAffinityThreshold);
             }
 
             // write results
 
-            simpleMatrix.writeFrequencyData(allele, freqWriter);
+            simpleMatrix.logStats();
+            simpleMatrix.writeFrequencyData(allele, freqWriter, probWriter);
         }
 
         closeBufferedWriter(freqWriter);
+        closeBufferedWriter(probWriter);
     }
 
     private double deriveLevelScore(final double affinity)

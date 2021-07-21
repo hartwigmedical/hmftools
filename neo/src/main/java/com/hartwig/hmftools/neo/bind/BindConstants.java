@@ -10,6 +10,4 @@ public class BindConstants
             'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y');
 
     public static final int MAX_PEPTIDE_POSITIONS = 9;
-
-
 }
