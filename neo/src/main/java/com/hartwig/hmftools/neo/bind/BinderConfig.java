@@ -12,7 +12,6 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.compress.utils.Lists;
-import org.immutables.value.internal.$guava$.collect.$MutableClassToInstanceMap;
 
 public class BinderConfig
 {
@@ -22,15 +21,18 @@ public class BinderConfig
 
     public final List<String> SpecificAlleles;
 
-    public final List<double[]> BindingLevelScores;
-    public final double BindingLevelExponent;
+    public final CalcConstants Constants;
+    public final boolean CalcPairs;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String OUTPUT_ID = "output_id";
 
-    private static final String BIND_LEVEL_SCORES = "binding_level_scores";
-    private static final String BIND_LEVEL_EXPONENT = "binding_level_exp";
+    private static final String MAX_AFFINITY = "max_affinity";
+    private static final String BINDING_AFFINITY_LOW = "binding_affinity_low";
+    private static final String BINDING_AFFINITY_HIGH = "binding_aff_high";
+    private static final String APPLY_SCALED_COUNT = "apply_scaled";
+    private static final String CALC_PAIRS = "calc_pairs";
 
     public BinderConfig(final CommandLine cmd)
     {
@@ -38,22 +40,11 @@ public class BinderConfig
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        BindingLevelScores = Lists.newArrayList();
-
-        if(cmd.hasOption(BIND_LEVEL_SCORES))
-        {
-            String[] levelScores = cmd.getOptionValue(BIND_LEVEL_SCORES).split(ITEM_DELIM, -1);
-
-            for(String levelScore : levelScores)
-            {
-                String[] item = levelScore.split("=", -1);
-                int level = Integer.parseInt(item[0]);
-                double score = Double.parseDouble(item[1]);
-                BindingLevelScores.add(new double[] { level, score });
-            }
-        }
-
-        BindingLevelExponent = Double.parseDouble(cmd.getOptionValue(BIND_LEVEL_EXPONENT, "50000"));
+        Constants = new CalcConstants(
+                Double.parseDouble(cmd.getOptionValue(MAX_AFFINITY, "50000")),
+                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_LOW, "100")),
+                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, "500")),
+                cmd.hasOption(APPLY_SCALED_COUNT));
 
         SpecificAlleles = Lists.newArrayList();
 
@@ -62,6 +53,8 @@ public class BinderConfig
             Arrays.stream(cmd.getOptionValue(SPECIFIC_ALLELES).split(ITEM_DELIM, -1)).forEach(x -> SpecificAlleles.add(x));
             NE_LOGGER.info("filtering for {} alleles: {}", SpecificAlleles.size(), SpecificAlleles);
         }
+
+        CalcPairs = cmd.hasOption(CALC_PAIRS);
     }
 
     public String formFilename(final String fileId)
@@ -76,8 +69,11 @@ public class BinderConfig
     {
         options.addOption(TRAINING_DATA_FILE, true, "Directory for sample prediction result files");
         options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
-        options.addOption(BIND_LEVEL_SCORES, true, "Affinities below the level deemed to bind");
-        options.addOption(BIND_LEVEL_EXPONENT, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
+        options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
+        options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");
+        options.addOption(MAX_AFFINITY, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
+        options.addOption(CALC_PAIRS, false, "Calculate amino-acid pairs and their coocurrence");
+        options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");

@@ -5,11 +5,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindConstants.MAX_PEPTIDE_POSITIONS;
-import static com.hartwig.hmftools.neo.bind.BindMatrix.initCombProbabilityWriter;
+import static com.hartwig.hmftools.neo.bind.BindMatrix.initPairDataWriter;
 import static com.hartwig.hmftools.neo.bind.BindMatrix.initFrequencyWriter;
-
-import static org.apache.commons.math3.util.FastMath.log;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,14 +31,10 @@ public class NeoBinder
 
     private final Map<String,List<BindData>> mAlleleBindData;
 
-    private final int mBindAffinityThreshold;
-
     public NeoBinder(final CommandLine cmd)
     {
         mConfig = new BinderConfig(cmd);
         mAlleleBindData = Maps.newHashMap();
-
-        mBindAffinityThreshold = 500;
     }
 
     public void run()
@@ -58,50 +51,50 @@ public class NeoBinder
 
     private void processingBindingData()
     {
-        BufferedWriter freqWriter = initFrequencyWriter(mConfig.formFilename("freq_score"));
-        BufferedWriter probWriter = initCombProbabilityWriter(mConfig.formFilename("pois_prob"));
+        BufferedWriter freqWriter = initFrequencyWriter(mConfig.formFilename("single_freq_score"));
+
+        BufferedWriter pairWriter = mConfig.CalcPairs ? initPairDataWriter(mConfig.formFilename("pair_score_prob")) : null;
 
         for(Map.Entry<String,List<BindData>> entry : mAlleleBindData.entrySet())
         {
             String allele = entry.getKey();
-            BindMatrix simpleMatrix = new BindMatrix(allele, MAX_PEPTIDE_POSITIONS);
+
+            Map<Integer,BindMatrix> matrixMap = Maps.newHashMap();
+            int currentLength = -1;
+            BindMatrix currentMatrix = null;
 
             for(BindData bindData : entry.getValue())
             {
-                double levelScore = deriveLevelScore(bindData.Affinity);
-                simpleMatrix.processBindData(bindData, levelScore, bindData.Affinity < mBindAffinityThreshold);
+                int peptideLength = bindData.Peptide.length();
+
+                if(currentLength != peptideLength)
+                {
+                    currentLength = peptideLength;
+                    currentMatrix = matrixMap.get(peptideLength);
+
+                    if(currentMatrix == null)
+                    {
+                        currentMatrix = new BindMatrix(allele, peptideLength, mConfig.Constants);
+                        matrixMap.put(peptideLength, currentMatrix);
+                    }
+                }
+
+                currentMatrix.processBindData(bindData, mConfig.CalcPairs);
             }
 
-            // write results
+            for(BindMatrix matrix : matrixMap.values())
+            {
+                // write results
+                matrix.logStats();
+                matrix.writeFrequencyData(freqWriter);
 
-            simpleMatrix.logStats();
-            simpleMatrix.writeFrequencyData(allele, freqWriter, probWriter);
+                if(mConfig.CalcPairs)
+                    matrix.writePairData(allele, pairWriter);
+            }
         }
 
         closeBufferedWriter(freqWriter);
-        closeBufferedWriter(probWriter);
-    }
-
-    private double deriveLevelScore(final double affinity)
-    {
-        if(!mConfig.BindingLevelScores.isEmpty())
-        {
-            for(double[] levelScore : mConfig.BindingLevelScores)
-            {
-                if(affinity < levelScore[0])
-                    return levelScore[1];
-            }
-
-            return mConfig.BindingLevelScores.get(mConfig.BindingLevelScores.size() - 1)[1];
-        }
-
-        if(affinity >= mConfig.BindingLevelExponent)
-            return 0;
-
-        if(affinity <= 0)
-            return 1;
-
-        return 1 - log(mConfig.BindingLevelExponent, affinity);
+        closeBufferedWriter(pairWriter);
     }
 
     private boolean loadTrainingData(final String filename)
@@ -116,6 +109,7 @@ public class NeoBinder
             int alleleIndex = fieldsIndexMap.get("Allele");
             int peptideIndex = fieldsIndexMap.get("Peptide");
             int affinityIndex = fieldsIndexMap.get("Affinity");
+            int predIndex = fieldsIndexMap.get("PredAffinity");
             int otherInfoIndex = fieldsIndexMap.get("OtherInfo");
 
             String currentAllele = "";
@@ -135,7 +129,7 @@ public class NeoBinder
                     continue;
                 }
 
-                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, otherInfoIndex);
+                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predIndex, otherInfoIndex);
 
                 if(!allele.equals(currentAllele))
                 {
