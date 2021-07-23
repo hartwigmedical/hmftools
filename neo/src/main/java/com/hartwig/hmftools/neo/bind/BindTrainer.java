@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.ScoringData.initMatrixWriter;
@@ -133,6 +134,41 @@ public class BindTrainer
             randomDistribution.buildDistribution(matrixList);
         }
 
+        // rank the training data peptides using the newly created data and the random peptide distributions
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("training_scores"), false);
+
+            writer.write("Allele,Peptide,Score,Rank,PredictedAffinity,Affinity");
+            writer.newLine();
+
+            for(Map.Entry<String, List<BindData>> entry : mAlleleBindData.entrySet())
+            {
+                String allele = entry.getKey();
+
+                BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
+
+                for(BindData bindData : entry.getValue())
+                {
+                    if(bindData.OtherInfo.equals("Random"))
+                        continue;
+
+                    double peptideScore = matrix.calcScore(bindData.Peptide);
+                    double scoreRank = randomDistribution.getScoreRank(allele, peptideScore);
+
+                    writer.write(String.format("%s,%s,%.4f,%.4f,%.1f,%.1f",
+                            allele, bindData.Peptide, peptideScore, scoreRank, bindData.Affinity, bindData.PredictedAffinity));
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write peptide scores file: {}", e.toString());
+        }
+
         closeBufferedWriter(matrixWriter);
         closeBufferedWriter(freqWriter);
         closeBufferedWriter(pairWriter);
@@ -171,6 +207,9 @@ public class BindTrainer
                 }
 
                 BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predIndex, otherInfoIndex);
+
+                if(bindData.Peptide.contains("X"))
+                    continue;
 
                 if(!allele.equals(currentAllele))
                 {

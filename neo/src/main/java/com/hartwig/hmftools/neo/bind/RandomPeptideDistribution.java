@@ -27,7 +27,7 @@ public class RandomPeptideDistribution
     private final String mDistributionFilename;
     private final boolean mDataLoaded;
 
-    private final Map<String,List<RandomScoreData>> mAlleleScoresMap;
+    private final Map<String,List<ScoreDistributionData>> mAlleleScoresMap;
 
     public RandomPeptideDistribution(final BinderConfig config)
     {
@@ -40,8 +40,36 @@ public class RandomPeptideDistribution
     }
 
     public boolean hasData() { return mDataLoaded; }
-    
-    public Map<String,List<RandomScoreData>> getAlleleScoresMap() { return mAlleleScoresMap; }
+
+    public Map<String,List<ScoreDistributionData>> getAlleleScoresMap() { return mAlleleScoresMap; }
+
+    public double getScoreRank(final String allele, double score)
+    {
+        List<ScoreDistributionData> scores = mAlleleScoresMap.get(allele);
+
+        if(scores == null || scores.isEmpty())
+            return -1;
+
+        if(score > scores.get(0).Score)
+            return scores.get(0).ScoreBucket * 0.5;
+
+        for(int i = 0; i < scores.size(); ++i)
+        {
+            ScoreDistributionData scoreData = scores.get(i);
+            ScoreDistributionData nextScoreData = i < scores.size() - 1 ? scores.get(i + 1) : null;
+
+            if(score < scoreData.Score)
+            {
+                if(nextScoreData == null)
+                    break;
+
+                if(score > nextScoreData.Score)
+                    return (scoreData.ScoreBucket + nextScoreData.ScoreBucket) * 0.5;
+            }
+        }
+
+        return 1;
+    }
 
     private boolean loadDistribution()
     {
@@ -57,9 +85,9 @@ public class RandomPeptideDistribution
 
             for(String line : lines)
             {
-                RandomScoreData data = RandomScoreData.fromCsv(line, fieldsIndexMap);
+                ScoreDistributionData data = ScoreDistributionData.fromCsv(line, fieldsIndexMap);
 
-                List<RandomScoreData> dataList = mAlleleScoresMap.get(data.Allele);
+                List<ScoreDistributionData> dataList = mAlleleScoresMap.get(data.Allele);
 
                 if(dataList == null)
                 {
@@ -145,7 +173,6 @@ public class RandomPeptideDistribution
 
                         writer.write(String.format("%s,%d,%f,%.4f", matrix.Allele, matrix.PeptideCount, currentSizeTotal, avgScore));
 
-                        // TEMP: working
                         //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
                         writer.newLine();
 
@@ -172,7 +199,7 @@ public class RandomPeptideDistribution
         }
         catch(IOException e)
         {
-            NE_LOGGER.error("failed to read random peptide file: {}", e.toString());
+            NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
         }
     }
 
