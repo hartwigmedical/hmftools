@@ -121,4 +121,92 @@ public final class VectorUtils
 
         return sortedList;
     }
+
+    public static void optimisedAdd(final List<Double> items, final double value, boolean ascending)
+    {
+        // early exits
+        if(items.isEmpty())
+        {
+            items.add(value);
+            return;
+        }
+
+        if((ascending && value < items.get(0) || (!ascending && value > items.get(0))))
+        {
+            items.add(0, value);
+            return;
+        }
+
+        int itemCount = items.size();
+        if((ascending && value > items.get(itemCount - 1)) || (!ascending && value < items.get(itemCount - 1)))
+        {
+            items.add(value);
+            return;
+        }
+
+        if(itemCount < 20)
+        {
+            int index = 0;
+            while(index < items.size())
+            {
+                if(ascending && value < items.get(index))
+                    break;
+                if(!ascending && value > items.get(index))
+                    break;
+
+                ++index;
+            }
+
+            items.add(index, value);
+            return;
+        }
+
+        int lowIndex = 0;
+        int highIndex = items.size() - 1;
+        int currentIndex = items.size() / 2;
+
+        while(true)
+        {
+            double currentValue = items.get(currentIndex);
+
+            if(currentValue == value)
+            {
+                items.add(currentIndex, value);
+                return;
+            }
+
+            if((ascending && value < currentValue) || (!ascending && value > currentValue))
+            {
+                // current index is looking too high in the list
+                if(currentIndex == lowIndex + 1)
+                {
+                    // no need to look any lower (again
+                    items.add(currentIndex, value);
+                    return;
+                }
+
+                highIndex = currentIndex;
+            }
+            else
+            {
+                if(currentIndex == highIndex - 1)
+                {
+                    items.add(currentIndex + 1, value);
+                    return;
+                }
+
+                lowIndex = currentIndex;
+            }
+
+            int newIndex = lowIndex + (highIndex - lowIndex) / 2;
+
+            if(newIndex == currentIndex)
+            {
+                items.add(currentIndex, value);
+                return;
+            }
+
+            currentIndex = newIndex;
+        }
+    }
 }

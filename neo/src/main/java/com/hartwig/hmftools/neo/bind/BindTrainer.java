@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static java.lang.Math.max;
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindMatrix.initPairDataWriter;
-import static com.hartwig.hmftools.neo.bind.BindMatrix.initFrequencyWriter;
+import static com.hartwig.hmftools.neo.bind.ScoringData.initMatrixWriter;
+import static com.hartwig.hmftools.neo.bind.ScoringData.initPairDataWriter;
+import static com.hartwig.hmftools.neo.bind.ScoringData.initFrequencyWriter;
+import static com.hartwig.hmftools.neo.utils.AminoAcidFrequency.AMINO_ACID_FREQ_FILE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,6 +22,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,23 +31,36 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class NeoBinder
+public class BindTrainer
 {
     private final BinderConfig mConfig;
 
     private final Map<String,List<BindData>> mAlleleBindData;
+    private final AminoAcidFrequency mAminoAcidFrequency;
+    private int mMaxPeptideLength;
 
-    public NeoBinder(final CommandLine cmd)
+    public BindTrainer(final CommandLine cmd)
     {
         mConfig = new BinderConfig(cmd);
         mAlleleBindData = Maps.newHashMap();
+        mMaxPeptideLength = 0;
+
+        mAminoAcidFrequency = new AminoAcidFrequency(cmd);
+        mAminoAcidFrequency.loadFrequencies();
     }
 
     public void run()
     {
+        NE_LOGGER.info("running NeoBinder on {} alleles", mConfig.SpecificAlleles.isEmpty() ? "all" : mConfig.SpecificAlleles.size());
+
         if(!loadTrainingData(mConfig.TrainingDataFile))
         {
             System.exit(1);
+        }
+
+        if(mConfig.WriteScoreMatrix && mAminoAcidFrequency.getAminoAcidFrequencies().isEmpty())
+        {
+            NE_LOGGER.warn("no amino acid frequencies loaded");
         }
 
         processingBindingData();
@@ -51,17 +70,23 @@ public class NeoBinder
 
     private void processingBindingData()
     {
-        BufferedWriter freqWriter = initFrequencyWriter(mConfig.formFilename("single_freq_score"));
+        BufferedWriter matrixWriter = mConfig.WriteScoreMatrix ?
+                initMatrixWriter(mConfig.formFilename("score_matrix"), mMaxPeptideLength) : null;
+
+        BufferedWriter freqWriter = mConfig.WriteFrequencyData ?
+                initFrequencyWriter(mConfig.formFilename("single_freq_score")) : null;
 
         BufferedWriter pairWriter = mConfig.CalcPairs ? initPairDataWriter(mConfig.formFilename("pair_score_prob")) : null;
+
+        List<BindScoreMatrix> matrixList = Lists.newArrayList();
 
         for(Map.Entry<String,List<BindData>> entry : mAlleleBindData.entrySet())
         {
             String allele = entry.getKey();
 
-            Map<Integer,BindMatrix> matrixMap = Maps.newHashMap();
+            Map<Integer,ScoringData> matrixMap = Maps.newHashMap();
             int currentLength = -1;
-            BindMatrix currentMatrix = null;
+            ScoringData currentData = null;
 
             for(BindData bindData : entry.getValue())
             {
@@ -70,29 +95,45 @@ public class NeoBinder
                 if(currentLength != peptideLength)
                 {
                     currentLength = peptideLength;
-                    currentMatrix = matrixMap.get(peptideLength);
+                    currentData = matrixMap.get(peptideLength);
 
-                    if(currentMatrix == null)
+                    if(currentData == null)
                     {
-                        currentMatrix = new BindMatrix(allele, peptideLength, mConfig.Constants);
-                        matrixMap.put(peptideLength, currentMatrix);
+                        currentData = new ScoringData(allele, peptideLength, mConfig.Constants);
+                        matrixMap.put(peptideLength, currentData);
                     }
                 }
 
-                currentMatrix.processBindData(bindData, mConfig.CalcPairs);
+                currentData.processBindData(bindData, mConfig.CalcPairs);
             }
 
-            for(BindMatrix matrix : matrixMap.values())
+            for(ScoringData scoringData : matrixMap.values())
             {
                 // write results
-                matrix.logStats();
-                matrix.writeFrequencyData(freqWriter);
+                scoringData.logStats();
+
+                BindScoreMatrix matrix = scoringData.createMatrix(mAminoAcidFrequency);
+                matrixList.add(matrix);
+
+                if(mConfig.WriteScoreMatrix)
+                    scoringData.writeMatrixData(matrixWriter, matrix, mMaxPeptideLength);
+
+                if(mConfig.WriteFrequencyData)
+                    scoringData.writeFrequencyData(freqWriter);
 
                 if(mConfig.CalcPairs)
-                    matrix.writePairData(allele, pairWriter);
+                    scoringData.writePairData(allele, pairWriter);
             }
         }
 
+        RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig);
+
+        if(!randomDistribution.hasData())
+        {
+            randomDistribution.buildDistribution(matrixList);
+        }
+
+        closeBufferedWriter(matrixWriter);
         closeBufferedWriter(freqWriter);
         closeBufferedWriter(pairWriter);
     }
@@ -139,10 +180,12 @@ public class NeoBinder
                 }
 
                 currentBindList.add(bindData);
+
+                mMaxPeptideLength = max(mMaxPeptideLength, bindData.Peptide.length());
             }
 
-            NE_LOGGER.info("loaded {} alleles with {} training data items from file({})",
-                    mAlleleBindData.size(), mAlleleBindData.values().stream().mapToInt(x -> x.size()).sum(), filename);
+            NE_LOGGER.info("loaded {} alleles with {} training data items from file({}) maxPeptideLength({})",
+                    mAlleleBindData.size(), mAlleleBindData.values().stream().mapToInt(x -> x.size()).sum(), filename, mMaxPeptideLength);
         }
         catch(IOException e)
         {
@@ -158,12 +201,13 @@ public class NeoBinder
         final Options options = new Options();
 
         BinderConfig.addCmdLineArgs(options);
+        options.addOption(AMINO_ACID_FREQ_FILE, true, "Amino acid frequency from proteome");
 
         final CommandLine cmd = createCommandLine(args, options);
 
         setLogLevel(cmd);
 
-        NeoBinder neoBinder = new NeoBinder(cmd);
+        BindTrainer neoBinder = new BindTrainer(cmd);
         neoBinder.run();
     }
 

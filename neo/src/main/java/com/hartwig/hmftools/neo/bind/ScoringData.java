@@ -5,16 +5,20 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
+import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
+
+import static org.apache.commons.math3.util.FastMath.log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
-public class BindMatrix
+public class ScoringData
 {
     private final String mAllele;
     private final CalcConstants mCalcConstants;
@@ -27,11 +31,12 @@ public class BindMatrix
 
     private final Map<String,double[]> mComboData;
     private int mTotal;
-    private int mTotalBinds;
+    private int mTotalBinds; // vs high affinity threshold
+    private double mCalcTotalBinds; // vs high affinity threshold
 
     private final Map<Character,Integer> mAminoAcidIndices;
 
-    public BindMatrix(final String allele, final int peptideLength, final CalcConstants calcConstants)
+    public ScoringData(final String allele, final int peptideLength, final CalcConstants calcConstants)
     {
         mAllele = allele;
         mCalcConstants = calcConstants;
@@ -51,18 +56,7 @@ public class BindMatrix
         mComboData = Maps.newHashMap();
         mTotal = 0;
         mTotalBinds = 0;
-    }
-
-    public void clear()
-    {
-        for(int aa = 0; aa < mAminoAcidCount; ++aa)
-        {
-            for(int p = 0; p < mPeptideCount; ++p)
-            {
-                mObservations[aa][p] = 0;
-                mBindScoreTotals[aa][p] = 0;
-            }
-        }
+        mCalcTotalBinds = 0;
     }
 
     public void logStats()
@@ -73,13 +67,14 @@ public class BindMatrix
 
     public void processBindData(final BindData bindData, boolean calcPairs)
     {
-        double levelScore = mCalcConstants.deriveLevelScore(bindData.Affinity);
-        double bindPerc = mCalcConstants.deriveAffinityPercent(bindData.Affinity);
-
         if(bindData.Peptide.length() != mPeptideCount || !bindData.Allele.equals(mAllele))
             return;
 
+        double levelScore = mCalcConstants.deriveLevelScore(bindData.Affinity);
+        double bindPerc = mCalcConstants.deriveAffinityPercent(bindData.Affinity);
+
         ++mTotal;
+        mCalcTotalBinds += bindPerc;
 
         boolean actualBind = bindData.Affinity < mCalcConstants.BindingAffinityHigh;
         boolean predictedBind = bindData.PredictedAffinity < mCalcConstants.BindingAffinityHigh && actualBind;
@@ -87,29 +82,29 @@ public class BindMatrix
         if(actualBind)
             ++mTotalBinds;
 
-        for(int i = 0; i < bindData.Peptide.length(); ++i)
+        for(int pos = 0; pos < bindData.Peptide.length(); ++pos)
         {
-            char aminoAcid = bindData.Peptide.charAt(i);
+            char aminoAcid = bindData.Peptide.charAt(pos);
             int aaIndex = aminoAcidIndex(aminoAcid);
 
             if(aaIndex < 0)
                 continue;
 
-            ++mObservations[aaIndex][i];
-            mBindScoreTotals[aaIndex][i] += levelScore;
-            mActualBinds[aaIndex][i] += bindPerc;
+            ++mObservations[aaIndex][pos];
+            mBindScoreTotals[aaIndex][pos] += levelScore;
+            mActualBinds[aaIndex][pos] += bindPerc;
 
             if(calcPairs)
             {
-                if(i < bindData.Peptide.length() - 1)
+                if(pos < bindData.Peptide.length() - 1)
                 {
-                    for(int j = i + 1; j < bindData.Peptide.length(); ++j)
+                    for(int pos2 = pos + 1; pos2 < bindData.Peptide.length(); ++pos2)
                     {
-                        char aminoAcid2 = bindData.Peptide.charAt(j);
+                        char aminoAcid2 = bindData.Peptide.charAt(pos2);
                         if(aminoAcidIndex(aminoAcid2) < 0)
                             continue;
 
-                        updatePairData(aminoAcid, i, aminoAcid2, j, levelScore, actualBind, predictedBind);
+                        updatePairData(aminoAcid, pos, aminoAcid2, pos2, levelScore, actualBind, predictedBind);
                     }
                 }
             }
@@ -120,6 +115,92 @@ public class BindMatrix
     {
         Integer index = mAminoAcidIndices.get(aminoAcid);
         return index != null ? index : -1;
+    }
+
+    public BindScoreMatrix createMatrix(final AminoAcidFrequency aminoAcidFrequency)
+    {
+        NE_LOGGER.debug("creating allele({}) peptideLength({}) matrix data", mAllele, mPeptideCount);
+
+        BindScoreMatrix matrix = new BindScoreMatrix(mAllele, mPeptideCount);
+        final double[][] data = matrix.getBindScores();
+
+        for(int aa = 0; aa < mAminoAcidCount; ++aa)
+        {
+            char aminoAcid = AMINO_ACIDS.get(aa);
+            double aaFrequency = aminoAcidFrequency.getAminoAcidFrequency(aminoAcid);
+
+            for(int pos = 0; pos < mPeptideCount; ++pos)
+            {
+                double totalBinds = mActualBinds[aa][pos];
+                double freqPerc = totalBinds / mCalcTotalBinds;
+                freqPerc = max(freqPerc, MIN_OBSERVED_AA_POS_FREQ);
+
+                // Score = log(max(FreqPerc,0.001) / AminoAcidFreq,2)
+                double score = log(2, freqPerc / aaFrequency);
+
+                data[aa][pos] = score;
+            }
+        }
+
+        return matrix;
+    }
+
+    public static BufferedWriter initMatrixWriter(final String filename, int peptideLength)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("Allele,PeptideLength,AminoAcid");
+
+            for(int i = 0; i < peptideLength; ++i)
+            {
+                writer.write(String.format(",P%d", i));
+            }
+
+            writer.newLine();
+
+            return writer;
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to initialise matrix data file({}): {}", filename, e.toString());
+            return null;
+        }
+    }
+
+    public void writeMatrixData(final BufferedWriter writer, final BindScoreMatrix matrix, int maxPeptideLength)
+    {
+        NE_LOGGER.debug("writing allele({}) matrix data", mAllele);
+
+        final double[][] data = matrix.getBindScores();
+
+        try
+        {
+            for(int aa = 0; aa < mAminoAcidCount; ++aa)
+            {
+                char aminoAcid = AMINO_ACIDS.get(aa);
+
+                writer.write(String.format("%s,%d,%c", mAllele, mPeptideCount, aminoAcid));
+
+                for(int pos = 0; pos < maxPeptideLength; ++pos)
+                {
+                    if(pos >= mPeptideCount)
+                    {
+                        writer.write(",0.0");
+                        continue;
+                    }
+
+                    writer.write(String.format(",%.4f", data[aa][pos]));
+                }
+
+                writer.newLine();
+            }
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to write matrix data: {}", e.toString());
+        }
     }
 
     public static BufferedWriter initFrequencyWriter(final String filename)

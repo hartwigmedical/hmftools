@@ -33,7 +33,6 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.neo.bind.BinderConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -42,7 +41,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class RandomPeptides
+public class GenerateRandomPeptides
 {
     private final int mRequiredPeptides;
     private final List<Integer> mPeptideLengths;
@@ -68,7 +67,7 @@ public class RandomPeptides
 
     private static final int MAX_PER_GENE = 10;
 
-    public RandomPeptides(final CommandLine cmd)
+    public GenerateRandomPeptides(final CommandLine cmd)
     {
         String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
         mEnsemblDataCache = new EnsemblDataCache(ensemblDataDir, RefGenomeVersion.V37);
@@ -281,7 +280,7 @@ public class RandomPeptides
 
         setLogLevel(cmd);
 
-        RandomPeptides neoBinder = new RandomPeptides(cmd);
+        GenerateRandomPeptides neoBinder = new GenerateRandomPeptides(cmd);
         neoBinder.run();
     }
 
