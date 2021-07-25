@@ -13,6 +13,7 @@ public final class ConsequenceEffects
     public static final String SPLICE_ACCEPTOR_EFFECT = "splice_acceptor_variant";
     public static final String SPLICE_DONOR_EFFECT = "splice_donor_variant";
     public static final String SPLICE_REGION_EFFECT = "splice_region_variant";
+    public static final String INTRON_VARIANT_EFFECT = "intron_variant";
 
     public static List<String> toEffects(final String effectString)
     {

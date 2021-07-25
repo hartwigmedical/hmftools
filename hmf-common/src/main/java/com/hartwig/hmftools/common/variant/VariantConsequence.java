@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.INTRON_VARIANT_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCEPTOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_REGION_EFFECT;
@@ -35,7 +36,7 @@ public enum VariantConsequence
             "conservative_missense_variant", "non_conservative_missense_variant",
             "rare_amino_acid_variant", "pyrrolysine_loss", "selenocysteine_loss"),
     SYNONYMOUS_VARIANT("synonymous_variant", "stop_retained_variant"),
-    INTRON_VARIANT("intron_variant"),
+    INTRON_VARIANT(INTRON_VARIANT_EFFECT),
     UTR_VARIANT("UTR_variant", THREE_PRIME_UTR_EFFECT, FIVE_PRIME_UTR_EFFECT,
             "5_prime_UTR_premature_start_codon_gain_variant", "5_prime_UTR_truncation", "3_prime_UTR_truncation"),
     UPSTREAM_GENE_VARIANT("upstream_gene_variant"),

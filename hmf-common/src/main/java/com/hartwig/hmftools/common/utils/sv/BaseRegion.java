@@ -94,7 +94,7 @@ public class BaseRegion implements Comparable<BaseRegion>
 
     public static boolean positionsWithin(int innerStart, int innerEnd, int outerStart, int outerEnd)
     {
-        return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
+        return (innerStart <= innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
 
 }

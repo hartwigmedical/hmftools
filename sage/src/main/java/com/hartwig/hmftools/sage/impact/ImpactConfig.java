@@ -26,38 +26,24 @@ import org.jetbrains.annotations.NotNull;
 
 public class ImpactConfig
 {
-    public final List<String> SampleIds;
+    public final String SampleId;
 
     public final String VcfFile;
     public final RefGenomeVersion RefGenVersion;
-    public final DatabaseAccess DbAccess;
 
     public final String OutputDir;
     public final boolean OverwriteVcf;
     public final boolean WriteTranscriptCsv;
 
     private static final String SAMPLE = "sample";
-    public static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String VCF_FILE = "vcf_file";
     private static final String OVERWRITE_VCF = "overwrite_vcf";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
     public ImpactConfig(final CommandLine cmd)
     {
-        SampleIds = Lists.newArrayList();
-
-        if(cmd.hasOption(SAMPLE))
-        {
-            SampleIds.add(cmd.getOptionValue(SAMPLE));
-            VcfFile = cmd.getOptionValue(VCF_FILE);
-            DbAccess = null;
-        }
-        else
-        {
-            SampleIds.addAll(loadSampleIdFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
-            DbAccess = createDatabaseAccess(cmd);
-            VcfFile = null;
-        }
+        SampleId = cmd.getOptionValue(SAMPLE);
+        VcfFile = cmd.getOptionValue(VCF_FILE);
 
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
@@ -67,25 +53,9 @@ public class ImpactConfig
         OutputDir = parseOutputDir(cmd);
     }
 
-    public boolean singleSample() { return SampleIds.size() == 1; }
-
-    public boolean singleSampleValid()
+    public boolean isValid()
     {
-        if(SampleIds.isEmpty())
-            return false;
-
         if(VcfFile == null)
-            return false;
-
-        return true;
-    }
-
-    public boolean multiSampleValid()
-    {
-        if(SampleIds.isEmpty())
-            return false;
-
-        if(DbAccess == null)
             return false;
 
         return true;
@@ -96,7 +66,6 @@ public class ImpactConfig
     {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of sample");
-        options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
         options.addOption(VCF_FILE, true, "VCF input file");
         options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
 
@@ -109,8 +78,6 @@ public class ImpactConfig
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-
-        addDatabaseCmdLineArgs(options);
 
         return options;
     }

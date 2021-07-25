@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.impact;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
@@ -7,7 +11,11 @@ import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.INTRON_VARIANT_EFFECT;
+import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_REGION_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.THREE_PRIME_UTR_EFFECT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
@@ -33,6 +41,8 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class ImpactClassifier
 {
@@ -61,7 +71,12 @@ public class ImpactClassifier
         if(transImpact != null)
             return transImpact;
 
+        List<String> consequenceEffects = Lists.newArrayList();
+
         boolean inSpliceRegion = false;
+        int exonRank = 0;
+
+        final List<Integer> nonRefPositions = variant.nonRefPositions();
 
         // check intron variant
         int exonCount = transData.exons().size();
@@ -71,48 +86,70 @@ public class ImpactClassifier
 
             ExonData nextExon = i < exonCount - 1 ? transData.exons().get(i + 1) : null;
 
-            if(isWithinSpliceRegion(variant, transData, exon))
+            if(!inSpliceRegion && isWithinSpliceRegion(variant, transData, exon))
             {
                 inSpliceRegion = true;
-                transImpact = mSpliceClassifier.classifyVariant(variant, transData, exon);
-
-                if(transImpact != null)
-                    break;
+                exonRank = exon.Rank;
+                addConsequenceEffect(consequenceEffects, mSpliceClassifier.classifyVariant(variant, transData, exon));
             }
-            else if(nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
+            else if(!inSpliceRegion && nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
             {
                 inSpliceRegion = true;
-                transImpact = mSpliceClassifier.classifyVariant(variant, transData, nextExon);
-
-                if(transImpact != null)
-                    break;
+                exonRank = nextExon.Rank;
+                addConsequenceEffect(consequenceEffects, mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
-            if(exon.Start <= position && position <= exon.End)
+            if(positionWithin(position, exon.Start, exon.End) || positionWithin(variant.endPosition(), exon.Start, exon.End))
             {
+                exonRank = exon.Rank;
                 transImpact = classifyExonicPosition(variant, transData, exon);
                 break;
             }
 
-            if(nextExon != null && position > exon.End && position < nextExon.Start)
+            if(nextExon != null && positionsWithin(position, variant.endPosition(), exon.End + 1, nextExon.Start - 1))
             {
-                transImpact = new VariantTransImpact(transData, INTRON_VARIANT);
+                addConsequenceEffect(consequenceEffects, INTRON_VARIANT_EFFECT);
                 break;
             }
         }
 
-        if(transImpact != null)
+        if(transImpact == null)
         {
-            if(inSpliceRegion)
-            {
-                transImpact.markSpliceRegion();
-                transImpact.addConsequence(SPLICE_REGION_VARIANT.description());
-            }
+            if(consequenceEffects.isEmpty())
+                return null;
 
-            checkStopStartCodons(transImpact);
+            transImpact = new VariantTransImpact(transData, consequenceEffects.get(0));
+            consequenceEffects.remove(0);
         }
 
+        for(String effect : consequenceEffects)
+        {
+            transImpact.addConsequence(effect);
+        }
+
+        if(inSpliceRegion)
+        {
+            transImpact.markSpliceRegion();
+            transImpact.addConsequence(SPLICE_REGION_EFFECT);
+        }
+
+        if(exonRank >= 1)
+            transImpact.setExonRank(exonRank);
+
+        checkStopStartCodons(transImpact);
+
         return transImpact;
+    }
+
+    private static void addConsequenceEffect(final List<String> consequenceEffects, final String consequenceEffect)
+    {
+        if(consequenceEffect == null)
+            return;
+
+        if(consequenceEffects.contains(consequenceEffect))
+            return;
+
+        consequenceEffects.add(consequenceEffect);
     }
 
     private boolean isOutsideTransRange(final TranscriptData transData, int position)
@@ -163,7 +200,32 @@ public class ImpactClassifier
             // for a DEL on the reverse strand this is position + baseDiff - 1
             // for an insert on the reverse strand this is position + 1
 
-            if((variant.baseDiff() % 3) == 0)
+            // if the variant crosses the exon boundary then only check the bases which are exonic to decide between frameshift or inframe
+            int exonicBases = 0;
+
+            if(variant.isDeletion())
+            {
+                int firstDelBase = variant.Position + 1;
+                int lastDelBase = variant.Position + abs(variant.baseDiff());
+
+                if(abs(exon.Start - variant.Position) < abs(exon.End - variant.Position))
+                    exonicBases = lastDelBase - max(firstDelBase, exon.Start) + 1;
+                else
+                    exonicBases = min(lastDelBase, exon.End) - firstDelBase + 1;
+            }
+            else
+            {
+
+            }
+
+            /*
+            if(positionWithin(exon.Start, firstDelBase, lastDelBase) && positionWithin(exon.Start + 1, firstDelBase, lastDelBase))
+                return new VariantTransImpact(transData, FRAMESHIFT_VARIANT);
+            else if(positionWithin(exon.End, firstDelBase, lastDelBase) && positionWithin(exon.End + 1, firstDelBase, lastDelBase))
+                return new VariantTransImpact(transData, FRAMESHIFT_VARIANT);
+            */
+
+            if((exonicBases % 3) == 0)
             {
                 // could use phasing info to set conservative vs disruptive type
                 if(variant.isDeletion())

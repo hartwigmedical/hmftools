@@ -27,6 +27,7 @@ public class VariantTransImpact
     private int mCodingBases;
     private int mBasesToLastExonJunction;
     private boolean mInSpliceRegion;
+    private int mExonRank;
 
     private int mLocalPhaseSetId;
 
@@ -47,6 +48,7 @@ public class VariantTransImpact
         mDownstreamAA = "";
         mCodingBases = 0;
         mBasesToLastExonJunction = 0;
+        mExonRank = 0;
         mLocalPhaseSetId = -1;
         mInSpliceRegion = false;
     }
@@ -95,6 +97,9 @@ public class VariantTransImpact
         mNovelAA = novel;
         mDownstreamAA = down;
     }
+
+    public void setExonRank(int rank) { mExonRank = rank; }
+    public int exonRank() { return mExonRank; }
 
     public void setCodingBases(int codingBase, int toLastExonJunc)
     {

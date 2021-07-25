@@ -44,13 +44,30 @@ public class GeneDataCache
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
     public List<String> getDriverPanelGenes() { return mDriverGenes; }
 
-    public boolean loadCache()
+    public boolean loadCache() { return loadCache(false, false); }
+
+    public boolean loadCache(boolean canonicalOnly, boolean onlyDriverGenes)
     {
-        mEnsemblDataCache.setRequiredData(true, false, false, false);
-        if(!mEnsemblDataCache.load(false))
-            return false;
+        mEnsemblDataCache.setRequiredData(true, false, false, canonicalOnly);
+
+        if(onlyDriverGenes)
+        {
+            if(!mEnsemblDataCache.load(true))
+                return false;
+
+            List<String> driverGeneIds = mDriverGenes.stream()
+                    .map(x -> mEnsemblDataCache.getGeneDataByName(x).GeneId).collect(Collectors.toList());
+
+            mEnsemblDataCache.loadTranscriptData(driverGeneIds);
+        }
+        else
+        {
+            if(!mEnsemblDataCache.load(false))
+                return false;
+        }
 
         mEnsemblDataCache.createGeneIdDataMap();
+
         return true;
     }
 
@@ -140,26 +157,4 @@ public class GeneDataCache
         else
             return position >= geneData.GeneStart && position <= geneData.GeneEnd + GENE_UPSTREAM_DISTANCE;
     }
-
-    /*
-    private void setGeneIndex(int position)
-    {
-        // move the current index to cover the position or be the last gene before it
-        for(; mCurrentGeneIndex < mCurrentGeneList.size(); ++mCurrentGeneIndex)
-        {
-            EnsemblGeneData geneData = mCurrentGeneList.get(mCurrentGeneIndex);
-
-            if(geneData.GeneStart > position)
-            {
-                --mCurrentGeneIndex;
-                return;
-            }
-
-            if(position > geneData.GeneEnd)
-            {
-                ++mCurrentGeneIndex;
-            }
-        }
-    }
-    */
 }

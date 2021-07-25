@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.impact;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -36,6 +39,7 @@ public class VariantData
     public String mRepeatSequence;
 
     private final int mIndelBaseDiff;
+    private final List<Integer> mNonRefPositions;
 
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
 
@@ -51,6 +55,22 @@ public class VariantData
         mRepeatSequence = "";
 
         mIndelBaseDiff = Alt.length() - Ref.length();
+
+        if(isInsert())
+        {
+            mNonRefPositions = Lists.newArrayListWithExpectedSize(0);
+        }
+        else
+        {
+            int count = mIndelBaseDiff == 0 ? Ref.length() : abs(mIndelBaseDiff);
+            mNonRefPositions = Lists.newArrayListWithExpectedSize(count);
+
+            int startPos = isIndel() ? 1 : 0;
+            for(int i = startPos; i < Ref.length(); ++i)
+            {
+                mNonRefPositions.add(Position + i);
+            }
+        }
 
         mGeneImpacts = Maps.newHashMap();
     }
@@ -79,6 +99,16 @@ public class VariantData
     public boolean isIndel() { return mIndelBaseDiff != 0; }
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
+
+    public int endPosition()
+    {
+        if(isInsert())
+            return Position + 1;
+        else
+            return mNonRefPositions.get(mNonRefPositions.size() - 1);
+    }
+
+    public List<Integer> nonRefPositions() { return mNonRefPositions; }
 
     public boolean phasedInframeIndel() { return mPhasedInframeIndel; }
 

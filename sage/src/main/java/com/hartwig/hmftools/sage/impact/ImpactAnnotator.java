@@ -76,7 +76,7 @@ public class ImpactAnnotator
 
     public void run()
     {
-        if(!mConfig.singleSampleValid())
+        if(!mConfig.isValid())
         {
             SG_LOGGER.error("invalid config, exiting");
             System.exit(1);
@@ -88,12 +88,11 @@ public class ImpactAnnotator
             System.exit(1);
         }
 
-        String sampleId = mConfig.SampleIds.get(0);
-        processVcfFile(sampleId);
+        processVcfFile(mConfig.SampleId);
 
         closeBufferedWriter(mCsvTranscriptWriter);
 
-        SG_LOGGER.info("sample({}) annotation complete", sampleId);
+        SG_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
     }
 
     private void processVcfFile(final String sampleId)
@@ -221,7 +220,7 @@ public class ImpactAnnotator
         final VersionInfo version = new VersionInfo("sage.version");
 
         String vcfFilename = mConfig.OverwriteVcf ?
-                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleIds.get(0) + ".sage.ann.vcf";
+                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleId + ".sage.ann.vcf";
 
         mVcfWriter = new ImpactVcfWriter(vcfFilename, mConfig.VcfFile);
         mVcfWriter.writeHeader(version.version());
@@ -231,7 +230,7 @@ public class ImpactAnnotator
     {
         try
         {
-            String transFileName = mConfig.OutputDir + mConfig.SampleIds.get(0) + ".sage.transcript_ann_compare.csv";
+            String transFileName = mConfig.OutputDir + mConfig.SampleId + ".sage.transcript_ann_compare.csv";
             mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
 
             mCsvTranscriptWriter.write(VariantData.csvCommonHeader());

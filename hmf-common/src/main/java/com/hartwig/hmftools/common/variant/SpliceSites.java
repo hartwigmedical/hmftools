@@ -9,20 +9,20 @@ public final class SpliceSites
 {
     public static int getDonorPosition(int position, int exonEnd, Strand strand)
     {
-        // zero is the first base after the exon, so pos of 101, exon end of 100, is position zero
+        // D-1 refs to the last base of the exon, D+1 the first base after, ie first of the intron, and there is no D-zerp
         if(strand == FORWARD)
-            return position - exonEnd - 1;
+            return position > exonEnd ? position - exonEnd : position - exonEnd - 1;
         else
-            return exonEnd - position - 1; // pos of 99, exon end of 100, is position zero
+            return position < exonEnd ? exonEnd - position : exonEnd - position - 1;
     }
 
     public static int getAcceptorPosition(int position, int exonEnd, Strand strand)
     {
-        // zero is the first base before the exon, so pos of 99, exon end of 100, is position zero
+        // A-1 refs to the first base of the exon, A+1 the first base before, ie first preceding in the intron, and there is no A-zero
         if(strand == FORWARD)
-            return exonEnd - position - 1;
+            return position < exonEnd ? exonEnd - position : exonEnd - position - 1;
         else
-            return position - exonEnd - 1; // pos of 101, exon end of 100, is position zero
+            return position > exonEnd ? position - exonEnd  : position - exonEnd - 1;
     }
 
     public static boolean isDonorMinusOne(final HmfTranscriptRegion transcript, long position)
