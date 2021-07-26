@@ -6,23 +6,26 @@ public class BindData
     public final String Peptide;
     public final double Affinity;
     public final double PredictedAffinity;
-    public final String OtherInfo;
+    public final String Source;
 
     public static final String DELIM = ",";
+    public static final String RANDOM_SOURCE = "Random";
 
-    public BindData(final String allele, String peptide, double affinity, double predictedAffinity, final String otherInfo)
+    public BindData(final String allele, String peptide, double affinity, double predictedAffinity, final String source)
     {
         Allele = allele;
         Peptide = peptide;
         Affinity = affinity;
         PredictedAffinity = predictedAffinity;
-        OtherInfo = otherInfo;
+        Source = source;
     }
+
+    public int peptideLength() { return Peptide.length(); }
 
     public String toString()
     {
-        return String.format("allele(%s) pep(%s) affinity(%.1f pred=%.1f) otherInfo(%s)",
-                Allele, Peptide, Affinity, PredictedAffinity, OtherInfo);
+        return String.format("allele(%s) pep(%s) affinity(%.1f pred=%.1f) source(%s)",
+                Allele, Peptide, Affinity, PredictedAffinity, Source);
     }
 
     public static BindData fromCsv(
@@ -37,4 +40,13 @@ public class BindData
                 allele, items[peptideIndex], Double.parseDouble(items[affinityIndex]),
                 Double.parseDouble(items[predictedIndex]), items[otherInfoIndex]);
     }
+
+    public static BindData fromCsv(
+            final String data, int alleleIndex, int peptideIndex, int predAffinityIndex, double maxAffinity)
+    {
+        final String[] items = data.split(DELIM, -1);
+        double predictedAffinity = Double.parseDouble(items[predAffinityIndex]);
+        return new BindData(items[alleleIndex], items[peptideIndex], maxAffinity, predictedAffinity, RANDOM_SOURCE);
+    }
+
 }

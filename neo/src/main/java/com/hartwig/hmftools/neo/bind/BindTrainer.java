@@ -14,8 +14,10 @@ import static com.hartwig.hmftools.neo.bind.ScoringData.initPairDataWriter;
 import static com.hartwig.hmftools.neo.bind.ScoringData.initFrequencyWriter;
 import static com.hartwig.hmftools.neo.utils.AminoAcidFrequency.AMINO_ACID_FREQ_FILE;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -36,14 +38,16 @@ public class BindTrainer
 {
     private final BinderConfig mConfig;
 
-    private final Map<String,List<BindData>> mAlleleBindData;
+    private final Map<String,List<BindData>> mAlleleTrainingData;
+    private final Map<String,List<BindData>> mAlleleRandomData;
     private final AminoAcidFrequency mAminoAcidFrequency;
     private int mMaxPeptideLength;
 
     public BindTrainer(final CommandLine cmd)
     {
         mConfig = new BinderConfig(cmd);
-        mAlleleBindData = Maps.newHashMap();
+        mAlleleTrainingData = Maps.newHashMap();
+        mAlleleRandomData = Maps.newHashMap();
         mMaxPeptideLength = 0;
 
         mAminoAcidFrequency = new AminoAcidFrequency(cmd);
@@ -54,7 +58,7 @@ public class BindTrainer
     {
         NE_LOGGER.info("running NeoBinder on {} alleles", mConfig.SpecificAlleles.isEmpty() ? "all" : mConfig.SpecificAlleles.size());
 
-        if(!loadTrainingData(mConfig.TrainingDataFile))
+        if(!loadTrainingData() || !loadRandomPredictionsData())
         {
             System.exit(1);
         }
@@ -81,17 +85,20 @@ public class BindTrainer
 
         List<BindScoreMatrix> matrixList = Lists.newArrayList();
 
-        for(Map.Entry<String,List<BindData>> entry : mAlleleBindData.entrySet())
+        for(Map.Entry<String,List<BindData>> entry : mAlleleTrainingData.entrySet())
         {
-            String allele = entry.getKey();
+            final String allele = entry.getKey();
+            List<BindData> trainingData = entry.getValue();
+
+            NE_LOGGER.debug("allele({}) processing {} training data items", allele, trainingData.size());
 
             Map<Integer,ScoringData> matrixMap = Maps.newHashMap();
             int currentLength = -1;
             ScoringData currentData = null;
 
-            for(BindData bindData : entry.getValue())
+            for(BindData bindData : trainingData)
             {
-                int peptideLength = bindData.Peptide.length();
+                int peptideLength = bindData.peptideLength();
 
                 if(currentLength != peptideLength)
                 {
@@ -106,6 +113,27 @@ public class BindTrainer
                 }
 
                 currentData.processBindData(bindData, mConfig.CalcPairs);
+            }
+
+            // now process the random peptides if present
+            List<BindData> randomPredictions = mAlleleRandomData.get(allele);
+
+            if(randomPredictions != null)
+            {
+                NE_LOGGER.debug("allele({}) processing {} random prediction", allele, randomPredictions.size());
+
+                for(BindData bindData : randomPredictions)
+                {
+                    if(currentLength != bindData.Peptide.length())
+                    {
+                        currentData = matrixMap.get(bindData.peptideLength());
+
+                        if(currentData == null)
+                            continue;
+                    }
+
+                    currentData.processBindData(bindData, mConfig.CalcPairs);
+                }
             }
 
             for(ScoringData scoringData : matrixMap.values())
@@ -139,26 +167,29 @@ public class BindTrainer
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("training_scores"), false);
 
-            writer.write("Allele,Peptide,Score,Rank,Affinity,PredictedAffinity");
+            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity");
             writer.newLine();
 
-            for(Map.Entry<String, List<BindData>> entry : mAlleleBindData.entrySet())
+            for(int i = 0; i <= 1; ++i)
             {
-                String allele = entry.getKey();
+                final Map<String, List<BindData>> bindDataMap = (i == 0) ? mAlleleTrainingData : mAlleleRandomData;
 
-                BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
-
-                for(BindData bindData : entry.getValue())
+                for(Map.Entry<String, List<BindData>> entry : bindDataMap.entrySet())
                 {
-                    if(bindData.OtherInfo.equals("Random"))
-                        continue;
+                    String allele = entry.getKey();
 
-                    double peptideScore = matrix.calcScore(bindData.Peptide);
-                    double scoreRank = randomDistribution.getScoreRank(allele, peptideScore);
+                    BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
 
-                    writer.write(String.format("%s,%s,%.4f,%.4f,%.1f,%.1f",
-                            allele, bindData.Peptide, peptideScore, scoreRank, bindData.Affinity, bindData.PredictedAffinity));
-                    writer.newLine();
+                    for(BindData bindData : entry.getValue())
+                    {
+                        double peptideScore = matrix.calcScore(bindData.Peptide);
+                        double scoreRank = randomDistribution.getScoreRank(allele, peptideScore);
+
+                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.1f,%.1f",
+                                allele, bindData.Peptide, bindData.Source,
+                                peptideScore, scoreRank, bindData.Affinity, bindData.PredictedAffinity));
+                        writer.newLine();
+                    }
                 }
             }
 
@@ -174,11 +205,11 @@ public class BindTrainer
         closeBufferedWriter(pairWriter);
     }
 
-    private boolean loadTrainingData(final String filename)
+    private boolean loadTrainingData()
     {
         try
         {
-            final List<String> lines = Files.readAllLines(new File(filename).toPath());
+            final List<String> lines = Files.readAllLines(new File(mConfig.TrainingDataFile).toPath());
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
             lines.remove(0);
@@ -186,8 +217,8 @@ public class BindTrainer
             int alleleIndex = fieldsIndexMap.get("Allele");
             int peptideIndex = fieldsIndexMap.get("Peptide");
             int affinityIndex = fieldsIndexMap.get("Affinity");
-            int predictedIndex = fieldsIndexMap.get("PredAffinity");
-            int otherInfoIndex = fieldsIndexMap.get("OtherInfo");
+            int predictedIndex = fieldsIndexMap.get("PredictedAffinity");
+            int sourceIndex = fieldsIndexMap.get("Source");
 
             String currentAllele = "";
             List<BindData> currentBindList = null;
@@ -200,13 +231,13 @@ public class BindTrainer
 
                 if(!mConfig.SpecificAlleles.isEmpty() && !mConfig.SpecificAlleles.contains(allele))
                 {
-                    if(mConfig.SpecificAlleles.size() == mAlleleBindData.size())
+                    if(mConfig.SpecificAlleles.size() == mAlleleTrainingData.size())
                         break;
 
                     continue;
                 }
 
-                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predictedIndex, otherInfoIndex);
+                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predictedIndex, sourceIndex);
 
                 if(bindData.Peptide.contains("X"))
                     continue;
@@ -215,7 +246,7 @@ public class BindTrainer
                 {
                     currentAllele = allele;
                     currentBindList = Lists.newArrayList();
-                    mAlleleBindData.put(allele, currentBindList);
+                    mAlleleTrainingData.put(allele, currentBindList);
                 }
 
                 currentBindList.add(bindData);
@@ -224,11 +255,72 @@ public class BindTrainer
             }
 
             NE_LOGGER.info("loaded {} alleles with {} training data items from file({}) maxPeptideLength({})",
-                    mAlleleBindData.size(), mAlleleBindData.values().stream().mapToInt(x -> x.size()).sum(), filename, mMaxPeptideLength);
+                    mAlleleTrainingData.size(), mAlleleTrainingData.values().stream().mapToInt(x -> x.size()).sum(),
+                    mConfig.TrainingDataFile, mMaxPeptideLength);
         }
         catch(IOException e)
         {
             NE_LOGGER.error("failed to read training binding data file: {}", e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean loadRandomPredictionsData()
+    {
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.RandomPeptidePredictionsFile));
+            String header = fileReader.readLine();
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+
+            int alleleIndex = fieldsIndexMap.get("Allele");
+            int peptideIndex = fieldsIndexMap.get("Peptide");
+            int predAffinityIndex = fieldsIndexMap.get("PredictedAffinity");
+
+            String currentAllele = "";
+            List<BindData> currentBindList = null;
+
+            String line = "";
+
+            while((line = fileReader.readLine()) != null)
+            {
+                final String[] items = line.split(DELIMITER, -1);
+
+                String allele = items[alleleIndex];
+
+                if(!mConfig.SpecificAlleles.isEmpty() && !mConfig.SpecificAlleles.contains(allele))
+                {
+                    if(mConfig.SpecificAlleles.size() == mAlleleRandomData.size())
+                        break;
+
+                    continue;
+                }
+
+                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, predAffinityIndex, mConfig.Constants.MaxAffinity);
+
+                if(bindData.Peptide.contains("X"))
+                    continue;
+
+                if(!allele.equals(currentAllele))
+                {
+                    currentAllele = allele;
+                    currentBindList = Lists.newArrayList();
+                    mAlleleRandomData.put(allele, currentBindList);
+                }
+
+                currentBindList.add(bindData);
+            }
+
+            NE_LOGGER.info("loaded {} alleles with {} random data items from file({})",
+                    mAlleleTrainingData.size(), mAlleleRandomData.values().stream().mapToInt(x -> x.size()).sum(),
+                    mConfig.RandomPeptidePredictionsFile);
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to read random peptide binding data file: {}", e.toString());
             return false;
         }
 

@@ -32,11 +32,20 @@ public class RandomPeptideDistribution
     public RandomPeptideDistribution(final BinderConfig config)
     {
         mInputPeptidesFilename = config.RandomPeptidesFile;
-        mDistributionFilename = config.RandomPeptideDistributionFile;
+
+        if(config.RandomPeptideDistributionFile != null)
+        {
+            mDistributionFilename = config.RandomPeptideDistributionFile;
+            mDataLoaded = loadDistribution();
+        }
+        else
+        {
+            mDistributionFilename = config.formFilename("random_peptide_dist");
+            mDataLoaded = false;
+        }
 
         mAlleleScoresMap = Maps.newHashMap();
 
-        mDataLoaded = loadDistribution();
     }
 
     public boolean hasData() { return mDataLoaded; }
@@ -73,7 +82,7 @@ public class RandomPeptideDistribution
 
     private boolean loadDistribution()
     {
-        if(!Files.exists(Paths.get(mDistributionFilename)))
+        if(mDistributionFilename == null || !Files.exists(Paths.get(mDistributionFilename)))
             return false;
 
         try
@@ -162,6 +171,9 @@ public class RandomPeptideDistribution
                 int currentScores = 0;
                 double currentSizeTotal = 0;
 
+                List<ScoreDistributionData> scoresDistributions = Lists.newArrayList();
+                mAlleleScoresMap.put(matrix.Allele, scoresDistributions);
+
                 for(Double score : peptideScores)
                 {
                     scoreTotal += score;
@@ -175,6 +187,8 @@ public class RandomPeptideDistribution
 
                         //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
                         writer.newLine();
+
+                        scoresDistributions.add(new ScoreDistributionData(matrix.Allele, matrix.PeptideCount, currentSizeTotal, avgScore));
 
                         scoreTotal = 0;
                         currentScores = 0;

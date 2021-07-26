@@ -184,7 +184,6 @@ public class ImpactComparisons
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
             String header = fileReader.readLine();
 
             final String fileDelim = "\t";
