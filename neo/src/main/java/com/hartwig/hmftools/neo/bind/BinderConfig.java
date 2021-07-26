@@ -28,6 +28,7 @@ public class BinderConfig
     public final boolean CalcPairs;
     public final boolean WriteFrequencyData;
     public final boolean WriteScoreMatrix;
+    public final PeptideWriteType WritePeptideType;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
@@ -44,6 +45,7 @@ public class BinderConfig
 
     private static final String WRITE_SCORE_MATRIX = "write_score_matrix";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
+    private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
 
     public BinderConfig(final CommandLine cmd)
     {
@@ -72,6 +74,7 @@ public class BinderConfig
         CalcPairs = cmd.hasOption(CALC_PAIRS);
         WriteScoreMatrix = cmd.hasOption(WRITE_SCORE_MATRIX);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
+        WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
     }
 
     public String formFilename(final String fileId)
@@ -95,6 +98,7 @@ public class BinderConfig
         options.addOption(CALC_PAIRS, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_SCORE_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
+        options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");

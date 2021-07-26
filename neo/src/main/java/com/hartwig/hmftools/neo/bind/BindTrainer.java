@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindData.RANDOM_SOURCE;
+import static com.hartwig.hmftools.neo.bind.PeptideWriteType.LIKELY_INCORRECT;
+import static com.hartwig.hmftools.neo.bind.PeptideWriteType.TRAINING;
 import static com.hartwig.hmftools.neo.bind.ScoringData.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.ScoringData.initPairDataWriter;
 import static com.hartwig.hmftools.neo.bind.ScoringData.initFrequencyWriter;
@@ -25,6 +28,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.stats.AucCalc;
+import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,6 +37,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class BindTrainer
@@ -162,32 +168,78 @@ public class BindTrainer
             randomDistribution.buildDistribution(matrixList);
         }
 
-        // rank the training data peptides using the newly created data and the random peptide distributions
+        // rank both the training and random peptide data using the newly created data and the random peptide distributions
+        for(Map.Entry<String, List<BindData>> entry : mAlleleTrainingData.entrySet())
+        {
+            String allele = entry.getKey();
+
+            List<AucData> alleleAucData = Lists.newArrayList();
+            List<AucData> alleleAucMcfData = Lists.newArrayList();
+
+            BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
+
+            // first the training data then the random peptide data
+            for(int i = 0; i <= 1; ++i)
+            {
+                final List<BindData> bindDataList = (i == 0) ? mAlleleTrainingData.get(allele) : mAlleleRandomData.get(allele);
+
+                for(BindData bindData : bindDataList)
+                {
+                    bindData.Score = matrix.calcScore(bindData.Peptide);
+                    bindData.RankPerc = randomDistribution.getScoreRank(allele, bindData.Score);
+                    boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
+
+                    alleleAucData.add(new AucData(isPositive, bindData.Score));
+                    alleleAucMcfData.add(new AucData(isPositive, bindData.PredictedAffinity));
+                }
+            }
+
+            NE_LOGGER.info(String.format("allele(%s) AUC(%.4f) mcfAUC(%.4f)",
+                    allele, AucCalc.calcAuc(alleleAucData, Level.TRACE), AucCalc.calcAuc(alleleAucMcfData, Level.TRACE)));
+        }
+
+        writePeptideScores();
+
+        closeBufferedWriter(matrixWriter);
+        closeBufferedWriter(freqWriter);
+        closeBufferedWriter(pairWriter);
+    }
+
+    private void writePeptideScores()
+    {
+        if(mConfig.WritePeptideType == PeptideWriteType.NONE)
+            return;
+
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("training_scores"), false);
-
+            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
             writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity");
             writer.newLine();
 
-            for(int i = 0; i <= 1; ++i)
+            for(Map.Entry<String, List<BindData>> entry : mAlleleTrainingData.entrySet())
             {
-                final Map<String, List<BindData>> bindDataMap = (i == 0) ? mAlleleTrainingData : mAlleleRandomData;
+                String allele = entry.getKey();
 
-                for(Map.Entry<String, List<BindData>> entry : bindDataMap.entrySet())
+                for(int i = 0; i <= 1; ++i)
                 {
-                    String allele = entry.getKey();
+                    final List<BindData> bindDataList = (i == 0) ? mAlleleTrainingData.get(allele) : mAlleleRandomData.get(allele);
 
-                    BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
-
-                    for(BindData bindData : entry.getValue())
+                    for(BindData bindData : bindDataList)
                     {
-                        double peptideScore = matrix.calcScore(bindData.Peptide);
-                        double scoreRank = randomDistribution.getScoreRank(allele, peptideScore);
+                        if(mConfig.WritePeptideType == LIKELY_INCORRECT)
+                        {
+                            boolean expectBinds = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
+                            if(expectBinds != (bindData.RankPerc < 0.02))
+                                continue;
+                        }
+                        else if(mConfig.WritePeptideType == TRAINING && bindData.Source.equals(RANDOM_SOURCE))
+                        {
+                            continue;
+                        }
 
                         writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.1f,%.1f",
                                 allele, bindData.Peptide, bindData.Source,
-                                peptideScore, scoreRank, bindData.Affinity, bindData.PredictedAffinity));
+                                bindData.Score, bindData.RankPerc, bindData.Affinity, bindData.PredictedAffinity));
                         writer.newLine();
                     }
                 }
@@ -199,10 +251,6 @@ public class BindTrainer
         {
             NE_LOGGER.error("failed to write peptide scores file: {}", e.toString());
         }
-
-        closeBufferedWriter(matrixWriter);
-        closeBufferedWriter(freqWriter);
-        closeBufferedWriter(pairWriter);
     }
 
     private boolean loadTrainingData()

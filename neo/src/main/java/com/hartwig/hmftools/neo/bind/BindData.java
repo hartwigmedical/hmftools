@@ -8,6 +8,9 @@ public class BindData
     public final double PredictedAffinity;
     public final String Source;
 
+    public double Score;
+    public double RankPerc;
+
     public static final String DELIM = ",";
     public static final String RANDOM_SOURCE = "Random";
 
@@ -18,6 +21,9 @@ public class BindData
         Affinity = affinity;
         PredictedAffinity = predictedAffinity;
         Source = source;
+
+        Score = 0;
+        RankPerc = 0;
     }
 
     public int peptideLength() { return Peptide.length(); }
