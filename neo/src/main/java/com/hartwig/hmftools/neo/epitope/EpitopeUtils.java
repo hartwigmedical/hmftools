@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -110,6 +113,61 @@ public class EpitopeUtils
             final CodingBaseData cbData = calcCodingBases(transData, position);
             neData.Phases[stream] = tickPhaseForward(cbData.Phase, insSeqLength);
         }
+    }
+
+    public static int getUpstreamOpenCodonBases(int startPhase, int strand, boolean isIndel)
+    {
+        int phase = startPhase;
+
+        // return the number of open codon bases up to but not including the variant's position
+        if(strand == POS_STRAND || !isIndel)
+        {
+            if(phase == PHASE_1)
+                return 0;
+            else if(phase == PHASE_2)
+                return 1;
+            else
+                return isIndel ? 0 : 2; // INDEL leaves the mutation base unchanged, so if it ends a codon, it's not novel
+        }
+        else
+        {
+            if(phase == PHASE_1)
+                return 1;
+            else if(phase == PHASE_2)
+                return 2;
+            else
+                return isIndel ? 0 : 2;
+        }
+    }
+
+    public static int getDownstreamOpenCodonBases(int startPhase, int strand, int baseChange, final String alt)
+    {
+        // determine the phase at the base after the mutation - last base of an MNV/SNV, and next base for an INS or DEL
+        int mutationTicks;
+
+        if(strand == POS_STRAND)
+        {
+            mutationTicks = baseChange < 0 ? 1 : alt.length();
+        }
+        else
+        {
+            // need to go to the phase (prior to?) the ALT
+            if(baseChange == 0)
+                mutationTicks = alt.length();
+            else if(baseChange > 0)
+                mutationTicks = alt.length() + 1;
+            else
+                mutationTicks = 2;
+        }
+
+        int postMutationPhase = tickPhaseForward(startPhase, mutationTicks);
+
+        if(postMutationPhase == PHASE_0)
+            return 1;
+        else if(postMutationPhase == PHASE_1)
+            return 0;
+        else
+            return 2;
     }
 
     public static String getUpstreamCodingBases(

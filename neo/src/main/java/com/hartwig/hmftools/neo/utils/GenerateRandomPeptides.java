@@ -55,7 +55,7 @@ public class GenerateRandomPeptides
     private final int mPeptideBaseGap;
 
     private int mPeptitdeLengthIndex;
-    private int mAlleleIndex;
+    private boolean mAssignAllelesByFreq;
 
     private final String mOutputFile;
     private BufferedWriter mWriter;
@@ -63,6 +63,7 @@ public class GenerateRandomPeptides
     private static final String REQ_PEPTIDES = "req_peptides";
     private static final String PEPTIDES_LENGTHS = "peptide_lengths";
     private static final String ALLELES_FILE = "alleles_file";
+    private static final String ASSIGN_ALLELES_BY_FREQ = "assign_alleles_by_freq";
     private static final String OUTPUT_FILE = "output_file";
 
     private static final int MAX_PER_GENE = 10;
@@ -79,6 +80,7 @@ public class GenerateRandomPeptides
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList());
 
         mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
+        mAssignAllelesByFreq = cmd.hasOption(ASSIGN_ALLELES_BY_FREQ);
 
         mPeptitdeLengthIndex = 0;
 
@@ -120,11 +122,17 @@ public class GenerateRandomPeptides
             {
                 String[] items = data.split(DELIM);
                 String allele = items[alleleIndex];
-                int freq = Integer.parseInt(items[freqIndex]);
 
-                for(int i = 0; i < freq; ++i)
+                mAlleles.add(allele);
+
+                if(mAssignAllelesByFreq)
                 {
-                    mAlleles.add(allele);
+                    int freq = Integer.parseInt(items[freqIndex]);
+
+                    for(int i = 1; i < freq; ++i)
+                    {
+                        mAlleles.add(allele);
+                    }
                 }
             }
 
@@ -222,15 +230,6 @@ public class GenerateRandomPeptides
     {
         int index = mRandom.nextInt(mAlleles.size());
         return mAlleles.get(index);
-
-        /*
-        if(mAlleleIndex >= mAlleles.size())
-            mAlleleIndex = 0;
-
-        String allele = mAlleles.get(mAlleleIndex);
-        ++mAlleleIndex;
-        return allele;
-        */
     }
 
     private BufferedWriter initialiseWriter(final String outputDir)
@@ -254,9 +253,20 @@ public class GenerateRandomPeptides
     {
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%s,%d,%d",
-                    getAllele(), peptide, chromosome, geneName, posStart, posEnd));
-            mWriter.newLine();
+            if(mAssignAllelesByFreq)
+            {
+                mWriter.write(String.format("%s,%s,%s,%s,%d,%d", getAllele(), peptide, chromosome, geneName, posStart, posEnd));
+                mWriter.newLine();
+            }
+            else
+            {
+                for(String allele : mAlleles)
+                {
+                    mWriter.write(String.format("%s,%s,%s,%s,%d,%d", allele, peptide, chromosome, geneName, posStart, posEnd));
+                    mWriter.newLine();
+                }
+
+            }
         }
         catch(IOException e)
         {

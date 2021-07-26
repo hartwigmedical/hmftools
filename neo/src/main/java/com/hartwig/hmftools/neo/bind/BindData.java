@@ -26,7 +26,7 @@ public class BindData
     }
 
     public static BindData fromCsv(
-            final String data, int alleleIndex, int peptideIndex, int affinityIndex, int predIndex, int otherInfoIndex)
+            final String data, int alleleIndex, int peptideIndex, int affinityIndex, int predictedIndex, int otherInfoIndex)
     {
         final String[] items = data.split(DELIM, -1);
 
@@ -35,6 +35,6 @@ public class BindData
 
         return new BindData(
                 allele, items[peptideIndex], Double.parseDouble(items[affinityIndex]),
-                Double.parseDouble(items[predIndex]), items[otherInfoIndex]);
+                Double.parseDouble(items[predictedIndex]), items[otherInfoIndex]);
     }
 }

@@ -139,7 +139,7 @@ public class BindTrainer
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("training_scores"), false);
 
-            writer.write("Allele,Peptide,Score,Rank,PredictedAffinity,Affinity");
+            writer.write("Allele,Peptide,Score,Rank,Affinity,PredictedAffinity");
             writer.newLine();
 
             for(Map.Entry<String, List<BindData>> entry : mAlleleBindData.entrySet())
@@ -186,7 +186,7 @@ public class BindTrainer
             int alleleIndex = fieldsIndexMap.get("Allele");
             int peptideIndex = fieldsIndexMap.get("Peptide");
             int affinityIndex = fieldsIndexMap.get("Affinity");
-            int predIndex = fieldsIndexMap.get("PredAffinity");
+            int predictedIndex = fieldsIndexMap.get("PredAffinity");
             int otherInfoIndex = fieldsIndexMap.get("OtherInfo");
 
             String currentAllele = "";
@@ -206,7 +206,7 @@ public class BindTrainer
                     continue;
                 }
 
-                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predIndex, otherInfoIndex);
+                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predictedIndex, otherInfoIndex);
 
                 if(bindData.Peptide.contains("X"))
                     continue;

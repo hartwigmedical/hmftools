@@ -164,13 +164,13 @@ public class PmNeoEpitope extends NeoEpitope
 
     private int getUpstreamOpenCodonBases()
     {
-        return TranscriptUtils.getUpstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, isIndel());
+        return EpitopeUtils.getUpstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, isIndel());
     }
 
     private int getDownstreamOpenCodonBases()
     {
         // determine the phase at the base after the mutation - last base of an MNV/SNV, and next base for an INS or DEL
-        return TranscriptUtils.getDownstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, mIndelBaseDiff, mPointMutation.Alt);
+        return EpitopeUtils.getDownstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, mIndelBaseDiff, mPointMutation.Alt);
     }
 
     public void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids)
