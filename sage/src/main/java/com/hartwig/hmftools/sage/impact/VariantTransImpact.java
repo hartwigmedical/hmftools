@@ -19,13 +19,8 @@ public class VariantTransImpact
 
     private final List<String> mConsequenceEffects;
 
-    private String mUpstreamAA;
-    private String mWildtypeAA;
-    private String mNovelAA;
-    private String mDownstreamAA;
+    private CodingContext mCodingContext;
 
-    private int mCodingBases;
-    private int mBasesToLastExonJunction;
     private boolean mInSpliceRegion;
     private int mExonRank;
 
@@ -42,12 +37,7 @@ public class VariantTransImpact
 
         mConsequenceEffects = Lists.newArrayList(consequenceEffect);
 
-        mUpstreamAA = "";
-        mWildtypeAA = "";
-        mNovelAA = "";
-        mDownstreamAA = "";
-        mCodingBases = 0;
-        mBasesToLastExonJunction = 0;
+        mCodingContext = null;
         mExonRank = 0;
         mLocalPhaseSetId = -1;
         mInSpliceRegion = false;
@@ -85,30 +75,12 @@ public class VariantTransImpact
 
     public int topRank() { return consequences().stream().mapToInt(x -> x.rank()).max().orElse(-1); }
 
-    public String upstreamAA() { return mUpstreamAA; }
-    public String wildtypeAA() { return mWildtypeAA; }
-    public String novelAA() { return mNovelAA; }
-    public String downstreamAA() { return mDownstreamAA; }
-
-    public void setAminoAcids(final String up, final String wildtype, final String novel, final String down)
-    {
-        mUpstreamAA = up;
-        mWildtypeAA = wildtype;
-        mNovelAA = novel;
-        mDownstreamAA = down;
-    }
+    public CodingContext getCodingContext() { return mCodingContext; }
+    public boolean hasCodingData() { return mCodingContext != null && mCodingContext.hasCodingBases(); }
+    public void setCodingContext(final CodingContext context) { mCodingContext = context; }
 
     public void setExonRank(int rank) { mExonRank = rank; }
     public int exonRank() { return mExonRank; }
-
-    public void setCodingBases(int codingBase, int toLastExonJunc)
-    {
-        mCodingBases = codingBase;
-        mBasesToLastExonJunction = toLastExonJunc;
-    }
-
-    public int codingBases() { return mCodingBases; }
-    public int basesToLastExonJunction() { return mBasesToLastExonJunction; }
 
     public void markSpliceRegion() { mInSpliceRegion = true; }
     public boolean inSpliceRegion() { return mInSpliceRegion; }

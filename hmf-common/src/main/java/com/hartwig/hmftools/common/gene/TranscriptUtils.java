@@ -286,10 +286,9 @@ public class TranscriptUtils
         return codingBaseRanges;
     }
 
-    public static int getUpstreamOpenCodonBases(int startPhase, int strand, int baseChange)
+    public static int getUpstreamOpenCodonBases(int startPhase, int strand, boolean isIndel)
     {
         int phase = startPhase;
-        boolean isIndel = baseChange != 0;
 
         // return the number of open codon bases up to but not including the variant's position
         if(strand == POS_STRAND || !isIndel)

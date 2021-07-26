@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
@@ -28,6 +30,7 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
+import static com.hartwig.hmftools.sage.impact.CodingContext.determineContext;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.sage.impact.SpliceClassifier.isWithinSpliceRegion;
 
@@ -197,8 +200,12 @@ public class ImpactClassifier
     {
         if(variant.isIndel())
         {
-            // for a DEL on the reverse strand this is position + baseDiff - 1
-            // for an insert on the reverse strand this is position + 1
+            // if only the end of an exon is affected (either strand) then this doesn't change the coding bases
+            if(variant.Position == exon.End)
+                return null;
+
+            if(variant.isInsert() && variant.endPosition() == exon.Start)
+                return null;
 
             // if the variant crosses the exon boundary then only check the bases which are exonic to decide between frameshift or inframe
             int exonicBases = 0;
@@ -215,7 +222,7 @@ public class ImpactClassifier
             }
             else
             {
-
+                exonicBases = variant.baseDiff();
             }
 
             /*
@@ -228,10 +235,15 @@ public class ImpactClassifier
             if((exonicBases % 3) == 0)
             {
                 // could use phasing info to set conservative vs disruptive type
-                if(variant.isDeletion())
-                    return new VariantTransImpact(transData, INFRAME_DELETION);
-                else
-                    return new VariantTransImpact(transData, INFRAME_INSERTION);
+                VariantTransImpact transImpact = variant.isDeletion() ?
+                        new VariantTransImpact(transData, INFRAME_DELETION) : new VariantTransImpact(transData, INFRAME_INSERTION);
+
+                CodingContext codingContext = determineContext(
+                        variant.Chromosome, variant.Position, variant.Ref, variant.Alt, transData, mRefGenome);
+
+                transImpact.setCodingContext(codingContext);
+
+                return transImpact;
             }
             else
             {
@@ -240,6 +252,10 @@ public class ImpactClassifier
         }
         else
         {
+            CodingContext codingContext = determineContext(
+                    variant.Chromosome, variant.Position, variant.Ref, variant.Alt, transData, mRefGenome);
+
+            /*
             // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
             int varLength = variant.Ref.length();
             boolean posStrand = transData.posStrand();
@@ -248,7 +264,7 @@ public class ImpactClassifier
             final CodingBaseData cbData = calcCodingBases(transData, upstreamStartPos);
 
             // this is 0 if the variant starts on the first base of a codon (phase=1), 1 if it starts on the 2nd, and 2 if on the 3rd/last
-            int openCodonBases = TranscriptUtils.getUpstreamOpenCodonBases(cbData.Phase, transData.Strand, variant.baseDiff());
+            int openCodonBases = getOpenCodonBases(cbData.Phase);
 
             int codingBaseLen = (int)(Math.ceil((openCodonBases + varLength) / 3.0)) * 3;
 
@@ -291,20 +307,22 @@ public class ImpactClassifier
                 refAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(refCodingBases));
                 altAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(altCodingBases));
             }
+            */
 
-            VariantConsequence consequence = refAminoAcids.equals(altAminoAcids) ? SYNONYMOUS_VARIANT : MISSENSE_VARIANT;
+            VariantConsequence consequence = codingContext.hasProteinChange() ? MISSENSE_VARIANT : SYNONYMOUS_VARIANT;
             VariantTransImpact transImpact = new VariantTransImpact(transData, consequence);
-            transImpact.setAminoAcids("", refAminoAcids, altAminoAcids, "");
+            transImpact.setCodingContext(codingContext);
             return transImpact;
         }
     }
 
     private void checkStopStartCodons(final VariantTransImpact transImpact)
     {
-        if(transImpact.wildtypeAA().isEmpty() || transImpact.novelAA().isEmpty())
+        if(!transImpact.hasCodingData())
             return;
 
-        VariantConsequence ssConsequence = checkStopStartCodons(transImpact.wildtypeAA(), transImpact.novelAA());
+        VariantConsequence ssConsequence = checkStopStartCodons(
+                transImpact.getCodingContext().WildtypeAA, transImpact.getCodingContext().NovelAA);
 
         if(ssConsequence != null)
         {

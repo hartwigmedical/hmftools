@@ -164,7 +164,7 @@ public class PmNeoEpitope extends NeoEpitope
 
     private int getUpstreamOpenCodonBases()
     {
-        return TranscriptUtils.getUpstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, mIndelBaseDiff);
+        return TranscriptUtils.getUpstreamOpenCodonBases(Phases[FS_UP], TransData[FS_UP].Strand, isIndel());
     }
 
     private int getDownstreamOpenCodonBases()
