@@ -835,6 +835,7 @@ Each candidate chained splice acceptor and splice donor fusion pair may have mul
 - Best 5’ partner transcript ranked by canonical, then longest protein coding, then longest
 - If multiple chains link the same 2 genes then they are prioritised again according to the above logic.
 
+For IG enhancer rearrangenemts, the canonical transcript is reported for all 3' gene partners.
 
 ##### Reportable fusions
 In addition to predicting fusions, Linx also tries to identify likely viable pathogenic fusions and marks as reportable. To maximise precision whilst ensuring high impact fusions are always likely to be reported, the criteria vary by fusion type with more relaxed criteria for known pathogenic pairs due to high prior likelihood. High impact promiscuous fusion partners which may be clinically relevant (including NTRK1-3, BRAF, RET, ROS1, ALK) also have more relaxed criteria
