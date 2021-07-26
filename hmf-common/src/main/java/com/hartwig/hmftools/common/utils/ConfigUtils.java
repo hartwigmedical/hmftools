@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.utils;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -12,6 +11,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +25,12 @@ public class ConfigUtils
     public static final String LOG_LEVEL = "log_level";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
+
+    public static void addLoggingOptions(final Options options)
+    {
+        options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(LOG_LEVEL, true, "Specify log level");
+    }
 
     public static void setLogLevel(final CommandLine cmd)
     {

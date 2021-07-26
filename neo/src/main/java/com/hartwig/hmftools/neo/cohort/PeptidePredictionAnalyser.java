@@ -5,12 +5,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
@@ -227,8 +228,7 @@ public class PeptidePredictionAnalyser
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         PeptidePredictionAnalyser samplePeptidePredictions = new PeptidePredictionAnalyser(cmd);
         samplePeptidePredictions.run();

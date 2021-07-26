@@ -1,20 +1,17 @@
 package com.hartwig.hmftools.neo.epitope;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.NE_FUSION_COHORT_FILE;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -409,8 +406,7 @@ public class NeoEpitopeAnnotator
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         NeoEpitopeAnnotator neoEpitopeAnnotator = new NeoEpitopeAnnotator(cmd);
         neoEpitopeAnnotator.run();

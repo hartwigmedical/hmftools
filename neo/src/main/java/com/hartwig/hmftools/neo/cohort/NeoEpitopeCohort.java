@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.MISSENSE;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -19,7 +21,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
 
@@ -320,8 +321,7 @@ public class NeoEpitopeCohort
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         NeoEpitopeCohort neoEpitopeCohort = new NeoEpitopeCohort(cmd);
         neoEpitopeCohort.run();

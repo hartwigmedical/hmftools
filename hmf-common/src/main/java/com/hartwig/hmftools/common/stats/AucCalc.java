@@ -1,0 +1,105 @@
+package com.hartwig.hmftools.common.stats;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sigs.VectorUtils;
+import com.hartwig.hmftools.common.utils.Doubles;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public final class AucCalc
+{
+    private static final Logger LOGGER = LogManager.getLogger(AucCalc.class);
+
+    public static double calcAuc(final List<AucData> dataList)
+    {
+        return calcAuc(dataList, Level.DEBUG);
+    }
+
+    public static double calcAuc(final List<AucData> dataList, final Level logLevel)
+    {
+        List<Double> posValues = Lists.newArrayList();
+        List<Double> negValues = Lists.newArrayList();
+
+        for(AucData data : dataList)
+        {
+            if(data.IsPositive)
+                VectorUtils.optimisedAdd(posValues, data.Value, true);
+            else
+                VectorUtils.optimisedAdd(negValues, data.Value, true);
+        }
+
+        long concordantPairs = 0;
+        long discordantPairs = 0;
+        long tiedPairs = 0;
+
+        int negIndex = 0;
+        int negCount = negValues.size();
+        int posCount = posValues.size();
+
+        for(int posIndex = 0; posIndex < posValues.size(); ++posIndex)
+        {
+            double posValue = posValues.get(posIndex);
+            int remainingPos = posCount - posIndex;
+
+            while(negIndex < negValues.size())
+            {
+                double negValue = negValues.get(negIndex);
+
+                if(Doubles.equal(posValue, negValue))
+                    ++tiedPairs;
+                else if(negValue < posValue)
+                    discordantPairs += remainingPos;
+                else
+                    break;
+
+                ++negIndex;
+            }
+
+            int remainingNeg = negCount - negIndex;
+            concordantPairs += remainingNeg;
+        }
+
+        double totalPairs = posValues.size() * negValues.size();
+        double percConcordant = 100 * concordantPairs / totalPairs;
+        double percDiscordant = 100 * discordantPairs / totalPairs;
+        double percTied = 100 * tiedPairs / totalPairs;
+
+        // Area under curve (AUC) = (Percent Concordant + 0.5 * Percent Tied)/100
+        double auc = (percConcordant + 0.5 * percTied) / 100;
+
+        if(auc < 0.5)
+            auc = 1 - auc;
+
+        LOGGER.log(logLevel, String.format("inputs(pos=%d neg=%d) perc(con=%.4f dis=%.4f tied=%.4f) auc(%.4f)",
+                posValues.size(), negValues.size(), percConcordant, percDiscordant, percTied, auc));
+
+        /*
+        // slow method
+        concordantPairs = 0;
+        discordantPairs = 0;
+        tiedPairs = 0;
+
+        for(Double posValue : posValues)
+        {
+            for(Double negValue : negValues)
+            {
+                if(Doubles.equal(posValue, negValue))
+                    ++tiedPairs;
+                else if(posValue > negValue)
+                    ++concordantPairs;
+                else
+                    ++discordantPairs;
+            }
+        }
+
+        LOGGER.log(logLevel, String.format("slow perc(con=%.4f dis=%.4f tied=%.4f) auc(%.4f)",
+                percConcordant, percDiscordant, percTied, auc));
+        */
+
+        return auc;
+    }
+}
