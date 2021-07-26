@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -346,9 +347,8 @@ public class FusionDisruptionAnalyser
                 {
                     if(fusion.knownType() != KnownFusionType.NONE)
                     {
-                        LNX_LOGGER.debug("fusion({}:{}-{}) reportable({}) knownType({}) cluster({} sv={} chain={}) SVs({} & {})",
-                                fusion.id(), fusion.upstreamTrans().gene().GeneName, fusion.downstreamTrans()
-                                        .gene().GeneName, fusion.reportable(),
+                        LNX_LOGGER.debug("fusion({}:{}) reportable({}) knownType({}) cluster({} sv={} chain={}) SVs({} & {})",
+                                fusion.id(), fusion.name(), fusion.reportable(),
                                 fusion.knownTypeStr(), fusion.getAnnotations().clusterId(), fusion.getAnnotations().clusterCount(),
                                 fusion.getAnnotations().chainInfo() != null ? fusion.getAnnotations().chainInfo().chainId() : -1,
                                 fusion.upstreamTrans().gene().id(), fusion.downstreamTrans().gene().id());
@@ -1022,7 +1022,7 @@ public class FusionDisruptionAnalyser
 
         for(final GeneFusion fusion : fusionList)
         {
-            if (fusion.reportable())
+            if(fusion.reportable() || fusion.knownType() == IG_PROMISCUOUS)
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 
