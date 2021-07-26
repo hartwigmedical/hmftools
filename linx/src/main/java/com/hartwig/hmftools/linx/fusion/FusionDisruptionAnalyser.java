@@ -1022,7 +1022,7 @@ public class FusionDisruptionAnalyser
 
         for(final GeneFusion fusion : fusionList)
         {
-            if(fusion.reportable() || fusion.knownType() == IG_PROMISCUOUS)
+            if(fusion.reportable())
             {
                 int clusterId = fusion.getAnnotations() != null ? fusion.getAnnotations().clusterId() : -1;
 
