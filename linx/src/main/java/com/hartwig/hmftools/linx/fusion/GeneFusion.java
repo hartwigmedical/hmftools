@@ -66,7 +66,7 @@ public class GeneFusion
 
     public String name()
     {
-        if(mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS) // form like @IGH-MYC
+        if(isIG()) // form like @IGH-MYC
             return mTranscripts[FS_UP].transName() + "_" + mTranscripts[FS_DOWN].geneName();
         else
             return mTranscripts[FS_UP].geneName() + "_" + mTranscripts[FS_DOWN].geneName();
@@ -80,7 +80,7 @@ public class GeneFusion
 
     public String geneName(int fs)
     {
-        if(fs == FS_UP && (mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS))
+        if(fs == FS_UP && isIG())
             return mTranscripts[FS_UP].transName();
         else
             return mTranscripts[fs].geneName();
@@ -107,6 +107,7 @@ public class GeneFusion
 
     public KnownFusionType knownType() { return mKnownFusionType; }
     public boolean[] isPromiscuous() { return mIsPromiscuous; }
+    public boolean isIG() { return mKnownFusionType == IG_KNOWN_PAIR || mKnownFusionType == IG_PROMISCUOUS; }
 
     public void setKnownType(KnownFusionType type) { mKnownFusionType = type; }
 

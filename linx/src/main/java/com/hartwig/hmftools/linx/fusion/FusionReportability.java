@@ -44,7 +44,7 @@ public class FusionReportability
     private static final List<String> mProteinsRequiredKept = Lists.newArrayList();
     private static final List<String> mProteinsRequiredLost = Lists.newArrayList();
 
-    public static ReportableReason determineReportability(GeneFusion fusion)
+    public static ReportableReason determineReportability(final GeneFusion fusion)
     {
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
         if (fusion.knownType() == NONE || fusion.knownType() == IG_PROMISCUOUS)

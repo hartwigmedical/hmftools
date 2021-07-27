@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -414,8 +415,10 @@ public class FusionDisruptionAnalyser
             List<GeneFusion> fusions = mFusionFinder.findFusions(genesListStart, genesListEnd, mFusionParams);
 
             if(mNeoEpitopeWriter != null)
+            {
                 mNeoEpitopeWriter.processFusionCandidate(
                         genesListStart, genesListEnd, null, null, null, null);
+            }
 
             if (fusions.isEmpty())
                 continue;
@@ -912,12 +915,11 @@ public class FusionDisruptionAnalyser
         if(!fusion.validChainTraversal() && !allowSuspectChains(fusion.knownType()))
             return false;
 
-        if(fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
+        if(!fusion.isIG() && fusion.downstreamTrans().hasNegativePrevSpliceAcceptorDistance())
             return false;
 
         return true;
     }
-
 
     private List<GeneFusion> extractUniqueFusions()
     {
@@ -945,17 +947,28 @@ public class FusionDisruptionAnalyser
         {
             List<GeneFusion> similarFusions = entry.getValue();
 
+            // IG promiscuous fusions are not reportable but need to all be recorded
+            List<GeneFusion> candidates = similarFusions.stream()
+                    .filter(x -> x.knownType() == IG_PROMISCUOUS)
+                    .filter(x -> x.downstreamTrans().TransData.IsCanonical)
+                    .collect(Collectors.toList());
+
             final GeneFusion topFusion = mFusionFinder.findTopReportableFusion(similarFusions);
 
-            if(topFusion == null)
-                continue;
+            if(topFusion != null && !candidates.contains(topFusion))
+            {
+                candidates.add(topFusion);
+            }
 
-            List<GeneFusion> fusionsByName = genePairFusions.get(topFusion.name());
+            for(GeneFusion fusion : candidates)
+            {
+                List<GeneFusion> fusionsByName = genePairFusions.get(fusion.name());
 
-            if(fusionsByName == null)
-                genePairFusions.put(topFusion.name(), Lists.newArrayList(topFusion));
-            else
-                fusionsByName.add(topFusion);
+                if(fusionsByName == null)
+                    genePairFusions.put(fusion.name(), Lists.newArrayList(fusion));
+                else
+                    fusionsByName.add(fusion);
+            }
         }
 
         List<GeneFusion> uniqueFusions = Lists.newArrayList();
