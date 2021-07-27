@@ -94,7 +94,7 @@ public class ScoringData
             mBindScoreTotals[aaIndex][pos] += levelScore;
             mActualBinds[aaIndex][pos] += bindPerc;
 
-            if(calcPairs)
+            if(calcPairs && bindData.isTraining())
             {
                 if(pos < bindData.Peptide.length() - 1)
                 {

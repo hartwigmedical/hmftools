@@ -27,6 +27,8 @@ public class BindData
     }
 
     public int peptideLength() { return Peptide.length(); }
+    public boolean isRandom() { return Source.equals(RANDOM_SOURCE); }
+    public boolean isTraining() { return !isRandom(); }
 
     public String toString()
     {
