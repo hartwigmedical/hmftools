@@ -79,6 +79,49 @@ public class BindTrainer
 
     private void processingBindingData()
     {
+        List<BindScoreMatrix> matrixList = mConfig.BindMatrixFile != null ?
+                BindScoreMatrix.loadFromCsv(mConfig.BindMatrixFile) : buildBindingScoreData();
+
+        RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig);
+
+        if(!randomDistribution.hasData())
+        {
+            randomDistribution.buildDistribution(matrixList);
+        }
+
+        NE_LOGGER.info("writing allele summaries");
+
+        BufferedWriter alleleWriter = initAlleleSummaryWriter();
+
+        // rank both the training and random peptide data using the newly created data and the random peptide distributions
+        for(Map.Entry<String, List<BindData>> entry : mAllelePeptideData.entrySet())
+        {
+            String allele = entry.getKey();
+            List<BindData> peptideBindData = entry.getValue();
+
+
+            BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
+
+            for(BindData bindData : peptideBindData)
+            {
+                bindData.Score = matrix.calcScore(bindData.Peptide);
+                bindData.RankPerc = randomDistribution.getScoreRank(allele, bindData.Score);
+            }
+
+            writeAlleleSummary(alleleWriter, allele);
+        }
+
+        closeBufferedWriter(alleleWriter);
+
+        NE_LOGGER.info("writing peptide scores");
+
+        writePeptideScores();
+    }
+
+    private List<BindScoreMatrix> buildBindingScoreData()
+    {
+        List<BindScoreMatrix> matrixList = Lists.newArrayList();
+
         BufferedWriter matrixWriter = mConfig.WriteScoreMatrix ?
                 initMatrixWriter(mConfig.formFilename("score_matrix"), mMaxPeptideLength) : null;
 
@@ -86,8 +129,6 @@ public class BindTrainer
                 initFrequencyWriter(mConfig.formFilename("single_freq_score")) : null;
 
         BufferedWriter pairWriter = mConfig.CalcPairs ? initPairDataWriter(mConfig.formFilename("pair_score_prob")) : null;
-
-        List<BindScoreMatrix> matrixList = Lists.newArrayList();
 
         for(Map.Entry<String,List<BindData>> entry : mAllelePeptideData.entrySet())
         {
@@ -138,43 +179,69 @@ public class BindTrainer
             }
         }
 
-        RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig);
+        closeBufferedWriter(matrixWriter);
+        closeBufferedWriter(freqWriter);
+        closeBufferedWriter(pairWriter);
 
-        if(!randomDistribution.hasData())
+        return matrixList;
+    }
+
+    private BufferedWriter initAlleleSummaryWriter()
+    {
+        try
         {
-            randomDistribution.buildDistribution(matrixList);
+            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("allele_summary"), false);
+            writer.write("Allele,TrainingCount,RandomCount,Auc,AucMcf");
+            writer.newLine();
+            return writer;
         }
-
-        // rank both the training and random peptide data using the newly created data and the random peptide distributions
-        for(Map.Entry<String, List<BindData>> entry : mAllelePeptideData.entrySet())
+        catch(IOException e)
         {
-            String allele = entry.getKey();
-            List<BindData> peptideBindData = entry.getValue();
+            NE_LOGGER.error("failed to init allele summary writer: {}", e.toString());
+            return null;
+        }
+    }
+
+    private void writeAlleleSummary(final BufferedWriter writer, final String allele)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            final List<BindData> peptideBindData = mAllelePeptideData.get(allele);
+
+            int trainingCount = 0;
+            int randomCount = 0;
 
             List<AucData> alleleAucData = Lists.newArrayList();
             List<AucData> alleleAucMcfData = Lists.newArrayList();
 
-            BindScoreMatrix matrix = matrixList.stream().filter(x -> x.Allele.equals(allele)).findFirst().orElse(null);
-
             for(BindData bindData : peptideBindData)
             {
-                bindData.Score = matrix.calcScore(bindData.Peptide);
-                bindData.RankPerc = randomDistribution.getScoreRank(allele, bindData.Score);
-                boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
+                if(bindData.isTraining())
+                    ++trainingCount;
+                else
+                    ++randomCount;
 
+                boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
                 alleleAucData.add(new AucData(isPositive, bindData.Score));
                 alleleAucMcfData.add(new AucData(isPositive, bindData.PredictedAffinity));
             }
 
-            NE_LOGGER.info(String.format("allele(%s) AUC(%.4f) mcfAUC(%.4f)",
-                    allele, AucCalc.calcAuc(alleleAucData, Level.TRACE), AucCalc.calcAuc(alleleAucMcfData, Level.TRACE)));
+            double auc = AucCalc.calcAuc(alleleAucData, Level.TRACE);
+            double aucMcf = AucCalc.calcAuc(alleleAucMcfData, Level.TRACE);
+
+            NE_LOGGER.info(String.format("allele(%s) peptides(train=%d, rand=%d) AUC(%.4f) mcfAUC(%.4f)",
+                    allele, trainingCount, randomCount, auc, aucMcf));
+
+            writer.write(String.format("%s,%d,%d,%.4f,%.4f", allele, trainingCount, randomCount, auc, aucMcf));
+            writer.newLine();
         }
-
-        writePeptideScores();
-
-        closeBufferedWriter(matrixWriter);
-        closeBufferedWriter(freqWriter);
-        closeBufferedWriter(pairWriter);
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write allele summary data: {}", e.toString());
+        }
     }
 
     private void writePeptideScores()
@@ -198,7 +265,8 @@ public class BindTrainer
                     if(mConfig.WritePeptideType == LIKELY_INCORRECT)
                     {
                         boolean expectBinds = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
-                        if(expectBinds != (bindData.RankPerc < 0.02))
+                        boolean inTopPerc = bindData.RankPerc < 0.02;
+                        if(expectBinds == inTopPerc)
                             continue;
                     }
                     else if(mConfig.WritePeptideType == TRAINING && !bindData.isTraining())

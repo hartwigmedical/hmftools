@@ -63,13 +63,14 @@ public final class AucCalc
             concordantPairs += remainingNeg;
         }
 
-        double totalPairs = posValues.size() * negValues.size();
-        double percConcordant = 100 * concordantPairs / totalPairs;
-        double percDiscordant = 100 * discordantPairs / totalPairs;
-        double percTied = 100 * tiedPairs / totalPairs;
+        long totalPairs = (long)posValues.size() * (long)negValues.size();
+        double totalPairsInv = 1.0 / totalPairs;
+        double percConcordant = concordantPairs * totalPairsInv;
+        double percDiscordant = discordantPairs * totalPairsInv;
+        double percTied = tiedPairs * totalPairsInv;
 
         // Area under curve (AUC) = (Percent Concordant + 0.5 * Percent Tied)/100
-        double auc = (percConcordant + 0.5 * percTied) / 100;
+        double auc = (percConcordant + 0.5 * percTied);
 
         if(auc < 0.5)
             auc = 1 - auc;
@@ -77,11 +78,16 @@ public final class AucCalc
         LOGGER.log(logLevel, String.format("inputs(pos=%d neg=%d) perc(con=%.4f dis=%.4f tied=%.4f) auc(%.4f)",
                 posValues.size(), negValues.size(), percConcordant, percDiscordant, percTied, auc));
 
-        /*
-        // slow method
-        concordantPairs = 0;
-        discordantPairs = 0;
-        tiedPairs = 0;
+        // runSlowMethod(posValues, negValues);
+
+        return auc;
+    }
+
+    private static void runSlowMethod(final List<Double> posValues, final List<Double> negValues)
+    {
+        int concordantPairs = 0;
+        int discordantPairs = 0;
+        int tiedPairs = 0;
 
         for(Double posValue : posValues)
         {
@@ -96,10 +102,17 @@ public final class AucCalc
             }
         }
 
-        LOGGER.log(logLevel, String.format("slow perc(con=%.4f dis=%.4f tied=%.4f) auc(%.4f)",
-                percConcordant, percDiscordant, percTied, auc));
-        */
+        double totalPairs = posValues.size() * negValues.size();
+        double percConcordant = 100 * concordantPairs / totalPairs;
+        double percDiscordant = 100 * discordantPairs / totalPairs;
+        double percTied = 100 * tiedPairs / totalPairs;
 
-        return auc;
+        // Area under curve (AUC) = (Percent Concordant + 0.5 * Percent Tied)/100
+        double auc = (percConcordant + 0.5 * percTied) / 100;
+
+        if(auc < 0.5)
+            auc = 1 - auc;
+
+        LOGGER.debug(String.format("slow perc(con=%.4f dis=%.4f tied=%.4f) auc(%.4f)", percConcordant, percDiscordant, percTied, auc));
     }
 }

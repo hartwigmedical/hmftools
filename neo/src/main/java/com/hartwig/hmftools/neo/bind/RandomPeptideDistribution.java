@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,6 +34,8 @@ public class RandomPeptideDistribution
     {
         mInputPeptidesFilename = config.RandomPeptidesFile;
 
+        mAlleleScoresMap = Maps.newHashMap();
+
         if(config.RandomPeptideDistributionFile != null)
         {
             mDistributionFilename = config.RandomPeptideDistributionFile;
@@ -43,9 +46,6 @@ public class RandomPeptideDistribution
             mDistributionFilename = config.formFilename("random_peptide_dist");
             mDataLoaded = false;
         }
-
-        mAlleleScoresMap = Maps.newHashMap();
-
     }
 
     public boolean hasData() { return mDataLoaded; }
@@ -89,7 +89,7 @@ public class RandomPeptideDistribution
         {
             final List<String> lines = Files.readAllLines(new File(mDistributionFilename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
             lines.remove(0);
 
             for(String line : lines)

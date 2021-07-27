@@ -5,7 +5,9 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
+import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
+import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
 
 import static org.apache.commons.math3.util.FastMath.log;
 
@@ -34,20 +36,12 @@ public class ScoringData
     private int mTotalBinds; // vs high affinity threshold
     private double mCalcTotalBinds; // vs high affinity threshold
 
-    private final Map<Character,Integer> mAminoAcidIndices;
-
     public ScoringData(final String allele, final int peptideLength, final CalcConstants calcConstants)
     {
         mAllele = allele;
         mCalcConstants = calcConstants;
         mPeptideCount = peptideLength;
         mAminoAcidCount = AMINO_ACIDS.size();
-        mAminoAcidIndices = Maps.newHashMap();
-
-        for(int i = 0; i < mAminoAcidCount; ++i)
-        {
-            mAminoAcidIndices.put(AMINO_ACIDS.get(i), i);
-        }
 
         mObservations = new int[mAminoAcidCount][mPeptideCount];
         mBindScoreTotals = new double[mAminoAcidCount][mPeptideCount];
@@ -87,7 +81,7 @@ public class ScoringData
             char aminoAcid = bindData.Peptide.charAt(pos);
             int aaIndex = aminoAcidIndex(aminoAcid);
 
-            if(aaIndex < 0)
+            if(aaIndex == INVALID_AMINO_ACID)
                 continue;
 
             ++mObservations[aaIndex][pos];
@@ -101,7 +95,7 @@ public class ScoringData
                     for(int pos2 = pos + 1; pos2 < bindData.Peptide.length(); ++pos2)
                     {
                         char aminoAcid2 = bindData.Peptide.charAt(pos2);
-                        if(aminoAcidIndex(aminoAcid2) < 0)
+                        if(aminoAcidIndex(aminoAcid2) == INVALID_AMINO_ACID)
                             continue;
 
                         updatePairData(aminoAcid, pos, aminoAcid2, pos2, levelScore, actualBind, predictedBind);
@@ -109,12 +103,6 @@ public class ScoringData
                 }
             }
         }
-    }
-
-    private int aminoAcidIndex(final Character aminoAcid)
-    {
-        Integer index = mAminoAcidIndices.get(aminoAcid);
-        return index != null ? index : -1;
     }
 
     public BindScoreMatrix createMatrix(final AminoAcidFrequency aminoAcidFrequency)

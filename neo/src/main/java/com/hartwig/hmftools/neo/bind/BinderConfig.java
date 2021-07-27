@@ -16,6 +16,7 @@ import org.apache.commons.compress.utils.Lists;
 public class BinderConfig
 {
     public final String TrainingDataFile;
+    public final String BindMatrixFile; // file with computed and cached binding matrix per allele
     public final String RandomPeptidesFile; // list of random peptides from the proteome
     public final String RandomPeptidePredictionsFile; // predictions per allele for random peptides
     public final String RandomPeptideDistributionFile; // internally scored and ranked distribuion of random peptides
@@ -34,6 +35,7 @@ public class BinderConfig
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
     private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
     private static final String RANDOM_PEPTIDE_DIST_FILE = "random_peptide_dist_file";
+    private static final String BIND_MATRIX_FILE = "bind_matrix_file";
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String OUTPUT_ID = "output_id";
 
@@ -53,6 +55,7 @@ public class BinderConfig
         RandomPeptidesFile = cmd.getOptionValue(RANDOM_PEPTIDES_FILE);
         RandomPeptidePredictionsFile = cmd.getOptionValue(RANDOM_PEPTIDE_PRED_FILE);
         RandomPeptideDistributionFile = cmd.getOptionValue(RANDOM_PEPTIDE_DIST_FILE);
+        BindMatrixFile = cmd.getOptionValue(BIND_MATRIX_FILE);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -91,6 +94,7 @@ public class BinderConfig
         options.addOption(RANDOM_PEPTIDES_FILE, true, "Random peptide file");
         options.addOption(RANDOM_PEPTIDE_DIST_FILE, true, "Random peptide distribution file");
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
+        options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
         options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
         options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");

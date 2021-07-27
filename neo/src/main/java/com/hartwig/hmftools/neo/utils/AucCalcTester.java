@@ -19,6 +19,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class AucCalcTester
@@ -59,7 +60,7 @@ public class AucCalcTester
 
             NE_LOGGER.info("loaded {} AUC items from file({})", aucDataList.size(), dataFile);
 
-            double auc = AucCalc.calcAuc(aucDataList);
+            double auc = AucCalc.calcAuc(aucDataList, Level.DEBUG);
 
             NE_LOGGER.info(String.format("AUC = %.4f", auc));
         }

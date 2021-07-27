@@ -1,17 +1,25 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
+import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
+import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
+import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 
 public class BindScoreMatrix
 {
     public final String Allele;
     public final int PeptideCount;
 
-    private final Map<Character,Integer> mAminoAcidIndices;
     private final double[][] mBindScores; // by amino acid and position
 
     private static final double INVALID_SCORE = -1000;
@@ -22,12 +30,6 @@ public class BindScoreMatrix
         PeptideCount = peptideLength;
 
         int aminoAcidCount = AMINO_ACIDS.size();
-        mAminoAcidIndices = Maps.newHashMap();
-
-        for(int i = 0; i < aminoAcidCount; ++i)
-        {
-            mAminoAcidIndices.put(AMINO_ACIDS.get(i), i);
-        }
 
         mBindScores = new double[aminoAcidCount][PeptideCount];
     }
@@ -45,9 +47,9 @@ public class BindScoreMatrix
         {
             char aminoAcid = peptide.charAt(i);
 
-            Integer aaIndex = mAminoAcidIndices.get(aminoAcid);
+            int aaIndex = aminoAcidIndex(aminoAcid);
 
-            if(aaIndex == null)
+            if(aaIndex == INVALID_AMINO_ACID)
                 return INVALID_SCORE;
 
             double aaPosScore = mBindScores[aaIndex][i];
@@ -56,5 +58,57 @@ public class BindScoreMatrix
         }
 
         return score;
+    }
+
+    public static List<BindScoreMatrix> loadFromCsv(final String filename)
+    {
+        List<BindScoreMatrix> matrixList = Lists.newArrayList();
+
+        BindScoreMatrix currentMatrix = null;
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            lines.remove(0);
+
+            int alleleIndex = fieldsIndexMap.get("Allele");
+            int peptideLenIndex = fieldsIndexMap.get("PeptideLength");
+            int aaIndex = fieldsIndexMap.get("AminoAcid");
+            int peptideStartIndex = aaIndex + 1;
+
+            for(String line : lines)
+            {
+                String[] items = line.split(DELIM, -1);
+
+                // Allele,PeptideLength,AminoAcid,P0,P1,P2,P3,P4,P5,P6,P7,P8
+                //B4001,9,A,1.0286,-4.7395,0.4656,-0.1505,-0.3065,-0.0971,-0.3378,0.4915,-3.4338
+                String allele = items[alleleIndex];
+
+                if(currentMatrix == null || !currentMatrix.Allele.equals(allele))
+                {
+                    int peptideLength = Integer.parseInt(items[peptideLenIndex]);
+                    currentMatrix = new BindScoreMatrix(allele, peptideLength);
+                    matrixList.add(currentMatrix);
+                }
+
+                char aminoAcid = items[aaIndex].charAt(0);
+                int aminoAcidIndex = aminoAcidIndex(aminoAcid);
+
+                int peptidePos = 0;
+                for(int i = peptideStartIndex; i < items.length; ++i, ++peptidePos)
+                {
+                    double value = Double.parseDouble(items[i]);
+                    currentMatrix.getBindScores()[aminoAcidIndex][peptidePos] = value;
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error(" failed to load matrix data file: {}" ,e.toString());
+        }
+
+        return matrixList;
     }
 }
