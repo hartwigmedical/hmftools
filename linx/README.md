@@ -811,7 +811,7 @@ Notes:
 (5) Coding Intronic to non-coding allowed only when transcript starts on 1st base of the next downstream exon - in this case we fuse to the first base of the gene which is allowed.
 
 ##### Special rules for IG rearrangements
-In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx requires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner. 
+In the special case of IG enhancer rearrangements, the rearrangement normally occurs either between the ‘D’ and ‘J’ region (due to RAG mediation D-J recombination failure – common in IGH-BCL2 fusions) or in the switch region just upstream of the constant regions (due to failure of isoform switching mechanisms – common in IGH-MYC rearrangements). In the former case, the Eµ enhancer is the likely driver of elevated expression whereas in the latter the driver is likely the alpha 1,2 & 3 regulatory region enhancer [ref: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6199666/]. To predict a relevant rearrangement, Linx onlyrequires that the breakend in IG is oriented downstream towards the enhancer regions and is is prior to the 1st coding base of the 3’ gene partner.   There is no requirement for consecutive splice acceptor and donors.
 
 ##### Special rules for single breakends which align to a site which forms a pathogenic fusion
 The post processing steps of GRIDSS annotate the best alignments for the insert sequence of single breakends which cannot be uniquely mapped. If any single breakend has an alignment which would create fusion matching a known fusion or a known IG rearrangement in our knowledge base then that fusion is called as if the single breakend was a translocation to that alignment. 
@@ -835,6 +835,7 @@ Each candidate chained splice acceptor and splice donor fusion pair may have mul
 - Best 5’ partner transcript ranked by canonical, then longest protein coding, then longest
 - If multiple chains link the same 2 genes then they are prioritised again according to the above logic.
 
+For IG enhancer rearrangenemts, the canonical transcript is reported for all 3' gene partners.
 
 ##### Reportable fusions
 In addition to predicting fusions, Linx also tries to identify likely viable pathogenic fusions and marks as reportable. To maximise precision whilst ensuring high impact fusions are always likely to be reported, the criteria vary by fusion type with more relaxed criteria for known pathogenic pairs due to high prior likelihood. High impact promiscuous fusion partners which may be clinically relevant (including NTRK1-3, BRAF, RET, ROS1, ALK) also have more relaxed criteria
