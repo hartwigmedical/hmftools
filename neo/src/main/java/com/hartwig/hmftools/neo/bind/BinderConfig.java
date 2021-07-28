@@ -26,6 +26,7 @@ public class BinderConfig
     public final List<String> SpecificAlleles;
 
     public final CalcConstants Constants;
+    public final boolean RunScoring;
     public final boolean CalcPairs;
     public final boolean WriteFrequencyData;
     public final boolean WriteScoreMatrix;
@@ -44,6 +45,7 @@ public class BinderConfig
     private static final String BINDING_AFFINITY_HIGH = "binding_aff_high";
     private static final String APPLY_SCALED_COUNT = "apply_scaled";
 
+    private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_SCORE_MATRIX = "write_score_matrix";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
@@ -75,6 +77,7 @@ public class BinderConfig
         }
 
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
+        RunScoring = cmd.hasOption(RUN_SCORING);
         WriteScoreMatrix = cmd.hasOption(WRITE_SCORE_MATRIX);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
@@ -99,6 +102,7 @@ public class BinderConfig
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
         options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");
         options.addOption(MAX_AFFINITY, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
+        options.addOption(RUN_SCORING, false, "Use binding matrix data to score training and random peptide data");
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_SCORE_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");

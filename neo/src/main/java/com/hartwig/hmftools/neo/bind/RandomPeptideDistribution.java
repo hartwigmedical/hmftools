@@ -131,7 +131,8 @@ public class RandomPeptideDistribution
                 refRandomPeptides.remove(0);
 
                 NE_LOGGER.info("loaded {} random peptides", refRandomPeptides.size());
-            } catch(IOException e)
+            }
+            catch(IOException e)
             {
                 NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
                 return;
@@ -157,7 +158,9 @@ public class RandomPeptideDistribution
                 if(randomPeptides.isEmpty())
                 {
                     randomPeptides = alleleBindDataMap.get(matrix.Allele).stream()
-                            .filter(x -> x.isRandom()).map(x -> x.Peptide).collect(Collectors.toList());
+                            .filter(x -> x.isRandom())
+                            .filter(x -> x.peptideLength() == matrix.PeptideCount)
+                            .map(x -> x.Peptide).collect(Collectors.toList());
                 }
 
                 int peptideCount = randomPeptides.size();
