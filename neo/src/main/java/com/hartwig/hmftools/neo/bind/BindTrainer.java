@@ -86,7 +86,7 @@ public class BindTrainer
 
         if(!randomDistribution.hasData())
         {
-            randomDistribution.buildDistribution(matrixList);
+            randomDistribution.buildDistribution(matrixList, mAllelePeptideData);
         }
 
         NE_LOGGER.info("writing allele summaries");
@@ -126,7 +126,7 @@ public class BindTrainer
                 initMatrixWriter(mConfig.formFilename("score_matrix"), mMaxPeptideLength) : null;
 
         BufferedWriter freqWriter = mConfig.WriteFrequencyData ?
-                initFrequencyWriter(mConfig.formFilename("single_freq_score")) : null;
+                initFrequencyWriter(mConfig.formFilename("pos_frequency")) : null;
 
         BufferedWriter pairWriter = mConfig.CalcPairs ? initPairDataWriter(mConfig.formFilename("pair_score_prob")) : null;
 
@@ -385,6 +385,9 @@ public class BindTrainer
 
                     continue;
                 }
+
+                if(!mAllelePeptideData.containsKey(allele))
+                    continue;
 
                 BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, predAffinityIndex, mConfig.Constants.MaxAffinity);
 

@@ -43,11 +43,11 @@ public class BinderConfig
     private static final String BINDING_AFFINITY_LOW = "binding_affinity_low";
     private static final String BINDING_AFFINITY_HIGH = "binding_aff_high";
     private static final String APPLY_SCALED_COUNT = "apply_scaled";
-    private static final String CALC_PAIRS = "calc_pairs";
 
     private static final String WRITE_SCORE_MATRIX = "write_score_matrix";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
+    private static final String WRITE_PAIRS_DATA = "write_pairs";
 
     public BinderConfig(final CommandLine cmd)
     {
@@ -74,7 +74,7 @@ public class BinderConfig
             NE_LOGGER.info("filtering for {} alleles: {}", SpecificAlleles.size(), SpecificAlleles);
         }
 
-        CalcPairs = cmd.hasOption(CALC_PAIRS);
+        CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
         WriteScoreMatrix = cmd.hasOption(WRITE_SCORE_MATRIX);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
@@ -99,7 +99,7 @@ public class BinderConfig
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
         options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");
         options.addOption(MAX_AFFINITY, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
-        options.addOption(CALC_PAIRS, false, "Calculate amino-acid pairs and their coocurrence");
+        options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_SCORE_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
