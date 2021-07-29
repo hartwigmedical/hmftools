@@ -22,6 +22,7 @@ import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,11 +88,12 @@ class ActionableEvidenceFactory {
     public Set<ActionableEvent> toActionableEvents(@NotNull ViccEntry entry) {
         Set<ActionableEvent> actionableEvents = Sets.newHashSet();
 
+        boolean isSupportive = isSupportiveEntry(entry);
         String treatment = reformatDrugLabels(entry.association().drugLabels());
         EvidenceLevel level = resolveLevel(entry.association().evidenceLabel());
         EvidenceDirection direction = resolveDirection(entry.association().responseType());
 
-        if (treatment != null && level != null && direction != null) {
+        if (isSupportive && treatment != null && level != null && direction != null) {
             Set<String> urls = resolveUrls(entry.association().evidence().info());
 
             Map<String, Set<String>> cancerTypeToDoidsMap = buildCancerTypeToDoidsMap(resolveCancerType(entry.association().phenotype()),
@@ -117,6 +119,24 @@ class ActionableEvidenceFactory {
         }
 
         return actionableEvents;
+    }
+
+    private static boolean isSupportiveEntry(@NotNull ViccEntry entry) {
+        // CIViC contributes entries that seem "sensitive" or "resistant" but are not "supportive" and rather do not support the evidence.
+        // We do not want to generate actionability for them (see also INC-92)
+        if (entry.kbSpecificObject() instanceof Civic) {
+            String direction = ((Civic) entry.kbSpecificObject()).evidenceItem().evidenceDirection();
+            if (direction == null || direction.equals("Supports")) {
+                return true;
+            } else if (direction.equals("Does Not Support")) {
+                return false;
+            } else {
+                LOGGER.warn("Unrecognized CIViC direction entry '{}' in entry {}", direction, entry);
+                return true;
+            }
+        } else {
+            return true;
+        }
     }
 
     public void evaluateCuration() {
