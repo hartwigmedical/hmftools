@@ -87,8 +87,8 @@ public class StudyChecker
         {
             BufferedWriter writer = createBufferedWriter(mOutputDir + "study_check_probs.csv", false);
 
-            writer.write("Allele,Position,AminoAcid,Study,Expected,Prob");
-            writer.write(",TotalBinds,WithStudy,WithAminoAcid,WithAminoAcidNoStudy,WithStudyNoAcid,Both,Neither");
+            writer.write("Allele,Position,AminoAcid,Study,Expected,Both,Prob");
+            writer.write(",TotalBinds,WithStudy,WithAminoAcid,WithAminoAcidNoStudy,WithStudyNoAcid,Neither");
             writer.newLine();
 
             return writer;
@@ -101,7 +101,7 @@ public class StudyChecker
         return null;
     }
 
-    private static final double LOW_PROB = 1e-30;
+    private static final double LOW_PROB = 1e-6;
 
     private void evaluate(final String allele, final List<BindStudyData> studyDataList, int position)
     {
@@ -165,19 +165,16 @@ public class StudyChecker
 
                     double expected = (withAminoAcid * withStudy) / (double) totalBinds;
 
-                    if(both <= expected)
-                        continue;
-
-                    double prob = mFisherEt.getCumulativeP(both, withAminoAcidNoStudy, withStudyNoAcid, neither);
+                    double prob = mFisherEt.calc(both, withAminoAcidNoStudy, withStudyNoAcid, neither, expected);
 
                     if(prob < LOW_PROB)
                     {
                         NE_LOGGER.debug(String.format("allele(%s) position(%d) aminoAcids(%s) study(%s) expected(%.3f) prob(%4.3e)",
                                 allele, position, aminoAcid, study, expected, prob));
 
-                        mWriter.write(String.format("%s,%s,%s,%s,%.2f,%4.3e,%d,%d,%d,%d,%d,%d,%d",
-                                allele, position, aminoAcid, study, expected, prob, totalBinds,
-                                withStudy, withAminoAcid, withAminoAcidNoStudy, withStudyNoAcid, both, neither));
+                        mWriter.write(String.format("%s,%s,%s,%s,%.2f,%d,%4.3e,%d,%d,%d,%d,%d,%d",
+                                allele, position, aminoAcid, study, expected, both, prob, totalBinds,
+                                withStudy, withAminoAcid, withAminoAcidNoStudy, withStudyNoAcid, neither));
                         mWriter.newLine();
                     }
                 }
