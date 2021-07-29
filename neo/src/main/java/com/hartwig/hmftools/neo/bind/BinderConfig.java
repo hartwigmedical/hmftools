@@ -5,6 +5,9 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BlosumMapping.BLOSUM_FILE;
+import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
+import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,25 +23,24 @@ public class BinderConfig
     public final String RandomPeptidesFile; // list of random peptides from the proteome
     public final String RandomPeptidePredictionsFile; // predictions per allele for random peptides
     public final String RandomPeptideDistributionFile; // internally scored and ranked distribuion of random peptides
-    public final String OutputDir;
-    public final String OutputId;
-
-    public final List<String> SpecificAlleles;
 
     public final CalcConstants Constants;
     public final boolean RunScoring;
     public final boolean CalcPairs;
+
+    public final String OutputDir;
+    public final String OutputId;
     public final boolean WriteFrequencyData;
     public final boolean WriteScoreMatrix;
     public final PeptideWriteType WritePeptideType;
+
+    public final List<String> SpecificAlleles;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
     private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
     private static final String RANDOM_PEPTIDE_DIST_FILE = "random_peptide_dist_file";
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
-    private static final String SPECIFIC_ALLELES = "specific_alleles";
-    private static final String OUTPUT_ID = "output_id";
 
     private static final String MAX_AFFINITY = "max_affinity";
     private static final String BINDING_AFFINITY_LOW = "binding_affinity_low";
@@ -50,6 +52,9 @@ public class BinderConfig
     private static final String WRITE_FREQ_DATA = "write_freq_data";
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
+
+    private static final String SPECIFIC_ALLELES = "specific_alleles";
+    private static final String OUTPUT_ID = "output_id";
 
     public BinderConfig(final CommandLine cmd)
     {
@@ -98,6 +103,10 @@ public class BinderConfig
         options.addOption(RANDOM_PEPTIDE_DIST_FILE, true, "Random peptide distribution file");
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
+        options.addOption(BLOSUM_FILE, true, "Blosum mapping file");
+        options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
+        options.addOption(POSITION_HLA_AA_FILE, true, "Position HLA allele amino acid mapping file");
+
         options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
         options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");

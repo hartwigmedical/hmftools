@@ -57,7 +57,6 @@ public class PeptideLengthAnalyser
 
         loadData(dataFile);
 
-        // int maxDataPoints = mAlleleDataMap.values().stream().mapToInt(x -> x.size()).max().orElse(0);
         mFisherEt = new FisherExactTest();
         mFisherEt.initialise(1000000);
     }
@@ -103,7 +102,7 @@ public class PeptideLengthAnalyser
 
     private static final double LOW_PROB = 1e-6;
 
-    private void evaluate(final String allele, final List<BindPositionData> studyDataList, int position)
+    private void evaluate(final String allele, final List<BindPositionData> posDataList, int position)
     {
         try
         {
@@ -119,7 +118,7 @@ public class PeptideLengthAnalyser
                     int both = 0;
                     int neither = 0;
 
-                    for(BindPositionData data : studyDataList)
+                    for(BindPositionData data : posDataList)
                     {
                         if(data.Position != position)
                             continue;
@@ -225,7 +224,7 @@ public class PeptideLengthAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(NMER_FREQ_FILE, true, "Nmer frequency data file");
+        options.addOption(NMER_FREQ_FILE, true, "N-mer frequency data file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         addLoggingOptions(options);
 
