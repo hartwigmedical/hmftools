@@ -377,6 +377,9 @@ public class BindTrainer
 
     private boolean loadRandomPredictionsData()
     {
+        if(mConfig.RandomPeptidePredictionsFile == null)
+            return true; // not required
+
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.RandomPeptidePredictionsFile));

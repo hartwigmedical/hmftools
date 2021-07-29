@@ -31,21 +31,21 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class StudyChecker
+public class PeptideLengthAnalyser
 {
-    private final Map<String,List<BindStudyData>> mAlleleDataMap;
+    private final Map<String,List<BindPositionData>> mAlleleDataMap;
     private final Set<Integer> mPositions;
-    private final Set<String> mStudies;
+    private final Set<Integer> mPeptideLengths;
     private final String mOutputDir;
     private final BufferedWriter mWriter;
 
     private final FisherExactTest mFisherEt;
 
-    private static final String STUDY_DATA_FILE = "study_data_file";
+    private static final String NMER_FREQ_FILE = "nmer_freq_file";
 
-    public StudyChecker(final CommandLine cmd)
+    public PeptideLengthAnalyser(final CommandLine cmd)
     {
-        String dataFile = cmd.getOptionValue(STUDY_DATA_FILE);
+        String dataFile = cmd.getOptionValue(NMER_FREQ_FILE);
 
         mOutputDir = parseOutputDir(cmd);
 
@@ -53,9 +53,9 @@ public class StudyChecker
 
         mAlleleDataMap = Maps.newHashMap();
         mPositions = Sets.newHashSet();
-        mStudies = Sets.newHashSet();
+        mPeptideLengths = Sets.newHashSet();
 
-        loadTrainingData(dataFile);
+        loadData(dataFile);
 
         // int maxDataPoints = mAlleleDataMap.values().stream().mapToInt(x -> x.size()).max().orElse(0);
         mFisherEt = new FisherExactTest();
@@ -66,7 +66,7 @@ public class StudyChecker
     {
         int maxPosition = mPositions.stream().mapToInt(x -> x.intValue()).max().orElse(0);
 
-        for(Map.Entry<String,List<BindStudyData>> entry : mAlleleDataMap.entrySet())
+        for(Map.Entry<String,List<BindPositionData>> entry : mAlleleDataMap.entrySet())
         {
             String allele = entry.getKey();
 
@@ -85,10 +85,10 @@ public class StudyChecker
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(mOutputDir + "study_check_probs.csv", false);
+            BufferedWriter writer = createBufferedWriter(mOutputDir + "peptide_length_probs.csv", false);
 
-            writer.write("Allele,Position,AminoAcid,Study,Expected,Both,Prob");
-            writer.write(",TotalBinds,WithStudy,WithAminoAcid,WithAminoAcidNoStudy,WithStudyNoAcid,Neither");
+            writer.write("Allele,Position,AminoAcid,PeptideLength,Expected,Both,Prob");
+            writer.write(",TotalBinds,WithLength,WithAminoAcid,WithAminoAcidNoLength,WithLengthNoAcid,Neither");
             writer.newLine();
 
             return writer;
@@ -103,44 +103,44 @@ public class StudyChecker
 
     private static final double LOW_PROB = 1e-6;
 
-    private void evaluate(final String allele, final List<BindStudyData> studyDataList, int position)
+    private void evaluate(final String allele, final List<BindPositionData> studyDataList, int position)
     {
         try
         {
             for(Character aminoAcid : AMINO_ACIDS)
             {
-                for(String study : mStudies)
+                for(Integer peptideLength : mPeptideLengths)
                 {
                     int totalBinds = 0;
-                    int withStudy = 0;
+                    int withLength = 0;
                     int withAminoAcid = 0;
-                    int withAminoAcidNoStudy = 0;
-                    int withStudyNoAcid = 0;
+                    int withAminoAcidNoLength = 0;
+                    int withLengthNoAcid = 0;
                     int both = 0;
                     int neither = 0;
 
-                    for(BindStudyData data : studyDataList)
+                    for(BindPositionData data : studyDataList)
                     {
                         if(data.Position != position)
                             continue;
 
                         totalBinds += data.BindCount;
 
-                        if(data.AminoAcid == aminoAcid && data.Study.equals(study))
+                        if(data.AminoAcid == aminoAcid && data.PeptideLength == peptideLength)
                         {
                             withAminoAcid += data.BindCount;
-                            withStudy += data.BindCount;
+                            withLength += data.BindCount;
                             both += data.BindCount;
                         }
-                        else if(data.AminoAcid == aminoAcid && !data.Study.equals(study))
+                        else if(data.AminoAcid == aminoAcid && data.PeptideLength != peptideLength)
                         {
                             withAminoAcid += data.BindCount;
-                            withAminoAcidNoStudy += data.BindCount;
+                            withAminoAcidNoLength += data.BindCount;
                         }
-                        else if(data.AminoAcid != aminoAcid && data.Study.equals(study))
+                        else if(data.AminoAcid != aminoAcid && data.PeptideLength == peptideLength)
                         {
-                            withStudyNoAcid += data.BindCount;
-                            withStudy += data.BindCount;
+                            withLengthNoAcid += data.BindCount;
+                            withLength += data.BindCount;
                         }
                         else
                         {
@@ -148,18 +148,18 @@ public class StudyChecker
                         }
                     }
 
-                    double expected = (withAminoAcid * withStudy) / (double) totalBinds;
+                    double expected = (withAminoAcid * withLength) / (double) totalBinds;
 
-                    double prob = mFisherEt.calc(both, withAminoAcidNoStudy, withStudyNoAcid, neither, expected);
+                    double prob = mFisherEt.calc(both, withAminoAcidNoLength, withLengthNoAcid, neither, expected);
 
                     if(prob < LOW_PROB)
                     {
-                        NE_LOGGER.debug(String.format("allele(%s) position(%d) aminoAcids(%s) study(%s) expected(%.3f) prob(%4.3e)",
-                                allele, position, aminoAcid, study, expected, prob));
+                        NE_LOGGER.debug(String.format("allele(%s) position(%d) aminoAcids(%s) pepLen(%d) expected(%.3f) prob(%4.3e)",
+                                allele, position, aminoAcid, peptideLength, expected, prob));
 
-                        mWriter.write(String.format("%s,%s,%s,%s,%.2f,%d,%4.3e,%d,%d,%d,%d,%d,%d",
-                                allele, position, aminoAcid, study, expected, both, prob, totalBinds,
-                                withStudy, withAminoAcid, withAminoAcidNoStudy, withStudyNoAcid, neither));
+                        mWriter.write(String.format("%s,%s,%s,%d,%.2f,%d,%4.3e,%d,%d,%d,%d,%d,%d",
+                                allele, position, aminoAcid, peptideLength, expected, both, prob, totalBinds,
+                                withLength, withAminoAcid, withAminoAcidNoLength, withLengthNoAcid, neither));
                         mWriter.newLine();
                     }
                 }
@@ -171,7 +171,7 @@ public class StudyChecker
         }
     }
 
-    private void loadTrainingData(final String filename)
+    private void loadData(final String filename)
     {
         try
         {
@@ -181,13 +181,13 @@ public class StudyChecker
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get("Allele");
-            int studyIndex = fieldsIndexMap.get("Study");
+            int pepLenIndex = fieldsIndexMap.get("PeptideLength");
             int posIndex = fieldsIndexMap.get("Position");
             int aaIndex = fieldsIndexMap.get("AminoAcid");
             int bcIndex = fieldsIndexMap.get("BindCount");
 
             String currentAllele = "";
-            List<BindStudyData> currentBindList = null;
+            List<BindPositionData> currentBindList = null;
 
             for(String line : lines)
             {
@@ -202,17 +202,18 @@ public class StudyChecker
                     mAlleleDataMap.put(allele, currentBindList);
                 }
 
-                BindStudyData data = new BindStudyData(
-                        allele, items[studyIndex], items[aaIndex].charAt(0), Integer.parseInt(items[posIndex]), Integer.parseInt(items[bcIndex]));
+                BindPositionData data = new BindPositionData(
+                        allele, Integer.parseInt(items[pepLenIndex]), items[aaIndex].charAt(0),
+                        Integer.parseInt(items[posIndex]), Integer.parseInt(items[bcIndex]));
 
                 mPositions.add(data.Position);
-                mStudies.add(data.Study);
+                mPeptideLengths.add(data.PeptideLength);
 
                 currentBindList.add(data);
             }
 
-            NE_LOGGER.info("loaded {} alleles, {} positions, {} studies with {} study data items from file({})",
-                    mAlleleDataMap.size(), mPositions.size(), mStudies.size(),
+            NE_LOGGER.info("loaded {} alleles, {} positions, {} peptide lengths with {} study data items from file({})",
+                    mAlleleDataMap.size(), mPositions.size(), mPeptideLengths.size(),
                     mAlleleDataMap.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
         catch(IOException e)
@@ -224,7 +225,7 @@ public class StudyChecker
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(STUDY_DATA_FILE, true, "Study binding data");
+        options.addOption(NMER_FREQ_FILE, true, "Nmer frequency data file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         addLoggingOptions(options);
 
@@ -232,8 +233,8 @@ public class StudyChecker
 
         setLogLevel(cmd);
 
-        StudyChecker studyChecker = new StudyChecker(cmd);
-        studyChecker.run();
+        PeptideLengthAnalyser peptideLengthAnalyser = new PeptideLengthAnalyser(cmd);
+        peptideLengthAnalyser.run();
     }
 
     @NotNull
@@ -243,18 +244,18 @@ public class StudyChecker
         return parser.parse(options, args);
     }
 
-    private class BindStudyData
+    private class BindPositionData
     {
         public final String Allele;
-        public final String Study;
+        public final int PeptideLength;
         public final Character AminoAcid;
         public final int Position;
         public final int BindCount;
 
-        public BindStudyData(final String allele, final String study, final char aminoAcid, final int position, final int bindCount)
+        public BindPositionData(final String allele, final int peptideLength, final char aminoAcid, final int position, final int bindCount)
         {
             Allele = allele;
-            Study = study;
+            PeptideLength = peptideLength;
             AminoAcid = aminoAcid;
             Position = position;
             BindCount = bindCount;
