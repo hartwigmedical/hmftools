@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static java.lang.Math.max;
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindData.RANDOM_SOURCE;
+import static com.hartwig.hmftools.neo.bind.BlosumMapping.BLOSUM_FILE;
+import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
+import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 import static com.hartwig.hmftools.neo.bind.PeptideWriteType.LIKELY_INCORRECT;
 import static com.hartwig.hmftools.neo.bind.PeptideWriteType.TRAINING;
 import static com.hartwig.hmftools.neo.bind.ScoringData.initMatrixWriter;
@@ -52,6 +51,9 @@ public class BindTrainer
     private final List<BindScoreMatrix> mBindMatrixList;
     private final Set<Integer> mDistinctPeptideLengths;
 
+    private final BlosumMapping mBlosumMapping;
+    private final HlaSequences mHlaSequences;
+
     public BindTrainer(final CommandLine cmd)
     {
         mConfig = new BinderConfig(cmd);
@@ -60,6 +62,12 @@ public class BindTrainer
 
         mAminoAcidFrequency = new AminoAcidFrequency(cmd);
         mAminoAcidFrequency.loadFrequencies();
+
+        mBlosumMapping = new BlosumMapping();
+        mBlosumMapping.load(cmd.getOptionValue(BLOSUM_FILE));
+
+        mHlaSequences = new HlaSequences();
+        mHlaSequences.load(cmd.getOptionValue(POSITION_HLA_AA_FILE), cmd.getOptionValue(HLA_DEFINITIONS_FILE));
 
         mBindMatrixList = Lists.newArrayList();
     }
