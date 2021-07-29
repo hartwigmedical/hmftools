@@ -17,7 +17,7 @@ public class ReportWriterTest {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportWriter.class);
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
