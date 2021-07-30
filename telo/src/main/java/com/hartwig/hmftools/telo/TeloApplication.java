@@ -5,10 +5,15 @@ import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
 import static com.hartwig.hmftools.telo.TeloUtils.createPartitions;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -24,6 +29,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.samtools.SamReader;
 
 public class TeloApplication
 {
@@ -54,16 +61,21 @@ public class TeloApplication
         }
 
         TE_LOGGER.info("starting telomeric analysis");
+        Instant start = Instant.now();
 
         processBam();
 
         mWriter.close();
 
-        TE_LOGGER.info("Telo run complete");
+        Instant finish = Instant.now();
+        long seconds = Duration.between(start, finish).getSeconds();
+        TE_LOGGER.info("Telo run complete, time taken: {}m {}s",  seconds / 60, seconds % 60);
     }
 
     private void processBam()
     {
+        final ConcurrentMap<Thread, SamReader> threadSamReaders = new ConcurrentHashMap<>();
+        final ConcurrentMap<String, ReadGroup> incompleteReadGroups = new ConcurrentHashMap<>();;
         final List<BamReader> bamReaders = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
 
@@ -74,7 +86,7 @@ public class TeloApplication
 
         for(BaseRegion partition : partitions)
         {
-            BamReader bamReader = new BamReader(mConfig, mWriter);
+            BamReader bamReader = new BamReader(mConfig, mWriter, threadSamReaders, incompleteReadGroups);
             bamReader.setBaseRegion(partition);
 
             bamReaders.add(bamReader);
@@ -89,24 +101,12 @@ public class TeloApplication
 
         TE_LOGGER.info("initial BAM file processing complete");
 
-        // gather up incomplete read groups
-        Map<String,ReadGroup> incompleteReadGroups = Maps.newHashMap();
-        List<ReadGroup> completeGroups = Lists.newArrayList();
-        bamReaders.forEach(x -> ReadGroup.mergeReadGroups(incompleteReadGroups, completeGroups, x.getIncompleteReadGroups()));
-
-        TE_LOGGER.info("complete groups({}) from merge, incomplete groups({})", completeGroups.size(), incompleteReadGroups.size());
-
-        completeGroups.forEach(x -> mWriter.writeReadGroup(x));
-
-        // now process unmapped and read groups with a non-telomeric read-pair
-        BamReader finalBamReader = new BamReader(mConfig, mWriter);
-        finalBamReader.setIncompleteReadGroups(incompleteReadGroups);
-
+        BamReader finalBamReader = new BamReader(mConfig, mWriter, threadSamReaders, incompleteReadGroups);
         finalBamReader.findTelomereContent();
 
-        TE_LOGGER.info("writing final {} incomplete groups", finalBamReader.getIncompleteReadGroups().size());
+        TE_LOGGER.info("writing final {} incomplete groups", incompleteReadGroups.size());
 
-        finalBamReader.getIncompleteReadGroups().values().forEach(x -> mWriter.writeReadGroup(x));
+        incompleteReadGroups.values().forEach(x -> mWriter.writeReadGroup(x));
     }
 
     public static void main(final String... args) throws IOException

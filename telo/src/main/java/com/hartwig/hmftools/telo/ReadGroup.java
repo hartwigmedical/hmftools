@@ -5,30 +5,27 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 
+import htsjdk.samtools.SAMRecord;
+
 public class ReadGroup
 {
-    public final List<ReadRecord> Reads;
+    public final List<SAMRecord> Reads;
 
-    public ReadGroup(final List<ReadRecord> reads)
+    public ReadGroup(final List<SAMRecord> reads)
     {
         Reads = Lists.newArrayListWithCapacity(3);
         Reads.addAll(reads);
     }
 
-    public ReadGroup(final ReadRecord read)
+    public ReadGroup(final SAMRecord read)
     {
         Reads = Lists.newArrayListWithCapacity(3);
         Reads.add(read);
     }
 
-    public final String id() { return Reads.get(0).Id; }
+    public final String id() { return Reads.get(0).getReadName(); }
 
-    public boolean isComplete() { return Reads.size() == 3 || (Reads.size() == 2 && !hasSuppAlignment(Reads)); }
-
-    public static boolean hasSuppAlignment(final List<ReadRecord> reads)
-    {
-        return reads.stream().anyMatch(x -> x.hasSuppAlignment());
-    }
+    public boolean isComplete() { return Reads.size() == 2 || !Reads.get(0).getReadPairedFlag(); }
 
     public void merge(final ReadGroup other)
     {
@@ -36,31 +33,6 @@ public class ReadGroup
     }
 
     public String toString() { return String.format("%s reads(%d) complete(%s)", id(), Reads.size(), isComplete()); }
-
-    public String findOtherChromosome(final String chromosome)
-    {
-        for(ReadRecord read : Reads)
-        {
-            if(!read.mateChromosome().equals(chromosome))
-                return read.mateChromosome();
-
-            if(read.hasSuppAlignment())
-                return suppAlignmentChromosome(read.getSuppAlignment());
-        }
-
-        return null;
-    }
-
-    public static final String SUPP_ALIGNMENT_DELIM = ",";
-
-    public static String suppAlignmentChromosome(final String suppAlignment)
-    {
-        if(suppAlignment == null)
-            return null;
-
-        final String[] items = suppAlignment.split(SUPP_ALIGNMENT_DELIM);
-        return items.length >= 5 ? items[0] : null;
-    }
 
     public static void mergeReadGroups(
             final Map<String,ReadGroup> partialGroups, final List<ReadGroup> completeGroups, final Map<String,ReadGroup> sourceMap)
