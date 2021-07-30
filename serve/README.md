@@ -314,7 +314,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   
 ## Version History and Download Links
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.6)
- - Add filter in VICC extraction to ignore evidence that does not support the direction when generating actionability.
+  - Add filter in VICC extraction to ignore evidence that does not support the direction when generating actionability.
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.5)
   - "Advanced solid tumor" in CKB is mapped to DOID 162 rather than 0050586 to avoid missing it for tumors with unknown tumor type
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.4)
