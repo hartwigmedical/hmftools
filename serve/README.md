@@ -192,6 +192,8 @@ evidence that is inconsistent with HMF driver model.
 
 For VICC the following curation and filtering is applied prior to presenting the data to SERVE:
  1. General filtering of mutations that are undetectable when analyzing DNA or RNA. Examples are phosphorylation and methylation.
+ 1. Determining whether the evidence is supportive of the specified direction. Eg if evidence "does not support" sensitivity
+ we do not generate actionable results from this evidence.
  1. Filtering of specific mutations:
     - Mutations that remove the stop codon. These are simply not interpreted yet by the SERVE main algorithm.
     - Synonymous mutations in coding regions are assumed to be benign by SERVE and ignored.
@@ -311,6 +313,8 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.6)
+ - Add filter in VICC extraction to ignore evidence that does not support the direction when generating actionability.
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.5)
   - "Advanced solid tumor" in CKB is mapped to DOID 162 rather than 0050586 to avoid missing it for tumors with unknown tumor type
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.4)
