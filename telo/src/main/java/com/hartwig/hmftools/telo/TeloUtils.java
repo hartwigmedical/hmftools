@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.telo;
 
-import static com.hartwig.hmftools.telo.TeloConstants.CANONICAL_TELOMERE_SEQUENCES;
-import static com.hartwig.hmftools.telo.TeloConstants.DEFAULT_MIN_TELE_SEQ_COUNT;
-import static com.hartwig.hmftools.telo.TeloConstants.DEFAULT_PARTITION_SIZE;
+import static com.hartwig.hmftools.telo.TeloConstants.*;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -14,33 +13,31 @@ import org.apache.commons.compress.utils.Lists;
 
 public class TeloUtils
 {
+    static final List<String> CANONICAL_TELOMERE_SEQUENCES = com.google.common.collect.Lists.newArrayList(
+            String.join("", Collections.nCopies(DEFAULT_MIN_TELE_SEQ_COUNT, CANONICAL_TELOMERE_SEQ)),
+            String.join("", Collections.nCopies(DEFAULT_MIN_TELE_SEQ_COUNT, CANONICAL_TELOMERE_SEQ_REV)));
+
     public static boolean hasTelomericContent(final String readBases)
     {
-        return hasTelomericContent(readBases, CANONICAL_TELOMERE_SEQUENCES, DEFAULT_MIN_TELE_SEQ_COUNT);
+        return hasTelomericContent(readBases, CANONICAL_TELOMERE_SEQUENCES);
     }
 
-    public static boolean hasTelomericContent(final String readBases, final List<String> sequences, int requiredCount)
+    public static boolean hasTelomericContent(final String readBases, final List<String> sequences)
     {
         for(String teloSeq : sequences)
         {
-            int matchCount = 0;
-            int seqLength = teloSeq.length();
             int matchIndex = readBases.indexOf(teloSeq);
 
-            while(matchIndex != -1)
+            if (matchIndex != -1)
             {
-                ++matchCount;
-                matchIndex = readBases.indexOf(teloSeq, matchIndex + seqLength);
-
-                if(matchCount >= requiredCount)
-                    return true;
+                return true;
             }
         }
 
         return false;
     }
 
-        public static List<BaseRegion> createPartitions(final TeloConfig config)
+    public static List<BaseRegion> createPartitions(final TeloConfig config)
     {
         RefGenomeCoordinates refGenomeCoords = RefGenomeCoordinates.COORDS_37;
 
@@ -67,7 +64,7 @@ public class TeloUtils
 
                 partitions.add(new BaseRegion(chrStr, startPos, endPos));
 
-                startPos += partitionSize;
+                startPos = endPos + 1;
             }
         }
 

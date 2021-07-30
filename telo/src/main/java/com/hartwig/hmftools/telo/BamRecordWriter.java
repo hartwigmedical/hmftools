@@ -5,28 +5,44 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+
 public class BamRecordWriter
 {
-    private final BufferedWriter mReadWriter;
-
+    private final BufferedWriter mCsvWriter;
+    private final SAMFileWriter mBamFileWriter;
 
     public BamRecordWriter(final TeloConfig config)
     {
-        final String outputFile = config.OutputDir + "telo_read_data.csv";
-        mReadWriter = outputFile != null ? createReadDataWriter(outputFile) : null;
+        String sampleBamFileBasename = new File(config.SampleBamFile).getName();
+        final String csvOutputFile = config.OutputDir + "/" + sampleBamFileBasename + ".telo_read_data.csv";
+        mCsvWriter = createReadDataWriter(csvOutputFile);
+
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile)).open(new File(config.SampleBamFile));
+
+        final String bamOutputFile = config.OutputDir + "/" + sampleBamFileBasename + ".telo_bam.bam";
+        mBamFileWriter = new SAMFileWriterFactory().makeBAMWriter(samReader.getFileHeader(), false, new File(bamOutputFile));
     }
 
-    public void close() { closeBufferedWriter(mReadWriter); }
+    public void close()
+    {
+        closeBufferedWriter(mCsvWriter);
+        mBamFileWriter.close();
+    }
 
     private static BufferedWriter createReadDataWriter(final String outputFile)
     {
         try
         {
-
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("ReadId,Chromosome,PosStart,PosEnd,MateChr,MatePosStart,HasTeloContent");
             writer.write(",Cigar,InsertSize,FirstInPair,Unmapped,MateUnmapped,Flags,SuppData,CompleteFrag,ReadBases");
@@ -42,35 +58,45 @@ public class BamRecordWriter
 
     public synchronized void writeReadGroup(final ReadGroup readGroup)
     {
-        if(mReadWriter == null)
-            return;
-
-        try
+        if(mCsvWriter != null)
         {
-            boolean completeGroup = readGroup.isComplete();
-
-            for(ReadRecord readRecord : readGroup.Reads)
+            try
             {
-                mReadWriter.write(String.format("%s,%s,%d,%d,%s,%d,%s",
-                        readRecord.Id, readRecord.Chromosome, readRecord.PosStart, readRecord.PosEnd,
-                        readRecord.mateChromosome(), readRecord.mateStartPosition(), readRecord.hasTeloContent()));
+                boolean completeGroup = readGroup.isComplete();
 
-                String suppAlignmentData = readRecord.hasSuppAlignment() ? readRecord.getSuppAlignment().replace(",", ";") : "";
-                suppAlignmentData = suppAlignmentData.replace(",", ";");
+                for(SAMRecord samRecord : readGroup.Reads)
+                {
+                    ReadRecord readRecord = ReadRecord.from(samRecord);
 
-                mReadWriter.write(String.format(",%s,%d,%s,%s,%s,%d",
-                        readRecord.Cigar.toString(), readRecord.fragmentInsertSize(), readRecord.isFirstOfPair(),
-                        readRecord.isUnmapped(), readRecord.isMateUnmapped(), readRecord.flags()));
+                    mCsvWriter.write(String.format("%s,%s,%d,%d,%s,%d,%s",
+                            readRecord.Id, readRecord.Chromosome, readRecord.PosStart, readRecord.PosEnd,
+                            readRecord.mateChromosome(), readRecord.mateStartPosition(), readRecord.hasTeloContent()));
 
-                mReadWriter.write(String.format(",%s,%s,%s",
-                        suppAlignmentData, completeGroup, readRecord.ReadBases));
+                    String suppAlignmentData = readRecord.hasSuppAlignment() ? readRecord.getSuppAlignment().replace(",", ";") : "";
+                    suppAlignmentData = suppAlignmentData.replace(",", ";");
 
-                mReadWriter.newLine();
+                    mCsvWriter.write(String.format(",%s,%d,%s,%s,%s,%d",
+                            readRecord.Cigar.toString(), readRecord.fragmentInsertSize(), readRecord.isFirstOfPair(),
+                            readRecord.isUnmapped(), readRecord.isMateUnmapped(), readRecord.flags()));
+
+                    mCsvWriter.write(String.format(",%s,%s,%s",
+                            suppAlignmentData, completeGroup, readRecord.ReadBases));
+
+                    mCsvWriter.newLine();
+                }
+            }
+            catch(IOException e)
+            {
+                TE_LOGGER.error("failed to write read data file: {}", e.toString());
             }
         }
-        catch(IOException e)
+
+        if(mBamFileWriter != null)
         {
-            TE_LOGGER.error("failed to write read data file: {}", e.toString());
+            for(SAMRecord samRecord : readGroup.Reads)
+            {
+                mBamFileWriter.addAlignment(samRecord);
+            }
         }
     }
 
