@@ -2,14 +2,17 @@ package com.hartwig.hmftools.telo;
 
 import static com.hartwig.hmftools.telo.TeloConstants.*;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
+
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.SamReader;
 
 public class TeloUtils
 {
@@ -39,27 +42,29 @@ public class TeloUtils
 
     public static List<BaseRegion> createPartitions(final TeloConfig config)
     {
-        RefGenomeCoordinates refGenomeCoords = RefGenomeCoordinates.COORDS_37;
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile)).open(new File(config.SampleBamFile));
+
+        List<SAMSequenceRecord> samSequences = samReader.getFileHeader().getSequenceDictionary().getSequences();
 
         List<BaseRegion> partitions = Lists.newArrayList();
 
         int partitionSize = DEFAULT_PARTITION_SIZE;
 
-        for(HumanChromosome chromosome : HumanChromosome.values())
+        for(SAMSequenceRecord seq : samSequences)
         {
-            String chrStr = chromosome.toString();
+            String chrStr = seq.getSequenceName();
 
             if(!config.SpecificChromosomes.isEmpty() && !config.SpecificChromosomes.contains(chrStr))
                 continue;
 
-            int chromosomeLength = refGenomeCoords.lengths().get(chromosome).intValue();
+            int chromosomeLength = seq.getSequenceLength();
 
             int startPos = 0;
             while(startPos < chromosomeLength)
             {
                 int endPos = startPos + partitionSize - 1;
 
-                if(endPos + partitionSize * 0.5 > chromosomeLength)
+                if(endPos + partitionSize * 0.2 > chromosomeLength)
                     endPos = chromosomeLength;
 
                 partitions.add(new BaseRegion(chrStr, startPos, endPos));

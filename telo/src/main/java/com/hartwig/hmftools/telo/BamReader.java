@@ -6,21 +6,20 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class BamReader implements Callable
+public class BamReader implements Callable<Void>
 {
     private final TeloConfig mConfig;
 
@@ -55,10 +54,10 @@ public class BamReader implements Callable
     public Map<String,ReadGroup> getIncompleteReadGroups() { return mIncompleteReadGroups; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         findTelomereContent();
-        return (long)0;
+        return null;
     }
 
     public void findTelomereContent()
@@ -137,15 +136,7 @@ public class BamReader implements Callable
 
                 if(!read.getMateUnmappedFlag())
                 {
-                    if(HumanChromosome.contains(read.getMateReferenceName()) && read.getMateAlignmentStart() > 0)
-                    {
-                        mateRegions.add(new BaseRegion(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart() + 1));
-                        break;
-                    }
-                    else
-                    {
-                        TE_LOGGER.info("mate region: {}:{} not found in chromosome", read.getMateReferenceName(), read.getMateAlignmentStart());
-                    }
+                    mateRegions.add(new BaseRegion(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart() + 1));
                 }
             }
         }
@@ -159,7 +150,7 @@ public class BamReader implements Callable
         }
     }
 
-    private boolean hasTelomericContent(final SAMRecord record)
+    private boolean hasTelomericContent(@NotNull final SAMRecord record)
     {
         return TeloUtils.hasTelomericContent(record.getReadString());
     }
@@ -186,7 +177,7 @@ public class BamReader implements Callable
         return true;
     }
 
-    private void processReadRecord(final SAMRecord record)
+    private void processReadRecord(@NotNull final SAMRecord record)
     {
         // we discard any supplementary / secondary alignments
         if(record.isSecondaryOrSupplementary())
@@ -233,13 +224,9 @@ public class BamReader implements Callable
 
     private void processCompleteReadGroup(final ReadGroup readGroup)
     {
+        // we must check the result of the remove, reason is that it is multi threaded
         if (mIncompleteReadGroups.remove(readGroup.id()) != null)
         {
-            if(readGroup.id().equals("HSQ1008:208:C0VH6ACXX:7:1212:6586:41485"))
-            {
-                TE_LOGGER.info("here");
-            }
-
             if (readGroup.Reads.size() > 2)
             {
                 TE_LOGGER.info("read group size: {}", readGroup.Reads.size());
