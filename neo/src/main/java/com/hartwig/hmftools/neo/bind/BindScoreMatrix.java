@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 public class BindScoreMatrix
 {
     public final String Allele;
-    public final int PeptideCount;
+    public final int PeptideLength;
 
     private final double[][] mBindScores; // by amino acid and position
 
@@ -27,18 +27,18 @@ public class BindScoreMatrix
     public BindScoreMatrix(final String allele, final int peptideLength)
     {
         Allele = allele;
-        PeptideCount = peptideLength;
+        PeptideLength = peptideLength;
 
         int aminoAcidCount = AMINO_ACIDS.size();
 
-        mBindScores = new double[aminoAcidCount][PeptideCount];
+        mBindScores = new double[aminoAcidCount][PeptideLength];
     }
 
     public final double[][] getBindScores() { return mBindScores; }
 
     public double calcScore(final String peptide)
     {
-        if(peptide.length() != PeptideCount)
+        if(peptide.length() != PeptideLength)
             return INVALID_SCORE; // for now
 
         double score = 0;

@@ -1,109 +1,141 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
 import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 
 public class BlosumMapping
 {
+    // mappings from one letter to another, indexed by the standard order so consistent with other data structures which reference AAs
     private final int[][] mMappings;
-    private boolean mIsValid;
-
-    public static final String BLOSUM_FILE = "blosum_file";
 
     public BlosumMapping()
     {
         int aminoAcidCount = BindConstants.AMINO_ACIDS.size();
         mMappings = new int[aminoAcidCount][aminoAcidCount];
-        mIsValid = false;
+        load();
     }
 
-    public boolean isValid() { return mIsValid; }
+    public int selfMapping(final int aaIndex)
+    {
+        return mMappings[aaIndex][aaIndex];
+    }
+
+    public int selfMapping(final char aa)
+    {
+        int aaIndex = aminoAcidIndex(aa);
+        return mMappings[aaIndex][aaIndex];
+    }
+
+    public int map(int aa1Index, int aa2Index)
+    {
+        return mMappings[aa1Index][aa2Index];
+    }
 
     public int map(final char aa1, final char aa2)
     {
         int aa1Index = aminoAcidIndex(aa1);
         int aa2Index = aminoAcidIndex(aa2);
 
-        if(aa1Index == INVALID_AMINO_ACID || aa2Index == INVALID_AMINO_ACID)
-            return 0;
+        // better to fail than return a potentially incorrect value
+        //if(aa1Index == INVALID_AMINO_ACID || aa2Index == INVALID_AMINO_ACID)
+        //    return 0;
 
         return mMappings[aa1Index][aa2Index];
     }
 
-    public void load(final String filename)
+    public double calcSequenceBlosumScore(final String sequence)
     {
-        if(filename == null || !Files.exists(Paths.get(filename)))
+        int total = 0;
+
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            char aminoAcid = sequence.charAt(0);
+            int mapping = selfMapping(aminoAcid);
+            total += Math.pow(2, mapping);
+        }
+
+        return total;
+    }
+
+    public double calcSequenceBlosumScore(final String seq1, final String seq2)
+    {
+        if(seq1.length() != seq2.length())
+            return 0;
+
+        if(seq1.equals(seq2))
+            return calcSequenceBlosumScore(seq1);
+
+        double total = 0;
+
+        for(int i = 0; i < seq1.length(); ++i)
+        {
+            char aa1 = seq1.charAt(0);
+            char aa2 = seq2.charAt(0);
+            int mapping = map(aa1, aa2);
+            total += Math.pow(2, mapping);
+        }
+
+        return total;
+    }
+
+    private void load()
+    {
+        final List<String> lines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream("/ref/blosum62.csv")))
+                .lines().collect(Collectors.toList());
+
+        String[] columns = lines.get(0).split(DELIM);
+        lines.remove(0);
+
+        if(columns.length != 21)
             return;
 
-        try
+        Map<Integer,Integer> columnAaMap = Maps.newHashMap();
+
+        for(int i = 1; i < columns.length; ++i)
         {
-            final List<String> lines = Files.readAllLines(new File(filename).toPath());
+            char aa = columns[i].charAt(0);
+            int aaIndex = aminoAcidIndex(aa);
 
-            String[] columns = lines.get(0).split(DELIM);
-            lines.remove(0);
-
-            if(columns.length != 21)
+            if(aaIndex == INVALID_AMINO_ACID)
                 return;
 
-            Map<Integer,Integer> columnAaMap = Maps.newHashMap();
-
-            for(int i = 1; i < columns.length; ++i)
-            {
-                char aa = columns[i].charAt(0);
-                int aaIndex = aminoAcidIndex(aa);
-
-                if(aaIndex == INVALID_AMINO_ACID)
-                    return;
-
-                columnAaMap.put(i, aaIndex);
-            }
-
-            for(String line : lines)
-            {
-                String[] items = line.split(DELIM);
-
-                if(items.length != 21)
-                    return;
-
-                char aa1 = items[0].charAt(0);
-                int aa1index = aminoAcidIndex(aa1);
-
-                if(aa1index == INVALID_AMINO_ACID)
-                    return;
-
-                for(int i = 1; i < items.length; ++i)
-                {
-                    int correlation = Integer.parseInt(items[i]);
-                    int aa2index = columnAaMap.get(i);
-
-                    if(aa2index == INVALID_AMINO_ACID)
-                        return;
-
-                    mMappings[aa1index][aa2index] = correlation;
-                }
-            }
-
-            NE_LOGGER.info("loaded blosum mappings from {}", filename);
+            columnAaMap.put(i, aaIndex);
         }
-        catch(IOException e)
+
+        for(String line : lines)
         {
-            NE_LOGGER.error("failed to load BLOSUM mapping file({}): {}", filename, e.toString());
-        }
+            String[] items = line.split(DELIM);
 
-        mIsValid = true;
+            if(items.length != 21)
+                return;
+
+            char aa1 = items[0].charAt(0);
+            int aa1index = aminoAcidIndex(aa1);
+
+            if(aa1index == INVALID_AMINO_ACID)
+                return;
+
+            for(int i = 1; i < items.length; ++i)
+            {
+                int correlation = Integer.parseInt(items[i]);
+                int aa2index = columnAaMap.get(i);
+
+                if(aa2index == INVALID_AMINO_ACID)
+                    return;
+
+                mMappings[aa1index][aa2index] = correlation;
+            }
+        }
     }
 }

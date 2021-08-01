@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BlosumMapping.BLOSUM_FILE;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 
@@ -68,6 +70,7 @@ public class BinderConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         Constants = new CalcConstants(
+                DEFAULT_PEPTIDE_LENGTH_WEIGHT, DEFAULT_ALLELE_MOTIF_WEIGHT, DEFAULT_WEIGHT_EXPONENT,
                 Double.parseDouble(cmd.getOptionValue(MAX_AFFINITY, "50000")),
                 Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_LOW, "100")),
                 Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, "500")),
@@ -103,7 +106,6 @@ public class BinderConfig
         options.addOption(RANDOM_PEPTIDE_DIST_FILE, true, "Random peptide distribution file");
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
-        options.addOption(BLOSUM_FILE, true, "Blosum mapping file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         options.addOption(POSITION_HLA_AA_FILE, true, "Position HLA allele amino acid mapping file");
 

@@ -5,7 +5,7 @@ public class BindData
     public final String Allele;
     public final String Peptide;
     public final double Affinity;
-    public final double PredictedAffinity;
+    public final double PredictedAffinity; // eg from MCF or another tool, only used for comparative purposes
     public final String Source;
 
     public double Score;

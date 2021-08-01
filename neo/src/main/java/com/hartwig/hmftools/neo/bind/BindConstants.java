@@ -29,8 +29,13 @@ public final class BindConstants
         return index != null ? index : INVALID_AMINO_ACID;
     }
 
-    public static final int MAX_PEPTIDE_LENGTH = 15;
+    public static final int REF_PEPTIDE_LENGTH = 12;
+    public static final int REF_PEPTIDE_LEFT_FIXED_POS = 4;
 
     public static final double MIN_OBSERVED_AA_POS_FREQ = 0.001;
+
+    public static final double DEFAULT_PEPTIDE_LENGTH_WEIGHT = 50;
+    public static final double DEFAULT_ALLELE_MOTIF_WEIGHT = 100;
+    public static final double DEFAULT_WEIGHT_EXPONENT = 1.5;
 
 }

@@ -34,6 +34,14 @@ public class HlaSequences
 
     public boolean isValid() { return mIsValid; }
 
+    public String getSequence(final String allele, int peptidePosition)
+    {
+        List<String> posSequences = mAllelePositionSequences.get(allele);
+        return posSequences != null && posSequences.size() > peptidePosition ? posSequences.get(peptidePosition) : null;
+    }
+
+    public Map<String,List<String>> getAllelePositionSequences() { return mAllelePositionSequences; }
+
     public void load(final String hlaPositionsFile, final String hlaDefinitionsFile)
     {
         mIsValid = loadHlaPositions(hlaPositionsFile);

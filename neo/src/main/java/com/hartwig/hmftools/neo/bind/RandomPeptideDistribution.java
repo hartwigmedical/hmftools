@@ -3,7 +3,6 @@ package com.hartwig.hmftools.neo.bind;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -151,7 +150,7 @@ public class RandomPeptideDistribution
             for(BindScoreMatrix matrix : matrixList)
             {
                 NE_LOGGER.info("building distribution for allele({}) peptideLength({})",
-                        matrix.Allele, matrix.PeptideCount);
+                        matrix.Allele, matrix.PeptideLength);
 
                 List<String> randomPeptides = Lists.newArrayList(refRandomPeptides);
 
@@ -159,7 +158,7 @@ public class RandomPeptideDistribution
                 {
                     randomPeptides = alleleBindDataMap.get(matrix.Allele).stream()
                             .filter(x -> x.isRandom())
-                            .filter(x -> x.peptideLength() == matrix.PeptideCount)
+                            .filter(x -> x.peptideLength() == matrix.PeptideLength)
                             .map(x -> x.Peptide).collect(Collectors.toList());
                 }
 
@@ -209,12 +208,12 @@ public class RandomPeptideDistribution
                         double avgScore = scoreTotal / currentScoreCount;
 
                         writer.write(String.format("%s,%d,%f,%.4f,%d,%d",
-                                matrix.Allele, matrix.PeptideCount, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
+                                matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
 
                         //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
                         writer.newLine();
 
-                        scoresDistributions.add(new ScoreDistributionData(matrix.Allele, matrix.PeptideCount, currentSizeTotal, avgScore));
+                        scoresDistributions.add(new ScoreDistributionData(matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore));
 
                         scoreTotal = 0;
                         currentScoreCount = 0;
