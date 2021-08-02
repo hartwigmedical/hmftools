@@ -118,7 +118,8 @@ public class RandomPeptideDistribution
         return true;
     }
 
-    public void buildDistribution(final List<BindScoreMatrix> matrixList, final Map<String,List<BindData>> alleleBindDataMap)
+    public void buildDistribution(
+            final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap, final Map<String,List<BindData>> alleleBindDataMap)
     {
         List<String> refRandomPeptides = Lists.newArrayList();
 
@@ -137,6 +138,16 @@ public class RandomPeptideDistribution
                 return;
             }
         }
+        else
+        {
+            // take the random peptides from any of the provided alleles??
+            /*
+            randomPeptides = alleleBindDataMap.get(matrix.Allele).stream()
+                .filter(x -> x.isRandom())
+                .filter(x -> x.peptideLength() == matrix.PeptideLength)
+                .map(x -> x.Peptide).collect(Collectors.toList());
+             */
+        }
 
         try
         {
@@ -147,20 +158,17 @@ public class RandomPeptideDistribution
             writer.newLine();
 
             // score each against each allele and build up a percentiles for each
-            for(BindScoreMatrix matrix : matrixList)
+            for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
             {
+                final String allele = alleleEntry.getKey();
+                final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
+
+                BindScoreMatrix matrix = peptideLengthMatrixMap.get(9);
+
                 NE_LOGGER.info("building distribution for allele({}) peptideLength({})",
                         matrix.Allele, matrix.PeptideLength);
 
                 List<String> randomPeptides = Lists.newArrayList(refRandomPeptides);
-
-                if(randomPeptides.isEmpty())
-                {
-                    randomPeptides = alleleBindDataMap.get(matrix.Allele).stream()
-                            .filter(x -> x.isRandom())
-                            .filter(x -> x.peptideLength() == matrix.PeptideLength)
-                            .map(x -> x.Peptide).collect(Collectors.toList());
-                }
 
                 int peptideCount = randomPeptides.size();
 

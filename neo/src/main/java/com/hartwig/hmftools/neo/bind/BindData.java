@@ -8,8 +8,8 @@ public class BindData
     public final double PredictedAffinity; // eg from MCF or another tool, only used for comparative purposes
     public final String Source;
 
-    public double Score;
-    public double RankPerc;
+    private double mScore;
+    private double mRankPerc;
 
     public static final String DELIM = ",";
     public static final String RANDOM_SOURCE = "Random";
@@ -22,13 +22,23 @@ public class BindData
         PredictedAffinity = predictedAffinity;
         Source = source;
 
-        Score = 0;
-        RankPerc = 0;
+        mScore = 0;
+        mRankPerc = -1;
     }
 
     public int peptideLength() { return Peptide.length(); }
     public boolean isRandom() { return Source.equals(RANDOM_SOURCE); }
     public boolean isTraining() { return !isRandom(); }
+
+    public void setScoreData(double score, double rankPerc)
+    {
+        mScore = score;
+        mRankPerc = rankPerc;
+    }
+
+    public double getScore() { return mScore; }
+    public double getRankPerc() { return mRankPerc; }
+
 
     public String toString()
     {

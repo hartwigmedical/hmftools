@@ -8,17 +8,19 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.neo.bind.BindConstants;
 
 import org.apache.commons.cli.CommandLine;
@@ -66,34 +68,23 @@ public class AminoAcidFrequency
 
     public void loadFrequencies()
     {
-        if(mAminoAcidFreqFile == null)
-            return;
+        final List<String> lines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream("/ref/amino_acid_frequencies.csv")))
+                .lines().collect(Collectors.toList());
 
-        try
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        lines.remove(0);
+
+        int aaIndex = fieldsIndexMap.get("AminoAcid");
+        int percentIndex = fieldsIndexMap.get("Percent");
+
+        for(String line : lines)
         {
-            final List<String> lines = Files.readAllLines(new File(mAminoAcidFreqFile).toPath());
+            final String[] items = line.split(DELIMITER, -1);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
-
-            int aaIndex = fieldsIndexMap.get("AminoAcid");
-            int percentIndex = fieldsIndexMap.get("Percent");
-
-            for(String line : lines)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                char aminoAcid = items[aaIndex].charAt(0);
-                double percent = Double.parseDouble(items[percentIndex]);
-                mAminoAcidFrequencies.put(aminoAcid, percent);
-            }
-
-            NE_LOGGER.info("loaded {} amino-acid frequencies from file({})",
-                    mAminoAcidFrequencies.size(), mAminoAcidFreqFile);
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to load amino-acid frequencies from file: {}", e.toString());
+            char aminoAcid = items[aaIndex].charAt(0);
+            double percent = Double.parseDouble(items[percentIndex]);
+            mAminoAcidFrequencies.put(aminoAcid, percent);
         }
     }
 

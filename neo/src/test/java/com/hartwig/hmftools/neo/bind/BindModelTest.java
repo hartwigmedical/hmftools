@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
@@ -158,19 +159,18 @@ public class BindModelTest
     {
         BindCountData bindCountsA1 = new BindCountData(TEST_ALLELE_1, 9);
 
-        int pos = 3;
         String peptide = "AAAAAAAAA";
 
-        int pepLen8Count = 100;
-        for(int i = 0; i < pepLen8Count; ++i)
+        int pepLenA1Count = 100;
+        for(int i = 0; i < pepLenA1Count; ++i)
         {
             bindCountsA1.processBindingPeptide(peptide);
         }
 
         BindCountData bindCountsA2 = new BindCountData(TEST_ALLELE_2, 9);
 
-        int pepLen9Count = 400;
-        for(int i = 0; i < pepLen9Count; ++i)
+        int pepLenA2Count = 400;
+        for(int i = 0; i < pepLenA2Count; ++i)
         {
             bindCountsA2.processBindingPeptide(peptide);
         }
@@ -194,20 +194,24 @@ public class BindModelTest
         bindCountsA1.buildWeightedCounts(Lists.newArrayList(bindCountsA1) , calcConstants);
         bindCountsA2.buildWeightedCounts(Lists.newArrayList(bindCountsA2), calcConstants);
 
-        bindCountsA1.buildFinalWeightedCounts(bindCounts, calcConstants, blosum, hlaSequences);
-        bindCountsA2.buildFinalWeightedCounts(bindCounts, calcConstants, blosum, hlaSequences);
+        Map<String,Integer> alleleTotalCounts = Maps.newHashMap();
+        alleleTotalCounts.put(TEST_ALLELE_1, pepLenA1Count);
+        alleleTotalCounts.put(TEST_ALLELE_2, pepLenA2Count);
+
+        bindCountsA1.buildFinalWeightedCounts(bindCounts, alleleTotalCounts, calcConstants, blosum, hlaSequences);
+        bindCountsA2.buildFinalWeightedCounts(bindCounts, alleleTotalCounts, calcConstants, blosum, hlaSequences);
 
         int aaIndex = aminoAcidIndex('A');
 
-        assertEquals(300.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][0], 0.1); // same sequence
-        assertEquals(103.1, bindCountsA1.getFinalWeightedCounts()[aaIndex][1], 0.1); // A & D
-        assertEquals(112.5, bindCountsA1.getFinalWeightedCounts()[aaIndex][3], 0.1); // A & E
-        assertEquals(300.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][4], 0.1); // A & E
+        assertEquals(180.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][0], 0.1); // same sequence
+        assertEquals(101.3, bindCountsA1.getFinalWeightedCounts()[aaIndex][1], 0.1); // A & D
+        assertEquals(102.5, bindCountsA1.getFinalWeightedCounts()[aaIndex][2], 0.1); // A & E
+        assertEquals(105.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][3], 0.1); // D & E
+        assertEquals(180.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][4], 0.1); // same seq
 
-        assertEquals(420.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][0], 0.1); // same sequence
-        assertEquals(400.1, bindCountsA2.getFinalWeightedCounts()[aaIndex][1], 0.1); // same sequence
-        assertEquals(402.5, bindCountsA2.getFinalWeightedCounts()[aaIndex][3], 0.1); // same sequence
-        assertEquals(420.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][4], 0.1); // same sequence
+        assertEquals(450.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][0], 0.1);
+        assertEquals(400.2, bindCountsA2.getFinalWeightedCounts()[aaIndex][1], 0.1);
+        assertEquals(406.3, bindCountsA2.getFinalWeightedCounts()[aaIndex][3], 0.1);
+        assertEquals(450.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][4], 0.1);
     }
-
 }

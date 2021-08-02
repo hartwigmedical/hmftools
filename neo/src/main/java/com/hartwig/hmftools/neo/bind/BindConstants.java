@@ -30,9 +30,10 @@ public final class BindConstants
     }
 
     public static final int REF_PEPTIDE_LENGTH = 12;
+    public static final int ALLELE_POS_MAPPING_PEPTIDE_LENGTH = 9;
     public static final int REF_PEPTIDE_LEFT_FIXED_POS = 4;
 
-    public static final double MIN_OBSERVED_AA_POS_FREQ = 0.001;
+    public static final double MIN_OBSERVED_AA_POS_FREQ = 0.0005;
 
     public static final double DEFAULT_PEPTIDE_LENGTH_WEIGHT = 50;
     public static final double DEFAULT_ALLELE_MOTIF_WEIGHT = 100;

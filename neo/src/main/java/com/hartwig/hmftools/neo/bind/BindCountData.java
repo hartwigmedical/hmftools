@@ -6,6 +6,7 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindConstants.ALLELE_POS_MAPPING_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
@@ -195,7 +196,7 @@ public class BindCountData
     }
 
     public void buildFinalWeightedCounts(
-            final List<BindCountData> allBindCounts, final CalcConstants calcConst,
+            final List<BindCountData> allBindCounts, final Map<String,Integer> alleleTotalCounts, final CalcConstants calcConst,
             final BlosumMapping blosumMapping, final HlaSequences hlaSequences)
     {
         // calculate blosum similarity at this position vs all the other alleles from matching peptide lengths
@@ -203,11 +204,24 @@ public class BindCountData
         // WCount(A,L,P,AA) = LWCount(A,L,P,AA) + SUM(a<>A)  [ LWCount(a,L,P,AA)
         // * (2^(LogSim(m,M)) /  MAX(i=all motifs)[2^(LogSim(i,M))]] * [1 / ( 1+ Obs(A,L)/MHW)^E)]
 
-        double observationsWeight = 1 / pow(1 + mTotalBinds / calcConst.AlleleWeight, calcConst.WeightExponent);
-
         for(int pos = 0; pos < PeptideLength; ++pos)
         {
-            String positionMotif = hlaSequences.getSequence(Allele, pos);
+            // pos needs to be mapped to the 9-mer allele position peptide-position mapping
+            int refPos = peptidePositionToRef(REF_PEPTIDE_LENGTH, PeptideLength, pos);
+            int mappingPos = refPeptidePositionToActual(REF_PEPTIDE_LENGTH, ALLELE_POS_MAPPING_PEPTIDE_LENGTH, refPos);
+
+            if(mappingPos == INVALID_POS)
+            {
+                // cannot use other alleles
+                for(int aa = 0; aa < mAminoAcidCount; ++aa)
+                {
+                    mFinalWeightedCounts[aa][pos] = mWeightedCounts[aa][pos];
+                }
+
+                continue;
+            }
+
+            String positionMotif = hlaSequences.getSequence(Allele, mappingPos);
 
             if(positionMotif == null)
                 continue;
@@ -228,7 +242,7 @@ public class BindCountData
                     if(otherCount == 0)
                         continue;
 
-                    String otherPositionMotif = hlaSequences.getSequence(otherBindCounts.Allele, pos);
+                    String otherPositionMotif = hlaSequences.getSequence(otherBindCounts.Allele, mappingPos);
 
                     double motifSimilarity = 1;
 
@@ -238,6 +252,9 @@ public class BindCountData
                         motifSimilarity = crossAlleleScore / selfScore;
                     }
 
+                    int alleleCount = alleleTotalCounts.get(otherBindCounts.Allele);
+                    double observationsWeight = 1 / pow(1 + alleleCount / calcConst.AlleleWeight, calcConst.WeightExponent);
+
                     double otherWeightedCount = otherCount * observationsWeight * motifSimilarity;
                     mFinalWeightedCounts[aa][pos] += otherWeightedCount;
                 }
@@ -245,12 +262,15 @@ public class BindCountData
         }
     }
 
-    public BindScoreMatrix createMatrix(final AminoAcidFrequency aminoAcidFrequency)
+    public BindScoreMatrix createMatrix(final AminoAcidFrequency aminoAcidFrequency, final Map<Integer,Integer> peptideLengthFrequency)
     {
         NE_LOGGER.debug("creating allele({}) peptideLength({}) matrix data", Allele, PeptideLength);
 
         BindScoreMatrix matrix = new BindScoreMatrix(Allele, PeptideLength);
         final double[][] data = matrix.getBindScores();
+
+        double alleleBinds = peptideLengthFrequency.values().stream().mapToInt(x -> x.intValue()).sum();
+        double alleleLengthPerc = mTotalBinds / alleleBinds;
 
         for(int aa = 0; aa < mAminoAcidCount; ++aa)
         {
@@ -259,6 +279,14 @@ public class BindCountData
 
             for(int pos = 0; pos < PeptideLength; ++pos)
             {
+                // Peptide Weight = 1/L * Sum[Log2(P(x,i)/Q(x) * Obs(L,A) / SUM[Obs(l,A)])]
+
+                double adjustedCount = max(mFinalWeightedCounts[aa][pos], mTotalBinds * MIN_OBSERVED_AA_POS_FREQ);
+                double weightedCount = log(2, adjustedCount / aaFrequency);
+                double posWeight = weightedCount * (1.0 / PeptideLength); // * (mTotalBinds / alleleBinds);
+                data[aa][pos] = posWeight;
+
+                /* simple original scoring
                 double totalBinds = mBindCounts[aa][pos];
                 double freqPerc = totalBinds / mCalcTotalBinds;
                 freqPerc = max(freqPerc, MIN_OBSERVED_AA_POS_FREQ);
@@ -267,19 +295,23 @@ public class BindCountData
                 double score = log(2, freqPerc / aaFrequency);
 
                 data[aa][pos] = score;
+                */
             }
         }
 
         return matrix;
     }
 
-    public static BufferedWriter initMatrixWriter(final String filename, int peptideLength)
+    public static BufferedWriter initMatrixWriter(final String filename, int peptideLength, boolean writeCounts)
     {
         try
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Allele,PeptideLength,AminoAcid");
+
+            if(writeCounts)
+                writer.write(",DataType");
 
             for(int i = 0; i < peptideLength; ++i)
             {
@@ -297,7 +329,7 @@ public class BindCountData
         }
     }
 
-    public void writeMatrixData(final BufferedWriter writer, final BindScoreMatrix matrix, int maxPeptideLength)
+    public void writeMatrixData(final BufferedWriter writer, final BindScoreMatrix matrix, int maxPeptideLength, boolean writeCounts)
     {
         NE_LOGGER.debug("writing allele({}) matrix data", Allele);
 
@@ -311,18 +343,52 @@ public class BindCountData
 
                 writer.write(String.format("%s,%d,%c", Allele, PeptideLength, aminoAcid));
 
+                if(writeCounts)
+                    writer.write(",PosWeights");
+
                 for(int pos = 0; pos < maxPeptideLength; ++pos)
                 {
-                    if(pos >= PeptideLength)
+                    if(pos < PeptideLength)
+                    {
+                        writer.write(String.format(",%.6f", data[aa][pos]));
+                    }
+                    else
                     {
                         writer.write(",0.0");
-                        continue;
                     }
-
-                    writer.write(String.format(",%.4f", data[aa][pos]));
                 }
 
                 writer.newLine();
+            }
+
+            if(writeCounts)
+            {
+                for(int i = 0; i <= 2; ++i)
+                {
+                    final double[][] counts = (i == 0) ? mBindCounts : (i == 1) ? mWeightedCounts : mFinalWeightedCounts;
+                    String dataType = (i == 0) ? "BindCounts" : (i == 1) ? "PeptideLengthWeighted" : "AlleleMotifWeighted";
+
+                    for(int aa = 0; aa < mAminoAcidCount; ++aa)
+                    {
+                        char aminoAcid = AMINO_ACIDS.get(aa);
+
+                        writer.write(String.format("%s,%d,%c,%s", Allele, PeptideLength, aminoAcid, dataType));
+
+                        for(int pos = 0; pos < maxPeptideLength; ++pos)
+                        {
+                            if(pos < PeptideLength)
+                            {
+                                writer.write(String.format(",%.1f", counts[aa][pos]));
+                            }
+                            else
+                            {
+                                writer.write(",0.0");
+                            }
+                        }
+
+                        writer.newLine();
+                    }
+                }
             }
         }
         catch (IOException e)
