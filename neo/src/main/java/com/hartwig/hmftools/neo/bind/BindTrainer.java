@@ -47,8 +47,8 @@ public class BindTrainer
     private final Map<String,List<BindData>> mAllelePeptideData;
     private final AminoAcidFrequency mAminoAcidFrequency;
 
-    private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
+    private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
 
     private final Set<Integer> mDistinctPeptideLengths;
 
@@ -289,10 +289,10 @@ public class BindTrainer
                     continue;
 
                 double score = matrix.calcScore(bindData.Peptide);
-                bindData.setScoreData(score, randomDistribution.getScoreRank(allele, score));
+                bindData.setScoreData(score, randomDistribution.getScoreRank(allele, bindData.peptideLength(), score));
             }
 
-            writeAlleleSummary(alleleWriter, allele);
+            // writeAlleleSummary(alleleWriter, allele);
         }
 
         closeBufferedWriter(alleleWriter);

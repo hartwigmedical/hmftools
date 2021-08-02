@@ -116,7 +116,7 @@ public class GenerateRandomPeptides
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(fileContents.get(0), DELIM);
             fileContents.remove(0);
             int alleleIndex = fieldsIndexMap.get("Allele");
-            int freqIndex = fieldsIndexMap.get("AlleleFreq");
+            Integer freqIndex = fieldsIndexMap.get("AlleleFreq");
 
             for(String data : fileContents)
             {
@@ -125,7 +125,7 @@ public class GenerateRandomPeptides
 
                 mAlleles.add(allele);
 
-                if(mAssignAllelesByFreq)
+                if(mAssignAllelesByFreq && freqIndex != null)
                 {
                     int freq = Integer.parseInt(items[freqIndex]);
 

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,7 +26,7 @@ public class RandomPeptideDistribution
     private final String mDistributionFilename;
     private final boolean mDataLoaded;
 
-    private final Map<String,List<ScoreDistributionData>> mAlleleScoresMap;
+    private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoresMap; // allele to peptide length to distribution
 
     public RandomPeptideDistribution(final BinderConfig config)
     {
@@ -50,11 +48,16 @@ public class RandomPeptideDistribution
 
     public boolean hasData() { return mDataLoaded; }
 
-    public Map<String,List<ScoreDistributionData>> getAlleleScoresMap() { return mAlleleScoresMap; }
+    public Map<String,Map<Integer,List<ScoreDistributionData>>> getAlleleScoresMap() { return mAlleleScoresMap; }
 
-    public double getScoreRank(final String allele, double score)
+    public double getScoreRank(final String allele, final int peptideLength, double score)
     {
-        List<ScoreDistributionData> scores = mAlleleScoresMap.get(allele);
+        Map<Integer,List<ScoreDistributionData>> peptideLengthMap = mAlleleScoresMap.get(allele);
+
+        if(peptideLengthMap == null)
+            return -1;
+
+        List<ScoreDistributionData> scores = peptideLengthMap.get(peptideLength);
 
         if(scores == null || scores.isEmpty())
             return -1;
@@ -96,12 +99,20 @@ public class RandomPeptideDistribution
             {
                 ScoreDistributionData data = ScoreDistributionData.fromCsv(line, fieldsIndexMap);
 
-                List<ScoreDistributionData> dataList = mAlleleScoresMap.get(data.Allele);
+                Map<Integer,List<ScoreDistributionData>> peptideLengthMap = mAlleleScoresMap.get(data.Allele);
+
+                if(peptideLengthMap == null)
+                {
+                    peptideLengthMap = Maps.newHashMap();
+                    mAlleleScoresMap.put(data.Allele, peptideLengthMap);
+                }
+
+                List<ScoreDistributionData> dataList = peptideLengthMap.get(data.PeptideLength);
 
                 if(dataList == null)
                 {
                     dataList = Lists.newArrayList();
-                    mAlleleScoresMap.put(data.Allele, dataList);
+                    peptideLengthMap.put(data.PeptideLength, dataList);
                 }
 
                 dataList.add(data);
@@ -163,79 +174,85 @@ public class RandomPeptideDistribution
                 final String allele = alleleEntry.getKey();
                 final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
 
-                BindScoreMatrix matrix = peptideLengthMatrixMap.get(9);
+                Map<Integer,List<ScoreDistributionData>> peptideLengthMap = Maps.newHashMap();
+                mAlleleScoresMap.put(allele, peptideLengthMap);
 
-                NE_LOGGER.info("building distribution for allele({}) peptideLength({})",
-                        matrix.Allele, matrix.PeptideLength);
-
-                List<String> randomPeptides = Lists.newArrayList(refRandomPeptides);
-
-                int peptideCount = randomPeptides.size();
-
-                List<Double> peptideScores = Lists.newArrayList();
-
-                int count = 0;
-
-                for(String peptide : randomPeptides)
+                for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
                 {
-                    double score = matrix.calcScore(peptide);
-                    VectorUtils.optimisedAdd(peptideScores, score, false);
+                    NE_LOGGER.info("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
 
-                    ++count;
+                    List<String> randomPeptides = Lists.newArrayList(refRandomPeptides);
 
-                    if(count > 0 && (count % 100000) == 0)
+                    int peptideCount = randomPeptides.size();
+
+                    List<Double> peptideScores = Lists.newArrayList();
+
+                    int count = 0;
+
+                    for(String peptide : randomPeptides)
                     {
-                        NE_LOGGER.debug("added {} sorted random peptide scores", count);
-                    }
-                }
+                        if(peptide.length() > matrix.PeptideLength)
+                            peptide = peptide.substring(0, matrix.PeptideLength);
 
-                // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
-                List<Double> scoreDiscreteSizes = Lists.newArrayList(0.0001, 0.001, 0.01);
-                List<Double> scoreDiscreteBrackets = Lists.newArrayList(0.01, 0.1, 1.0);
-                int discreteIndex = 0;
-                double currentSize = scoreDiscreteSizes.get(discreteIndex);
-                double currentBracket = scoreDiscreteBrackets.get(discreteIndex);
-                int requiredScores = (int)round(peptideCount * currentSize);
+                        double score = matrix.calcScore(peptide);
+                        VectorUtils.optimisedAdd(peptideScores, score, false);
 
-                double scoreTotal = 0;
-                int currentScoreCount = 0;
-                double currentSizeTotal = 0;
-                int cumulativeScores = 0;
+                        ++count;
 
-                List<ScoreDistributionData> scoresDistributions = Lists.newArrayList();
-                mAlleleScoresMap.put(matrix.Allele, scoresDistributions);
-
-                for(Double score : peptideScores)
-                {
-                    scoreTotal += score;
-                    ++currentScoreCount;
-                    ++cumulativeScores;
-
-                    if(currentScoreCount >= requiredScores)
-                    {
-                        double avgScore = scoreTotal / currentScoreCount;
-
-                        writer.write(String.format("%s,%d,%f,%.4f,%d,%d",
-                                matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
-
-                        //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
-                        writer.newLine();
-
-                        scoresDistributions.add(new ScoreDistributionData(matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore));
-
-                        scoreTotal = 0;
-                        currentScoreCount = 0;
-                        currentSizeTotal += currentSize;
-
-                        if(Doubles.equal(currentSizeTotal, currentBracket))
+                        if(count > 0 && (count % 100000) == 0)
                         {
-                            ++discreteIndex;
+                            NE_LOGGER.debug("added {} sorted random peptide scores", count);
+                        }
+                    }
 
-                            if(discreteIndex < scoreDiscreteSizes.size())
+                    // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
+                    List<Double> scoreDiscreteSizes = Lists.newArrayList(0.0001, 0.001, 0.01);
+                    List<Double> scoreDiscreteBrackets = Lists.newArrayList(0.01, 0.1, 1.0);
+                    int discreteIndex = 0;
+                    double currentSize = scoreDiscreteSizes.get(discreteIndex);
+                    double currentBracket = scoreDiscreteBrackets.get(discreteIndex);
+                    int requiredScores = (int) round(peptideCount * currentSize);
+
+                    double scoreTotal = 0;
+                    int currentScoreCount = 0;
+                    double currentSizeTotal = 0;
+                    int cumulativeScores = 0;
+
+                    List<ScoreDistributionData> scoresDistributions = Lists.newArrayList();
+                    peptideLengthMap.put(matrix.PeptideLength, scoresDistributions);
+
+                    for(Double score : peptideScores)
+                    {
+                        scoreTotal += score;
+                        ++currentScoreCount;
+                        ++cumulativeScores;
+
+                        if(currentScoreCount >= requiredScores)
+                        {
+                            double avgScore = scoreTotal / currentScoreCount;
+
+                            writer.write(String.format("%s,%d,%f,%.4f,%d,%d",
+                                    matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
+
+                            //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
+                            writer.newLine();
+
+                            scoresDistributions.add(new ScoreDistributionData(matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore));
+
+                            scoreTotal = 0;
+                            currentScoreCount = 0;
+                            currentSizeTotal += currentSize;
+
+                            if(Doubles.equal(currentSizeTotal, currentBracket))
                             {
-                                currentSize = scoreDiscreteSizes.get(discreteIndex);
-                                currentBracket = scoreDiscreteBrackets.get(discreteIndex);
-                                requiredScores = (int) round(peptideCount * currentSize);
+                                ++discreteIndex;
+
+                                if(discreteIndex < scoreDiscreteSizes.size())
+                                {
+                                    currentSize = scoreDiscreteSizes.get(discreteIndex);
+                                    currentBracket = scoreDiscreteBrackets.get(discreteIndex);
+                                    requiredScores = (int) round(peptideCount * currentSize);
+                                }
                             }
                         }
                     }

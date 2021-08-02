@@ -244,6 +244,9 @@ public class BindCountData
 
                     String otherPositionMotif = hlaSequences.getSequence(otherBindCounts.Allele, mappingPos);
 
+                    if(otherPositionMotif == null)
+                        continue;
+
                     double motifSimilarity = 1;
 
                     if(!otherPositionMotif.equals(positionMotif))
@@ -283,7 +286,7 @@ public class BindCountData
 
                 double adjustedCount = max(mFinalWeightedCounts[aa][pos], mTotalBinds * MIN_OBSERVED_AA_POS_FREQ);
                 double weightedCount = log(2, adjustedCount / aaFrequency);
-                double posWeight = weightedCount * (1.0 / PeptideLength); // * (mTotalBinds / alleleBinds);
+                double posWeight = weightedCount; //  * (1.0 / PeptideLength); // * (mTotalBinds / alleleBinds);
                 data[aa][pos] = posWeight;
 
                 /* simple original scoring
