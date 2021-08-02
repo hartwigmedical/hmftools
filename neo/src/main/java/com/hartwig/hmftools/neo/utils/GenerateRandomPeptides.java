@@ -23,9 +23,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
@@ -48,7 +50,10 @@ public class GenerateRandomPeptides
     private final List<String> mAlleles;
 
     private final EnsemblDataCache mEnsemblDataCache;
-    private final Map<String,TranscriptAminoAcids > mTransAminoAcidMap;
+    private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+
+    private final Set<String> mUniquePeptides;
+    private final List<String> mPeptideExclusions;
 
     private final Random mRandom;
     private final int mMaxPeptidesPerGene;
@@ -63,6 +68,7 @@ public class GenerateRandomPeptides
     private static final String REQ_PEPTIDES = "req_peptides";
     private static final String PEPTIDES_LENGTHS = "peptide_lengths";
     private static final String ALLELES_FILE = "alleles_file";
+    private static final String PEPTIDE_EXCLUSIONS_FILE = "peptide_exclusions_file";
     private static final String ASSIGN_ALLELES_BY_FREQ = "assign_alleles_by_freq";
     private static final String OUTPUT_FILE = "output_file";
 
@@ -78,6 +84,9 @@ public class GenerateRandomPeptides
 
         mTransAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList());
+
+        mUniquePeptides = Sets.newHashSet();
+        mPeptideExclusions = Lists.newArrayList();
 
         mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
         mAssignAllelesByFreq = cmd.hasOption(ASSIGN_ALLELES_BY_FREQ);
@@ -100,6 +109,7 @@ public class GenerateRandomPeptides
 
         mAlleles = Lists.newArrayList();
         loadAlleleFrequencies(cmd.getOptionValue(ALLELES_FILE));
+        loadPeptideExclusions(cmd.getOptionValue(PEPTIDE_EXCLUSIONS_FILE));
 
         mRandom = new Random();
         mPeptideBaseGap = MAX_PER_GENE - (int)round(log10(mRequiredPeptides)); // smaller gaps when more peptides are required
@@ -144,6 +154,24 @@ public class GenerateRandomPeptides
         }
     }
 
+    private void loadPeptideExclusions(final String filename)
+    {
+        if(filename == null)
+            return;
+
+        try
+        {
+            mPeptideExclusions.addAll(Files.readAllLines(new File(filename).toPath()));
+            mPeptideExclusions.remove(0);
+
+            NE_LOGGER.info("loaded {} peptide exclusions", mPeptideExclusions.size());
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.warn("failed to load alleles file: {}", e.toString());
+        }
+    }
+
     public void run()
     {
         NE_LOGGER.info("searching for {} peptides of lengths: {}", mRequiredPeptides, mPeptideLengths);
@@ -151,7 +179,7 @@ public class GenerateRandomPeptides
         int totalPeptideCount = 0;
         int transCodingCount = 0;
 
-        final String stopAminoAcid = String.valueOf(Codons.STOP_AMINO_ACID);
+        int reqPeptideLength = mPeptideLengths.stream().mapToInt(x -> x.intValue()).max().orElse(0);
 
         for(Map.Entry<String,List<GeneData>> entry : mEnsemblDataCache.getChrGeneDataMap().entrySet())
         {
@@ -180,26 +208,30 @@ public class GenerateRandomPeptides
                 int codingLength = aminoAcids.length() - 1; // excluding the stop codon
 
                 int startPos = mPeptideBaseGap > 0 ? mRandom.nextInt(mPeptideBaseGap) : 0;
-                int reqPeptideLength = getPeptideLength();
                 int endPos = startPos + reqPeptideLength;
 
                 while(endPos < codingLength)
                 {
                     String peptide = aminoAcids.substring(startPos, endPos);
 
-                    if(!peptide.contains(stopAminoAcid))
+                    if(isValidPeptide(peptide))
                     {
+                        mUniquePeptides.add(peptide);
                         writeData(chromosome, geneData.GeneName, startPos, endPos, peptide);
 
                         ++genePeptideCount;
                         ++totalPeptideCount;
+
+                        if(totalPeptideCount > 0 && (totalPeptideCount % 10000) == 0)
+                        {
+                            NE_LOGGER.info("found {} peptides", totalPeptideCount);
+                        }
 
                         if(genePeptideCount >= mMaxPeptidesPerGene || totalPeptideCount >= mRequiredPeptides)
                             break;
                     }
 
                     startPos = mPeptideBaseGap > 0 ? endPos + mRandom.nextInt(mPeptideBaseGap) : startPos + 1;
-                    reqPeptideLength = getPeptideLength();
                     endPos = startPos + reqPeptideLength;
                 }
 
@@ -224,6 +256,26 @@ public class GenerateRandomPeptides
         int length = mPeptideLengths.get(mPeptitdeLengthIndex);
         ++mPeptitdeLengthIndex;
         return length;
+    }
+
+    private boolean isValidPeptide(final String peptide)
+    {
+        final String stopAminoAcid = String.valueOf(Codons.STOP_AMINO_ACID);
+
+        if(peptide.contains(stopAminoAcid))
+            return false;
+
+        if(mUniquePeptides.contains(peptide))
+            return false;
+
+        for(int peptideLength : mPeptideLengths)
+        {
+            String peptideByLength = peptide.length() > peptideLength ? peptide.substring(0, peptideLength) : peptide;
+            if(mPeptideExclusions.contains(peptideByLength))
+                return false;
+        }
+
+        return true;
     }
 
     private String getAllele()
@@ -262,10 +314,14 @@ public class GenerateRandomPeptides
             {
                 for(String allele : mAlleles)
                 {
-                    mWriter.write(String.format("%s,%s,%s,%s,%d,%d", allele, peptide, chromosome, geneName, posStart, posEnd));
-                    mWriter.newLine();
-                }
+                    for(int peptideLength : mPeptideLengths)
+                    {
+                        String peptideByLength = peptide.length() > peptideLength ? peptide.substring(0, peptideLength) : peptide;
 
+                        mWriter.write(String.format("%s,%s,%s,%s,%d,%d", allele, peptideByLength, chromosome, geneName, posStart, posEnd));
+                        mWriter.newLine();
+                    }
+                }
             }
         }
         catch(IOException e)
@@ -282,6 +338,7 @@ public class GenerateRandomPeptides
         options.addOption(REQ_PEPTIDES, true, "Number of peptides to find randomly from the proteome");
         options.addOption(PEPTIDES_LENGTHS, true, "Peptide lengths, separated by ';'");
         options.addOption(ALLELES_FILE, true, "File with alleles to assign");
+        options.addOption(PEPTIDE_EXCLUSIONS_FILE, true, "File with training set peptides to avoid replicating");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
