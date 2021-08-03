@@ -25,13 +25,13 @@ import org.jetbrains.annotations.NotNull;
 public class AucCalcTester
 {
     private static final String DATA_FILE = "data_file";
-    private static final String RESULT_COLUMN = "result_column";
-    private static final String VALUE_COLUMN = "value_column";
+    private static final String IS_PERCENTILE = "percentile";
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(DATA_FILE, true, "Output filename");
+        options.addOption(DATA_FILE, true, "Input filename");
+        options.addOption(IS_PERCENTILE, false, "In percentile or rank form");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         addLoggingOptions(options);
 
@@ -40,8 +40,7 @@ public class AucCalcTester
         setLogLevel(cmd);
 
         String dataFile = cmd.getOptionValue(DATA_FILE);
-
-        List<AucData> aucDataList = Lists.newArrayList();
+        boolean isPercentile = cmd.hasOption(IS_PERCENTILE);
 
         try
         {
@@ -49,20 +48,24 @@ public class AucCalcTester
 
             lines.remove(0);
 
+            List<AucData> aucDataList = Lists.newArrayList();
+
             for(String line : lines)
             {
                 String[] items = line.split(",");
                 boolean isPositive = Boolean.parseBoolean(items[0]);
                 double value = Double.parseDouble(items[1]);
 
-                aucDataList.add(new AucData(isPositive, value));
+                aucDataList.add(new AucData(isPositive, value, isPercentile));
             }
 
             NE_LOGGER.info("loaded {} AUC items from file({})", aucDataList.size(), dataFile);
 
-            double auc = AucCalc.calcAuc(aucDataList, Level.DEBUG);
+            double auc = isPercentile ?
+                    AucCalc.calcPercentilesAuc(aucDataList, Level.DEBUG) : AucCalc.calcScoresAuc(aucDataList, Level.DEBUG);
 
-            NE_LOGGER.info(String.format("AUC = %.4f", auc));
+            NE_LOGGER.info(String.format("AUC from %s = %.4f",
+                    isPercentile ? "percentiles" : "values", auc));
         }
         catch(IOException e)
         {

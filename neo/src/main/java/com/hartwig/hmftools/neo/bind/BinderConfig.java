@@ -38,6 +38,7 @@ public class BinderConfig
     public final PeptideWriteType WritePeptideType;
 
     public final List<String> SpecificAlleles;
+    public final List<Integer> SpecificPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
@@ -58,6 +59,7 @@ public class BinderConfig
     private static final String WRITE_PAIRS_DATA = "write_pairs";
 
     private static final String SPECIFIC_ALLELES = "specific_alleles";
+    private static final String SPECIFIC_PEPTIDE_LENGTHS = "specific_peptide_lengths";
     private static final String OUTPUT_ID = "output_id";
 
     public BinderConfig(final CommandLine cmd)
@@ -86,6 +88,15 @@ public class BinderConfig
             NE_LOGGER.info("filtering for {} alleles: {}", SpecificAlleles.size(), SpecificAlleles);
         }
 
+        SpecificPeptideLengths = Lists.newArrayList();
+
+        if(cmd.hasOption(SPECIFIC_PEPTIDE_LENGTHS))
+        {
+            Arrays.stream(cmd.getOptionValue(SPECIFIC_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1))
+                    .forEach(x -> SpecificPeptideLengths.add(Integer.parseInt(x)));
+            NE_LOGGER.info("filtering for {} peptide lengths: {}", SpecificPeptideLengths.size(), SpecificPeptideLengths);
+        }
+
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
         RunScoring = cmd.hasOption(RUN_SCORING);
         WritePosWeightMatrix = cmd.hasOption(WRITE_PW_MATRIX);
@@ -112,7 +123,6 @@ public class BinderConfig
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         options.addOption(POSITION_HLA_AA_FILE, true, "Position HLA allele amino acid mapping file");
 
-        options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
         options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");
         options.addOption(MAX_AFFINITY, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
@@ -123,6 +133,9 @@ public class BinderConfig
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
+
+        options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
+        options.addOption(SPECIFIC_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");

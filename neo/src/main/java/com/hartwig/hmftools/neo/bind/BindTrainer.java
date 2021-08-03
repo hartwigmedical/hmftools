@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initMatrixWriter;
+import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 import static com.hartwig.hmftools.neo.bind.PeptideWriteType.LIKELY_INCORRECT;
@@ -14,12 +13,8 @@ import static com.hartwig.hmftools.neo.bind.PeptideWriteType.TRAINING;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initFrequencyWriter;
 import static com.hartwig.hmftools.neo.utils.AminoAcidFrequency.AMINO_ACID_FREQ_FILE;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +39,7 @@ public class BindTrainer
 {
     private final BinderConfig mConfig;
 
-    private final Map<String,List<BindData>> mAllelePeptideData;
+    private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
     private final AminoAcidFrequency mAminoAcidFrequency;
 
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
@@ -132,40 +127,38 @@ public class BindTrainer
         BufferedWriter pairWriter = mConfig.CalcPairs ?
                 ComboCorrelations.initPairDataWriter(mConfig.formFilename("pair_score_prob")) : null;
 
-        for(Map.Entry<String,List<BindData>> entry : mAllelePeptideData.entrySet())
+        for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
-            final String allele = entry.getKey();
+            final String allele = alleleEntry.getKey();
 
-            List<BindData> peptideBindData = entry.getValue();
+            final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
 
-            NE_LOGGER.debug("allele({}) processing {} data items", allele, peptideBindData.size());
+            Map<Integer,BindCountData> pepLenCountsMap = Maps.newHashMap(); // counts data by peptide length
+            mAlleleBindCounts.put(allele, pepLenCountsMap);
 
-            Map<Integer,BindCountData> peptideLengthCountsMap = Maps.newHashMap(); // counts data by peptide length
-            mAlleleBindCounts.put(allele, peptideLengthCountsMap);
-
-            int currentLength = -1;
-            BindCountData currentData = null;
-
-            for(BindData bindData : peptideBindData)
+            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
-                int peptideLength = bindData.peptideLength();
+                List<BindData> bindDataList = pepLenEntry.getValue();
 
-                if(currentLength != peptideLength)
+                NE_LOGGER.debug("allele({}) length({}) processing {} data items", allele, pepLenEntry.getKey(), bindDataList.size());
+
+                for(BindData bindData : bindDataList)
                 {
-                    currentLength = peptideLength;
-                    currentData = peptideLengthCountsMap.get(peptideLength);
+                    int peptideLength = bindData.peptideLength();
 
-                    if(currentData == null)
+                    BindCountData bindCounts = pepLenCountsMap.get(bindData.peptideLength());
+
+                    if(bindCounts == null)
                     {
-                        currentData = new BindCountData(allele, peptideLength);
-                        peptideLengthCountsMap.put(peptideLength, currentData);
+                        bindCounts = new BindCountData(allele, peptideLength);
+                        pepLenCountsMap.put(peptideLength, bindCounts);
                     }
-                }
 
-                currentData.processBindData(bindData, mConfig.CalcPairs, mConfig.Constants);
+                    bindCounts.processBindData(bindData, mConfig.CalcPairs, mConfig.Constants);
+                }
             }
 
-            for(BindCountData bindCounts : peptideLengthCountsMap.values())
+            for(BindCountData bindCounts : pepLenCountsMap.values())
             {
                 // write results
                 bindCounts.logStats();
@@ -189,15 +182,15 @@ public class BindTrainer
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
             final String allele = alleleEntry.getKey();
-            final List<BindCountData> peptideLengthCounts = alleleEntry.getValue().values().stream().collect(Collectors.toList());
+            final List<BindCountData> pepLenBindCounts = alleleEntry.getValue().values().stream().collect(Collectors.toList());
             int totalAlelleCount = 0;
 
-            NE_LOGGER.debug("allele({}) build matrix for {} peptide lengths", allele, peptideLengthCounts.size());
+            NE_LOGGER.debug("allele({}) build matrix for {} peptide lengths", allele, pepLenBindCounts.size());
 
-            for(BindCountData bindCounts : peptideLengthCounts)
+            for(BindCountData bindCounts : pepLenBindCounts)
             {
                 totalAlelleCount += bindCounts.totalBindCount();
-                bindCounts.buildWeightedCounts(peptideLengthCounts, mConfig.Constants);
+                bindCounts.buildWeightedCounts(pepLenBindCounts, mConfig.Constants);
             }
 
             alleleTotalCounts.put(allele, totalAlelleCount);
@@ -212,7 +205,7 @@ public class BindTrainer
             List<BindCountData> allBindCounts = Lists.newArrayList();
             countsByLength.put(peptideLength, allBindCounts);
 
-            for(Map<Integer, BindCountData> alleleEntry : mAlleleBindCounts.values())
+            for(Map<Integer,BindCountData> alleleEntry : mAlleleBindCounts.values())
             {
                 BindCountData bindCounts = alleleEntry.get(peptideLength);
 
@@ -221,7 +214,7 @@ public class BindTrainer
             }
 
             // now apply the list of counts across all alleles per peptide length
-            for(Map<Integer, BindCountData> alleleEntry : mAlleleBindCounts.values())
+            for(Map<Integer,BindCountData> alleleEntry : mAlleleBindCounts.values())
             {
                 BindCountData bindCounts = alleleEntry.get(peptideLength);
 
@@ -266,7 +259,7 @@ public class BindTrainer
 
         if(!randomDistribution.hasData())
         {
-            randomDistribution.buildDistribution(mAlleleBindMatrices, mAllelePeptideData);
+            randomDistribution.buildDistribution(mAlleleBindMatrices);
         }
 
         NE_LOGGER.info("writing allele summaries");
@@ -274,25 +267,29 @@ public class BindTrainer
         BufferedWriter alleleWriter = initAlleleSummaryWriter();
 
         // rank both the training and random peptide data using the newly created data and the random peptide distributions
-        for(Map.Entry<String,List<BindData>> entry : mAllelePeptideData.entrySet())
+        for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
-            String allele = entry.getKey();
-            List<BindData> peptideBindData = entry.getValue();
+            final String allele = alleleEntry.getKey();
+            final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
 
             Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = mAlleleBindMatrices.get(allele);
 
-            for(BindData bindData : peptideBindData)
+            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
-                BindScoreMatrix matrix = peptideLengthMatrixMap.get(bindData.peptideLength());
+                final List<BindData> bindDataList = pepLenEntry.getValue();
+                for(BindData bindData : bindDataList)
+                {
+                    BindScoreMatrix matrix = peptideLengthMatrixMap.get(bindData.peptideLength());
 
-                if(matrix == null)
-                    continue;
+                    if(matrix == null)
+                        continue;
 
-                double score = matrix.calcScore(bindData.Peptide);
-                bindData.setScoreData(score, randomDistribution.getScoreRank(allele, bindData.peptideLength(), score));
+                    double score = matrix.calcScore(bindData.Peptide);
+                    bindData.setScoreData(score, randomDistribution.getScoreRank(allele, bindData.peptideLength(), score));
+                }
             }
 
-            // writeAlleleSummary(alleleWriter, allele);
+            writeAlleleSummary(alleleWriter, allele);
         }
 
         closeBufferedWriter(alleleWriter);
@@ -306,7 +303,7 @@ public class BindTrainer
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("allele_summary"), false);
-            writer.write("Allele,TrainingCount,RandomCount,Auc,AucMcf");
+            writer.write("Allele,PeptideLength,Source,TrainingCount,RandomCount,AUC");
             writer.newLine();
             return writer;
         }
@@ -324,34 +321,54 @@ public class BindTrainer
 
         try
         {
-            final List<BindData> peptideBindData = mAllelePeptideData.get(allele);
+            final Map<Integer,List<BindData>> pepLenBindDataMap = mAllelePeptideData.get(allele);
 
             int trainingCount = 0;
             int randomCount = 0;
+            int errors = 0;
 
-            List<AucData> alleleAucData = Lists.newArrayList();
+            // internal model assesses AUC per peptide length
+            // external models across an entire allele
+
             List<AucData> alleleAucMcfData = Lists.newArrayList();
 
-            for(BindData bindData : peptideBindData)
+            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
-                if(bindData.isTraining())
-                    ++trainingCount;
-                else
-                    ++randomCount;
+                List<AucData> alleleAucData = Lists.newArrayList();
+                List<AucData> alleleAucRankData = Lists.newArrayList();
 
-                boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
+                for(BindData bindData : pepLenEntry.getValue())
+                {
+                    if(bindData.isTraining())
+                        ++trainingCount;
+                    else
+                        ++randomCount;
 
-                alleleAucData.add(new AucData(isPositive, bindData.getScore()));
-                alleleAucMcfData.add(new AucData(isPositive, bindData.PredictedAffinity));
+                    boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
+
+                    alleleAucData.add(new AucData(isPositive, bindData.score(), false));
+                    alleleAucRankData.add(new AucData(isPositive, bindData.rankPercentile(), true));
+                    alleleAucMcfData.add(new AucData(isPositive, bindData.affinityPercentile(), true));
+                }
+
+                // double auc = AucCalc.calcScoresAuc(alleleAucData, Level.TRACE);
+                double aucPerc = AucCalc.calcPercentilesAuc(alleleAucRankData, Level.TRACE);
+
+                NE_LOGGER.info(String.format("allele(%s) peptideLength(%d) peptides(train=%d, rand=%d) AUC(%.4f)",
+                        allele, pepLenEntry.getKey(), trainingCount, randomCount, aucPerc));
+
+                writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
+                        allele, pepLenEntry.getKey(), "MODEL", trainingCount, randomCount, aucPerc));
+                writer.newLine();
             }
 
-            double auc = AucCalc.calcAuc(alleleAucData, Level.TRACE);
-            double aucMcf = AucCalc.calcAuc(alleleAucMcfData, Level.TRACE);
+            double aucMcf = AucCalc.calcPercentilesAuc(alleleAucMcfData, Level.TRACE);
 
-            NE_LOGGER.info(String.format("allele(%s) peptides(train=%d, rand=%d) AUC(%.4f) mcfAUC(%.4f)",
-                    allele, trainingCount, randomCount, auc, aucMcf));
+            NE_LOGGER.info(String.format("allele(%s) McFlurry peptides(train=%d, rand=%d) AUC(%.4f)",
+                    allele, trainingCount, randomCount, aucMcf));
 
-            writer.write(String.format("%s,%d,%d,%.4f,%.4f", allele, trainingCount, randomCount, auc, aucMcf));
+            writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
+                    allele, 0, "MCF", trainingCount, randomCount, aucMcf));
             writer.newLine();
         }
         catch(IOException e)
@@ -371,29 +388,32 @@ public class BindTrainer
             writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity");
             writer.newLine();
 
-            for(Map.Entry<String, List<BindData>> entry : mAllelePeptideData.entrySet())
+            for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
             {
-                String allele = entry.getKey();
-                List<BindData> peptideBindData = entry.getValue();
+                final String allele = alleleEntry.getKey();
+                final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
 
-                for(BindData bindData : peptideBindData)
+                for(List<BindData> bindDataList : pepLenBindDataMap.values())
                 {
-                    if(mConfig.WritePeptideType == LIKELY_INCORRECT)
+                    for(BindData bindData : bindDataList)
                     {
-                        boolean expectBinds = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
-                        boolean inTopPerc = bindData.getRankPerc() < 0.02;
-                        if(expectBinds == inTopPerc)
+                        if(mConfig.WritePeptideType == LIKELY_INCORRECT)
+                        {
+                            boolean expectBinds = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
+                            boolean inTopPerc = bindData.rankPercentile() < 0.02;
+                            if(expectBinds == inTopPerc)
+                                continue;
+                        }
+                        else if(mConfig.WritePeptideType == TRAINING && !bindData.isTraining())
+                        {
                             continue;
-                    }
-                    else if(mConfig.WritePeptideType == TRAINING && !bindData.isTraining())
-                    {
-                        continue;
-                    }
+                        }
 
-                    writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.1f,%.1f",
-                            allele, bindData.Peptide, bindData.Source,
-                            bindData.getScore(), bindData.getRankPerc(), bindData.Affinity, bindData.PredictedAffinity));
-                    writer.newLine();
+                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.1f,%.1f",
+                                allele, bindData.Peptide, bindData.Source,
+                                bindData.score(), bindData.rankPercentile(), bindData.Affinity, bindData.predictedAffinity()));
+                        writer.newLine();
+                    }
                 }
             }
 
@@ -407,62 +427,19 @@ public class BindTrainer
 
     private boolean loadTrainingData()
     {
-        try
+        if(!loadBindData(
+                mConfig.TrainingDataFile, true, mConfig.SpecificAlleles, mConfig.SpecificPeptideLengths, mAllelePeptideData))
         {
-            final List<String> lines = Files.readAllLines(new File(mConfig.TrainingDataFile).toPath());
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
-
-            int alleleIndex = fieldsIndexMap.get("Allele");
-            int peptideIndex = fieldsIndexMap.get("Peptide");
-            int affinityIndex = fieldsIndexMap.get("Affinity");
-            int predictedIndex = fieldsIndexMap.get("PredictedAffinity");
-            int sourceIndex = fieldsIndexMap.get("Source");
-
-            String currentAllele = "";
-            List<BindData> currentBindList = null;
-
-            for(String line : lines)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                String allele = items[alleleIndex];
-
-                if(!mConfig.SpecificAlleles.isEmpty() && !mConfig.SpecificAlleles.contains(allele))
-                {
-                    if(mConfig.SpecificAlleles.size() == mAllelePeptideData.size())
-                        break;
-
-                    continue;
-                }
-
-                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, affinityIndex, predictedIndex, sourceIndex);
-
-                if(bindData.Peptide.contains("X"))
-                    continue;
-
-                if(!allele.equals(currentAllele))
-                {
-                    currentAllele = allele;
-                    currentBindList = Lists.newArrayList();
-                    mAllelePeptideData.put(allele, currentBindList);
-                }
-
-                currentBindList.add(bindData);
-
-                mDistinctPeptideLengths.add(bindData.peptideLength());
-            }
-
-            NE_LOGGER.info("loaded {} alleles with {} training data items from file({}) maxPeptideLength({})",
-                    mAllelePeptideData.size(), mAllelePeptideData.values().stream().mapToInt(x -> x.size()).sum(),
-                    mConfig.TrainingDataFile, getMaxPeptideLength());
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to read training binding data file: {}", e.toString());
             return false;
         }
+
+        for(Map<Integer,List<BindData>> pepLenBindDataMap : mAllelePeptideData.values())
+        {
+            pepLenBindDataMap.keySet().forEach(x -> mDistinctPeptideLengths.add(x));
+        }
+
+        NE_LOGGER.info("{} peptide lengths, maxPeptideLength({})",
+                mDistinctPeptideLengths.size(), getMaxPeptideLength());
 
         return true;
     }
@@ -471,9 +448,16 @@ public class BindTrainer
 
     private boolean loadRandomPredictionsData()
     {
+        if(!loadBindData(
+                mConfig.RandomPeptidePredictionsFile, false, mConfig.SpecificAlleles, mConfig.SpecificPeptideLengths, mAllelePeptideData))
+        {
+            return false;
+        }
+
         if(mConfig.RandomPeptidePredictionsFile == null)
             return true; // not required
 
+        /*
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.RandomPeptidePredictionsFile));
@@ -534,6 +518,7 @@ public class BindTrainer
             NE_LOGGER.error("failed to read random peptide binding data file: {}", e.toString());
             return false;
         }
+         */
 
         return true;
     }

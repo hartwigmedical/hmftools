@@ -129,8 +129,7 @@ public class RandomPeptideDistribution
         return true;
     }
 
-    public void buildDistribution(
-            final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap, final Map<String,List<BindData>> alleleBindDataMap)
+    public void buildDistribution(final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap)
     {
         List<String> refRandomPeptides = Lists.newArrayList();
 

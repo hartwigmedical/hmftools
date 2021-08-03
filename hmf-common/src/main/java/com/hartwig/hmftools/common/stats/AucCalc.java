@@ -14,13 +14,27 @@ public final class AucCalc
 {
     private static final Logger LOGGER = LogManager.getLogger(AucCalc.class);
 
-    public static double calcAuc(final List<AucData> dataList)
+    public static double calcPercentilesAuc(final List<AucData> dataList, final Level logLevel)
     {
-        return calcAuc(dataList, Level.DEBUG);
+        if(dataList.isEmpty() || dataList.stream().anyMatch(x -> !x.IsPercentile))
+            return 0;
+
+        double positiveRankSum = dataList.stream().filter(x -> x.IsPositive).mapToDouble(x -> x.Value).sum();
+        long posCount = dataList.stream().filter(x -> x.IsPositive).count();
+        // return 1 - positiveRankSum / dataList.size();
+        return 1 - positiveRankSum / posCount;
     }
 
-    public static double calcAuc(final List<AucData> dataList, final Level logLevel)
+    public static double calcScoresAuc(final List<AucData> dataList)
     {
+        return calcScoresAuc(dataList, Level.DEBUG);
+    }
+
+    public static double calcScoresAuc(final List<AucData> dataList, final Level logLevel)
+    {
+        if(dataList.isEmpty() || dataList.stream().anyMatch(x -> x.IsPercentile))
+            return 0;
+
         List<Double> posValues = Lists.newArrayList();
         List<Double> negValues = Lists.newArrayList();
 

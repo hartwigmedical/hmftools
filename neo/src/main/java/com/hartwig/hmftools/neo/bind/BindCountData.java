@@ -86,7 +86,7 @@ public class BindCountData
         mCalcTotalBinds += bindPerc;
 
         boolean actualBind = bindData.Affinity < calcConstants.BindingAffinityHigh;
-        boolean predictedBind = bindData.PredictedAffinity < calcConstants.BindingAffinityHigh && actualBind;
+        boolean predictedBind = bindData.predictedAffinity() < calcConstants.BindingAffinityHigh && actualBind;
 
         if(actualBind)
             ++mTotalBinds;
