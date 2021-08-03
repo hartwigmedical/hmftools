@@ -22,28 +22,23 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 public class RandomPeptideDistribution
 {
-    private final String mInputPeptidesFilename;
-    private final String mDistributionFilename;
-    private final boolean mDataLoaded;
+    private final BinderConfig mConfig;
+    private boolean mDataLoaded;
 
     private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoresMap; // allele to peptide length to distribution
 
     public RandomPeptideDistribution(final BinderConfig config)
     {
-        mInputPeptidesFilename = config.RandomPeptidesFile;
+        mConfig = config;
 
         mAlleleScoresMap = Maps.newHashMap();
+        mDataLoaded = false;
+    }
 
-        if(config.RandomPeptideDistributionFile != null)
-        {
-            mDistributionFilename = config.RandomPeptideDistributionFile;
-            mDataLoaded = loadDistribution();
-        }
-        else
-        {
-            mDistributionFilename = config.formFilename("random_peptide_dist");
-            mDataLoaded = false;
-        }
+    public boolean loadData()
+    {
+        mDataLoaded = loadDistribution();
+        return mDataLoaded;
     }
 
     public boolean hasData() { return mDataLoaded; }
@@ -85,12 +80,12 @@ public class RandomPeptideDistribution
 
     private boolean loadDistribution()
     {
-        if(mDistributionFilename == null || !Files.exists(Paths.get(mDistributionFilename)))
+        if(mConfig.RandomPeptideDistributionFile == null)
             return false;
 
         try
         {
-            final List<String> lines = Files.readAllLines(new File(mDistributionFilename).toPath());
+            final List<String> lines = Files.readAllLines(new File(mConfig.RandomPeptideDistributionFile).toPath());
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
             lines.remove(0);
@@ -131,37 +126,32 @@ public class RandomPeptideDistribution
 
     public void buildDistribution(final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap)
     {
+        if(mConfig.RandomPeptidesFile == null)
+        {
+            NE_LOGGER.error("missing random peptides file");
+            return;
+        }
+
         List<String> refRandomPeptides = Lists.newArrayList();
 
-        if(mInputPeptidesFilename != null)
-        {
-            try
-            {
-                refRandomPeptides.addAll(Files.readAllLines(new File(mInputPeptidesFilename).toPath()));
-                refRandomPeptides.remove(0);
+        final String distFilename = mConfig.formFilename("random_peptide_dist");
 
-                NE_LOGGER.info("loaded {} random peptides", refRandomPeptides.size());
-            }
-            catch(IOException e)
-            {
-                NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
-                return;
-            }
-        }
-        else
+        try
         {
-            // take the random peptides from any of the provided alleles??
-            /*
-            randomPeptides = alleleBindDataMap.get(matrix.Allele).stream()
-                .filter(x -> x.isRandom())
-                .filter(x -> x.peptideLength() == matrix.PeptideLength)
-                .map(x -> x.Peptide).collect(Collectors.toList());
-             */
+            refRandomPeptides.addAll(Files.readAllLines(new File(mConfig.RandomPeptidesFile).toPath()));
+            refRandomPeptides.remove(0);
+
+            NE_LOGGER.info("loaded {} random peptides", refRandomPeptides.size());
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
+            return;
         }
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mDistributionFilename, false);
+            BufferedWriter writer = createBufferedWriter(distFilename, false);
 
             writer.write("Allele,PeptideLength,ScoreBucket,Score,BucketCount,CumulativeCount");
             // writer.write(",CurrentScores,CurrentSize,CurrentBracket,CurrentSizeTotal");
@@ -180,15 +170,13 @@ public class RandomPeptideDistribution
                 {
                     NE_LOGGER.info("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
 
-                    List<String> randomPeptides = Lists.newArrayList(refRandomPeptides);
-
-                    int peptideCount = randomPeptides.size();
+                    int peptideCount = refRandomPeptides.size();
 
                     List<Double> peptideScores = Lists.newArrayList();
 
                     int count = 0;
 
-                    for(String peptide : randomPeptides)
+                    for(String peptide : refRandomPeptides)
                     {
                         if(peptide.length() > matrix.PeptideLength)
                             peptide = peptide.substring(0, matrix.PeptideLength);

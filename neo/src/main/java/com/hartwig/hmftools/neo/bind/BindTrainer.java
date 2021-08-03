@@ -101,15 +101,15 @@ public class BindTrainer
 
             for(BindScoreMatrix matrix : matrixList)
             {
-                Map<Integer,BindScoreMatrix> alleleMap = mAlleleBindMatrices.get(matrix.Allele);
+                Map<Integer,BindScoreMatrix> pepLenMap = mAlleleBindMatrices.get(matrix.Allele);
 
-                if(alleleMap == null)
+                if(pepLenMap == null)
                 {
-                    alleleMap = Maps.newHashMap();
-                    mAlleleBindMatrices.put(matrix.Allele, alleleMap);
+                    pepLenMap = Maps.newHashMap();
+                    mAlleleBindMatrices.put(matrix.Allele, pepLenMap);
                 }
 
-                alleleMap.put(matrix.PeptideLength, matrix);
+                pepLenMap.put(matrix.PeptideLength, matrix);
             }
         }
         else
@@ -257,172 +257,13 @@ public class BindTrainer
     {
         RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig);
 
-        if(!randomDistribution.hasData())
+        if(!randomDistribution.loadData())
         {
             randomDistribution.buildDistribution(mAlleleBindMatrices);
         }
 
-        NE_LOGGER.info("writing allele summaries");
-
-        BufferedWriter alleleWriter = initAlleleSummaryWriter();
-
-        // rank both the training and random peptide data using the newly created data and the random peptide distributions
-        for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
-        {
-            final String allele = alleleEntry.getKey();
-            final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
-
-            Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = mAlleleBindMatrices.get(allele);
-
-            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
-            {
-                final List<BindData> bindDataList = pepLenEntry.getValue();
-                for(BindData bindData : bindDataList)
-                {
-                    BindScoreMatrix matrix = peptideLengthMatrixMap.get(bindData.peptideLength());
-
-                    if(matrix == null)
-                        continue;
-
-                    double score = matrix.calcScore(bindData.Peptide);
-                    bindData.setScoreData(score, randomDistribution.getScoreRank(allele, bindData.peptideLength(), score));
-                }
-            }
-
-            writeAlleleSummary(alleleWriter, allele);
-        }
-
-        closeBufferedWriter(alleleWriter);
-
-        NE_LOGGER.info("writing peptide scores");
-        writePeptideScores();
-    }
-
-    private BufferedWriter initAlleleSummaryWriter()
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("allele_summary"), false);
-            writer.write("Allele,PeptideLength,Source,TrainingCount,RandomCount,AUC");
-            writer.newLine();
-            return writer;
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to init allele summary writer: {}", e.toString());
-            return null;
-        }
-    }
-
-    private void writeAlleleSummary(final BufferedWriter writer, final String allele)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
-            final Map<Integer,List<BindData>> pepLenBindDataMap = mAllelePeptideData.get(allele);
-
-            int trainingCount = 0;
-            int randomCount = 0;
-            int errors = 0;
-
-            // internal model assesses AUC per peptide length
-            // external models across an entire allele
-
-            List<AucData> alleleAucMcfData = Lists.newArrayList();
-
-            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
-            {
-                List<AucData> alleleAucData = Lists.newArrayList();
-                List<AucData> alleleAucRankData = Lists.newArrayList();
-
-                for(BindData bindData : pepLenEntry.getValue())
-                {
-                    if(bindData.isTraining())
-                        ++trainingCount;
-                    else
-                        ++randomCount;
-
-                    boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
-
-                    alleleAucData.add(new AucData(isPositive, bindData.score(), false));
-                    alleleAucRankData.add(new AucData(isPositive, bindData.rankPercentile(), true));
-                    alleleAucMcfData.add(new AucData(isPositive, bindData.affinityPercentile(), true));
-                }
-
-                // double auc = AucCalc.calcScoresAuc(alleleAucData, Level.TRACE);
-                double aucPerc = AucCalc.calcPercentilesAuc(alleleAucRankData, Level.TRACE);
-
-                NE_LOGGER.info(String.format("allele(%s) peptideLength(%d) peptides(train=%d, rand=%d) AUC(%.4f)",
-                        allele, pepLenEntry.getKey(), trainingCount, randomCount, aucPerc));
-
-                writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
-                        allele, pepLenEntry.getKey(), "MODEL", trainingCount, randomCount, aucPerc));
-                writer.newLine();
-            }
-
-            double aucMcf = AucCalc.calcPercentilesAuc(alleleAucMcfData, Level.TRACE);
-
-            NE_LOGGER.info(String.format("allele(%s) McFlurry peptides(train=%d, rand=%d) AUC(%.4f)",
-                    allele, trainingCount, randomCount, aucMcf));
-
-            writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
-                    allele, 0, "MCF", trainingCount, randomCount, aucMcf));
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write allele summary data: {}", e.toString());
-        }
-    }
-
-    private void writePeptideScores()
-    {
-        if(mConfig.WritePeptideType == PeptideWriteType.NONE)
-            return;
-
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity");
-            writer.newLine();
-
-            for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
-            {
-                final String allele = alleleEntry.getKey();
-                final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
-
-                for(List<BindData> bindDataList : pepLenBindDataMap.values())
-                {
-                    for(BindData bindData : bindDataList)
-                    {
-                        if(mConfig.WritePeptideType == LIKELY_INCORRECT)
-                        {
-                            boolean expectBinds = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
-                            boolean inTopPerc = bindData.rankPercentile() < 0.02;
-                            if(expectBinds == inTopPerc)
-                                continue;
-                        }
-                        else if(mConfig.WritePeptideType == TRAINING && !bindData.isTraining())
-                        {
-                            continue;
-                        }
-
-                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.1f,%.1f",
-                                allele, bindData.Peptide, bindData.Source,
-                                bindData.score(), bindData.rankPercentile(), bindData.Affinity, bindData.predictedAffinity()));
-                        writer.newLine();
-                    }
-                }
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write peptide scores file: {}", e.toString());
-        }
+        BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution);
+        scorer.runScoring();
     }
 
     private boolean loadTrainingData()
@@ -456,69 +297,6 @@ public class BindTrainer
 
         if(mConfig.RandomPeptidePredictionsFile == null)
             return true; // not required
-
-        /*
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.RandomPeptidePredictionsFile));
-            String header = fileReader.readLine();
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
-
-            int alleleIndex = fieldsIndexMap.get("Allele");
-            int peptideIndex = fieldsIndexMap.get("Peptide");
-            int predAffinityIndex = fieldsIndexMap.get("PredictedAffinity");
-
-            String currentAllele = "";
-            List<BindData> currentBindList = null;
-
-            String line = "";
-
-            int loadedAlleles = 0;
-            int randomPeptides = 0;
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                String allele = items[alleleIndex];
-
-                if(!mConfig.SpecificAlleles.isEmpty() && !mConfig.SpecificAlleles.contains(allele))
-                {
-                    if(mConfig.SpecificAlleles.size() == loadedAlleles)
-                        break;
-
-                    continue;
-                }
-
-                if(!mAllelePeptideData.containsKey(allele))
-                    continue;
-
-                BindData bindData = BindData.fromCsv(line, alleleIndex, peptideIndex, predAffinityIndex, mConfig.Constants.MaxAffinity);
-
-                if(bindData.Peptide.contains("X"))
-                    continue;
-
-                if(!allele.equals(currentAllele))
-                {
-                    ++loadedAlleles;
-                    currentAllele = allele;
-                    currentBindList = mAllelePeptideData.get(allele);
-                }
-
-                currentBindList.add(bindData);
-                ++randomPeptides;
-            }
-
-            NE_LOGGER.info("loaded {} random data items from file({})",
-                    randomPeptides, mConfig.RandomPeptidePredictionsFile);
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to read random peptide binding data file: {}", e.toString());
-            return false;
-        }
-         */
 
         return true;
     }

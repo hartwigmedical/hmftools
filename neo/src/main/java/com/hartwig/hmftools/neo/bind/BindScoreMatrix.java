@@ -85,10 +85,10 @@ public class BindScoreMatrix
                 // Allele,PeptideLength,AminoAcid,P0,P1,P2,P3,P4,P5,P6,P7,P8
                 //B4001,9,A,1.0286,-4.7395,0.4656,-0.1505,-0.3065,-0.0971,-0.3378,0.4915,-3.4338
                 String allele = items[alleleIndex];
+                int peptideLength = Integer.parseInt(items[peptideLenIndex]);
 
-                if(currentMatrix == null || !currentMatrix.Allele.equals(allele))
+                if(currentMatrix == null || !currentMatrix.Allele.equals(allele) || currentMatrix.PeptideLength != peptideLength)
                 {
-                    int peptideLength = Integer.parseInt(items[peptideLenIndex]);
                     currentMatrix = new BindScoreMatrix(allele, peptideLength);
                     matrixList.add(currentMatrix);
                 }
@@ -101,6 +101,9 @@ public class BindScoreMatrix
                 {
                     double value = Double.parseDouble(items[i]);
                     currentMatrix.getBindScores()[aminoAcidIndex][peptidePos] = value;
+
+                    if(peptidePos == currentMatrix.PeptideLength - 1)
+                        break;
                 }
             }
         }

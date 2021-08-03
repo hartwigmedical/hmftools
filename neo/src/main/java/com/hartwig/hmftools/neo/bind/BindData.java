@@ -24,6 +24,7 @@ public class BindData
     public final String Source;
 
     // optional fields
+    private boolean mHasPredictionData;
     private double mPredictedAffinity; // eg from MCF or another tool, only used for comparative purposes
     private double mAffinityPercentile;
     private double mPresentationPercentile;
@@ -41,6 +42,7 @@ public class BindData
         Affinity = affinity;
         Source = source;
 
+        mHasPredictionData = false;
         mPredictedAffinity = -1;
         mPresentationPercentile = -1;
         mAffinityPercentile = -1;
@@ -55,11 +57,13 @@ public class BindData
 
     public void setPredictionData(double predictedAffinity, double affinityPercentile, double presentationPercentile)
     {
+        mHasPredictionData = true;
         mPredictedAffinity = predictedAffinity;
         mAffinityPercentile = affinityPercentile;
         mPresentationPercentile = presentationPercentile;
     }
 
+    public boolean hasPredictionData() { return mHasPredictionData; }
     public double predictedAffinity() { return mPredictedAffinity; }
     public double affinityPercentile() { return mAffinityPercentile; }
     public double presentationPercentile() { return mPresentationPercentile; }
@@ -78,29 +82,6 @@ public class BindData
         return String.format("allele(%s) pep(%s) affinity(%.1f pred=%.1f) source(%s)",
                 Allele, Peptide, Affinity, mPredictedAffinity, Source);
     }
-
-    /*
-    public static BindData fromCsv(
-            final String data, int alleleIndex, int peptideIndex, int affinityIndex, int predictedIndex, int otherInfoIndex)
-    {
-        final String[] items = data.split(DELIM, -1);
-
-        String allele = items[alleleIndex].replaceAll("HLA-", "");
-        allele = allele.replaceAll(":", "").replaceAll("\\*", "");
-
-        return new BindData(
-                allele, items[peptideIndex], Double.parseDouble(items[affinityIndex]),
-                Double.parseDouble(items[predictedIndex]), items[otherInfoIndex]);
-    }
-
-    public static BindData fromCsv(
-            final String data, int alleleIndex, int peptideIndex, int predAffinityIndex, double maxAffinity)
-    {
-        final String[] items = data.split(DELIM, -1);
-        double predictedAffinity = Double.parseDouble(items[predAffinityIndex]);
-        return new BindData(items[alleleIndex], items[peptideIndex], maxAffinity, predictedAffinity, RANDOM_SOURCE);
-    }
-    */
 
     public static String cleanAllele(final String allele)
     {
