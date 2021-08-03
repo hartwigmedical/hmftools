@@ -106,10 +106,14 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addKataegisPlot(@NotNull Document document) {
         document.add(new Paragraph("Kataegis plot").addStyle(ReportResources.tableTitleStyle()));
-        Image image = ImageUtil.build(report.plots().purpleKataegisPlot());
-        image.setMaxWidth(ReportResources.CONTENT_WIDTH);
-        image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        document.add(image);
+        if (report.plots().purpleKataegisPlot() != null) {
+            Image image = ImageUtil.build(report.plots().purpleKataegisPlot());
+            image.setMaxWidth(ReportResources.CONTENT_WIDTH);
+            image.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            document.add(image);
+        } else {
+            document.add(new Paragraph("No kataegis plot could be generated for this sample").addStyle(ReportResources.tableContentStyle()));
+        }
     }
 
     private void addSomaticAmpDels(@NotNull Document document) {

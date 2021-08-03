@@ -34,7 +34,7 @@ public abstract class OrangePlots {
     @NotNull
     public abstract String purplePurityRangePlot();
 
-    @NotNull
+    @Nullable
     public abstract String purpleKataegisPlot();
 
     @NotNull

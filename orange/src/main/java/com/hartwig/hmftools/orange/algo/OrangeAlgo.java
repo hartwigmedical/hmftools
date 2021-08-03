@@ -166,6 +166,12 @@ public class OrangeAlgo {
         }
         LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
 
+        String kataegisPlot = config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.rainfall.png";
+        if (!new File(kataegisPlot).exists()) {
+            LOGGER.debug(" Could not locate kataegis plot '{}'", kataegisPlot);
+            kataegisPlot = null;
+        }
+
         return ImmutableOrangePlots.builder()
                 .sageReferenceBQRPlot(config.sageSomaticRefSampleBQRPlot())
                 .sageTumorBQRPlot(config.sageSomaticTumorSampleBQRPlot())
@@ -175,7 +181,7 @@ public class OrangeAlgo {
                 .purpleCopyNumberPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".copynumber.png")
                 .purpleVariantCopyNumberPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.png")
                 .purplePurityRangePlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".purity.range.png")
-                .purpleKataegisPlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.rainfall.png")
+                .purpleKataegisPlot(kataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
                 .build();
     }

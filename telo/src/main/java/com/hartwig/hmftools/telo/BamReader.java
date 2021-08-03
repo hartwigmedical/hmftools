@@ -6,6 +6,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -24,35 +26,30 @@ public class BamReader implements Callable
 
     private BaseRegion mBaseRegion;
 
-    private final SamReader mSamReader;
+    // one sam reader per thread
+    private ConcurrentMap<Thread, SamReader> mThreadSamReaders;
+    private SamReader mSamReader;
     private final BamRecordWriter mWriter;
 
-    private final Map<String,ReadGroup> mIncompleteReadGroups;
+    private final ConcurrentMap<String, ReadGroup> mIncompleteReadGroups;
     private int mCompletedGroups;
 
-    public BamReader(final TeloConfig config, final BamRecordWriter writer)
+    public BamReader(final TeloConfig config, final BamRecordWriter writer, ConcurrentMap<Thread, SamReader> threadSamReaders,
+            ConcurrentMap<String, ReadGroup> incompleteReadGroups)
     {
         mConfig = config;
         mBaseRegion = null;
 
-        mSamReader = mConfig.SampleBamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.SampleBamFile)) : null;
-
+        mThreadSamReaders = threadSamReaders;
         mWriter = writer;
 
-        mIncompleteReadGroups = Maps.newHashMap();
+        mIncompleteReadGroups = incompleteReadGroups;
         mCompletedGroups = 0;
     }
 
     public void setBaseRegion(final BaseRegion baseRegion)
     {
         mBaseRegion = baseRegion;
-    }
-
-    public void setIncompleteReadGroups(final Map<String,ReadGroup> incompleteReadGroups)
-    {
-        mIncompleteReadGroups.clear();
-        incompleteReadGroups.putAll(incompleteReadGroups);
     }
 
     public Map<String,ReadGroup> getIncompleteReadGroups() { return mIncompleteReadGroups; }
@@ -66,6 +63,16 @@ public class BamReader implements Callable
 
     public void findTelomereContent()
     {
+        // we use a thread based sam reader
+        mSamReader = mThreadSamReaders.get(Thread.currentThread());
+
+        if (mSamReader == null)
+        {
+            TE_LOGGER.info("creating sam reader");
+            mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.SampleBamFile));
+            mThreadSamReaders.put(Thread.currentThread(), mSamReader);
+        }
+
         mCompletedGroups = 0;
 
         if(mBaseRegion != null)
@@ -92,7 +99,7 @@ public class BamReader implements Callable
 
     private void processUnmappedReads()
     {
-        TE_LOGGER.info("processing unmapped reads");
+        TE_LOGGER.info("processing unmapped reads, incomplete={}", mIncompleteReadGroups.size());
 
         int readCount = 0;
 
@@ -117,16 +124,28 @@ public class BamReader implements Callable
     private void processIncompleteReadGroups()
     {
         // TODO - consider organising these into chromosomes and merging any close positions into a single region
+        // Question: What happens if the mate is not mapped?
         List<BaseRegion> mateRegions = Lists.newArrayList();
         for(ReadGroup readGroup : mIncompleteReadGroups.values())
         {
-            // TODO - are these supplementary? if so should merge their
-            for(ReadRecord read : readGroup.Reads)
+            for(SAMRecord read : readGroup.Reads)
             {
-                if(HumanChromosome.contains(read.mateChromosome()) && read.mateStartPosition() > 0)
+                if(!read.getReadPairedFlag())
                 {
-                    mateRegions.add(new BaseRegion(read.mateChromosome(), read.mateStartPosition(), read.mateStartPosition() + 1));
-                    break;
+                    continue;
+                }
+
+                if(!read.getMateUnmappedFlag())
+                {
+                    if(HumanChromosome.contains(read.getMateReferenceName()) && read.getMateAlignmentStart() > 0)
+                    {
+                        mateRegions.add(new BaseRegion(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart() + 1));
+                        break;
+                    }
+                    else
+                    {
+                        TE_LOGGER.info("mate region: {}:{} not found in chromosome", read.getMateReferenceName(), read.getMateAlignmentStart());
+                    }
                 }
             }
         }
@@ -169,30 +188,34 @@ public class BamReader implements Callable
 
     private void processReadRecord(final SAMRecord record)
     {
+        // we discard any supplementary / secondary alignments
+        if(record.isSecondaryOrSupplementary())
+            return;
+
+        // duplicate reads are fine, cause they telomere all look similar we should just keep them.
+        // most tools probably will not be able to correctly align them.
+
         ReadGroup readGroup = mIncompleteReadGroups.get(record.getReadName());
         boolean hasTeloContent = hasTelomericContent(record);
 
         if(!hasTeloContent && readGroup == null)
             return;
 
-        // look up any existing reads with the same ID
-        ReadRecord readRecord = ReadRecord.from(record);
-        readRecord.setTeloContent(hasTeloContent);
-
         if(readGroup == null)
         {
             // cache if new
-            readGroup = new ReadGroup(readRecord);
-            mIncompleteReadGroups.put(readRecord.Id, readGroup);
+            readGroup = new ReadGroup(record);
+            mIncompleteReadGroups.put(record.getReadName(), readGroup);
         }
         else
         {
             // otherwise log details and discard if now complete
-            readGroup.Reads.add(ReadRecord.from(record));
+            //TE_LOGGER.info("add to existing read group {}", record.getReadName());
+            readGroup.Reads.add(record);
 
-            if(readGroup.isComplete())
-                processCompleteReadGroup(readGroup);
         }
+        if(readGroup.isComplete())
+            processCompleteReadGroup(readGroup);
     }
 
     private void processIncompleteReadRecord(final SAMRecord record)
@@ -202,10 +225,7 @@ public class BamReader implements Callable
         if(readGroup == null)
             return;
 
-        ReadRecord readRecord = ReadRecord.from(record);
-        readRecord.setTeloContent(hasTelomericContent(record));
-
-        readGroup.Reads.add(readRecord);
+        readGroup.Reads.add(record);
 
         if(readGroup.isComplete())
             processCompleteReadGroup(readGroup);
@@ -213,11 +233,22 @@ public class BamReader implements Callable
 
     private void processCompleteReadGroup(final ReadGroup readGroup)
     {
-        mIncompleteReadGroups.remove(readGroup.id());
+        if (mIncompleteReadGroups.remove(readGroup.id()) != null)
+        {
+            if(readGroup.id().equals("HSQ1008:208:C0VH6ACXX:7:1212:6586:41485"))
+            {
+                TE_LOGGER.info("here");
+            }
 
-        readGroup.Reads.forEach(x -> x.markCompleteGroup());
-        mWriter.writeReadGroup(readGroup);
+            if (readGroup.Reads.size() > 2)
+            {
+                TE_LOGGER.info("read group size: {}", readGroup.Reads.size());
+            }
 
-        ++mCompletedGroups;
+            // readGroup.Reads.forEach(x -> x.markCompleteGroup());
+            mWriter.writeReadGroup(readGroup);
+
+            ++mCompletedGroups;
+        }
     }
 }
