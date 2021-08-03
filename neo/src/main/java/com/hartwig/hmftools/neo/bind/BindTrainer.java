@@ -2,19 +2,15 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCountData.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
+import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
+import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
-import static com.hartwig.hmftools.neo.bind.PeptideWriteType.LIKELY_INCORRECT;
-import static com.hartwig.hmftools.neo.bind.PeptideWriteType.TRAINING;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initFrequencyWriter;
-import static com.hartwig.hmftools.neo.utils.AminoAcidFrequency.AMINO_ACID_FREQ_FILE;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,16 +19,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.stats.AucCalc;
-import com.hartwig.hmftools.common.stats.AucData;
-import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class BindTrainer
@@ -40,13 +32,13 @@ public class BindTrainer
     private final BinderConfig mConfig;
 
     private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
-    private final AminoAcidFrequency mAminoAcidFrequency;
 
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
 
     private final Set<Integer> mDistinctPeptideLengths;
 
+    private final PosWeightModel mPosWeightModel;
     private final BlosumMapping mBlosumMapping;
     private final HlaSequences mHlaSequences;
 
@@ -56,13 +48,12 @@ public class BindTrainer
         mAllelePeptideData = Maps.newHashMap();
         mDistinctPeptideLengths = Sets.newHashSet();
 
-        mAminoAcidFrequency = new AminoAcidFrequency(cmd);
-        mAminoAcidFrequency.loadFrequencies();
-
         mBlosumMapping = new BlosumMapping();
 
         mHlaSequences = new HlaSequences();
         mHlaSequences.load(cmd.getOptionValue(POSITION_HLA_AA_FILE), cmd.getOptionValue(HLA_DEFINITIONS_FILE));
+
+        mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
 
         mAlleleBindCounts = Maps.newHashMap();
         mAlleleBindMatrices = Maps.newHashMap();
@@ -74,12 +65,6 @@ public class BindTrainer
 
         if(!loadTrainingData() || !loadRandomPredictionsData())
         {
-            System.exit(1);
-        }
-
-        if(mConfig.WritePosWeightMatrix && mAminoAcidFrequency.getAminoAcidFrequencies().isEmpty())
-        {
-            NE_LOGGER.warn("no amino acid frequencies loaded");
             System.exit(1);
         }
 
@@ -190,7 +175,7 @@ public class BindTrainer
             for(BindCountData bindCounts : pepLenBindCounts)
             {
                 totalAlelleCount += bindCounts.totalBindCount();
-                bindCounts.buildWeightedCounts(pepLenBindCounts, mConfig.Constants);
+                mPosWeightModel.buildWeightedCounts(bindCounts, pepLenBindCounts);
             }
 
             alleleTotalCounts.put(allele, totalAlelleCount);
@@ -220,7 +205,7 @@ public class BindTrainer
 
                 if(bindCounts != null)
                 {
-                    bindCounts.buildFinalWeightedCounts(allBindCounts, alleleTotalCounts, mConfig.Constants, mBlosumMapping, mHlaSequences);
+                    mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts, alleleTotalCounts);
                 }
             }
         }
@@ -242,11 +227,11 @@ public class BindTrainer
 
             for(BindCountData bindCounts : peptideLengthCounts.values())
             {
-                BindScoreMatrix matrix = bindCounts.createMatrix(mAminoAcidFrequency, peptideLengthFrequency);
+                BindScoreMatrix matrix = mPosWeightModel.createMatrix(bindCounts, peptideLengthFrequency);
                 peptideLengthMatrixMap.put(matrix.PeptideLength, matrix);
 
                 if(mConfig.WritePosWeightMatrix)
-                    bindCounts.writeMatrixData(matrixWriter, matrix, getMaxPeptideLength(), mConfig.WriteBindCounts);
+                    writeMatrixData(matrixWriter, bindCounts, matrix, getMaxPeptideLength(), mConfig.WriteBindCounts);
             }
         }
 
@@ -306,7 +291,6 @@ public class BindTrainer
         final Options options = new Options();
 
         BinderConfig.addCmdLineArgs(options);
-        options.addOption(AMINO_ACID_FREQ_FILE, true, "Amino acid frequency from proteome");
 
         final CommandLine cmd = createCommandLine(args, options);
 

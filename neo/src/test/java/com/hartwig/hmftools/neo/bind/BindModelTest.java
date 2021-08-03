@@ -2,9 +2,9 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
-import static com.hartwig.hmftools.neo.bind.BindCountData.INVALID_POS;
-import static com.hartwig.hmftools.neo.bind.BindCountData.peptidePositionToRef;
-import static com.hartwig.hmftools.neo.bind.BindCountData.refPeptidePositionToActual;
+import static com.hartwig.hmftools.neo.bind.PosWeightModel.INVALID_POS;
+import static com.hartwig.hmftools.neo.bind.PosWeightModel.peptidePositionToRef;
+import static com.hartwig.hmftools.neo.bind.PosWeightModel.refPeptidePositionToActual;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -134,9 +134,11 @@ public class BindModelTest
         CalcConstants calcConstants = new CalcConstants(100, 100, 1,
                 20000, 500, 500, false);
 
-        bindCounts8.buildWeightedCounts(bindCounts, calcConstants);
-        bindCounts9.buildWeightedCounts(bindCounts, calcConstants);
-        bindCounts12.buildWeightedCounts(bindCounts, calcConstants);
+        PosWeightModel pwModel = new PosWeightModel(calcConstants, new HlaSequences());
+
+        pwModel.buildWeightedCounts(bindCounts8, bindCounts);
+        pwModel.buildWeightedCounts(bindCounts9, bindCounts);
+        pwModel.buildWeightedCounts(bindCounts12, bindCounts);
 
         assertEquals(325, bindCounts8.getWeightedCounts()[aaIndex][0], 0.1);
         assertEquals(325, bindCounts8.getWeightedCounts()[aaIndex][7], 0.1);
@@ -180,9 +182,8 @@ public class BindModelTest
         CalcConstants calcConstants = new CalcConstants(100, 100, 1,
                 20000, 500, 500, false);
 
-        BlosumMapping blosum = new BlosumMapping();
-
         HlaSequences hlaSequences = new HlaSequences();
+
 
         Map<String,List<String>> allelePosSequences = hlaSequences.getAllelePositionSequences();
         String seq1 = "A";
@@ -191,15 +192,17 @@ public class BindModelTest
         allelePosSequences.put(TEST_ALLELE_1, Lists.newArrayList(seq1, seq1, seq1, seq2, seq2, seq2, seq3, seq3, seq3));
         allelePosSequences.put(TEST_ALLELE_2, Lists.newArrayList(seq1, seq2, seq3, seq3, seq2, seq2, seq3, seq3, seq3));
 
-        bindCountsA1.buildWeightedCounts(Lists.newArrayList(bindCountsA1) , calcConstants);
-        bindCountsA2.buildWeightedCounts(Lists.newArrayList(bindCountsA2), calcConstants);
+        PosWeightModel pwModel = new PosWeightModel(calcConstants, hlaSequences);
+
+        pwModel.buildWeightedCounts(bindCountsA1, Lists.newArrayList(bindCountsA1));
+        pwModel.buildWeightedCounts(bindCountsA2, Lists.newArrayList(bindCountsA2));
 
         Map<String,Integer> alleleTotalCounts = Maps.newHashMap();
         alleleTotalCounts.put(TEST_ALLELE_1, pepLenA1Count);
         alleleTotalCounts.put(TEST_ALLELE_2, pepLenA2Count);
 
-        bindCountsA1.buildFinalWeightedCounts(bindCounts, alleleTotalCounts, calcConstants, blosum, hlaSequences);
-        bindCountsA2.buildFinalWeightedCounts(bindCounts, alleleTotalCounts, calcConstants, blosum, hlaSequences);
+        pwModel.buildFinalWeightedCounts(bindCountsA1, bindCounts, alleleTotalCounts);
+        pwModel.buildFinalWeightedCounts(bindCountsA2, bindCounts, alleleTotalCounts);
 
         int aaIndex = aminoAcidIndex('A');
 

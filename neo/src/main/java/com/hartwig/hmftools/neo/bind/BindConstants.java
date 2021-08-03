@@ -11,6 +11,8 @@ public final class BindConstants
     public static final List<Character> AMINO_ACIDS = Lists.newArrayList(
             'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y');
 
+    public static final int AMINO_ACID_COUNT = AMINO_ACIDS.size();
+
     public static final Map<Character,Integer> AMINO_ACID_INDICES = Maps.newHashMap();
 
     static
@@ -34,6 +36,8 @@ public final class BindConstants
     public static final int REF_PEPTIDE_LEFT_FIXED_POS = 4;
 
     public static final double MIN_OBSERVED_AA_POS_FREQ = 0.0005;
+
+    public static final double AMINO_ACID_C_FREQ_ADJUST = 3;
 
     public static final double DEFAULT_PEPTIDE_LENGTH_WEIGHT = 50;
     public static final double DEFAULT_ALLELE_MOTIF_WEIGHT = 100;

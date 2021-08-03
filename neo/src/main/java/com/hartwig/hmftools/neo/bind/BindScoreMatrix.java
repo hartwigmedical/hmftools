@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
+import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
 import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -59,6 +62,105 @@ public class BindScoreMatrix
 
         return score;
     }
+
+    public static BufferedWriter initMatrixWriter(final String filename, int peptideLength, boolean writeCounts)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("Allele,PeptideLength,AminoAcid");
+
+            if(writeCounts)
+                writer.write(",DataType");
+
+            for(int i = 0; i < peptideLength; ++i)
+            {
+                writer.write(String.format(",P%d", i));
+            }
+
+            writer.newLine();
+
+            return writer;
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to initialise matrix data file({}): {}", filename, e.toString());
+            return null;
+        }
+    }
+
+    public static void writeMatrixData(
+            final BufferedWriter writer, final BindCountData bindCounts, final BindScoreMatrix matrix, int maxPeptideLength, boolean writeCounts)
+    {
+        NE_LOGGER.debug("writing allele({}) matrix data", matrix.Allele);
+
+        final double[][] data = matrix.getBindScores();
+
+        try
+        {
+            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
+            {
+                char aminoAcid = AMINO_ACIDS.get(aa);
+
+                writer.write(String.format("%s,%d,%c", matrix.Allele, matrix.PeptideLength, aminoAcid));
+
+                if(writeCounts)
+                    writer.write(",PosWeights");
+
+                for(int pos = 0; pos < maxPeptideLength; ++pos)
+                {
+                    if(pos < matrix.PeptideLength)
+                    {
+                        writer.write(String.format(",%.6f", data[aa][pos]));
+                    }
+                    else
+                    {
+                        writer.write(",0.0");
+                    }
+                }
+
+                writer.newLine();
+            }
+
+            if(writeCounts)
+            {
+                for(int i = 0; i <= 2; ++i)
+                {
+                    final double[][] counts = (i == 0) ? bindCounts.getBindCounts() : (i == 1) ?
+                            bindCounts.getWeightedCounts() : bindCounts.getFinalWeightedCounts();
+
+                    String dataType = (i == 0) ? "BindCounts" : (i == 1) ? "PeptideLengthWeighted" : "AlleleMotifWeighted";
+
+                    for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
+                    {
+                        char aminoAcid = AMINO_ACIDS.get(aa);
+
+                        writer.write(String.format("%s,%d,%c,%s", matrix.Allele, matrix.PeptideLength, aminoAcid, dataType));
+
+                        for(int pos = 0; pos < maxPeptideLength; ++pos)
+                        {
+                            if(pos < matrix.PeptideLength)
+                            {
+                                writer.write(String.format(",%.1f", counts[aa][pos]));
+                            }
+                            else
+                            {
+                                writer.write(",0.0");
+                            }
+                        }
+
+                        writer.newLine();
+                    }
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to write matrix data: {}", e.toString());
+        }
+    }
+
 
     public static List<BindScoreMatrix> loadFromCsv(final String filename)
     {

@@ -45,20 +45,22 @@ public class RandomPeptideDistribution
 
     public Map<String,Map<Integer,List<ScoreDistributionData>>> getAlleleScoresMap() { return mAlleleScoresMap; }
 
+    public static final double INVALID_RANK = -1;
+
     public double getScoreRank(final String allele, final int peptideLength, double score)
     {
         Map<Integer,List<ScoreDistributionData>> peptideLengthMap = mAlleleScoresMap.get(allele);
 
         if(peptideLengthMap == null)
-            return -1;
+            return INVALID_RANK;
 
         List<ScoreDistributionData> scores = peptideLengthMap.get(peptideLength);
 
         if(scores == null || scores.isEmpty())
-            return -1;
+            return INVALID_RANK;
 
         if(score > scores.get(0).Score)
-            return scores.get(0).ScoreBucket * 0.5;
+            return 0; // zero-th percentile if the score is better than any in the random distribution
 
         for(int i = 0; i < scores.size(); ++i)
         {
