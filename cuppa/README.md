@@ -241,13 +241,10 @@ This classifier solely relies on the mutational distribution of tumors of genomi
 CUPPA calculates a consensus mutation distribution for each cohort by counting  SNV TMB by bucketed genomic position across each cohort. High TMB samples are downsampled to 20k mutations in this consensus so that individual samples cannot dominate a cohort. CUPPA counts mutations using a window size of 500kb bases (chosen after testing various sizes from 100kb to 10Mb). 
 
 The genomic position similarity likelihood for a given sample is determined by first calculating the cosine similarity (CSS) of a sample to each cohort consensus distribution and then weighing using the following algorithm:
-
 ```
 Score(sample=s,cancerType=i) = 8^[100*(CSS(i,s)-BestCSS(s))] 
 ```
-
 CUPPA sums the scores across each tumor type to estimate a likelihood for each cancer type:
-
 ```
 Likelihood(tumorType=i) = Score(i) / SUM(all tumors) [Score]
 ```
@@ -259,23 +256,19 @@ This classifier relies solely on relative SNV counts via the 96 trinucleotide bu
 Unlike the genomic position similarity which determines a consensus view of mutational distribution, the SNV_96_PAIRWISE classifier does not create a consensus view per tumor type as tumor types may have a diverse range of mutational profiles. Instead the classifier calculates a pairwise cosine similarity between the sample in question and every other sample in the Hartwig cohort.
 
 Once a pairwise CSS has been determined, a score is calculated for each pair using the following formula:
-
 ```
 Score(i,j) = 8^[-100*(1-CSS)] ^[ maxCSS^8] * mutationCountWeightFactor * cohortSizeWeightFactor
 ```
-
 Where:
-
-*MaxCSS is the maximum pairwise CSS for any sample in the cohort.  This factor reduces confidences in general for samples that have no close pairwise match.
-*mutationCountWeightFactor penalises pairs with large differences in SNV TMB. This is implemented as:
+* MaxCSS is the maximum pairwise CSS for any sample in the cohort.  This factor reduces confidences in general for samples that have no close pairwise match.
+* mutationCountWeightFactor penalises pairs with large differences in SNV TMB. This is implemented as:
 ```
 mutationCountWeightFactor = min(SNV_TMB(i)/SNV_TMB(j),SNV_TMB(j)/SNV_TMB(i)) 
 ```
-*cohortSizeWeightFactor penalises larger cohorts which will have more similar tumors just by chance (eg. Breast cohort =~ 750 samples vs Thyroid cohort =~ 20 samples), implemented as:
+* cohortSizeWeightFactor penalises larger cohorts which will have more similar tumors just by chance (eg. Breast cohort =~ 750 samples vs Thyroid cohort =~ 20 samples), implemented as:
 ```
 cohortSizeWeightFactor = sqrt(# of samples of tumor type) / SUM(i)[sqrt(# of samples of tumor type i)]
 ```
-
 As for genomic position similarity, CUPPA sums the scores across each tumor type to estimate the likelihood:
 ```
 Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
@@ -294,7 +287,7 @@ Features are weighted by driver likelihood.   For point mutations the driver lik
 
 The prevalence of each feature in each cancer type is calculated
 ```
-Prevalence = minPrevalence + sum (driverLikelihood) / COUNT(samples)]
+Prevalence = minPrevalence + sum (driverLikelihood) / COUNT(samples)
 ```
 Where minPrevalence is a fixed notional background rate of observing a passenger set to 0.15 / count of cancer types for drivers or indels in lineage defining genes and 0.01 / count of cancer types for fusions and viral insertions which are rarely passengers. 
 
@@ -363,7 +356,7 @@ cohortSizeWeightFactor = sqrt(# of samples of tumor type) / SUM(i)[sqrt(# of sam
 ```
 CUPPA then sums the scores across each tumor type to estimate the likelihood:
 ```
-Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
+Likelihood(tumorType=i) = SUM(tumorType=i)[Score] / SUM(all tumors)[Score]
 ```
 
 ### Novel Splice Junction (ALT_SJ_COHORT) classifier
