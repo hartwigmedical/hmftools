@@ -11,12 +11,18 @@ public class ScoreDistributionData
     public final double ScoreBucket;
     public final double Score;
 
-    public ScoreDistributionData(final String allele, final int peptideLength, final double scoreBucket, final double score)
+    public final int BucketCount;
+    public final int CumulativeCount;
+
+    public ScoreDistributionData(
+            final String allele, final int peptideLength, final double scoreBucket, final double score, int bucketCount, int cumulCount)
     {
         Allele = allele;
         PeptideLength = peptideLength;
         ScoreBucket = scoreBucket;
         Score = score;
+        BucketCount = bucketCount;
+        CumulativeCount = cumulCount;
     }
 
     public static ScoreDistributionData fromCsv(final String data, final Map<String,Integer> fieldsDataMap)
@@ -25,7 +31,8 @@ public class ScoreDistributionData
 
         return new ScoreDistributionData(
                 items[fieldsDataMap.get("Allele")], Integer.parseInt(items[fieldsDataMap.get("PeptideLength")]),
-                Double.parseDouble(items[fieldsDataMap.get("ScoreBucket")]), Double.parseDouble(items[fieldsDataMap.get("Score")]));
+                Double.parseDouble(items[fieldsDataMap.get("ScoreBucket")]), Double.parseDouble(items[fieldsDataMap.get("Score")]),
+                0, 0);
     }
 
 }

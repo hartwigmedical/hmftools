@@ -35,6 +35,7 @@ public class BinderConfig
     public final boolean WriteFrequencyData;
     public final boolean WritePosWeightMatrix;
     public final boolean WriteBindCounts;
+    public final boolean WriteRandomDistribution;
     public final PeptideWriteType WritePeptideType;
 
     public final List<String> SpecificAlleles;
@@ -54,6 +55,7 @@ public class BinderConfig
     private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
     private static final String WRITE_BIND_COUNTS = "write_bind_counts";
+    private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
@@ -101,6 +103,7 @@ public class BinderConfig
         RunScoring = cmd.hasOption(RUN_SCORING);
         WritePosWeightMatrix = cmd.hasOption(WRITE_PW_MATRIX);
         WriteBindCounts = cmd.hasOption(WRITE_BIND_COUNTS);
+        WriteRandomDistribution = cmd.hasOption(WRITE_RAND_DIST);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
     }
@@ -130,6 +133,7 @@ public class BinderConfig
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_BIND_COUNTS, false, "Write interim bind counts data");
+        options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");

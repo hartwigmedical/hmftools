@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static java.lang.Math.pow;
+
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
 import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
@@ -59,12 +61,12 @@ public class BlosumMapping
 
         for(int i = 0; i < sequence.length(); ++i)
         {
-            char aminoAcid = sequence.charAt(0);
+            char aminoAcid = sequence.charAt(i);
             int mapping = selfMapping(aminoAcid);
-            total += Math.pow(2, mapping);
+            total += mapping;
         }
 
-        return total;
+        return pow(2, total);
     }
 
     public double calcSequenceBlosumScore(final String seq1, final String seq2)
@@ -79,13 +81,13 @@ public class BlosumMapping
 
         for(int i = 0; i < seq1.length(); ++i)
         {
-            char aa1 = seq1.charAt(0);
-            char aa2 = seq2.charAt(0);
+            char aa1 = seq1.charAt(i);
+            char aa2 = seq2.charAt(i);
             int mapping = map(aa1, aa2);
-            total += Math.pow(2, mapping);
+            total += mapping;
         }
 
-        return total;
+        return pow(2, total);
     }
 
     private void load()

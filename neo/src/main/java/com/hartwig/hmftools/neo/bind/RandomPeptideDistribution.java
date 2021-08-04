@@ -11,7 +11,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +25,11 @@ public class RandomPeptideDistribution
     private boolean mDataLoaded;
 
     private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoresMap; // allele to peptide length to distribution
+
+    private static final List<Double> SCORE_DISCRETE_SIZES = Lists.newArrayList(0.0001, 0.001, 0.01);
+    private static final List<Double> SCORE_DISCRETE_BRACKETS = Lists.newArrayList(0.01, 0.1, 1.0);
+
+    public static final double INVALID_RANK = -1;
 
     public RandomPeptideDistribution(final BinderConfig config)
     {
@@ -44,8 +48,6 @@ public class RandomPeptideDistribution
     public boolean hasData() { return mDataLoaded; }
 
     public Map<String,Map<Integer,List<ScoreDistributionData>>> getAlleleScoresMap() { return mAlleleScoresMap; }
-
-    public static final double INVALID_RANK = -1;
 
     public double getScoreRank(final String allele, final int peptideLength, double score)
     {
@@ -78,6 +80,166 @@ public class RandomPeptideDistribution
         }
 
         return 1;
+    }
+
+    private List<String> loadRandomPeptides()
+    {
+        List<String> refRandomPeptides = Lists.newArrayList();
+
+        if(mConfig.RandomPeptidesFile == null)
+        {
+            NE_LOGGER.error("missing random peptides file");
+            return refRandomPeptides;
+        }
+
+        try
+        {
+            refRandomPeptides.addAll(Files.readAllLines(new File(mConfig.RandomPeptidesFile).toPath()));
+            refRandomPeptides.remove(0);
+
+            NE_LOGGER.info("loaded {} random peptides", refRandomPeptides.size());
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to load random peptide file: {}", e.toString());
+        }
+
+        return refRandomPeptides;
+    }
+
+    public void buildDistribution(final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap)
+    {
+        List<String> refRandomPeptides = loadRandomPeptides();
+
+        if(refRandomPeptides.isEmpty())
+            return;
+
+        // score each against each allele and build up a percentiles for each
+        for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
+        {
+            final String allele = alleleEntry.getKey();
+            final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
+
+            Map<Integer,List<ScoreDistributionData>> peptideLengthMap = Maps.newHashMap();
+            mAlleleScoresMap.put(allele, peptideLengthMap);
+
+            for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
+            {
+                NE_LOGGER.info("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
+
+                int peptideCount = refRandomPeptides.size();
+
+                List<Double> peptideScores = Lists.newArrayList();
+
+                int count = 0;
+
+                for(String peptide : refRandomPeptides)
+                {
+                    if(peptide.length() > matrix.PeptideLength)
+                        peptide = peptide.substring(0, matrix.PeptideLength);
+
+                    double score = matrix.calcScore(peptide);
+                    VectorUtils.optimisedAdd(peptideScores, score, false);
+
+                    ++count;
+
+                    if(count > 0 && (count % 500000) == 0)
+                    {
+                        NE_LOGGER.debug("added {} sorted random peptide scores", count);
+                    }
+                }
+
+                // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
+                int discreteIndex = 0;
+                double currentSize = SCORE_DISCRETE_SIZES.get(discreteIndex);
+                double currentBracket = SCORE_DISCRETE_BRACKETS.get(discreteIndex);
+                int requiredScores = (int) round(peptideCount * currentSize);
+
+                double scoreTotal = 0;
+                int currentScoreCount = 0;
+                double currentSizeTotal = 0;
+                int cumulativeScores = 0;
+
+                List<ScoreDistributionData> scoresDistributions = Lists.newArrayList();
+                peptideLengthMap.put(matrix.PeptideLength, scoresDistributions);
+
+                for(Double score : peptideScores)
+                {
+                    scoreTotal += score;
+                    ++currentScoreCount;
+                    ++cumulativeScores;
+
+                    if(currentScoreCount >= requiredScores)
+                    {
+                        double avgScore = scoreTotal / currentScoreCount;
+
+                        scoresDistributions.add(new ScoreDistributionData(
+                                matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
+
+                        scoreTotal = 0;
+                        currentScoreCount = 0;
+                        currentSizeTotal += currentSize;
+
+                        if(Doubles.equal(currentSizeTotal, currentBracket))
+                        {
+                            ++discreteIndex;
+
+                            if(discreteIndex < SCORE_DISCRETE_SIZES.size())
+                            {
+                                currentSize = SCORE_DISCRETE_SIZES.get(discreteIndex);
+                                currentBracket = SCORE_DISCRETE_BRACKETS.get(discreteIndex);
+                                requiredScores = (int) round(peptideCount * currentSize);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if(mConfig.WriteRandomDistribution)
+            writeDistribution();
+    }
+
+    private void writeDistribution()
+    {
+        NE_LOGGER.info("writing random peptide scoring distribution");
+
+        final String distFilename = mConfig.formFilename("random_peptide_dist");
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(distFilename, false);
+
+            writer.write("Allele,PeptideLength,ScoreBucket,Score,BucketCount,CumulativeCount");
+            // writer.write(",CurrentScores,CurrentSize,CurrentBracket,CurrentSizeTotal");
+            writer.newLine();
+
+            // score each against each allele and build up a percentiles for each
+            for(Map.Entry<String,Map<Integer,List<ScoreDistributionData>>> alleleEntry : mAlleleScoresMap.entrySet())
+            {
+                final String allele = alleleEntry.getKey();
+                final Map<Integer,List<ScoreDistributionData>> pepLenDistMap = alleleEntry.getValue();
+
+                for(List<ScoreDistributionData> pepLenScoreDist : pepLenDistMap.values())
+                {
+                    for(ScoreDistributionData scoreDist : pepLenScoreDist)
+                    {
+                        writer.write(String.format("%s,%d,%f,%.4f,%d,%d",
+                                scoreDist.Allele, scoreDist.PeptideLength, scoreDist.ScoreBucket, scoreDist.Score,
+                                scoreDist.BucketCount, scoreDist.CumulativeCount));
+
+                        //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
+                        writer.newLine();
+                    }
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
+        }
     }
 
     private boolean loadDistribution()
@@ -119,141 +281,10 @@ public class RandomPeptideDistribution
         }
         catch(IOException e)
         {
-            NE_LOGGER.error("failed to read training binding data file: {}", e.toString());
+            NE_LOGGER.error("failed to read random distribution file: {}", e.toString());
             return false;
         }
 
         return true;
     }
-
-    public void buildDistribution(final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap)
-    {
-        if(mConfig.RandomPeptidesFile == null)
-        {
-            NE_LOGGER.error("missing random peptides file");
-            return;
-        }
-
-        List<String> refRandomPeptides = Lists.newArrayList();
-
-        final String distFilename = mConfig.formFilename("random_peptide_dist");
-
-        try
-        {
-            refRandomPeptides.addAll(Files.readAllLines(new File(mConfig.RandomPeptidesFile).toPath()));
-            refRandomPeptides.remove(0);
-
-            NE_LOGGER.info("loaded {} random peptides", refRandomPeptides.size());
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
-            return;
-        }
-
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(distFilename, false);
-
-            writer.write("Allele,PeptideLength,ScoreBucket,Score,BucketCount,CumulativeCount");
-            // writer.write(",CurrentScores,CurrentSize,CurrentBracket,CurrentSizeTotal");
-            writer.newLine();
-
-            // score each against each allele and build up a percentiles for each
-            for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
-            {
-                final String allele = alleleEntry.getKey();
-                final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
-
-                Map<Integer,List<ScoreDistributionData>> peptideLengthMap = Maps.newHashMap();
-                mAlleleScoresMap.put(allele, peptideLengthMap);
-
-                for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
-                {
-                    NE_LOGGER.info("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
-
-                    int peptideCount = refRandomPeptides.size();
-
-                    List<Double> peptideScores = Lists.newArrayList();
-
-                    int count = 0;
-
-                    for(String peptide : refRandomPeptides)
-                    {
-                        if(peptide.length() > matrix.PeptideLength)
-                            peptide = peptide.substring(0, matrix.PeptideLength);
-
-                        double score = matrix.calcScore(peptide);
-                        VectorUtils.optimisedAdd(peptideScores, score, false);
-
-                        ++count;
-
-                        if(count > 0 && (count % 100000) == 0)
-                        {
-                            NE_LOGGER.debug("added {} sorted random peptide scores", count);
-                        }
-                    }
-
-                    // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
-                    List<Double> scoreDiscreteSizes = Lists.newArrayList(0.0001, 0.001, 0.01);
-                    List<Double> scoreDiscreteBrackets = Lists.newArrayList(0.01, 0.1, 1.0);
-                    int discreteIndex = 0;
-                    double currentSize = scoreDiscreteSizes.get(discreteIndex);
-                    double currentBracket = scoreDiscreteBrackets.get(discreteIndex);
-                    int requiredScores = (int) round(peptideCount * currentSize);
-
-                    double scoreTotal = 0;
-                    int currentScoreCount = 0;
-                    double currentSizeTotal = 0;
-                    int cumulativeScores = 0;
-
-                    List<ScoreDistributionData> scoresDistributions = Lists.newArrayList();
-                    peptideLengthMap.put(matrix.PeptideLength, scoresDistributions);
-
-                    for(Double score : peptideScores)
-                    {
-                        scoreTotal += score;
-                        ++currentScoreCount;
-                        ++cumulativeScores;
-
-                        if(currentScoreCount >= requiredScores)
-                        {
-                            double avgScore = scoreTotal / currentScoreCount;
-
-                            writer.write(String.format("%s,%d,%f,%.4f,%d,%d",
-                                    matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
-
-                            //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
-                            writer.newLine();
-
-                            scoresDistributions.add(new ScoreDistributionData(matrix.Allele, matrix.PeptideLength, currentSizeTotal, avgScore));
-
-                            scoreTotal = 0;
-                            currentScoreCount = 0;
-                            currentSizeTotal += currentSize;
-
-                            if(Doubles.equal(currentSizeTotal, currentBracket))
-                            {
-                                ++discreteIndex;
-
-                                if(discreteIndex < scoreDiscreteSizes.size())
-                                {
-                                    currentSize = scoreDiscreteSizes.get(discreteIndex);
-                                    currentBracket = scoreDiscreteBrackets.get(discreteIndex);
-                                    requiredScores = (int) round(peptideCount * currentSize);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
-        }
-    }
-
 }

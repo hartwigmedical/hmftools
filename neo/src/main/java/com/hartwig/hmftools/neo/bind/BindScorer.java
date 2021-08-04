@@ -139,19 +139,22 @@ public class BindScorer
         {
             final Map<Integer,List<BindData>> pepLenBindDataMap = mAllelePeptideData.get(allele);
 
-            int trainingCount = 0;
-            int randomCount = 0;
             int errors = 0;
 
             // internal model assesses AUC per peptide length
             // external models across an entire allele
 
             List<AucData> alleleAucMcfData = Lists.newArrayList();
+            int trainingCountMcf = 0;
+            int randomCountMcf = 0;
 
             for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
                 List<AucData> alleleAucData = Lists.newArrayList();
                 List<AucData> alleleAucRankData = Lists.newArrayList();
+
+                int trainingCount = 0;
+                int randomCount = 0;
 
                 for(BindData bindData : pepLenEntry.getValue())
                 {
@@ -177,6 +180,9 @@ public class BindScorer
                 writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
                         allele, pepLenEntry.getKey(), "MODEL", trainingCount, randomCount, aucPerc));
                 writer.newLine();
+
+                trainingCountMcf += trainingCount;
+                randomCountMcf += randomCount;
             }
 
             if(!alleleAucMcfData.isEmpty())
@@ -184,10 +190,10 @@ public class BindScorer
                 double aucMcf = AucCalc.calcPercentilesAuc(alleleAucMcfData, Level.TRACE);
 
                 NE_LOGGER.debug(String.format("allele(%s) McFlurry peptides(train=%d, rand=%d) AUC(%.4f)",
-                        allele, trainingCount, randomCount, aucMcf));
+                        allele, trainingCountMcf, randomCountMcf, aucMcf));
 
                 writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
-                        allele, 0, "MCF", trainingCount, randomCount, aucMcf));
+                        allele, 0, "MCF", trainingCountMcf, randomCountMcf, aucMcf));
                 writer.newLine();
             }
         }
@@ -205,7 +211,7 @@ public class BindScorer
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity");
+            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
             writer.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
@@ -229,9 +235,10 @@ public class BindScorer
                             continue;
                         }
 
-                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.1f,%.1f",
+                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.2f,%.2f,%.4f,%.4f",
                                 allele, bindData.Peptide, bindData.Source,
-                                bindData.score(), bindData.rankPercentile(), bindData.Affinity, bindData.predictedAffinity()));
+                                bindData.score(), bindData.rankPercentile(), bindData.Affinity,
+                                bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
                         writer.newLine();
                     }
                 }

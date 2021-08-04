@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -69,10 +71,7 @@ public class BindScoreMatrix
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Allele,PeptideLength,AminoAcid");
-
-            if(writeCounts)
-                writer.write(",DataType");
+            writer.write("DataType,Allele,PeptideLength,AminoAcid");
 
             for(int i = 0; i < peptideLength; ++i)
             {
@@ -90,6 +89,8 @@ public class BindScoreMatrix
         }
     }
 
+    private static final String DATA_TYPE_POS_WEIGHTS = "PosWeights";
+
     public static void writeMatrixData(
             final BufferedWriter writer, final BindCountData bindCounts, final BindScoreMatrix matrix, int maxPeptideLength, boolean writeCounts)
     {
@@ -103,10 +104,7 @@ public class BindScoreMatrix
             {
                 char aminoAcid = AMINO_ACIDS.get(aa);
 
-                writer.write(String.format("%s,%d,%c", matrix.Allele, matrix.PeptideLength, aminoAcid));
-
-                if(writeCounts)
-                    writer.write(",PosWeights");
+                writer.write(String.format("%s,%s,%d,%c", DATA_TYPE_POS_WEIGHTS, matrix.Allele, matrix.PeptideLength, aminoAcid));
 
                 for(int pos = 0; pos < maxPeptideLength; ++pos)
                 {
@@ -136,7 +134,7 @@ public class BindScoreMatrix
                     {
                         char aminoAcid = AMINO_ACIDS.get(aa);
 
-                        writer.write(String.format("%s,%d,%c,%s", matrix.Allele, matrix.PeptideLength, aminoAcid, dataType));
+                        writer.write(String.format("%s,%s,%d,%c", dataType, matrix.Allele, matrix.PeptideLength, aminoAcid));
 
                         for(int pos = 0; pos < maxPeptideLength; ++pos)
                         {
@@ -176,9 +174,10 @@ public class BindScoreMatrix
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get("Allele");
+            int dataTypeIndex = fieldsIndexMap.get("DataType");
             int peptideLenIndex = fieldsIndexMap.get("PeptideLength");
             int aaIndex = fieldsIndexMap.get("AminoAcid");
-            int peptideStartIndex = aaIndex + 1;
+            int peptideStartIndex = max(aaIndex, dataTypeIndex) + 1;
 
             for(String line : lines)
             {
@@ -186,6 +185,11 @@ public class BindScoreMatrix
 
                 // Allele,PeptideLength,AminoAcid,P0,P1,P2,P3,P4,P5,P6,P7,P8
                 //B4001,9,A,1.0286,-4.7395,0.4656,-0.1505,-0.3065,-0.0971,-0.3378,0.4915,-3.4338
+                String dataType = items[dataTypeIndex];
+
+                if(!dataType.equals(DATA_TYPE_POS_WEIGHTS))
+                    continue;
+
                 String allele = items[alleleIndex];
                 int peptideLength = Integer.parseInt(items[peptideLenIndex]);
 
