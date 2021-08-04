@@ -195,8 +195,8 @@ Bone/Soft tissue: Other | Bone/Soft tissue ({other or unspecified})
 Breast | Breast
 Cartilaginous neoplasm | 
 Chronic lymphocytic leukemia |
-Colorectum/Appendix/Small intestine | Colorectum ({other or unspecified}); Appendix; Small intestine({other or unspecified})
-Esophagus/Stomach | Esophagus ({excluding Nueroendocrine tumor}); Stomach ({excluding Nueroendocrine tumor}); Gastroesophageal
+Colorectum/Appendix/Small intestine | Colorectum ({other or unspecified}); Appendix; Small intestine({other})
+Esophagus/Stomach | Esophagus ({excl. Nueroendocrine tumor}); Stomach ({excl. Nueroendocrine tumor}); Gastroesophageal
 GIST | Bone/Soft tissue (Gastrointestinal stromal tumor)
 Glioma | Nervous system (Glioma)
 Head and neck: other | Head and neck({other})
@@ -213,13 +213,13 @@ Mesothelium | Mesothelium
 Osteosarcoma | Bone/Soft tissue (Osteosarcoma)
 Other | Gastrointestinal tract, Eye, Bone marrow, Nervous system({other}), Adrenal Gland, Thymus, Testis, Esophagus (Nueroendocrine tumor),Stomach (Neuroendocrine tumor)
 Ovary/Fallopian tube | Ovary; Fallopian tube
-Pancreas | Pancreas ({other or unspecified>)
+Pancreas | Pancreas ({other>)
 Pancreas: NET | Pancreas (Neuroendocrine Tumor)
 Pilocytic astrocytoma | Nervous system (Pilocytic astrocytoma)
 Prostate | Prostate
 Salivary gland/Adenoid cystic | Head and Neck:Salivary gland, Head and Neck:Parotid gland, Head and Neck:Sublingual gland, {any}(Carcinoma:Adenoid cystic carcinoma), Trachea
 Melanoma | <Any, excluding Eye> (Melanoma)
-Skin:Other | Skin ({other or unspecified})
+Skin:Other | Skin ({other})
 Small intestine/Colorectum: NET | Small intestine(Neuroendocrine tumor); Colorectum(Neuroendocrine tumor)
 Thyroid gland | Thyroid gland
 Urothelial tract | Urothelial tract
