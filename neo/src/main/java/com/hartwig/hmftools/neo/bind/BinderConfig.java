@@ -22,29 +22,26 @@ public class BinderConfig
 {
     public final String TrainingDataFile;
     public final String BindMatrixFile; // file with computed and cached binding matrix per allele
-    public final String RandomPeptidesFile; // list of random peptides from the proteome
     public final String RandomPeptidePredictionsFile; // predictions per allele for random peptides
-    public final String RandomPeptideDistributionFile; // internally scored and ranked distribuion of random peptides
 
     public final CalcConstants Constants;
     public final boolean RunScoring;
     public final boolean CalcPairs;
+
+    public final RandomPeptideConfig RandomPeptides;
 
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteFrequencyData;
     public final boolean WritePosWeightMatrix;
     public final boolean WriteBindCounts;
-    public final boolean WriteRandomDistribution;
     public final PeptideWriteType WritePeptideType;
 
     public final List<String> SpecificAlleles;
     public final List<Integer> SpecificPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
-    private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
     private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
-    private static final String RANDOM_PEPTIDE_DIST_FILE = "random_peptide_dist_file";
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
 
     private static final String MAX_AFFINITY = "max_affinity";
@@ -55,21 +52,18 @@ public class BinderConfig
     private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
     private static final String WRITE_BIND_COUNTS = "write_bind_counts";
-    private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
 
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String SPECIFIC_PEPTIDE_LENGTHS = "specific_peptide_lengths";
-    private static final String OUTPUT_ID = "output_id";
+    public static final String OUTPUT_ID = "output_id";
 
     public BinderConfig(final CommandLine cmd)
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
-        RandomPeptidesFile = cmd.getOptionValue(RANDOM_PEPTIDES_FILE);
         RandomPeptidePredictionsFile = cmd.getOptionValue(RANDOM_PEPTIDE_PRED_FILE);
-        RandomPeptideDistributionFile = cmd.getOptionValue(RANDOM_PEPTIDE_DIST_FILE);
         BindMatrixFile = cmd.getOptionValue(BIND_MATRIX_FILE);
 
         OutputDir = parseOutputDir(cmd);
@@ -101,26 +95,32 @@ public class BinderConfig
 
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
         RunScoring = cmd.hasOption(RUN_SCORING);
+
+        RandomPeptides = new RandomPeptideConfig(cmd);
+
         WritePosWeightMatrix = cmd.hasOption(WRITE_PW_MATRIX);
         WriteBindCounts = cmd.hasOption(WRITE_BIND_COUNTS);
-        WriteRandomDistribution = cmd.hasOption(WRITE_RAND_DIST);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
     }
 
     public String formFilename(final String fileId)
     {
-        if(OutputId.isEmpty())
-            return String.format("%sbind_%s.csv", OutputDir, fileId);
+        return formFilename(fileId, OutputDir, OutputId);
+    }
+
+    public static String formFilename(final String fileId, final String outputDir, final String outputId)
+    {
+        if(outputId.isEmpty())
+            return String.format("%sbind_%s.csv", outputDir, fileId);
         else
-            return String.format("%sbind_%s_%s.csv", OutputDir, OutputId, fileId);
+            return String.format("%sbind_%s_%s.csv", outputDir, outputId, fileId);
     }
 
     public static void addCmdLineArgs(Options options)
     {
+        RandomPeptideConfig.addCmdLineArgs(options);
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
-        options.addOption(RANDOM_PEPTIDES_FILE, true, "Random peptide file");
-        options.addOption(RANDOM_PEPTIDE_DIST_FILE, true, "Random peptide distribution file");
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
@@ -133,7 +133,6 @@ public class BinderConfig
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_BIND_COUNTS, false, "Write interim bind counts data");
-        options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");

@@ -6,7 +6,6 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.ALLELE_POS_MAPPING_PEPTIDE_LENGTH;
-import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_C_FREQ_ADJUST;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
@@ -18,8 +17,6 @@ import static org.apache.commons.math3.util.FastMath.log;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 public class PosWeightModel
@@ -29,25 +26,12 @@ public class PosWeightModel
     private final BlosumMapping mBlosumMapping;
     private final HlaSequences mHlaSequences;
 
-    private final List<Double> mScorePercentileBuckets;
-
-    // per-allele working data
-    private final Map<Integer,List<Integer>> mScorePercentileCounts;
-
     public PosWeightModel(final CalcConstants calcConstants, final HlaSequences hlaSequences)
     {
         mConstants = calcConstants;
         mAminoAcidFrequency = new AminoAcidFrequency();
         mBlosumMapping = new BlosumMapping();
         mHlaSequences = hlaSequences;
-
-        mScorePercentileBuckets = Lists.newArrayList();
-        mScorePercentileCounts = Maps.newHashMap();
-    }
-
-    public void populateScorePercentileBuckets(final List<Double> scorePercentileBuckets)
-    {
-        mScorePercentileBuckets.addAll(scorePercentileBuckets);
     }
 
     public static final int INVALID_POS = -1;
@@ -82,13 +66,14 @@ public class PosWeightModel
             final double[][] otherCounts = otherBindCounts.getBindCounts();
             int otherPeptideLength = otherBindCounts.PeptideLength;
 
+            // = IF(E2 = $B$2, F2, F2 / abs(E2-$B$2) * (1/(1+($B$10/$B$4)^$B$6)))
             // LWCount(A,L,P,AA) = Count(A,L,P,AA) + SUM(l<>L) [ Count(A,l,P,AA) * 1/abs(L-l)] * [1 / ( 1+ Obs(A,L)/LHW)^E)]
             double weight = 1;
 
             if(otherPeptideLength != bindCounts.PeptideLength)
             {
                 weight = 1.0 / abs(bindCounts.PeptideLength - otherPeptideLength)
-                        * 1 / pow(1 + bindCounts.totalBindCount() / mConstants.PeptideLengthWeight, mConstants.WeightExponent);
+                        * 1 / (1 + pow(bindCounts.totalBindCount() / mConstants.PeptideLengthWeight, mConstants.WeightExponent));
             }
 
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
@@ -171,7 +156,7 @@ public class PosWeightModel
                         motifSimilarity = crossAlleleScore / selfScore;
                     }
 
-                    double observationsWeight = 1 / pow(1 + alleleTotalCount / mConstants.AlleleWeight, mConstants.WeightExponent);
+                    double observationsWeight = 1 / (1 + pow(alleleTotalCount / mConstants.AlleleWeight, mConstants.WeightExponent));
 
                     double otherWeightedCount = otherCount * observationsWeight * motifSimilarity;
                     finalWeightedCounts[aa][pos] += otherWeightedCount;
@@ -180,7 +165,7 @@ public class PosWeightModel
         }
     }
 
-    public BindScoreMatrix createMatrix(final BindCountData bindCounts, final Map<Integer,Integer> peptideLengthFrequency)
+    public BindScoreMatrix createMatrix(final BindCountData bindCounts)
     {
         NE_LOGGER.debug("creating allele({}) peptideLength({}) matrix data", bindCounts.Allele, bindCounts.PeptideLength);
 

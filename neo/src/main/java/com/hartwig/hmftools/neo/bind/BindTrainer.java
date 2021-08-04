@@ -216,18 +216,16 @@ public class BindTrainer
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
             final String allele = alleleEntry.getKey();
-            final Map<Integer,BindCountData> peptideLengthCounts = alleleEntry.getValue();
+            final Map<Integer,BindCountData> pepLenBindCounts = alleleEntry.getValue();
 
-            // calculate peptide length frequency per allele
-            final Map<Integer,Integer> peptideLengthFrequency = Maps.newHashMap();
-            peptideLengthCounts.entrySet().forEach(x -> peptideLengthFrequency.put(x.getKey(), x.getValue().totalBindCount()));
+            // int totalAlleleCount = alleleTotalCounts.get(allele);
 
             Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = Maps.newHashMap();
             mAlleleBindMatrices.put(allele, peptideLengthMatrixMap);
 
-            for(BindCountData bindCounts : peptideLengthCounts.values())
+            for(BindCountData bindCounts : pepLenBindCounts.values())
             {
-                BindScoreMatrix matrix = mPosWeightModel.createMatrix(bindCounts, peptideLengthFrequency);
+                BindScoreMatrix matrix = mPosWeightModel.createMatrix(bindCounts);
                 peptideLengthMatrixMap.put(matrix.PeptideLength, matrix);
 
                 if(mConfig.WritePosWeightMatrix)
@@ -240,7 +238,7 @@ public class BindTrainer
 
     private void runScoring()
     {
-        RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig);
+        RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig.RandomPeptides);
 
         if(!randomDistribution.loadData())
         {

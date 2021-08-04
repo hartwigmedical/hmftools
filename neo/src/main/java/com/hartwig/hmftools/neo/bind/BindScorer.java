@@ -35,13 +35,21 @@ public class BindScorer
 
     private final RandomPeptideDistribution mRandomDistribution;
 
+    private final List<Double> mScoreRankPercentileBuckets;
+    private final Map<String,Map<Integer,int[]>> mAlleleScoreRankPercentileCounts;
+
+
     public BindScorer(final BinderConfig config)
     {
         mConfig = config;
 
         mAllelePeptideData = Maps.newHashMap();
         mAlleleBindMatrices = Maps.newHashMap();
-        mRandomDistribution = new RandomPeptideDistribution(config);
+        mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
+
+        // only used for training
+        mScoreRankPercentileBuckets = null;
+        mAlleleScoreRankPercentileCounts = null;
     }
 
     public BindScorer(
@@ -53,6 +61,16 @@ public class BindScorer
         mAllelePeptideData = allelePeptideData;
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
+
+        mAlleleScoreRankPercentileCounts = Maps.newHashMap();
+        mScoreRankPercentileBuckets = Lists.newArrayListWithExpectedSize(16);
+
+        double rankPercBucket = 0.00005;
+        while(rankPercBucket < 1)
+        {
+            mScoreRankPercentileBuckets.add(rankPercBucket);
+            rankPercBucket *= 2;
+        }
     }
 
     public void run()
@@ -82,9 +100,9 @@ public class BindScorer
             final String allele = alleleEntry.getKey();
             final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
 
-            Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = mAlleleBindMatrices.get(allele);
+            Map<Integer,BindScoreMatrix> pepLenMatrixMap = mAlleleBindMatrices.get(allele);
 
-            if(peptideLengthMatrixMap == null)
+            if(pepLenMatrixMap == null)
             {
                 NE_LOGGER.warn("allele({}) has no matrix scoring data", allele);
                 continue;
@@ -95,7 +113,7 @@ public class BindScorer
                 final List<BindData> bindDataList = pepLenEntry.getValue();
                 for(BindData bindData : bindDataList)
                 {
-                    BindScoreMatrix matrix = peptideLengthMatrixMap.get(bindData.peptideLength());
+                    BindScoreMatrix matrix = pepLenMatrixMap.get(bindData.peptideLength());
 
                     if(matrix == null)
                         continue;
@@ -112,6 +130,42 @@ public class BindScorer
 
         NE_LOGGER.info("writing peptide scores");
         writePeptideScores();
+    }
+
+    public void buildScoreDistribution()
+    {
+        if(mScoreRankPercentileBuckets == null)
+            return;
+
+        for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
+        {
+            final String allele = alleleEntry.getKey();
+            final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
+
+            Map<Integer,int[]> pepLenScoreDistMap = Maps.newHashMap();
+            mAlleleScoreRankPercentileCounts.put(allele, pepLenScoreDistMap);
+
+            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
+            {
+                int peptideLength = pepLenEntry.getKey();
+
+                int[] distCounts = new int[mScoreRankPercentileBuckets.size()];
+                pepLenScoreDistMap.put(peptideLength, distCounts);
+
+                final List<BindData> bindDataList = pepLenEntry.getValue();
+                for(BindData bindData : bindDataList)
+                {
+                    for(int scoreBucket = 0; scoreBucket < mScoreRankPercentileBuckets.size(); ++scoreBucket)
+                    {
+                        if(bindData.score() < mScoreRankPercentileBuckets.get(0) || scoreBucket == mScoreRankPercentileBuckets.size() - 1)
+                        {
+                            ++distCounts[scoreBucket];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private BufferedWriter initAlleleSummaryWriter()

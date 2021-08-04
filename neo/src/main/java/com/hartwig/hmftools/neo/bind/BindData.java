@@ -187,10 +187,4 @@ public class BindData
 
         return true;
     }
-
-
-
-
-
-
 }

@@ -35,4 +35,5 @@ public class ScoreDistributionData
                 0, 0);
     }
 
+    public String toString() { return String.format("bucket(%f) score(%f)", ScoreBucket, Score); }
 }
