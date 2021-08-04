@@ -189,37 +189,37 @@ Cohorts for training the algorithm were constructed from the HMF database by sel
 CUPPA Category | primaryTumorLocation:subLocation (primaryTumorType:primaryTumorSubType)
 ---|---
 Acute myeloid leukemia | 
-Anogenital | Penis, Vulva, Vagina, Anus (<excl. melanoma>), Uterus:Cervix
+Anogenital | Penis, Vulva, Vagina, Anus ({excl. melanoma}), Uterus:Cervix
 Bile duct /Gallbladder | Bile duct; Hepatobiliary system; Gallbladder
-Bone/Soft tissue: Other | Bone/Soft tissue (<other or unspecified>)
+Bone/Soft tissue: Other | Bone/Soft tissue ({other or unspecified})
 Breast | Breast
 Cartilaginous neoplasm | 
 Chronic lymphocytic leukemia |
-Colorectum/Appendix/Small intestine | Colorectum (<other or unspecified>); Appendix; Small intestine(<other or unspecified>)
-Esophagus/Stomach | Esophagus (<excluding Nueroendocrine tumor); Stomach (<excluding Nueroendocrine tumor); Gastroesophageal
+Colorectum/Appendix/Small intestine | Colorectum ({other or unspecified}); Appendix; Small intestine({other or unspecified})
+Esophagus/Stomach | Esophagus ({excluding Nueroendocrine tumor}); Stomach ({excluding Nueroendocrine tumor}); Gastroesophageal
 GIST | Bone/Soft tissue (Gastrointestinal stromal tumor)
 Glioma | Nervous system (Glioma)
-Head and neck: other | Head and neck(<other>)
+Head and neck: other | Head and neck({other})
 Kidney | Kidney
 Leiomyosarcoma | Bone/Soft tissue (Leiomyosarcoma)
 Liposarcoma | Bone/Soft tissue (Liposarcoma)
-Liver | Liver (<excluding Nueroendocrine tumor>)
+Liver | Liver ({excluding Nueroendocrine tumor})
 Lung: NET | Lung(Neuroendocrine tumor)
-Lung: Non-small Cell | Lung(Carcinoma:Non-small cell carcinoma); Lung(Carcinoma:Adenocarcinoma); Lung(<other>)
+Lung: Non-small Cell | Lung(Carcinoma:Non-small cell carcinoma); Lung(Carcinoma:Adenocarcinoma); Lung({other})
 Lung: Small Cell | Lung(Carcinoma:Small cell carcinoma); Lung(Carcinoma:Small cell carcinoma combined type)
 Lymphoid tissue | Lymphoid tissue
 Medulloblastoma | Medulloblastoma
 Mesothelium | Mesothelium
 Osteosarcoma | Bone/Soft tissue (Osteosarcoma)
-Other | Gastrointestinal tract, Eye, Bone marrow, Nervous system(<other), Adrenal Gland, Thymus, Testis, Esophagus (Nueroendocrine tumor),Stomach (Neuroendocrine tumor)
+Other | Gastrointestinal tract, Eye, Bone marrow, Nervous system({other}), Adrenal Gland, Thymus, Testis, Esophagus (Nueroendocrine tumor),Stomach (Neuroendocrine tumor)
 Ovary/Fallopian tube | Ovary; Fallopian tube
-Pancreas | Pancreas (<other or unspecified>)
+Pancreas | Pancreas ({other or unspecified>)
 Pancreas: NET | Pancreas (Neuroendocrine Tumor)
 Pilocytic astrocytoma | Nervous system (Pilocytic astrocytoma)
 Prostate | Prostate
-Salivary gland/Adenoid cystic | Head and Neck:Salivary gland, Head and Neck:Parotid gland, Head and Neck:Sublingual gland, <any>(Carcinoma:Adenoid cystic carcinoma), Trachea
+Salivary gland/Adenoid cystic | Head and Neck:Salivary gland, Head and Neck:Parotid gland, Head and Neck:Sublingual gland, {any}(Carcinoma:Adenoid cystic carcinoma), Trachea
 Melanoma | <Any, excluding Eye> (Melanoma)
-Skin:Other | Skin (<other or unspecified>)
+Skin:Other | Skin ({other or unspecified})
 Small intestine/Colorectum: NET | Small intestine(Neuroendocrine tumor); Colorectum(Neuroendocrine tumor)
 Thyroid gland | Thyroid gland
 Urothelial tract | Urothelial tract
