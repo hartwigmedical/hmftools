@@ -78,7 +78,7 @@ public class BindModelTest
         BlosumMapping blosum = new BlosumMapping();
 
         assertEquals(16.0, blosum.calcSequenceBlosumScore("A"));
-        assertEquals(48.0, blosum.calcSequenceBlosumScore("AAA"));
+        assertEquals(4096.0, blosum.calcSequenceBlosumScore("AAA"));
         assertEquals(128.0, blosum.calcSequenceBlosumScore("Y"));
 
         assertEquals(4.0, blosum.calcSequenceBlosumScore("D", "E"));
@@ -206,15 +206,15 @@ public class BindModelTest
 
         int aaIndex = aminoAcidIndex('A');
 
-        assertEquals(180.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][0], 0.1); // same sequence
-        assertEquals(101.3, bindCountsA1.getFinalWeightedCounts()[aaIndex][1], 0.1); // A & D
-        assertEquals(102.5, bindCountsA1.getFinalWeightedCounts()[aaIndex][2], 0.1); // A & E
-        assertEquals(105.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][3], 0.1); // D & E
-        assertEquals(180.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][4], 0.1); // same seq
+        assertEquals(300, bindCountsA1.getFinalWeightedCounts()[aaIndex][0], 0.1); // same sequence
+        assertEquals(103.1, bindCountsA1.getFinalWeightedCounts()[aaIndex][1], 0.1); // A & D
+        assertEquals(106.3, bindCountsA1.getFinalWeightedCounts()[aaIndex][2], 0.1); // A & E
+        assertEquals(112.5, bindCountsA1.getFinalWeightedCounts()[aaIndex][3], 0.1); // D & E
+        assertEquals(300.0, bindCountsA1.getFinalWeightedCounts()[aaIndex][4], 0.1); // same seq
 
-        assertEquals(450.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][0], 0.1);
-        assertEquals(400.2, bindCountsA2.getFinalWeightedCounts()[aaIndex][1], 0.1);
-        assertEquals(406.3, bindCountsA2.getFinalWeightedCounts()[aaIndex][3], 0.1);
-        assertEquals(450.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][4], 0.1);
+        assertEquals(420.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][0], 0.1);
+        assertEquals(400.1, bindCountsA2.getFinalWeightedCounts()[aaIndex][1], 0.1);
+        assertEquals(402.5, bindCountsA2.getFinalWeightedCounts()[aaIndex][3], 0.1);
+        assertEquals(420.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][4], 0.1);
     }
 }
