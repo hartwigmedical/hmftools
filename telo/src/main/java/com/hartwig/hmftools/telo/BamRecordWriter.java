@@ -16,7 +16,6 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 class TelBamRecord
 {
@@ -41,11 +40,11 @@ public class BamRecordWriter implements Runnable
         mTelBamRecordQ = telBamRecordQ;
         mIncompleteReadNames = incompleteReadNames;
 
-        String sampleBamFileBasename = new File(config.SampleBamFile).getName();
+        String sampleBamFileBasename = new File(config.BamFile).getName();
         final String csvOutputFile = config.OutputDir + "/" + sampleBamFileBasename + ".telo_read_data.csv";
         mCsvWriter = createReadDataWriter(csvOutputFile);
 
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile)).open(new File(config.SampleBamFile));
+        SamReader samReader = TeloUtils.openSamReader(config);
 
         final String bamOutputFile = config.OutputDir + "/" + sampleBamFileBasename + ".telo_bam.bam";
         mBamFileWriter = new SAMFileWriterFactory().makeBAMWriter(samReader.getFileHeader(), false, new File(bamOutputFile));

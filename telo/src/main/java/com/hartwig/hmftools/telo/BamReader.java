@@ -2,7 +2,6 @@ package com.hartwig.hmftools.telo;
 
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
 
-import java.io.File;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class BamReader implements Runnable
 {
@@ -37,7 +35,7 @@ public class BamReader implements Runnable
         mBaseRegionQ = baseRegionQ;
         mTelBamRecordQ = telBamRecordQ;
         mIncompleteReadNames = incompleteReadNames;
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.SampleBamFile));
+        mSamReader = TeloUtils.openSamReader(mConfig);
     }
 
     @Override
@@ -61,7 +59,7 @@ public class BamReader implements Runnable
 
     public void findTelomereContent(BaseRegion baseRegion)
     {
-        if(baseRegion.Chromosome != null)
+        if(!baseRegion.equals(TeloConstants.UNMAPPED_BASE_REGION))
         {
             processBamByRegion(baseRegion);
         }

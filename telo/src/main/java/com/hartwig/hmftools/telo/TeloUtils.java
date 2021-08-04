@@ -42,7 +42,7 @@ public class TeloUtils
 
     public static List<BaseRegion> createPartitions(final TeloConfig config)
     {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(config.RefGenomeFile)).open(new File(config.SampleBamFile));
+        SamReader samReader = TeloUtils.openSamReader(config);
 
         List<SAMSequenceRecord> samSequences = samReader.getFileHeader().getSequenceDictionary().getSequences();
 
@@ -74,5 +74,15 @@ public class TeloUtils
         }
 
         return partitions;
+    }
+
+    public static SamReader openSamReader(final TeloConfig config)
+    {
+        SamReaderFactory factory = SamReaderFactory.makeDefault();
+        if(config.RefGenomeFile != null)
+        {
+            factory = factory.referenceSequence(new File(config.RefGenomeFile));
+        }
+        return factory.open(new File(config.BamFile));
     }
 }
