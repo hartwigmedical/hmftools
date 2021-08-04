@@ -3,16 +3,18 @@ package com.hartwig.hmftools.common.utils.sv;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.Arrays;
+
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class BaseRegion implements Comparable<BaseRegion>
+public class BaseRegion implements Cloneable, Comparable<BaseRegion>
 {
     public final String Chromosome;
-    public final int[] Positions;
+    public int[] Positions;
 
     public BaseRegion(final String chromosome, final int[] positions)
     {
@@ -65,6 +67,36 @@ public class BaseRegion implements Comparable<BaseRegion>
     public String toString() { return String.format("%s:%d-%d", Chromosome, Positions[SE_START], Positions[SE_END]); }
 
     @Override
+    public Object clone()
+    {
+        try
+        {
+            BaseRegion br = (BaseRegion) super.clone();
+            br.Positions = Positions.clone();
+            return br;
+        }
+        catch (CloneNotSupportedException e)
+        {
+            // Will not happen in this case
+            return null;
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        // same instance
+        if (obj == this) { return true; }
+        // null
+        if (obj == null) { return false; }
+        // type
+        if (!getClass().equals(obj.getClass())) { return false; }
+        // cast and compare state
+        BaseRegion other = (BaseRegion) obj;
+        return chromosome().equals(other.chromosome()) && Arrays.equals(Positions, other.Positions);
+    }
+
+    @Override
     public int compareTo(@NotNull final BaseRegion other)
     {
         if(Chromosome.equals(other.Chromosome))
@@ -98,3 +130,4 @@ public class BaseRegion implements Comparable<BaseRegion>
     }
 
 }
+
