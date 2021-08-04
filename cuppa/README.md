@@ -1,7 +1,7 @@
 # Cuppa
 
 ## Overview
-CUPPA is a tool that weighs multiple genomic features observed from WGS & WTS to predict the tissue of origin of a tumor sample. It is intended to 1) provide molecular tumor type prediction to verify histopathological classification, 2) provide support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis) and 3)  prediction of primary tumor location for Cancer of Unknown Primary (CUP). 
+CUPPA is a tool that weighs multiple genomic features observed from WGS and/or WTS data to predict the tissue of origin of a tumor sample. It is intended to 1) provide molecular tumor type prediction to verify histopathological classification, 2) provide support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis) and 3) prediction of primary tumor location for Cancer of Unknown Primary (CUP). 
 
 The key inputs to Cuppa are:
 - a collection of reference data files which define rates of various DNA and RNA features and characteristics
@@ -180,11 +180,11 @@ Value | The sample's value for this category if applicable
 RefCancerType | Reference cancer type evaluated against
 RefValue | Probability of the reference cancer type for this category of data
 
-# Algorithm
+# Detailed Algorithm
 
 ## Determination of cancer type cohorts
 
-Cohorts for training the algorithm were constructed from the HMF database by selecting the highest purity sample from each unique patient from our database with qcStatus = ‘PASS’.    37 tumor categories were defined based on the clinical annotations of primaryTumorLocation, primaryTumorSubLocation, primaryTumorType and primaryTumorSubType as follows:
+Cohorts for training the algorithm were constructed from the HMF database by selecting the highest purity sample from each unique patient from our database with qcStatus = ‘PASS’. 37 tumor categories were defined based on the clinical annotations of primaryTumorLocation, primaryTumorSubLocation, primaryTumorType and primaryTumorSubType as follows:
 
 CUPPA Category | primaryTumorLocation:subLocation (primaryTumorType:primaryTumorSubType)
 ---|---
@@ -226,7 +226,7 @@ Urothelial tract | Urothelial tract
 Uterus:Endometrium | Uterus:Endometrium
 Myeloproliferative neoplasm |
 
-Certain cancers such as Esophagus and Stomach were combined for the categorisation as we found empirically that the CUPPA classifiers had little ability to distinguish between them.   For other cancers including Lung, Bone/Soft tissue, Skin, Uterus & Pancreatic cancers we have broken into subtypes where histological information allows.    All cancers not in one of these 36 cohorts was deemed as “Other” and was excluded from the reference cohorts for analysis.   Samples with ‘unknown’ tumor type are also excluded.   Finally, 45 samples were also explicitly excluded from the reference cohort where our analysis strongly suggested the clinical configured cancer type may be incorrect for these samples
+Certain cancers such as Esophagus and Stomach were combined for the categorisation as we found empirically that the CUPPA classifiers had little ability to distinguish between them. For other cancers including Lung, Bone/Soft tissue, Skin, Uterus & Pancreatic cancers we have broken into subtypes where histological information allows. All cancers not in one of these 36 cohorts was deemed as “Other” and was excluded from the reference cohorts for analysis.   Samples with ‘unknown’ tumor type are also excluded. Finally, 45 samples were also explicitly excluded from the reference cohort where our analysis strongly suggested the clinical configured cancer type may be incorrect for these samples
 
 ## DNA Classifier logic
 
@@ -238,7 +238,7 @@ The algorithm for each of the classifiers is described below:
 
 This classifier solely relies on the mutational distribution of tumors of genomic position, which has been shown previously to have strong predictive power for tissue of origin (eg. https://www.nature.com/articles/s41467-019-13825-8). 
 
-CUPPA calculates a consensus mutation distribution for each cohort by counting  SNV TMB by bucketed genomic position across each cohort. High TMB samples are downsampled to 20k mutations in this consensus so that individual samples cannot dominate a cohort. CUPPA counts mutations using a window size of 500kb bases (chosen after testing various sizes from 100kb to 10Mb). 
+CUPPA calculates a consensus mutation distribution for each cohort by counting SNV TMB by bucketed genomic position across each cohort. High TMB samples are downsampled to 20k mutations in this consensus so that individual samples cannot dominate a cohort. CUPPA counts mutations using a window size of 500kb bases (chosen after testing various sizes from 100kb to 10Mb). 
 
 The genomic position similarity likelihood for a given sample is determined by first calculating the cosine similarity (CSS) of a sample to each cohort consensus distribution and then weighing using the following algorithm:
 ```
@@ -260,7 +260,7 @@ Once a pairwise CSS has been determined, a score is calculated for each pair usi
 Score(i,j) = 8^[-100*(1-CSS)] ^[ maxCSS^8] * mutationCountWeightFactor * cohortSizeWeightFactor
 ```
 Where:
-* MaxCSS is the maximum pairwise CSS for any sample in the cohort.  This factor reduces confidences in general for samples that have no close pairwise match.
+* MaxCSS is the maximum pairwise CSS for any sample in the cohort. This factor reduces confidences in general for samples that have no close pairwise match.
 * mutationCountWeightFactor penalises pairs with large differences in SNV TMB. This is implemented as:
 ```
 mutationCountWeightFactor = min(SNV_TMB(i)/SNV_TMB(j),SNV_TMB(j)/SNV_TMB(i)) 
@@ -279,11 +279,11 @@ Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
 The FEATURE classifier uses observed prevalence of both cancer type specific drivers as well as certain passenger mutational features that may be significantly enriched or depleted in certain types to predict the cancer type of a sample. 
 
 #### Driver Prevalence
-Driver (or driver like) features used include all driver point mutation, high amplification, homozygous deletion and homozygous disruptions in the driver catalog as well as viral insertions & fusions. For fusions, known pathogenic fusion pairs, IG rearrangement pairs and exon deletions/duplications configured in the HMF fusion knowledge base are all considered as features as are fusions with highly promiscuous exons such as ALK exon 20-21.   For Sarcomas specifically, we override the prevalence for a list of 56 pathognomic fusions which are highly diagnostic but may not be prevalent enough to be present in our database to the appropriate cancer type with the maximal allowed feature weight.
+Driver (or driver like) features used include all driver point mutation, high amplification, homozygous deletion and homozygous disruptions in the driver catalog as well as viral insertions & fusions. For fusions, known pathogenic fusion pairs, IG rearrangement pairs and exon deletions/duplications configured in the HMF fusion knowledge base are all considered as features as are fusions with highly promiscuous exons such as ALK exon 20-21. For Sarcomas specifically, we override the prevalence for a list of 56 pathognomic fusions which are highly diagnostic but may not be prevalent enough to be present in our database to the appropriate cancer type with the maximal allowed feature weight.
 
-Indels in repeat contexts of 6 or less bases in 3 lineage defining genes: ALB (highly specific to Liver cancer) and  SFTPB & SLC34A2 (highly specific to Lung cancer) are also treated as additional features (note though that they are ignored for MSI samples).    A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe deletions) are also treated as a single feature.
+Indels in repeat contexts of 6 or less bases in 3 lineage defining genes: ALB (highly specific to Liver cancer) and SFTPB & SLC34A2 (highly specific to Lung cancer) are also treated as additional features (note though that they are ignored for MSI samples). A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe deletions) are also treated as a single feature.
 
-Features are weighted by driver likelihood.   For point mutations the driver likelihood (the dnds calculated probability between 0 and 1 that the mutation is a driver) is used to weight the mutations, whilst other mutations, virus insertions and fusions are assumed to have probability of 1. 
+Features are weighted by driver likelihood. For point mutations the driver likelihood (the dnds calculated probability between 0 and 1 that the mutation is a driver) is used to weight the mutations, whilst other mutations, virus insertions and fusions are assumed to have probability of 1. 
 
 The prevalence of each feature in each cancer type is calculated
 ```
@@ -327,21 +327,21 @@ And finally CUPPA sums the scores across each tumor type to estimate the likelih
 ```
 Likelihood(tumorType=i) = Score(i)^correlationDampenFactor / SUM(all tumors) [Score^correlationDampenFactor]
 ```
-The correlationDampenFactor is introduced to reduce the confidence of the classifier and set at 0.8 to empirically match the observed accuracy.   This is required as some of the driver or passenger features may be correlated with each other - for example same arm amplifications are highly correlated and TMB might be positively correlated with more drivers in general
+The correlationDampenFactor is introduced to reduce the confidence of the classifier and set at 0.8 to empirically match the observed accuracy. This is required as some of the driver or passenger features may be correlated with each other - for example same arm amplifications are highly correlated and TMB might be positively correlated with more drivers in general
 
 ### DNA_COMBINED CLASSIFIER
 
 A combined score is calculated by multiplying the 3 likelihoods together with an absolute floor set at 1% per likelihood. The likelihood is then calculated as
 ```
-Likelihood(tumorType=i) =  PRODUCT(max(0.01,Classifier(i,j)))^correlationDampenFactor / SUM(all tumors)[ PRODUCT(max(0.01,Classifier(j)))]^correlationDampenFactor
+Likelihood(tumorType=i) = PRODUCT(max(0.01,Classifier(i,j)))^correlationDampenFactor / SUM(all tumors)[ PRODUCT(max(0.01,Classifier(j)))]^correlationDampenFactor
 ```
-As for the feature classifier, a correlationDampenFactor is introduced to reduce the confidence of the classifier and reflect the fact that the individual classifiers are not completely independent.  A value of 0.65 is chosen to empirically match the confidence to the observed accuracy.
+As for the feature classifier, a correlationDampenFactor is introduced to reduce the confidence of the classifier and reflect the fact that the individual classifiers are not completely independent. A value of 0.65 is chosen to empirically match the confidence to the observed accuracy.
 
-For the DNA_COMBINED classifier, males are excluded from matching ‘Ovary’ and ‘Uterus’ cancer cohorts and females are excluded from matching the ‘Prostate' cohort.  ‘Breast’ cancer scores for male cancer cohorts are penalised but not excluded.
+For the DNA_COMBINED classifier, males are excluded from matching ‘Ovary’ and ‘Uterus’ cancer cohorts and females are excluded from matching the ‘Prostate' cohort. ‘Breast’ cancer scores for male cancer cohorts are penalised but not excluded.
 
 ## RNA Classifier logic
 
-CUPPA has 2 expression based WTS based RNA classifiers and a combined RNA classifier:  
+CUPPA has 2 WTS based RNA classifiers and a combined RNA classifier:
 
 ### EXPRESSION_PAIRWISE classifier
 The pairwise classifier calculates a pairwise cosine similarity of log(adjTPM+1) per gene, between the sample in question and every other sample in the Hartwig cohort.
@@ -350,7 +350,7 @@ Once a pairwise CSS has been determined, a score is calculated for each pair usi
 ```
 Score(i,j) = 50^[-100*(1-CSS)] * cohortSizeWeightFactor
 ```
-Where cohortSizeWeightFactor penalises larger cohorts which will have more similar tumors just by chance.  It its calculated as:
+Where cohortSizeWeightFactor penalises larger cohorts which will have more similar tumors just by chance. It its calculated as:
 ```
 cohortSizeWeightFactor = sqrt(# of samples of tumor type) / SUM(i)[sqrt(# of samples of tumor type i)]
 ```
@@ -373,19 +373,17 @@ Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
 ```
 
 #### Impact of read length
-The HMF RNA cohort contains a mix of samples sequenced with 151 and 76 read lengths, and each of these lengths exhibit differences in novel splice junction fragment support. The  151-read-length samples were sequenced with greater depth, and in addition to often having greater fragment count support per novel splice site, approximately 10% of novel splice sites were only present in 151 read-length samples. Those cancer cohorts with a predominance of samples with either read-length of 76 or 151 read bases tended to find a closer CSS match with other samples of the same read-length. 
+The HMF RNA cohort contains a mix of samples sequenced with 151 and 76 read lengths, and each of these lengths exhibit differences in novel splice junction fragment support. The 151-read-length samples were sequenced with greater depth, and in addition to often having greater fragment count support per novel splice site, approximately 10% of novel splice sites were only present in 151 read-length samples. Those cancer cohorts with a predominance of samples with either read-length of 76 or 151 read bases tended to find a closer CSS match with other samples of the same read-length. 
 
 To address this bias, the reference cancer cohort file was split into average fragment counts per cancer type and per read-length group. A sample was only tested against the cancer reference data for its matching read length sub-cohorts.
 
 ### RNA_COMBINED classifier
 
-A combined RNA classifier is calculated using the same formula as the combined DNA based on the 2 expression classifiers.    The correlationDampenFactor is set to 0.7 via empirical analysis for the RNA_COMBINED confidence calculation.
+A combined RNA classifier is calculated using the same formula as the combined DNA based on the 2 expression classifiers. The correlationDampenFactor is set to 0.7 via empirical analysis for the RNA_COMBINED confidence calculation. Gender restrictions are applied in the same manner as for the DNA_COMBINED score.
 
 ## Overall Combined Classifier
 
-The RNA and DNA classifiers can be further merged into a consensus classifier in the same manner as the RNA_COMBINED and DNA_COMBINED, by merging all 5 individual classifiers.  The correlationDampenFactor is set to 0.4 via empirical analysis for the overall COMBINED confidence calculation. 
-
-Gender restrictions are applied in the same manner as for the DNA_COMBINED score.
+The RNA and DNA classifiers can be further merged into a consensus classifier in the same manner as the RNA_COMBINED and DNA_COMBINED, by merging all 5 individual classifiers. The correlationDampenFactor is set to 0.4 via empirical analysis for the overall COMBINED confidence calculation. Gender restrictions are applied in the same manner as for the DNA_COMBINED score.
 
 ## Nearest Neighbor Analysis
 
