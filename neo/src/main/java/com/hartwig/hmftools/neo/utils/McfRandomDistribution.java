@@ -102,8 +102,11 @@ public class McfRandomDistribution
         try
         {
             String outputFilename = BinderConfig.formFilename("mcf_validation_scores", mConfig.OutputDir, mConfig.OutputId);
+
+            NE_LOGGER.info("writing score results to {}", outputFilename);
+
             BufferedWriter writer = createBufferedWriter(outputFilename, false);
-            writer.write("Allele,DataCount,AUC");
+            writer.write("Allele,PeptideLength,DataCount,AUC");
             writer.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : allelePeptideData.entrySet())
@@ -111,24 +114,30 @@ public class McfRandomDistribution
                 final String allele = alleleEntry.getKey();
                 final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
 
-                List<BindData> alleleBindDataList = Lists.newArrayList();
-                pepLenBindDataMap.values().forEach(x -> alleleBindDataList.addAll(x));
-
-                List<AucData> aucData = Lists.newArrayList();
-
-                for(BindData bindData : alleleBindDataList)
+                for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
                 {
-                    double scoreRank = mRandomDistribution.getScoreRank(allele, 9, bindData.predictedAffinity());
-                    aucData.add(new AucData(true, scoreRank, true));
+                    int peptideLength = pepLenEntry.getKey();
+                    List<BindData> bindDataList = pepLenEntry.getValue();
+
+                    List<AucData> aucData = Lists.newArrayList();
+
+                    for(BindData bindData : bindDataList)
+                    {
+                        //if(bindData.peptideLength() != 9)
+                        //    continue;
+
+                        double scoreRank = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), bindData.predictedAffinity());
+                        aucData.add(new AucData(true, scoreRank, true));
+                    }
+
+                    double aucPerc = AucCalc.calcPercentilesAuc(aucData, Level.TRACE);
+
+                    NE_LOGGER.info(String.format("allele(%s) peptideLength(%d) items(%d) AUC(%.4f)",
+                            allele, peptideLength, bindDataList.size(), aucPerc));
+
+                    writer.write(String.format("%s,%d,%d,%.4f", allele, peptideLength, bindDataList.size(), aucPerc));
+                    writer.newLine();
                 }
-
-                double aucPerc = AucCalc.calcPercentilesAuc(aucData, Level.TRACE);
-
-                NE_LOGGER.info(String.format("allele(%s) items(%d) AUC(%.4f)",
-                        allele, alleleBindDataList.size(), aucPerc));
-
-                writer.write(String.format("%s,%d,%.4f", allele, alleleBindDataList.size(), aucPerc));
-                writer.newLine();
             }
 
             writer.close();
@@ -198,14 +207,22 @@ public class McfRandomDistribution
 
     private void generateDistribution(final String allele, final List<BindData> bindDataList)
     {
-        NE_LOGGER.info("allele({}) buliding distribution with {} random peptide predictions", allele, bindDataList.size());
+        NE_LOGGER.info("allele({}) building distribution with {} random peptide predictions", allele, bindDataList.size());
 
-        List<Double> peptideScores = Lists.newArrayListWithExpectedSize(bindDataList.size());
+        Map<Integer,List<Double>> pepLenScoresMap = Maps.newHashMap();
 
         int count = 0;
 
         for(BindData bindData : bindDataList)
         {
+            List<Double> peptideScores = pepLenScoresMap.get(bindData.peptideLength());
+
+            if(peptideScores == null)
+            {
+                peptideScores = Lists.newArrayList();
+                pepLenScoresMap.put(bindData.peptideLength(), peptideScores);
+            }
+
             VectorUtils.optimisedAdd(peptideScores, bindData.Affinity, true);
 
             ++count;
@@ -216,9 +233,15 @@ public class McfRandomDistribution
             }
         }
 
-        List<ScoreDistributionData> scoreDistribution = mRandomDistribution.generateDistribution(allele, 9, peptideScores);
+        for(Map.Entry<Integer,List<Double>> entry : pepLenScoresMap.entrySet())
+        {
+            NE_LOGGER.debug("allele({}) peptideLength({}) writing distribution", allele, entry.getKey());
 
-        RandomPeptideDistribution.writeDistribution(mDistributionWriter, scoreDistribution);
+            List<ScoreDistributionData> scoreDistribution = mRandomDistribution.generateDistribution(
+                    allele, entry.getKey(), entry.getValue());
+
+            RandomPeptideDistribution.writeDistribution(mDistributionWriter, scoreDistribution);
+        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
