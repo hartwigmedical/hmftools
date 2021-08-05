@@ -293,7 +293,7 @@ Where minPrevalence is a fixed notional background rate of observing a passenger
 
 A combined driver score for each cancer type is calculated by taking the product of the observed prevalence of each of the drivers from the sample in the cancer type cohort, discounted by the driver likelihood in the cancer itself. ie:
 ```
-DriverScore = weightFactor(cohort)* PRODUCT [ Prevalence(d)^driverLikelihood(d,s) ]
+DriverScore = weightFactor(cohort)* PRODUCT[Prevalence(d)^driverLikelihood(d,s)]
 ```
 Where the weight factor = meanDriverLoad(pan-cancer) / meanDriverLikelihood(cohort) and is intended to reduce the tendency for cancer types with higher average rates of drivers such as Urinary Tract and Esophagus to have higher driver scores
 
@@ -315,7 +315,7 @@ SIMPLE_DUP_32B_200B | TRUE | NA
 
 As for drivers the prevalence in each cancer type is added to a minPrevalence set to 0.15 / count of cancer types. The passenger score is simply the product of all the passenger prevalence rates
 ```
-PassengerScore = PRODUCT [ max(Passenger Prevalence,minPrevalence)]
+PassengerScore = PRODUCT[max(Passenger Prevalence,minPrevalence)]
 ```
 
 #### Combining scores to a likelihood
@@ -333,7 +333,7 @@ The correlationDampenFactor is introduced to reduce the confidence of the classi
 
 A combined score is calculated by multiplying the 3 likelihoods together with an absolute floor set at 1% per likelihood. The likelihood is then calculated as
 ```
-Likelihood(tumorType=i) = PRODUCT(max(0.01,Classifier(i,j)))^correlationDampenFactor / SUM(all tumors)[ PRODUCT(max(0.01,Classifier(j)))]^correlationDampenFactor
+Likelihood(tumorType=i) = PRODUCT(max(0.01,Classifier(i,j)))^correlationDampenFactor / SUM(all tumors)[PRODUCT(max(0.01,Classifier(j)))]^correlationDampenFactor
 ```
 As for the feature classifier, a correlationDampenFactor is introduced to reduce the confidence of the classifier and reflect the fact that the individual classifiers are not completely independent. A value of 0.65 is chosen to empirically match the confidence to the observed accuracy.
 
