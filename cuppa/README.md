@@ -184,7 +184,7 @@ RefValue | Probability of the reference cancer type for this category of data
 
 ## Determination of cancer type cohorts
 
-Cohorts for training the algorithm were constructed from the HMF database by selecting the highest purity sample from each unique patient from our database with qcStatus = ‘PASS’. 37 tumor categories were defined based on the clinical annotations of primaryTumorLocation, primaryTumorSubLocation, primaryTumorType and primaryTumorSubType as follows:
+Cohorts for training the algorithm were constructed from the HMF database by selecting the highest purity sample from each unique patient from our database with qcStatus = ‘PASS’. 37 tumor categories were defined based on the clinical annotations in the HMF database of primaryTumorLocation, primaryTumorSubLocation, primaryTumorType and primaryTumorSubType as follows:
 
 CUPPA Category | primaryTumorLocation:subLocation (primaryTumorType:primaryTumorSubType)
 ---|---
