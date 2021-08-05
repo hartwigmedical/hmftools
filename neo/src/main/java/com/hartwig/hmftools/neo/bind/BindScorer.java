@@ -306,7 +306,6 @@ public class BindScorer
         }
     }
 
-
     private boolean loadData()
     {
         if(!loadBindData(

@@ -101,13 +101,19 @@ public class McfRandomDistribution
 
         try
         {
-            String outputFilename = BinderConfig.formFilename("mcf_validation_scores", mConfig.OutputDir, mConfig.OutputId);
+            String alleleFilename = BinderConfig.formFilename("mcf_validation_summary", mConfig.OutputDir, mConfig.OutputId);
 
-            NE_LOGGER.info("writing score results to {}", outputFilename);
+            NE_LOGGER.info("writing score results to {}", alleleFilename);
 
-            BufferedWriter writer = createBufferedWriter(outputFilename, false);
-            writer.write("Allele,PeptideLength,DataCount,AUC");
-            writer.newLine();
+            BufferedWriter alleleWriter = createBufferedWriter(alleleFilename, false);
+            alleleWriter.write("Allele,PeptideLength,DataCount,AUC");
+            alleleWriter.newLine();
+
+            String peptideFilename = BinderConfig.formFilename("mcf_validation_peptide_scores", mConfig.OutputDir, mConfig.OutputId);
+
+            BufferedWriter peptideWriter = createBufferedWriter(peptideFilename, false);
+            peptideWriter.write("Allele,Peptide,PredictedAffinity,RankPerc,AffinityPerc,PresentationPerc");
+            peptideWriter.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : allelePeptideData.entrySet())
             {
@@ -127,6 +133,12 @@ public class McfRandomDistribution
                         //    continue;
 
                         double scoreRank = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), bindData.predictedAffinity());
+
+                        peptideWriter.write(String.format("%s,%s,%.2f,%.4f,%.4f,%.4f",
+                                allele, bindData.Peptide, bindData.predictedAffinity(), scoreRank,
+                                bindData.affinityPercentile(), bindData.presentationPercentile()));
+                        peptideWriter.newLine();
+
                         aucData.add(new AucData(true, scoreRank, true));
                     }
 
@@ -135,12 +147,13 @@ public class McfRandomDistribution
                     NE_LOGGER.info(String.format("allele(%s) peptideLength(%d) items(%d) AUC(%.4f)",
                             allele, peptideLength, bindDataList.size(), aucPerc));
 
-                    writer.write(String.format("%s,%d,%d,%.4f", allele, peptideLength, bindDataList.size(), aucPerc));
-                    writer.newLine();
+                    alleleWriter.write(String.format("%s,%d,%d,%.4f", allele, peptideLength, bindDataList.size(), aucPerc));
+                    alleleWriter.newLine();
                 }
             }
 
-            writer.close();
+            alleleWriter.close();
+            peptideWriter.close();
         }
         catch(IOException e)
         {
