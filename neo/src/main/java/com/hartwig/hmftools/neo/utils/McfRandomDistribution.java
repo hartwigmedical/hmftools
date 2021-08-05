@@ -9,7 +9,11 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindData.RANDOM_SOURCE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
 import static com.hartwig.hmftools.neo.bind.BindData.cleanAllele;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
@@ -48,12 +52,14 @@ public class McfRandomDistribution
     private final RandomPeptideConfig mConfig;
     private final String mMcfPredictionsFile;
     private final String mValidationDataFile;
+    private final boolean mUsePresentation;
 
     private final RandomPeptideDistribution mRandomDistribution;
     private BufferedWriter mDistributionWriter;
 
     private static final String PREDICTIONS_FILE = "mcf_rand_predictions_file";
     private static final String VALIDATION_FILE = "validation_data_file";
+    private static final String USE_PRESENTATION = "use_presentation";
 
     public McfRandomDistribution(final CommandLine cmd)
     {
@@ -61,6 +67,7 @@ public class McfRandomDistribution
         mValidationDataFile = cmd.getOptionValue(VALIDATION_FILE);
 
         mConfig = new RandomPeptideConfig(cmd);
+        mUsePresentation = cmd.hasOption(USE_PRESENTATION);
 
         mRandomDistribution = new RandomPeptideDistribution(mConfig);
 
@@ -112,7 +119,7 @@ public class McfRandomDistribution
             String peptideFilename = BinderConfig.formFilename("mcf_validation_peptide_scores", mConfig.OutputDir, mConfig.OutputId);
 
             BufferedWriter peptideWriter = createBufferedWriter(peptideFilename, false);
-            peptideWriter.write("Allele,Peptide,PredictedAffinity,RankPerc,AffinityPerc,PresentationPerc");
+            peptideWriter.write("Allele,Peptide,RankPerc,PredictedAffinity,AffinityPerc,PresentationScore,PresentationPerc");
             peptideWriter.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : allelePeptideData.entrySet())
@@ -129,14 +136,12 @@ public class McfRandomDistribution
 
                     for(BindData bindData : bindDataList)
                     {
-                        //if(bindData.peptideLength() != 9)
-                        //    continue;
+                        double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.predictedAffinity();
+                        double scoreRank = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), scoreValue);
 
-                        double scoreRank = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), bindData.predictedAffinity());
-
-                        peptideWriter.write(String.format("%s,%s,%.2f,%.4f,%.4f,%.4f",
-                                allele, bindData.Peptide, bindData.predictedAffinity(), scoreRank,
-                                bindData.affinityPercentile(), bindData.presentationPercentile()));
+                        peptideWriter.write(String.format("%s,%s,%.4f,%.2f,%.4f,%.6f,%.4f",
+                                allele, bindData.Peptide, scoreRank, bindData.predictedAffinity(),
+                                bindData.affinityPercentile(), bindData.presentationScore(), bindData.presentationPercentile()));
                         peptideWriter.newLine();
 
                         aucData.add(new AucData(true, scoreRank, true));
@@ -175,9 +180,10 @@ public class McfRandomDistribution
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
-            int alleleIndex = fieldsIndexMap.get("Allele");
-            int peptideIndex = fieldsIndexMap.get("Peptide");
-            int affinityIndex = fieldsIndexMap.get("PredictedAffinity");
+            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
+            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
+            int affinityIndex = fieldsIndexMap.get(FLD_PRED_AFFINITY);
+            Integer presentationIndex = fieldsIndexMap.get(FLD_PRES_SCORE);
 
             String currentAllele = "";
             List<BindData> bindDataList = null;
@@ -191,8 +197,10 @@ public class McfRandomDistribution
                 String allele = cleanAllele(items[alleleIndex]);
                 String peptide = items[peptideIndex];
                 double affinity = Double.parseDouble(items[affinityIndex]);
+                double presScore = presentationIndex != null ? Double.parseDouble(items[affinityIndex]) : -1;
 
                 BindData bindData = new BindData(allele, peptide, affinity, RANDOM_SOURCE);
+                bindData.setPredictionData(affinity, -1, presScore, -1);
 
                 if(!currentAllele.equals(allele))
                 {
@@ -236,7 +244,10 @@ public class McfRandomDistribution
                 pepLenScoresMap.put(bindData.peptideLength(), peptideScores);
             }
 
-            VectorUtils.optimisedAdd(peptideScores, bindData.Affinity, true);
+            // affinity goes from low to high as binding gets worse, presentation is the opposite
+            double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.Affinity;
+            boolean isAscending = mUsePresentation ? false : true;
+            VectorUtils.optimisedAdd(peptideScores, scoreValue, isAscending);
 
             ++count;
 
@@ -263,6 +274,7 @@ public class McfRandomDistribution
         RandomPeptideConfig.addCmdLineArgs(options);
         options.addOption(PREDICTIONS_FILE, true, "MCF predictions file");
         options.addOption(VALIDATION_FILE, true, "Binding validation file");
+        options.addOption(USE_PRESENTATION, false, "Rank and score using presentation instead of affinity");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");
         options.addOption(LOG_DEBUG, false, "Log verbose");

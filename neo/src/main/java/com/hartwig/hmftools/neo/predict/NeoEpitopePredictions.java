@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.epitope.NeoConfig.NEO_EPITOPE_FILE_ID;
 import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
 
@@ -103,7 +104,7 @@ public class NeoEpitopePredictions
             // NeId,HlaAllele,Peptide,affinity,affinity_percentile,processing_score,presentation_score,presentation_percentile
             int neIdIndex = fieldsIndexMap.get("NeId");
             int hlaIndex = fieldsIndexMap.get("HlaAllele");
-            int peptideIndex = fieldsIndexMap.get("Peptide");
+            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
 
             NeoPredictionData nedPredData = null;
 

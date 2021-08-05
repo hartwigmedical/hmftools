@@ -4,7 +4,7 @@ import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
-import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

@@ -5,11 +5,14 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AMINO_ACID;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
-import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -173,10 +176,10 @@ public class BindScoreMatrix
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
             lines.remove(0);
 
-            int alleleIndex = fieldsIndexMap.get("Allele");
+            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int dataTypeIndex = fieldsIndexMap.get("DataType");
-            int peptideLenIndex = fieldsIndexMap.get("PeptideLength");
-            int aaIndex = fieldsIndexMap.get("AminoAcid");
+            int peptideLenIndex = fieldsIndexMap.get(FLD_PEPTIDE_LEN);
+            int aaIndex = fieldsIndexMap.get(FLD_AMINO_ACID);
             int peptideStartIndex = max(aaIndex, dataTypeIndex) + 1;
 
             for(String line : lines)

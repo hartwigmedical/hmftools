@@ -2,6 +2,7 @@ package com.hartwig.hmftools.neo.cohort;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.neo.cohort.PredictionData.DELIM;
 
@@ -72,7 +73,7 @@ public class DataLoader
 
             int alleleIndex = fieldsIndexMap.get("HlaAllele");
             int neIdIndex = fieldsIndexMap.get("NeId");
-            int peptideIndex = fieldsIndexMap.get("Peptide");
+            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
             int affinityIndex = fieldsIndexMap.get("affinity");
             int presentationIndex = fieldsIndexMap.get("presentation_score");
 

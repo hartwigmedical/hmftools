@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
 
 import java.io.BufferedWriter;
@@ -181,7 +182,7 @@ public class NeoEpitopeCohort
 
             // NeId,HlaAllele,Peptide,affinity,affinity_percentile,processing_score,presentation_score,presentation_percentile
             int neIdIndex = fieldsIndexMap.get("NeId");
-            int peptideIndex = fieldsIndexMap.get("Peptide");
+            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
             int affinityIndex = fieldsIndexMap.get("affinity");
             int presentationIndex = fieldsIndexMap.get("presentation_score");
 

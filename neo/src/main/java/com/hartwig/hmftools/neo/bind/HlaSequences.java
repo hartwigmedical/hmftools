@@ -2,7 +2,8 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,7 +113,7 @@ public class HlaSequences
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
             lines.remove(0);
 
-            int alleleIndex = fieldsIndexMap.get("Allele");
+            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int seqIndex = fieldsIndexMap.get("Sequence");
 
             for(String line : lines)

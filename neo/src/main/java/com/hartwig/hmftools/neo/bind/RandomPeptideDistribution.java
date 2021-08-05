@@ -5,7 +5,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
 
 import java.io.BufferedWriter;
@@ -124,6 +124,8 @@ public class RandomPeptideDistribution
             return;
 
         // score each against each allele and build up a percentiles for each
+        int alleleCount = 0;
+
         for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
         {
             final String allele = alleleEntry.getKey();
@@ -134,7 +136,7 @@ public class RandomPeptideDistribution
 
             for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
             {
-                NE_LOGGER.info("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
+                NE_LOGGER.debug("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
 
                 List<Double> peptideScores = Lists.newArrayListWithExpectedSize(refRandomPeptides.size());
 
@@ -158,6 +160,13 @@ public class RandomPeptideDistribution
 
                 List<ScoreDistributionData> scoresDistributions = generateDistribution(matrix.Allele, matrix.PeptideLength, peptideScores);
                 peptideLengthMap.put(matrix.PeptideLength, scoresDistributions);
+            }
+
+            ++alleleCount;
+
+            if(alleleCount > 0 && (alleleCount % 10) == 0)
+            {
+                NE_LOGGER.info("generated distributions for {} alleles", alleleCount);
             }
         }
 

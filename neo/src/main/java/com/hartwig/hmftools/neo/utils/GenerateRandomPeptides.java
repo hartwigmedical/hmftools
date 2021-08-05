@@ -13,7 +13,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -125,7 +126,7 @@ public class GenerateRandomPeptides
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(fileContents.get(0), DELIM);
             fileContents.remove(0);
-            int alleleIndex = fieldsIndexMap.get("Allele");
+            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             Integer freqIndex = fieldsIndexMap.get("AlleleFreq");
 
             for(String data : fileContents)

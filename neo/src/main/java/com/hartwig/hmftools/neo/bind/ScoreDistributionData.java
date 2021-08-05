@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.neo.bind.BindData.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 
 import java.util.Map;
 
@@ -30,8 +32,10 @@ public class ScoreDistributionData
         final String[] items = data.split(DELIM, -1);
 
         return new ScoreDistributionData(
-                items[fieldsDataMap.get("Allele")], Integer.parseInt(items[fieldsDataMap.get("PeptideLength")]),
-                Double.parseDouble(items[fieldsDataMap.get("ScoreBucket")]), Double.parseDouble(items[fieldsDataMap.get("Score")]),
+                items[fieldsDataMap.get(FLD_ALLELE)],
+                Integer.parseInt(items[fieldsDataMap.get(FLD_PEPTIDE_LEN)]),
+                Double.parseDouble(items[fieldsDataMap.get("ScoreBucket")]),
+                Double.parseDouble(items[fieldsDataMap.get("Score")]),
                 0, 0);
     }
 
