@@ -180,7 +180,7 @@ Value | The sample's value for this category if applicable
 RefCancerType | Reference cancer type evaluated against
 RefValue | Probability of the reference cancer type for this category of data
 
-# Detailed Algorithm
+# Algorithm
 
 ## Determination of cancer type cohorts
 
