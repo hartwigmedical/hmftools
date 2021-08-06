@@ -78,6 +78,9 @@ public class PosWeightModel
                 posTotalBinds += counts[aa][pos];
             }
 
+            if(posTotalBinds == 0)
+                continue;
+
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
             {
                 double obsCount = counts[aa][pos];

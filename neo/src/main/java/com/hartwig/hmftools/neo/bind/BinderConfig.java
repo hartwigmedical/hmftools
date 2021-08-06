@@ -9,13 +9,14 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_W
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_BINDING_AFFINITY_HIGH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_BINDING_AFFINITY_LOW;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_MAX_AFFINITY;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_NOISE_PROB;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_NOISE_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,8 +43,8 @@ public class BinderConfig
     public final boolean WriteBindCounts;
     public final PeptideWriteType WritePeptideType;
 
-    public final List<String> SpecificAlleles;
-    public final List<Integer> SpecificPeptideLengths;
+    public final List<String> RequiredAlleles;
+    public final List<Integer> RequiredPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
@@ -66,8 +67,8 @@ public class BinderConfig
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
 
-    private static final String SPECIFIC_ALLELES = "specific_alleles";
-    private static final String SPECIFIC_PEPTIDE_LENGTHS = "specific_peptide_lengths";
+    private static final String REQUIRED_ALLELES = "required_alleles";
+    private static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
     public static final String OUTPUT_ID = "output_id";
 
     public BinderConfig(final CommandLine cmd)
@@ -90,21 +91,40 @@ public class BinderConfig
                 Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, String.valueOf(DEFAULT_BINDING_AFFINITY_HIGH))),
                 cmd.hasOption(APPLY_SCALED_COUNT));
 
-        SpecificAlleles = Lists.newArrayList();
+        RequiredAlleles = Lists.newArrayList();
 
-        if(cmd.hasOption(SPECIFIC_ALLELES))
+        if(cmd.hasOption(REQUIRED_ALLELES))
         {
-            Arrays.stream(cmd.getOptionValue(SPECIFIC_ALLELES).split(ITEM_DELIM, -1)).forEach(x -> SpecificAlleles.add(x));
-            NE_LOGGER.info("filtering for {} alleles: {}", SpecificAlleles.size(), SpecificAlleles);
+            String requiredAlleles = cmd.getOptionValue(REQUIRED_ALLELES);
+
+            if(requiredAlleles.endsWith(".csv") && Files.exists(Paths.get(requiredAlleles)))
+            {
+                try
+                {
+                    Files.readAllLines(Paths.get(requiredAlleles)).stream()
+                            .filter(x -> !x.equals("Allele")).forEach(x -> RequiredAlleles.add(x));
+
+                    NE_LOGGER.info("loaded {} required alleles from file({})", RequiredAlleles.size(), requiredAlleles);
+                }
+                catch(IOException e)
+                {
+                    NE_LOGGER.error("failed to load required alleles file({}): {}", requiredAlleles, e.toString());
+                }
+            }
+            else
+            {
+                Arrays.stream(cmd.getOptionValue(REQUIRED_ALLELES).split(ITEM_DELIM, -1)).forEach(x -> RequiredAlleles.add(x));
+                NE_LOGGER.info("filtering for {} alleles: {}", RequiredAlleles.size(), RequiredAlleles);
+            }
         }
 
-        SpecificPeptideLengths = Lists.newArrayList();
+        RequiredPeptideLengths = Lists.newArrayList();
 
-        if(cmd.hasOption(SPECIFIC_PEPTIDE_LENGTHS))
+        if(cmd.hasOption(REQUIRED_PEPTIDE_LENGTHS))
         {
-            Arrays.stream(cmd.getOptionValue(SPECIFIC_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1))
-                    .forEach(x -> SpecificPeptideLengths.add(Integer.parseInt(x)));
-            NE_LOGGER.info("filtering for {} peptide lengths: {}", SpecificPeptideLengths.size(), SpecificPeptideLengths);
+            Arrays.stream(cmd.getOptionValue(REQUIRED_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1))
+                    .forEach(x -> RequiredPeptideLengths.add(Integer.parseInt(x)));
+            NE_LOGGER.info("requiring {} peptide lengths: {}", RequiredPeptideLengths.size(), RequiredPeptideLengths);
         }
 
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
@@ -157,8 +177,8 @@ public class BinderConfig
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
 
-        options.addOption(SPECIFIC_ALLELES, true, "List of alleles separated by ';'");
-        options.addOption(SPECIFIC_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
+        options.addOption(REQUIRED_ALLELES, true, "List of alleles separated by ';'");
+        options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");

@@ -305,7 +305,7 @@ public class BindScorer
     private boolean loadData()
     {
         if(!loadBindData(
-                mConfig.TrainingDataFile, true, mConfig.SpecificAlleles, mConfig.SpecificPeptideLengths, mAllelePeptideData))
+                mConfig.TrainingDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
         {
             return false;
         }

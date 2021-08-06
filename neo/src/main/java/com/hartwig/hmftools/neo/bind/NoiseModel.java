@@ -110,8 +110,8 @@ public class NoiseModel
 
             double newValue = (lowerValue + upperValue) * 0.5;
 
-            if(abs(newValue - currentValue) < 0.25)
-                return currentValue;
+            if(abs(newValue - currentValue) < 0.1)
+                return (currentValue + newValue) * 0.5;
 
             currentValue = newValue;
             ++iterations;
