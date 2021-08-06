@@ -20,22 +20,16 @@ public class TeloConfig
 {
     public final int ThreadCount;
 
-    public final String SampleId;
-
-    public final String SampleBamFile;
+    public final String BamFile;
     public final String RefGenomeFile;
     public final String OutputDir;
-    public final boolean WriteReads;
 
     public final List<String> SpecificChromosomes;
     public final int Threads;
 
-    public static String SAMPLE_ID = "sample";
-
     private static String THREADS = "threads";
-    private static String SAMPLE_BAM_FILE = "sample_bam";
+    private static String BAM_FILE = "bam_file";
     private static String REF_GENOME = "ref_genome";
-    private static String WRITE_READS = "write_reads";
     private static final String SPECIFIC_CHR = "specific_chr";
 
     public static final Logger TE_LOGGER = LogManager.getLogger(com.hartwig.hmftools.telo.TeloConfig.class);
@@ -45,8 +39,7 @@ public class TeloConfig
         ThreadCount = getConfigValue(cmd, THREADS, 1);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME, "");
 
-        SampleId = cmd.getOptionValue(SAMPLE_ID);
-        SampleBamFile = cmd.getOptionValue(SAMPLE_BAM_FILE);
+        BamFile = cmd.getOptionValue(BAM_FILE);
         OutputDir = parseOutputDir(cmd);
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
@@ -59,15 +52,13 @@ public class TeloConfig
             TE_LOGGER.info("filtering for specific chromosomes: {}", chromosomes);
             SpecificChromosomes.addAll(Arrays.stream(chromosomes.split(";")).collect(Collectors.toList()));
         }
-
-        WriteReads = cmd.hasOption(WRITE_READS);
     }
 
     public boolean isValid()
     {
-        if(SampleBamFile == null || SampleId == null)
+        if(BamFile == null)
         {
-            TE_LOGGER.error( "missing sampleId or BAM file");
+            TE_LOGGER.error( "missing BAM / CRAM file");
             return false;
         }
 
@@ -84,12 +75,10 @@ public class TeloConfig
     {
         final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads");
-        options.addOption(SAMPLE_ID, true, "Name of tumor sample");
-        options.addOption(SAMPLE_BAM_FILE, true, "Path to tumor bam file");
+        options.addOption(BAM_FILE, true, "Path to bam file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
         options.addOption(SPECIFIC_CHR, true, "Optional: list of chromosomes separated by ;");
-        options.addOption(WRITE_READS, false, "Write BAM read data to CSV file");
         options.addOption(LOG_DEBUG, false, "Log verbose");
 
         return options;
