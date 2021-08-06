@@ -10,15 +10,20 @@ public class CalcConstants
     public final double MaxAffinity;
     public final double BindingAffinityLow;
     public final double BindingAffinityHigh;
+    public final double NoiseProbability;
+    public final double NoiseWeight;
     public final boolean ApplyScaledCount;
 
     public CalcConstants(
-            final double peptideLengthWeight, final double alleleWeight, final double weightExponent,
-            final double maxAffinity, final double bindingAffinityLow, final double bindingAffinityHigh, final boolean applyScaledCount)
+            double peptideLengthWeight, double alleleWeight, double weightExponent,
+            double noiseProb, double noiseWeight,
+            double maxAffinity, double bindingAffinityLow, double bindingAffinityHigh, boolean applyScaledCount)
     {
         PeptideLengthWeight = peptideLengthWeight;
         AlleleWeight = alleleWeight;
         WeightExponent = weightExponent;
+        NoiseProbability = noiseProb;
+        NoiseWeight = noiseWeight;
         MaxAffinity = maxAffinity;
         BindingAffinityLow = bindingAffinityLow;
         BindingAffinityHigh = bindingAffinityHigh;

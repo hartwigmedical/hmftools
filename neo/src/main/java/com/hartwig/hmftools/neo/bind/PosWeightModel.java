@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.ALLELE_POS_MAPPING_PEPTIDE_LENGTH;
@@ -25,6 +26,7 @@ public class PosWeightModel
     private final AminoAcidFrequency mAminoAcidFrequency;
     private final BlosumMapping mBlosumMapping;
     private final HlaSequences mHlaSequences;
+    private final NoiseModel mNoiseModel;
 
     public PosWeightModel(final CalcConstants calcConstants, final HlaSequences hlaSequences)
     {
@@ -32,7 +34,11 @@ public class PosWeightModel
         mAminoAcidFrequency = new AminoAcidFrequency();
         mBlosumMapping = new BlosumMapping();
         mHlaSequences = hlaSequences;
+        mNoiseModel = new NoiseModel(mAminoAcidFrequency, calcConstants.NoiseProbability, calcConstants.NoiseWeight);
     }
+
+    public boolean noiseEnabled() { return mNoiseModel.enabled(); }
+    public final NoiseModel noiseModel() { return mNoiseModel; }
 
     public static final int INVALID_POS = -1;
 
@@ -55,6 +61,32 @@ public class PosWeightModel
         return actualPos > REF_PEPTIDE_LEFT_FIXED_POS ? actualPos : INVALID_POS;
     }
 
+    public void buildNoiseCounts(final BindCountData bindCounts)
+    {
+        if(!mNoiseModel.enabled())
+            return;
+
+        final double[][] counts = bindCounts.getBindCounts();
+        final double[][] noiseCounts = bindCounts.getNoiseCounts();
+
+        for(int pos = 0; pos < bindCounts.PeptideLength; ++pos)
+        {
+            int posTotalBinds = 0;
+
+            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
+            {
+                posTotalBinds += counts[aa][pos];
+            }
+
+            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
+            {
+                double obsCount = counts[aa][pos];
+                double noiseCount = mNoiseModel.getExpected(aa, posTotalBinds, (int)round(obsCount));
+                noiseCounts[aa][pos] = max(noiseCount, obsCount);
+            }
+        }
+    }
+
     public void buildWeightedCounts(final BindCountData bindCounts, final List<BindCountData> peptideLengthCounts)
     {
         // translate the counts from various peptide lengths into this set of counts, normalising to the reference peptide length
@@ -63,11 +95,11 @@ public class PosWeightModel
 
         for(BindCountData otherBindCounts : peptideLengthCounts)
         {
-            final double[][] otherCounts = otherBindCounts.getBindCounts();
+            final double[][] otherCounts = mNoiseModel.enabled() ? otherBindCounts.getNoiseCounts() : otherBindCounts.getBindCounts();
             int otherPeptideLength = otherBindCounts.PeptideLength;
 
-            // = IF(E2 = $B$2, F2, F2 / abs(E2-$B$2) * (1/(1+($B$10/$B$4)^$B$6)))
-            // LWCount(A,L,P,AA) = Count(A,L,P,AA) + SUM(l<>L) [ Count(A,l,P,AA) * 1/abs(L-l)] * [1 / ( 1+ Obs(A,L)/LHW)^E)]
+            // use CountWeight for other peptide lengths' counts
+            // CountWeight = 1 (PeptideLengthDiff) * 1 / (1 + (observedCount / LHW) ^ WeightExponent)
             double weight = 1;
 
             if(otherPeptideLength != bindCounts.PeptideLength)

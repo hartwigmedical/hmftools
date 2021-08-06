@@ -245,10 +245,6 @@ public class BindScorer
 
                 NE_LOGGER.debug(String.format("allele(%s) McFlurry peptides(train=%d, rand=%d) AUC(%.4f)",
                         allele, trainingCountMcf, randomCountMcf, aucMcf));
-
-                writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
-                        allele, 0, "MCF", trainingCountMcf, randomCountMcf, aucMcf));
-                writer.newLine();
             }
         }
         catch(IOException e)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
+import static com.hartwig.hmftools.neo.bind.NoiseModel.calcExpected;
 import static com.hartwig.hmftools.neo.bind.PosWeightModel.INVALID_POS;
 import static com.hartwig.hmftools.neo.bind.PosWeightModel.peptidePositionToRef;
 import static com.hartwig.hmftools.neo.bind.PosWeightModel.refPeptidePositionToActual;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 import org.junit.Test;
 
@@ -131,8 +133,7 @@ public class BindModelTest
 
         List<BindCountData> bindCounts = Lists.newArrayList(bindCounts8, bindCounts9, bindCounts12);
 
-        CalcConstants calcConstants = new CalcConstants(100, 100, 1,
-                20000, 500, 500, false);
+        CalcConstants calcConstants = getTestCalcConstants();
 
         PosWeightModel pwModel = new PosWeightModel(calcConstants, new HlaSequences());
 
@@ -179,8 +180,7 @@ public class BindModelTest
 
         List<BindCountData> bindCounts = Lists.newArrayList(bindCountsA1, bindCountsA2);
 
-        CalcConstants calcConstants = new CalcConstants(100, 100, 1,
-                20000, 500, 500, false);
+        CalcConstants calcConstants = getTestCalcConstants();
 
         HlaSequences hlaSequences = new HlaSequences();
 
@@ -216,5 +216,64 @@ public class BindModelTest
         assertEquals(400.1, bindCountsA2.getFinalWeightedCounts()[aaIndex][1], 0.1);
         assertEquals(402.5, bindCountsA2.getFinalWeightedCounts()[aaIndex][3], 0.1);
         assertEquals(420.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][4], 0.1);
+    }
+
+    @Test
+    public void testNoiseModel()
+    {
+        // first the raw probability calcs
+        int totalBinds = 100;
+        double reqProbability = 0.05;
+        double expected = calcExpected(totalBinds, 1, 10, reqProbability);
+        assertEquals(4.7, expected, 0.1);
+
+        expected = calcExpected(totalBinds, 0, 10, reqProbability);
+        assertEquals(3.0, expected, 0.1);
+
+        expected = calcExpected(totalBinds, 5, 15, reqProbability);
+        assertEquals(10.3, expected, 0.1);
+
+        // now test using cache and amino-acid frequency
+
+        // initially with a zero weight to fully use expected
+        NoiseModel noiseModel = new NoiseModel(new AminoAcidFrequency(), 0.05, 0.0);
+
+        // L is about 10%
+        expected = noiseModel.getExpected('L', 100, 1);
+        assertEquals(4.7, expected, 0.1);
+
+        // value cached for a similar request
+        expected = noiseModel.getExpected('L', 100, 1);
+        assertEquals(1, noiseModel.cacheSize());
+
+        // test larger values with rounding
+        expected = noiseModel.getExpected('L', 1504, 47);
+        assertEquals(60, expected, 1.0);
+
+        noiseModel.getExpected('L', 1504, 51);
+        assertEquals(3, noiseModel.cacheSize());
+
+        noiseModel.getExpected('L', 1506, 51); // observed is rounded to as previous call
+        assertEquals(3, noiseModel.cacheSize());
+
+        // and with roundng the observed
+        expected = noiseModel.getExpected('L', 10100, 802); // observed is rounded to as previous call
+        assertEquals(847, expected, 1.0);
+        assertEquals(4, noiseModel.cacheSize());
+
+        noiseModel.getExpected('L', 10099, 799); // observed is rounded to as previous call
+        noiseModel.getExpected('L', 10103, 803); // observed is rounded to as previous call
+        assertEquals(4, noiseModel.cacheSize());
+
+        // test weight
+        noiseModel = new NoiseModel(new AminoAcidFrequency(), 0.05, 0.5);
+        expected = noiseModel.getExpected('L', 10100, 802); // observed is rounded to as previous call
+        assertEquals(824, expected, 1.0);
+    }
+
+    private static CalcConstants getTestCalcConstants()
+    {
+        return new CalcConstants(100, 100, 1, 0, 0,
+                20000, 500, 500, false);
     }
 }

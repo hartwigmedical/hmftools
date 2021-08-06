@@ -6,6 +6,11 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_BINDING_AFFINITY_HIGH;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_BINDING_AFFINITY_LOW;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_MAX_AFFINITY;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_NOISE_PROB;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_NOISE_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
@@ -51,6 +56,8 @@ public class BinderConfig
     private static final String WEIGHT_EXPONENT = "weight_exponent";
     private static final String LENGTH_WEIGHT = "length_weight";
     private static final String ALLELE_MOTIF_WEIGHT = "allele_motif_weight";
+    private static final String NOISE_PROB = "noise_prob";
+    private static final String NOISE_WEIGHT = "noise_weight";
 
     private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
@@ -76,9 +83,11 @@ public class BinderConfig
                 Double.parseDouble(cmd.getOptionValue(LENGTH_WEIGHT, String.valueOf(DEFAULT_PEPTIDE_LENGTH_WEIGHT))),
                 Double.parseDouble(cmd.getOptionValue(ALLELE_MOTIF_WEIGHT, String.valueOf(DEFAULT_ALLELE_MOTIF_WEIGHT))),
                 Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(DEFAULT_WEIGHT_EXPONENT))),
-                Double.parseDouble(cmd.getOptionValue(MAX_AFFINITY, "50000")),
-                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_LOW, "100")),
-                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, "500")),
+                Double.parseDouble(cmd.getOptionValue(NOISE_PROB, "0")), // String.valueOf(DEFAULT_NOISE_PROB)
+                Double.parseDouble(cmd.getOptionValue(NOISE_WEIGHT, "0")), // String.valueOf(DEFAULT_NOISE_WEIGHT)
+                Double.parseDouble(cmd.getOptionValue(MAX_AFFINITY, String.valueOf(DEFAULT_MAX_AFFINITY))),
+                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_LOW, String.valueOf(DEFAULT_BINDING_AFFINITY_LOW))),
+                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, String.valueOf(DEFAULT_BINDING_AFFINITY_HIGH))),
                 cmd.hasOption(APPLY_SCALED_COUNT));
 
         SpecificAlleles = Lists.newArrayList();
@@ -137,6 +146,9 @@ public class BinderConfig
         options.addOption(WEIGHT_EXPONENT, true, "Weight exponent");
         options.addOption(ALLELE_MOTIF_WEIGHT, true, "Allele motif weight");
         options.addOption(LENGTH_WEIGHT, true, "Length weight");
+        options.addOption(NOISE_PROB, true, "Noise target probability");
+        options.addOption(NOISE_WEIGHT, true, "Noise weight");
+
         options.addOption(RUN_SCORING, false, "Use binding matrix data to score training and random peptide data");
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");

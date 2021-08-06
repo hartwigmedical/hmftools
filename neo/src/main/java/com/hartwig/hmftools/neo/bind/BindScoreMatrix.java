@@ -94,11 +94,8 @@ public class BindScoreMatrix
 
     private static final String DATA_TYPE_POS_WEIGHTS = "PosWeights";
 
-    public static void writeMatrixData(
-            final BufferedWriter writer, final BindCountData bindCounts, final BindScoreMatrix matrix, int maxPeptideLength, boolean writeCounts)
+    public static void writeMatrixData(final BufferedWriter writer, final BindScoreMatrix matrix, int maxPeptideLength)
     {
-        NE_LOGGER.debug("writing allele({}) matrix data", matrix.Allele);
-
         final double[][] data = matrix.getBindScores();
 
         try
@@ -123,45 +120,12 @@ public class BindScoreMatrix
 
                 writer.newLine();
             }
-
-            if(writeCounts)
-            {
-                for(int i = 0; i <= 2; ++i)
-                {
-                    final double[][] counts = (i == 0) ? bindCounts.getBindCounts() : (i == 1) ?
-                            bindCounts.getWeightedCounts() : bindCounts.getFinalWeightedCounts();
-
-                    String dataType = (i == 0) ? "BindCounts" : (i == 1) ? "PeptideLengthWeighted" : "AlleleMotifWeighted";
-
-                    for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-                    {
-                        char aminoAcid = AMINO_ACIDS.get(aa);
-
-                        writer.write(String.format("%s,%s,%d,%c", dataType, matrix.Allele, matrix.PeptideLength, aminoAcid));
-
-                        for(int pos = 0; pos < maxPeptideLength; ++pos)
-                        {
-                            if(pos < matrix.PeptideLength)
-                            {
-                                writer.write(String.format(",%.1f", counts[aa][pos]));
-                            }
-                            else
-                            {
-                                writer.write(",0.0");
-                            }
-                        }
-
-                        writer.newLine();
-                    }
-                }
-            }
         }
         catch (IOException e)
         {
             NE_LOGGER.error("failed to write matrix data: {}", e.toString());
         }
     }
-
 
     public static List<BindScoreMatrix> loadFromCsv(final String filename)
     {

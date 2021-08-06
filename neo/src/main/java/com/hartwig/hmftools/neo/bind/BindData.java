@@ -3,8 +3,11 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
 
 import java.io.BufferedReader;
@@ -111,13 +114,13 @@ public class BindData
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
             Integer sourceIndex = fieldsIndexMap.get("Source");
 
-            boolean isPredictionOnly = !fieldsIndexMap.containsKey("Affinity") && fieldsIndexMap.containsKey("PredictedAffinity");
-            int affinityIndex = isPredictionOnly ? fieldsIndexMap.get("PredictedAffinity") : fieldsIndexMap.get("Affinity");
+            boolean isPredictionOnly = !fieldsIndexMap.containsKey(FLD_AFFINITY) && fieldsIndexMap.containsKey(FLD_PRED_AFFINITY);
+            int affinityIndex = isPredictionOnly ? fieldsIndexMap.get(FLD_PRED_AFFINITY) : fieldsIndexMap.get(FLD_AFFINITY);
 
             // optional fields
-            Integer predictedIndex = fieldsIndexMap.get("PredictedAffinity");
+            Integer predictedIndex = fieldsIndexMap.get(FLD_PRED_AFFINITY);
             Integer affinityPercIndex = fieldsIndexMap.get("AffinityPercentile");
-            Integer presentationScoreIndex = fieldsIndexMap.get("PresentationScore");
+            Integer presentationScoreIndex = fieldsIndexMap.get(FLD_PRES_SCORE);
             Integer presentationPercIndex = fieldsIndexMap.get("PresentationPercentile");
 
             // Allele,Peptide,PredictedAffinity,AffinityPercentile,PresentationPercentile,Source

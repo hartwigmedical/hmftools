@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
@@ -183,6 +184,14 @@ public class BindTrainer
 
             NE_LOGGER.debug("allele({}) build matrix for {} peptide lengths", allele, pepLenBindCounts.size());
 
+            if(mPosWeightModel.noiseEnabled())
+            {
+                for(BindCountData bindCounts : pepLenBindCounts)
+                {
+                    mPosWeightModel.buildNoiseCounts(bindCounts);
+                }
+            }
+
             for(BindCountData bindCounts : pepLenBindCounts)
             {
                 totalAlelleCount += bindCounts.totalBindCount();
@@ -221,15 +230,13 @@ public class BindTrainer
             }
         }
 
-        BufferedWriter matrixWriter = mConfig.WritePosWeightMatrix ?
+        BufferedWriter matrixWriter = mConfig.WritePosWeightMatrix || mConfig.WriteBindCounts ?
                 initMatrixWriter(mConfig.formFilename("matrix_data"), getMaxPeptideLength(), mConfig.WriteBindCounts) : null;
 
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
             final String allele = alleleEntry.getKey();
             final Map<Integer,BindCountData> pepLenBindCounts = alleleEntry.getValue();
-
-            // int totalAlleleCount = alleleTotalCounts.get(allele);
 
             Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = Maps.newHashMap();
             mAlleleBindMatrices.put(allele, peptideLengthMatrixMap);
@@ -240,7 +247,10 @@ public class BindTrainer
                 peptideLengthMatrixMap.put(matrix.PeptideLength, matrix);
 
                 if(mConfig.WritePosWeightMatrix)
-                    writeMatrixData(matrixWriter, bindCounts, matrix, getMaxPeptideLength(), mConfig.WriteBindCounts);
+                    writeMatrixData(matrixWriter, matrix, getMaxPeptideLength());
+
+                if(mConfig.WriteBindCounts)
+                    writeCounts(matrixWriter, bindCounts, getMaxPeptideLength(), mPosWeightModel.noiseEnabled());
             }
         }
 
