@@ -104,7 +104,9 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
             if (start() < other.start())
             {
                 return -1;
-            } else if (start() == other.start()) {
+            }
+            else if (start() == other.start())
+            {
                 return 0;
             }
             return 1;
