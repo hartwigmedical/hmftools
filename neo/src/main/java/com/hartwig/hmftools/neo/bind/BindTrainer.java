@@ -275,8 +275,7 @@ public class BindTrainer
             }
         }
 
-        if(mConfig.Constants.GlobalWeight > 0)
-            mPosWeightModel.writeGlobalCounts(matrixWriter, getMaxPeptideLength());
+        mPosWeightModel.writeGlobalCounts(matrixWriter, getMaxPeptideLength());
 
         closeBufferedWriter(matrixWriter);
     }

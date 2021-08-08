@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
+
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 public class PosWeightModel
@@ -31,9 +31,7 @@ public class PosWeightModel
     private final BlosumMapping mBlosumMapping;
     private final HlaSequences mHlaSequences;
     private final NoiseModel mNoiseModel;
-
-    private final Map<Integer,double[][]> mGlobalWeights; // sum of peptide-length weighted counts from all alleles
-    private final Map<Integer,Double> mGlobalPeptideLengthTotals;
+    private final GlobalWeights mGlobalWeights;
 
     public PosWeightModel(final CalcConstants calcConstants, final HlaSequences hlaSequences)
     {
@@ -42,8 +40,7 @@ public class PosWeightModel
         mBlosumMapping = new BlosumMapping();
         mHlaSequences = hlaSequences;
         mNoiseModel = new NoiseModel(mAminoAcidFrequency, calcConstants.NoiseProbability, calcConstants.NoiseWeight);
-        mGlobalWeights = Maps.newHashMap();
-        mGlobalPeptideLengthTotals = Maps.newHashMap();
+        mGlobalWeights = new GlobalWeights(calcConstants);
     }
 
     public boolean noiseEnabled() { return mNoiseModel.enabled(); }
@@ -135,24 +132,7 @@ public class PosWeightModel
             }
         }
 
-        if(mConstants.GlobalWeight > 0)
-        {
-            double[][] globalCounts = mGlobalWeights.get(bindCounts.PeptideLength);
-
-            if(globalCounts == null)
-            {
-                globalCounts = new double[AMINO_ACID_COUNT][bindCounts.PeptideLength];
-                mGlobalWeights.put(bindCounts.PeptideLength, globalCounts);
-            }
-
-            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-            {
-                for(int pos = 0; pos < bindCounts.PeptideLength; ++pos)
-                {
-                    globalCounts[aa][pos] += weightedCounts[aa][pos];
-                }
-            }
-        }
+        mGlobalWeights.processBindCounts(bindCounts);
     }
 
     public void buildFinalWeightedCounts(
@@ -228,45 +208,18 @@ public class PosWeightModel
         }
     }
 
-    public void setGlobalTotals()
-    {
-        for(Map.Entry<Integer,double[][]> entry : mGlobalWeights.entrySet())
-        {
-            int peptideLength = entry.getKey();
-            double[][] counts = entry.getValue();
-
-            double total = calcCountsTotal(counts);
-            mGlobalPeptideLengthTotals.put(peptideLength, total);
-        }
-    }
-
-    private static double calcCountsTotal(final double[][] counts)
-    {
-        double total = 0;
-
-        for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-        {
-            for(int pos = 0; pos < counts[0].length; ++pos)
-            {
-                total += counts[aa][pos];
-            }
-        }
-
-        return total;
-    }
-
     public BindScoreMatrix createMatrix(final BindCountData bindCounts)
     {
         double globalWeight = mConstants.GlobalWeight;
 
-        if(mGlobalPeptideLengthTotals.isEmpty() && globalWeight > 0)
-            setGlobalTotals();
+        mGlobalWeights.setGlobalTotals();
 
         final double[][] finalWeightedCounts = bindCounts.getFinalWeightedCounts();
 
         BindScoreMatrix matrix = new BindScoreMatrix(bindCounts.Allele, bindCounts.PeptideLength);
         final double[][] data = matrix.getBindScores();
 
+        /*
         double globalReductionFactor = 1;
         double[][] globalCounts = mGlobalWeights.get(bindCounts.PeptideLength);
 
@@ -276,6 +229,7 @@ public class PosWeightModel
             double globalTotal = mGlobalPeptideLengthTotals.get(bindCounts.PeptideLength);
             globalReductionFactor = total / globalTotal;
         }
+        */
 
         for(int pos = 0; pos < bindCounts.PeptideLength; ++pos)
         {
@@ -299,10 +253,12 @@ public class PosWeightModel
                 // handle very low observation counts
                 adjustedCount = max(adjustedCount, posTotalCount * MIN_OBSERVED_AA_POS_FREQ);
 
+                /*
                 if(globalWeight > 0)
                 {
                     adjustedCount = globalWeight * globalReductionFactor * globalCounts[aa][pos] + (1 - globalWeight) * adjustedCount;
                 }
+                */
 
                 double posWeight = log(2, adjustedCount / aaFrequency);
                 data[aa][pos] = posWeight;
@@ -314,39 +270,7 @@ public class PosWeightModel
 
     public void writeGlobalCounts(final BufferedWriter writer, int maxPeptideLength)
     {
-        try
-        {
-            for(Map.Entry<Integer,double[][]> entry : mGlobalWeights.entrySet())
-            {
-                int peptideLength = entry.getKey();
-                double[][] counts = entry.getValue();
-
-                for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-                {
-                    char aminoAcid = AMINO_ACIDS.get(aa);
-
-                    writer.write(String.format("%s,%s,%d,%c", "Global", "GLOBAL", peptideLength, aminoAcid));
-
-                    for(int pos = 0; pos < maxPeptideLength; ++pos)
-                    {
-                        if(pos < peptideLength)
-                        {
-                            writer.write(String.format(",%.1f", counts[aa][pos]));
-                        }
-                        else
-                        {
-                            writer.write(",0.0");
-                        }
-                    }
-
-                    writer.newLine();
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.error("failed to write global counts data: {}", e.toString());
-        }
+        if(mGlobalWeights.enabled())
+            mGlobalWeights.writeGlobalCounts(writer, maxPeptideLength);
     }
-
 }
