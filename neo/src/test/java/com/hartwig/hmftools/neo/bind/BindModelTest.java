@@ -273,7 +273,7 @@ public class BindModelTest
 
     private static CalcConstants getTestCalcConstants()
     {
-        return new CalcConstants(100, 100, 1, 0, 0,
+        return new CalcConstants(100, 100, 1, 0, 0, 0,
                 20000, 500, 500, false);
     }
 }

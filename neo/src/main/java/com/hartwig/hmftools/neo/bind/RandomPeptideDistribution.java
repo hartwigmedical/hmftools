@@ -43,7 +43,8 @@ public class RandomPeptideDistribution
         mDiscreteScoreData = Lists.newArrayList();
         mDiscreteScoreData.add(new double[] {0.0001, 0.01});
         mDiscreteScoreData.add(new double[] {0.001, 0.1});
-        mDiscreteScoreData.add(new double[] {0.01, 1.0});
+        mDiscreteScoreData.add(new double[] {0.01, 0.25});
+        mDiscreteScoreData.add(new double[] {0.05, 1.0});
     }
 
     public boolean loadData()
@@ -129,6 +130,12 @@ public class RandomPeptideDistribution
         for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
         {
             final String allele = alleleEntry.getKey();
+
+            if(!mConfig.AllelesToWrite.isEmpty() && !mConfig.AllelesToWrite.contains(allele))
+                continue;
+
+            NE_LOGGER.debug("building distribution for allele({})", allele);
+
             final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
 
             Map<Integer,List<ScoreDistributionData>> peptideLengthMap = Maps.newHashMap();
@@ -136,7 +143,6 @@ public class RandomPeptideDistribution
 
             for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
             {
-                NE_LOGGER.debug("building distribution for allele({}) peptideLength({})", matrix.Allele, matrix.PeptideLength);
 
                 List<Double> peptideScores = Lists.newArrayListWithExpectedSize(refRandomPeptides.size());
 
@@ -265,7 +271,8 @@ public class RandomPeptideDistribution
 
     private void writeDistribution()
     {
-        NE_LOGGER.info("writing random peptide scoring distribution");
+        NE_LOGGER.info("writing random peptide scoring distribution for {} alleles",
+                !mConfig.AllelesToWrite.isEmpty() ? mConfig.AllelesToWrite.size() : "all");
 
         final String distFilename = formFilename("random_peptide_dist", mConfig.OutputDir, mConfig.OutputId);
 
@@ -276,6 +283,8 @@ public class RandomPeptideDistribution
             // score each against each allele and build up a percentiles for each
             for(Map.Entry<String,Map<Integer,List<ScoreDistributionData>>> alleleEntry : mAlleleScoresMap.entrySet())
             {
+                String allele = alleleEntry.getKey();
+
                 final Map<Integer,List<ScoreDistributionData>> pepLenDistMap = alleleEntry.getValue();
 
                 for(List<ScoreDistributionData> pepLenScoreDist : pepLenDistMap.values())

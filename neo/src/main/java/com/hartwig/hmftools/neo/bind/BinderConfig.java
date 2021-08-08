@@ -59,6 +59,7 @@ public class BinderConfig
     private static final String ALLELE_MOTIF_WEIGHT = "allele_motif_weight";
     private static final String NOISE_PROB = "noise_prob";
     private static final String NOISE_WEIGHT = "noise_weight";
+    private static final String GLOBAL_WEIGHT = "global_weight";
 
     private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
@@ -86,6 +87,7 @@ public class BinderConfig
                 Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(DEFAULT_WEIGHT_EXPONENT))),
                 Double.parseDouble(cmd.getOptionValue(NOISE_PROB, "0")), // String.valueOf(DEFAULT_NOISE_PROB)
                 Double.parseDouble(cmd.getOptionValue(NOISE_WEIGHT, "0")), // String.valueOf(DEFAULT_NOISE_WEIGHT)
+                Double.parseDouble(cmd.getOptionValue(GLOBAL_WEIGHT, "0")),
                 Double.parseDouble(cmd.getOptionValue(MAX_AFFINITY, String.valueOf(DEFAULT_MAX_AFFINITY))),
                 Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_LOW, String.valueOf(DEFAULT_BINDING_AFFINITY_LOW))),
                 Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, String.valueOf(DEFAULT_BINDING_AFFINITY_HIGH))),
@@ -168,6 +170,7 @@ public class BinderConfig
         options.addOption(LENGTH_WEIGHT, true, "Length weight");
         options.addOption(NOISE_PROB, true, "Noise target probability");
         options.addOption(NOISE_WEIGHT, true, "Noise weight");
+        options.addOption(GLOBAL_WEIGHT, true, "Global counts weight");
 
         options.addOption(RUN_SCORING, false, "Use binding matrix data to score training and random peptide data");
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");

@@ -254,6 +254,9 @@ public class BindTrainer
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
             final String allele = alleleEntry.getKey();
+
+            NE_LOGGER.debug("allele({}) creating matrix data", allele);
+
             final Map<Integer,BindCountData> pepLenBindCounts = alleleEntry.getValue();
 
             Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = Maps.newHashMap();
@@ -271,6 +274,9 @@ public class BindTrainer
                     writeCounts(matrixWriter, bindCounts, getMaxPeptideLength(), mPosWeightModel.noiseEnabled());
             }
         }
+
+        if(mConfig.Constants.GlobalWeight > 0)
+            mPosWeightModel.writeGlobalCounts(matrixWriter, getMaxPeptideLength());
 
         closeBufferedWriter(matrixWriter);
     }
