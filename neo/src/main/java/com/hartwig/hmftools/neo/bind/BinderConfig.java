@@ -147,7 +147,7 @@ public class BinderConfig
 
     public static String formFilename(final String fileId, final String outputDir, final String outputId)
     {
-        if(outputId.isEmpty())
+        if(outputId == null || outputId.isEmpty())
             return String.format("%sbind_%s.csv", outputDir, fileId);
         else
             return String.format("%sbind_%s_%s.csv", outputDir, outputId, fileId);
