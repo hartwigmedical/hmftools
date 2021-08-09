@@ -201,7 +201,7 @@ public class BindTrainer
 
             int totalAlelleCount = 0;
 
-            NE_LOGGER.debug("allele({}) build matrix for {} peptide lengths", allele, pepLenBindCounts.size());
+            NE_LOGGER.debug("allele({}) building counts data for {} peptide lengths", allele, pepLenBindCounts.size());
 
             if(mPosWeightModel.noiseEnabled())
             {

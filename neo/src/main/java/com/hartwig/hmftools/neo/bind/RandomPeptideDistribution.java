@@ -84,7 +84,7 @@ public class RandomPeptideDistribution
 
             ScoreDistributionData nextScoreData = i < scores.size() - 1 ? scores.get(i + 1) : null;
 
-            if(Doubles.equal(score, nextScoreData.Score))
+            if(nextScoreData != null && Doubles.equal(score, nextScoreData.Score))
                 return nextScoreData.ScoreBucket;
 
             if((isAscending && score > scoreData.Score) || (!isAscending && score < scoreData.Score))

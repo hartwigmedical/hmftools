@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static org.apache.commons.math3.util.FastMath.log;
+
 import java.util.List;
 import java.util.Map;
 
@@ -49,4 +51,8 @@ public final class BindConstants
 
     public static final double DEFAULT_NOISE_PROB = 0.05;
     public static final double DEFAULT_NOISE_WEIGHT = 0.5;
+
+    // public static final double DEFAULT_ENTROPY_ADJUST = 0;
+    public static final double ENTROPY_ADJUST = 4;
+    public static final double ENTROPY_FACTOR = log(2, 20);
 }

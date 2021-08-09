@@ -37,8 +37,6 @@ public class BindScorer
     private final RandomPeptideDistribution mRandomDistribution;
 
     private final List<Double> mScoreRankPercentileBuckets;
-    private final Map<String,Map<Integer,int[]>> mAlleleScoreRankPercentileCounts;
-
 
     public BindScorer(final BinderConfig config)
     {
@@ -50,7 +48,6 @@ public class BindScorer
 
         // only used for training
         mScoreRankPercentileBuckets = null;
-        mAlleleScoreRankPercentileCounts = null;
     }
 
     public BindScorer(
@@ -63,7 +60,6 @@ public class BindScorer
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
 
-        mAlleleScoreRankPercentileCounts = Maps.newHashMap();
         mScoreRankPercentileBuckets = Lists.newArrayListWithExpectedSize(16);
 
         double rankPercBucket = 0.00005;
@@ -284,6 +280,8 @@ public class BindScorer
             return false;
         }
 
+        NE_LOGGER.info("loading matrix data from {}", mConfig.BindMatrixFile);
+
         List<BindScoreMatrix> matrixList = BindScoreMatrix.loadFromCsv(mConfig.BindMatrixFile);
 
         for(BindScoreMatrix matrix : matrixList)
@@ -298,6 +296,8 @@ public class BindScorer
 
             pepLenMap.put(matrix.PeptideLength, matrix);
         }
+
+        NE_LOGGER.info("loading random distribution data from {}", mConfig.RandomPeptides.RandomPeptideDistributionFile);
 
         if(!mRandomDistribution.loadData())
             return false;
