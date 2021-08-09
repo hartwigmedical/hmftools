@@ -66,7 +66,6 @@ public final class DriverCatalogFile
     @NotNull
     private static String header()
     {
-        // TODO Can remove "NA" column as described in DEV-1924
         return new StringJoiner(DELIMITER).add("chromosome")
                 .add("chromosomeBand")
                 .add("gene")
@@ -74,7 +73,6 @@ public final class DriverCatalogFile
                 .add("category")
                 .add("likelihoodMethod")
                 .add("driverLikelihood")
-                .add("NA")
                 .add("missense")
                 .add("nonsense")
                 .add("splice")
@@ -89,7 +87,6 @@ public final class DriverCatalogFile
     @NotNull
     private static String toString(@NotNull final DriverCatalog driverCatalog)
     {
-        // TODO Can remove "0" column as described in DEV-1924
         return new StringJoiner(DELIMITER).add(driverCatalog.chromosome())
                 .add(driverCatalog.chromosomeBand())
                 .add(driverCatalog.gene())
@@ -97,7 +94,6 @@ public final class DriverCatalogFile
                 .add(String.valueOf(driverCatalog.category()))
                 .add(String.valueOf(driverCatalog.likelihoodMethod()))
                 .add(FORMAT.format(driverCatalog.driverLikelihood()))
-                .add("0")
                 .add(String.valueOf(driverCatalog.missense()))
                 .add(String.valueOf(driverCatalog.nonsense()))
                 .add(String.valueOf(driverCatalog.splice()))
