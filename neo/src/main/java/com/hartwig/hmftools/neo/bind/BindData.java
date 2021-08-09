@@ -39,6 +39,9 @@ public class BindData
     private double mScore;
     private double mRankPercentile;
 
+    private double mGlobalScore;
+    private double mGlobalRankPercentile;
+
     public BindData(final String allele, String peptide, double affinity, final String source)
     {
         Allele = allele;
@@ -54,6 +57,9 @@ public class BindData
 
         mScore = 0;
         mRankPercentile = -1;
+
+        mGlobalScore = 0;
+        mGlobalRankPercentile = -1;
     }
 
     public int peptideLength() { return Peptide.length(); }
@@ -84,6 +90,15 @@ public class BindData
 
     public double score() { return mScore; }
     public double rankPercentile() { return mRankPercentile; }
+
+    public void setGlobalScoreData(double score, double rankPerc)
+    {
+        mGlobalScore = score;
+        mGlobalRankPercentile = rankPerc;
+    }
+
+    public double globalScore() { return mGlobalScore; }
+    public double globalRankPercentile() { return mGlobalRankPercentile; }
 
     public String toString()
     {

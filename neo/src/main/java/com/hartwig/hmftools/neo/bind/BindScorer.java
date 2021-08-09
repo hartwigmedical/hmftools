@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
+import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 import static com.hartwig.hmftools.neo.bind.PeptideWriteType.LIKELY_INCORRECT;
 import static com.hartwig.hmftools.neo.bind.PeptideWriteType.TRAINING;
 
@@ -95,6 +96,8 @@ public class BindScorer
         BufferedWriter alleleWriter = initAlleleSummaryWriter();
 
         // rank both the training and random peptide data using the newly created data and the random peptide distributions
+        Map<Integer,BindScoreMatrix> globalMatrixMap = mAlleleBindMatrices.get(GLOBAL_COUNTS);
+
         for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
             final String allele = alleleEntry.getKey();
@@ -120,6 +123,13 @@ public class BindScorer
 
                     double score = matrix.calcScore(bindData.Peptide);
                     bindData.setScoreData(score, mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), score));
+
+                    // add global scores if the matrix is present
+                    if(globalMatrixMap != null && globalMatrixMap.containsKey(bindData.peptideLength()))
+                    {
+                        double globalScore = globalMatrixMap.get(bindData.peptideLength()).calcScore(bindData.Peptide);
+                        bindData.setGlobalScoreData(globalScore, mRandomDistribution.getScoreRank(GLOBAL_COUNTS, bindData.peptideLength(), globalScore));
+                    }
                 }
             }
 
@@ -130,42 +140,6 @@ public class BindScorer
 
         NE_LOGGER.info("writing peptide scores");
         writePeptideScores();
-    }
-
-    public void buildScoreDistribution()
-    {
-        if(mScoreRankPercentileBuckets == null)
-            return;
-
-        for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
-        {
-            final String allele = alleleEntry.getKey();
-            final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
-
-            Map<Integer,int[]> pepLenScoreDistMap = Maps.newHashMap();
-            mAlleleScoreRankPercentileCounts.put(allele, pepLenScoreDistMap);
-
-            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
-            {
-                int peptideLength = pepLenEntry.getKey();
-
-                int[] distCounts = new int[mScoreRankPercentileBuckets.size()];
-                pepLenScoreDistMap.put(peptideLength, distCounts);
-
-                final List<BindData> bindDataList = pepLenEntry.getValue();
-                for(BindData bindData : bindDataList)
-                {
-                    for(int scoreBucket = 0; scoreBucket < mScoreRankPercentileBuckets.size(); ++scoreBucket)
-                    {
-                        if(bindData.score() < mScoreRankPercentileBuckets.get(0) || scoreBucket == mScoreRankPercentileBuckets.size() - 1)
-                        {
-                            ++distCounts[scoreBucket];
-                            break;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private BufferedWriter initAlleleSummaryWriter()
@@ -261,7 +235,7 @@ public class BindScorer
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
+            writer.write("Allele,Peptide,Source,Score,Rank,GlobalScore,GlobalRank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
             writer.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
@@ -285,10 +259,10 @@ public class BindScorer
                             continue;
                         }
 
-                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.2f,%.2f,%.4f,%.4f",
+                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f,%.4f,%.4f",
                                 allele, bindData.Peptide, bindData.Source,
-                                bindData.score(), bindData.rankPercentile(), bindData.Affinity,
-                                bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
+                                bindData.score(), bindData.rankPercentile(), bindData.globalScore(), bindData.globalRankPercentile(),
+                                bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
                         writer.newLine();
                     }
                 }

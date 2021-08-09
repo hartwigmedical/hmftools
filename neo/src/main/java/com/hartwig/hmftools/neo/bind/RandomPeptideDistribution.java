@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
+import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -77,7 +78,14 @@ public class RandomPeptideDistribution
         for(int i = 0; i < scores.size(); ++i)
         {
             ScoreDistributionData scoreData = scores.get(i);
+
+            if(Doubles.equal(score, scoreData.Score))
+                return scoreData.ScoreBucket;
+
             ScoreDistributionData nextScoreData = i < scores.size() - 1 ? scores.get(i + 1) : null;
+
+            if(Doubles.equal(score, nextScoreData.Score))
+                return nextScoreData.ScoreBucket;
 
             if((isAscending && score > scoreData.Score) || (!isAscending && score < scoreData.Score))
             {
@@ -131,7 +139,7 @@ public class RandomPeptideDistribution
         {
             final String allele = alleleEntry.getKey();
 
-            if(!mConfig.AllelesToWrite.isEmpty() && !mConfig.AllelesToWrite.contains(allele))
+            if(!allele.equals(GLOBAL_COUNTS) && !mConfig.AllelesToWrite.isEmpty() && !mConfig.AllelesToWrite.contains(allele))
                 continue;
 
             NE_LOGGER.debug("building distribution for allele({})", allele);

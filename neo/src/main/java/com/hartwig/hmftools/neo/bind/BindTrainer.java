@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
+import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initFrequencyWriter;
@@ -275,7 +276,13 @@ public class BindTrainer
             }
         }
 
-        mPosWeightModel.writeGlobalCounts(matrixWriter, getMaxPeptideLength());
+        if(mPosWeightModel.getGlobalWeights().enabled())
+        {
+            mPosWeightModel.getGlobalWeights().writeGlobalCounts(
+                    matrixWriter, getMaxPeptideLength(), mConfig.WritePosWeightMatrix, mConfig.WriteBindCounts);
+
+            mAlleleBindMatrices.put(GLOBAL_COUNTS, mPosWeightModel.getGlobalWeights().getMatrixMap());
+        }
 
         closeBufferedWriter(matrixWriter);
     }

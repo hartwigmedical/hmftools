@@ -5,9 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.ALLELE_POS_MAPPING_PEPTIDE_LENGTH;
-import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_C_FREQ_ADJUST;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
@@ -17,7 +15,6 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static org.apache.commons.math3.util.FastMath.log;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -40,13 +37,15 @@ public class PosWeightModel
         mBlosumMapping = new BlosumMapping();
         mHlaSequences = hlaSequences;
         mNoiseModel = new NoiseModel(mAminoAcidFrequency, calcConstants.NoiseProbability, calcConstants.NoiseWeight);
-        mGlobalWeights = new GlobalWeights(calcConstants);
+        mGlobalWeights = new GlobalWeights(calcConstants, mAminoAcidFrequency);
     }
 
     public boolean noiseEnabled() { return mNoiseModel.enabled(); }
     public final NoiseModel noiseModel() { return mNoiseModel; }
 
     public static final int INVALID_POS = -1;
+
+    public final GlobalWeights getGlobalWeights() { return mGlobalWeights; }
 
     public static int peptidePositionToRef(int refLength, int peptideLength, int position)
     {
@@ -210,9 +209,7 @@ public class PosWeightModel
 
     public BindScoreMatrix createMatrix(final BindCountData bindCounts)
     {
-        double globalWeight = mConstants.GlobalWeight;
-
-        mGlobalWeights.setGlobalTotals();
+        mGlobalWeights.buildMatrixData();
 
         final double[][] finalWeightedCounts = bindCounts.getFinalWeightedCounts();
 
@@ -220,6 +217,8 @@ public class PosWeightModel
         final double[][] data = matrix.getBindScores();
 
         /*
+        double globalWeight = mConstants.GlobalWeight;
+
         double globalReductionFactor = 1;
         double[][] globalCounts = mGlobalWeights.get(bindCounts.PeptideLength);
 
@@ -268,9 +267,4 @@ public class PosWeightModel
         return matrix;
     }
 
-    public void writeGlobalCounts(final BufferedWriter writer, int maxPeptideLength)
-    {
-        if(mGlobalWeights.enabled())
-            mGlobalWeights.writeGlobalCounts(writer, maxPeptideLength);
-    }
 }

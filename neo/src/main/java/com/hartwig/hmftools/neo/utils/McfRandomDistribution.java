@@ -125,6 +125,7 @@ public class McfRandomDistribution
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : allelePeptideData.entrySet())
             {
                 final String allele = alleleEntry.getKey();
+
                 final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
 
                 for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
