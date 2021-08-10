@@ -144,7 +144,7 @@ public class SomaticFindingsChapter implements ReportChapter {
             }
         }
 
-        return gains.stream().sorted((o1, o2) -> (int) (o1.copies() - o2.copies())).collect(Collectors.toList());
+        return gains.stream().sorted((o1, o2) -> (int) (o2.copies() - o1.copies())).collect(Collectors.toList());
     }
 
     @NotNull
