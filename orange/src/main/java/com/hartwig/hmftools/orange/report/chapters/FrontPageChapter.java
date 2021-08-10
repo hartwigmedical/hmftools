@@ -150,12 +150,16 @@ public class FrontPageChapter implements ReportChapter {
                 }
             }
 
-            StringJoiner joiner = new StringJoiner(", ");
-            for (String gene : highDriverGenes) {
-                joiner.add(gene);
-            }
+            if (highDriverGenes.isEmpty()) {
+                return String.valueOf(variants.size());
+            } else {
+                StringJoiner joiner = new StringJoiner(", ");
+                for (String gene : highDriverGenes) {
+                    joiner.add(gene);
+                }
 
-            return variants.size() + " (" + joiner.toString() + ")";
+                return variants.size() + " (" + joiner.toString() + ")";
+            }
         }
     }
 
