@@ -10,6 +10,7 @@ import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,21 +27,30 @@ public final class FusionTable {
             return TableUtil.createEmptyTable(title);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 2, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("CN"),
-                        TableUtil.createHeaderCell("Phased"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Chain"),
-                        TableUtil.createHeaderCell("Terminated")});
+        Table table = TableUtil.createReportContentTable(new float[] { 1, 5 },
+                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("Details")});
 
         for (LinxFusion fusion : sort(fusions)) {
             table.addCell(TableUtil.createContentCell(fusion.name()));
-            table.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
-            table.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
-            table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
-            table.addCell(TableUtil.createContentCell(fusion.phased().display()));
-            table.addCell(TableUtil.createContentCell(fusion.reportedType()));
-            table.addCell(TableUtil.createContentCell(String.valueOf(fusion.chainLinks())));
-            table.addCell(TableUtil.createContentCell(fusion.chainTerminated() ? "Yes" : "No"));
+
+            Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
+            details.addCell(TableUtil.createKeyCell("5' End"));
+            details.addCell(TableUtil.createValueCell(fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")"));
+            details.addCell(TableUtil.createKeyCell("3' Start"));
+            details.addCell(TableUtil.createValueCell(fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")"));
+            details.addCell(TableUtil.createKeyCell("CN"));
+            details.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
+            details.addCell(TableUtil.createKeyCell("Phasing"));
+            details.addCell(TableUtil.createValueCell(fusion.phased().display()));
+            details.addCell(TableUtil.createKeyCell("Type"));
+            details.addCell(TableUtil.createValueCell(fusion.reportedType()));
+            details.addCell(TableUtil.createKeyCell("Chain links (terminated?)"));
+            details.addCell(TableUtil.createValueCell(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
+            details.addCell(TableUtil.createKeyCell("Domains kept"));
+            details.addCell(TableUtil.createValueCell(fusion.domainsKept()));
+            details.addCell(TableUtil.createKeyCell("Domains lost"));
+            details.addCell(TableUtil.createValueCell(fusion.domainsLost()));
+            table.addCell(TableUtil.createContentCell(details));
         }
 
         return TableUtil.createWrappingReportTable(table, title);
