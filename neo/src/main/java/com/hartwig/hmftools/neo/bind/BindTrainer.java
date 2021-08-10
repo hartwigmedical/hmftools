@@ -66,7 +66,8 @@ public class BindTrainer
             System.exit(1);
         }
 
-        processingBindingData();
+        buildBindCountsData();
+        buildPositionWeightMatrices();
 
         if(mConfig.RandomPeptides.WriteRandomDistribution || mConfig.RunScoring)
         {
@@ -81,36 +82,17 @@ public class BindTrainer
             {
                 BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution);
                 scorer.runScoring();
+
+                if(mConfig.WriteLikelihood)
+                {
+                    final String relativeLikelihoodFile = mConfig.formFilename("rel_likelihood");
+                    CompetitiveBinding compBinding = new CompetitiveBinding(relativeLikelihoodFile);
+                    compBinding.processAllelePeptideRanks(mAllelePeptideData);
+                }
             }
         }
 
         NE_LOGGER.info("NeoBinder complete");
-    }
-
-    private void processingBindingData()
-    {
-        if(mConfig.BindMatrixFile != null)
-        {
-            List<BindScoreMatrix> matrixList = BindScoreMatrix.loadFromCsv(mConfig.BindMatrixFile);
-
-            for(BindScoreMatrix matrix : matrixList)
-            {
-                Map<Integer,BindScoreMatrix> pepLenMap = mAlleleBindMatrices.get(matrix.Allele);
-
-                if(pepLenMap == null)
-                {
-                    pepLenMap = Maps.newHashMap();
-                    mAlleleBindMatrices.put(matrix.Allele, pepLenMap);
-                }
-
-                pepLenMap.put(matrix.PeptideLength, matrix);
-            }
-        }
-        else
-        {
-            buildBindCountsData();
-            buildPositionWeightMatrices();
-        }
     }
 
     private void buildBindCountsData()

@@ -274,6 +274,8 @@ public class PosWeightModel
                 posTotalCount += finalWeightedCounts[aa][pos];
             }
 
+            posTotalCount = max(posTotalCount, 0.1); // for training data without observed counts in a peptide length
+
             // double entropyAdjust = ENTROPY_ADJUST > 0 ? 1 - pow(entropy[pos] / ENTROPY_FACTOR, ENTROPY_ADJUST) : 1;
 
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)

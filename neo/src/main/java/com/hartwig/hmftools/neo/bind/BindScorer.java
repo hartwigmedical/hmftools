@@ -242,7 +242,7 @@ public class BindScorer
                             continue;
                         }
 
-                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.2f,%.2f,%.4f,%.4f",
+                        writer.write(String.format("%s,%s,%s,%.4f,%.6f,%.2f,%.2f,%.6f,%.6f",
                                 allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
                                 bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
 

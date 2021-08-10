@@ -43,6 +43,7 @@ public class BinderConfig
     public final boolean WriteBindCounts;
     public final PeptideWriteType WritePeptideType;
     public final boolean WriteSummaryData;
+    public final boolean WriteLikelihood;
 
     public final List<String> RequiredAlleles;
     public final List<Integer> RequiredPeptideLengths;
@@ -70,6 +71,7 @@ public class BinderConfig
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
+    private static final String WRITE_LIKELIHOOD = "write_likelihood";
 
     private static final String REQUIRED_ALLELES = "required_alleles";
     private static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
@@ -142,6 +144,7 @@ public class BinderConfig
         WriteBindCounts = cmd.hasOption(WRITE_BIND_COUNTS);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
         WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
+        WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
     }
 
@@ -182,7 +185,8 @@ public class BinderConfig
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_BIND_COUNTS, false, "Write interim bind counts data");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
-        options.addOption(WRITE_SUMMARY_DATA, false, "Write allelel summary data including AUC");
+        options.addOption(WRITE_SUMMARY_DATA, false, "Write allele summary data including AUC");
+        options.addOption(WRITE_LIKELIHOOD, false, "Write relative likelihood data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
 

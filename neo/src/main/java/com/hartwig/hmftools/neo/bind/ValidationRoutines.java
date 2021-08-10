@@ -294,7 +294,7 @@ public class ValidationRoutines
     {
         try
         {
-            mPeptideWriter.write(String.format("%s,%s,%s,%.4f,%.4f",
+            mPeptideWriter.write(String.format("%s,%s,%s,%.4f,%.6f",
                     excludedAllele, bindData.Allele, bindData.Peptide, bindData.score(), bindData.rankPercentile()));
             mPeptideWriter.newLine();
         }

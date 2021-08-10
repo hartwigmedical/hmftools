@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -96,7 +97,19 @@ public class RandomPeptideDistribution
                     break;
 
                 if((isAscending && score < nextScoreData.Score) || (!isAscending && score > nextScoreData.Score))
-                    return (scoreData.ScoreBucket + nextScoreData.ScoreBucket) * 0.5;
+                {
+                    // interpolate between the scores to set the rank
+                    if(isAscending)
+                    {
+                        double upperPerc = (score - scoreData.Score) / (nextScoreData.Score - scoreData.Score);
+                        return upperPerc * nextScoreData.ScoreBucket + (1 - upperPerc) * scoreData.ScoreBucket;
+                    }
+                    else
+                    {
+                        double upperPerc = (score - nextScoreData.Score) / (scoreData.Score - nextScoreData.Score);
+                        return upperPerc * scoreData.ScoreBucket + (1 - upperPerc) * nextScoreData.ScoreBucket;
+                    }
+                }
             }
         }
 
