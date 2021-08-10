@@ -17,6 +17,7 @@ import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.FusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
+import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
@@ -55,7 +56,8 @@ public class SomaticFindingsChapter implements ReportChapter {
         addSomaticAmpDels(document);
         addFusions(document);
         addViralPresence(document);
-        addSomaticGeneDisruptions(document);
+        addHomozygousDisruptions(document);
+        addGeneDisruptions(document);
         addLinxDriverPlots(document);
     }
 
@@ -201,7 +203,13 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(otherVirusTable);
     }
 
-    private void addSomaticGeneDisruptions(@NotNull Document document) {
+    private void addHomozygousDisruptions(@NotNull Document document) {
+        String homozygousDisruptionTitle = "Homozygous disruptions (" + report.linx().homozygousDisruptions().size() + ")";
+        Table homozygousDisruptionTable = HomozygousDisruptionTable.build(homozygousDisruptionTitle, report.linx().homozygousDisruptions());
+        document.add(homozygousDisruptionTable);
+    }
+
+    private void addGeneDisruptions(@NotNull Document document) {
         String geneDisruptionTitle = "Gene disruptions (" + report.linx().geneDisruptions().size() + ")";
         Table geneDisruptionTable = GeneDisruptionTable.build(geneDisruptionTitle, report.linx().geneDisruptions());
         document.add(geneDisruptionTable);
