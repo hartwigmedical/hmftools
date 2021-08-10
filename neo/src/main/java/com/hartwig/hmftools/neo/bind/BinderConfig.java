@@ -27,6 +27,7 @@ import org.apache.commons.compress.utils.Lists;
 public class BinderConfig
 {
     public final String TrainingDataFile;
+    public final String ValidationDataFile;
     public final String BindMatrixFile; // file with computed and cached binding matrix per allele
     public final String RandomPeptidePredictionsFile; // predictions per allele for random peptides
 
@@ -42,11 +43,13 @@ public class BinderConfig
     public final boolean WritePosWeightMatrix;
     public final boolean WriteBindCounts;
     public final PeptideWriteType WritePeptideType;
+    public final boolean WriteSummaryData;
 
     public final List<String> RequiredAlleles;
     public final List<Integer> RequiredPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
+    private static final String VALIDATION_DATA_FILE = "validation_data_file";
     private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
 
@@ -66,6 +69,7 @@ public class BinderConfig
     private static final String WRITE_BIND_COUNTS = "write_bind_counts";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
     private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
+    private static final String WRITE_SUMMARY_DATA = "write_summary_data";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
 
     private static final String REQUIRED_ALLELES = "required_alleles";
@@ -75,6 +79,7 @@ public class BinderConfig
     public BinderConfig(final CommandLine cmd)
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
+        ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
         RandomPeptidePredictionsFile = cmd.getOptionValue(RANDOM_PEPTIDE_PRED_FILE);
         BindMatrixFile = cmd.getOptionValue(BIND_MATRIX_FILE);
 
@@ -137,6 +142,7 @@ public class BinderConfig
         WritePosWeightMatrix = cmd.hasOption(WRITE_PW_MATRIX);
         WriteBindCounts = cmd.hasOption(WRITE_BIND_COUNTS);
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
+        WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
     }
 
@@ -157,6 +163,7 @@ public class BinderConfig
     {
         RandomPeptideConfig.addCmdLineArgs(options);
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
+        options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
@@ -177,6 +184,7 @@ public class BinderConfig
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_BIND_COUNTS, false, "Write interim bind counts data");
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
+        options.addOption(WRITE_SUMMARY_DATA, false, "Write allelel summary data including AUC");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
         options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
 

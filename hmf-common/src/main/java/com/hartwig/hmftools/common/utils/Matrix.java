@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.sumMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,13 +79,7 @@ public class Matrix
 
     public void initialise(double value)
     {
-        for(int i = 0; i < Rows; ++i)
-        {
-            for (int j = 0; j < Cols; ++j)
-            {
-                mData[i][j] = value;
-            }
-        }
+        MatrixUtils.initialise(mData, value);
     }
 
     public int getDataCount() { return Rows * Cols; }
@@ -296,22 +291,6 @@ public class Matrix
     {
         return sumMatrix(mData);
     }
-
-    public static double sumMatrix(final double[][] data)
-    {
-        double total = 0;
-
-        for(int row = 0; row < data.length; ++row)
-        {
-            for(int col = 0; col < data[0].length; ++col)
-            {
-                total += data[row][col];
-            }
-        }
-
-        return total;
-    }
-
 
     public double[] getRow(int r)
     {

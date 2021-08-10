@@ -18,6 +18,37 @@ public class MatrixUtils
 
     public static final String DEFAULT_MATRIX_DELIM = ",";
 
+    public static double sumMatrix(final double[][] data)
+    {
+        double total = 0;
+
+        for(int row = 0; row < data.length; ++row)
+        {
+            for(int col = 0; col < data[0].length; ++col)
+            {
+                total += data[row][col];
+            }
+        }
+
+        return total;
+    }
+
+    public static void clear(final double[][] data)
+    {
+        initialise(data, 0);
+    }
+
+    public static void initialise(final double[][] data, final double value)
+    {
+        for(int row = 0; row < data.length; ++row)
+        {
+            for(int col = 0; col < data[0].length; ++col)
+            {
+                data[row][col] = value;
+            }
+        }
+    }
+
     public static Matrix createMatrixFromListData(final List<List<Double>> dataSet)
     {
         if(dataSet.isEmpty())

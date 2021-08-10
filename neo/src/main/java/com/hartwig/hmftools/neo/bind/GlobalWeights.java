@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
@@ -15,7 +13,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 public class GlobalWeights
@@ -97,11 +95,6 @@ public class GlobalWeights
         }
     }
 
-//    public double calcScore(final BindCountData bindCounts)
-//    {
-//
-//    }
-
     public void buildMatrixData()
     {
         if(!mPeptideLengthTotals.isEmpty() || !enabled())
@@ -112,7 +105,7 @@ public class GlobalWeights
             int peptideLength = entry.getKey();
             double[][] counts = entry.getValue();
 
-            double total = Matrix.sumMatrix(counts);
+            double total = MatrixUtils.sumMatrix(counts);
             mPeptideLengthTotals.put(peptideLength, total);
         }
 

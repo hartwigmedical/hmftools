@@ -41,7 +41,6 @@ public class BindTrainer
     private final Set<Integer> mDistinctPeptideLengths;
 
     private final PosWeightModel mPosWeightModel;
-    private final BlosumMapping mBlosumMapping;
     private final HlaSequences mHlaSequences;
 
     public BindTrainer(final CommandLine cmd)
@@ -49,8 +48,6 @@ public class BindTrainer
         mConfig = new BinderConfig(cmd);
         mAllelePeptideData = Maps.newHashMap();
         mDistinctPeptideLengths = Sets.newHashSet();
-
-        mBlosumMapping = new BlosumMapping();
 
         mHlaSequences = new HlaSequences();
         mHlaSequences.load(cmd.getOptionValue(POSITION_HLA_AA_FILE), cmd.getOptionValue(HLA_DEFINITIONS_FILE));

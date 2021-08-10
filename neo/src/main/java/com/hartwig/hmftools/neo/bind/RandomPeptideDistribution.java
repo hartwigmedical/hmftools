@@ -26,6 +26,8 @@ public class RandomPeptideDistribution
     private final RandomPeptideConfig mConfig;
     private boolean mDataLoaded;
 
+    private final List<String> mRefRandomPeptides;
+
     private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoresMap; // allele to peptide length to distribution
     private final List<double[]> mDiscreteScoreData;
 
@@ -38,6 +40,7 @@ public class RandomPeptideDistribution
     {
         mConfig = config;
 
+        mRefRandomPeptides = Lists.newArrayList();
         mAlleleScoresMap = Maps.newHashMap();
         mDataLoaded = false;
 
@@ -100,36 +103,34 @@ public class RandomPeptideDistribution
         return 1;
     }
 
-    private List<String> loadRandomPeptides()
+    private void loadRandomPeptides()
     {
-        List<String> refRandomPeptides = Lists.newArrayList();
+        if(!mRefRandomPeptides.isEmpty())
+            return;
 
         if(mConfig.RandomPeptidesFile == null)
         {
             NE_LOGGER.error("missing random peptides file");
-            return refRandomPeptides;
         }
 
         try
         {
-            refRandomPeptides.addAll(Files.readAllLines(new File(mConfig.RandomPeptidesFile).toPath()));
-            refRandomPeptides.remove(0);
+            mRefRandomPeptides.addAll(Files.readAllLines(new File(mConfig.RandomPeptidesFile).toPath()));
+            mRefRandomPeptides.remove(0);
 
-            NE_LOGGER.info("loaded {} random peptides", refRandomPeptides.size());
+            NE_LOGGER.info("loaded {} random peptides", mRefRandomPeptides.size());
         }
         catch(IOException e)
         {
             NE_LOGGER.error("failed to load random peptide file: {}", e.toString());
         }
-
-        return refRandomPeptides;
     }
 
     public void buildDistribution(final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap)
     {
-        List<String> refRandomPeptides = loadRandomPeptides();
+        loadRandomPeptides();
 
-        if(refRandomPeptides.isEmpty())
+        if(mRefRandomPeptides.isEmpty())
             return;
 
         // score each against each allele and build up a percentiles for each
@@ -152,11 +153,11 @@ public class RandomPeptideDistribution
             for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
             {
 
-                List<Double> peptideScores = Lists.newArrayListWithExpectedSize(refRandomPeptides.size());
+                List<Double> peptideScores = Lists.newArrayListWithExpectedSize(mRefRandomPeptides.size());
 
                 int count = 0;
 
-                for(String peptide : refRandomPeptides)
+                for(String peptide : mRefRandomPeptides)
                 {
                     if(peptide.length() > matrix.PeptideLength)
                         peptide = peptide.substring(0, matrix.PeptideLength);

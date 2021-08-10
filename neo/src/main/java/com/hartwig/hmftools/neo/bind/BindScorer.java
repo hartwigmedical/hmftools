@@ -36,8 +36,6 @@ public class BindScorer
 
     private final RandomPeptideDistribution mRandomDistribution;
 
-    private final List<Double> mScoreRankPercentileBuckets;
-
     public BindScorer(final BinderConfig config)
     {
         mConfig = config;
@@ -45,9 +43,6 @@ public class BindScorer
         mAllelePeptideData = Maps.newHashMap();
         mAlleleBindMatrices = Maps.newHashMap();
         mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
-
-        // only used for training
-        mScoreRankPercentileBuckets = null;
     }
 
     public BindScorer(
@@ -59,15 +54,6 @@ public class BindScorer
         mAllelePeptideData = allelePeptideData;
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
-
-        mScoreRankPercentileBuckets = Lists.newArrayListWithExpectedSize(16);
-
-        double rankPercBucket = 0.00005;
-        while(rankPercBucket < 1)
-        {
-            mScoreRankPercentileBuckets.add(rankPercBucket);
-            rankPercBucket *= 2;
-        }
     }
 
     public void run()
@@ -87,9 +73,9 @@ public class BindScorer
 
     public void runScoring()
     {
-        NE_LOGGER.info("writing allele summaries");
+        NE_LOGGER.info("running scoring");
 
-        BufferedWriter alleleWriter = initAlleleSummaryWriter();
+        BufferedWriter alleleWriter = mConfig.WriteSummaryData ? initAlleleSummaryWriter() : null;
 
         // rank both the training and random peptide data using the newly created data and the random peptide distributions
         Map<Integer,BindScoreMatrix> globalMatrixMap = mAlleleBindMatrices.get(GLOBAL_COUNTS);
@@ -129,7 +115,8 @@ public class BindScorer
                 }
             }
 
-            writeAlleleSummary(alleleWriter, allele);
+            if(mConfig.WriteSummaryData)
+                writeAlleleSummary(alleleWriter, allele);
         }
 
         closeBufferedWriter(alleleWriter);
@@ -231,7 +218,7 @@ public class BindScorer
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,GlobalScore,GlobalRank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
+            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
             writer.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
@@ -255,10 +242,13 @@ public class BindScorer
                             continue;
                         }
 
-                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f,%.4f,%.4f",
-                                allele, bindData.Peptide, bindData.Source,
-                                bindData.score(), bindData.rankPercentile(), bindData.globalScore(), bindData.globalRankPercentile(),
+                        writer.write(String.format("%s,%s,%s,%.4f,%.4f,%.2f,%.2f,%.4f,%.4f",
+                                allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
                                 bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
+
+                        // GlobalScore,GlobalRank, bindData.globalScore(), bindData.globalRankPercentile(), no longer written
+
+
                         writer.newLine();
                     }
                 }
@@ -275,7 +265,7 @@ public class BindScorer
     private boolean loadData()
     {
         if(!loadBindData(
-                mConfig.TrainingDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
+                mConfig.ValidationDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
         {
             return false;
         }
@@ -327,5 +317,4 @@ public class BindScorer
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }
