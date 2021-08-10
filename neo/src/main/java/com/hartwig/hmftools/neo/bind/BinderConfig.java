@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_MAX_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
-import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -167,7 +166,6 @@ public class BinderConfig
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
-        options.addOption(POSITION_HLA_AA_FILE, true, "Position HLA allele amino acid mapping file");
 
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
         options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");

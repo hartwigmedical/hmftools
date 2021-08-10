@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
-import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,7 +36,6 @@ public class ValidationRoutines
     private final RandomPeptideDistribution mRandomDistribution;
     private final Map<String,Integer> mAlleleTotalCounts;
 
-
     private final BufferedWriter mPeptideWriter;
 
     public ValidationRoutines(final CommandLine cmd)
@@ -49,7 +47,7 @@ public class ValidationRoutines
         mAlleleTotalCounts = Maps.newHashMap();
 
         mHlaSequences = new HlaSequences();
-        mHlaSequences.load(cmd.getOptionValue(POSITION_HLA_AA_FILE), cmd.getOptionValue(HLA_DEFINITIONS_FILE));
+        mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
 
         mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
 
@@ -143,7 +141,6 @@ public class ValidationRoutines
             }
         }
 
-        // fill in an gaps in alleles or peptide lengths if they are required
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
             final String allele = alleleEntry.getKey();
@@ -180,6 +177,8 @@ public class ValidationRoutines
         Map<Integer,List<BindCountData>> countsByLength = Maps.newHashMap();
         mConfig.RequiredPeptideLengths.forEach(x -> countsByLength.put(x, Lists.newArrayList()));
 
+        Map<Integer,BindCountData> targetAllelePepLenMap = mAlleleBindCounts.get(targetAllele);
+
         // now factor each allele's weighted counts into all the others
         for(Integer peptideLength : mConfig.RequiredPeptideLengths)
         {
@@ -189,11 +188,15 @@ public class ValidationRoutines
             for(Map<Integer,BindCountData> pepLenMap : mAlleleBindCounts.values())
             {
                 BindCountData bindCounts = pepLenMap.get(peptideLength);
+
+                // exclude the target allele from contributing its counts
+                if(bindCounts.Allele.equals(targetAllele))
+                    continue;
+
                 allBindCounts.add(bindCounts);
             }
 
-            Map<Integer,BindCountData> pepLenMap = mAlleleBindCounts.get(targetAllele);
-            BindCountData bindCounts = pepLenMap.get(peptideLength);
+            BindCountData bindCounts = targetAllelePepLenMap.get(peptideLength);
             
             // clear any previously set values
             MatrixUtils.clear(bindCounts.getFinalWeightedCounts());
@@ -214,7 +217,7 @@ public class ValidationRoutines
              */
         }
 
-        final Map<Integer,BindCountData> pepLenBindCounts = mAlleleBindCounts.get(targetAllele);
+        Map<Integer,BindCountData> pepLenBindCounts = mAlleleBindCounts.get(targetAllele);
         Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = Maps.newHashMap();
         alleleBindMatrices.put(targetAllele, peptideLengthMatrixMap);
 

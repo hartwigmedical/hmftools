@@ -5,15 +5,19 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 
 public class HlaSequences
 {
@@ -23,7 +27,6 @@ public class HlaSequences
 
     private boolean mIsValid;
 
-    public static final String POSITION_HLA_AA_FILE = "pos_hla_aa_file";
     public static final String HLA_DEFINITIONS_FILE = "hla_defintions_file";
 
     public HlaSequences()
@@ -43,62 +46,52 @@ public class HlaSequences
 
     public Map<String,List<String>> getAllelePositionSequences() { return mAllelePositionSequences; }
 
-    public void load(final String hlaPositionsFile, final String hlaDefinitionsFile)
+    public void load(final String hlaDefinitionsFile)
     {
-        mIsValid = loadHlaPositions(hlaPositionsFile);
+        loadHlaPositions();
         mIsValid &= loadHlaDefinitions(hlaDefinitionsFile);
     }
 
-    private boolean loadHlaPositions(final String filename)
+    private void loadHlaPositions()
     {
-        if(filename == null || !Files.exists(Paths.get(filename)))
-            return false;
+        final List<String> lines = new BufferedReader(new InputStreamReader(
+                RefGenomeCoordinates.class.getResourceAsStream("/ref/hla_allele_bind_positions.csv")))
+                .lines().collect(Collectors.toList());
 
-        try
+        String[] columns = lines.get(0).split(DELIM);
+        lines.remove(0);
+
+        int positionCount = columns.length - 1;
+
+        for(int i = 0; i < positionCount; ++i)
         {
-            final List<String> lines = Files.readAllLines(new File(filename).toPath());
+            mPositionHlaAminoAcids.add(Lists.newArrayList());
+        }
 
-            String[] columns = lines.get(0).split(DELIM);
-            lines.remove(0);
+        for(String line : lines)
+        {
+            String[] items = line.split(DELIM);
 
-            int positionCount = columns.length - 1;
-
-            for(int i = 0; i < positionCount; ++i)
+            if(items.length != positionCount + 1)
             {
-                mPositionHlaAminoAcids.add(Lists.newArrayList());
+                mIsValid = false;
+                return;
             }
 
-            for(String line : lines)
+            int aminoAcidPosition = Integer.parseInt(items[0]);
+
+            for(int i = 1; i < items.length; ++i)
             {
-                String[] items = line.split(DELIM);
+                boolean applies = Boolean.parseBoolean(items[i]);
 
-                if(items.length != positionCount + 1)
-                    return false;
-
-                int aminoAcidPosition = Integer.parseInt(items[0]);
-
-                for(int i = 1; i < items.length; ++i)
+                if(applies)
                 {
-                    boolean applies = Boolean.parseBoolean(items[i]);
-
-                    if(applies)
-                    {
-                        int pos = i - 1;
-                        List<Integer> positions = mPositionHlaAminoAcids.get(pos);
-                        positions.add(aminoAcidPosition);
-                    }
+                    int pos = i - 1;
+                    List<Integer> positions = mPositionHlaAminoAcids.get(pos);
+                    positions.add(aminoAcidPosition);
                 }
             }
-
-            NE_LOGGER.info("loaded HLA amino-acid to position mappings from {}", filename);
         }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to load HLA amino-acid to position mappings file({}): {}", filename, e.toString());
-            return false;
-        }
-
-        return true;
     }
 
     private boolean loadHlaDefinitions(final String filename)

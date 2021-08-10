@@ -175,12 +175,14 @@ public class PosWeightModel
 
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
             {
-                finalWeightedCounts[aa][pos] = weightedCounts[aa][pos];
-
                 for(BindCountData otherBindCounts : allBindCounts)
                 {
                     if(otherBindCounts.Allele.equals(bindCounts.Allele))
+                    {
+                        // taken as is, no weighting
+                        finalWeightedCounts[aa][pos] = weightedCounts[aa][pos];
                         continue;
+                    }
 
                     double otherCount = otherBindCounts.getWeightedCounts()[aa][pos];
 

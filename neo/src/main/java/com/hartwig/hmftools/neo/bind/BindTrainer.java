@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
 import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
-import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initFrequencyWriter;
 
 import java.io.BufferedWriter;
@@ -50,7 +49,7 @@ public class BindTrainer
         mDistinctPeptideLengths = Sets.newHashSet();
 
         mHlaSequences = new HlaSequences();
-        mHlaSequences.load(cmd.getOptionValue(POSITION_HLA_AA_FILE), cmd.getOptionValue(HLA_DEFINITIONS_FILE));
+        mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
 
         mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
 

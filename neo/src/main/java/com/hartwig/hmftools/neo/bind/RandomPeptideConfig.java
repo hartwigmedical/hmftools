@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
-import static com.hartwig.hmftools.neo.bind.HlaSequences.POSITION_HLA_AA_FILE;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -65,7 +62,6 @@ public class RandomPeptideConfig
         options.addOption(RANDOM_PEPTIDES_FILE, true, "Random peptide file");
         options.addOption(RANDOM_PEPTIDE_DIST_FILE, true, "Random peptide distribution file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
-        options.addOption(POSITION_HLA_AA_FILE, true, "Position HLA allele amino acid mapping file");
         options.addOption(ALLELES_TO_WRITE, true, "Restricted set of alleles to write to file");
         options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
     }
