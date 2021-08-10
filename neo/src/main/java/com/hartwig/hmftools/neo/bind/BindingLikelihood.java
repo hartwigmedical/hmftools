@@ -4,10 +4,16 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -15,16 +21,22 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-public class CompetitiveBinding
+public class BindingLikelihood
 {
     private final List<Double> mScoreRankBuckets;
+    private final Map<String,double[][]> mAlleleLikelihoodMap;
 
-    private final BufferedWriter mWriter;
+    private BufferedWriter mWriter;
 
+    private static final double INVALID_LIKELIHOOD = -1;
     private static final double MIN_BUCKET_RANK = 0.00005;
+    private static final int PEPTIDE_LENGTHS = 5;
 
-    public CompetitiveBinding(final String outputFilename)
+    public BindingLikelihood()
     {
+        mWriter = null;
+        mAlleleLikelihoodMap = Maps.newHashMap();
+
         mScoreRankBuckets = Lists.newArrayListWithExpectedSize(16);
 
         double rankPercBucket = MIN_BUCKET_RANK;
@@ -33,12 +45,94 @@ public class CompetitiveBinding
             mScoreRankBuckets.add(rankPercBucket);
             rankPercBucket *= 2;
         }
-
-        mWriter = initWriter(outputFilename);
     }
 
-    public void processAllelePeptideRanks(final Map<String,Map<Integer,List<BindData>>> allelePeptideData)
+    public double getBindingLikelihood(final String allele, final String peptide, final double rank)
     {
+        int peptideLength = peptide.length();
+        int pepLenIndex = peptideLengthIndex(peptideLength);
+
+        if(pepLenIndex == INVALID_PEP_LEN)
+            return INVALID_LIKELIHOOD;
+
+        final double[][] likelihoods = mAlleleLikelihoodMap.get(allele);
+        if(likelihoods == null)
+            return INVALID_LIKELIHOOD;
+
+        for(int i = 0; i < mScoreRankBuckets.size(); ++i)
+        {
+            if(rank < mScoreRankBuckets.get(i))
+                return likelihoods[pepLenIndex][i];
+        }
+
+        return 0;
+    }
+
+    public boolean loadLikelihoods(final String filename)
+    {
+        if(filename == null)
+            return false;
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(new File(filename).toPath());
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            lines.remove(0);
+
+            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
+            int pepLenIndex = fieldsIndexMap.get(FLD_PEPTIDE_LEN);
+
+            String currentAllele = "";
+            double[][] likelihoods = null;
+
+            for(String line : lines)
+            {
+                String[] items = line.split(DELIM, -1);
+                String allele = items[alleleIndex];
+                int peptideLength = Integer.parseInt(items[pepLenIndex]);
+
+                if(!currentAllele.equals(allele))
+                {
+                    currentAllele = allele;
+                    likelihoods = new double[PEPTIDE_LENGTHS][mScoreRankBuckets.size()];
+                    mAlleleLikelihoodMap.put(allele, likelihoods);
+                }
+
+                int index = pepLenIndex + 1;
+                for(int i = 0; index < items.length; ++i, ++index)
+                {
+                    likelihoods[peptideLengthIndex(peptideLength)][i] = Double.parseDouble(items[index]);
+                }
+            }
+
+            NE_LOGGER.info("loaded {} alleles peptide likelihoods from {}", mAlleleLikelihoodMap.size(), filename);
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to read peptide likelihoods file: {}", e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    private static int INVALID_PEP_LEN = -1;
+
+    private static int peptideLengthIndex(int peptideLength)
+    {
+        if(peptideLength < 8 || peptideLength > 12)
+            return INVALID_PEP_LEN;
+
+        return peptideLength - 8;
+    }
+
+    public void buildAllelePeptideLikelihoods(
+            final Map<String,Map<Integer,List<BindData>>> allelePeptideData, final String outputFilename)
+    {
+        if(outputFilename != null)
+            mWriter = initWriter(outputFilename);
+
         for(Map.Entry<String, Map<Integer, List<BindData>>> alleleEntry : allelePeptideData.entrySet())
         {
             final String allele = alleleEntry.getKey();
@@ -54,13 +148,13 @@ public class CompetitiveBinding
                 pepLenRanks.put(peptideLength, peptideRanks);
             }
 
-            processAllelePeptideRanks(allele, pepLenRanks);
+            buildAllelePeptideLikelihoods(allele, pepLenRanks);
         }
 
         closeBufferedWriter(mWriter);
     }
 
-    private void processAllelePeptideRanks(final String allele, final Map<Integer,List<Double>> pepLenRanks)
+    private void buildAllelePeptideLikelihoods(final String allele, final Map<Integer,List<Double>> pepLenRanks)
     {
         Map<Integer,int[]> pepLenRankCounts = Maps.newHashMap();
         int totalBuckets = mScoreRankBuckets.size();

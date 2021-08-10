@@ -28,6 +28,7 @@ public class BinderConfig
     public final String TrainingDataFile;
     public final String ValidationDataFile;
     public final String BindMatrixFile; // file with computed and cached binding matrix per allele
+    public final String BindLikelihoodFile;
     public final String RandomPeptidePredictionsFile; // predictions per allele for random peptides
 
     public final CalcConstants Constants;
@@ -52,6 +53,7 @@ public class BinderConfig
     private static final String VALIDATION_DATA_FILE = "validation_data_file";
     private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
+    private static final String BIND_LIKELIHOOD_FILE = "bind_likelihood_file";
 
     private static final String MAX_AFFINITY = "max_affinity";
     private static final String BINDING_AFFINITY_LOW = "binding_affinity_low";
@@ -83,6 +85,7 @@ public class BinderConfig
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
         RandomPeptidePredictionsFile = cmd.getOptionValue(RANDOM_PEPTIDE_PRED_FILE);
         BindMatrixFile = cmd.getOptionValue(BIND_MATRIX_FILE);
+        BindLikelihoodFile = cmd.getOptionValue(BIND_LIKELIHOOD_FILE);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -168,6 +171,7 @@ public class BinderConfig
         options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
         options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
+        options.addOption(BIND_LIKELIHOOD_FILE, true, "Binding relative likelihood file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
 
         options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");

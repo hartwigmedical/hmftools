@@ -85,9 +85,9 @@ public class BindTrainer
 
                 if(mConfig.WriteLikelihood)
                 {
+                    BindingLikelihood compBinding = new BindingLikelihood();
                     final String relativeLikelihoodFile = mConfig.formFilename("rel_likelihood");
-                    CompetitiveBinding compBinding = new CompetitiveBinding(relativeLikelihoodFile);
-                    compBinding.processAllelePeptideRanks(mAllelePeptideData);
+                    compBinding.buildAllelePeptideLikelihoods(mAllelePeptideData, relativeLikelihoodFile);
                 }
             }
         }

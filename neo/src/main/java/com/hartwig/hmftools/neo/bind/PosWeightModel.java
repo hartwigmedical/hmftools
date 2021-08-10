@@ -180,7 +180,7 @@ public class PosWeightModel
                     if(otherBindCounts.Allele.equals(bindCounts.Allele))
                     {
                         // taken as is, no weighting
-                        finalWeightedCounts[aa][pos] = weightedCounts[aa][pos];
+                        finalWeightedCounts[aa][pos] += weightedCounts[aa][pos];
                         continue;
                     }
 

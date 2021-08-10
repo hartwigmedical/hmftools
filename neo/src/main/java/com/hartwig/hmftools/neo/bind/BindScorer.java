@@ -35,6 +35,7 @@ public class BindScorer
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
 
     private final RandomPeptideDistribution mRandomDistribution;
+    private final BindingLikelihood mBindingLikelihood;
 
     public BindScorer(final BinderConfig config)
     {
@@ -43,6 +44,8 @@ public class BindScorer
         mAllelePeptideData = Maps.newHashMap();
         mAlleleBindMatrices = Maps.newHashMap();
         mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
+
+        mBindingLikelihood = new BindingLikelihood();
     }
 
     public BindScorer(
@@ -54,6 +57,7 @@ public class BindScorer
         mAllelePeptideData = allelePeptideData;
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
+        mBindingLikelihood = null;
     }
 
     public void run()
@@ -219,6 +223,10 @@ public class BindScorer
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
             writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
+
+            if(mBindingLikelihood != null)
+                writer.write(",Likelihood");
+
             writer.newLine();
 
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
@@ -246,8 +254,13 @@ public class BindScorer
                                 allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
                                 bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
 
-                        // GlobalScore,GlobalRank, bindData.globalScore(), bindData.globalRankPercentile(), no longer written
+                        if(mBindingLikelihood != null)
+                        {
+                            writer.write(String.format(",%.6f",
+                                    mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, bindData.rankPercentile())));
+                        }
 
+                        // GlobalScore,GlobalRank, bindData.globalScore(), bindData.globalRankPercentile(), no longer written
 
                         writer.newLine();
                     }
@@ -290,6 +303,9 @@ public class BindScorer
         NE_LOGGER.info("loading random distribution data from {}", mConfig.RandomPeptides.RandomPeptideDistributionFile);
 
         if(!mRandomDistribution.loadData())
+            return false;
+
+        if(mConfig.BindLikelihoodFile != null && !mBindingLikelihood.loadLikelihoods(mConfig.BindLikelihoodFile))
             return false;
 
         return true;

@@ -184,7 +184,6 @@ public class BindModelTest
 
         HlaSequences hlaSequences = new HlaSequences();
 
-
         Map<String,List<String>> allelePosSequences = hlaSequences.getAllelePositionSequences();
         String seq1 = "A";
         String seq2 = "D";
