@@ -123,7 +123,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         Table driverAmpsDelsTable = GeneCopyNumberTable.build(driverAmpsDelsTitle, report.purple().reportableGainsLosses());
         document.add(driverAmpsDelsTable);
 
-        List<ReportableGainLoss> sortedGains = sortedGains(report.purple().unreportedGainsLosses());
+        List<ReportableGainLoss> sortedGains = sortedFullGains(report.purple().unreportedGainsLosses());
         String sortedGainsTitle = "Other amps (" + sortedGains.size() + ")";
         Table sortedGainsTable = GeneCopyNumberTable.build(sortedGainsTitle, sortedGains.subList(0, Math.min(10, sortedGains.size())));
         document.add(sortedGainsTable);
@@ -136,11 +136,10 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static List<ReportableGainLoss> sortedGains(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
+    private static List<ReportableGainLoss> sortedFullGains(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
         List<ReportableGainLoss> gains = Lists.newArrayList();
         for (ReportableGainLoss gainLoss : unreportedGainsLosses) {
-            if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
-                    || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
+            if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN) {
                 gains.add(gainLoss);
             }
         }
