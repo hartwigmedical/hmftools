@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -258,7 +259,11 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String chordString() {
-        return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+        if (report.chord().hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
+            return report.chord().hrStatus().display();
+        } else {
+            return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+        }
     }
 
     @NotNull
