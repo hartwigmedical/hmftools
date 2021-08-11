@@ -40,7 +40,7 @@ public final class FusionTable {
             details.addCell(TableUtil.createKeyCell("3' Start"));
             details.addCell(TableUtil.createValueCell(
                     fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")"));
-            details.addCell(TableUtil.createKeyCell("Junction copynumber"));
+            details.addCell(TableUtil.createKeyCell("Junction CN"));
             details.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
             details.addCell(TableUtil.createKeyCell("Phasing"));
             details.addCell(TableUtil.createValueCell(fusion.phased().display()));
