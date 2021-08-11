@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COU
 import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.getGeneStatus;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
-import static com.hartwig.hmftools.neo.cohort.PredictionData.expandHomozygous;
+import static com.hartwig.hmftools.neo.cohort.BindingPredictionData.expandHomozygous;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.NORMAL;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.SIM_TUMOR;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.STATUS_MAX;
@@ -36,8 +36,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class SamplePeptidePredictions
@@ -139,20 +137,20 @@ public class SamplePeptidePredictions
 
         List<Boolean> geneLostStatus = getGeneStatus(alleleCoverages);
 
-        List<PredictionData> allPredictions = loadPredictionData(sampleId, mPredictionsDataDir);
+        List<BindingPredictionData> allPredictions = loadPredictionData(sampleId, mPredictionsDataDir);
 
         Map<String,PeptideScores> peptideScores = Maps.newHashMap();
 
-        Map<String,List<PredictionData>> peptidePredictions = Maps.newHashMap();
+        Map<String,List<BindingPredictionData>> peptidePredictions = Maps.newHashMap();
 
         // organise into map by peptide, avoiding repeated peptides
         for(int i = 0; i < allPredictions.size(); ++i)
         {
-            PredictionData predData = allPredictions.get(i);
+            BindingPredictionData predData = allPredictions.get(i);
 
             addAllelePrediction(predData);
 
-            List<PredictionData> predictions = peptidePredictions.get(predData.Peptide);
+            List<BindingPredictionData> predictions = peptidePredictions.get(predData.Peptide);
 
             if(predictions == null)
             {
@@ -168,10 +166,10 @@ public class SamplePeptidePredictions
         }
 
         boolean allValid = true;
-        for(Map.Entry<String,List<PredictionData>> entry : peptidePredictions.entrySet())
+        for(Map.Entry<String,List<BindingPredictionData>> entry : peptidePredictions.entrySet())
         {
             String peptide = entry.getKey();
-            List<PredictionData> predictions = entry.getValue();
+            List<BindingPredictionData> predictions = entry.getValue();
 
             expandHomozygous(predictions);
 
@@ -182,8 +180,8 @@ public class SamplePeptidePredictions
             }
 
             // process the 6 alleles using the coverage
-            double maxAffinity = predictions.stream().mapToDouble(x -> x.Affinity).max().orElse(0);
-            double minPresentation = predictions.stream().mapToDouble(x -> x.Presentation).min().orElse(0);
+            double maxAffinity = predictions.stream().mapToDouble(x -> x.affinity()).max().orElse(0);
+            double minPresentation = predictions.stream().mapToDouble(x -> x.presentation()).min().orElse(0);
 
             PeptideScores scores = new PeptideScores(peptide, maxAffinity, minPresentation);
 
@@ -191,7 +189,7 @@ public class SamplePeptidePredictions
             {
                 AlleleCoverage alleleCoverage = alleleCoverages.get(alleleIndex);
 
-                PredictionData allelePrediction = predictions.stream()
+                BindingPredictionData allelePrediction = predictions.stream()
                         .filter(x -> x.Allele.equals(alleleCoverage.Allele)).findFirst().orElse(null);
 
                 if(allelePrediction == null)
@@ -201,19 +199,19 @@ public class SamplePeptidePredictions
                     break;
                 }
 
-                scores.Affinity[NORMAL] = min(scores.Affinity[NORMAL], allelePrediction.Affinity);
-                scores.Presentation[NORMAL] = max(scores.Presentation[NORMAL], allelePrediction.Presentation);
+                scores.Affinity[NORMAL] = min(scores.Affinity[NORMAL], allelePrediction.affinity());
+                scores.Presentation[NORMAL] = max(scores.Presentation[NORMAL], allelePrediction.presentation());
 
                 if(!alleleCoverage.isLost())
                 {
-                    scores.Affinity[TUMOR] = min(scores.Affinity[TUMOR], allelePrediction.Affinity);
-                    scores.Presentation[TUMOR] = max(scores.Presentation[TUMOR], allelePrediction.Presentation);
+                    scores.Affinity[TUMOR] = min(scores.Affinity[TUMOR], allelePrediction.affinity());
+                    scores.Presentation[TUMOR] = max(scores.Presentation[TUMOR], allelePrediction.presentation());
                 }
 
                 if(alleleCoverage.isLost() || !geneLostStatus.get(alleleIndex))
                 {
-                    scores.Affinity[SIM_TUMOR] = min(scores.Affinity[SIM_TUMOR], allelePrediction.Affinity);
-                    scores.Presentation[SIM_TUMOR] = max(scores.Presentation[SIM_TUMOR], allelePrediction.Presentation);
+                    scores.Affinity[SIM_TUMOR] = min(scores.Affinity[SIM_TUMOR], allelePrediction.affinity());
+                    scores.Presentation[SIM_TUMOR] = max(scores.Presentation[SIM_TUMOR], allelePrediction.presentation());
                 }
             }
 
@@ -258,7 +256,7 @@ public class SamplePeptidePredictions
         writeSampleSummary(sampleId, sampleSummary);
     }
 
-    private void addAllelePrediction(PredictionData predData)
+    private void addAllelePrediction(BindingPredictionData predData)
     {
         if(!mWriteAlleleFrequencies)
             return;
@@ -271,7 +269,7 @@ public class SamplePeptidePredictions
             mAllelePredictions.put(predData.Allele, predictions);
         }
 
-        predictions.addPeptide(predData.Peptide, predData.Affinity);
+        predictions.addPeptide(predData.Peptide, predData.affinity());
 
         int totalPepetideCount = mAllelePredictions.values().stream().mapToInt(x -> x.getPepetideCount()).sum();
         if(totalPepetideCount > 0 && (totalPepetideCount % 1000) == 0)

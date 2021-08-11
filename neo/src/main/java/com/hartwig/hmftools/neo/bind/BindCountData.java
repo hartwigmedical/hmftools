@@ -60,7 +60,7 @@ public class BindCountData
 
     public void logStats()
     {
-        NE_LOGGER.info("allele({}) peptideLen({}) total({}) binds({}) pairs({})",
+        NE_LOGGER.debug("allele({}) peptideLen({}) total({}) binds({}) pairs({})",
                 Allele, PeptideLength, mTotal, mTotalBinds, mComboData.size());
     }
 

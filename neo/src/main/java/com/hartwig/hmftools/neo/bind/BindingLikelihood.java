@@ -27,6 +27,7 @@ public class BindingLikelihood
     private final Map<String,double[][]> mAlleleLikelihoodMap;
 
     private BufferedWriter mWriter;
+    private boolean mHasData;
 
     private static final double INVALID_LIKELIHOOD = -1;
     private static final double MIN_BUCKET_RANK = 0.00005;
@@ -36,6 +37,7 @@ public class BindingLikelihood
     {
         mWriter = null;
         mAlleleLikelihoodMap = Maps.newHashMap();
+        mHasData = false;
 
         mScoreRankBuckets = Lists.newArrayListWithExpectedSize(16);
 
@@ -47,8 +49,13 @@ public class BindingLikelihood
         }
     }
 
+    public boolean hasData() { return mHasData; }
+
     public double getBindingLikelihood(final String allele, final String peptide, final double rank)
     {
+        if(!mHasData)
+            return INVALID_LIKELIHOOD;
+
         int peptideLength = peptide.length();
         int pepLenIndex = peptideLengthIndex(peptideLength);
 
@@ -107,6 +114,7 @@ public class BindingLikelihood
             }
 
             NE_LOGGER.info("loaded {} alleles peptide likelihoods from {}", mAlleleLikelihoodMap.size(), filename);
+            mHasData = true;
         }
         catch(IOException e)
         {

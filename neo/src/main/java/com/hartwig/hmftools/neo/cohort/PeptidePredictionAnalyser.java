@@ -1,41 +1,30 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
+import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
-import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class PeptidePredictionAnalyser
@@ -105,18 +94,18 @@ public class PeptidePredictionAnalyser
 
     private void processSample(final String sampleId)
     {
-        List<PredictionData> predictions = loadPredictionData(sampleId, mPredictionsDataDir);
-        Map<Integer,NeoEpitopeData> neoDataMap = loadNeoEpitopes(sampleId);
+        List<BindingPredictionData> predictions = loadPredictionData(sampleId, mPredictionsDataDir);
+        Map<Integer,NeoEpitopeData> neoDataMap = loadNeoEpitopes(sampleId, mNeoDataDir);
 
         // organise into map by peptide, avoiding repeated peptides
         for(int i = 0; i < predictions.size(); ++i)
         {
-            PredictionData predData = predictions.get(i);
+            BindingPredictionData predData = predictions.get(i);
 
             if(!mSpecificAlleles.isEmpty() && !mSpecificAlleles.contains(predData.Allele))
                 continue;
 
-            if(predData.Affinity > mPeptideAffinityThreshold)
+            if(predData.affinity() > mPeptideAffinityThreshold)
                 continue;
 
             NeoEpitopeData neoData = neoDataMap.get(predData.NeId);
@@ -129,49 +118,6 @@ public class PeptidePredictionAnalyser
 
             writePeptideData(sampleId, predData, neoData);
         }
-    }
-
-    private Map<Integer,NeoEpitopeData> loadNeoEpitopes(final String sampleId)
-    {
-        Map<Integer,NeoEpitopeData> neoDataMap = Maps.newHashMap();
-
-        try
-        {
-            String neoEpitopeFile = NeoEpitopeFile.generateFilename(mNeoDataDir, sampleId);
-
-            final List<String> lines = Files.readAllLines(new File(neoEpitopeFile).toPath());
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
-
-            int neIdIndex = fieldsIndexMap.get("NeId");
-            int varTypeIndex = fieldsIndexMap.get("VariantType");
-            int varInfoIndex = fieldsIndexMap.get("VariantInfo");
-            int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
-            int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
-
-            for(String line : lines)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                int neId = Integer.parseInt(items[neIdIndex]);
-
-                String geneNameUp = items[geneNameUpIndex];
-                String geneNameDown = items[geneNameDownIndex];
-                String geneName = geneNameUp.equals(geneNameDown) ? geneNameUp : geneNameUp + "_" + geneNameDown;
-
-                neoDataMap.put(neId, new NeoEpitopeData(
-                        neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneName));
-            }
-
-            NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, lines.size());
-        }
-        catch(IOException exception)
-        {
-            NE_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
-        }
-
-        return neoDataMap;
     }
 
     private void initialisePeptideWriter()
@@ -191,7 +137,7 @@ public class PeptidePredictionAnalyser
         }
     }
 
-    private void writePeptideData(final String sampleId, final PredictionData prediction, final NeoEpitopeData neoData)
+    private void writePeptideData(final String sampleId, final BindingPredictionData prediction, final NeoEpitopeData neoData)
     {
         try
         {
@@ -199,7 +145,7 @@ public class PeptidePredictionAnalyser
                     sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName));
 
             mPeptideWriter.write(String.format(",%s,%s,%.1f,%.4f",
-                    prediction.Peptide, prediction.Allele, prediction.Affinity, prediction.Presentation));
+                    prediction.Peptide, prediction.Allele, prediction.affinity(), prediction.presentation()));
 
             mPeptideWriter.newLine();
         }

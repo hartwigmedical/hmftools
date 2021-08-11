@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static com.hartwig.hmftools.neo.cohort.PredictionData.DELIM;
+import static com.hartwig.hmftools.neo.cohort.BindingPredictionData.DELIM;
 import static com.hartwig.hmftools.neo.cohort.StatusResults.STATUS_MAX;
 
 import java.util.List;

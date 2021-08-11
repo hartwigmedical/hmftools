@@ -1,23 +1,106 @@
 package com.hartwig.hmftools.neo.cohort;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.neo.cohort.PredictionData.DELIM;
+import static com.hartwig.hmftools.neo.cohort.BindingPredictionData.DELIM;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
+import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
 public class DataLoader
 {
     public static final String LILAC_COVERAGE_FILE_ID = ".lilac.csv";
-    public static final String MHCF_PREDICTION_FILE_ID = ".mcf.predictions.csv";
+    public static final String MCF_PREDICTION_FILE_ID = ".mcf.predictions.csv";
+    public static final String MCF_AFFINITY = "affinity";
+    public static final String MCF_AFFINITY_PERC = "affinity_percentile";
+    public static final String MCF_PRESENTATION = "presentation_score";
+    public static final String MCF_PRESENTATION_PERC = "presentation_percentile";
+
+    public static Map<Integer,NeoEpitopeData> loadNeoEpitopes(final String sampleId, final String neoDataDir)
+    {
+        Map<Integer,NeoEpitopeData> neoDataMap = Maps.newHashMap();
+
+        try
+        {
+            String neoEpitopeFile = NeoEpitopeFile.generateFilename(neoDataDir, sampleId);
+            String rnaNeoEpitopeFile = neoEpitopeFile.replace(IM_FILE_ID, ISF_FILE_ID);
+
+            boolean hasRnaData = Files.exists(Paths.get(rnaNeoEpitopeFile));
+
+            final List<String> lines = hasRnaData ?
+                    Files.readAllLines(new File(rnaNeoEpitopeFile).toPath()) : Files.readAllLines(new File(neoEpitopeFile).toPath());
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            lines.remove(0);
+
+            int neIdIndex = fieldsIndexMap.get("NeId");
+            int varTypeIndex = fieldsIndexMap.get("VariantType");
+            int varInfoIndex = fieldsIndexMap.get("VariantInfo");
+            int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
+            int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
+            int tpmCancerIndex = fieldsIndexMap.get("TpmCancerDown");
+            int tpmCohortIndex = fieldsIndexMap.get("TpmCohortDown");
+
+            Integer rnaFragIndex = fieldsIndexMap.get("FragmentsNovel");
+            Integer rnaBaseDepthUp = fieldsIndexMap.get("BaseDepthUp");
+            Integer rnaBaseDepthDown = fieldsIndexMap.get("BaseDepthDown");
+
+            for(String line : lines)
+            {
+                final String[] items = line.split(DELIMITER, -1);
+
+                int neId = Integer.parseInt(items[neIdIndex]);
+
+                String geneNameUp = items[geneNameUpIndex];
+                String geneNameDown = items[geneNameDownIndex];
+                String geneName = geneNameUp.equals(geneNameDown) ? geneNameUp : geneNameUp + "_" + geneNameDown;
+
+                double tpmCancer = Double.parseDouble(items[tpmCancerIndex]);
+                double tpmCohort = Double.parseDouble(items[tpmCohortIndex]);
+
+                int rnaFragCount = 0;
+                int[] rnaBaseDepth = new int[] {0, 0};
+
+                if(hasRnaData)
+                {
+                    rnaFragCount = Integer.parseInt(items[rnaFragIndex]);
+                    rnaBaseDepth[SE_START] =  Integer.parseInt(items[rnaBaseDepthUp]);
+                    rnaBaseDepth[SE_END] =  Integer.parseInt(items[rnaBaseDepthDown]);
+                }
+
+                NeoEpitopeData neoData = new NeoEpitopeData(
+                        neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneName,
+                        tpmCancer, tpmCohort, rnaFragCount, rnaBaseDepth);
+
+                neoDataMap.put(neId, neoData);
+            }
+
+            NE_LOGGER.debug("sample({}) loaded {} neo-epitopes", sampleId, lines.size());
+        }
+        catch(IOException exception)
+        {
+            NE_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
+        }
+
+        return neoDataMap;
+    }
+
 
     public static List<AlleleCoverage> loadAlleleCoverage(final String sampleId, final String lilacDir)
     {
@@ -55,13 +138,13 @@ public class DataLoader
         return alleleCoverages;
     }
 
-    public static List<PredictionData> loadPredictionData(final String sampleId, final String predictionsDir)
+    public static List<BindingPredictionData> loadPredictionData(final String sampleId, final String predictionsDir)
     {
-        List<PredictionData> predictionList = Lists.newArrayList();
+        List<BindingPredictionData> predictionList = Lists.newArrayList();
 
         try
         {
-            String filename = predictionsDir + sampleId + MHCF_PREDICTION_FILE_ID;
+            String filename = predictionsDir + sampleId + MCF_PREDICTION_FILE_ID;
 
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
@@ -74,12 +157,15 @@ public class DataLoader
             int alleleIndex = fieldsIndexMap.get("HlaAllele");
             int neIdIndex = fieldsIndexMap.get("NeId");
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-            int affinityIndex = fieldsIndexMap.get("affinity");
-            int presentationIndex = fieldsIndexMap.get("presentation_score");
+            int affinityIndex = fieldsIndexMap.get(MCF_AFFINITY);
+            int affinityPercIndex = fieldsIndexMap.get(MCF_AFFINITY_PERC);
+            int presIndex = fieldsIndexMap.get(MCF_PRESENTATION);
+            int presPercIndex = fieldsIndexMap.get(MCF_PRESENTATION_PERC);
 
             for(String line : lines)
             {
-                predictionList.add(PredictionData.fromCsv(line, alleleIndex, neIdIndex, peptideIndex, affinityIndex, presentationIndex));
+                predictionList.add(BindingPredictionData.fromMcfCsv(
+                        line, alleleIndex, neIdIndex, peptideIndex, affinityIndex, affinityPercIndex, presIndex, presPercIndex));
             }
 
             NE_LOGGER.debug("sample({}) loaded {} peptide predictions", sampleId, predictionList.size());

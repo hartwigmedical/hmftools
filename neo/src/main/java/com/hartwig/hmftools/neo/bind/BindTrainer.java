@@ -137,7 +137,7 @@ public class BindTrainer
             for(BindCountData bindCounts : pepLenCountsMap.values())
             {
                 // write results
-                bindCounts.logStats();
+                // bindCounts.logStats();
 
                 if(mConfig.WriteFrequencyData)
                     bindCounts.writeFrequencyData(freqWriter);

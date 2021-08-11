@@ -66,13 +66,49 @@ public class BindScorer
 
         if(!loadData())
         {
-            NE_LOGGER.error("invalid data");
+            NE_LOGGER.error("invalid reference data");
+            return;
+        }
+
+        if(!loadBindData(
+                mConfig.ValidationDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
+        {
+            NE_LOGGER.error("invalid validation data");
             return;
         }
 
         runScoring();
 
         NE_LOGGER.info("Bind scoring complete");
+    }
+
+    public static final double INVALID_CALC = -1;
+
+    public double calcScore(final String allele, final String peptide)
+    {
+        Map<Integer,BindScoreMatrix> pepLenMatrixMap = mAlleleBindMatrices.get(allele);
+        if(pepLenMatrixMap == null)
+            return INVALID_CALC;
+
+        BindScoreMatrix matrix = pepLenMatrixMap.get(peptide.length());
+
+        if(matrix == null)
+            return INVALID_CALC;
+
+        return matrix.calcScore(peptide);
+    }
+
+    public double calcScoreRank(final String allele, final String peptide, double score)
+    {
+        return mRandomDistribution.getScoreRank(allele, peptide.length(), score);
+    }
+
+    public double calcLikelihood(final String allele, final String peptide, double ranks)
+    {
+        if(mBindingLikelihood == null || !mBindingLikelihood.hasData())
+            return INVALID_CALC;
+
+        return mBindingLikelihood.getBindingLikelihood(allele, peptide, ranks);
     }
 
     public void runScoring()
@@ -125,7 +161,6 @@ public class BindScorer
 
         closeBufferedWriter(alleleWriter);
 
-        NE_LOGGER.info("writing peptide scores");
         writePeptideScores();
     }
 
@@ -219,10 +254,12 @@ public class BindScorer
         if(mConfig.WritePeptideType == PeptideWriteType.NONE)
             return;
 
+        NE_LOGGER.info("writing peptide scores");
+
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresentationPerc");
+            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresScore,PresPerc");
 
             if(mBindingLikelihood != null)
                 writer.write(",Likelihood");
@@ -250,11 +287,12 @@ public class BindScorer
                             continue;
                         }
 
-                        writer.write(String.format("%s,%s,%s,%.4f,%.6f,%.2f,%.2f,%.6f,%.6f",
+                        writer.write(String.format("%s,%s,%s,%.4f,%.6f,%.2f,%.2f,%.6f,%.4f,%.6f",
                                 allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
-                                bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(), bindData.presentationPercentile()));
+                                bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(),
+                                bindData.presentationScore(), bindData.presentationPercentile()));
 
-                        if(mBindingLikelihood != null)
+                        if(mBindingLikelihood != null && mBindingLikelihood.hasData())
                         {
                             writer.write(String.format(",%.6f",
                                     mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, bindData.rankPercentile())));
@@ -275,14 +313,8 @@ public class BindScorer
         }
     }
 
-    private boolean loadData()
+    public boolean loadData()
     {
-        if(!loadBindData(
-                mConfig.ValidationDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
-        {
-            return false;
-        }
-
         NE_LOGGER.info("loading matrix data from {}", mConfig.BindMatrixFile);
 
         List<BindScoreMatrix> matrixList = BindScoreMatrix.loadFromCsv(mConfig.BindMatrixFile);

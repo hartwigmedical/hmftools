@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.predict.NeoPredictionsConfig.PREDICTIONS_FILE_ID;
+import static com.hartwig.hmftools.neo.cohort.DataLoader.MCF_PREDICTION_FILE_ID;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -45,8 +45,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class NeoEpitopeCohort
@@ -170,7 +168,7 @@ public class NeoEpitopeCohort
 
         try
         {
-            final String predictionsFile = mPredictionsDataDir + sampleId + PREDICTIONS_FILE_ID;
+            final String predictionsFile = mPredictionsDataDir + sampleId + MCF_PREDICTION_FILE_ID;
             final List<String> fileContents = Files.readAllLines(new File(predictionsFile).toPath());
 
             if(fileContents.isEmpty())
