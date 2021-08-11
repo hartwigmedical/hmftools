@@ -27,6 +27,8 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.cuppa.CuppaData;
+import com.hartwig.hmftools.orange.cuppa.CuppaDataFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,6 +60,7 @@ public class OrangeAlgo {
                 .pipelineVersion(loadPipelineVersion(config))
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .cuppaPrimaryTumor(loadCuppaPrimaryTumor(config))
+                .cuppaData(loadCuppaData(config))
                 .purple(loadPurpleData(config))
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
@@ -110,6 +113,14 @@ public class OrangeAlgo {
     }
 
     @NotNull
+    private static List<CuppaData> loadCuppaData(@NotNull OrangeConfig config) throws IOException {
+        LOGGER.info("Loading Cuppa data from {}", new File(config.cuppaResultCsv()).getParent());
+        List<CuppaData> cuppaData = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaData.size(), config.cuppaResultCsv());
+        return cuppaData;
+    }
+
+    @NotNull
     private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
@@ -121,7 +132,7 @@ public class OrangeAlgo {
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
                 null,
-                RefGenomeVersion.V37);
+                RefGenomeVersion.V37); // The ref genome version doesn't matter if you don't calc CN per chr arm.
     }
 
     @NotNull
