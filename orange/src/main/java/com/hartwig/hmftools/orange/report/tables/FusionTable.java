@@ -28,28 +28,30 @@ public final class FusionTable {
         }
 
         Table table = TableUtil.createReportContentTable(new float[] { 1, 5 },
-                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("Details")});
+                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("Details") });
 
         for (LinxFusion fusion : sort(fusions)) {
             table.addCell(TableUtil.createContentCell(fusion.name()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
             details.addCell(TableUtil.createKeyCell("5' End"));
-            details.addCell(TableUtil.createValueCell(fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")"));
+            details.addCell(TableUtil.createValueCell(
+                    fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")"));
             details.addCell(TableUtil.createKeyCell("3' Start"));
-            details.addCell(TableUtil.createValueCell(fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")"));
-            details.addCell(TableUtil.createKeyCell("CN"));
+            details.addCell(TableUtil.createValueCell(
+                    fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")"));
+            details.addCell(TableUtil.createKeyCell("Junction copynumber"));
             details.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
             details.addCell(TableUtil.createKeyCell("Phasing"));
             details.addCell(TableUtil.createValueCell(fusion.phased().display()));
-            details.addCell(TableUtil.createKeyCell("Type"));
-            details.addCell(TableUtil.createValueCell(fusion.reportedType()));
+            details.addCell(TableUtil.createKeyCell("Reported type (DL)"));
+            details.addCell(TableUtil.createValueCell(fusion.reportedType() + " (" + fusion.likelihood().display() + ")"));
             details.addCell(TableUtil.createKeyCell("Chain links (terminated?)"));
             details.addCell(TableUtil.createValueCell(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
             details.addCell(TableUtil.createKeyCell("Domains kept"));
-            details.addCell(TableUtil.createValueCell(fusion.domainsKept()));
+            details.addCell(TableUtil.createValueCell(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-"));
             details.addCell(TableUtil.createKeyCell("Domains lost"));
-            details.addCell(TableUtil.createValueCell(fusion.domainsLost()));
+            details.addCell(TableUtil.createValueCell(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-"));
             table.addCell(TableUtil.createContentCell(details));
         }
 
