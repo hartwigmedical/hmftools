@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CuppaData {
+public abstract class CuppaEntry {
 
     @NotNull
     public abstract String category();

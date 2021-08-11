@@ -27,8 +27,8 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.orange.cuppa.CuppaEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +60,7 @@ public class OrangeAlgo {
                 .pipelineVersion(loadPipelineVersion(config))
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .cuppaPrimaryTumor(loadCuppaPrimaryTumor(config))
-                .cuppaData(loadCuppaData(config))
+                .cuppaEntries(loadCuppaEntries(config))
                 .purple(loadPurpleData(config))
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
@@ -113,11 +113,11 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static List<CuppaData> loadCuppaData(@NotNull OrangeConfig config) throws IOException {
+    private static List<CuppaEntry> loadCuppaEntries(@NotNull OrangeConfig config) throws IOException {
         LOGGER.info("Loading Cuppa data from {}", new File(config.cuppaResultCsv()).getParent());
-        List<CuppaData> cuppaData = CuppaDataFile.read(config.cuppaResultCsv());
-        LOGGER.info(" Loaded {} entries from {}", cuppaData.size(), config.cuppaResultCsv());
-        return cuppaData;
+        List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+        return cuppaEntries;
     }
 
     @NotNull

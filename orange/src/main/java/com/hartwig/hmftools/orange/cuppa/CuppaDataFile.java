@@ -17,8 +17,8 @@ public final class CuppaDataFile {
     }
 
     @NotNull
-    public static List<CuppaData> read(@NotNull String cuppaDataCsv) throws IOException {
-        List<CuppaData> cuppaData = Lists.newArrayList();
+    public static List<CuppaEntry> read(@NotNull String cuppaDataCsv) throws IOException {
+        List<CuppaEntry> cuppaData = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(cuppaDataCsv).toPath());
 
         // Skip header
@@ -29,10 +29,10 @@ public final class CuppaDataFile {
     }
 
     @NotNull
-    private static CuppaData fromLine(@NotNull String line) {
+    private static CuppaEntry fromLine(@NotNull String line) {
         String[] values = line.split(FIELD_DELIMITER);
 
-        return ImmutableCuppaData.builder()
+        return ImmutableCuppaEntry.builder()
                 .category(values[1])
                 .resultType(values[2])
                 .dataType(values[3])
