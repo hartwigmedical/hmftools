@@ -52,6 +52,7 @@ public class CohortComparisonChapter implements ReportChapter {
         addTumorTypeClassificationTable(document, refCancerTypes);
         addTumorTraitsTable(document, refCancerTypes);
 
+        document.add(new Paragraph("TODO: Add detailed cohort incidence per driver").addStyle(ReportResources.tableTitleStyle()));
         document.add(new Paragraph("TODO: Add detailed cohort incidence per signature").addStyle(ReportResources.tableTitleStyle()));
     }
 
