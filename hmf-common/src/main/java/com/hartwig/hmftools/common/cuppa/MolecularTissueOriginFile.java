@@ -27,7 +27,7 @@ public final class MolecularTissueOriginFile {
             LOGGER.warn("No molecular tissue origin could be read from {}!", molecularTissueOriginTxt);
             origin = Strings.EMPTY;
         }
-        return extractPedictionDataOrigin(origin);
+        return extractPredictionDataOrigin(origin);
     }
 
     @Nullable
@@ -41,24 +41,24 @@ public final class MolecularTissueOriginFile {
 
     @NotNull
     @VisibleForTesting
-    public static MolecularTissueOrginData extractPedictionDataOrigin(@NotNull String cuppaResult) {
-        String orgin = Strings.EMPTY;
+    public static MolecularTissueOrginData extractPredictionDataOrigin(@NotNull String cuppaResult) {
+        String origin = Strings.EMPTY;
         String prediction = null;
         String[] lengthCuppaResult = cuppaResult.split("\\(");
 
         if (lengthCuppaResult.length == 2) {
-            orgin = cuppaResult.split(" \\(")[0];
+            origin = cuppaResult.split(" \\(")[0];
             prediction = cuppaResult.split("\\(")[1];
             prediction = prediction.substring(0, prediction.length() - 1);
         } else if (lengthCuppaResult.length == 1) {
-            orgin = cuppaResult.split("\\(")[0];
+            origin = cuppaResult.split("\\(")[0];
         } else {
             LOGGER.warn("Cuppa result is Empty");
         }
 
         return ImmutableMolecularTissueOrginData.builder()
                 .conclusion(cuppaResult)
-                .predictedOrigin(orgin)
+                .predictedOrigin(origin)
                 .predictionLikelihood(prediction)
                 .build();
     }
