@@ -24,6 +24,7 @@ public class CohortWriters
 
         mNeoWriter = null;
         mPeptideWriter = initPeptideWriter();
+        mNeoWriter = initNeoepitopeWriter();
 
         mSampleWriter = null;
         // initialiseSampleWriter();
@@ -34,6 +35,57 @@ public class CohortWriters
         closeBufferedWriter(mNeoWriter);
         closeBufferedWriter(mPeptideWriter);
 
+    }
+
+    private BufferedWriter initNeoepitopeWriter()
+    {
+        try
+        {
+            final String outputFileName = mConfig.formFilename("neoepitope");
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("SampleId,NeId,VariantType,VariantInfo,AminoAcids");
+            writer.write(",Allele,PeptideCount,MaxLikelihood,SumLikelihood");
+            writer.write(",MinAffinity,SumAffinity,MinPresentationPerc,SumPresentation");
+            writer.write(",AllelCN,AlleleDisrupted");
+            writer.write(",TpmSample,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
+            writer.newLine();
+            return writer;
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to create neoepitope writer: {}", e.toString());
+            return null;
+        }
+    }
+
+    public synchronized void writeNeoData(
+            final String sampleId, final NeoEpitopeData neoData, final NeoPredictionData allelePredData, final AlleleCoverage alleleCoverage)
+    {
+        if(mNeoWriter == null)
+            return;
+
+        try
+        {
+            mNeoWriter.write(String.format("%s,%d,%s,%s,%s",
+                    sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.AminoAcids));
+
+            mNeoWriter.write(String.format(",%s,%d,%.4f,%.4f,%.1f,%.4f,%.6f,%.4f",
+                    alleleCoverage.Allele, allelePredData.Peptides, allelePredData.MaxLikelihood, allelePredData.SumLikelihood,
+                    allelePredData.MinAffinity, allelePredData.SumAffinity, allelePredData.MinPresentationPerc, allelePredData.SumPresentation));
+
+            mNeoWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
+
+            mNeoWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%d,%.0f",
+                    neoData.GeneExpression, neoData.TpmCancer, neoData.TpmCohort,
+                    neoData.RnaNovelFragments, (neoData.RnaBaseDepth[SE_START] + neoData.RnaBaseDepth[SE_END]) * 0.5));
+
+            mNeoWriter.newLine();
+        }
+        catch (IOException e)
+        {
+            NE_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
+        }
     }
 
     private BufferedWriter initPeptideWriter()
@@ -64,6 +116,9 @@ public class CohortWriters
         if(mPeptideWriter == null)
             return;
 
+        if(predData.likelihood() < mConfig.LikelihoodThreshold)
+            return;
+
         try
         {
             mPeptideWriter.write(String.format("%s,%d,%s,%s", sampleId, neoData.Id, predData.Allele, predData.Peptide));
@@ -83,7 +138,7 @@ public class CohortWriters
         }
         catch (IOException e)
         {
-            NE_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
+            NE_LOGGER.error("failed to write peptide data: {}", e.toString());
         }
     }
 

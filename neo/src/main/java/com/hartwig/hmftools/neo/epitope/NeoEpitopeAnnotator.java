@@ -382,7 +382,7 @@ public class NeoEpitopeAnnotator
                     if(neData.UpstreamWildTypeAcids.contains(peptideData.Peptide))
                         continue;
 
-                    // for now skip any upstream peptide containing the 21st AA until MhcFlurry can handle it
+                    // for now skip any upstream peptide containing the 21st AA until the binding prediction routine can handle it
                     if(peptideData.Peptide.contains(AA_SELENOCYSTEINE) || peptideData.UpFlank.contains(AA_SELENOCYSTEINE))
                         continue;
 

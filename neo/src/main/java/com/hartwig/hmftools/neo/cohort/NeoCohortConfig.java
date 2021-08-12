@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.cohort.CohortWriteDetail.NEOEPITOPE;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -25,20 +24,23 @@ public class NeoCohortConfig
     public final String McfPredictionsDir;
     public final List<String> SampleIds;
 
-    public final CohortWriteDetail WriteDetail;
+    public final List<CohortWriteType> WriteTypes;
 
     public final double McfSumFactor;
+    public final double LikelihoodThreshold;
     public final int Threads;
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String LILAC_DATA_DIR = "lilac_data_dir";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
+    public static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
     public static final String THREADS = "threads";
 
     private static final String MCF_SUM_FACTOR = "mcf_sum_factor";
+    private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
 
-    private static final String WRITE_DETAIL = "write_detail";
+    private static final String WRITE_TYPES = "write_types";
 
     public NeoCohortConfig(final CommandLine cmd)
     {
@@ -50,11 +52,19 @@ public class NeoCohortConfig
         LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
 
         McfSumFactor = Double.parseDouble(cmd.getOptionValue(MCF_SUM_FACTOR, "2"));
+        LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.001"));
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
-        WriteDetail = CohortWriteDetail.valueOf(cmd.getOptionValue(WRITE_DETAIL, String.valueOf(NEOEPITOPE)));
+
+        WriteTypes = Lists.newArrayList();
+
+        if(cmd.hasOption(WRITE_TYPES))
+        {
+            String[] types = cmd.getOptionValue(WRITE_TYPES).split(";");
+            Arrays.stream(types).map(x -> CohortWriteType.valueOf(x)).forEach(x -> WriteTypes.add(x));
+        }
     }
 
     public String formFilename(final String fileId)
@@ -71,13 +81,15 @@ public class NeoCohortConfig
         options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
+        options.addOption(SAMPLE_GENE_EXP_FILE, true, "Cohort gene expression matrix");
 
         BinderConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
         options.addOption(MCF_SUM_FACTOR, true, "Affinity sum factor");
+        options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
         options.addOption(THREADS, true, "Thread count");
 
-        options.addOption(WRITE_DETAIL, false, "Write all peptide scores");
+        options.addOption(WRITE_TYPES, true, "Valid types: ALLELE_PEPTIDE, PEPTIDE, NEOEPITOPE, SAMPLE_SUMMARY sep by ';'");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file ID");
     }

@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.neo.cohort;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
@@ -22,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.common.utils.Matrix;
 
 public class DataLoader
 {
@@ -54,8 +58,12 @@ public class DataLoader
             int varInfoIndex = fieldsIndexMap.get("VariantInfo");
             int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
             int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
+            int geneIdDownIndex = fieldsIndexMap.get("GeneIdDown");
             int tpmCancerIndex = fieldsIndexMap.get("TpmCancerDown");
             int tpmCohortIndex = fieldsIndexMap.get("TpmCohortDown");
+            int upAaIndex = fieldsIndexMap.get("UpstreamAA");
+            int downAaIndex = fieldsIndexMap.get("DownstreamAA");
+            int novelAaIndex = fieldsIndexMap.get("NovelAA");
 
             Integer rnaFragIndex = fieldsIndexMap.get("FragmentsNovel");
             Integer rnaBaseDepthUp = fieldsIndexMap.get("BaseDepthUp");
@@ -69,7 +77,10 @@ public class DataLoader
 
                 String geneNameUp = items[geneNameUpIndex];
                 String geneNameDown = items[geneNameDownIndex];
+                String geneIdDown = items[geneIdDownIndex];
                 String geneName = geneNameUp.equals(geneNameDown) ? geneNameUp : geneNameUp + "_" + geneNameDown;
+
+                String aminoAcids = items[upAaIndex] + items[novelAaIndex] + items[downAaIndex];
 
                 double tpmCancer = Double.parseDouble(items[tpmCancerIndex]);
                 double tpmCohort = Double.parseDouble(items[tpmCohortIndex]);
@@ -85,8 +96,8 @@ public class DataLoader
                 }
 
                 NeoEpitopeData neoData = new NeoEpitopeData(
-                        neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneName,
-                        tpmCancer, tpmCohort, rnaFragCount, rnaBaseDepth);
+                        neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneIdDown, geneName,
+                        aminoAcids, tpmCancer, tpmCohort, rnaFragCount, rnaBaseDepth);
 
                 neoDataMap.put(neId, neoData);
             }
@@ -177,5 +188,6 @@ public class DataLoader
 
         return predictionList;
     }
+
 
 }

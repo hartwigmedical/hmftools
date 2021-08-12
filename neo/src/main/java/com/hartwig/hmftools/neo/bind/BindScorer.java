@@ -189,14 +189,11 @@ public class BindScorer
         {
             final Map<Integer,List<BindData>> pepLenBindDataMap = mAllelePeptideData.get(allele);
 
-            int errors = 0;
-
             // internal model assesses AUC per peptide length
             // external models across an entire allele
 
             List<AucData> alleleAucMcfData = Lists.newArrayList();
             int trainingCountMcf = 0;
-            int randomCountMcf = 0;
 
             for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
@@ -204,43 +201,37 @@ public class BindScorer
                 List<AucData> alleleAucRankData = Lists.newArrayList();
 
                 int trainingCount = 0;
-                int randomCount = 0;
 
                 for(BindData bindData : pepLenEntry.getValue())
                 {
                     if(bindData.isTraining())
                         ++trainingCount;
-                    else
-                        ++randomCount;
 
-                    boolean isPositive = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
-
-                    alleleAucData.add(new AucData(isPositive, bindData.score(), false));
-                    alleleAucRankData.add(new AucData(isPositive, bindData.rankPercentile(), true));
+                    alleleAucData.add(new AucData(true, bindData.score(), false));
+                    alleleAucRankData.add(new AucData(true, bindData.rankPercentile(), true));
 
                     if(bindData.hasPredictionData())
-                        alleleAucMcfData.add(new AucData(isPositive, bindData.affinityPercentile(), true));
+                        alleleAucMcfData.add(new AucData(true, bindData.affinityPercentile(), true));
                 }
 
                 double aucPerc = AucCalc.calcPercentilesAuc(alleleAucRankData, Level.TRACE);
 
-                NE_LOGGER.debug(String.format("allele(%s) peptideLength(%d) peptides(train=%d, rand=%d) AUC(%.4f)",
-                        allele, pepLenEntry.getKey(), trainingCount, randomCount, aucPerc));
+                NE_LOGGER.debug(String.format("allele(%s) peptideLength(%d) peptides(%d) AUC(%.4f)",
+                        allele, pepLenEntry.getKey(), trainingCount, aucPerc));
 
-                writer.write(String.format("%s,%d,%s,%d,%d,%.4f",
-                        allele, pepLenEntry.getKey(), "MODEL", trainingCount, randomCount, aucPerc));
+                writer.write(String.format("%s,%d,%s,%d,%.4f",
+                        allele, pepLenEntry.getKey(), "MODEL", trainingCount, aucPerc));
                 writer.newLine();
 
                 trainingCountMcf += trainingCount;
-                randomCountMcf += randomCount;
             }
 
             if(!alleleAucMcfData.isEmpty())
             {
                 double aucMcf = AucCalc.calcPercentilesAuc(alleleAucMcfData, Level.TRACE);
 
-                NE_LOGGER.debug(String.format("allele(%s) McFlurry peptides(train=%d, rand=%d) AUC(%.4f)",
-                        allele, trainingCountMcf, randomCountMcf, aucMcf));
+                NE_LOGGER.debug(String.format("allele(%s) McFlurry peptides(%d) AUC(%.4f)",
+                        allele, trainingCountMcf, aucMcf));
             }
         }
         catch(IOException e)
@@ -275,18 +266,6 @@ public class BindScorer
                 {
                     for(BindData bindData : bindDataList)
                     {
-                        if(mConfig.WritePeptideType == LIKELY_INCORRECT)
-                        {
-                            boolean expectBinds = bindData.Affinity < mConfig.Constants.BindingAffinityHigh;
-                            boolean inTopPerc = bindData.rankPercentile() < 0.02;
-                            if(expectBinds == inTopPerc)
-                                continue;
-                        }
-                        else if(mConfig.WritePeptideType == TRAINING && !bindData.isTraining())
-                        {
-                            continue;
-                        }
-
                         writer.write(String.format("%s,%s,%s,%.4f,%.6f,%.2f,%.2f,%.6f,%.4f,%.6f",
                                 allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
                                 bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(),

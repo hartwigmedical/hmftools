@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
+import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
+import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -69,7 +71,19 @@ public class BindingLikelihood
         for(int i = 0; i < mScoreRankBuckets.size(); ++i)
         {
             if(rank < mScoreRankBuckets.get(i))
-                return likelihoods[pepLenIndex][i];
+            {
+                double likelihood = likelihoods[pepLenIndex][i];
+
+                if(i == 0)
+                    return likelihood;
+
+                double lowerLikelihood = likelihoods[pepLenIndex][i - 1];
+                double lowerRank = mScoreRankBuckets.get(i - 1);
+                double upperRank = mScoreRankBuckets.get(i);
+                double upperPerc = (rank - lowerRank) / (upperRank - lowerRank);
+                return upperPerc * likelihood + (1 - upperPerc) * lowerLikelihood;
+
+            }
         }
 
         return 0;
@@ -129,7 +143,7 @@ public class BindingLikelihood
 
     private static int peptideLengthIndex(int peptideLength)
     {
-        if(peptideLength < 8 || peptideLength > 12)
+        if(peptideLength < MIN_PEPTIDE_LENGTH || peptideLength > REF_PEPTIDE_LENGTH)
             return INVALID_PEP_LEN;
 
         return peptideLength - 8;

@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.getGeneStatus;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
-import static com.hartwig.hmftools.neo.cohort.BindingPredictionData.expandHomozygous;
 
 import java.util.List;
 import java.util.Map;
@@ -21,14 +17,16 @@ public class NeoSampleBindTask implements Callable
     private final String mSampleId;
     private final NeoCohortConfig mConfig;
     private final BindScorer mScorer;
+    private final GeneExpression mGeneExpression;
     private final CohortWriters mWriters;
 
     public NeoSampleBindTask(
-            final String sampleId, final NeoCohortConfig config, final BindScorer scorer, final CohortWriters writers)
+            final String sampleId, final NeoCohortConfig config, final BindScorer scorer, final GeneExpression geneExpression, final CohortWriters writers)
     {
         mSampleId = sampleId;
         mConfig = config;
         mScorer = scorer;
+        mGeneExpression = geneExpression;
         mWriters = writers;
     }
 
@@ -45,17 +43,34 @@ public class NeoSampleBindTask implements Callable
 
         List<AlleleCoverage> alleleCoverages = loadAlleleCoverage(mSampleId, mConfig.LilacDataDir);
 
-        List<Boolean> geneLostStatus = getGeneStatus(alleleCoverages);
+        // List<Boolean> geneLostStatus = getGeneStatus(alleleCoverages);
 
         List<BindingPredictionData> allPredictions = loadPredictionData(mSampleId, mConfig.McfPredictionsDir);
 
-        Map<String,PeptideScores> peptideScores = Maps.newHashMap();
+        // organise by neoepitope
+        Map<Integer,List<BindingPredictionData>> neoPredictions = Maps.newHashMap();
 
-        Map<String,List<BindingPredictionData>> peptidePredictions = Maps.newHashMap();
+        // Map<String,List<BindingPredictionData>> peptidePredictions = Maps.newHashMap();
 
         // organise into map by peptide, avoiding repeated peptides
         for(BindingPredictionData predData : allPredictions)
         {
+            double score = mScorer.calcScore(predData.Allele, predData.Peptide);
+            double rankPerc = mScorer.calcScoreRank(predData.Allele, predData.Peptide, score);
+            double likelihood = mScorer.calcLikelihood(predData.Allele, predData.Peptide, rankPerc);
+            predData.setScoreData(score, rankPerc, likelihood);
+
+            List<BindingPredictionData> predictions = neoPredictions.get(predData.NeId);
+
+            if(predictions == null)
+            {
+                predictions = Lists.newArrayList();
+                neoPredictions.put(predData.NeId, predictions);
+            }
+
+            predictions.add(predData);
+
+            /*
             List<BindingPredictionData> predictions = peptidePredictions.get(predData.Peptide);
 
             if(predictions == null)
@@ -66,17 +81,48 @@ public class NeoSampleBindTask implements Callable
             else
             {
                 if(predictions.stream().anyMatch(x -> x.Allele.equals(predData.Allele)))
-                continue;
+                    continue;
             }
 
-            double score = mScorer.calcScore(predData.Allele, predData.Peptide);
-            double rankPerc = mScorer.calcScoreRank(predData.Allele, predData.Peptide, score);
-            double likelihood = mScorer.calcLikelihood(predData.Allele, predData.Peptide, rankPerc);
-            predData.setScoreData(score, rankPerc, likelihood);
-
             predictions.add(predData);
+             */
         }
 
+        for(Map.Entry<Integer,List<BindingPredictionData>> entry : neoPredictions.entrySet())
+        {
+            NeoEpitopeData neoData = neoEpitopeDataMap.get(entry.getKey());
+
+            neoData.GeneExpression = mGeneExpression.getExpression(neoData.GeneId, mSampleId);
+
+            NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);
+
+            Map<String,NeoPredictionData> allelePredictions = Maps.newHashMap();
+            alleleCoverages.forEach(x -> allelePredictions.put(x.Allele, new NeoPredictionData(neoData.Id)));
+
+            for(BindingPredictionData predData : entry.getValue())
+            {
+                neoPredData.processPredictionData(predData, mConfig.McfSumFactor);
+
+                NeoPredictionData allelePredData = allelePredictions.get(predData.Allele);
+                allelePredData.processPredictionData(predData, mConfig.McfSumFactor);
+
+                if(mConfig.WriteTypes.contains(CohortWriteType.ALLELE_PEPTIDE))
+                {
+                    AlleleCoverage alleleCoverage = alleleCoverages.stream().filter(x -> x.Allele.equals(predData.Allele)).findFirst().orElse(null);
+
+                    if(alleleCoverage != null)
+                        mWriters.writePeptideData(mSampleId, neoData, predData, alleleCoverage);
+                }
+            }
+
+            for(AlleleCoverage alleleCoverage : alleleCoverages)
+            {
+                NeoPredictionData allelePredData = allelePredictions.get(alleleCoverage.Allele);
+                mWriters.writeNeoData(mSampleId, neoData, allelePredData, alleleCoverage);
+            }
+        }
+
+        /*
         boolean allValid = true;
         for(Map.Entry<String,List<BindingPredictionData>> entry : peptidePredictions.entrySet())
         {
@@ -94,8 +140,6 @@ public class NeoSampleBindTask implements Callable
             // process the 6 alleles using the coverage
             double maxAffinity = predictions.stream().mapToDouble(x -> x.affinity()).max().orElse(0);
             double minPresentation = predictions.stream().mapToDouble(x -> x.presentation()).min().orElse(0);
-
-            PeptideScores scores = new PeptideScores(peptide, maxAffinity, minPresentation);
 
             for(int alleleIndex = 0; alleleIndex < alleleCoverages.size(); ++alleleIndex)
             {
@@ -120,31 +164,7 @@ public class NeoSampleBindTask implements Callable
                 }
 
                 mWriters.writePeptideData(mSampleId, neoData, predData, alleleCoverage);
-
-                /*
-                scores.Affinity[NORMAL] = min(scores.Affinity[NORMAL], allelePrediction.Affinity);
-                scores.Presentation[NORMAL] = max(scores.Presentation[NORMAL], allelePrediction.Presentation);
-
-                if(!alleleCoverage.isLost())
-                {
-                    scores.Affinity[TUMOR] = min(scores.Affinity[TUMOR], allelePrediction.Affinity);
-                    scores.Presentation[TUMOR] = max(scores.Presentation[TUMOR], allelePrediction.Presentation);
-                }
-
-                if(alleleCoverage.isLost() || !geneLostStatus.get(alleleIndex))
-                {
-                    scores.Affinity[SIM_TUMOR] = min(scores.Affinity[SIM_TUMOR], allelePrediction.Affinity);
-                    scores.Presentation[SIM_TUMOR] = max(scores.Presentation[SIM_TUMOR], allelePrediction.Presentation);
-                }
-                */
             }
-
-            /*
-            if(!allValid)
-                break;
-
-            peptideScores.put(peptide, scores);
-            */
         }
 
         if(!allValid)
@@ -152,30 +172,8 @@ public class NeoSampleBindTask implements Callable
             NE_LOGGER.warn("sampleId({}) has inconsistent allele coverage vs prediction alleles", mSampleId);
             return;
         }
-
-        /*
-        SampleSummary sampleSummary = new SampleSummary(peptideScores.size());
-
-        for(Map.Entry<String,PeptideScores> entry : peptideScores.entrySet())
-        {
-            String peptide = entry.getKey();
-            PeptideScores scores = entry.getValue();
-
-            for(int i = 0; i < STATUS_MAX; ++i)
-            {
-                sampleSummary.Results[i].AffinityTotal += pow(1 / scores.Affinity[i], mConfig.McfSumFactor);
-
-                sampleSummary.Results[i].PresentationTotal += pow(scores.Presentation[i], mConfig.McfSumFactor);
-
-                if(scores.Presentation[i] >= 0.95)
-                    ++sampleSummary.Results[i].PresentationCount;
-            }
-
-            mWriters.writePeptideData(mSampleId, peptide, scores);
-        }
-
-        mWriters.writeSampleSummary(mSampleId, sampleSummary);
         */
+
     }
 
 }

@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.cohort.NeoCohortConfig.SAMPLE_GENE_EXP_FILE;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -27,6 +25,7 @@ public class NeoPresentation
     private final NeoCohortConfig mConfig;
     private final CohortWriters mWriters;
     private final BindScorer mPeptideScorer;
+    private final GeneExpression mGeneExpression;
 
     public NeoPresentation(final CommandLine cmd)
     {
@@ -34,6 +33,7 @@ public class NeoPresentation
 
         BinderConfig binderConfig = new BinderConfig(cmd);
         mPeptideScorer = new BindScorer(binderConfig);
+        mGeneExpression = new GeneExpression(cmd.getOptionValue(SAMPLE_GENE_EXP_FILE));
 
         mWriters = new CohortWriters(mConfig);
     }
@@ -55,7 +55,7 @@ public class NeoPresentation
 
         for(String sampleId : mConfig.SampleIds)
         {
-            NeoSampleBindTask sampleTask = new NeoSampleBindTask(sampleId, mConfig, mPeptideScorer, mWriters);
+            NeoSampleBindTask sampleTask = new NeoSampleBindTask(sampleId, mConfig, mPeptideScorer, mGeneExpression, mWriters);
 
             sampleTasks.add(sampleTask);
         }

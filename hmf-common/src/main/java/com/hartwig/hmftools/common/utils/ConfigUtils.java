@@ -112,6 +112,9 @@ public class ConfigUtils
 
             for(String sampleData : fileContents)
             {
+                if(sampleData.startsWith("#"))
+                    continue;
+
                 String[] items = sampleData.split(delim, -1);
                 sampleIds.add(items[sampleIdIndex]);
             }

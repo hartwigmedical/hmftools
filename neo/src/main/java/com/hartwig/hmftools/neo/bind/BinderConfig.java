@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_BINDING_AFFINI
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_MAX_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
+import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
 import java.io.IOException;
@@ -55,10 +57,6 @@ public class BinderConfig
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
     private static final String BIND_LIKELIHOOD_FILE = "bind_likelihood_file";
 
-    private static final String MAX_AFFINITY = "max_affinity";
-    private static final String BINDING_AFFINITY_LOW = "binding_affinity_low";
-    private static final String BINDING_AFFINITY_HIGH = "binding_aff_high";
-    private static final String APPLY_SCALED_COUNT = "apply_scaled";
     private static final String WEIGHT_EXPONENT = "weight_exponent";
     private static final String LENGTH_WEIGHT = "length_weight";
     private static final String ALLELE_MOTIF_WEIGHT = "allele_motif_weight";
@@ -96,11 +94,7 @@ public class BinderConfig
                 Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(DEFAULT_WEIGHT_EXPONENT))),
                 Double.parseDouble(cmd.getOptionValue(NOISE_PROB, "0")), // String.valueOf(DEFAULT_NOISE_PROB)
                 Double.parseDouble(cmd.getOptionValue(NOISE_WEIGHT, "0")), // String.valueOf(DEFAULT_NOISE_WEIGHT)
-                Double.parseDouble(cmd.getOptionValue(GLOBAL_WEIGHT, "0")),
-                Double.parseDouble(cmd.getOptionValue(MAX_AFFINITY, String.valueOf(DEFAULT_MAX_AFFINITY))),
-                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_LOW, String.valueOf(DEFAULT_BINDING_AFFINITY_LOW))),
-                Double.parseDouble(cmd.getOptionValue(BINDING_AFFINITY_HIGH, String.valueOf(DEFAULT_BINDING_AFFINITY_HIGH))),
-                cmd.hasOption(APPLY_SCALED_COUNT));
+                Double.parseDouble(cmd.getOptionValue(GLOBAL_WEIGHT, "0")));
 
         RequiredAlleles = Lists.newArrayList();
 
@@ -133,8 +127,21 @@ public class BinderConfig
 
         if(cmd.hasOption(REQUIRED_PEPTIDE_LENGTHS))
         {
-            Arrays.stream(cmd.getOptionValue(REQUIRED_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1))
-                    .forEach(x -> RequiredPeptideLengths.add(Integer.parseInt(x)));
+            String[] pepLenStrings = cmd.getOptionValue(REQUIRED_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1);
+
+            for(String pepLenStr : pepLenStrings)
+            {
+                int peptideLength = Integer.parseInt(pepLenStr);
+
+                if(peptideLength < MIN_PEPTIDE_LENGTH || peptideLength > REF_PEPTIDE_LENGTH)
+                {
+                    NE_LOGGER.error("ignoring invalid configured peptide length({})", peptideLength);
+                    continue;
+                }
+
+                RequiredPeptideLengths.add(peptideLength);
+            }
+
             NE_LOGGER.info("requiring {} peptide lengths: {}", RequiredPeptideLengths.size(), RequiredPeptideLengths);
         }
 
@@ -174,9 +181,6 @@ public class BinderConfig
         options.addOption(BIND_LIKELIHOOD_FILE, true, "Binding relative likelihood file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
 
-        options.addOption(BINDING_AFFINITY_HIGH, true, "Upper binding affinity threshold");
-        options.addOption(BINDING_AFFINITY_LOW, true, "Lower binding affinity threshold");
-        options.addOption(MAX_AFFINITY, true, "Binding affinity exponent  for score calc: 1 - log(exp,affinity)");
         options.addOption(WEIGHT_EXPONENT, true, "Weight exponent");
         options.addOption(ALLELE_MOTIF_WEIGHT, true, "Allele motif weight");
         options.addOption(LENGTH_WEIGHT, true, "Length weight");
@@ -192,7 +196,6 @@ public class BinderConfig
         options.addOption(WRITE_SUMMARY_DATA, false, "Write allele summary data including AUC");
         options.addOption(WRITE_LIKELIHOOD, false, "Write relative likelihood data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
-        options.addOption(APPLY_SCALED_COUNT, false, "Calculate amino-acid pairs and their coocurrence");
 
         options.addOption(REQUIRED_ALLELES, true, "List of alleles separated by ';'");
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");

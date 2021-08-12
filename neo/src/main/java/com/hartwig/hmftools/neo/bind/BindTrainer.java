@@ -130,7 +130,7 @@ public class BindTrainer
                         pepLenCountsMap.put(peptideLength, bindCounts);
                     }
 
-                    bindCounts.processBindData(bindData, mConfig.CalcPairs, mConfig.Constants);
+                    bindCounts.processBindData(bindData, mConfig.CalcPairs);
                 }
             }
 

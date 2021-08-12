@@ -20,15 +20,13 @@ public class BindCountData
     public final String Allele;
     public final int PeptideLength;
 
-    private final int[][] mObservations; // data points with a given amino acid and peptide
-    private final double[][] mBindScoreTotals; // log-score total
-    private final double[][] mBindCounts; // observations with affinity below configured binding threshold
+    private final double[][] mBindCounts; // binding observations
     private final double[][] mNoiseCounts; // adjusted for noise
 
     private final double[][] mWeightedCounts; // weighted across the peptide lengths for this allele, padded to reference length
     private final double[][] mFinalWeightedCounts; // weighted across all other alleles, padded to reference length
 
-    private final Map<String,double[]> mComboData;
+    private final Map<String,Integer> mComboCounts;
     private int mTotal;
     private int mTotalBinds; // vs high affinity threshold
 
@@ -38,21 +36,18 @@ public class BindCountData
         PeptideLength = peptideLength;
         int aminoAcidCount = AMINO_ACID_COUNT;
 
-        mObservations = new int[aminoAcidCount][PeptideLength];
-        mBindScoreTotals = new double[aminoAcidCount][PeptideLength];
         mBindCounts = new double[aminoAcidCount][PeptideLength];
         mNoiseCounts = new double[aminoAcidCount][PeptideLength];
         mWeightedCounts = new double[aminoAcidCount][PeptideLength];
         mFinalWeightedCounts = new double[aminoAcidCount][PeptideLength];
 
-        mComboData = Maps.newHashMap();
+        mComboCounts = Maps.newHashMap();
         mTotal = 0;
         mTotalBinds = 0;
     }
 
     public final double[][] getBindCounts() { return mBindCounts; }
-    public final int[][] getObservations() { return mObservations; }
-    public Map<String,double[]> getComboData() { return mComboData; }
+    public Map<String,Integer> getComboData() { return mComboCounts; }
     public final double[][] getNoiseCounts() { return mNoiseCounts; }
     public final double[][] getWeightedCounts() { return mWeightedCounts; }
     public final double[][] getFinalWeightedCounts() { return mFinalWeightedCounts; }
@@ -61,24 +56,24 @@ public class BindCountData
     public void logStats()
     {
         NE_LOGGER.debug("allele({}) peptideLen({}) total({}) binds({}) pairs({})",
-                Allele, PeptideLength, mTotal, mTotalBinds, mComboData.size());
+                Allele, PeptideLength, mTotal, mTotalBinds, mComboCounts.size());
     }
 
-    public void processBindData(final BindData bindData, boolean calcPairs, final CalcConstants calcConstants)
+    public void processBindData(final BindData bindData, boolean calcPairs)
     {
         if(bindData.Peptide.length() != PeptideLength || !bindData.Allele.equals(Allele))
             return;
 
-        double levelScore = calcConstants.deriveLevelScore(bindData.Affinity);
-        double bindPerc = calcConstants.deriveAffinityPercent(bindData.Affinity);
 
         ++mTotal;
+        ++mTotalBinds; // every observation means the peptide does bind
 
+        /* from when affinity was used to judge likelihood of binding
+        double bindPerc = calcConstants.deriveAffinityPercent(bindData.Affinity);
         boolean actualBind = bindData.Affinity < calcConstants.BindingAffinityHigh;
         boolean predictedBind = bindData.predictedAffinity() < calcConstants.BindingAffinityHigh && actualBind;
+        */
 
-        if(actualBind)
-            ++mTotalBinds;
 
         for(int pos = 0; pos < bindData.Peptide.length(); ++pos)
         {
@@ -88,9 +83,7 @@ public class BindCountData
             if(aaIndex == INVALID_AMINO_ACID)
                 continue;
 
-            ++mObservations[aaIndex][pos];
-            mBindScoreTotals[aaIndex][pos] += levelScore;
-            mBindCounts[aaIndex][pos] += bindPerc;
+            ++mBindCounts[aaIndex][pos];
 
             if(calcPairs && bindData.isTraining())
             {
@@ -102,8 +95,7 @@ public class BindCountData
                         if(aminoAcidIndex(aminoAcid2) == INVALID_AMINO_ACID)
                             continue;
 
-                        ComboCorrelations.updatePairData(
-                                mComboData, aminoAcid, pos, aminoAcid2, pos2, levelScore, actualBind, predictedBind);
+                        ComboCorrelations.updatePairData(mComboCounts, aminoAcid, pos, aminoAcid2, pos2);
                     }
                 }
             }
@@ -124,8 +116,6 @@ public class BindCountData
             if(aaIndex == INVALID_AMINO_ACID)
                 continue;
 
-            ++mObservations[aaIndex][pos];
-            mBindScoreTotals[aaIndex][pos] += 1;
             mBindCounts[aaIndex][pos] += 1;
         }
     }
@@ -182,7 +172,7 @@ public class BindCountData
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Allele,PeptideLength,AminoAcid,PeptidePos,Count,Score,TotalScore,ActualBinds");
+            writer.write("Allele,PeptideLength,AminoAcid,PeptidePos,BindCount");
             writer.newLine();
 
             return writer;
@@ -206,13 +196,9 @@ public class BindCountData
 
                 for(int p = 0; p < PeptideLength; ++p)
                 {
-                    int freq = mObservations[aa][p];
                     double totalBinds = mBindCounts[aa][p];
-                    double totalScore = mBindScoreTotals[aa][p];
-                    double avgScore = freq > 0 ? totalScore / freq : 0;
 
-                    writer.write(String.format("%s,%d,%s,%d,%d,%.4f,%.4f,%.2f",
-                            Allele, PeptideLength, aminoAcid, p, freq, avgScore, totalScore, totalBinds));
+                    writer.write(String.format("%s,%d,%s,%d,%d", Allele, PeptideLength, aminoAcid, p, totalBinds));
 
                     writer.newLine();
                 }

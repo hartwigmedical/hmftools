@@ -115,7 +115,7 @@ public class ValidationRoutines
                         pepLenCountsMap.put(peptideLength, bindCounts);
                     }
 
-                    bindCounts.processBindData(bindData, false, mConfig.Constants);
+                    bindCounts.processBindData(bindData, false);
                 }
             }
         }

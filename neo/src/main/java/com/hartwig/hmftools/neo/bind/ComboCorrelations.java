@@ -14,32 +14,15 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public final class ComboCorrelations
 {
-    private static final int COMBO_DATA_COUNT = 0;
-    private static final int COMBO_DATA_TOTAL = 1;
-    private static final int COMBO_DATA_ACTUAL_BINDS = 2;
-    private static final int COMBO_DATA_PRED_BINDS = 3;
-
-    public static void updatePairData(
-            final Map<String,double[]> comboDataMap,
-            char aa1, int pos1, char aa2, int pos2, double levelScore, boolean actualBind, boolean predictedBind)
+    public static void updatePairData(final Map<String,Integer> comboDataMap, char aa1, int pos1, char aa2, int pos2)
     {
         String pairKey = String.format("%c%d_%c%d", aa1, pos1, aa2, pos2);
-        double[] data = comboDataMap.get(pairKey);
+        Integer count = comboDataMap.get(pairKey);
 
-        if(data == null)
-        {
-            data = new double[COMBO_DATA_PRED_BINDS + 1];
-            comboDataMap.put(pairKey, data);
-        }
-
-        ++data[COMBO_DATA_COUNT];
-        data[COMBO_DATA_TOTAL] += levelScore;
-
-        if(actualBind)
-            ++data[COMBO_DATA_ACTUAL_BINDS];
-
-        if(predictedBind)
-            ++data[COMBO_DATA_PRED_BINDS];
+        if(count == null)
+            comboDataMap.put(pairKey,  1);
+        else
+            comboDataMap.put(pairKey,  count + 1);
     }
 
     public static BufferedWriter initPairDataWriter(final String filename)
@@ -48,8 +31,8 @@ public final class ComboCorrelations
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Allele,AminoAcids,Positions,Count,Score,TotalScore,ActualBinds,PredictedBinds");
-            writer.write(",TotalBinds,Expected,Prob,Aa1Binds,Aa1Total,Aa2Binds,Aa2Total");
+            writer.write("Allele,AminoAcids,Positions,PairBindCount");
+            writer.write(",TotalBinds,Expected,Prob,Aa1Binds,Aa2Binds");
             writer.newLine();
 
             return writer;
@@ -67,49 +50,40 @@ public final class ComboCorrelations
         NE_LOGGER.info("writing allele({}) pair probabilities", bindCountData.Allele);
 
         final double[][] bindCounts = bindCountData.getBindCounts();
-        final int[][] observations = bindCountData.getObservations();
-        final Map<String,double[]> comboData = bindCountData.getComboData();
+        final Map<String,Integer> comboData = bindCountData.getComboData();
         int totalBinds = bindCountData.totalBindCount();
 
         try
         {
-            for(Map.Entry<String,double[]> entry : comboData.entrySet())
+            for(Map.Entry<String,Integer> entry : comboData.entrySet())
             {
                 String pairKey = entry.getKey();
                 char aa1 = pairKey.charAt(0);
                 int pos1 = Integer.parseInt(pairKey.substring(1, 2));
                 char aa2 = pairKey.charAt(3);
                 int pos2 = Integer.parseInt(pairKey.substring(4, 5));
-                final double[] data = entry.getValue();
-
-                int pairCount = (int)data[COMBO_DATA_COUNT];
-                int predictedBinds = (int)data[COMBO_DATA_PRED_BINDS];
-                int actualBinds = (int)data[COMBO_DATA_ACTUAL_BINDS];
-                double totalScore = data[COMBO_DATA_TOTAL];
-                double avgScore = pairCount > 0 ? totalScore / pairCount : 0;
+                int pairBindCount = entry.getValue();
 
                 int aa1Index = aminoAcidIndex(aa1);
-                int aa1Total = observations[aa1Index][pos1];
                 double aa1ActBinds = bindCounts[aa1Index][pos1];
 
                 int aa2Index = aminoAcidIndex(aa2);
-                int aa2Total = observations[aa2Index][pos2];
                 double aa2ActBinds = bindCounts[aa2Index][pos2];
 
-                double a1Rate = aa1Total > 0 ? aa1ActBinds / (double)totalBinds : 0; // was using a denom of aa1Total
-                double a2Rate = aa2Total > 0 ? aa2ActBinds / (double)totalBinds : 0;
+                double a1Rate = aa1ActBinds / (double)totalBinds;
+                double a2Rate = aa2ActBinds / (double)totalBinds;
                 double expectedPairBind = max(totalBinds * a1Rate * a2Rate, 0.00001);
 
                 PoissonDistribution poisson = new PoissonDistribution(expectedPairBind);
 
-                double poisProb = actualBinds > expectedPairBind ?
-                        1 - poisson.cumulativeProbability(actualBinds - 1) : poisson.cumulativeProbability(actualBinds);
+                double poisProb = pairBindCount > expectedPairBind ?
+                        1 - poisson.cumulativeProbability(pairBindCount - 1) : poisson.cumulativeProbability(pairBindCount);
 
-                writer.write(String.format("%s,%c_%c,%d_%d,%d,%.4f,%.4f,%d,%d",
-                        bindCountData.Allele, aa1, aa2, pos1, pos2, pairCount, avgScore, totalScore, actualBinds, predictedBinds));
+                writer.write(String.format("%s,%c_%c,%d_%d,%d,%d,%d",
+                        bindCountData.Allele, aa1, aa2, pos1, pos2, pairBindCount));
 
-                writer.write(String.format(",%d,%.2f,%6.3e,%.2f,%d,%.2f,%d",
-                        bindCounts, expectedPairBind, poisProb, aa1ActBinds, aa1Total, aa2ActBinds, aa2Total));
+                writer.write(String.format(",%d,%.2f,%6.3e,%d,%d",
+                        totalBinds, expectedPairBind, poisProb, aa1ActBinds, aa2ActBinds));
 
                 writer.newLine();
             }
