@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -18,6 +19,7 @@ import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +31,7 @@ public class CohortComparisonChapter implements ReportChapter {
     private static final String COMBINED_CATEGORY = "COMBINED";
     private static final String CLASSIFIER_CATEGORY = "CLASSIFIER";
     private static final String SAMPLE_TRAIT_CATEGORY = "SAMPLE_TRAIT";
+    private static final String FEATURE_CATEGORY = "FEATURE";
     private static final String SV_CATEGORY = "SV";
 
     @NotNull
@@ -51,8 +54,8 @@ public class CohortComparisonChapter implements ReportChapter {
 
         addTumorTypeClassificationTable(document, refCancerTypes);
         addTumorTraitsTable(document, refCancerTypes);
+        addTumorDriverTable(document, refCancerTypes);
 
-        document.add(new Paragraph("TODO: Add detailed cohort incidence per driver").addStyle(ReportResources.tableTitleStyle()));
         document.add(new Paragraph("TODO: Add detailed cohort incidence per signature").addStyle(ReportResources.tableTitleStyle()));
     }
 
@@ -79,25 +82,43 @@ public class CohortComparisonChapter implements ReportChapter {
         String firstCancerType = Lists.newArrayList(refCancerTypes.iterator()).get(0);
         Table traits = new Table(UnitValue.createPercentArray(new float[] { 2, 1, 3 }));
         traits.addCell(TableUtil.createKeyCell("Gender"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SAMPLE_TRAIT_CATEGORY, "GENDER", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SAMPLE_TRAIT_CATEGORY,
+                Sets.newHashSet("GENDER"),
+                null,
+                firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         traits.addCell(TableUtil.createKeyCell("SNVs"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SAMPLE_TRAIT_CATEGORY, "SNV_COUNT", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SAMPLE_TRAIT_CATEGORY,
+                Sets.newHashSet("SNV_COUNT"),
+                null,
+                firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         traits.addCell(TableUtil.createKeyCell("MSI"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SAMPLE_TRAIT_CATEGORY, "MS_INDELS_TMB", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SAMPLE_TRAIT_CATEGORY,
+                Sets.newHashSet("MS_INDELS_TMB"),
+                null,
+                firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         traits.addCell(TableUtil.createKeyCell("DUPs 32B-200B"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY, "SIMPLE_DUP_32B_200B", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY,
+                Sets.newHashSet("SIMPLE_DUP_32B_200B"),
+                null,
+                firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         traits.addCell(TableUtil.createKeyCell("Max Complex Size"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY, "MAX_COMPLEX_SIZE", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY,
+                Sets.newHashSet("MAX_COMPLEX_SIZE"),
+                null,
+                firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         traits.addCell(TableUtil.createKeyCell("LINEs"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY, "LINE", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY, Sets.newHashSet("LINE"), null, firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         traits.addCell(TableUtil.createKeyCell("Telomeric SGLs"));
-        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY, "TELOMERIC_SGL", firstCancerType))));
+        traits.addCell(TableUtil.createValueCell(safeValue(findEntry(SV_CATEGORY,
+                Sets.newHashSet("TELOMERIC_SGL"),
+                null,
+                firstCancerType))));
         traits.addCell(TableUtil.createValueCell(""));
         document.add(TableUtil.createWrappingReportTable(traits, "Sample traits"));
 
@@ -121,6 +142,57 @@ public class CohortComparisonChapter implements ReportChapter {
         document.add(TableUtil.createWrappingReportTable(percentiles, "Sample trait percentiles"));
     }
 
+    private void addTumorDriverTable(@NotNull Document document, @NotNull Set<String> refCancerTypes) {
+        Set<String> drivers = Sets.newHashSet();
+        for (CuppaEntry entry : report.cuppaEntries()) {
+            if (entry.category().equals(FEATURE_CATEGORY) && (entry.dataType().equals("DRIVER") || entry.dataType().equals("INDEL"))) {
+                drivers.add(entry.value());
+            }
+        }
+
+        List<String> driverList = Lists.newArrayList(drivers.iterator());
+        int driversPerTable = 5;
+        for (int i = 0; i <= driverList.size() / driversPerTable; i++) {
+            renderDriverPrevalenceTable(document,
+                    refCancerTypes,
+                    driversPerTable,
+                    driverList.subList(i * driversPerTable, Math.min((i + 1) * driversPerTable, driverList.size())));
+        }
+    }
+
+    private void renderDriverPrevalenceTable(@NotNull Document document, @NotNull Set<String> refCancerTypes, int requiredDriverColumns,
+            @NotNull List<String> drivers) {
+        float[] widths = new float[requiredDriverColumns + 1];
+        Cell[] headers = new Cell[requiredDriverColumns + 1];
+
+        widths[0] = 3;
+        headers[0] = TableUtil.createHeaderCell("Ref Cancer Type");
+        for (int i = 0; i < requiredDriverColumns; i++) {
+            widths[i + 1] = 1;
+            headers[i + 1] = TableUtil.createHeaderCell(i < drivers.size() ? drivers.get(i) : Strings.EMPTY);
+        }
+
+        Table percentiles = TableUtil.createReportContentTable(widths, headers);
+
+        for (String refCancerType : refCancerTypes) {
+            percentiles.addCell(TableUtil.createContentCell(refCancerType));
+            for (int i = 0; i < requiredDriverColumns; i++) {
+                if (i < drivers.size()) {
+                    percentiles.addCell(TableUtil.createContentCell(findDriverFeature(drivers.get(i), refCancerType)));
+                } else {
+                    percentiles.addCell(TableUtil.createContentCell(Strings.EMPTY));
+                }
+            }
+        }
+
+        document.add(TableUtil.createWrappingReportTable(percentiles, "Sample driver prevalences"));
+    }
+
+    @NotNull
+    private String findDriverFeature(@NotNull String driver, @NotNull String refCancerType) {
+        return findPercentileOrPrevalence(FEATURE_CATEGORY, Sets.newHashSet("DRIVER", "INDEL"), driver, refCancerType);
+    }
+
     @NotNull
     private String findCombinedLikelihood(@NotNull String type, @NotNull String refCancerType) {
         return findLikelihood(COMBINED_CATEGORY, type, refCancerType);
@@ -133,17 +205,17 @@ public class CohortComparisonChapter implements ReportChapter {
 
     @NotNull
     private String findSampleTraitValue(@NotNull String type, @NotNull String refCancerType) {
-        return findPercentileOrPrevalence(SAMPLE_TRAIT_CATEGORY, type, refCancerType);
+        return findPercentileOrPrevalence(SAMPLE_TRAIT_CATEGORY, Sets.newHashSet(type), null, refCancerType);
     }
 
     @NotNull
     private String findSvValue(@NotNull String type, @NotNull String refCancerType) {
-        return findPercentileOrPrevalence(SV_CATEGORY, type, refCancerType);
+        return findPercentileOrPrevalence(SV_CATEGORY, Sets.newHashSet(type), null, refCancerType);
     }
 
     @NotNull
     private String findLikelihood(@NotNull String category, @NotNull String type, @NotNull String refCancerType) {
-        CuppaEntry entry = findEntry(category, type, refCancerType);
+        CuppaEntry entry = findEntry(category, Sets.newHashSet(type), null, refCancerType);
         if (entry == null) {
             return "NA";
         } else {
@@ -155,8 +227,9 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     @NotNull
-    private String findPercentileOrPrevalence(@NotNull String category, @NotNull String type, @NotNull String refCancerType) {
-        CuppaEntry entry = findEntry(category, type, refCancerType);
+    private String findPercentileOrPrevalence(@NotNull String category, @NotNull Set<String> types, @Nullable String value,
+            @NotNull String refCancerType) {
+        CuppaEntry entry = findEntry(category, types, value, refCancerType);
         if (entry == null) {
             return "NA";
         } else {
@@ -168,13 +241,20 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     @Nullable
-    private CuppaEntry findEntry(@NotNull String category, @NotNull String dataType, @NotNull String refCancerType) {
+    private CuppaEntry findEntry(@NotNull String category, @NotNull Set<String> dataTypes, @Nullable String value,
+            @NotNull String refCancerType) {
         for (CuppaEntry entry : report.cuppaEntries()) {
-            if (entry.category().equals(category) && entry.dataType().equals(dataType) && entry.refCancerType().equals(refCancerType)) {
+            if (entry.category().equals(category) && dataTypes.contains(entry.dataType()) && entry.refCancerType().equals(refCancerType)
+                    && (value == null || entry.value().equals(value))) {
                 return entry;
             }
         }
-        LOGGER.warn("Could not find entry of category '{}' and datatype '{}' for ref cancer type '{}'", category, dataType, refCancerType);
+        LOGGER.warn("Could not find entry of category '{}' and datatypes '{}' with value '{}' for ref cancer type '{}'",
+                category,
+                dataTypes,
+                value,
+                refCancerType);
+
         return null;
     }
 
