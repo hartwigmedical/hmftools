@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
-import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStep20;
 
@@ -47,9 +46,10 @@ public class IsofoxDAO
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        InsertValuesStep14 inserter = context.insertInto(RNASTATISTICS,
+        InsertValuesStep15 inserter = context.insertInto(RNASTATISTICS,
                 RNASTATISTICS.MODIFIED,
                 RNASTATISTICS.SAMPLEID,
+                RNASTATISTICS.QCSTATUS,
                 RNASTATISTICS.READLENGTH,
                 RNASTATISTICS.TOTALFRAGMENTS,
                 RNASTATISTICS.DUPLICATES,
@@ -66,6 +66,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
+                statistics.qcStatus(),
                 statistics.readLength(),
                 statistics.totalFragments(),
                 statistics.duplicateFragments(),

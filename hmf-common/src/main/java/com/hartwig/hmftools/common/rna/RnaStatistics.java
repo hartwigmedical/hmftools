@@ -29,6 +29,13 @@ public abstract class RnaStatistics
     // Median GC (excluding 7 highly expressed genes)
     public abstract double medianGCRatio();
 
+    public static final int LOW_COVERAGE_THRESHOLD = 2500000;
+
+    public String qcStatus()
+    {
+        return totalFragments() - duplicateFragments() >= LOW_COVERAGE_THRESHOLD ? "PASS" : "FAIL_LOW_COVERAGE";
+    }
+
     public static String csvHeader()
     {
         return "SampleId,TotalFragments,DuplicateFragments"
