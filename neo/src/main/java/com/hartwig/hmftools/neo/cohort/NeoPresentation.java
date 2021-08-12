@@ -1,14 +1,16 @@
 package com.hartwig.hmftools.neo.cohort;
 
+import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.cohort.NeoCohortConfig.SAMPLE_GENE_EXP_FILE;
+import static com.hartwig.hmftools.neo.cohort.NeoCohortConfig.SAMPLE_TRANS_EXP_FILE;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.BinderConfig;
@@ -25,7 +27,7 @@ public class NeoPresentation
     private final NeoCohortConfig mConfig;
     private final CohortWriters mWriters;
     private final BindScorer mPeptideScorer;
-    private final GeneExpression mGeneExpression;
+    private final RnaExpressionMatrix mTranscriptExpression;
 
     public NeoPresentation(final CommandLine cmd)
     {
@@ -33,7 +35,7 @@ public class NeoPresentation
 
         BinderConfig binderConfig = new BinderConfig(cmd);
         mPeptideScorer = new BindScorer(binderConfig);
-        mGeneExpression = new GeneExpression(cmd.getOptionValue(SAMPLE_GENE_EXP_FILE));
+        mTranscriptExpression = new RnaExpressionMatrix(cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE), EXPRESSION_SCOPE_TRANS);
 
         mWriters = new CohortWriters(mConfig);
     }
@@ -55,7 +57,7 @@ public class NeoPresentation
 
         for(String sampleId : mConfig.SampleIds)
         {
-            NeoSampleBindTask sampleTask = new NeoSampleBindTask(sampleId, mConfig, mPeptideScorer, mGeneExpression, mWriters);
+            NeoSampleBindTask sampleTask = new NeoSampleBindTask(sampleId, mConfig, mPeptideScorer, mTranscriptExpression, mWriters);
 
             sampleTasks.add(sampleTask);
         }

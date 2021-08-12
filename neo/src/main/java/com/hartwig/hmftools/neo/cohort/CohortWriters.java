@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.neo.cohort;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -44,11 +46,11 @@ public class CohortWriters
             final String outputFileName = mConfig.formFilename("neoepitope");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("SampleId,NeId,VariantType,VariantInfo,AminoAcids");
+            writer.write("SampleId,NeId,VariantType,VariantInfo,GeneName,AminoAcids");
             writer.write(",Allele,PeptideCount,MaxLikelihood,SumLikelihood");
             writer.write(",MinAffinity,SumAffinity,MinPresentationPerc,SumPresentation");
             writer.write(",AllelCN,AlleleDisrupted");
-            writer.write(",TpmSample,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
+            writer.write(",TpmSampleUp,TpmSampleDown,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
             writer.newLine();
             return writer;
         }
@@ -67,8 +69,8 @@ public class CohortWriters
 
         try
         {
-            mNeoWriter.write(String.format("%s,%d,%s,%s,%s",
-                    sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.AminoAcids));
+            mNeoWriter.write(String.format("%s,%d,%s,%s,%s,%s",
+                    sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName, neoData.AminoAcids));
 
             mNeoWriter.write(String.format(",%s,%d,%.4f,%.4f,%.1f,%.4f,%.6f,%.4f",
                     alleleCoverage.Allele, allelePredData.Peptides, allelePredData.MaxLikelihood, allelePredData.SumLikelihood,
@@ -76,8 +78,8 @@ public class CohortWriters
 
             mNeoWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
 
-            mNeoWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%d,%.0f",
-                    neoData.GeneExpression, neoData.TpmCancer, neoData.TpmCohort,
+            mNeoWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%4.3e,%d,%.0f",
+                    neoData.TransExpression[FS_UP], neoData.TransExpression[FS_DOWN], neoData.TpmCancer, neoData.TpmCohort,
                     neoData.RnaNovelFragments, (neoData.RnaBaseDepth[SE_START] + neoData.RnaBaseDepth[SE_END]) * 0.5));
 
             mNeoWriter.newLine();

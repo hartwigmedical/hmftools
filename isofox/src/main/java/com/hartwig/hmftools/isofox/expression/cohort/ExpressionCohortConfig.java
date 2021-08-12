@@ -20,6 +20,7 @@ public class ExpressionCohortConfig
     public final String CancerGeneFiles;
     public final boolean DistributionByCancerType;
     public final boolean LogElevatedDistributions;
+    public final boolean ApplyTpmWriteLimit;
 
     private static final String EXTERNAL_SOURCE = "exp_external_source";
     private static final String EXTERNAL_COMPARE_TRANSCRIPTS = "exp_compare_transcripts";
@@ -29,6 +30,7 @@ public class ExpressionCohortConfig
     public static final String TPM_THRESHOLD = "tpm_threshold";
     public static final String USE_LOG_TPM = "use_log_tpm";
     public static final String TPM_ROUNDING = "tpm_rounding";
+    public static final String APPLY_TPM_WRITE_THRESHOLD = "apply_tpm_write_threshold";
 
     public static final String GENE_EXP_MATRIX_FILE = "gene_exp_matrix_file";
     public static final String COHORT_TRANS_FILE = "cohort_trans_file";
@@ -57,6 +59,7 @@ public class ExpressionCohortConfig
         CancerGeneFiles = cmd.getOptionValue(CANCER_GENE_FILES);
         DistributionByCancerType = cmd.hasOption(DIST_BY_CANCER_TYPE);
         LogElevatedDistributions = cmd.hasOption(LOG_ELEVATED_DIST);
+        ApplyTpmWriteLimit = cmd.hasOption(APPLY_TPM_WRITE_THRESHOLD);
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -73,5 +76,6 @@ public class ExpressionCohortConfig
         options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
         options.addOption(DIST_BY_CANCER_TYPE, false, "Produce cancer gene distributions");
         options.addOption(LOG_ELEVATED_DIST, false, "Log elevated gene distributions");
+        options.addOption(APPLY_TPM_WRITE_THRESHOLD, false, "Log elevated gene distributions");
     }
 }

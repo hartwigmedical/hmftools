@@ -91,7 +91,6 @@ public class BindingLikelihood
                 double upperRank = mScoreRankBuckets.get(i);
                 double upperPerc = (rank - lowerRank) / (upperRank - lowerRank);
                 return upperPerc * likelihood + (1 - upperPerc) * lowerLikelihood;
-
             }
         }
 

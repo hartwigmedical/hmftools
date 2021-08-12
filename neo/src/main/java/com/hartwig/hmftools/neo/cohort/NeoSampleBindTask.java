@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.neo.cohort;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
@@ -10,6 +13,7 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 
 public class NeoSampleBindTask implements Callable
@@ -17,16 +21,17 @@ public class NeoSampleBindTask implements Callable
     private final String mSampleId;
     private final NeoCohortConfig mConfig;
     private final BindScorer mScorer;
-    private final GeneExpression mGeneExpression;
+    private final RnaExpressionMatrix mTransExpression;
     private final CohortWriters mWriters;
 
     public NeoSampleBindTask(
-            final String sampleId, final NeoCohortConfig config, final BindScorer scorer, final GeneExpression geneExpression, final CohortWriters writers)
+            final String sampleId, final NeoCohortConfig config, final BindScorer scorer,
+            final RnaExpressionMatrix transExpression, final CohortWriters writers)
     {
         mSampleId = sampleId;
         mConfig = config;
         mScorer = scorer;
-        mGeneExpression = geneExpression;
+        mTransExpression = transExpression;
         mWriters = writers;
     }
 
@@ -92,7 +97,22 @@ public class NeoSampleBindTask implements Callable
         {
             NeoEpitopeData neoData = neoEpitopeDataMap.get(entry.getKey());
 
-            neoData.GeneExpression = mGeneExpression.getExpression(neoData.GeneId, mSampleId);
+            if(mTransExpression.hasSampleId(mSampleId))
+            {
+                for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
+                {
+                    neoData.TransExpression[fs] = 0;
+
+                    for(String transName : neoData.Transcripts[fs])
+                    {
+                        double expression = mTransExpression.getExpression(transName, mSampleId);
+
+                        // distinguish non-existent expression vs zero TPM
+                        if(expression != INVALID_EXP)
+                            neoData.TransExpression[fs] += expression;
+                    }
+                }
+            }
 
             NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);
 

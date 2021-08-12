@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.errorprone.annotations.Var;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -47,7 +48,7 @@ public class NeoEpitopeFile
     public final double[] CohortTpmTotal;
     public final boolean WildtypeNovelAAMatch;
 
-    public static final String  DELIMITER = ",";
+    public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
     public static final String FUSION_INFO_DELIM = ";";
@@ -262,9 +263,14 @@ public class NeoEpitopeFile
 
     public void extractLocationData(final String[] chromosomes, final int[] positions, final byte[] orientations)
     {
-        if(VariantInfo.contains(FUSION_INFO_DELIM))
+        extractLocationData(VariantInfo, chromosomes, positions, orientations);
+    }
+
+    public static void extractLocationData(final String variantInfo, final String[] chromosomes, final int[] positions, final byte[] orientations)
+    {
+        if(variantInfo.contains(FUSION_INFO_DELIM))
         {
-            final String[] streamData = VariantInfo.split(FUSION_INFO_DELIM);
+            final String[] streamData = variantInfo.split(FUSION_INFO_DELIM);
             chromosomes[FS_UP] = streamData[FS_UP].split(VAR_INFO_DELIM)[0];
             chromosomes[FS_DOWN] = streamData[FS_DOWN].split(VAR_INFO_DELIM)[0];
             positions[FS_UP] = Integer.parseInt(streamData[FS_UP].split(VAR_INFO_DELIM)[1]);
@@ -274,7 +280,7 @@ public class NeoEpitopeFile
         }
         else
         {
-            final String[] varData = VariantInfo.split(VAR_INFO_DELIM);
+            final String[] varData = variantInfo.split(VAR_INFO_DELIM);
             chromosomes[FS_UP] = chromosomes[FS_DOWN] = varData[0];
             positions[FS_UP] = positions[FS_DOWN] = Integer.parseInt(varData[1]);
         }
@@ -282,8 +288,13 @@ public class NeoEpitopeFile
 
     public void extractTranscriptNames(final List<String> upNames, final List<String> downNames)
     {
-        Arrays.stream(Transcripts[FS_UP].split(ITEM_DELIM)).forEach(x -> upNames.add(x));
-        Arrays.stream(Transcripts[FS_DOWN].split(ITEM_DELIM)).forEach(x -> downNames.add(x));
+        extractTranscriptNames(Transcripts[FS_UP], Transcripts[FS_DOWN], upNames, downNames);
+    }
+
+    public static void extractTranscriptNames(final String transUp, final String transDown, final List<String> upNames, final List<String> downNames)
+    {
+        Arrays.stream(transUp.split(ITEM_DELIM)).forEach(x -> upNames.add(x));
+        Arrays.stream(transDown.split(ITEM_DELIM)).forEach(x -> downNames.add(x));
     }
 
 }

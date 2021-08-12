@@ -34,7 +34,7 @@ public class NeoCohortConfig
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String LILAC_DATA_DIR = "lilac_data_dir";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
-    public static final String SAMPLE_GENE_EXP_FILE = "sample_gene_exp_file";
+    public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
     public static final String THREADS = "threads";
 
     private static final String MCF_SUM_FACTOR = "mcf_sum_factor";
@@ -81,7 +81,7 @@ public class NeoCohortConfig
         options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
-        options.addOption(SAMPLE_GENE_EXP_FILE, true, "Cohort gene expression matrix");
+        options.addOption(SAMPLE_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
 
         BinderConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);

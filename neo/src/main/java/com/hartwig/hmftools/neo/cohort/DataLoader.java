@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.cohort;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNames;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
@@ -64,6 +65,8 @@ public class DataLoader
             int upAaIndex = fieldsIndexMap.get("UpstreamAA");
             int downAaIndex = fieldsIndexMap.get("DownstreamAA");
             int novelAaIndex = fieldsIndexMap.get("NovelAA");
+            int transUpIndex = fieldsIndexMap.get("UpTranscripts");
+            int transDownIndex = fieldsIndexMap.get("DownTranscripts");
 
             Integer rnaFragIndex = fieldsIndexMap.get("FragmentsNovel");
             Integer rnaBaseDepthUp = fieldsIndexMap.get("BaseDepthUp");
@@ -85,6 +88,11 @@ public class DataLoader
                 double tpmCancer = Double.parseDouble(items[tpmCancerIndex]);
                 double tpmCohort = Double.parseDouble(items[tpmCohortIndex]);
 
+                List<String> transUpNames = Lists.newArrayList();
+                List<String> transDownNames = Lists.newArrayList();
+
+                extractTranscriptNames(items[transUpIndex], items[transDownIndex], transUpNames, transDownNames);
+
                 int rnaFragCount = 0;
                 int[] rnaBaseDepth = new int[] {0, 0};
 
@@ -97,7 +105,7 @@ public class DataLoader
 
                 NeoEpitopeData neoData = new NeoEpitopeData(
                         neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneIdDown, geneName,
-                        aminoAcids, tpmCancer, tpmCohort, rnaFragCount, rnaBaseDepth);
+                        aminoAcids, transUpNames, transDownNames, tpmCancer, tpmCohort, rnaFragCount, rnaBaseDepth);
 
                 neoDataMap.put(neId, neoData);
             }
