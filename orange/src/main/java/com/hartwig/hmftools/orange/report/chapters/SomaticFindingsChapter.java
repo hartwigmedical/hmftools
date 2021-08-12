@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -17,9 +19,11 @@ import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.FusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
+import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
+import com.hartwig.hmftools.orange.report.util.LocationKey;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
@@ -55,7 +59,8 @@ public class SomaticFindingsChapter implements ReportChapter {
         addSomaticAmpDels(document);
         addFusions(document);
         addViralPresence(document);
-        addSomaticGeneDisruptions(document);
+        addHomozygousDisruptions(document);
+        addGeneDisruptions(document);
         addLinxDriverPlots(document);
     }
 
@@ -121,42 +126,80 @@ public class SomaticFindingsChapter implements ReportChapter {
         Table driverAmpsDelsTable = GeneCopyNumberTable.build(driverAmpsDelsTitle, report.purple().reportableGainsLosses());
         document.add(driverAmpsDelsTable);
 
-        List<ReportableGainLoss> sortedGains = sortedGains(report.purple().unreportedGainsLosses());
-        String sortedGainsTitle = "Other amps (" + sortedGains.size() + ")";
+        List<ReportableGainLoss> sortedGains = otherRelevantGains(report.purple().unreportedGainsLosses());
+        String sortedGainsTitle = "Other regions with amps (" + sortedGains.size() + ")";
         Table sortedGainsTable = GeneCopyNumberTable.build(sortedGainsTitle, sortedGains.subList(0, Math.min(10, sortedGains.size())));
         document.add(sortedGainsTable);
 
-        List<ReportableGainLoss> lossesNoAllosomes = lossesNoAllosomes(report.purple().unreportedGainsLosses());
-        String unreportedLossesTitle = "Other dels on autosomes (" + lossesNoAllosomes.size() + ")";
+        List<ReportableGainLoss> lossesNoAllosomes =
+                otherRelevantLosses(report.purple().unreportedGainsLosses(), report.purple().reportableGainsLosses());
+        String unreportedLossesTitle = "Other autosomal regions with dels (" + lossesNoAllosomes.size() + ")";
         Table unreportedLossesTable =
                 GeneCopyNumberTable.build(unreportedLossesTitle, lossesNoAllosomes.subList(0, Math.min(10, lossesNoAllosomes.size())));
         document.add(unreportedLossesTable);
     }
 
     @NotNull
-    private static List<ReportableGainLoss> sortedGains(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
-        List<ReportableGainLoss> gains = Lists.newArrayList();
-        for (ReportableGainLoss gainLoss : unreportedGainsLosses) {
-            if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN
-                    || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN) {
-                gains.add(gainLoss);
+    private static List<ReportableGainLoss> otherRelevantGains(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
+        List<ReportableGainLoss> unreportedFullGains = unreportedGainsLosses.stream()
+                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
+                .collect(Collectors.toList());
+
+        Map<LocationKey, ReportableGainLoss> maxGainPerLocation = Maps.newHashMap();
+        for (ReportableGainLoss gain : unreportedFullGains) {
+            LocationKey key = new LocationKey(gain.chromosome(), gain.chromosomeBand());
+            ReportableGainLoss maxGain = maxGainPerLocation.get(key);
+            if (maxGain == null || gain.copies() > maxGain.copies()) {
+                maxGainPerLocation.put(key, gain);
             }
         }
 
-        return gains.stream().sorted((o1, o2) -> (int) (o1.copies() - o2.copies())).collect(Collectors.toList());
+        return maxGainPerLocation.values().stream().sorted((o1, o2) -> (int) (o2.copies() - o1.copies())).collect(Collectors.toList());
     }
 
     @NotNull
-    private static List<ReportableGainLoss> lossesNoAllosomes(@NotNull List<ReportableGainLoss> unreportedGainsLosses) {
+    private static List<ReportableGainLoss> otherRelevantLosses(@NotNull List<ReportableGainLoss> unreportedGainsLosses,
+            @NotNull List<ReportableGainLoss> reportedGainLosses) {
         List<ReportableGainLoss> lossesNoAllosomes = Lists.newArrayList();
-        for (ReportableGainLoss gainLoss : unreportedGainsLosses) {
-            if (!HumanChromosome.fromString(gainLoss.chromosome()).isAllosome() && (
-                    gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
-                            || gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS)) {
-                lossesNoAllosomes.add(gainLoss);
+
+        List<ReportableGainLoss> unreportedLosses = unreportedGainsLosses.stream()
+                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+                .collect(Collectors.toList());
+
+        List<ReportableGainLoss> reportedLosses = reportedGainLosses.stream()
+                .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+                        || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+                .collect(Collectors.toList());
+
+        for (ReportableGainLoss loss : unreportedLosses) {
+            if (!HumanChromosome.fromString(loss.chromosome()).isAllosome() && !locusPresent(reportedLosses,
+                    loss.chromosome(),
+                    loss.chromosomeBand())) {
+                lossesNoAllosomes.add(loss);
             }
         }
-        return lossesNoAllosomes;
+
+        Map<LocationKey, ReportableGainLoss> oneLossPerLocation = Maps.newHashMap();
+        for (ReportableGainLoss loss : lossesNoAllosomes) {
+            LocationKey key = new LocationKey(loss.chromosome(), loss.chromosomeBand());
+            if (!oneLossPerLocation.containsKey(key)) {
+                oneLossPerLocation.put(key, loss);
+            }
+        }
+
+        return Lists.newArrayList(oneLossPerLocation.values().iterator());
+    }
+
+    private static boolean locusPresent(@NotNull List<ReportableGainLoss> gainsLosses, @NotNull String chromosome,
+            @NotNull String chromosomeBand) {
+        for (ReportableGainLoss gainLoss : gainsLosses) {
+            if (gainLoss.chromosome().equals(chromosome) && gainLoss.chromosomeBand().equals(chromosomeBand)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void addFusions(@NotNull Document document) {
@@ -201,7 +244,13 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(otherVirusTable);
     }
 
-    private void addSomaticGeneDisruptions(@NotNull Document document) {
+    private void addHomozygousDisruptions(@NotNull Document document) {
+        String homozygousDisruptionTitle = "Homozygous disruptions (" + report.linx().homozygousDisruptions().size() + ")";
+        Table homozygousDisruptionTable = HomozygousDisruptionTable.build(homozygousDisruptionTitle, report.linx().homozygousDisruptions());
+        document.add(homozygousDisruptionTable);
+    }
+
+    private void addGeneDisruptions(@NotNull Document document) {
         String geneDisruptionTitle = "Gene disruptions (" + report.linx().geneDisruptions().size() + ")";
         Table geneDisruptionTable = GeneDisruptionTable.build(geneDisruptionTitle, report.linx().geneDisruptions());
         document.add(geneDisruptionTable);

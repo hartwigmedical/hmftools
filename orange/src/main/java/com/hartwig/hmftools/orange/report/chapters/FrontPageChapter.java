@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 public class FrontPageChapter implements ReportChapter {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
+    private static final String NONE = "None";
 
     @NotNull
     private final OrangeReport report;
@@ -139,7 +141,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private static String variantDriverString(@NotNull List<ReportableVariant> variants) {
         if (variants.isEmpty()) {
-            return "None";
+            return NONE;
         } else {
             Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
             for (ReportableVariant variant : variants) {
@@ -148,19 +150,23 @@ public class FrontPageChapter implements ReportChapter {
                 }
             }
 
-            StringJoiner joiner = new StringJoiner(", ");
-            for (String gene : highDriverGenes) {
-                joiner.add(gene);
-            }
+            if (highDriverGenes.isEmpty()) {
+                return String.valueOf(variants.size());
+            } else {
+                StringJoiner joiner = new StringJoiner(", ");
+                for (String gene : highDriverGenes) {
+                    joiner.add(gene);
+                }
 
-            return variants.size() + " (" + joiner.toString() + ")";
+                return variants.size() + " (" + joiner.toString() + ")";
+            }
         }
     }
 
     @NotNull
     private String copyNumberDriverString() {
         if (report.purple().reportableGainsLosses().isEmpty()) {
-            return "None";
+            return NONE;
         } else {
             StringJoiner joiner = new StringJoiner(", ");
             for (ReportableGainLoss gainLoss : report.purple().reportableGainsLosses()) {
@@ -173,7 +179,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String disruptionDriverString() {
         if (report.linx().homozygousDisruptions().isEmpty()) {
-            return "None";
+            return NONE;
         } else {
             StringJoiner joiner = new StringJoiner(", ");
             for (ReportableHomozygousDisruption disruption : report.linx().homozygousDisruptions()) {
@@ -186,7 +192,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String fusionDriverString() {
         if (report.linx().reportableFusions().isEmpty()) {
-            return "None";
+            return NONE;
         } else {
             StringJoiner joiner = new StringJoiner(", ");
             for (LinxFusion fusion : report.linx().reportableFusions()) {
@@ -199,7 +205,7 @@ public class FrontPageChapter implements ReportChapter {
     @NotNull
     private String virusString() {
         if (report.virusInterpreter().reportableViruses().isEmpty()) {
-            return "None";
+            return NONE;
         } else {
             Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
             for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
@@ -258,7 +264,11 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String chordString() {
-        return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+        if (report.chord().hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
+            return report.chord().hrStatus().display();
+        } else {
+            return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+        }
     }
 
     @NotNull
@@ -283,7 +293,7 @@ public class FrontPageChapter implements ReportChapter {
         }
 
         if (treatments.isEmpty()) {
-            return "None";
+            return NONE;
         } else {
             StringJoiner joiner = new StringJoiner(", ");
             for (EvidenceLevel level : levels) {

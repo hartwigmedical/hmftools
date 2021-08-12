@@ -21,7 +21,7 @@ public class MolecularTissueOriginFileTest {
 
     @Test
     public void canDetermineMolecularTissueOriginDta() {
-        MolecularTissueOrginData molecularTissueOrigin = MolecularTissueOriginFile.extractPedictionDataOrigin("Lower GI tract (likelihood=80.4%)");
+        MolecularTissueOrginData molecularTissueOrigin = MolecularTissueOriginFile.extractPredictionDataOrigin("Lower GI tract (likelihood=80.4%)");
 
         assertEquals("Lower GI tract (likelihood=80.4%)", molecularTissueOrigin.conclusion());
         assertEquals("Lower GI tract", molecularTissueOrigin.predictedOrigin());
