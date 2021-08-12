@@ -27,8 +27,7 @@ public class BindCountData
     private final double[][] mFinalWeightedCounts; // weighted across all other alleles, padded to reference length
 
     private final Map<String,Integer> mComboCounts;
-    private int mTotal;
-    private int mTotalBinds; // vs high affinity threshold
+    private int mTotalBinds;
 
     public BindCountData(final String allele, final int peptideLength)
     {
@@ -42,7 +41,6 @@ public class BindCountData
         mFinalWeightedCounts = new double[aminoAcidCount][PeptideLength];
 
         mComboCounts = Maps.newHashMap();
-        mTotal = 0;
         mTotalBinds = 0;
     }
 
@@ -55,8 +53,8 @@ public class BindCountData
 
     public void logStats()
     {
-        NE_LOGGER.debug("allele({}) peptideLen({}) total({}) binds({}) pairs({})",
-                Allele, PeptideLength, mTotal, mTotalBinds, mComboCounts.size());
+        NE_LOGGER.debug("allele({}) peptideLen({}) totalBinds({}) pairs({})",
+                Allele, PeptideLength, mTotalBinds, mComboCounts.size());
     }
 
     public void processBindData(final BindData bindData, boolean calcPairs)
@@ -65,7 +63,6 @@ public class BindCountData
             return;
 
 
-        ++mTotal;
         ++mTotalBinds; // every observation means the peptide does bind
 
         /* from when affinity was used to judge likelihood of binding
@@ -105,7 +102,6 @@ public class BindCountData
     public void processBindingPeptide(final String peptide)
     {
         // simpler method assumes the correct allele and that peptide binds
-        ++mTotal;
         ++mTotalBinds;
 
         for(int pos = 0; pos < peptide.length(); ++pos)
@@ -164,7 +160,6 @@ public class BindCountData
             NE_LOGGER.error("failed to write bind counts data: {}", e.toString());
         }
     }
-
 
     public static BufferedWriter initFrequencyWriter(final String filename)
     {

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
+import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_LIKELIHOOD_ALLELE_BIND_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 
@@ -64,9 +65,17 @@ public class BindingLikelihood
         if(pepLenIndex == INVALID_PEP_LEN)
             return INVALID_LIKELIHOOD;
 
-        final double[][] likelihoods = mAlleleLikelihoodMap.get(allele);
+        double[][] likelihoods = mAlleleLikelihoodMap.get(allele);
         if(likelihoods == null)
-            return INVALID_LIKELIHOOD;
+        {
+            likelihoods = mAlleleLikelihoodMap.get(extractTwoDigitType(allele));
+
+            if(likelihoods == null)
+                likelihoods = mAlleleLikelihoodMap.get(extractGene(allele));
+
+            if(likelihoods == null)
+                return INVALID_LIKELIHOOD;
+        }
 
         for(int i = 0; i < mScoreRankBuckets.size(); ++i)
         {
@@ -155,10 +164,37 @@ public class BindingLikelihood
         if(outputFilename != null)
             mWriter = initWriter(outputFilename);
 
+        // any allele with sufficient counts will have a likelihood distribution calculated for it
+
+        // in addition, distributions will be calculated for 2-digit alleles and at the HLA gene level
+        final Map<String,Map<Integer,List<Double>>> sharedPepLenRanks = Maps.newHashMap();
+
         for(Map.Entry<String, Map<Integer, List<BindData>>> alleleEntry : allelePeptideData.entrySet())
         {
             final String allele = alleleEntry.getKey();
             final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
+
+            int alleleBindCount = pepLenBindDataMap.values().stream().mapToInt(x -> x.size()).sum();
+
+            if(alleleBindCount < MIN_LIKELIHOOD_ALLELE_BIND_COUNT)
+                continue;
+
+            String hlaGene = extractGene(allele);
+            String twoDigitType = extractTwoDigitType(allele);
+
+            Map<Integer,List<Double>> genePepLenRanks = sharedPepLenRanks.get(hlaGene);
+            if(genePepLenRanks == null)
+            {
+                genePepLenRanks = Maps.newHashMap();
+                sharedPepLenRanks.put(hlaGene, genePepLenRanks);
+            }
+
+            Map<Integer,List<Double>> twoDigitPepLenRanks = sharedPepLenRanks.get(twoDigitType);
+            if(twoDigitPepLenRanks == null)
+            {
+                twoDigitPepLenRanks = Maps.newHashMap();
+                sharedPepLenRanks.put(twoDigitType, twoDigitPepLenRanks);
+            }
 
             final Map<Integer,List<Double>> pepLenRanks = Maps.newHashMap();
 
@@ -168,12 +204,47 @@ public class BindingLikelihood
                 List<Double> peptideRanks = Lists.newArrayListWithCapacity(pepLenEntry.getValue().size());
                 pepLenEntry.getValue().forEach(x -> peptideRanks.add(x.rankPercentile()));
                 pepLenRanks.put(peptideLength, peptideRanks);
+
+                List<Double> sharedRanks = genePepLenRanks.get(peptideLength);
+                if(sharedRanks == null)
+                {
+                    sharedRanks = Lists.newArrayList();
+                    genePepLenRanks.put(peptideLength, sharedRanks);
+                }
+
+                sharedRanks.addAll(peptideRanks);
+
+                sharedRanks = twoDigitPepLenRanks.get(peptideLength);
+                if(sharedRanks == null)
+                {
+                    sharedRanks = Lists.newArrayList();
+                    twoDigitPepLenRanks.put(peptideLength, sharedRanks);
+                }
+
+                sharedRanks.addAll(peptideRanks);
             }
 
             buildAllelePeptideLikelihoods(allele, pepLenRanks);
         }
 
+        for(Map.Entry<String,Map<Integer,List<Double>>> sharedAlleleEntry : sharedPepLenRanks.entrySet())
+        {
+            buildAllelePeptideLikelihoods(sharedAlleleEntry.getKey(), sharedAlleleEntry.getValue());
+        }
+
         closeBufferedWriter(mWriter);
+    }
+
+    private static String extractGene(final String allele)
+    {
+        // A, B or C
+        return allele.substring(0, 1);
+    }
+
+    private static String extractTwoDigitType(final String allele)
+    {
+        // eg A02
+        return allele.substring(0, 3);
     }
 
     private void buildAllelePeptideLikelihoods(final String allele, final Map<Integer,List<Double>> pepLenRanks)

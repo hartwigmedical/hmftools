@@ -42,13 +42,11 @@ public final class BindConstants
 
     public static final double AMINO_ACID_C_FREQ_ADJUST = 3;
 
-    public static final double DEFAULT_MAX_AFFINITY = 20000;
-    public static final double DEFAULT_BINDING_AFFINITY_LOW = 250;
-    public static final double DEFAULT_BINDING_AFFINITY_HIGH = 500;
-
     public static final double DEFAULT_PEPTIDE_LENGTH_WEIGHT = 1000;
     public static final double DEFAULT_ALLELE_MOTIF_WEIGHT = 2000;
     public static final double DEFAULT_WEIGHT_EXPONENT = 1.5;
+
+    public static final int MIN_LIKELIHOOD_ALLELE_BIND_COUNT = 200;
 
     public static final double DEFAULT_NOISE_PROB = 0.05;
     public static final double DEFAULT_NOISE_WEIGHT = 0.5;
