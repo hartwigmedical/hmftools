@@ -197,11 +197,11 @@ public class McfRandomDistribution
 
                 String allele = cleanAllele(items[alleleIndex]);
                 String peptide = items[peptideIndex];
-                double affinity = Double.parseDouble(items[affinityIndex]);
+                double predictedAffinity = Double.parseDouble(items[affinityIndex]);
                 double presScore = presentationIndex != null ? Double.parseDouble(items[affinityIndex]) : -1;
 
-                BindData bindData = new BindData(allele, peptide, affinity, RANDOM_SOURCE);
-                bindData.setPredictionData(affinity, -1, presScore, -1);
+                BindData bindData = new BindData(allele, peptide, RANDOM_SOURCE);
+                bindData.setPredictionData(predictedAffinity, -1, presScore, -1);
 
                 if(!currentAllele.equals(allele))
                 {
@@ -246,7 +246,7 @@ public class McfRandomDistribution
             }
 
             // affinity goes from low to high as binding gets worse, presentation is the opposite
-            double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.Affinity;
+            double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.predictedAffinity();
             boolean isAscending = mUsePresentation ? false : true;
             VectorUtils.optimisedAdd(peptideScores, scoreValue, isAscending);
 

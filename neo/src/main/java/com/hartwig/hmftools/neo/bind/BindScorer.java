@@ -250,10 +250,22 @@ public class BindScorer
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,Affinity,PredictedAffinity,AffinityPerc,PresScore,PresPerc");
+            writer.write("Allele,Peptide,Source,Score,Rank,Likelihood");
 
-            if(mBindingLikelihood != null)
-                writer.write(",Likelihood");
+            boolean hasPredictionData = false;
+            boolean hasMeasuredAffinity = false;
+
+            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasMeasuredAffinity())))
+            {
+                hasMeasuredAffinity = true;
+                writer.write(",MeasuredAffinity");
+            }
+
+            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasPredictionData())))
+            {
+                hasPredictionData = true;
+                writer.write(",PredictedAffinity,AffinityPerc,PresScore,PresPerc");
+            }
 
             writer.newLine();
 
@@ -266,10 +278,10 @@ public class BindScorer
                 {
                     for(BindData bindData : bindDataList)
                     {
-                        writer.write(String.format("%s,%s,%s,%.4f,%.6f,%.2f,%.2f,%.6f,%.4f,%.6f",
+                        writer.write(String.format("%s,%s,%s,%.2f,%.6f,%.6f",
                                 allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
-                                bindData.Affinity, bindData.predictedAffinity(), bindData.affinityPercentile(),
-                                bindData.presentationScore(), bindData.presentationPercentile()));
+                                mBindingLikelihood != null && mBindingLikelihood.hasData() ?
+                                        mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, bindData.rankPercentile()) : 0));
 
                         if(mBindingLikelihood != null && mBindingLikelihood.hasData())
                         {
@@ -277,7 +289,17 @@ public class BindScorer
                                     mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, bindData.rankPercentile())));
                         }
 
-                        // GlobalScore,GlobalRank, bindData.globalScore(), bindData.globalRankPercentile(), no longer written
+                        if(hasMeasuredAffinity)
+                        {
+                            writer.write(String.format(",%.2f", bindData.measuredAffinity()));
+                        }
+
+                        if(hasPredictionData)
+                        {
+                            writer.write(String.format(",%.2f,%.6f,%.4f,%.6f",
+                                    bindData.predictedAffinity(), bindData.affinityPercentile(),
+                                    bindData.presentationScore(), bindData.presentationPercentile()));
+                        }
 
                         writer.newLine();
                     }

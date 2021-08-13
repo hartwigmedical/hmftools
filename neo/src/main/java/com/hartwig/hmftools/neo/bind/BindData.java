@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,10 +25,12 @@ public class BindData
 {
     public final String Allele;
     public final String Peptide;
-    public final double Affinity;
     public final String Source;
 
     // optional fields
+    private boolean mHasMeasuredAffinity;
+    private double mMeasuredAffinity;
+
     private boolean mHasPredictionData;
     private double mPredictedAffinity; // eg from MCF or another tool, only used for comparative purposes
     private double mAffinityPercentile;
@@ -42,12 +43,14 @@ public class BindData
     private double mGlobalScore;
     private double mGlobalRankPercentile;
 
-    public BindData(final String allele, String peptide, double affinity, final String source)
+    public BindData(final String allele, String peptide, final String source)
     {
         Allele = allele;
         Peptide = peptide;
-        Affinity = affinity;
         Source = source;
+
+        mHasMeasuredAffinity = false;
+        mMeasuredAffinity = -1;
 
         mHasPredictionData = false;
         mPredictedAffinity = -1;
@@ -65,6 +68,15 @@ public class BindData
     public int peptideLength() { return Peptide.length(); }
     public boolean isRandom() { return Source.equals(RANDOM_SOURCE); }
     public boolean isTraining() { return !isRandom(); }
+
+    public void setMeasuredAffinity(double affinity)
+    {
+        mHasMeasuredAffinity = true;
+        mMeasuredAffinity = affinity;
+    }
+
+    public double measuredAffinity() { return mMeasuredAffinity; }
+    public boolean hasMeasuredAffinity() { return mHasMeasuredAffinity; }
 
     public void setPredictionData(
             double predictedAffinity, double affinityPercentile, double presentationScore, double presentationPercentile)
@@ -103,7 +115,7 @@ public class BindData
     public String toString()
     {
         return String.format("allele(%s) pep(%s) affinity(%.1f pred=%.1f) source(%s)",
-                Allele, Peptide, Affinity, mPredictedAffinity, Source);
+                Allele, Peptide, mMeasuredAffinity, mPredictedAffinity, Source);
     }
 
     public static String cleanAllele(final String allele)
@@ -127,18 +139,15 @@ public class BindData
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
+
+            // all other fields are optional
             Integer sourceIndex = fieldsIndexMap.get("Source");
-
-            boolean isPredictionOnly = !fieldsIndexMap.containsKey(FLD_AFFINITY) && fieldsIndexMap.containsKey(FLD_PRED_AFFINITY);
-            int affinityIndex = isPredictionOnly ? fieldsIndexMap.get(FLD_PRED_AFFINITY) : fieldsIndexMap.get(FLD_AFFINITY);
-
-            // optional fields
+            Integer affinityIndex = fieldsIndexMap.get(FLD_AFFINITY);
             Integer predictedIndex = fieldsIndexMap.get(FLD_PRED_AFFINITY);
             Integer affinityPercIndex = fieldsIndexMap.get("AffinityPercentile");
             Integer presentationScoreIndex = fieldsIndexMap.get(FLD_PRES_SCORE);
             Integer presentationPercIndex = fieldsIndexMap.get("PresentationPercentile");
 
-            // Allele,Peptide,PredictedAffinity,AffinityPercentile,PresentationPercentile,Source
             int alleleCount = 0;
             int itemCount = 0;
 
@@ -170,16 +179,21 @@ public class BindData
 
                 String source = sourceIndex != null ? items[sourceIndex] : RANDOM_SOURCE;
 
-                double affinity = !isPredictionOnly ? Double.parseDouble(items[affinityIndex]) : 50000;
+                BindData bindData = new BindData(allele, peptide, source);
 
-                double predictedAffinity = predictedIndex != null ? Double.parseDouble(items[predictedIndex]) : -1;
-                double affinityPerc = affinityPercIndex != null ? Double.parseDouble(items[affinityPercIndex]) : -1;
-                double presentationScore = presentationScoreIndex != null ? Double.parseDouble(items[presentationScoreIndex]) : -1;
-                double presentationPerc = presentationPercIndex != null ? Double.parseDouble(items[presentationPercIndex]) : -1;
+                if(affinityIndex != null)
+                {
+                    bindData.setMeasuredAffinity(Double.parseDouble(items[affinityIndex]));
+                }
 
-                BindData bindData = new BindData(allele, peptide, affinity, source);
-
-                bindData.setPredictionData(predictedAffinity, affinityPerc, presentationScore, presentationPerc);
+                if(predictedIndex != null || affinityPercIndex != null || presentationScoreIndex != null)
+                {
+                    double predictedAffinity = predictedIndex != null ? Double.parseDouble(items[predictedIndex]) : -1;
+                    double affinityPerc = affinityPercIndex != null ? Double.parseDouble(items[affinityPercIndex]) : -1;
+                    double presentationScore = presentationScoreIndex != null ? Double.parseDouble(items[presentationScoreIndex]) : -1;
+                    double presentationPerc = presentationPercIndex != null ? Double.parseDouble(items[presentationPercIndex]) : -1;
+                    bindData.setPredictionData(predictedAffinity, affinityPerc, presentationScore, presentationPerc);
+                }
 
                 Map<Integer,List<BindData>> pepLenBindDataMap = allelePeptideMap.get(allele);
 
