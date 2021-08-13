@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
+import static com.hartwig.hmftools.neo.cohort.DataLoader.loadRnaNeoData;
 
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 
@@ -51,6 +53,8 @@ public class NeoSampleBindTask implements Callable
         // List<Boolean> geneLostStatus = getGeneStatus(alleleCoverages);
 
         List<BindingPredictionData> allPredictions = loadPredictionData(mSampleId, mConfig.McfPredictionsDir);
+
+        List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(mSampleId, mConfig.IsofoxDataDir);
 
         // organise by neoepitope
         Map<Integer,List<BindingPredictionData>> neoPredictions = Maps.newHashMap();
@@ -112,6 +116,16 @@ public class NeoSampleBindTask implements Callable
                             neoData.TransExpression[fs] += expression;
                     }
                 }
+            }
+
+            RnaNeoEpitope rnaNeoData = rnaNeoDataList.stream()
+                    .filter(x -> x.Id == neoData.Id && x.VariantInfo.equals(neoData.VariantInfo)).findFirst().orElse(null);
+
+            if(rnaNeoData != null)
+            {
+                neoData.RnaNovelFragments = rnaNeoData.FragmentCount;
+                neoData.RnaBaseDepth[FS_UP] = rnaNeoData.BaseDepth[FS_UP];
+                neoData.RnaBaseDepth[FS_DOWN] = rnaNeoData.BaseDepth[FS_DOWN];
             }
 
             NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);

@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 public class DataLoader
@@ -44,12 +45,8 @@ public class DataLoader
         try
         {
             String neoEpitopeFile = NeoEpitopeFile.generateFilename(neoDataDir, sampleId);
-            String rnaNeoEpitopeFile = neoEpitopeFile.replace(IM_FILE_ID, ISF_FILE_ID);
 
-            boolean hasRnaData = Files.exists(Paths.get(rnaNeoEpitopeFile));
-
-            final List<String> lines = hasRnaData ?
-                    Files.readAllLines(new File(rnaNeoEpitopeFile).toPath()) : Files.readAllLines(new File(neoEpitopeFile).toPath());
+            final List<String> lines = Files.readAllLines(new File(neoEpitopeFile).toPath());
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
             lines.remove(0);
@@ -67,10 +64,6 @@ public class DataLoader
             int novelAaIndex = fieldsIndexMap.get("NovelAA");
             int transUpIndex = fieldsIndexMap.get("UpTranscripts");
             int transDownIndex = fieldsIndexMap.get("DownTranscripts");
-
-            Integer rnaFragIndex = fieldsIndexMap.get("FragmentsNovel");
-            Integer rnaBaseDepthUp = fieldsIndexMap.get("BaseDepthUp");
-            Integer rnaBaseDepthDown = fieldsIndexMap.get("BaseDepthDown");
 
             for(String line : lines)
             {
@@ -93,19 +86,9 @@ public class DataLoader
 
                 extractTranscriptNames(items[transUpIndex], items[transDownIndex], transUpNames, transDownNames);
 
-                int rnaFragCount = 0;
-                int[] rnaBaseDepth = new int[] {0, 0};
-
-                if(hasRnaData)
-                {
-                    rnaFragCount = Integer.parseInt(items[rnaFragIndex]);
-                    rnaBaseDepth[SE_START] =  Integer.parseInt(items[rnaBaseDepthUp]);
-                    rnaBaseDepth[SE_END] =  Integer.parseInt(items[rnaBaseDepthDown]);
-                }
-
                 NeoEpitopeData neoData = new NeoEpitopeData(
                         neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneIdDown, geneName,
-                        aminoAcids, transUpNames, transDownNames, tpmCancer, tpmCohort, rnaFragCount, rnaBaseDepth);
+                        aminoAcids, transUpNames, transDownNames, tpmCancer, tpmCohort);
 
                 neoDataMap.put(neId, neoData);
             }
@@ -197,5 +180,29 @@ public class DataLoader
         return predictionList;
     }
 
+    public static List<RnaNeoEpitope> loadRnaNeoData(final String sampleId, final String isofoxDataDir)
+    {
+        if(isofoxDataDir == null)
+            return Lists.newArrayList();
+
+        try
+        {
+            String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sampleId);
+
+            if(!Files.exists(Paths.get(filename)))
+                return Lists.newArrayList();
+
+            List<RnaNeoEpitope> rnaNeoDataList = RnaNeoEpitope.read(filename);
+
+            NE_LOGGER.debug("sample({}) loaded {} RNA neoepitopes", sampleId, rnaNeoDataList.size());
+
+            return rnaNeoDataList;
+        }
+        catch(IOException exception)
+        {
+            NE_LOGGER.error("failed to read sample({}) predictions file: {}", sampleId, exception.toString());
+            return Lists.newArrayList();
+        }
+    }
 
 }

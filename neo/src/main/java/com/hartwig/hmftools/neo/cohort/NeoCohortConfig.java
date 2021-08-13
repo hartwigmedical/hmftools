@@ -21,6 +21,7 @@ public class NeoCohortConfig
     public final String OutputId;
     public final String NeoDataDir;
     public final String LilacDataDir;
+    public final String IsofoxDataDir;
     public final String McfPredictionsDir;
     public final List<String> SampleIds;
 
@@ -34,6 +35,7 @@ public class NeoCohortConfig
     public static final String NEO_DATA_DIR = "neo_data_dir";
     public static final String LILAC_DATA_DIR = "lilac_data_dir";
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
+    public static final String ISF_DATA_DIR = "isofox_neo_dir";
     public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
     public static final String THREADS = "threads";
 
@@ -50,6 +52,7 @@ public class NeoCohortConfig
         NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
         McfPredictionsDir = cmd.getOptionValue(PREDICTION_DATA_DIR);
         LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
+        IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
 
         McfSumFactor = Double.parseDouble(cmd.getOptionValue(MCF_SUM_FACTOR, "2"));
         LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.001"));
@@ -81,6 +84,7 @@ public class NeoCohortConfig
         options.addOption(NEO_DATA_DIR, true, "Directory for sample neo-epitope files");
         options.addOption(PREDICTION_DATA_DIR, true, "Directory for sample prediction result files");
         options.addOption(LILAC_DATA_DIR, true, "Directory for Lilac coverage files");
+        options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
         options.addOption(SAMPLE_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
 
         BinderConfig.addCmdLineArgs(options);
