@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -14,11 +15,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.errorprone.annotations.Var;
+import com.hartwig.hmftools.common.rna.RnaCommon;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class NeoEpitopeFile
@@ -48,10 +53,16 @@ public class NeoEpitopeFile
     public final double[] CohortTpmTotal;
     public final boolean WildtypeNovelAAMatch;
 
+    public static final String FLD_NE_ID = "NeId";
+    public static final String FLD_NE_VAR_TYPE = "VariantType";
+    public static final String FLD_NE_VAR_INFO = "VariantInfo";
+
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
     public static final String FUSION_INFO_DELIM = ";";
+
+    protected static final Logger NEO_LOGGER = LogManager.getLogger(NeoEpitopeFile.class);
 
     public NeoEpitopeFile(
             int id, final NeoEpitopeType varType, final String varInfo, final double copyNumber,
@@ -123,23 +134,92 @@ public class NeoEpitopeFile
     @NotNull
     private static List<NeoEpitopeFile> fromLines(@NotNull List<String> lines)
     {
+        List<NeoEpitopeFile> neoepitopes = Lists.newArrayList();
+
         if(lines.isEmpty())
-            return Lists.newArrayList();
+            return neoepitopes;
 
         final String header = lines.get(0);
 
-        boolean skipSampleId = header.startsWith("SampleId");
         lines.remove(0);
 
-        return lines.stream().map(x -> NeoEpitopeFile.fromString(x, skipSampleId)).collect(toList());
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+
+        Integer sampleIndex = fieldsIndexMap.get(FLD_NE_ID);
+        int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
+        int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
+        int varInfoIndex = fieldsIndexMap.get(FLD_NE_VAR_INFO);
+        int geneIdUpIndex = fieldsIndexMap.get("GeneIdUp");
+        int geneIdDowwIndex = fieldsIndexMap.get("GeneIdDown");
+        int geneNameUpIndex = fieldsIndexMap.get("GeneNameUp");
+        int geneNameDownIndex = fieldsIndexMap.get("GeneNameDown");
+        int chrUpIndex = fieldsIndexMap.get("ChrUp");
+        int chrDownIndex = fieldsIndexMap.get("ChrDown");
+        int orientUpIndex = fieldsIndexMap.get("OrientUp");
+        int orientDownIndex = fieldsIndexMap.get("OrientDown");
+        int upAaIndex = fieldsIndexMap.get("UpstreamAA");
+        int downAaIndex = fieldsIndexMap.get("DownstreamAA");
+        int novelAaIndex = fieldsIndexMap.get("NovelAA");
+        int nmdMinIndex = fieldsIndexMap.get("NmdMin");
+        int nmdMaxIndex = fieldsIndexMap.get("NmdMax");
+        int jcnIndex = fieldsIndexMap.get("JunctionCopyNumber");
+        int cbLenMinIndex = fieldsIndexMap.get("CodingBasesLengthMin");
+        int cbLenMaxIndex = fieldsIndexMap.get("CodingBasesLengthMax");
+        int feLenIndex = fieldsIndexMap.get("FusedIntronLength");
+        int skipDonIndex = fieldsIndexMap.get("SkippedDonors");
+        int skipAccIndex = fieldsIndexMap.get("SkippedAcceptors");
+        int upTransIndex = fieldsIndexMap.get("UpTranscripts");
+        int downTransIndex = fieldsIndexMap.get("DownTranscripts");
+        int wtAaIndex = fieldsIndexMap.get("WildtypeAA");
+        int cbUpPosStartIndex = fieldsIndexMap.get("CodingBaseUpPosStart");
+        int cbUpPosEndIndex = fieldsIndexMap.get("CodingBaseUpPosEnd");
+        int cbUpIndex = fieldsIndexMap.get("CodingBasesUp");
+        int cbCigUpIndex = fieldsIndexMap.get("CodingBaseCigarUp");
+        int cbDownPosStartIndex = fieldsIndexMap.get("CodingBaseDownPosStart");
+        int cbDownPosEndIndex = fieldsIndexMap.get("CodingBaseDownPosEnd");
+        int cbDownIndex = fieldsIndexMap.get("CodingBasesDown");
+        int cbCigDownIndex = fieldsIndexMap.get("CodingBaseCigarDown");
+        int tpmCanUpIndex = fieldsIndexMap.get("TpmCancerUp");
+        int tpmCohUpIndex = fieldsIndexMap.get("TpmCohortUp");
+        int tpmCanDownIndex = fieldsIndexMap.get("TpmCancerDown");
+        int tpmCohDownIndex = fieldsIndexMap.get("TpmCohortDown");
+        int wtNovelAaIndex = fieldsIndexMap.get("WildtypeNovelAAMatch");
+
+        for(String line : lines)
+        {
+            String[] values = line.split(DELIMITER, -1);
+
+            try
+            {
+                neoepitopes.add(new NeoEpitopeFile(
+                        Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex], Double.parseDouble(values[jcnIndex]),
+                        values[geneIdUpIndex], values[geneIdDowwIndex], values[geneNameUpIndex], values[geneNameDownIndex],
+                        values[chrUpIndex], values[chrDownIndex], Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex]),
+                        values[upAaIndex], values[downAaIndex], values[novelAaIndex], Integer.parseInt(values[nmdMinIndex]), Integer.parseInt(values[nmdMaxIndex]),
+                        Integer.parseInt(values[cbLenMinIndex]), Integer.parseInt(values[cbLenMaxIndex]),
+                        Integer.parseInt(values[feLenIndex]), Integer.parseInt(values[skipDonIndex]), Integer.parseInt(values[skipAccIndex]),
+                        values[upTransIndex], values[downTransIndex], values[wtAaIndex],
+                        Integer.parseInt(values[cbUpPosStartIndex]), Integer.parseInt(values[cbUpPosEndIndex]), values[cbUpIndex], values[cbCigUpIndex],
+                        Integer.parseInt(values[cbDownPosStartIndex]), Integer.parseInt(values[cbDownPosEndIndex]), values[cbDownIndex], values[cbCigDownIndex],
+                        Double.parseDouble(values[tpmCanUpIndex]), Double.parseDouble(values[tpmCohUpIndex]),
+                        Double.parseDouble(values[tpmCanDownIndex]), Double.parseDouble(values[tpmCohDownIndex]), Boolean.parseBoolean(values[wtNovelAaIndex])));
+            }
+            catch(Exception e)
+            {
+                NEO_LOGGER.error("failed to read neoepitope line: {}", line);
+            }
+
+        }
+
+        return neoepitopes;
     }
 
     public static String header()
     {
         return new StringJoiner(DELIMITER)
-                .add("NeId")
-                .add("VariantType")
-                .add("VariantInfo")
+                .add(FLD_NE_ID)
+                .add(FLD_NE_VAR_TYPE)
+                .add(FLD_NE_VAR_INFO)
                 .add("JunctionCopyNumber")
                 .add("GeneIdUp")
                 .add("GeneIdDown")

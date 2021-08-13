@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
+import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -93,7 +94,7 @@ public class NeoEpitopeReader
         {
             final List<NeoEpitopeFile> sourceNEs = NeoEpitopeFile.read(filename);
             sourceNEs.forEach(x -> mNeoEpitopes.add(new NeoEpitopeData(x)));
-            ISF_LOGGER.info("loaded {} neo-epitopes from file: {}", mNeoEpitopes.size(), filename);
+            ISF_LOGGER.info("sample({}) loaded {} neo-epitopes from file: {}", mConfig.SampleId, mNeoEpitopes.size(), filename);
         }
         catch(IOException exception)
         {
@@ -348,10 +349,10 @@ public class NeoEpitopeReader
     {
         try
         {
-            final String outputFileName = mConfig.formOutputFile("neo_epitopes.csv");
+            final String outputFileName = RnaNeoEpitope.generateFilename(mConfig.OutputDir, mConfig.SampleId);
 
             mWriter = createBufferedWriter(outputFileName, false);
-            mWriter.write(NeoEpitopeData.header());
+            mWriter.write(RnaNeoEpitope.header());
             mWriter.newLine();
         }
         catch (IOException e)
@@ -364,7 +365,7 @@ public class NeoEpitopeReader
     {
         try
         {
-            mWriter.write(neData.toString());
+            mWriter.write(RnaNeoEpitope.toString(neData.asRnaFile()));
             mWriter.newLine();
         }
         catch (IOException e)
