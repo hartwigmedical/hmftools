@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
-import static com.hartwig.hmftools.neo.bind.PeptideWriteType.LIKELY_INCORRECT;
-import static com.hartwig.hmftools.neo.bind.PeptideWriteType.TRAINING;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -71,7 +69,7 @@ public class BindScorer
         }
 
         if(!loadBindData(
-                mConfig.ValidationDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
+                mConfig.ValidationDataFile, true, Lists.newArrayList(), Lists.newArrayList(), mAllelePeptideData))
         {
             NE_LOGGER.error("invalid validation data");
             return;
@@ -144,7 +142,12 @@ public class BindScorer
                         continue;
 
                     double score = matrix.calcScore(bindData.Peptide);
-                    bindData.setScoreData(score, mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), score));
+                    double rankPercentile = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), score);
+
+                    double likelihood = mBindingLikelihood != null && mBindingLikelihood.hasData() ?
+                            mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, rankPercentile) : 0;
+
+                    bindData.setScoreData(score, rankPercentile, likelihood);
 
                     // add global scores if the matrix is present
                     if(globalMatrixMap != null && globalMatrixMap.containsKey(bindData.peptideLength()))
@@ -279,15 +282,8 @@ public class BindScorer
                     for(BindData bindData : bindDataList)
                     {
                         writer.write(String.format("%s,%s,%s,%.2f,%.6f,%.6f",
-                                allele, bindData.Peptide, bindData.Source, bindData.score(), bindData.rankPercentile(),
-                                mBindingLikelihood != null && mBindingLikelihood.hasData() ?
-                                        mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, bindData.rankPercentile()) : 0));
-
-                        if(mBindingLikelihood != null && mBindingLikelihood.hasData())
-                        {
-                            writer.write(String.format(",%.6f",
-                                    mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, bindData.rankPercentile())));
-                        }
+                                allele, bindData.Peptide, bindData.Source,
+                                bindData.score(), bindData.rankPercentile(), bindData.likelihood()));
 
                         if(hasMeasuredAffinity)
                         {

@@ -33,6 +33,8 @@ public final class BindConstants
         return index != null ? index : INVALID_AMINO_ACID;
     }
 
+    public static final List<Integer> DEFAULT_PEPTIDE_LENGTHS = Lists.newArrayList(8, 9, 10, 11, 12);
+
     public static final int REF_PEPTIDE_LENGTH = 12;
     public static final int MIN_PEPTIDE_LENGTH = 8;
     public static final int ALLELE_POS_MAPPING_PEPTIDE_LENGTH = 9;

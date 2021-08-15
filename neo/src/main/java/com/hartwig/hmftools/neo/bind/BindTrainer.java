@@ -59,7 +59,8 @@ public class BindTrainer
 
     public void run()
     {
-        NE_LOGGER.info("running NeoBinder on {} alleles", mConfig.RequiredAlleles.isEmpty() ? "all" : mConfig.RequiredAlleles.size());
+        NE_LOGGER.info("building training data from {} alleles for {} required alleles",
+                mAllelePeptideData.size(), mConfig.RequiredOutputAlleles.size());
 
         if(!loadTrainingData() || !loadRandomPredictionsData())
         {
@@ -78,7 +79,7 @@ public class BindTrainer
                 randomDistribution.buildDistribution(mAlleleBindMatrices);
             }
 
-            if(mConfig.RunScoring)
+            if(mConfig.RunScoring || mConfig.WriteLikelihood)
             {
                 BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution);
                 scorer.runScoring();
@@ -153,10 +154,10 @@ public class BindTrainer
 
     private void buildPositionWeightMatrices()
     {
-        // fill in an gaps in allles or peptide lengths if they are required
-        if(!mConfig.RequiredAlleles.isEmpty())
+        // fill in an gaps in alleles or peptide lengths if they are required for the training data output
+        if(!mConfig.RequiredOutputAlleles.isEmpty())
         {
-            mConfig.RequiredAlleles.stream()
+            mConfig.RequiredOutputAlleles.stream()
                     .filter(x -> !mAlleleBindCounts.containsKey(x))
                     .forEach(x -> mAlleleBindCounts.put(x, Maps.newHashMap()));
         }
@@ -268,7 +269,7 @@ public class BindTrainer
     private boolean loadTrainingData()
     {
         if(!loadBindData(
-                mConfig.TrainingDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
+                mConfig.TrainingDataFile, true, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAllelePeptideData))
         {
             return false;
         }
@@ -289,7 +290,7 @@ public class BindTrainer
     private boolean loadRandomPredictionsData()
     {
         if(!loadBindData(
-                mConfig.RandomPeptidePredictionsFile, false, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAllelePeptideData))
+                mConfig.RandomPeptidePredictionsFile, false, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAllelePeptideData))
         {
             return false;
         }

@@ -153,7 +153,7 @@ public class RandomPeptideDistribution
         {
             final String allele = alleleEntry.getKey();
 
-            if(!allele.equals(GLOBAL_COUNTS) && !mConfig.AllelesToWrite.isEmpty() && !mConfig.AllelesToWrite.contains(allele))
+            if(!allele.equals(GLOBAL_COUNTS) && !mConfig.RequiredOutputAlleles.isEmpty() && !mConfig.RequiredOutputAlleles.contains(allele))
                 continue;
 
             NE_LOGGER.debug("building distribution for allele({})", allele);
@@ -294,7 +294,7 @@ public class RandomPeptideDistribution
     private void writeDistribution()
     {
         NE_LOGGER.info("writing random peptide scoring distribution for {} alleles",
-                !mConfig.AllelesToWrite.isEmpty() ? mConfig.AllelesToWrite.size() : "all");
+                !mConfig.RequiredOutputAlleles.isEmpty() ? mConfig.RequiredOutputAlleles.size() : "all");
 
         final String distFilename = formFilename("random_peptide_dist", mConfig.OutputDir, mConfig.OutputId);
 

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
@@ -15,8 +16,8 @@ import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -44,8 +45,13 @@ public class BinderConfig
     public final PeptideWriteType WritePeptideType;
     public final boolean WriteSummaryData;
     public final boolean WriteLikelihood;
+    public final boolean RunValidation;
 
-    public final List<String> RequiredAlleles;
+    // the set of alleles which ensured to exist in the training output data (ie PWM values)
+    // including for alleles which don't exist in the training data but which are required to score novel alleles
+    public final List<String> RequiredOutputAlleles;
+
+    // set of peptide lengths processed from training data and ensured to exist in training output data
     public final List<Integer> RequiredPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
@@ -69,8 +75,9 @@ public class BinderConfig
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
     private static final String WRITE_LIKELIHOOD = "write_likelihood";
+    private static final String RUN_VALIDATION = "run_validation";
 
-    private static final String REQUIRED_ALLELES = "required_alleles";
+    public static final String REQUIRED_OUTPUT_ALLELES = "required_output_alleles";
     private static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
     public static final String OUTPUT_ID = "output_id";
 
@@ -93,32 +100,7 @@ public class BinderConfig
                 Double.parseDouble(cmd.getOptionValue(NOISE_WEIGHT, "0")), // String.valueOf(DEFAULT_NOISE_WEIGHT)
                 Double.parseDouble(cmd.getOptionValue(GLOBAL_WEIGHT, "0")));
 
-        RequiredAlleles = Lists.newArrayList();
-
-        if(cmd.hasOption(REQUIRED_ALLELES))
-        {
-            String requiredAlleles = cmd.getOptionValue(REQUIRED_ALLELES);
-
-            if(requiredAlleles.endsWith(".csv") && Files.exists(Paths.get(requiredAlleles)))
-            {
-                try
-                {
-                    Files.readAllLines(Paths.get(requiredAlleles)).stream()
-                            .filter(x -> !x.equals("Allele")).forEach(x -> RequiredAlleles.add(x));
-
-                    NE_LOGGER.info("loaded {} required alleles from file({})", RequiredAlleles.size(), requiredAlleles);
-                }
-                catch(IOException e)
-                {
-                    NE_LOGGER.error("failed to load required alleles file({}): {}", requiredAlleles, e.toString());
-                }
-            }
-            else
-            {
-                Arrays.stream(cmd.getOptionValue(REQUIRED_ALLELES).split(ITEM_DELIM, -1)).forEach(x -> RequiredAlleles.add(x));
-                NE_LOGGER.info("filtering for {} alleles: {}", RequiredAlleles.size(), RequiredAlleles);
-            }
-        }
+        RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
 
         RequiredPeptideLengths = Lists.newArrayList();
 
@@ -141,9 +123,14 @@ public class BinderConfig
 
             NE_LOGGER.info("requiring {} peptide lengths: {}", RequiredPeptideLengths.size(), RequiredPeptideLengths);
         }
+        else
+        {
+            RequiredPeptideLengths.addAll(DEFAULT_PEPTIDE_LENGTHS);
+        }
 
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
         RunScoring = cmd.hasOption(RUN_SCORING);
+        RunValidation = cmd.hasOption(RUN_VALIDATION);
 
         RandomPeptides = new RandomPeptideConfig(cmd);
 
@@ -153,6 +140,28 @@ public class BinderConfig
         WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
         WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
+    }
+
+    public static List<String> loadRequiredOutputAlleles(final String filename)
+    {
+        List<String> requiredAlleles = Lists.newArrayList();
+
+        if(filename != null)
+        {
+            try
+            {
+                requiredAlleles.addAll(Files.readAllLines(Paths.get(filename)).stream()
+                        .filter(x -> !x.equals("Allele")).collect(Collectors.toList()));
+
+                NE_LOGGER.info("loaded {} required output alleles from file({})", requiredAlleles.size(), filename);
+            }
+            catch(IOException e)
+            {
+                NE_LOGGER.error("failed to load required alleles file({}): {}", filename, e.toString());
+            }
+        }
+
+        return requiredAlleles;
     }
 
     public String formFilename(final String fileId)
@@ -194,9 +203,9 @@ public class BinderConfig
         options.addOption(WRITE_LIKELIHOOD, false, "Write relative likelihood data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
 
-        options.addOption(REQUIRED_ALLELES, true, "List of alleles separated by ';'");
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
 
+        options.addOption(RUN_VALIDATION, false, "Run validation routines");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");
         options.addOption(LOG_DEBUG, false, "Log verbose");

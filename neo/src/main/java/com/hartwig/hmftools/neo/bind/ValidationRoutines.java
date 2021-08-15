@@ -27,8 +27,9 @@ public class ValidationRoutines
 {
     private final BinderConfig mConfig;
 
-    private final Map<String, Map<Integer, List<BindData>>> mAlleleTrainingData;
-    private final Map<String, Map<Integer, List<BindData>>> mAlleleValidationData;
+    private final Map<String,Map<Integer,List<BindData>>> mAlleleTrainingData;
+    private final Map<String,Map<Integer,List<BindData>>> mAlleleValidationData;
+    private final List<String> mValidationAlleles;
 
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
     private final PosWeightModel mPosWeightModel;
@@ -45,6 +46,7 @@ public class ValidationRoutines
         mAlleleValidationData = Maps.newHashMap();
         mAlleleBindCounts = Maps.newHashMap();
         mAlleleTotalCounts = Maps.newHashMap();
+        mValidationAlleles = Lists.newArrayList();
 
         mHlaSequences = new HlaSequences();
         mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
@@ -64,14 +66,13 @@ public class ValidationRoutines
             return;
         }
 
-        mConfig.RequiredAlleles.clear();
-        mAlleleValidationData.keySet().forEach(x -> mConfig.RequiredAlleles.add(x));
+        mAlleleValidationData.keySet().forEach(x -> mValidationAlleles.add(x));
 
-        NE_LOGGER.info("running validation for {} alleles", mConfig.RequiredAlleles.size());
+        NE_LOGGER.info("running validation for {} alleles", mValidationAlleles.size());
 
         buildBindCounts();
 
-        for(String allele : mConfig.RequiredAlleles)
+        for(String allele : mValidationAlleles)
         {
             // if allele isn't in the training set then no need for evaluation
             if(!mAlleleTrainingData.containsKey(allele))
@@ -88,7 +89,7 @@ public class ValidationRoutines
     private void buildBindCounts()
     {
         // translate binds to counts and weighted counts - ie the step prior to allele-blending
-        NE_LOGGER.info("building bind counts", mConfig.RequiredAlleles.size());
+        NE_LOGGER.info("building bind counts", mValidationAlleles.size());
 
         for(Map.Entry<String, Map<Integer, List<BindData>>> alleleEntry : mAlleleTrainingData.entrySet())
         {
@@ -121,9 +122,9 @@ public class ValidationRoutines
         }
 
         // fill in an gaps in alleles or peptide lengths if they are required
-        if(!mConfig.RequiredAlleles.isEmpty())
+        if(!mValidationAlleles.isEmpty())
         {
-            mConfig.RequiredAlleles.stream()
+            mValidationAlleles.stream()
                     .filter(x -> !mAlleleBindCounts.containsKey(x))
                     .forEach(x -> mAlleleBindCounts.put(x, Maps.newHashMap()));
         }
@@ -202,19 +203,6 @@ public class ValidationRoutines
             MatrixUtils.clear(bindCounts.getFinalWeightedCounts());
             
             mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts, mAlleleTotalCounts);
-
-            /*
-            // now apply the list of counts across all alleles per peptide length
-            for(Map<Integer,BindCountData> pepLenMap : mAlleleBindCounts.values())
-            {
-                BindCountData bindCounts = pepLenMap.get(peptideLength);
-
-                if(bindCounts != null)
-                {
-                    mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts, mAlleleTotalCounts);
-                }
-            }
-             */
         }
 
         Map<Integer,BindCountData> pepLenBindCounts = mAlleleBindCounts.get(targetAllele);
@@ -226,24 +214,6 @@ public class ValidationRoutines
             BindScoreMatrix matrix = mPosWeightModel.createMatrix(bindCounts);
             peptideLengthMatrixMap.put(matrix.PeptideLength, matrix);
         }
-
-        /*
-        for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
-        {
-            final String allele = alleleEntry.getKey();
-
-            final Map<Integer,BindCountData> pepLenBindCounts = alleleEntry.getValue();
-
-            Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = Maps.newHashMap();
-            alleleBindMatrices.put(allele, peptideLengthMatrixMap);
-
-            for(BindCountData bindCounts : pepLenBindCounts.values())
-            {
-                BindScoreMatrix matrix = mPosWeightModel.createMatrix(bindCounts);
-                peptideLengthMatrixMap.put(matrix.PeptideLength, matrix);
-            }
-        }
-        */
     }
 
     private void runScoring(final String targetAllele, final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices)
@@ -266,7 +236,8 @@ public class ValidationRoutines
                 BindScoreMatrix matrix = pepLenMatrixMap.get(bindData.peptideLength());
 
                 double score = matrix.calcScore(bindData.Peptide);
-                bindData.setScoreData(score, mRandomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score));
+                double rankPercentile = mRandomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
+                bindData.setScoreData(score, rankPercentile, -1);
 
                 writePeptideResults(targetAllele, bindData);
             }
@@ -307,13 +278,13 @@ public class ValidationRoutines
     private boolean loadData()
     {
         if(!loadBindData(
-                mConfig.TrainingDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAlleleTrainingData))
+                mConfig.TrainingDataFile, true, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAlleleTrainingData))
         {
             return false;
         }
 
         if(!loadBindData(
-                mConfig.ValidationDataFile, true, mConfig.RequiredAlleles, mConfig.RequiredPeptideLengths, mAlleleValidationData))
+                mConfig.ValidationDataFile, true, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAlleleValidationData))
         {
             return false;
         }

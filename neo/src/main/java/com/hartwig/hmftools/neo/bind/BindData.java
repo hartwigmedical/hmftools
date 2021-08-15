@@ -39,6 +39,7 @@ public class BindData
 
     private double mScore;
     private double mRankPercentile;
+    private double mLikelihood;
 
     private double mGlobalScore;
     private double mGlobalRankPercentile;
@@ -60,6 +61,7 @@ public class BindData
 
         mScore = 0;
         mRankPercentile = -1;
+        mLikelihood = -1;
 
         mGlobalScore = 0;
         mGlobalRankPercentile = -1;
@@ -94,14 +96,16 @@ public class BindData
     public double presentationScore() { return mPresentationScore; }
     public double presentationPercentile() { return mPresentationPercentile; }
 
-    public void setScoreData(double score, double rankPerc)
+    public void setScoreData(double score, double rankPerc, double likelihood)
     {
         mScore = score;
         mRankPercentile = rankPerc;
+        mLikelihood = likelihood;
     }
 
     public double score() { return mScore; }
     public double rankPercentile() { return mRankPercentile; }
+    public double likelihood() { return mLikelihood; }
 
     public void setGlobalScoreData(double score, double rankPerc)
     {
