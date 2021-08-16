@@ -13,7 +13,7 @@ public class CuppaDataFileTest {
 
     @Test
     public void canLoadTestFile() throws IOException {
-        List<CuppaEntry> data = CuppaDataFile.read(OrangeTestFactory.createTestOrangeConfig().cuppaResultCsv());
-        assertEquals(1044, data.size());
+        List<CuppaEntry> entries = CuppaDataFile.read(OrangeTestFactory.createTestOrangeConfig().cuppaResultCsv());
+        assertEquals(1044, entries.size());
     }
 }

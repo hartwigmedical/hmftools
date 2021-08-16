@@ -62,7 +62,7 @@ public class FrontPageChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor"),
                         TableUtil.createHeaderCell("QC") });
         table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
-        table.addCell(TableUtil.createContentCell(report.cuppaPrimaryTumor()));
+        table.addCell(TableUtil.createContentCell(report.cuppa().primaryTumor()));
         table.addCell(TableUtil.createContentCell(purpleQCString()));
         document.add(TableUtil.createWrappingReportTable(table));
     }

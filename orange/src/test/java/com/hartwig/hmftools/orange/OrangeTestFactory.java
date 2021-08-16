@@ -35,6 +35,7 @@ public final class OrangeTestFactory {
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA_CONCLUSION_TXT = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa.conclusion.txt";
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
+    private static final String CUPPA_REPORT_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.report.png";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/tumor_sample.virus.annotated.tsv";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/tumor_sample.protect.tsv";
@@ -74,6 +75,7 @@ public final class OrangeTestFactory {
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaConclusionTxt(CUPPA_CONCLUSION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
+                .cuppaReportPlot(CUPPA_REPORT_PLOT)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .protectEvidenceTsv(PROTECT_EVIDENCE_TSV)
