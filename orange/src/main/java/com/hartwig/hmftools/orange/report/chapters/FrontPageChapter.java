@@ -119,12 +119,12 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
         summary.addCell(TableUtil.createKeyCell("Microsatellite indels per Mb:"));
         summary.addCell(TableUtil.createValueCell(msiString()));
+        summary.addCell(TableUtil.createKeyCell("Tumor mutations per Mb:"));
+        summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
         summary.addCell(TableUtil.createKeyCell("Tumor mutational load:"));
         summary.addCell(TableUtil.createValueCell(tmlString()));
         summary.addCell(TableUtil.createKeyCell("CHORD score:"));
         summary.addCell(TableUtil.createValueCell(chordString()));
-        summary.addCell(TableUtil.createKeyCell("Tumor mutations per Mb:"));
-        summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
         summary.addCell(TableUtil.createKeyCell("Max complex cluster size:"));
@@ -275,14 +275,14 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String tmlString() {
-        return report.purple().tumorMutationalLoad() + " (" + report.purple().tumorMutationalLoadStatus().display() + ")";
-    }
-
-    @NotNull
     private String msiString() {
         return SINGLE_DIGIT.format(report.purple().microsatelliteIndelsPerMb()) + " (" + report.purple().microsatelliteStatus().display()
                 + ")";
+    }
+
+    @NotNull
+    private String tmlString() {
+        return report.purple().tumorMutationalLoad() + " (" + report.purple().tumorMutationalLoadStatus().display() + ")";
     }
 
     @NotNull
