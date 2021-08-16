@@ -65,7 +65,8 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addSummaryTable(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(new float[] { 2, 1, 1 },
+        Table table = TableUtil.createReportContentTable(contentWidth(),
+                new float[] { 2, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor"),
                         TableUtil.createHeaderCell("QC") });
         table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
@@ -75,7 +76,7 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addDetailsAndPlots(@NotNull Document document) {
-        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(ReportResources.CONTENT_WIDTH - 5);
+        Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         summary.addCell(TableUtil.createKeyCell("Purity:"));
@@ -120,7 +121,7 @@ public class FrontPageChapter implements ReportChapter {
         topTable.addCell(summary);
         topTable.addCell(circosImage);
 
-        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(ReportResources.CONTENT_WIDTH).setPadding(0);
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth()).setPadding(0);
         table.addCell(topTable);
 
         Image clonalityImage = ImageUtil.build(report.plots().purpleClonalityPlot());

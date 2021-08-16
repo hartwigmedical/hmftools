@@ -17,12 +17,12 @@ public final class GeneCopyNumberTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<ReportableGainLoss> driverAmpsDels) {
+    public static Table build(@NotNull String title, float width, @NotNull List<ReportableGainLoss> driverAmpsDels) {
         if (driverAmpsDels.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(width, new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Copies") });
 

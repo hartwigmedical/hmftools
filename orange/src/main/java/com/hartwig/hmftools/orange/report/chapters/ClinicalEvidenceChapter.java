@@ -144,7 +144,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     @NotNull
     private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap) {
-        Table treatmentTable = TableUtil.createReportContentTable(new float[] { 1, 1, 1 },
+        Table treatmentTable = TableUtil.createReportContentTable(contentWidth(), new float[] { 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment"), TableUtil.createHeaderCell("Responsive Evidence"),
                         TableUtil.createHeaderCell("Resistance Evidence") });
 
@@ -162,7 +162,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         if (hasEvidence) {
             return TableUtil.createWrappingReportTable(treatmentTable, title);
         } else {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, contentWidth());
         }
     }
 

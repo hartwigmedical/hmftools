@@ -57,14 +57,16 @@ public class GermlineFindingsChapter implements ReportChapter {
 
     private void addGermlineVariants(@NotNull Document document) {
         String germlineDriversTitle = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
-        Table germlineDriversTable = GermlineVariantTable.build(germlineDriversTitle, report.purple().reportableGermlineVariants());
+        Table germlineDriversTable =
+                GermlineVariantTable.build(germlineDriversTitle, contentWidth(), report.purple().reportableGermlineVariants());
         document.add(germlineDriversTable);
 
         document.add(new Paragraph("TODO: Add other potentially other germline variants").addStyle(ReportResources.tableTitleStyle()));
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
+        Table table = TableUtil.createReportContentTable(contentWidth(),
+                new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),

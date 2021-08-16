@@ -21,12 +21,13 @@ public final class GeneDisruptionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<ReportableGeneDisruption> disruptions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<ReportableGeneDisruption> disruptions) {
         if (disruptions.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(width,
+                new float[] { 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Range"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Junction CN"),
                         TableUtil.createHeaderCell("Undisrupted CN") });

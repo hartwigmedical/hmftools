@@ -24,9 +24,7 @@ public final class ReportResources {
     public static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 30;
     public static final float PAGE_MARGIN_RIGHT = 30;
-    public static final float PAGE_MARGIN_BOTTOM = 62;
-
-    public static final float CONTENT_WIDTH = 510;
+    public static final float PAGE_MARGIN_BOTTOM = 40;
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);

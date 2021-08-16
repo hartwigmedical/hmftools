@@ -52,7 +52,7 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addKeyQC(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(contentWidth(), new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Amber Mean Depth"),
                         TableUtil.createHeaderCell("Contamination"), TableUtil.createHeaderCell("Uns. CN segments"),
                         TableUtil.createHeaderCell("Deleted Genes") });
@@ -82,13 +82,13 @@ public class QualityControlChapter implements ReportChapter {
     private void addSageBQRPlots(@NotNull Document document) {
         document.add(new Paragraph("SAGE Reference Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
         Image refImage = ImageUtil.build(report.plots().sageReferenceBQRPlot());
-        refImage.setMaxWidth(ReportResources.CONTENT_WIDTH);
+        refImage.setMaxWidth(contentWidth());
         refImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(refImage);
 
         document.add(new Paragraph("SAGE Tumor Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
         Image tumorImage = ImageUtil.build(report.plots().sageTumorBQRPlot());
-        tumorImage.setMaxWidth(ReportResources.CONTENT_WIDTH);
+        tumorImage.setMaxWidth(contentWidth());
         tumorImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(tumorImage);
     }
@@ -96,7 +96,7 @@ public class QualityControlChapter implements ReportChapter {
     private void addPurpleQCPlots(@NotNull Document document) {
         document.add(new Paragraph("Purple QC plots").addStyle(ReportResources.tableTitleStyle()));
 
-        long halfContentWidth = Math.round(ReportResources.CONTENT_WIDTH / 2D) - 2;
+        long halfContentWidth = Math.round(contentWidth() / 2D) - 2;
         Table table = new Table(2);
         table.addCell(TableUtil.createImageCell(ImageUtil.build(report.plots().purpleInputPlot()).setMaxWidth(halfContentWidth)));
         table.addCell(TableUtil.createImageCell(ImageUtil.build(report.plots().purplePurityRangePlot()).setMaxWidth(halfContentWidth)));

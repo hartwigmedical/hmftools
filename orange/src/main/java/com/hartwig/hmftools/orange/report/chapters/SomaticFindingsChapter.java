@@ -73,12 +73,12 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addSomaticVariants(@NotNull Document document) {
         String driverVariantTableTitle = "Driver variants (" + report.purple().reportableSomaticVariants().size() + ")";
-        Table driverVariantTable = SomaticVariantTable.build(driverVariantTableTitle, report.purple().reportableSomaticVariants());
+        Table driverVariantTable = SomaticVariantTable.build(driverVariantTableTitle, contentWidth(), report.purple().reportableSomaticVariants());
         document.add(driverVariantTable);
 
         List<ReportableVariant> otherVariants = otherInterestingVariants(report.purple().unreportedSomaticVariants(), report.protect());
         String otherVariantTableTitle = "Other potentially relevant coding variants (" + otherVariants.size() + ")";
-        Table otherVariantTable = SomaticVariantTable.build(otherVariantTableTitle, otherVariants);
+        Table otherVariantTable = SomaticVariantTable.build(otherVariantTableTitle, contentWidth(), otherVariants);
         document.add(otherVariantTable);
     }
 
@@ -120,7 +120,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         document.add(new Paragraph("Kataegis plot").addStyle(ReportResources.tableTitleStyle()));
         if (report.plots().purpleKataegisPlot() != null) {
             Image image = ImageUtil.build(report.plots().purpleKataegisPlot());
-            image.setMaxWidth(ReportResources.CONTENT_WIDTH);
+            image.setMaxWidth(contentWidth());
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(image);
         } else {
@@ -130,19 +130,21 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addSomaticAmpDels(@NotNull Document document) {
         String driverAmpsDelsTitle = "Driver amps/dels (" + report.purple().reportableGainsLosses().size() + ")";
-        Table driverAmpsDelsTable = GeneCopyNumberTable.build(driverAmpsDelsTitle, report.purple().reportableGainsLosses());
+        Table driverAmpsDelsTable = GeneCopyNumberTable.build(driverAmpsDelsTitle, contentWidth(), report.purple().reportableGainsLosses());
         document.add(driverAmpsDelsTable);
 
         List<ReportableGainLoss> sortedGains = otherRelevantGains(report.purple().unreportedGainsLosses());
         String sortedGainsTitle = "Other regions with amps (" + sortedGains.size() + ")";
-        Table sortedGainsTable = GeneCopyNumberTable.build(sortedGainsTitle, sortedGains.subList(0, Math.min(10, sortedGains.size())));
+        Table sortedGainsTable =
+                GeneCopyNumberTable.build(sortedGainsTitle, contentWidth(), sortedGains.subList(0, Math.min(10, sortedGains.size())));
         document.add(sortedGainsTable);
 
         List<ReportableGainLoss> lossesNoAllosomes =
                 otherRelevantLosses(report.purple().unreportedGainsLosses(), report.purple().reportableGainsLosses());
         String unreportedLossesTitle = "Other autosomal regions with dels (" + lossesNoAllosomes.size() + ")";
-        Table unreportedLossesTable =
-                GeneCopyNumberTable.build(unreportedLossesTitle, lossesNoAllosomes.subList(0, Math.min(10, lossesNoAllosomes.size())));
+        Table unreportedLossesTable = GeneCopyNumberTable.build(unreportedLossesTitle,
+                contentWidth(),
+                lossesNoAllosomes.subList(0, Math.min(10, lossesNoAllosomes.size())));
         document.add(unreportedLossesTable);
     }
 
@@ -211,12 +213,13 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addFusions(@NotNull Document document) {
         String driverFusionTableTitle = "Driver fusions (" + report.linx().reportableFusions().size() + ")";
-        Table driverFusionTable = FusionTable.build(driverFusionTableTitle, report.linx().reportableFusions());
+        Table driverFusionTable = FusionTable.build(driverFusionTableTitle, contentWidth(), report.linx().reportableFusions());
         document.add(driverFusionTable);
 
         List<LinxFusion> otherFusions = otherInterestingFusions(report.linx().unreportedFusions(), report.protect());
         String otherFusionTableTitle = "Other potentially interesting fusions (" + otherFusions.size() + ")";
-        Table otherFusionTable = FusionTable.build(otherFusionTableTitle, otherFusions.subList(0, Math.min(10, otherFusions.size())));
+        Table otherFusionTable =
+                FusionTable.build(otherFusionTableTitle, contentWidth(), otherFusions.subList(0, Math.min(10, otherFusions.size())));
         document.add(otherFusionTable);
     }
 
@@ -243,23 +246,24 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addViralPresence(@NotNull Document document) {
         String driverVirusTitle = "Driver viruses (" + report.virusInterpreter().reportableViruses().size() + ")";
-        Table driverVirusTable = ViralPresenceTable.build(driverVirusTitle, report.virusInterpreter().reportableViruses());
+        Table driverVirusTable = ViralPresenceTable.build(driverVirusTitle, contentWidth(), report.virusInterpreter().reportableViruses());
         document.add(driverVirusTable);
 
         String otherVirusTitle = "Other viral presence (" + report.virusInterpreter().unreportedViruses().size() + ")";
-        Table otherVirusTable = ViralPresenceTable.build(otherVirusTitle, report.virusInterpreter().unreportedViruses());
+        Table otherVirusTable = ViralPresenceTable.build(otherVirusTitle, contentWidth(), report.virusInterpreter().unreportedViruses());
         document.add(otherVirusTable);
     }
 
     private void addHomozygousDisruptions(@NotNull Document document) {
         String homozygousDisruptionTitle = "Homozygous disruptions (" + report.linx().homozygousDisruptions().size() + ")";
-        Table homozygousDisruptionTable = HomozygousDisruptionTable.build(homozygousDisruptionTitle, report.linx().homozygousDisruptions());
+        Table homozygousDisruptionTable =
+                HomozygousDisruptionTable.build(homozygousDisruptionTitle, contentWidth(), report.linx().homozygousDisruptions());
         document.add(homozygousDisruptionTable);
     }
 
     private void addGeneDisruptions(@NotNull Document document) {
         String geneDisruptionTitle = "Gene disruptions (" + report.linx().geneDisruptions().size() + ")";
-        Table geneDisruptionTable = GeneDisruptionTable.build(geneDisruptionTitle, report.linx().geneDisruptions());
+        Table geneDisruptionTable = GeneDisruptionTable.build(geneDisruptionTitle, contentWidth(), report.linx().geneDisruptions());
         document.add(geneDisruptionTable);
     }
 
@@ -268,7 +272,7 @@ public class SomaticFindingsChapter implements ReportChapter {
         Table table = new Table(2);
         for (String plot : report.plots().linxDriverPlots()) {
             Image image = ImageUtil.build(plot);
-            image.setMaxWidth(Math.round(ReportResources.CONTENT_WIDTH / 2D) - 2);
+            image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             table.addCell(TableUtil.createImageCell(image));
         }

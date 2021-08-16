@@ -22,12 +22,13 @@ public final class SomaticVariantTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<ReportableVariant> driverVariants) {
+    public static Table build(@NotNull String title, float width, @NotNull List<ReportableVariant> driverVariants) {
         if (driverVariants.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(width,
+                new float[] { 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("CN"), TableUtil.createHeaderCell("MACN"),
                         TableUtil.createHeaderCell("VCN"), TableUtil.createHeaderCell("RNA VAF"), TableUtil.createHeaderCell("Biallelic"),
                         TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("DL"), TableUtil.createHeaderCell("CL"),
