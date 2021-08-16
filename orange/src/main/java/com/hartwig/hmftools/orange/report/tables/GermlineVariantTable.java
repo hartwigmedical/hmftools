@@ -36,7 +36,7 @@ public final class GermlineVariantTable {
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
-            table.addCell(TableUtil.createContentCell("NA"));
+            table.addCell(TableUtil.createContentCell(ReportResources.NOT_AVAILABLE));
             table.addCell(TableUtil.createContentCell(variant.biallelic() ? "Yes" : "No"));
             table.addCell(TableUtil.createContentCell(VariantUtil.hotspotField(variant)));
             table.addCell(TableUtil.createContentCell(variant.genotypeStatus().simplifiedDisplay()));

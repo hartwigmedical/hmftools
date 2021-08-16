@@ -51,7 +51,7 @@ public class GermlineFindingsChapter implements ReportChapter {
             addGermlineCNAberrations(document);
             addPEACH(document);
         } else {
-            document.add(new Paragraph("NA").addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         }
     }
 
