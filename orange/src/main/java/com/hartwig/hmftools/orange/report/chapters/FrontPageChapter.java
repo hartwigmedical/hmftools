@@ -75,6 +75,26 @@ public class FrontPageChapter implements ReportChapter {
         document.add(TableUtil.createWrappingReportTable(table));
     }
 
+    @NotNull
+    private static String toConfiguredTumorType(@NotNull Set<DoidNode> nodes) {
+        StringJoiner joiner = new StringJoiner(", ");
+
+        for (DoidNode node : nodes) {
+            joiner.add(node.doidTerm() + " (DOID " + node.doid() + ")");
+        }
+
+        return joiner.toString();
+    }
+
+    @NotNull
+    private String purpleQCString() {
+        StringJoiner joiner = new StringJoiner(", ");
+        for (PurpleQCStatus status : report.purple().qc().status()) {
+            joiner.add(status.toString());
+        }
+        return joiner.toString();
+    }
+
     private void addDetailsAndPlots(@NotNull Document document) {
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
@@ -83,8 +103,6 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(purityString()));
         summary.addCell(TableUtil.createKeyCell("Ploidy:"));
         summary.addCell(TableUtil.createValueCell(ploidyString()));
-        summary.addCell(TableUtil.createKeyCell("Fit method:"));
-        summary.addCell(TableUtil.createValueCell(report.purple().fittedPurityMethod().toString()));
         summary.addCell(TableUtil.createKeyCell("Somatic variant drivers:"));
         summary.addCell(TableUtil.createValueCell(somaticDriverString()));
         summary.addCell(TableUtil.createKeyCell("Germline variant drivers:"));
@@ -109,6 +127,12 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
+        summary.addCell(TableUtil.createKeyCell("Max complex cluster size:"));
+        summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().maxComplexSize())));
+        summary.addCell(TableUtil.createKeyCell("Telomeric SGLs:"));
+        summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().telomericSGLs())));
+        summary.addCell(TableUtil.createKeyCell("Number of LINE insertions:"));
+        summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().LINECount())));
         summary.addCell(TableUtil.createKeyCell("On-label treatments:"));
         summary.addCell(TableUtil.createValueCell(onLabelTreatmentString()));
         summary.addCell(TableUtil.createKeyCell("Off-label treatments:"));
@@ -133,17 +157,35 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
+    private String purityString() {
+        DecimalFormat purityFormat = ReportResources.decimalFormat("#'%'");
+        return String.format("%s (%s-%s)",
+                purityFormat.format(report.purple().purity() * 100),
+                purityFormat.format(report.purple().minPurity() * 100),
+                purityFormat.format(report.purple().maxPurity() * 100));
+    }
+
+    @NotNull
+    private String ploidyString() {
+        DecimalFormat ploidyFormat = ReportResources.decimalFormat("#.##");
+        return String.format("%s (%s-%s)",
+                ploidyFormat.format(report.purple().ploidy()),
+                ploidyFormat.format(report.purple().minPloidy()),
+                ploidyFormat.format(report.purple().maxPloidy()));
+    }
+
+    @NotNull
+    private String somaticDriverString() {
+        return variantDriverString(report.purple().reportableSomaticVariants());
+    }
+
+    @NotNull
     private String germlineDriverString() {
         if (reportGermline) {
             return variantDriverString(report.purple().reportableGermlineVariants());
         } else {
             return ReportResources.NOT_AVAILABLE;
         }
-    }
-
-    @NotNull
-    private String somaticDriverString() {
-        return variantDriverString(report.purple().reportableSomaticVariants());
     }
 
     @NotNull
@@ -233,33 +275,6 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String purpleQCString() {
-        StringJoiner joiner = new StringJoiner(", ");
-        for (PurpleQCStatus status : report.purple().qc().status()) {
-            joiner.add(status.toString());
-        }
-        return joiner.toString();
-    }
-
-    @NotNull
-    private String purityString() {
-        DecimalFormat purityFormat = ReportResources.decimalFormat("#'%'");
-        return String.format("%s (%s-%s)",
-                purityFormat.format(report.purple().purity() * 100),
-                purityFormat.format(report.purple().minPurity() * 100),
-                purityFormat.format(report.purple().maxPurity() * 100));
-    }
-
-    @NotNull
-    private String ploidyString() {
-        DecimalFormat ploidyFormat = ReportResources.decimalFormat("#.##");
-        return String.format("%s (%s-%s)",
-                ploidyFormat.format(report.purple().ploidy()),
-                ploidyFormat.format(report.purple().minPloidy()),
-                ploidyFormat.format(report.purple().maxPloidy()));
-    }
-
-    @NotNull
     private String tmlString() {
         return report.purple().tumorMutationalLoad() + " (" + report.purple().tumorMutationalLoadStatus().display() + ")";
     }
@@ -310,16 +325,5 @@ public class FrontPageChapter implements ReportChapter {
 
             return treatments.size() + " (" + joiner.toString() + ")";
         }
-    }
-
-    @NotNull
-    private static String toConfiguredTumorType(@NotNull Set<DoidNode> nodes) {
-        StringJoiner joiner = new StringJoiner(", ");
-
-        for (DoidNode node : nodes) {
-            joiner.add(node.doidTerm() + " (DOID " + node.doid() + ")");
-        }
-
-        return joiner.toString();
     }
 }

@@ -52,12 +52,14 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addKeyQC(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(contentWidth(), new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Amber Mean Depth"),
-                        TableUtil.createHeaderCell("Contamination"), TableUtil.createHeaderCell("Uns. CN segments"),
-                        TableUtil.createHeaderCell("Deleted Genes") });
+        Table table = TableUtil.createReportContentTable(contentWidth(),
+                new float[] { 1, 1, 1, 1, 1, 1 },
+                new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Fit Method"),
+                        TableUtil.createHeaderCell("Amber Mean Depth"), TableUtil.createHeaderCell("Contamination"),
+                        TableUtil.createHeaderCell("Uns. CN segments"), TableUtil.createHeaderCell("Deleted Genes") });
 
         table.addCell(TableUtil.createContentCell(purpleQCString()));
+        table.addCell(TableUtil.createContentCell(report.purple().fittedPurityMethod().toString()));
         table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().amberMeanDepth())));
         table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(report.purple().qc().contamination() * 100)));
         table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().unsupportedCopyNumberSegments())));
