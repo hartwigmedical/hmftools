@@ -112,14 +112,16 @@ public enum HumanChromosome implements Chromosome {
         if(!HumanChromosome.contains(chromosome))
             return -1;
 
-        if(chromosome.equalsIgnoreCase("X") || chromosome.equalsIgnoreCase("chrX"))
+        String chrTrimmed = RefGenomeFunctions.stripChrPrefix(chromosome);
+
+        if(chrTrimmed.equalsIgnoreCase("X"))
             return 23;
-        else if(chromosome.equalsIgnoreCase("Y") || chromosome.equalsIgnoreCase("chrY"))
+        else if(chrTrimmed.equalsIgnoreCase("Y"))
             return 24;
-        else if(chromosome.equalsIgnoreCase("MT") || chromosome.equalsIgnoreCase("chrMT"))
+        else if(chrTrimmed.equalsIgnoreCase("MT"))
             return 25;
         else
-            return Integer.parseInt(chromosome);
+            return Integer.parseInt(chrTrimmed);
     }
 
 }

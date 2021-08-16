@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -215,7 +217,9 @@ public class BamFragmentReader implements Callable
                 }
                 else
                 {
-                    geneCollection.setNonGenicPosition(SE_END, (int)getChromosomeLength(mChromosome) - 1000);
+                    int endOfChromosome = (int)getChromosomeLength(mChromosome, mConfig.RefGenVersion);
+                    int endNonGenicPosition = max(geneCollection.getNonGenicPositions()[SE_START] + 1, endOfChromosome - 1000);
+                    geneCollection.setNonGenicPosition(SE_END, endNonGenicPosition);
                     geneCollection.setEndOfChromosome();
                 }
             }
