@@ -5,12 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.ALLELE_POS_MAPPING_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_C_FREQ_ADJUST;
-import static com.hartwig.hmftools.neo.bind.BindConstants.ENTROPY_ADJUST;
-import static com.hartwig.hmftools.neo.bind.BindConstants.ENTROPY_FACTOR;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LEFT_FIXED_POS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -20,7 +17,6 @@ import static org.apache.commons.math3.util.FastMath.log;
 import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
-
 
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 

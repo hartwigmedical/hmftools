@@ -78,7 +78,8 @@ public class McfRandomDistribution
     {
         if(mMcfPredictionsFile != null)
         {
-            NE_LOGGER.info("loading MCF random peptide predictions from file({})", mMcfPredictionsFile);
+            NE_LOGGER.info("loading MCF random peptide predictions from file({}) using {}",
+                    mMcfPredictionsFile, mUsePresentation ? "presentation" : "affinity");
 
             String distributionFilename = BinderConfig.formFilename("mcf_random_peptide_dist", mConfig.OutputDir, mConfig.OutputId);
             mDistributionWriter = initialiseWriter(distributionFilename);
@@ -140,7 +141,7 @@ public class McfRandomDistribution
                         double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.predictedAffinity();
                         double scoreRank = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), scoreValue);
 
-                        peptideWriter.write(String.format("%s,%s,%.4f,%.2f,%.4f,%.6f,%.4f",
+                        peptideWriter.write(String.format("%s,%s,%.6f,%.2f,%.6f,%.6f,%.6f",
                                 allele, bindData.Peptide, scoreRank, bindData.predictedAffinity(),
                                 bindData.affinityPercentile(), bindData.presentationScore(), bindData.presentationPercentile()));
                         peptideWriter.newLine();
@@ -198,7 +199,7 @@ public class McfRandomDistribution
                 String allele = cleanAllele(items[alleleIndex]);
                 String peptide = items[peptideIndex];
                 double predictedAffinity = Double.parseDouble(items[affinityIndex]);
-                double presScore = presentationIndex != null ? Double.parseDouble(items[affinityIndex]) : -1;
+                double presScore = presentationIndex != null ? Double.parseDouble(items[presentationIndex]) : -1;
 
                 BindData bindData = new BindData(allele, peptide, RANDOM_SOURCE);
                 bindData.setPredictionData(predictedAffinity, -1, presScore, -1);
