@@ -22,6 +22,7 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
@@ -49,6 +50,12 @@ public class FrontPageChapter implements ReportChapter {
     @Override
     public String name() {
         return "Front Page";
+    }
+
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4;
     }
 
     @Override

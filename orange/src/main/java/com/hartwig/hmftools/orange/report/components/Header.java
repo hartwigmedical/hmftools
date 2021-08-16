@@ -5,10 +5,8 @@ import java.net.URL;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.kernel.pdf.xobject.PdfImageXObject;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
@@ -24,7 +22,7 @@ public class Header {
 
     public Header(@NotNull URL orangeCircosPath) {
         ImageData orangeCircos = ImageDataFactory.create(orangeCircosPath);
-        orangeCircosObj = new PdfImageXObject(orangeCircos);
+        this.orangeCircosObj = new PdfImageXObject(orangeCircos);
     }
 
     public void renderHeader(@NotNull PdfPage page) {
@@ -32,7 +30,7 @@ public class Header {
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
         if (orangeCircosObj != null) {
-            pdfCanvas.addXObject(orangeCircosObj, 52, 772, 60, false);
+            pdfCanvas.addXObject(orangeCircosObj, 50, page.getPageSize().getHeight() - 70, 60, false);
         }
 
         cv.add(new Paragraph().add(new Text("O").setFont(ReportResources.fontBold())
@@ -44,9 +42,7 @@ public class Header {
                 .add(new Text("G").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
                 .add(new Text("E").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
                 .add(new Text(" Report").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
-                .setFixedPosition(200, 800, 300));
-
-        pdfCanvas.addXObject(new PdfFormXObject(new Rectangle(0, 0, 200, 0)), ReportResources.PAGE_MARGIN_LEFT, 200);
+                .setFixedPosition(200, page.getPageSize().getHeight() - 40, 300));
 
         pdfCanvas.release();
     }

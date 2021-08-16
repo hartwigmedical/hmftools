@@ -9,6 +9,7 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
@@ -35,9 +36,15 @@ public class GermlineFindingsChapter implements ReportChapter {
         return "Germline Findings";
     }
 
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4;
+    }
+
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Germline Findings").addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
         if (reportGermline) {
             addGermlineVariants(document);
             addMVLHAnalysis(document);

@@ -25,6 +25,7 @@ import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.LocationKey;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
@@ -50,9 +51,15 @@ public class SomaticFindingsChapter implements ReportChapter {
         return "Somatic Findings";
     }
 
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4;
+    }
+
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Somatic Findings").addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
         addSomaticVariants(document);
         addKataegisPlot(document);

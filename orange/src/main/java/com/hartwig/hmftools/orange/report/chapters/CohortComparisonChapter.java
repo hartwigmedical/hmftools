@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
@@ -25,17 +26,22 @@ public class CohortComparisonChapter implements ReportChapter {
         return "Cohort Comparison";
     }
 
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4.rotate();
+    }
+
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Cohort Comparison").addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
         addCuppaReportPlot(document);
-
     }
 
     private void addCuppaReportPlot(@NotNull Document document) {
         Image cuppaReportImage = ImageUtil.build(report.plots().cuppaReportPlot());
-        cuppaReportImage.setMaxWidth(ReportResources.CONTENT_WIDTH);
+        cuppaReportImage.setMaxWidth(740);
         cuppaReportImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(cuppaReportImage);
     }

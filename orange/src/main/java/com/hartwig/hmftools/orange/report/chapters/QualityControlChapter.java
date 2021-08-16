@@ -8,6 +8,7 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
@@ -34,9 +35,15 @@ public class QualityControlChapter implements ReportChapter {
         return "Quality Control";
     }
 
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4;
+    }
+
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Quality Control").addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
         addKeyQC(document);
         addMetricsFlagstats(document);

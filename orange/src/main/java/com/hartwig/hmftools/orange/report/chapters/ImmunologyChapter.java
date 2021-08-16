@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 
@@ -22,9 +23,15 @@ public class ImmunologyChapter implements ReportChapter {
         return "Immunology";
     }
 
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4;
+    }
+
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Immunology").addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
         document.add(new Paragraph("TODO: Add HLA types for patient + status in tumor").addStyle(ReportResources.tableTitleStyle()));
         document.add(new Paragraph("TODO: Add list of neo-epitopes with predicted binding affinity").addStyle(ReportResources.tableTitleStyle()));
         document.add(new Paragraph("TODO: Add details about RNA tumor micro-environment").addStyle(ReportResources.tableTitleStyle()));
