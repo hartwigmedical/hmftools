@@ -271,6 +271,9 @@ public class FeatureDataLoader
     {
         final Map<String,List<LinxViralInsertion>> sampleVirusMap = Maps.newHashMap();
 
+        // TODO - use new data structures from VirusBreakend instead of Linx viralInsertion
+
+        /*
         Result<Record> result = dbAccess.context().select()
                 .from(VIRALINSERTION)
                 .where(specificSampleId != null ? VIRALINSERTION.SAMPLEID.eq(specificSampleId) : VIRALINSERTION.SAMPLEID.isNotNull())
@@ -290,6 +293,7 @@ public class FeatureDataLoader
             else
                 viralInsertions.add(viralInsertion);
         }
+        */
 
         return sampleVirusMap;
     }

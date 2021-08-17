@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
-import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
-import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator.LINX_DRIVER_CATALOG;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
@@ -42,7 +40,6 @@ import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
 import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
-import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
@@ -78,7 +75,6 @@ public class SampleAnalyser
     private final FragileSiteAnnotator mFragileSiteAnnotator;
     private final LineElementAnnotator mLineElementAnnotator;
     private final ReplicationOriginAnnotator mReplicationOriginAnnotator;
-    private final ViralInsertAnnotator mViralInsertAnnotator;
     private final KataegisAnnotator mKataegisAnnotator;
     private CnDataLoader mCnDataLoader;
     private final PseudoGeneFinder mPseudoGeneFinder;
@@ -117,9 +113,6 @@ public class SampleAnalyser
 
         mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
         mReplicationOriginAnnotator.loadReplicationOrigins(mConfig.ReplicationOriginsFile);
-
-        mViralInsertAnnotator = new ViralInsertAnnotator();
-        mViralInsertAnnotator.loadViralHostData(mConfig.ViralHostsFile);
 
         mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
@@ -375,11 +368,10 @@ public class SampleAnalyser
         final List<LinxSvAnnotation> linxSvData = prepareSampleData ? generateSvDataOutput() : null;
         final List<LinxCluster> clusterData = prepareSampleData ? generateClusterOutput() : null;
         final List<LinxLink> linksData = prepareSampleData ? generateLinksOutput() : null;
-        final List<LinxViralInsertion> viralInserts = prepareSampleData ? generateViralInserts() : null;
 
         if(mCohortDataWriter.writeCohortFiles())
         {
-            mCohortDataWriter.writeSvData(mSampleId, mAllVariants, mViralInsertAnnotator);
+            mCohortDataWriter.writeSvData(mSampleId, mAllVariants);
             mCohortDataWriter.writeLinksData(mSampleId, mAnalyser.getClusters());
             mCohortDataWriter.writeClusterData(mSampleId, mAnalyser.getClusters());
         }
@@ -394,8 +386,6 @@ public class SampleAnalyser
                 LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
                 LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
                 LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
-                LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mSampleId), viralInserts);
-
             }
             catch (IOException e)
             {
@@ -408,7 +398,6 @@ public class SampleAnalyser
             dbAccess.writeSvLinxData(mSampleId, linxSvData);
             dbAccess.writeSvClusters(mSampleId, clusterData);
             dbAccess.writeSvLinks(mSampleId, linksData);
-            dbAccess.writeSvViralInserts(mSampleId, viralInserts);
         }
 
         mPcWrite.stop();
@@ -630,23 +619,6 @@ public class SampleAnalyser
         }
 
         return linksData;
-    }
-
-    private List<LinxViralInsertion> generateViralInserts()
-    {
-        List<LinxViralInsertion> viralInserts = Lists.newArrayList();
-
-        for(final SvVarData var : mAllVariants)
-        {
-            final String[] viralInsertData = mViralInsertAnnotator.matchesViralInsert(var);
-
-            if(viralInsertData != null)
-            {
-                viralInserts.add(new LinxViralInsertion(mSampleId, var.id(), viralInsertData[VH_ID], viralInsertData[VH_NAME]));
-            }
-        }
-
-        return viralInserts;
     }
 
     public void close()

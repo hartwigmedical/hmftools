@@ -48,7 +48,6 @@ public class LinxConfig
     public final String KataegisFile;
     public final String LineElementFile;
     public final String ReplicationOriginsFile;
-    public final String ViralHostsFile;
     public final int ChainingSvLimit; // for analysis and chaining
     public final boolean IsGermline;
     public final boolean IndelAnnotation;
@@ -88,7 +87,6 @@ public class LinxConfig
     private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String INDEL_FILE = "indel_input_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
     public static final String GENE_ID_FILE = "gene_id_file";
     private static final String GERMLINE = "germline";
@@ -153,7 +151,6 @@ public class LinxConfig
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         KataegisFile = cmd.getOptionValue(KATAEGIS_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
-        ViralHostsFile = cmd.getOptionValue(VIRAL_HOSTS_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
@@ -311,7 +308,6 @@ public class LinxConfig
         FragileSiteFile = "";
         KataegisFile = "";
         LineElementFile = "";
-        ViralHostsFile = "";
         IndelFile = "";
         ReplicationOriginsFile = "";
         IndelAnnotation = false;
@@ -329,7 +325,7 @@ public class LinxConfig
         return configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SAMPLE_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
             && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE) && configPathValid(cmd, DRIVER_GENE_PANEL_OPTION)
-            && configPathValid(cmd, VIRAL_HOSTS_FILE) && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
+            && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
             && FusionDisruptionAnalyser.validConfig(cmd);
     }
 
@@ -363,7 +359,6 @@ public class LinxConfig
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
-        options.addOption(VIRAL_HOSTS_FILE, true, "Viral hosts file");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(KATAEGIS_FILE, true, "Kataegis data file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");

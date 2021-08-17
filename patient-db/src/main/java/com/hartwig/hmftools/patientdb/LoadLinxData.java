@@ -68,10 +68,6 @@ public class LoadLinxData {
         LOGGER.info("Sample({}) loading {} SV links records", sampleId, links.size());
         dbAccess.writeSvLinks(sampleId, links);
 
-        List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(LinxViralInsertion.generateFilename(linxDir, sampleId));
-        LOGGER.info("Sample({}) loading {} SV viral inserts records", sampleId, viralInserts.size());
-        dbAccess.writeSvViralInserts(sampleId, viralInserts);
-
         List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
         List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
         LOGGER.info("Sample({}) loading {} breakends and {} fusion records", sampleId, breakends.size(), fusions.size());

@@ -1011,19 +1011,6 @@ CREATE TABLE svFusion
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS viralInsertion;
-CREATE TABLE viralInsertion
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    svId INT NOT NULL,
-    virusId VARCHAR(50) NOT NULL,
-    virusName VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId),
-    INDEX(svId)
-);
-
 DROP TABLE IF EXISTS signature;
 CREATE TABLE signature
 (   id int NOT NULL AUTO_INCREMENT,

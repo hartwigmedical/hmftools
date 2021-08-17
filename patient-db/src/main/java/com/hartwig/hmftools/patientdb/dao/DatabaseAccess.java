@@ -417,10 +417,6 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
-    public void writeSvViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertion> inserts) {
-        structuralVariantClusterDAO.writeViralInserts(sample, inserts);
-    }
-
     public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations) {
         signatureDAO.write(sample, sigAllocations);
     }

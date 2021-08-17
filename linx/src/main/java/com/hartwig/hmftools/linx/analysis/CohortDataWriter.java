@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
-import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_LINE;
@@ -40,7 +39,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
-import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.DbPair;
@@ -127,7 +125,7 @@ public class CohortDataWriter
             writer.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
 
             // gene & replication info
-            writer.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,VirusName,Annotations");
+            writer.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,Annotations");
 
             if(mConfig.Output.WriteSvData)
             {
@@ -152,7 +150,7 @@ public class CohortDataWriter
 
     private static final int INF_DB_MARKER = -2000;
 
-    public void writeSvData(final String sampleId, final List<SvVarData> svDataList, final ViralInsertAnnotator viralInsertAnnotator)
+    public void writeSvData(final String sampleId, final List<SvVarData> svDataList)
     {
         if(mSvFileWriter == null)
             return;
@@ -266,19 +264,9 @@ public class CohortDataWriter
                         mSvFileWriter.write(",-1,,0");
                 }
 
-                String virusName = "";
-
-                if(viralInsertAnnotator != null)
-                {
-                    final String[] viralInsertData = viralInsertAnnotator.matchesViralInsert(var);
-
-                    if (viralInsertData != null)
-                        virusName = viralInsertData[VH_NAME];
-                }
-
-                mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f,%s,%s",
+                mSvFileWriter.write(String.format(",%s,%s,%.4f,%.4f,%s",
                         var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
-                        var.getReplicationOrigin(true), var.getReplicationOrigin(false), virusName, var.getAnnotations()));
+                        var.getReplicationOrigin(true), var.getReplicationOrigin(false), var.getAnnotations()));
 
                 if(mConfig.Output.WriteSvData)
                 {

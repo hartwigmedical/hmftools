@@ -198,33 +198,6 @@ class StructuralVariantClusterDAO
                 link.ecDna());
     }
 
-    public void writeViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertion> inserts)
-    {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-
-        context.delete(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).execute();
-
-        InsertValuesStep5 inserter = context.insertInto(VIRALINSERTION,
-                VIRALINSERTION.SAMPLEID,
-                VIRALINSERTION.MODIFIED,
-                VIRALINSERTION.SVID,
-                VIRALINSERTION.VIRUSID,
-                VIRALINSERTION.VIRUSNAME);
-
-        for (LinxViralInsertion record : inserts)
-        {
-            addRecord(timestamp, inserter, sample, record);
-        }
-
-        inserter.execute();
-    }
-
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
-            @NotNull LinxViralInsertion insert)
-    {
-        inserter.values(sample, timestamp, insert.SvId, insert.VirusId, insert.VirusName);
-    }
-
     public void writeDrivers(@NotNull String sample, @NotNull List<LinxDriver> drivers)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -345,6 +318,5 @@ class StructuralVariantClusterDAO
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
         context.delete(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).execute();
         context.delete(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).execute();
-        context.delete(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).execute();
     }
 }

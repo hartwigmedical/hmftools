@@ -44,7 +44,7 @@ Linx will read sample data from the following HMF tables:
 * geneCopyNumber and driverCatalog - if running driver annotation
 
 and upload samples data to the following HMF tables:
-* svAnnotation, svCluster and svLink, viralInsertion
+* svAnnotation, svCluster and svLink
 * svBreakend, svFusion and svDriver
 
 #### Multi-sample batch mode
@@ -67,11 +67,10 @@ Argument  | Description
 fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
 line_element_file | List of known LINE source regions - specify Chromosome,PosStart,PosEnd
 replication_origins_file | Optional: Replication timing input - in BED format with replication timing as the 4th column
-viral_hosts_file | Optional: List of known viral hosts - Refseq_id,Virus_name
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
-- Linx: fragile sites, LINE source regions, viral hosts and replication origins
+- Linx: fragile sites, LINE source regions and replication origins
 - Ensembl: cached Ensembl files
 - KnownFusions: HMF known fusion data
 - GenePanel: HMF driver genes
@@ -109,7 +108,6 @@ java -jar linx.jar
     -fragile_site_file fragile_sites.csv 
     -line_element_file line_elements.csv 
     -replication_origins_file heli_rep_origins.bed 
-    -viral_hosts_file viral_host_ref.csv 
     -gene_transcripts_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
@@ -128,7 +126,6 @@ java -jar linx.jar
     -fragile_site_file fragile_sites.csv 
     -line_element_file line_elements.csv 
     -replication_origins_file heli_rep_origins.bed 
-    -viral_hosts_file viral_host_ref.csv 
     -gene_transcripts_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
@@ -255,18 +252,6 @@ junctionCopyNumber | Predicted copy number of the chain
 junctionCopyNumberUncertainty | Uncertainty in the copy number of the chain
 pseudogeneInfo | If the segment precisely matches an exon of an ensembl gene, then contains details of the matching exon:  {geneName;TranscriptId,ExonRank,ExonLength}
 ecDna | True if the link is predicted to be part of a DM / ecDNA chain
-
-### Viral insertions
-
-Viral insertions detected in the sample
-
-Generated file: sample_id.viral_inserts.tsv
-
-Field | Description 
----|---
-SvId | Id of break junction
-VirusId | Id of virus that insertion sequence is mapped to
-VirusName | Full name of virus
 
 
 ### Fusions
