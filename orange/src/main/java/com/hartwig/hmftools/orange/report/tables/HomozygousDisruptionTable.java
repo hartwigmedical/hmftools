@@ -17,12 +17,13 @@ public final class HomozygousDisruptionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         if (homozygousDisruptions.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(width,
+                new float[] { 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell(""), TableUtil.createHeaderCell(""), TableUtil.createHeaderCell("") });
 

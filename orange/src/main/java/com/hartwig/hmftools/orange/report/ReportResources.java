@@ -21,12 +21,12 @@ public final class ReportResources {
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
+    public static final String NOT_AVAILABLE = "NA";
+
     public static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 30;
     public static final float PAGE_MARGIN_RIGHT = 30;
-    public static final float PAGE_MARGIN_BOTTOM = 62;
-
-    public static final float CONTENT_WIDTH = 510; // Width of the content on a narrow page (page without full side panel)
+    public static final float PAGE_MARGIN_BOTTOM = 40;
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
     public static final DeviceRgb PALETTE_BLACK = new DeviceRgb(0, 0, 0);

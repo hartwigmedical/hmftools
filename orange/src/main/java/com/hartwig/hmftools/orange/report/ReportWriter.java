@@ -58,7 +58,7 @@ public class ReportWriter {
 
         for (int i = 0; i < chapters.length; i++) {
             ReportChapter chapter = chapters[i];
-
+            pdfDocument.setDefaultPageSize(chapter.pageSize());
             pageEventHandler.chapterTitle(chapter.name());
             pageEventHandler.resetChapterPageCounter();
 

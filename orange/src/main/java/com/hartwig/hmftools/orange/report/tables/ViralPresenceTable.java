@@ -16,12 +16,13 @@ public final class ViralPresenceTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<AnnotatedVirus> viruses) {
+    public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirus> viruses) {
         if (viruses.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(width,
+                new float[] { 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("QC Status"),
                         TableUtil.createHeaderCell("Interpretation"), TableUtil.createHeaderCell("Integrations") });
 

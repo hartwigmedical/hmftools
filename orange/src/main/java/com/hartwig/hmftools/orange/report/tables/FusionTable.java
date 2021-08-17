@@ -22,12 +22,13 @@ public final class FusionTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, @NotNull List<LinxFusion> fusions) {
+    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions) {
         if (fusions.isEmpty()) {
-            return TableUtil.createEmptyTable(title);
+            return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1, 5 },
+        Table table = TableUtil.createReportContentTable(width,
+                new float[] { 1, 5 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("Details") });
 
         for (LinxFusion fusion : sort(fusions)) {

@@ -23,11 +23,10 @@ public class TableUtil {
     }
 
     @NotNull
-    public static Table createEmptyTable(@NotNull String tableTitle) {
-        Cell headerCell =
-                new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(tableTitle).addStyle(ReportResources.tableTitleStyle()));
+    public static Table createEmptyTable(@NotNull String title, float width) {
+        Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
 
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
+        Table table = TableUtil.createReportContentTable(width, new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
         table.addCell(TableUtil.createContentCell(new Paragraph(DataUtil.NONE_STRING)));
@@ -36,8 +35,8 @@ public class TableUtil {
     }
 
     @NotNull
-    public static Table createReportContentTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
-        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH);
+    public static Table createReportContentTable(float width, @NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
+        Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(width);
         table.setFixedLayout();
 
         for (Cell headerCell : headerCells) {
@@ -53,7 +52,7 @@ public class TableUtil {
     }
 
     @NotNull
-    public static Table createWrappingReportTable(@NotNull Table contentTable, @Nullable String tableTitle) {
+    public static Table createWrappingReportTable(@NotNull Table contentTable, @Nullable String title) {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
                 .setPaddingTop(5)
                 .setPaddingBottom(5)
@@ -67,10 +66,10 @@ public class TableUtil {
                 .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
 
         Table table = new Table(1).setMinWidth(contentTable.getWidth()).setMarginBottom(TABLE_BOTTOM_MARGIN);
-        if (tableTitle != null) {
+        if (title != null) {
             table.addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                     .setPadding(0)
-                    .add(new Paragraph(tableTitle).addStyle(ReportResources.tableTitleStyle())));
+                    .add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle())));
         }
 
         table.addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));

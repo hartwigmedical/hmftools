@@ -27,8 +27,10 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.orange.cuppa.CuppaEntry;
+import com.hartwig.hmftools.orange.cuppa.CuppaFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,8 +61,7 @@ public class OrangeAlgo {
                 .sampleId(config.tumorSampleId())
                 .pipelineVersion(loadPipelineVersion(config))
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
-                .cuppaPrimaryTumor(loadCuppaPrimaryTumor(config))
-                .cuppaEntries(loadCuppaEntries(config))
+                .cuppa(loadCuppaData(config))
                 .purple(loadPurpleData(config))
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
@@ -105,11 +106,15 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static String loadCuppaPrimaryTumor(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading Cuppa result from {}", new File(config.cuppaConclusionTxt()).getParent());
+    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
+        LOGGER.info("Loading Cuppa from {}", new File(config.cuppaConclusionTxt()).getParent());
         String cuppaTumorLocation = MolecularTissueOriginFile.read(config.cuppaConclusionTxt()).conclusion();
         LOGGER.info(" Cuppa predicted primary tumor: {}", cuppaTumorLocation);
-        return cuppaTumorLocation;
+
+        List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+
+        return CuppaFactory.build(cuppaTumorLocation, cuppaEntries);
     }
 
     @NotNull
@@ -194,6 +199,7 @@ public class OrangeAlgo {
                 .purplePurityRangePlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".purity.range.png")
                 .purpleKataegisPlot(kataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
+                .cuppaReportPlot(config.cuppaReportPlot())
                 .build();
     }
 }

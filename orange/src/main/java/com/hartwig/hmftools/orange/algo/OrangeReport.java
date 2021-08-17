@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.cuppa.CuppaEntry;
+import com.hartwig.hmftools.orange.cuppa.CuppaData;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -30,12 +30,6 @@ public abstract class OrangeReport {
     public abstract Set<DoidNode> configuredPrimaryTumor();
 
     @NotNull
-    public abstract String cuppaPrimaryTumor();
-
-    @NotNull
-    public abstract List<CuppaEntry> cuppaEntries();
-
-    @NotNull
     public abstract PurpleData purple();
 
     @NotNull
@@ -46,6 +40,9 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract ChordAnalysis chord();
+
+    @NotNull
+    public abstract CuppaData cuppa();
 
     @NotNull
     public abstract List<ProtectEvidence> protect();

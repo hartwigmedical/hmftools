@@ -9,6 +9,7 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
@@ -35,29 +36,37 @@ public class GermlineFindingsChapter implements ReportChapter {
         return "Germline Findings";
     }
 
+    @NotNull
+    @Override
+    public PageSize pageSize() {
+        return PageSize.A4;
+    }
+
     @Override
     public void render(@NotNull final Document document) {
-        document.add(new Paragraph("Germline Findings").addStyle(ReportResources.chapterTitleStyle()));
+        document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
         if (reportGermline) {
             addGermlineVariants(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
             addPEACH(document);
         } else {
-            document.add(new Paragraph("NA").addStyle(ReportResources.tableContentStyle()));
+            document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         }
     }
 
     private void addGermlineVariants(@NotNull Document document) {
         String germlineDriversTitle = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
-        Table germlineDriversTable = GermlineVariantTable.build(germlineDriversTitle, report.purple().reportableGermlineVariants());
+        Table germlineDriversTable =
+                GermlineVariantTable.build(germlineDriversTitle, contentWidth(), report.purple().reportableGermlineVariants());
         document.add(germlineDriversTable);
 
         document.add(new Paragraph("TODO: Add other potentially other germline variants").addStyle(ReportResources.tableTitleStyle()));
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
+        Table table = TableUtil.createReportContentTable(contentWidth(),
+                new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
