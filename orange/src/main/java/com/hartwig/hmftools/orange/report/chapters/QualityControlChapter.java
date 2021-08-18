@@ -55,7 +55,7 @@ public class QualityControlChapter implements ReportChapter {
         Table table = TableUtil.createReportContentTable(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Fit Method"),
-                        TableUtil.createHeaderCell("Amber Mean Depth"), TableUtil.createHeaderCell("Contamination"),
+                        TableUtil.createHeaderCell("Mean Depth"), TableUtil.createHeaderCell("Contamination"),
                         TableUtil.createHeaderCell("Uns. CN segments"), TableUtil.createHeaderCell("Deleted Genes") });
 
         table.addCell(TableUtil.createContentCell(purpleQCString()));
@@ -82,13 +82,13 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addSageBQRPlots(@NotNull Document document) {
-        document.add(new Paragraph("SAGE Reference Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("Reference Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
         Image refImage = ImageUtil.build(report.plots().sageReferenceBQRPlot());
         refImage.setMaxWidth(contentWidth());
         refImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
         document.add(refImage);
 
-        document.add(new Paragraph("SAGE Tumor Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("Tumor Sample BQR plot").addStyle(ReportResources.tableTitleStyle()));
         Image tumorImage = ImageUtil.build(report.plots().sageTumorBQRPlot());
         tumorImage.setMaxWidth(contentWidth());
         tumorImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -96,7 +96,7 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addPurpleQCPlots(@NotNull Document document) {
-        document.add(new Paragraph("Purple QC plots").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("QC plots").addStyle(ReportResources.tableTitleStyle()));
 
         long halfContentWidth = Math.round(contentWidth() / 2D) - 2;
         Table table = new Table(2);

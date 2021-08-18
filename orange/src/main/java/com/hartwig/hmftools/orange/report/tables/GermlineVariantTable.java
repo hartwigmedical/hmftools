@@ -27,15 +27,15 @@ public final class GermlineVariantTable {
 
         Table table = TableUtil.createReportContentTable(width,
                 new float[] { 3, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("CN"), TableUtil.createHeaderCell("MACN"),
-                        TableUtil.createHeaderCell("VCN"), TableUtil.createHeaderCell("RNA VAF"), TableUtil.createHeaderCell("Biallelic"),
+                new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("VCN"), TableUtil.createHeaderCell("CN"),
+                        TableUtil.createHeaderCell("MACN"), TableUtil.createHeaderCell("RNA VAF"), TableUtil.createHeaderCell("Biallelic"),
                         TableUtil.createHeaderCell("Hotspot"), TableUtil.createHeaderCell("Genotype") });
 
         for (ReportableVariant variant : VariantUtil.sort(variants)) {
             table.addCell(TableUtil.createContentCell(VariantUtil.variantField(variant)));
+            table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.totalCopyNumber())));
             table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.minorAlleleCopyNumber())));
-            table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(variant.alleleCopyNumber())));
             table.addCell(TableUtil.createContentCell(ReportResources.NOT_AVAILABLE));
             table.addCell(TableUtil.createContentCell(variant.biallelic() ? "Yes" : "No"));
             table.addCell(TableUtil.createContentCell(VariantUtil.hotspotField(variant)));

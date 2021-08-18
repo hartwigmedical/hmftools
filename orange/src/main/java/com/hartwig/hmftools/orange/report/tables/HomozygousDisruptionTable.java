@@ -9,6 +9,7 @@ import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class HomozygousDisruptionTable {
@@ -23,17 +24,14 @@ public final class HomozygousDisruptionTable {
         }
 
         Table table = TableUtil.createReportContentTable(width,
-                new float[] { 1, 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell(""),
-                        TableUtil.createHeaderCell(""), TableUtil.createHeaderCell(""), TableUtil.createHeaderCell("") });
+                new float[] { 1, 1, 4 },
+                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
+                        TableUtil.createHeaderCell(Strings.EMPTY) });
 
         for (ReportableHomozygousDisruption homozygousDisruption : sort(homozygousDisruptions)) {
             table.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
             table.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
-            table.addCell(TableUtil.createContentCell(""));
-            table.addCell(TableUtil.createContentCell(""));
-            table.addCell(TableUtil.createContentCell(""));
-            table.addCell(TableUtil.createContentCell(""));
+            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
         }
 
         return TableUtil.createWrappingReportTable(table, title);

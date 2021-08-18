@@ -23,7 +23,7 @@ public abstract class OrangeReport {
     @NotNull
     public abstract String sampleId();
 
-    @NotNull
+    @Nullable
     public abstract String pipelineVersion();
 
     @NotNull

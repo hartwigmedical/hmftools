@@ -27,21 +27,22 @@ public final class SidePanel {
     public static void renderSidePanel(@NotNull PdfPage page, @NotNull OrangeReport report) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
-        renderBackgroundRect(canvas, pageSize);
+        canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, -RECTANGLE_HEIGHT);
+        canvas.setFillColor(ReportResources.PALETTE_ORANGE);
+        canvas.fill();
 
         int sideTextIndex = 0;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
         cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Sample", report.sampleId()));
-        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Platinum version", report.pipelineVersion()));
+        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Platinum version", pipelineVersion(report)));
 
         canvas.release();
     }
 
-    private static void renderBackgroundRect(@NotNull PdfCanvas canvas, @NotNull Rectangle pageSize) {
-        canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, -RECTANGLE_HEIGHT);
-        canvas.setFillColor(ReportResources.PALETTE_ORANGE);
-        canvas.fill();
+    @NotNull
+    private static String pipelineVersion(@NotNull OrangeReport report) {
+        return report.pipelineVersion() != null ? report.pipelineVersion() : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull
