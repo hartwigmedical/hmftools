@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -29,7 +28,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -44,8 +42,6 @@ import org.jetbrains.annotations.Nullable;
 public final class PurpleDataLoader {
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
-    private static final Set<CodingEffect> CODING_EFFECTS_TO_INCLUDE_FOR_UNREPORTED =
-            Sets.newHashSet(CodingEffect.MISSENSE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
     private PurpleDataLoader() {
     }
@@ -154,7 +150,7 @@ public final class PurpleDataLoader {
     private static List<SomaticVariant> selectUnreportedCodingVariants(@NotNull List<SomaticVariant> somaticVariants) {
         List<SomaticVariant> variants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariants) {
-            if (!variant.reported() && CODING_EFFECTS_TO_INCLUDE_FOR_UNREPORTED.contains(variant.canonicalCodingEffect())) {
+            if (!variant.reported()) {
                 variants.add(variant);
             }
         }
