@@ -54,6 +54,7 @@ public interface OrangeConfig {
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
+    String LINX_DRIVER_TSV = "linx_driver_tsv";
     String LINX_PLOT_DIRECTORY = "linx_plot_directory";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
@@ -94,6 +95,7 @@ public interface OrangeConfig {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
+        options.addOption(LINX_DRIVER_TSV, true, "Path towards the LINX driver TSV.");
         options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the Cuppa conclusion TXT.");
@@ -174,6 +176,9 @@ public interface OrangeConfig {
     String linxDriverCatalogTsv();
 
     @NotNull
+    String linxDriverTsv();
+
+    @NotNull
     String linxPlotDirectory();
 
     @NotNull
@@ -241,6 +246,7 @@ public interface OrangeConfig {
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
+                .linxDriverTsv(nonOptionalFile(cmd, LINX_DRIVER_TSV))
                 .linxPlotDirectory(nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .cuppaConclusionTxt(nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))

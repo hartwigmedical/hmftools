@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
 import org.immutables.value.Value;
@@ -23,4 +24,7 @@ public interface LinxData {
 
     @NotNull
     List<ReportableHomozygousDisruption> homozygousDisruptions();
+
+    @NotNull
+    List<LinxDriver> drivers();
 }

@@ -124,14 +124,6 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static List<CuppaEntry> loadCuppaEntries(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading Cuppa data from {}", new File(config.cuppaResultCsv()).getParent());
-        List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
-        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
-        return cuppaEntries;
-    }
-
-    @NotNull
     private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
         return PurpleDataLoader.load(config.tumorSampleId(),
                 config.referenceSampleId(),
@@ -148,7 +140,7 @@ public class OrangeAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
+        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv(), config.linxDriverTsv());
     }
 
     @NotNull
@@ -172,7 +164,7 @@ public class OrangeAlgo {
         List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] values = line.split("\t");
-            double mvlh = Double.parseDouble(values[1].substring(0, values[1].length() -1)) / 100D;
+            double mvlh = Double.parseDouble(values[1].substring(0, values[1].length() - 1)) / 100D;
             mvlhPerGene.put(values[0], mvlh);
         }
         return mvlhPerGene;
