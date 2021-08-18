@@ -72,11 +72,17 @@ public class OrangeAlgo {
                 .build();
     }
 
-    @NotNull
+    @Nullable
     private static String loadPipelineVersion(@NotNull OrangeConfig config) throws IOException {
-        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile());
-        LOGGER.info("Loaded pipeline version '{}'", pipelineVersion);
-        return pipelineVersion;
+        String pipelineVersionFile = config.pipelineVersionFile();
+        if (pipelineVersionFile != null) {
+            String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+            LOGGER.info("Loaded pipeline version '{}'", pipelineVersion);
+            return pipelineVersion;
+        } else {
+            LOGGER.info("No pipeline version file configured");
+            return null;
+        }
     }
 
     @NotNull

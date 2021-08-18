@@ -128,7 +128,7 @@ public interface OrangeConfig {
     @NotNull
     String doidJsonFile();
 
-    @NotNull
+    @Nullable
     String pipelineVersionFile();
 
     @NotNull
@@ -226,7 +226,7 @@ public interface OrangeConfig {
                 .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
-                .pipelineVersionFile(nonOptionalFile(cmd, PIPELINE_VERSION_FILE))
+                .pipelineVersionFile(optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .sageGermlineGeneCoverageTsv(nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
                 .sageSomaticRefSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
                 .sageSomaticTumorSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
