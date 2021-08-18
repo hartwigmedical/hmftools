@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class AmpliconData
 {
-    public final List<BaseRegion> Regions;
+    public final List<ChrBaseRegion> Regions;
     public final String Type;
     public final int ClusterId;
     public final double MaxCN;
@@ -42,7 +42,7 @@ public class AmpliconData
     public String chromosomes()
     {
         final List<String> chromosomes = Lists.newArrayList();
-        for(BaseRegion region : Regions)
+        for(ChrBaseRegion region : Regions)
         {
             if(!chromosomes.contains(region.Chromosome))
                 chromosomes.add(region.Chromosome);
@@ -104,7 +104,7 @@ public class AmpliconData
 
                 final String chromosome = regionItems[0];
                 final int[] positions = { Integer.parseInt(regionItems[1]), Integer.parseInt(regionItems[2]) };
-                ampData.Regions.add(new BaseRegion(chromosome, positions));
+                ampData.Regions.add(new ChrBaseRegion(chromosome, positions));
             }
 
             return ampData;
@@ -113,7 +113,7 @@ public class AmpliconData
         //pair	seqnames	start	end	strand	width	type	footprint	ev.id	id	max.cn	max.jcn	cluster
         final String chromosome = items[fieldsIndexMap.get("seqnames")];
         final int[] positions = { Integer.parseInt(items[fieldsIndexMap.get("start")]), Integer.parseInt(items[fieldsIndexMap.get("end")]) };
-        final BaseRegion region = new BaseRegion(chromosome, positions);
+        final ChrBaseRegion region = new ChrBaseRegion(chromosome, positions);
         final String type = items[fieldsIndexMap.get("type")];
         final int clusterId = Integer.parseInt(items[fieldsIndexMap.get("cluster")]);
         final double maxCN = Integer.parseInt(items[fieldsIndexMap.get("max.cn")]);

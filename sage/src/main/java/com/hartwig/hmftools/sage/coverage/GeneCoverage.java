@@ -7,13 +7,12 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
-public class GeneCoverage implements Consumer<BaseRegion>
+public class GeneCoverage implements Consumer<ChrBaseRegion>
 {
     private final String mChromosome;
     private final String mGene;
@@ -90,7 +89,7 @@ public class GeneCoverage implements Consumer<BaseRegion>
     }
 
     @Override
-    public void accept(final BaseRegion alignment)
+    public void accept(final ChrBaseRegion alignment)
     {
         if(alignment.chromosome().equals(mChromosome))
         {

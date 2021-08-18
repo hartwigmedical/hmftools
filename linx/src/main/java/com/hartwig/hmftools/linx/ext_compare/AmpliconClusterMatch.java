@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.drivers.DriverAmpData;
 import com.hartwig.hmftools.linx.drivers.OpposingSegment;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -24,7 +24,7 @@ public class AmpliconClusterMatch
     public static final double MIN_AMP_PERCENT_VS_MAX = 0.33;
 
     public static List<DriverAmpData> findAmplifyingClusters(
-            final BaseRegion ampRegion, final List<SvBreakend> breakendList)
+            final ChrBaseRegion ampRegion, final List<SvBreakend> breakendList)
     {
         if (breakendList == null || breakendList.isEmpty())
             return Lists.newArrayList();
@@ -96,7 +96,7 @@ public class AmpliconClusterMatch
     }
 
     private static DriverAmpData checkClusterForAmplification(
-            final BaseRegion ampRegion, final List<SvBreakend> breakendList, final SvBreakend startBreakend,
+            final ChrBaseRegion ampRegion, final List<SvBreakend> breakendList, final SvBreakend startBreakend,
             boolean traverseUp, final List<OpposingSegment> opposingSegments)
     {
         double startCopyNumber = startBreakend.getCopyNumber(traverseUp);
@@ -277,7 +277,7 @@ public class AmpliconClusterMatch
         return opposingSegment;
     }
 
-    private static double calcRegionCopyNumber(final BaseRegion region, final List<SvBreakend> breakendList)
+    private static double calcRegionCopyNumber(final ChrBaseRegion region, final List<SvBreakend> breakendList)
     {
         double regionCopyNumber = -1;
 

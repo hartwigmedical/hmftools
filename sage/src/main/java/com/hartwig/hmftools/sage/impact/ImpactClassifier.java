@@ -5,14 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
-import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
-import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
@@ -22,9 +15,7 @@ import static com.hartwig.hmftools.common.variant.ConsequenceEffects.THREE_PRIME
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_REGION_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
@@ -36,12 +27,8 @@ import static com.hartwig.hmftools.sage.impact.SpliceClassifier.isWithinSpliceRe
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.codon.Codons;
-import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 

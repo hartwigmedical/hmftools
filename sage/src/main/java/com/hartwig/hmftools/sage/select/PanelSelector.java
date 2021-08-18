@@ -4,18 +4,15 @@ import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 @NotThreadSafe
 public class PanelSelector
 {
-    private final List<BaseRegion> mRegions;
+    private final List<ChrBaseRegion> mRegions;
     private int mIndex;
 
-    public PanelSelector(final List<BaseRegion> regions)
+    public PanelSelector(final List<ChrBaseRegion> regions)
     {
         mRegions = regions;
         mIndex = 0;
@@ -28,7 +25,7 @@ public class PanelSelector
         if(mRegions.isEmpty())
             return false;
 
-        BaseRegion current = current();
+        ChrBaseRegion current = current();
         while(mIndex > 0 && current.start() > end)
         {
             mIndex--;
@@ -47,7 +44,7 @@ public class PanelSelector
         return false;
     }
 
-    private BaseRegion current()
+    private ChrBaseRegion current()
     {
         return mRegions.get(mIndex);
     }

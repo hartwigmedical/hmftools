@@ -4,9 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -87,9 +85,9 @@ public class ExonCoverageTest
     }
 
     @NotNull
-    private BaseRegion alignment(int start, int end)
+    private ChrBaseRegion alignment(int start, int end)
     {
-        return new BaseRegion("1", start, end);
+        return new ChrBaseRegion("1", start, end);
     }
 
     @NotNull

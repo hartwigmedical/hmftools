@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 
@@ -193,7 +193,7 @@ public class FragmentSizeCalcs implements Callable
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
 
-            final List<BaseRegion> regions = Lists.newArrayList(new BaseRegion(mChromosome, mCurrentGenesRange));
+            final List<ChrBaseRegion> regions = Lists.newArrayList(new ChrBaseRegion(mChromosome, mCurrentGenesRange));
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
                     mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, regions.get(0).toString());

@@ -8,7 +8,7 @@ import java.util.function.Function;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
@@ -26,13 +26,13 @@ import htsjdk.samtools.SAMRecord;
 public class RefContextConsumer implements Consumer<SAMRecord>
 {
     private final SageConfig mConfig;
-    private final BaseRegion mBounds;
+    private final ChrBaseRegion mBounds;
     private final RefSequence mRefGenome;
     private final RefContextFactory mCandidates;
     private final ReadContextFactory mReadContextFactory;
 
     public RefContextConsumer(
-            final SageConfig config, final BaseRegion bounds, final RefSequence refGenome, final RefContextFactory candidates)
+            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextFactory candidates)
     {
         mBounds = bounds;
         mRefGenome = refGenome;

@@ -6,15 +6,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.junit.Test;
 
 public class PanelSelectorTest
 {
-    private final List<BaseRegion> panel =
+    private final List<ChrBaseRegion> panel =
             Lists.newArrayList(region(995, 995), region(998, 1102), region(1995, 1995), region(1998, 2102));
 
     private final PanelSelector victim = new PanelSelector(panel);
@@ -41,9 +39,9 @@ public class PanelSelectorTest
         testOverlap();
     }
 
-    private static BaseRegion region(int start, int end)
+    private static ChrBaseRegion region(int start, int end)
     {
-        return new BaseRegion("1", start, end);
+        return new ChrBaseRegion("1", start, end);
     }
 
 }

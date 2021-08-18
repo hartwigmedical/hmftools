@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -21,8 +20,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -30,11 +28,9 @@ import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class ChromosomePipeline implements AutoCloseable
 {
@@ -82,7 +78,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     public void process() throws ExecutionException, InterruptedException
     {
-        for(BaseRegion region : mPartition.partition(mChromosome))
+        for(ChrBaseRegion region : mPartition.partition(mChromosome))
         {
             final CompletableFuture<List<SageVariant>> future = mSomaticPipeline.findVariants(region);
             final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
@@ -169,9 +165,9 @@ public class ChromosomePipeline implements AutoCloseable
     private static class RegionFuture<T>
     {
         private final CompletableFuture<T> mFuture;
-        private final BaseRegion mRegion;
+        private final ChrBaseRegion mRegion;
 
-        public RegionFuture(final BaseRegion region, final CompletableFuture<T> future)
+        public RegionFuture(final ChrBaseRegion region, final CompletableFuture<T> future)
         {
             mRegion = region;
             mFuture = future;
@@ -182,7 +178,7 @@ public class ChromosomePipeline implements AutoCloseable
             return mFuture;
         }
 
-        public BaseRegion region()
+        public ChrBaseRegion region()
         {
             return mRegion;
         }

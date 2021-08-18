@@ -11,7 +11,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
@@ -44,7 +44,7 @@ public class AdditionalReferencePipeline
     }
 
     @NotNull
-    public CompletableFuture<List<VariantContext>> appendReference(final BaseRegion region, final List<VariantContext> variants)
+    public CompletableFuture<List<VariantContext>> appendReference(final ChrBaseRegion region, final List<VariantContext> variants)
     {
         if(variants.isEmpty())
         {

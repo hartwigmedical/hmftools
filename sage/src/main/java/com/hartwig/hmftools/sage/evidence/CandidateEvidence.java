@@ -8,7 +8,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -32,13 +32,13 @@ public class CandidateEvidence
 {
     private final SageConfig mConfig;
     private final List<VariantHotspot> mHotspots;
-    private final List<BaseRegion> mPanel;
+    private final List<ChrBaseRegion> mPanel;
     private final ReferenceSequenceFile mRefGenome;
     private final SamSlicerFactory mSamSlicerFactory;
     private final Coverage mCoverage;
 
     public CandidateEvidence(
-            final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel,
+            final SageConfig config, final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel,
             final SamSlicerFactory samSlicerFactory, final ReferenceSequenceFile refGenome, final Coverage coverage)
     {
         mConfig = config;
@@ -51,7 +51,7 @@ public class CandidateEvidence
 
     @NotNull
     public List<AltContext> readBam(
-            final String sample, final String bamFile, final RefSequence refSequence, final BaseRegion bounds)
+            final String sample, final String bamFile, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
         SG_LOGGER.trace("variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
@@ -63,7 +63,7 @@ public class CandidateEvidence
             refContextConsumer.accept(record);
             if(!geneCoverage.isEmpty())
             {
-                BaseRegion alignment = new BaseRegion(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
+                ChrBaseRegion alignment = new ChrBaseRegion(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
                 geneCoverage.forEach(x -> x.accept(alignment));
             }
         };
@@ -73,7 +73,7 @@ public class CandidateEvidence
 
     @NotNull
     private List<AltContext> readBam(
-            final String bamFile, final BaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextFactory candidates)
+            final String bamFile, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextFactory candidates)
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 

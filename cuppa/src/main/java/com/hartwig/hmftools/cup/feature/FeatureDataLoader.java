@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
 
 import java.io.File;
 import java.io.IOException;

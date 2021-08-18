@@ -38,7 +38,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
@@ -338,7 +338,7 @@ public class Isofox
         }
         else
         {
-            for(final BaseRegion region : mConfig.SpecificRegions)
+            for(final ChrBaseRegion region : mConfig.SpecificRegions)
             {
                 List<GeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
 

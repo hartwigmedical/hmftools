@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -34,8 +34,8 @@ public class SomaticPipeline
 
     public SomaticPipeline(
             final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
-            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
-            final List<BaseRegion> highConfidenceRegions,
+            final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panelRegions,
+            final List<ChrBaseRegion> highConfidenceRegions,
             final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
             final Coverage coverage)
     {
@@ -46,7 +46,7 @@ public class SomaticPipeline
         mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
     }
 
-    public CompletableFuture<List<SageVariant>> findVariants(final BaseRegion region)
+    public CompletableFuture<List<SageVariant>> findVariants(final ChrBaseRegion region)
     {
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, mRefGenome), mExecutor);
 
@@ -64,7 +64,7 @@ public class SomaticPipeline
     }
 
     private CompletableFuture<List<SageVariant>> combine(
-            final BaseRegion region,
+            final ChrBaseRegion region,
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
             final CompletableFuture<ReadContextCounters> doneNormal)
     {

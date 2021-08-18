@@ -32,7 +32,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.drivers.DriverAmpData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -109,7 +109,7 @@ public class AmpliconCompare
     {
         final List<DriverAmpData> ampClusterCandidates = Lists.newArrayList();
 
-        for(final BaseRegion ampRegion : ampData.Regions)
+        for(final ChrBaseRegion ampRegion : ampData.Regions)
         {
             final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
             if(breakendList == null)
@@ -264,7 +264,7 @@ public class AmpliconCompare
     {
         double[] maxCnData = {0, 0};
 
-        for(final BaseRegion ampRegion : ampData.Regions)
+        for(final ChrBaseRegion ampRegion : ampData.Regions)
         {
             final List<SvBreakend> breakendList = chrBreakendMap.get(ampRegion.Chromosome);
 

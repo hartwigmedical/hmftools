@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
@@ -54,7 +52,7 @@ public class ReadContextEvidence
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
 
-        final BaseRegion bounds = new BaseRegion(firstCandidate.chromosome(),
+        final ChrBaseRegion bounds = new ChrBaseRegion(firstCandidate.chromosome(),
                 Math.max((int)firstCandidate.position() - mTypicalReadLength, 1),
                 (int)lastCandidate.position() + mTypicalReadLength);
 

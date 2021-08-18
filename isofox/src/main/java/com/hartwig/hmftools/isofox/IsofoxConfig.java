@@ -42,7 +42,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
@@ -113,7 +113,7 @@ public class IsofoxConfig
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
-    public final BaseRegion ExcludedRegion;
+    public final ChrBaseRegion ExcludedRegion;
 
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
@@ -157,7 +157,7 @@ public class IsofoxConfig
 
     // debugging and performance options
     public final List<String> SpecificChromosomes;
-    public final List<BaseRegion> SpecificRegions;
+    public final List<ChrBaseRegion> SpecificRegions;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
@@ -309,7 +309,7 @@ public class IsofoxConfig
                 final String[] items = regionStr.split(SUB_ITEM_DELIM);
                 if(items.length == 3)
                 {
-                    BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+                    ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
 
                     if(!region.isValid())
                     {

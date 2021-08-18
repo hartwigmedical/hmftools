@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.count.EvictingArray;
@@ -23,7 +23,7 @@ public class RefContextFactory
     private final List<AltContext> mSavedCandidates = Lists.newArrayList();
 
     public RefContextFactory(
-            final SageConfig config, final String sample, final List<VariantHotspot> hotspots, final List<BaseRegion> panel)
+            final SageConfig config, final String sample, final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel)
     {
         mSample = sample;
         mConfig = config;

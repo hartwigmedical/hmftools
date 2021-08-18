@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class LineRegion
 {
-    public final BaseRegion Region;
+    public final ChrBaseRegion Region;
     public final LineElementType LineType;
     public int BreakendCount;
 
-    public LineRegion(final BaseRegion region, LineElementType type)
+    public LineRegion(final ChrBaseRegion region, LineElementType type)
     {
         Region = region;
         LineType = type;

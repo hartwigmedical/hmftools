@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -184,7 +184,7 @@ public class GenerateBedRegions
                 int regionMin = max(exon.Start, transData.CodingStart);
                 int regionMax = min(exon.End, transData.CodingEnd);
 
-                RegionData regionData = new RegionData(geneData.GeneName, new BaseRegion(geneData.Chromosome, regionMin, regionMax), CODING);
+                RegionData regionData = new RegionData(geneData.GeneName, new ChrBaseRegion(geneData.Chromosome, regionMin, regionMax), CODING);
                 addRegion(regionData);
             }
         }
@@ -300,7 +300,7 @@ public class GenerateBedRegions
         {
             try
             {
-                List<BaseRegion> comparisonRegions = Lists.newArrayList();
+                List<ChrBaseRegion> comparisonRegions = Lists.newArrayList();
 
                 final List<String> fileContents = Files.readAllLines(new File(mSourceDir + comparisonFile).toPath());
 
@@ -310,7 +310,7 @@ public class GenerateBedRegions
                     String chromosome = items[0];
                     int posStart = Integer.parseInt(items[1]) + 1;
                     int posEnd = Integer.parseInt(items[2]);
-                    comparisonRegions.add(new BaseRegion(chromosome, posStart, posEnd));
+                    comparisonRegions.add(new ChrBaseRegion(chromosome, posStart, posEnd));
                 }
 
                 LOGGER.info("loaded {} comparison regions from file: {}", comparisonRegions.size(), comparisonFile);
@@ -336,7 +336,7 @@ public class GenerateBedRegions
 
                     for(RegionData region : regions)
                     {
-                        List<BaseRegion> overlaps =
+                        List<ChrBaseRegion> overlaps =
                                 comparisonRegions.stream().filter(x -> x.overlaps(region.Region)).collect(Collectors.toList());
 
                         if(overlaps.size() == 1 && overlaps.get(0).matches(region.Region))
@@ -358,8 +358,8 @@ public class GenerateBedRegions
                         }
                         else
                         {
-                            List<BaseRegion> missedRegions = Lists.newArrayList();
-                            BaseRegion currentSegment = null;
+                            List<ChrBaseRegion> missedRegions = Lists.newArrayList();
+                            ChrBaseRegion currentSegment = null;
                             int basesCovered = 0;
 
                             for(int i = region.Region.start(); i <= region.Region.end(); ++i)
@@ -374,7 +374,7 @@ public class GenerateBedRegions
                                 {
                                     if(currentSegment == null || currentSegment.end() != i - 1)
                                     {
-                                        currentSegment = new BaseRegion(region.Region.Chromosome, i, i);
+                                        currentSegment = new ChrBaseRegion(region.Region.Chromosome, i, i);
                                         missedRegions.add(currentSegment);
                                     }
                                     else

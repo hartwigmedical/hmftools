@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +43,7 @@ public class BamSlicer
 
     public void haltProcessing() { mConsumerHalt = true; }
 
-    public void slice(@NotNull final SamReader samReader, final List<BaseRegion> regions, @NotNull final Consumer<SAMRecord> consumer)
+    public void slice(@NotNull final SamReader samReader, final List<ChrBaseRegion> regions, @NotNull final Consumer<SAMRecord> consumer)
     {
         mConsumerHalt = false;
 
@@ -63,7 +63,7 @@ public class BamSlicer
         }
     }
 
-    public List<SAMRecord> slice(@NotNull final SamReader samReader, final BaseRegion region)
+    public List<SAMRecord> slice(@NotNull final SamReader samReader, final ChrBaseRegion region)
     {
         return slice(samReader, createIntervals(Lists.newArrayList(region), samReader.getFileHeader()));
     }
@@ -73,7 +73,7 @@ public class BamSlicer
         int position = (int)variantRegion.position();
 
         final QueryInterval[] queryIntervals = createIntervals(Lists.newArrayList(
-                new BaseRegion(variantRegion.chromosome(), position, position)), samReader.getFileHeader());
+                new ChrBaseRegion(variantRegion.chromosome(), position, position)), samReader.getFileHeader());
 
         return slice(samReader, queryIntervals);
     }
@@ -101,7 +101,7 @@ public class BamSlicer
     public void sliceNoDups(@NotNull final SamReader samReader, final List<GenomeRegion> regions, final Consumer<SAMRecord> consumer)
     {
         // skips duplicate reads
-        List<BaseRegion> baseRegions = regions.stream().map(x -> BaseRegion.from(x)).collect(Collectors.toList());
+        List<ChrBaseRegion> baseRegions = regions.stream().map(x -> ChrBaseRegion.from(x)).collect(Collectors.toList());
 
         final QueryInterval[] queryIntervals = QueryInterval.optimizeIntervals(createIntervals(baseRegions, samReader.getFileHeader()));
 
@@ -131,13 +131,13 @@ public class BamSlicer
                 .collect(Collectors.toList());
     }
 
-    private static QueryInterval[] createIntervals(final List<BaseRegion> regions, final SAMFileHeader header)
+    private static QueryInterval[] createIntervals(final List<ChrBaseRegion> regions, final SAMFileHeader header)
     {
         final QueryInterval[] queryIntervals = new QueryInterval[regions.size()];
 
         for (int i = 0; i < regions.size(); ++i)
         {
-            final BaseRegion region = regions.get(i);
+            final ChrBaseRegion region = regions.get(i);
             int sequenceIndex = header.getSequenceIndex(region.Chromosome);
 
             if (sequenceIndex < 0)

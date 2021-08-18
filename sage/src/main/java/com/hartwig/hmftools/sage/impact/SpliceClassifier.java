@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCE
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_ACCEPTOR_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_ACCEPTOR_END_RANGE;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_ACCEPTOR_START_RANGE;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_DONOR_END_RANGE;
@@ -20,7 +18,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 public class SpliceClassifier
 {

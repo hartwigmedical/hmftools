@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -31,9 +31,9 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ReferenceData
 {
     public final ListMultimap<Chromosome,NamedBed> CoveragePanel;
-    public final ListMultimap<Chromosome, BaseRegion> PanelWithHotspots;
+    public final ListMultimap<Chromosome, ChrBaseRegion> PanelWithHotspots;
     public final ListMultimap<Chromosome,VariantHotspot> Hotspots;
-    public final ListMultimap<Chromosome,BaseRegion> HighConfidence;
+    public final ListMultimap<Chromosome, ChrBaseRegion> HighConfidence;
 
     public final List<HmfTranscriptRegion> TranscriptRegions;
 
@@ -87,7 +87,7 @@ public class ReferenceData
 
             loadHotspots();
 
-            final ListMultimap<Chromosome, BaseRegion> panelWithoutHotspots = readUnnamedBedFile(mConfig.PanelBed);
+            final ListMultimap<Chromosome, ChrBaseRegion> panelWithoutHotspots = readUnnamedBedFile(mConfig.PanelBed);
 
             if(!mConfig.PanelBed.isEmpty())
             {
@@ -132,14 +132,14 @@ public class ReferenceData
         }
     }
 
-    private ListMultimap<Chromosome,BaseRegion> panelWithHotspots(
-            final ListMultimap<Chromosome,BaseRegion> panelWithoutHotspots, final ListMultimap<Chromosome,VariantHotspot> hotspots)
+    private ListMultimap<Chromosome, ChrBaseRegion> panelWithHotspots(
+            final ListMultimap<Chromosome, ChrBaseRegion> panelWithoutHotspots, final ListMultimap<Chromosome,VariantHotspot> hotspots)
     {
-        final ListMultimap<Chromosome,BaseRegion> result = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, ChrBaseRegion> result = ArrayListMultimap.create();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            List<BaseRegion> regions = Lists.newArrayList();
+            List<ChrBaseRegion> regions = Lists.newArrayList();
 
             if(panelWithoutHotspots.containsKey(chromosome))
             {
@@ -148,7 +148,7 @@ public class ReferenceData
 
             if(hotspots.containsKey(chromosome))
             {
-                hotspots.get(chromosome).forEach(x -> regions.add(new BaseRegion(chromosome.toString(), (int)x.position(), (int)x.end())));
+                hotspots.get(chromosome).forEach(x -> regions.add(new ChrBaseRegion(chromosome.toString(), (int)x.position(), (int)x.end())));
             }
 
             Collections.sort(regions);
@@ -176,9 +176,9 @@ public class ReferenceData
         return panel;
     }
 
-    private static ListMultimap<Chromosome,BaseRegion> readUnnamedBedFile(final String panelBed) throws IOException
+    private static ListMultimap<Chromosome, ChrBaseRegion> readUnnamedBedFile(final String panelBed) throws IOException
     {
-        final ListMultimap<Chromosome,BaseRegion> panel = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, ChrBaseRegion> panel = ArrayListMultimap.create();
 
         if(!panelBed.isEmpty())
         {
@@ -190,7 +190,7 @@ public class ReferenceData
                 {
                     panel.putAll(
                             HumanChromosome.fromString(contig),
-                            bed.get(contig).stream().map(x -> BaseRegion.from(x)).collect(Collectors.toSet()));
+                            bed.get(contig).stream().map(x -> ChrBaseRegion.from(x)).collect(Collectors.toSet()));
                 }
             }
         }

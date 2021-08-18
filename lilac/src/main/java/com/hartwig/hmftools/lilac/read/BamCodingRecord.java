@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -136,19 +136,19 @@ public class BamCodingRecord
     public final List<BamCodingRecord> alignmentsOnly()
     {
         final String chromosome = mSamRecord.getContig();
-        final BaseRegion outerRegion = new BaseRegion(chromosome, PositionStart, PositionEnd);
+        final ChrBaseRegion outerRegion = new ChrBaseRegion(chromosome, PositionStart, PositionEnd);
 
         return mSamRecord.getAlignmentBlocks().stream()
-                .map(x -> new BaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
+                .map(x -> new ChrBaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
                 .filter(x -> outerRegion.overlaps(x))
-                .map(x -> new BaseRegion(chromosome, max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
+                .map(x -> new ChrBaseRegion(chromosome, max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
                 .map(x -> create(ReverseStrand, x, mSamRecord, false, false))
                 .collect(Collectors.toList());
 
     }
 
     public static BamCodingRecord create(
-            boolean reverseStrand, final BaseRegion codingRegion, final SAMRecord record,
+            boolean reverseStrand, final ChrBaseRegion codingRegion, final SAMRecord record,
             boolean includeSoftClips, boolean includeIndels)
     {
         int softClipStart = softClipStart(record);

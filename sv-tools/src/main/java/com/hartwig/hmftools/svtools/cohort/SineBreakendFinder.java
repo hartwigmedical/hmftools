@@ -30,7 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -202,7 +202,7 @@ public class SineBreakendFinder
                 byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
 
                 RepeatMaskerData rmData = new RepeatMaskerData(
-                        rmId, new BaseRegion(chromosome, positions), strand, items[classIndex], matchingRepeat);
+                        rmId, new ChrBaseRegion(chromosome, positions), strand, items[classIndex], matchingRepeat);
 
                 final String subRepeat = rmData.subRepeat(REPEAT_SUB_LENGTH);
 

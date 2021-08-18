@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.stream.Collectors;
@@ -17,7 +16,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
 import htsjdk.samtools.SAMSequenceRecord;
@@ -55,7 +54,7 @@ public class BaseQualityRecalibration
             return;
         }
 
-        final List<BaseRegion> regions = createRegions();
+        final List<ChrBaseRegion> regions = createRegions();
 
         for(int i = 0; i < mConfig.ReferenceIds.size(); i++)
         {
@@ -72,12 +71,12 @@ public class BaseQualityRecalibration
         mPerfCounter.logStats();
     }
 
-    private void processSample(final String sampleId, final String bamFile, final List<BaseRegion> regions)
+    private void processSample(final String sampleId, final String bamFile, final List<ChrBaseRegion> regions)
     {
         List<BaseQualityRegionCounter> regionCounters = Lists.newArrayList();
         List<FutureTask> taskList = new ArrayList<FutureTask>();
 
-        for(BaseRegion region : regions)
+        for(ChrBaseRegion region : regions)
         {
             BaseQualityRegionCounter regionCounter = new BaseQualityRegionCounter(mConfig, bamFile, mRefGenome, region);
             regionCounters.add(regionCounter);
@@ -181,9 +180,9 @@ public class BaseQualityRecalibration
     private static final int END_BUFFER = 1000000;
     private static final int REGION_SIZE = 100000;
 
-    private List<BaseRegion> createRegions()
+    private List<ChrBaseRegion> createRegions()
     {
-        List<BaseRegion> result = Lists.newArrayList();
+        List<ChrBaseRegion> result = Lists.newArrayList();
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
@@ -200,7 +199,7 @@ public class BaseQualityRecalibration
 
             while(start < end)
             {
-                result.add(new BaseRegion(chromosome, start, start + REGION_SIZE - 1));
+                result.add(new ChrBaseRegion(chromosome, start, start + REGION_SIZE - 1));
                 start += REGION_SIZE;
             }
         }

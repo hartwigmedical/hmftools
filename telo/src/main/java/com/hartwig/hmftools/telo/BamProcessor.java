@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -26,14 +26,14 @@ public class BamProcessor
 {
     public static void processBam(TeloConfig config) throws InterruptedException
     {
-        final Queue<BaseRegion> baseRegionQ = new ConcurrentLinkedQueue<>();
+        final Queue<ChrBaseRegion> baseRegionQ = new ConcurrentLinkedQueue<>();
         final BlockingQueue<TelBamRecord> telBamRecordQ = new LinkedBlockingDeque<>();
         final Set<String> incompleteReadNames = Collections.newSetFromMap(new ConcurrentHashMap<>());
         BamRecordWriter writer = new BamRecordWriter(config, telBamRecordQ, incompleteReadNames);
         writer.setProcessingMateRegions(false);
         final List<BamReader> bamReaders = new ArrayList<>();
 
-        List<BaseRegion> partitions = createPartitions(config);
+        List<ChrBaseRegion> partitions = createPartitions(config);
 
         // add unmapped base region, add it first cause it is slower to process
         partitions.add(0, TeloConstants.UNMAPPED_BASE_REGION);
@@ -55,7 +55,7 @@ public class BamProcessor
 
         // now we process the incomplete groups, sicne the threads have already finished there is no
         // concurrency problem
-        List<BaseRegion> mateRegions = getIncompleteReadGroupMateRegions(writer.getmIncompleteReadGroups());
+        List<ChrBaseRegion> mateRegions = getIncompleteReadGroupMateRegions(writer.getmIncompleteReadGroups());
 
         if(!mateRegions.isEmpty())
         {
@@ -97,9 +97,9 @@ public class BamProcessor
         TE_LOGGER.info("writer thread finished");
     }
 
-    private static List<BaseRegion> getIncompleteReadGroupMateRegions(Map<String, ReadGroup> incompleteReadGroups)
+    private static List<ChrBaseRegion> getIncompleteReadGroupMateRegions(Map<String, ReadGroup> incompleteReadGroups)
     {
-        List<BaseRegion> mateRegions = new ArrayList<>();
+        List<ChrBaseRegion> mateRegions = new ArrayList<>();
         boolean addUnmapped = false;
         for(ReadGroup readGroup : incompleteReadGroups.values())
         {
@@ -116,7 +116,7 @@ public class BamProcessor
                 }
                 else
                 {
-                    mateRegions.add(new BaseRegion(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart()));
+                    mateRegions.add(new ChrBaseRegion(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart()));
                 }
             }
         }
@@ -126,11 +126,11 @@ public class BamProcessor
 
         if (!mateRegions.isEmpty())
         {
-            List<BaseRegion> compactMateRegions = new ArrayList<>();
+            List<ChrBaseRegion> compactMateRegions = new ArrayList<>();
 
             // now we go through the mate regions and create a new condense list
-            BaseRegion overlapRegion = null;
-            for(BaseRegion br : mateRegions)
+            ChrBaseRegion overlapRegion = null;
+            for(ChrBaseRegion br : mateRegions)
             {
                 // see if still overlap
                 if(overlapRegion != null && br.Chromosome.equals(overlapRegion.Chromosome))
@@ -145,7 +145,7 @@ public class BamProcessor
                     }
                 }
                 // no longer can reuse old one, make a new one
-                overlapRegion = (BaseRegion)br.clone();
+                overlapRegion = (ChrBaseRegion)br.clone();
                 compactMateRegions.add(overlapRegion);
             }
 

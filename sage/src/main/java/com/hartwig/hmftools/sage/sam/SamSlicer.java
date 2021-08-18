@@ -6,39 +6,36 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
 public class SamSlicer
 {
-    private final List<BaseRegion> mRegions;
+    private final List<ChrBaseRegion> mRegions;
 
     private final BamSlicer mBamSlicer;
 
-    public SamSlicer(final int minMappingQuality, final BaseRegion slice)
+    public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice)
     {
         mBamSlicer = new BamSlicer(minMappingQuality);
         mRegions = Collections.singletonList(slice);
     }
 
-    public SamSlicer(final int minMappingQuality, final BaseRegion slice, final List<BaseRegion> panel)
+    public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice, final List<ChrBaseRegion> panel)
     {
         mBamSlicer = new BamSlicer(minMappingQuality);
         mRegions = Lists.newArrayList();
 
-        for(final BaseRegion panelRegion : panel)
+        for(final ChrBaseRegion panelRegion : panel)
         {
             if(slice.Chromosome.equals(panelRegion.Chromosome) && panelRegion.start() <= slice.end()
                     && panelRegion.end() >= slice.start())
             {
-                BaseRegion overlap = new BaseRegion(slice.Chromosome,
+                ChrBaseRegion overlap = new ChrBaseRegion(slice.Chromosome,
                         Math.max(panelRegion.start(), slice.start()),
                         Math.min(panelRegion.end(), slice.end()));
 

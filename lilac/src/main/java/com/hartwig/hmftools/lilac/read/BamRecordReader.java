@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 public class BamRecordReader implements BamReader
 {
     private final Map<String,TranscriptData> mTranscripts;
-    private final List<BaseRegion> mCodingRegions;
+    private final List<ChrBaseRegion> mCodingRegions;
 
     private final String mBamFile;
     private final SamReaderFactory mSamReaderFactory;
@@ -66,7 +66,7 @@ public class BamRecordReader implements BamReader
 
         mCodingRegions = HLA_GENES.stream()
                 .map(x -> mTranscripts.get(x))
-                .map(x -> new BaseRegion(HLA_CHR, x.CodingStart - MAX_DISTANCE, x.CodingEnd + MAX_DISTANCE))
+                .map(x -> new ChrBaseRegion(HLA_CHR, x.CodingStart - MAX_DISTANCE, x.CodingEnd + MAX_DISTANCE))
                 .collect(Collectors.toList());
 
         mFragmentFactory = factory;
@@ -256,7 +256,7 @@ public class BamRecordReader implements BamReader
                     continue;
 
                 BamCodingRecord codingRecord = BamCodingRecord.create(
-                        reverseStrand, BaseRegion.from(codingRegion), record, true, true);
+                        reverseStrand, ChrBaseRegion.from(codingRegion), record, true, true);
 
                 Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, codingRegion);
 
@@ -275,7 +275,7 @@ public class BamRecordReader implements BamReader
 
         SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
 
-        BaseRegion codingRegion = new BaseRegion(
+        ChrBaseRegion codingRegion = new ChrBaseRegion(
                 nearestCodingRegion.chromosome(), (int)nearestCodingRegion.start(), (int)nearestCodingRegion.end());
 
         final List<SAMRecord> records = slicer.slice(samReader, variantRegion);
@@ -303,7 +303,7 @@ public class BamRecordReader implements BamReader
 
         SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
 
-        BaseRegion codingRegion = new BaseRegion(bedRegion.chromosome(), (int)bedRegion.start(), (int)bedRegion.end());
+        ChrBaseRegion codingRegion = new ChrBaseRegion(bedRegion.chromosome(), (int)bedRegion.start(), (int)bedRegion.end());
 
         List<SAMRecord> records = slicer.slice(samReader, codingRegion);
 

@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -36,7 +36,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class LineElementAnnotator {
 
-    private final List<BaseRegion> mKnownLineElements;
+    private final List<ChrBaseRegion> mKnownLineElements;
     private PseudoGeneFinder mPseudoGeneFinder;
     private final int mProximityDistance;
     private LineClusterState mLineState;
@@ -84,7 +84,7 @@ public class LineElementAnnotator {
                 if(items.length < LE_COL_POS_END+1)
                     continue;
 
-                final BaseRegion lineRegion = new BaseRegion(
+                final ChrBaseRegion lineRegion = new ChrBaseRegion(
                         RG_VERSION.versionedChromosome(items[LE_COL_CHR]),
                         Integer.parseInt(items[LE_COL_POS_START]),
                         Integer.parseInt(items[LE_COL_POS_END]));
@@ -107,7 +107,7 @@ public class LineElementAnnotator {
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            for(final BaseRegion lineRegion : mKnownLineElements)
+            for(final ChrBaseRegion lineRegion : mKnownLineElements)
             {
                 if(!lineRegion.Chromosome.equals(svData.chromosome(isStart(se))))
                     continue;

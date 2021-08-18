@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class BaseQualityRecalibrationTest
     public void testBaseQualityCounts()
     {
         BaseQualityRegionCounter bqrCounter = new BaseQualityRegionCounter(
-                new SageConfig(), null, null, new BaseRegion("1", 100, 1000));
+                new SageConfig(), null, null, new ChrBaseRegion("1", 100, 1000));
 
         Map<Integer, Map<BaseQualityKey,Integer>> bqMap = bqrCounter.getQualityMap();
 

@@ -5,18 +5,18 @@ import static java.lang.Math.min;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class RegionData
 {
     public final String GeneName;
-    public final BaseRegion Region;
+    public final ChrBaseRegion Region;
     public final RegionType Type;
 
     private String mExtraInfo;
     private int mId;
 
-    public RegionData(final String geneName, final BaseRegion region, final RegionType type)
+    public RegionData(final String geneName, final ChrBaseRegion region, final RegionType type)
     {
         GeneName = geneName;
         Region = region;
@@ -55,7 +55,7 @@ public class RegionData
         final String[] items = data.split(",", -1);
 
         // Chromosome,PosStart,PosEnd,GeneName,Type,Info
-        BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+        ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
         RegionData regionData = new RegionData(items[3], region, RegionType.valueOf(items[4]));
         regionData.setExtraInfo(items[5]);
         return regionData;
@@ -135,7 +135,7 @@ public class RegionData
             {
                 RegionData preRegion = new RegionData(
                         newRegion.GeneName,
-                        new BaseRegion(newRegion.Region.Chromosome, newRegion.Region.start(), region.Region.start() - 1),
+                        new ChrBaseRegion(newRegion.Region.Chromosome, newRegion.Region.start(), region.Region.start() - 1),
                         newRegion.Type);
 
                 preRegion.setExtraInfo(newRegion.getExtraInfo());

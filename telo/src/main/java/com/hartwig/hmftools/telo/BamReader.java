@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +20,7 @@ public class BamReader implements Runnable
 {
     private final TeloConfig mConfig;
 
-    private final Queue<BaseRegion> mBaseRegionQ;
+    private final Queue<ChrBaseRegion> mBaseRegionQ;
     private final Queue<TelBamRecord> mTelBamRecordQ;
     private final Set<String> mIncompleteReadNames;
 
@@ -29,7 +29,7 @@ public class BamReader implements Runnable
     // one sam reader per thread
     private SamReader mSamReader;
 
-    public BamReader(final TeloConfig config, Queue<BaseRegion> baseRegionQ, Queue<TelBamRecord> telBamRecordQ, Set<String> incompleteReadNames)
+    public BamReader(final TeloConfig config, Queue<ChrBaseRegion> baseRegionQ, Queue<TelBamRecord> telBamRecordQ, Set<String> incompleteReadNames)
     {
         mConfig = config;
         mBaseRegionQ = baseRegionQ;
@@ -43,7 +43,7 @@ public class BamReader implements Runnable
     {
         while(true)
         {
-            BaseRegion baseRegion;
+            ChrBaseRegion baseRegion;
             try
             {
                 baseRegion = mBaseRegionQ.remove();
@@ -57,7 +57,7 @@ public class BamReader implements Runnable
         }
     }
 
-    public void findTelomereContent(BaseRegion baseRegion)
+    public void findTelomereContent(ChrBaseRegion baseRegion)
     {
         if(!baseRegion.equals(TeloConstants.UNMAPPED_BASE_REGION))
         {
@@ -69,7 +69,7 @@ public class BamReader implements Runnable
         }
     }
 
-    private void processBamByRegion(BaseRegion baseRegion)
+    private void processBamByRegion(ChrBaseRegion baseRegion)
     {
         TE_LOGGER.info("processing region({})", baseRegion.toString());
         mReadCount = 0;

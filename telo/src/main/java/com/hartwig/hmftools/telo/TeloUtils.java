@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -40,13 +40,13 @@ public class TeloUtils
         return false;
     }
 
-    public static List<BaseRegion> createPartitions(final TeloConfig config)
+    public static List<ChrBaseRegion> createPartitions(final TeloConfig config)
     {
         SamReader samReader = TeloUtils.openSamReader(config);
 
         List<SAMSequenceRecord> samSequences = samReader.getFileHeader().getSequenceDictionary().getSequences();
 
-        List<BaseRegion> partitions = Lists.newArrayList();
+        List<ChrBaseRegion> partitions = Lists.newArrayList();
 
         int partitionSize = DEFAULT_PARTITION_SIZE;
 
@@ -67,7 +67,7 @@ public class TeloUtils
                 if(endPos + partitionSize * 0.2 > chromosomeLength)
                     endPos = chromosomeLength;
 
-                partitions.add(new BaseRegion(chrStr, startPos, endPos));
+                partitions.add(new ChrBaseRegion(chrStr, startPos, endPos));
 
                 startPos = endPos + 1;
             }

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -76,7 +76,7 @@ public class DoubleMinuteData
     public Map<Integer,double[]> ChainSglInternalData;
     public Map<Integer,double[]> ChainInfInternalData;
 
-    private final List<BaseRegion> mDmRegions;
+    private final List<ChrBaseRegion> mDmRegions;
 
     private static final int OPEN_CHAIN_ID = -1;
 
@@ -401,7 +401,7 @@ public class DoubleMinuteData
 
             if(var.type() == DUP)
             {
-                mDmRegions.add(new BaseRegion(var.chromosome(true), var.position(true), var.position(false)));
+                mDmRegions.add(new ChrBaseRegion(var.chromosome(true), var.position(true), var.position(false)));
             }
 
             return;
@@ -414,7 +414,7 @@ public class DoubleMinuteData
             if(SVs.stream().noneMatch(x -> x.chromosome(true).equals(chromosome) || x.chromosome(false).equals(chromosome)))
                 continue;
 
-            BaseRegion currentRegion = null;
+            ChrBaseRegion currentRegion = null;
             double regionStartCopyNumber = 0;
 
             for(SvBreakend breakend : entry.getValue())
@@ -430,7 +430,7 @@ public class DoubleMinuteData
                     if(getMajorAlleleJcnRatio(breakend) >= ADJACENT_JCN_RATIO)
                     {
                         regionStartCopyNumber = breakend.copyNumberLowSide();
-                        currentRegion = new BaseRegion(chromosome, breakend.position(), 0);
+                        currentRegion = new ChrBaseRegion(chromosome, breakend.position(), 0);
                     }
                 }
                 else
@@ -440,7 +440,7 @@ public class DoubleMinuteData
                         // last region was ended but now extend it onto this additional closing breakend
                         if(!mDmRegions.isEmpty())
                         {
-                            BaseRegion lastRegion = mDmRegions.get(mDmRegions.size() - 1);
+                            ChrBaseRegion lastRegion = mDmRegions.get(mDmRegions.size() - 1);
                             lastRegion.setEnd(breakend.position());
                         }
 

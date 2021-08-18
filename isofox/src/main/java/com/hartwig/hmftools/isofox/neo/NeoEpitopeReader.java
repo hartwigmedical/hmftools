@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -148,7 +148,7 @@ public class NeoEpitopeReader
         {
             initialiseGeneData(mCurrentNeoData.Source.GeneIds[fs]);
 
-            final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
+            final ChrBaseRegion readRegion = new ChrBaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
             mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
         }
 
@@ -165,7 +165,7 @@ public class NeoEpitopeReader
         mCurrentNeoData.setOrientation(mCurrentGenes.genes().get(0).GeneData.Strand);
 
         // the 'UP' stream caches the full coding base= sequence since relates to a single gene
-        final BaseRegion readRegion = new BaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
+        final ChrBaseRegion readRegion = new ChrBaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
         mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
 
         mReadGroups.values().forEach(x -> processFragmentReads(x));

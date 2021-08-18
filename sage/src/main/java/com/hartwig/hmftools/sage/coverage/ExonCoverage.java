@@ -3,12 +3,9 @@ package com.hartwig.hmftools.sage.coverage;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
-import org.jetbrains.annotations.NotNull;
-
-public class ExonCoverage implements Consumer<BaseRegion>
+public class ExonCoverage implements Consumer<ChrBaseRegion>
 {
     private final NamedBed mExon;
     private final int[] mBaseCoverage;
@@ -44,7 +41,7 @@ public class ExonCoverage implements Consumer<BaseRegion>
     }
 
     @Override
-    public void accept(final BaseRegion alignment)
+    public void accept(final ChrBaseRegion alignment)
     {
         if(alignment.start() <= mExon.end() && alignment.end() >= mExon.start())
         {

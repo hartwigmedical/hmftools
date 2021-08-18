@@ -36,9 +36,6 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.neo.epitope.CodingBaseExcerpt;
-import com.hartwig.hmftools.neo.epitope.NeoEpitope;
-import com.hartwig.hmftools.neo.epitope.PeptideData;
 
 import org.apache.commons.compress.utils.Lists;
 

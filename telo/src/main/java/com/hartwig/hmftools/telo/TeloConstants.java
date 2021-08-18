@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.telo;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class TeloConstants
 {
@@ -10,5 +10,5 @@ public class TeloConstants
 
     public static final String CANONICAL_TELOMERE_SEQ = "TTAGGG";
     public static final String CANONICAL_TELOMERE_SEQ_REV = "CCCTAA";
-    public static final BaseRegion UNMAPPED_BASE_REGION = new BaseRegion("", 0, 0);
+    public static final ChrBaseRegion UNMAPPED_BASE_REGION = new ChrBaseRegion("", 0, 0);
 }

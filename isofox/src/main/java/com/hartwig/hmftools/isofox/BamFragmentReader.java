@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -359,7 +359,7 @@ public class BamFragmentReader implements Callable
             return;
         }
 
-        final BaseRegion geneRegion = new BaseRegion(geneCollection.chromosome(), geneRegionPositions);
+        final ChrBaseRegion geneRegion = new ChrBaseRegion(geneCollection.chromosome(), geneRegionPositions);
 
         mPerfCounters[PERF_READS].start();
         mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);

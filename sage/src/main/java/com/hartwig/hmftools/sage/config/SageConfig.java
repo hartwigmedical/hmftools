@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -60,7 +60,7 @@ public class SageConfig
     public final QualityConfig Quality;
     public final QualityRecalibrationConfig QualityRecalibration;
     public final Set<String> Chromosomes;
-    public final List<BaseRegion> SpecificRegions;
+    public final List<ChrBaseRegion> SpecificRegions;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxRealignmentDepth;
@@ -164,7 +164,7 @@ public class SageConfig
                 final String[] items = regionStr.split(SUB_ITEM_DELIM);
                 if(items.length == 3)
                 {
-                    BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+                    ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
 
                     if(!region.isValid())
                     {

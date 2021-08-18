@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -68,7 +68,7 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable
 
     public void run() throws IOException
     {
-        List<BaseRegion> regions = createRegions(refGenome, Sets.newHashSet(), sampleSize);
+        List<ChrBaseRegion> regions = createRegions(refGenome, Sets.newHashSet(), sampleSize);
         List<GenomeRegion> genRegions = regions.stream().map(x -> GenomeRegions.create(x.Chromosome, x.start(), x.end())).collect(Collectors.toList());
         NamedBedFile.writeUnnamedBedFile(out, genRegions);
     }
@@ -76,10 +76,10 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable
     private static final int END_BUFFER = 1000000;
     private static final int REGION_SIZE = 100000;
 
-    private static List<BaseRegion> createRegions(
+    private static List<ChrBaseRegion> createRegions(
             final IndexedFastaSequenceFile refGenome, final Set<String> chromosomes, int regionSubsetSize)
     {
-        List<BaseRegion> result = Lists.newArrayList();
+        List<ChrBaseRegion> result = Lists.newArrayList();
 
         for(final SAMSequenceRecord sequenceRecord : refGenome.getSequenceDictionary().getSequences())
         {
@@ -96,7 +96,7 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable
 
             while(start < end)
             {
-                result.add(new BaseRegion(chromosome, start, start + REGION_SIZE - 1));
+                result.add(new ChrBaseRegion(chromosome, start, start + REGION_SIZE - 1));
                 start += REGION_SIZE;
             }
 

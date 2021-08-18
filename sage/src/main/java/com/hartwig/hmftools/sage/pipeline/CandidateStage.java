@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
@@ -23,13 +23,13 @@ public class CandidateStage
 {
     private final SageConfig mConfig;
     private final List<VariantHotspot> mHotspots;
-    private final List<BaseRegion> mPanelRegions;
+    private final List<ChrBaseRegion> mPanelRegions;
     private final CandidateEvidence mCandidateEvidence;
-    private final List<BaseRegion> mHighConfidenceRegions;
+    private final List<ChrBaseRegion> mHighConfidenceRegions;
 
     public CandidateStage(final SageConfig config, final ReferenceSequenceFile refGenome,
-            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
-            final List<BaseRegion> highConfidenceRegions, final Coverage coverage)
+            final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panelRegions,
+            final List<ChrBaseRegion> highConfidenceRegions, final Coverage coverage)
     {
         mConfig = config;
 
@@ -42,7 +42,7 @@ public class CandidateStage
     }
 
     @NotNull
-    public CompletableFuture<List<Candidate>> findCandidates(final BaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
+    public CompletableFuture<List<Candidate>> findCandidates(final ChrBaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
     {
         return refSequenceFuture.thenCompose(refSequence ->
         {

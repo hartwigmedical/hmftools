@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.ref.RefSequence;
@@ -35,7 +35,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 class BaseQualityRegionCounter implements CigarHandler, Callable
 {
     private final String mBamFile;
-    private final BaseRegion mRegion;
+    private final ChrBaseRegion mRegion;
     private final ReferenceSequenceFile mRefGenome;
     private final IndexedBases mIndexedBases;
     private final SageConfig mConfig;
@@ -54,7 +54,7 @@ class BaseQualityRegionCounter implements CigarHandler, Callable
     private final PerformanceCounter mSummaryPc;
 
     public BaseQualityRegionCounter(
-            final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome, final BaseRegion region)
+            final SageConfig config, final String bamFile, final ReferenceSequenceFile refGenome, final ChrBaseRegion region)
     {
         mConfig = config;
         mBamFile = bamFile;
