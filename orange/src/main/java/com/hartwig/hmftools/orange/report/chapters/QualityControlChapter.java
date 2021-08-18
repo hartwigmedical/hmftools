@@ -55,7 +55,7 @@ public class QualityControlChapter implements ReportChapter {
         Table table = TableUtil.createReportContentTable(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Fit Method"),
-                        TableUtil.createHeaderCell("Amber Mean Depth"), TableUtil.createHeaderCell("Contamination"),
+                        TableUtil.createHeaderCell("Mean Depth"), TableUtil.createHeaderCell("Contamination"),
                         TableUtil.createHeaderCell("Uns. CN segments"), TableUtil.createHeaderCell("Deleted Genes") });
 
         table.addCell(TableUtil.createContentCell(purpleQCString()));
