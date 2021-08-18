@@ -24,7 +24,7 @@ public final class GeneCopyNumberTable {
 
         Table table = TableUtil.createReportContentTable(width, new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Copies") });
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("CN") });
 
         for (ReportableGainLoss gainLoss : sort(driverAmpsDels)) {
             table.addCell(TableUtil.createContentCell(gainLoss.chromosome()));
