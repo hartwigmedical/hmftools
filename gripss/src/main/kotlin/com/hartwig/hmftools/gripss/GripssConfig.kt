@@ -53,7 +53,15 @@ data class GripssConfig(
     }
 
     private fun sampleOrdinal(sample: String, allSamples: List<String>): Int {
+
+        for(i in 0 until allSamples.size)
+        {
+            if(allSamples[i].contains(sample))
+                return i
+        }
+
         val ordinal = allSamples.indexOf(sample)
+
         if (ordinal < 0) {
             throw IllegalArgumentException("Unable to locate sample $sample in supplied VCF")
         }
