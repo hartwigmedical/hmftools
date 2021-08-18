@@ -45,6 +45,7 @@ public class HospitalModelFactoryTest {
         assertNull(cpct1.requesterName());
         assertNull(cpct1.requesterEmail());
 
+
         HospitalPersons cpct2 = hospitalContactCPCT.get("02");
         assertEquals("Someone", cpct2.hospitalPI());
         assertNull(cpct2.requesterName());
