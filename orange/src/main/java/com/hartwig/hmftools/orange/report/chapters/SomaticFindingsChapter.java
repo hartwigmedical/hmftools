@@ -21,6 +21,7 @@ import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
 import com.hartwig.hmftools.orange.report.tables.GeneDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
+import com.hartwig.hmftools.orange.report.tables.StructuralDriverTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.LocationKey;
@@ -67,13 +68,15 @@ public class SomaticFindingsChapter implements ReportChapter {
         addFusions(document);
         addViralPresence(document);
         addHomozygousDisruptions(document);
+        addStructuralDrivers(document);
         addGeneDisruptions(document);
         addLinxDriverPlots(document);
     }
 
     private void addSomaticVariants(@NotNull Document document) {
         String driverVariantTableTitle = "Driver variants (" + report.purple().reportableSomaticVariants().size() + ")";
-        Table driverVariantTable = SomaticVariantTable.build(driverVariantTableTitle, contentWidth(), report.purple().reportableSomaticVariants());
+        Table driverVariantTable =
+                SomaticVariantTable.build(driverVariantTableTitle, contentWidth(), report.purple().reportableSomaticVariants());
         document.add(driverVariantTable);
 
         List<ReportableVariant> otherVariants = otherInterestingVariants(report.purple().unreportedSomaticVariants(), report.protect());
@@ -259,6 +262,12 @@ public class SomaticFindingsChapter implements ReportChapter {
         Table homozygousDisruptionTable =
                 HomozygousDisruptionTable.build(homozygousDisruptionTitle, contentWidth(), report.linx().homozygousDisruptions());
         document.add(homozygousDisruptionTable);
+    }
+
+    private void addStructuralDrivers(final Document document) {
+        String structuralDriverTitle = "Structural drivers (" + report.linx().drivers().size() + ")";
+        Table structuralDriversTable = StructuralDriverTable.build(structuralDriverTitle, contentWidth(), report.linx().drivers());
+        document.add(structuralDriversTable);
     }
 
     private void addGeneDisruptions(@NotNull Document document) {
