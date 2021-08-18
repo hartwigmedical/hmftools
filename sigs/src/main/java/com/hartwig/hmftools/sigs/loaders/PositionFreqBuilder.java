@@ -17,10 +17,8 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,7 +74,7 @@ public class PositionFreqBuilder
 
         mSamplePosCountsFile = cmd.getOptionValue(POSITION_DATA_FILE);
 
-        mSampleList.addAll(ConfigUtils.loadDelimitedSampleIdFile(cmd.getOptionValue(SAMPLE_DATA_FILE), ","));
+        mSampleList.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_DATA_FILE)));
 
         mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 

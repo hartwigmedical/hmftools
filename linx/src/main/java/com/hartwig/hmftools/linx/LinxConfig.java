@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -170,7 +171,7 @@ public class LinxConfig
         if(cmd.hasOption(GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             LNX_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
     }
@@ -192,53 +193,6 @@ public class LinxConfig
         return Lists.newArrayList();
     }
 
-    private void loadGeneIdsFile(final String filename, final List<String> geneIdList)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            LNX_LOGGER.warn("invalid gene ID file({})", filename);
-            return;
-        }
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return;
-
-            int geneIdIndex = 0;
-            boolean parseData = false;
-            if (fileContents.get(0).contains("GeneId"))
-            {
-                final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(fileContents.get(0), ",");
-                geneIdIndex = fieldsIndexMap.get("GeneId");
-                parseData = fieldsIndexMap.size() > 1;
-                fileContents.remove(0);
-            }
-
-            for(String data : fileContents)
-            {
-                if(data.startsWith("#"))
-                    continue;
-
-                if(parseData)
-                {
-                    final String[] items = data.split(",", -1);
-                    geneIdList.add(items[geneIdIndex]);
-                }
-                else
-                {
-                    geneIdList.add(data);
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            LNX_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
-            }
-    }
-
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
@@ -257,7 +211,7 @@ public class LinxConfig
             }
             else if(configSampleStr.contains(".csv"))
             {
-                sampleIds.addAll(ConfigUtils.loadSampleIdFile(configSampleStr));
+                sampleIds.addAll(ConfigUtils.loadSampleIdsFile(configSampleStr));
                 LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
             }
             else

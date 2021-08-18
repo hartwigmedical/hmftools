@@ -172,7 +172,7 @@ public class SampleFitter
                 if(mSampleIdsConfig.contains(".csv"))
                 {
                     // load from file
-                    mSampleIdList.addAll(ConfigUtils.loadSampleIdFile(mSampleIdsConfig));
+                    mSampleIdList.addAll(ConfigUtils.loadSampleIdsFile(mSampleIdsConfig));
                 }
                 else
                 {

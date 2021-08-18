@@ -9,9 +9,6 @@ import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -107,7 +104,7 @@ public class ComparConfig
     {
         if(cmd.hasOption(SAMPLE_ID_FILE))
         {
-            SampleIds.addAll(ConfigUtils.loadSampleIdFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
 
             if(SampleIds.isEmpty())
             {

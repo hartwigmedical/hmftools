@@ -23,6 +23,7 @@ public class ConfigUtils
 {
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_LEVEL = "log_level";
+    public static final String CSV_DELIM = ",";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
@@ -59,39 +60,24 @@ public class ConfigUtils
         return cmd.hasOption(configName) ? Boolean.parseBoolean(cmd.getOptionValue(configName)) : defaultValue;
     }
 
-    public static List<String> loadSampleIdFile(final String filename)
+    public static List<String> loadSampleIdsFile(final String filename)
     {
-        final List<String> sampleIds = Lists.newArrayList();
-
-        if(filename == null || filename.isEmpty())
-        {
-            LOGGER.error("sampleId file({}) missing or invalid", filename);
-            return sampleIds;
-        }
-
-        try
-        {
-            Files.readAllLines(new File(filename).toPath()).stream()
-                    .filter(x -> !x.equalsIgnoreCase("SampleId"))
-                    .filter(x -> !x.isEmpty())
-                    .forEach(x -> sampleIds.add(x));
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("failed to read sampleId file({}): {}", filename, e.toString());
-        }
-
-        return sampleIds;
+        return loadDelimitedIdFile(filename, "SampleId", CSV_DELIM);
     }
 
-    public static List<String> loadDelimitedSampleIdFile(final String filename, final String delim)
+    public static List<String> loadGeneIdsFile(final String filename)
     {
-        final List<String> sampleIds = Lists.newArrayList();
+        return loadDelimitedIdFile(filename, "GeneId", CSV_DELIM);
+    }
+
+    public static List<String> loadDelimitedIdFile(final String filename, final String idColumn, final String delim)
+    {
+        final List<String> ids = Lists.newArrayList();
 
         if(filename == null || filename.isEmpty())
         {
-            LOGGER.error("sampleId file({}) missing or invalid", filename);
-            return sampleIds;
+            LOGGER.error("{} file({}) missing or invalid", idColumn, filename);
+            return ids;
         }
 
         try
@@ -99,32 +85,32 @@ public class ConfigUtils
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
             if(fileContents.isEmpty())
-                return sampleIds;
+                return ids;
 
             String header = fileContents.get(0);
 
-            if(!header.contains("SampleId"))
-                return sampleIds;
+            if(!header.contains(idColumn))
+                return ids;
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
             fileContents.remove(0);
-            int sampleIdIndex = fieldsIndexMap.get("SampleId");
+            int idIndex = fieldsIndexMap.get(idColumn);
 
-            for(String sampleData : fileContents)
+            for(String line : fileContents)
             {
-                if(sampleData.startsWith("#"))
+                if(line.startsWith("#"))
                     continue;
 
-                String[] items = sampleData.split(delim, -1);
-                sampleIds.add(items[sampleIdIndex]);
+                String[] items = line.split(delim, -1);
+                ids.add(items[idIndex]);
             }
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to read sampleId file({}): {}", filename, e.toString());
+            LOGGER.error("failed to read {} file({}): {}", idColumn, filename, e.toString());
         }
 
-        return sampleIds;
+        return ids;
     }
 
     @NotNull

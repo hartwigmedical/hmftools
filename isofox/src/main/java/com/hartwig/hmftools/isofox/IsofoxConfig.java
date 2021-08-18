@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
@@ -224,7 +225,7 @@ public class IsofoxConfig
         if(cmd.hasOption(GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
 
             if(!RestrictedGeneIds.isEmpty())
             {
@@ -239,7 +240,7 @@ public class IsofoxConfig
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, ExcludedGeneIds);
+            ExcludedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
@@ -591,40 +592,4 @@ public class IsofoxConfig
 
         return options;
     }
-
-    private static final int COL_GENE_ID = 0;
-
-    public static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            ISF_LOGGER.warn("invalid gene ID file({})", filename);
-            return;
-        }
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return;
-
-            if (fileContents.get(0).contains("GeneId"))
-            {
-                // check for header row
-                fileContents.remove(0);
-            }
-
-            geneIdList.addAll(fileContents.stream()
-                    .filter(x -> !x.isEmpty())
-                    .filter(x -> !x.contains("GeneId"))
-                    .filter(x -> !x.startsWith("#"))
-                    .map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
-        }
-    }
-
 }

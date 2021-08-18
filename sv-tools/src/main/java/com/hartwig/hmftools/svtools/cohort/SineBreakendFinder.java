@@ -68,7 +68,7 @@ public class SineBreakendFinder
     public SineBreakendFinder(final CommandLine cmd)
     {
         String sampleIdsFile = cmd.getOptionValue(SAMPLE_ID_FILE);
-        mSampleIds = ConfigUtils.loadSampleIdFile(sampleIdsFile);
+        mSampleIds = ConfigUtils.loadSampleIdsFile(sampleIdsFile);
         LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
 
         mRmTypes = Lists.newArrayList();

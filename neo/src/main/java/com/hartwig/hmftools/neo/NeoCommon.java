@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.neo;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedSampleIdFile;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.neo.epitope.SampleData;
 
 import org.apache.logging.log4j.LogManager;
@@ -23,39 +24,6 @@ public class NeoCommon
 
     public static final Logger NE_LOGGER = LogManager.getLogger(NeoCommon.class);
 
-    public static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            NE_LOGGER.warn("invalid gene ID file({})", filename);
-            return;
-        }
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return;
-
-            if (fileContents.get(0).contains("GeneId"))
-            {
-                // check for header row
-                fileContents.remove(0);
-            }
-
-            geneIdList.addAll(fileContents.stream()
-                    .filter(x -> !x.isEmpty())
-                    .filter(x -> !x.contains("GeneId"))
-                    .filter(x -> !x.startsWith("#"))
-                    .map(x -> x.split(",")[0]).collect(Collectors.toList()));
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
-        }
-    }
-
     public static void loadSampleIdsFile(final String filename, final List<String> sampleIds)
     {
         if (!Files.exists(Paths.get(filename)))
@@ -64,7 +32,7 @@ public class NeoCommon
             return;
         }
 
-        sampleIds.addAll(loadDelimitedSampleIdFile(filename, DELIMITER));
+        sampleIds.addAll(ConfigUtils.loadSampleIdsFile(filename));
     }
 
     public static void loadSampleDataFile(final String filename, final List<SampleData> samples)

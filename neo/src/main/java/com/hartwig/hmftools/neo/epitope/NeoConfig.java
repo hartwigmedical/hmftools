@@ -5,13 +5,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.loadGeneIdsFile;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleDataFile;
 
 import java.io.File;
@@ -144,7 +144,7 @@ public class NeoConfig
 
         RestrictedGeneIds = Lists.newArrayList();
         if(cmd.hasOption(GENE_ID_FILE))
-            loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE), RestrictedGeneIds);
+            RestrictedGeneIds.addAll(loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE)));
     }
 
     public boolean isMultiSample() { return Samples.size() > 1; }
