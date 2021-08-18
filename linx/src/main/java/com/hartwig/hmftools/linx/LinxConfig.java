@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.linx.germline.GermlinePonCache;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -62,6 +63,8 @@ public class LinxConfig
 
     public final List<DriverGene> DriverGenes;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
+
+    public final CommandLine CmdLineArgs;
 
     // config options
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -100,6 +103,7 @@ public class LinxConfig
 
     public LinxConfig(final CommandLine cmd)
     {
+        CmdLineArgs = cmd;
         mSampleIds = sampleListFromConfigStr(cmd.getOptionValue(SAMPLE));
 
         if(cmd.hasOption(UPLOAD_TO_DB) && hasDatabaseConfig(cmd))
@@ -235,7 +239,6 @@ public class LinxConfig
             }
     }
 
-
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
@@ -295,9 +298,10 @@ public class LinxConfig
         return true;
     }
 
-    public LinxConfig(int proximityDistance)
+    public LinxConfig()
     {
-        ProximityDistance = proximityDistance;
+        CmdLineArgs = null;
+        ProximityDistance = DEFAULT_PROXIMITY_DISTANCE;
         RG_VERSION = V37;
         PurpleDataPath = "";
         OutputDataPath = "";
@@ -372,5 +376,6 @@ public class LinxConfig
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
 
         LinxOutput.addCmdLineArgs(options);
+        GermlinePonCache.addCmdLineArgs(options);
     }
 }

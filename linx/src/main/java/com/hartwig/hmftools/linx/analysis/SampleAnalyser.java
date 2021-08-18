@@ -99,7 +99,7 @@ public class SampleAnalyser
 
         mIsValid = true;
 
-        mCohortDataWriter = new CohortDataWriter(config, mAnalyser);
+        mCohortDataWriter = new CohortDataWriter(config);
 
         mFragileSiteAnnotator = new FragileSiteAnnotator();
         mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);

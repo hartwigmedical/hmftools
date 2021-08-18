@@ -41,7 +41,7 @@ public class LinxTester
 
     public LinxTester()
     {
-        Config = new LinxConfig(DEFAULT_PROXIMITY_DISTANCE);
+        Config = new LinxConfig();
 
         Analyser = new ClusterAnalyser(Config);
         CnDataLoader = new CnDataLoader( "", null);

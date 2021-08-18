@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.germline.GermlinePonCache;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.ArmCluster;
@@ -52,19 +54,20 @@ import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 
 public class CohortDataWriter
 {
-    private final ClusterAnalyser mAnalyser;
     private final LinxConfig mConfig;
 
     private final BufferedWriter mSvFileWriter;
     private final BufferedWriter mClusterFileWriter;
     private final BufferedWriter mLinksFileWriter;
     private final VisDataWriter mVisWriter;
+    private final GermlinePonCache mGermlinePonCache;
 
-    public CohortDataWriter(final LinxConfig config, final ClusterAnalyser analyser)
+    public CohortDataWriter(final LinxConfig config)
     {
-        mAnalyser = analyser;
         mConfig = config;
         mVisWriter = new VisDataWriter(config.OutputDataPath, config.Output.WriteVisualisationData, config.hasMultipleSamples());
+
+        mGermlinePonCache = config.IsGermline ? new GermlinePonCache(config.CmdLineArgs) : null;
 
         mSvFileWriter = createSvDataFile();
         mClusterFileWriter = createClusterFile();
@@ -136,6 +139,11 @@ public class CohortDataWriter
                 writer.write(",HomologyStart,HomologyEnd,InsertSeq,Imprecise,QualScore");
                 writer.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
                 writer.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
+            }
+
+            if(mConfig.IsGermline)
+            {
+                writer.write(",Filter,PonCount");
             }
 
             writer.newLine();
@@ -287,6 +295,12 @@ public class CohortDataWriter
                     mSvFileWriter.write(String.format(",%s,%s,%s,%d,%d",
                             dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
                             dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
+                }
+
+                if(mConfig.IsGermline)
+                {
+                    int ponCount = var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
+                    mSvFileWriter.write(String.format(",%s,%d", var.getSvData().filter(), ponCount));
                 }
 
                 mSvFileWriter.newLine();
