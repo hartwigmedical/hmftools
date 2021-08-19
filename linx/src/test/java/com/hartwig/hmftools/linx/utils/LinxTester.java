@@ -1,28 +1,35 @@
 package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
-import static com.hartwig.hmftools.linx.analysis.SampleAnalyser.setSvCopyNumberData;
-import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
+import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvCopyNumberData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
-import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.LohEvent;
+import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -36,6 +43,9 @@ public class LinxTester
     public CnDataLoader CnDataLoader;
     public LineElementAnnotator LineAnnotator;
     public FusionDisruptionAnalyser FusionAnalyser;
+    public DriverGeneAnnotator DriverAnnotator;
+    public CohortDataWriter CohortWriter;
+    public VisSampleData VisData;
 
     private CnSegmentBuilder mCnSegmentBuilder;
     private int mNextVarId;
@@ -43,10 +53,16 @@ public class LinxTester
     public LinxTester()
     {
         Config = new LinxConfig();
+        Config.RequiredAnnotations.add(ALL_ANNOTATIONS);
 
         Analyser = new ClusterAnalyser(Config, null);
         CnDataLoader = new CnDataLoader( "", null);
         Analyser.setCnDataLoader(CnDataLoader);
+
+        SampleId = "TEST";
+        VisData = new VisSampleData();
+
+        CohortWriter = new CohortDataWriter(Config, null);
 
         LineAnnotator = new LineElementAnnotator(Config.ProximityDistance);
         Analyser.setLineAnnotator(LineAnnotator);
@@ -55,7 +71,6 @@ public class LinxTester
 
         FusionAnalyser = null;
 
-        SampleId = "TEST";
         AllVariants = Lists.newArrayList();
 
         Analyser.setSampleData(SampleId, AllVariants);
@@ -66,9 +81,15 @@ public class LinxTester
         // Configurator.setRootLevel(Level.DEBUG);
     }
 
-    public void initialiseFusions(EnsemblDataCache geneTransCache)
+    public void initialiseFusions(final EnsemblDataCache ensemblDataCache)
     {
-        FusionAnalyser = new FusionDisruptionAnalyser(null, Config, geneTransCache, new CohortDataWriter(Config));
+        FusionAnalyser = new FusionDisruptionAnalyser(
+                null, Config, ensemblDataCache, new FusionResources(null), CohortWriter, VisData);
+    }
+
+    public void initialiseDriverGeneAnnotator(final EnsemblDataCache ensemblDataCache)
+    {
+        DriverAnnotator = new DriverGeneAnnotator(null, ensemblDataCache, Config, CnDataLoader, CohortWriter, VisData);
     }
 
     public final int nextVarId() { return mNextVarId++; }

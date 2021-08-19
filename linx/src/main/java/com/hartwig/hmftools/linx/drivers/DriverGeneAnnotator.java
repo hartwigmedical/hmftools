@@ -31,15 +31,17 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
-import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class DriverGeneAnnotator
+public class DriverGeneAnnotator implements CohortFileInterface
 {
     private final DatabaseAccess mDbAccess;
     private final EnsemblDataCache mGeneTransCache;
@@ -49,10 +51,9 @@ public class DriverGeneAnnotator
     private final AmplificationDrivers mAmpDrivers;
     private final DeletionDrivers mDelDrivers;
 
-    private BufferedWriter mFileWriter;
-
     private String mSampleId;
     private String mOutputDir;
+    private final CohortDataWriter mCohortDataWriter;
 
     private final List<LinxDriver> mDriverOutputList;
 
@@ -60,12 +61,12 @@ public class DriverGeneAnnotator
 
     // references only
     private Map<String, List<SvBreakend>> mChrBreakendMap;
-    private VisDataWriter mVisWriter;
+    private final VisSampleData mVisSampleData;
 
     public static final String LINX_DRIVER_CATALOG = ".linx.driver.catalog.tsv";
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache,
-            final LinxConfig config, final CnDataLoader cnDataLoader)
+    public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
+            final CnDataLoader cnDataLoader, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mDbAccess = dbAccess;
         mGeneTransCache = geneTransCache;
@@ -73,10 +74,8 @@ public class DriverGeneAnnotator
 
         mDriverOutputList = Lists.newArrayList();
 
-        mFileWriter = null;
         mOutputDir = mConfig.OutputDataPath;
-
-        mGeneTransCache.createGeneNameIdMap();
+        mCohortDataWriter = cohortDataWriter;
 
         mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
@@ -86,7 +85,7 @@ public class DriverGeneAnnotator
 
         mDelDrivers = new DeletionDrivers(disruptionGeneIds, mDataCache);
 
-        mVisWriter = null;
+        mVisSampleData = visSampleData;
 
         mPerfCounter = new PerformanceCounter("Drivers");
     }
@@ -96,7 +95,6 @@ public class DriverGeneAnnotator
         mDataCache.setSamplePurityData(ploidy, isMale);
     }
 
-    public void setVisWriter(VisDataWriter writer) { mVisWriter = writer; }
     public final List<DriverGeneData> getDriverGeneDataList() { return mDataCache.getDriverGeneDataList(); }
 
     public void annotateSVs(final String sampleId, final Map<String, List<SvBreakend>> chrBreakendMap)
@@ -224,7 +222,7 @@ public class DriverGeneAnnotator
             mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
         }
 
-        if(mConfig.hasMultipleSamples() || mOutputDir.isEmpty())
+        if(mConfig.hasMultipleSamples() || mOutputDir == null)
             return;
 
         // generate an empty Linx driver file even if no annotations were found
@@ -242,10 +240,38 @@ public class DriverGeneAnnotator
         }
     }
 
+    private static final String COHORT_WRITER_DRIVER = "Driver";
+
+    @Override
+    public String fileType() { return COHORT_WRITER_DRIVER; }
+
+    @Override
+    public BufferedWriter createWriter(final String outputDir)
+    {
+        try
+        {
+            String outputFileName = outputDir + "LNX_DRIVERS.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            writer.write("SampleId,Gene,Category,DriverType,LikelihoodMethod,Likelihood");
+            writer.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
+            writer.write(",Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain");
+            writer.write(",SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType");
+            writer.newLine();
+            return writer;
+        }
+        catch (final IOException e)
+        {
+            LNX_LOGGER.error("failed to initialise cohort driver file: {}", e.toString());
+            return null;
+        }
+    }
+
     private void writeDriverData(final DriverGeneData dgData)
     {
         // convert to a sample driver record
-        if(mVisWriter != null)
+        if(mVisSampleData != null)
         {
             for (final DriverGeneEvent driverEvent : dgData.getEvents())
             {
@@ -257,33 +283,18 @@ public class DriverGeneAnnotator
                         .eventType(driverEvent.Type.toString())
                         .build());
 
-                mVisWriter.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
+                mVisSampleData.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
                         "", 0, dgData.GeneData.Chromosome, DRIVER);
             }
         }
 
-        if(!mConfig.hasMultipleSamples() || mOutputDir.isEmpty())
+        BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
+
+        if(cohortWriter == null)
             return;
 
         try
         {
-            if(mFileWriter == null)
-            {
-                String outputFileName = mOutputDir;
-
-                outputFileName += "LNX_DRIVERS.csv";
-
-                mFileWriter = createBufferedWriter(outputFileName, false);
-
-                mFileWriter.write("SampleId,Gene,Category,DriverType,LikelihoodMethod,Likelihood");
-                mFileWriter.write(",FullyMatched,EventType,ClusterId,ClusterCount,ResolvedType");
-                mFileWriter.write(",Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain");
-                mFileWriter.write(",SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType");
-                mFileWriter.newLine();
-            }
-
-            BufferedWriter writer = mFileWriter;
-
             final DriverCatalog driverGene = dgData.DriverData;
             final GeneData geneData = dgData.GeneData;
 
@@ -306,7 +317,7 @@ public class DriverGeneAnnotator
             {
                 final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
 
-                writer.write(String.format("%s,%s,%s,%s,%s,%.2f,%s,%s",
+                cohortWriter.write(String.format("%s,%s,%s,%s,%s,%.2f,%s,%s",
                         mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(),
                         driverGene.likelihoodMethod(), driverGene.driverLikelihood(), dgData.fullyMatched(), driverEvent.Type));
 
@@ -314,19 +325,18 @@ public class DriverGeneAnnotator
 
                 if(cluster != null)
                 {
-                    writer.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
+                    cohortWriter.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
                 }
                 else
                 {
-                    writer.write(String.format(",-1,0,"));
+                    cohortWriter.write(String.format(",-1,0,"));
                 }
 
                 // breakend info if present
 
-                // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain
-                // SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
+                // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain,SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
 
-                writer.write(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
+                cohortWriter.write(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
                         geneData.Chromosome, dgData.Arm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
                         centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
 
@@ -335,16 +345,15 @@ public class DriverGeneAnnotator
                 String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
                 String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 
-                writer.write(String.format(",%s,%s,%d,%d,%s",
+                cohortWriter.write(String.format(",%s,%s,%d,%d,%s",
                         svIdStart, svIdEnd, posStart, posEnd, driverEvent.getSvInfo()));
 
-
-                writer.newLine();
+                cohortWriter.newLine();
             }
         }
         catch (final IOException e)
         {
-            LNX_LOGGER.error("error writing driver data to outputFile: {}", e.toString());
+            LNX_LOGGER.error("error writing cohort driver data: {}", e.toString());
         }
     }
 
@@ -370,9 +379,7 @@ public class DriverGeneAnnotator
     {
         if(LNX_LOGGER.isDebugEnabled() || mConfig.hasMultipleSamples())
         {
-            mPerfCounter.logStats();
+            // mPerfCounter.logStats();
         }
-
-        closeBufferedWriter(mFileWriter);
     }
 }

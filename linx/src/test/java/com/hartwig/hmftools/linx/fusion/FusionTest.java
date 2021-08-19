@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
@@ -39,7 +40,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
-import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
+import com.hartwig.hmftools.linx.SampleAnalyser;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -352,7 +353,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -392,7 +393,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -433,7 +434,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -500,7 +501,7 @@ public class FusionTest
         assertEquals(1, cluster.getChains().size());
         assertEquals(7, cluster.getChains().get(0).getSvCount());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -552,7 +553,7 @@ public class FusionTest
         cluster = tester.Analyser.getClusters().get(0);
         assertEquals(1, cluster.getChains().size());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -595,7 +596,7 @@ public class FusionTest
         SvChain chain = cluster.getChains().get(0);
         assertEquals(4, chain.getLinkCount());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,

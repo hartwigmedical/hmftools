@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
@@ -57,7 +58,7 @@ public class LinxConfig
     public final String IndelFile;
 
     public boolean LogVerbose;
-    public String RequiredAnnotations;
+    public final List<String> RequiredAnnotations;
 
     public final LinxOutput Output;
 
@@ -67,6 +68,10 @@ public class LinxConfig
     public final List<String> RestrictedGeneIds; // specific set of genes to process
 
     public final CommandLine CmdLineArgs;
+    public final boolean RunFusions;
+    public final boolean RunDrivers;
+
+    public final int Threads;
 
     // config options
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -85,6 +90,7 @@ public class LinxConfig
     public static RefGenomeVersion RG_VERSION = V37;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
+    private static final String GERMLINE = "germline";
 
     // reference files
     public static final String REF_GENOME_FILE = "ref_genome";
@@ -94,7 +100,8 @@ public class LinxConfig
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
     public static final String GENE_ID_FILE = "gene_id_file";
-    private static final String GERMLINE = "germline";
+
+    private static final String THREADS = "threads";
 
     // logging options
     public static final String LOG_VERBOSE = "log_verbose";
@@ -144,6 +151,7 @@ public class LinxConfig
         SvVcfFile = svVcfFile;
 
         IsGermline = cmd.hasOption(GERMLINE);
+        RunFusions = cmd.hasOption(CHECK_FUSIONS);
 
         Output = new LinxOutput(cmd, isSingleSample());
 
@@ -159,11 +167,19 @@ public class LinxConfig
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
-        RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
+
+        RequiredAnnotations = Lists.newArrayList();
+
+        if(cmd.hasOption(REQUIRED_ANNOTATIONS))
+        {
+            Arrays.stream(cmd.getOptionValue(REQUIRED_ANNOTATIONS).split(ITEM_DELIM, -1)).forEach(x -> RequiredAnnotations.add(x));
+        }
 
         DriverGenes = loadDriverGenes(cmd);
+        RunDrivers = cmd.hasOption(CHECK_DRIVERS) && !DriverGenes.isEmpty();
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
 
@@ -174,6 +190,11 @@ public class LinxConfig
             RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             LNX_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
+    }
+
+    public boolean breakendGeneLoading()
+    {
+        return isSingleSample() && !RunDrivers && RestrictedGeneIds.isEmpty() && !IsGermline;
     }
 
     private List<DriverGene> loadDriverGenes(final CommandLine cmd)
@@ -195,9 +216,11 @@ public class LinxConfig
 
     public final List<String> getSampleIds() { return mSampleIds; }
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
+
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
-    public boolean requireCohortWriters() { return hasMultipleSamples() || Output.WriteCohortFiles; }
+
+    public boolean loadSampleDataFromFile() { return (!PurpleDataPath.isEmpty() && SvVcfFile != null) || IsGermline; }
 
     public static List<String> sampleListFromConfigStr(final String configSampleStr)
     {
@@ -259,7 +282,7 @@ public class LinxConfig
         ProximityDistance = DEFAULT_PROXIMITY_DISTANCE;
         RG_VERSION = V37;
         PurpleDataPath = "";
-        OutputDataPath = "";
+        OutputDataPath = null;
         SampleDataPath = "";
         SvVcfFile = "";
         UploadToDB = false;
@@ -270,13 +293,16 @@ public class LinxConfig
         IndelFile = "";
         ReplicationOriginsFile = "";
         IndelAnnotation = false;
-        RequiredAnnotations = "";
+        RequiredAnnotations = Lists.newArrayList();
         mSampleIds = Lists.newArrayList();
         LogVerbose = false;
         Output = new LinxOutput();
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
         DriverGenes = Lists.newArrayList();
         RestrictedGeneIds = Lists.newArrayList();
+        RunDrivers = false;
+        RunFusions = false;
+        Threads = 0;
     }
 
     public static boolean validConfig(final CommandLine cmd)
@@ -327,6 +353,7 @@ public class LinxConfig
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
         options.addOption(INDEL_FILE, true, "Optional: cached set of INDELs");
+        options.addOption(THREADS, true, "Cohort mode: number of threads");
 
         ConfigUtils.addLoggingOptions(options);
         options.addOption(LOG_VERBOSE, false, "Log extra detail");

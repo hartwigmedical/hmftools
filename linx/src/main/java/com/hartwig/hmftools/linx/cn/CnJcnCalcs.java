@@ -256,8 +256,11 @@ public class CnJcnCalcs
         return uncertainty;
     }
 
-    public void establishReadCountCache()
+    public synchronized static void establishReadCountCache()
     {
+        if(!mReadCountProbilities.isEmpty())
+            return;
+
         mReadCountProbilities.add(0, new int[] {0, 0});
 
         for(int i = 1; i <= READ_COUNT_PROB_MAX; ++i)

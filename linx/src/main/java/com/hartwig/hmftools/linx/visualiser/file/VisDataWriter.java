@@ -39,14 +39,10 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 public class VisDataWriter
 {
     // references only
-    private EnsemblDataCache mGeneTranscriptCollection;
-
-    private final List<VisGeneData> mGeneData;
-    private final List<VisFusionFile> mFusions;
+    private EnsemblDataCache mGeneDataCache;
 
     private boolean mEnabled;
     private final String mOutputDir;
-    private String mSampleId;
 
     private boolean mBatchOutput;
     private BufferedWriter mSvFileWriter;
@@ -56,25 +52,21 @@ public class VisDataWriter
     private BufferedWriter mProteinDomainFileWriter;
     private BufferedWriter mFusionFileWriter;
 
-    public VisDataWriter(final String outputDir, boolean enabled, boolean isBatchOutput)
+    public VisDataWriter(final String outputDir, final EnsemblDataCache geneDataCache, boolean enabled, boolean isBatchOutput)
     {
         mEnabled = enabled;
         mOutputDir = outputDir;
-        mSampleId = "";
         mBatchOutput = isBatchOutput;
 
         if(mBatchOutput && mEnabled)
         {
-            initialiseBatchOutputFiles();
+            initialiseCohortOutputFiles();
         }
 
-        mGeneTranscriptCollection = null;
-
-        mGeneData = Lists.newArrayList();
-        mFusions = Lists.newArrayList();
+        mGeneDataCache = geneDataCache;
     }
 
-    private void initialiseBatchOutputFiles()
+    private void initialiseCohortOutputFiles()
     {
         try
         {
@@ -119,59 +111,21 @@ public class VisDataWriter
         closeBufferedWriter(mFusionFileWriter);
     }
 
-    public void setGeneDataCache(EnsemblDataCache geneDataCache)
-    {
-        mGeneTranscriptCollection = geneDataCache;
-    }
-
-    public void setSampleId(final String sampleId)
-    {
-        mSampleId = sampleId;
-        mGeneData.clear();
-        mFusions.clear();
-    }
-
-    public void addGeneExonData(int clusterId, final String geneId, final String geneName, final String transName, int transId,
-            final String chromosome, final VisGeneAnnotationType annotationType)
-    {
-        addGeneExonData(new VisGeneData(clusterId, geneId, geneName, transName, transId, chromosome, annotationType));
-    }
-
-    public void addGeneExonData(final VisGeneData geneData)
-    {
-        // no duplicates for the same clusterId - favour fusions over other types where transcripts differ
-        for(VisGeneData otherGeneData : mGeneData)
-        {
-            if(otherGeneData.GeneId.equals(geneData.GeneId) && otherGeneData.ClusterId == geneData.ClusterId)
-            {
-                if(otherGeneData.AnnotationType != FUSION && geneData.AnnotationType == FUSION)
-                {
-                    mGeneData.remove(otherGeneData);
-                    mGeneData.add(geneData);
-                }
-
-                return;
-            }
-        }
-
-        mGeneData.add(geneData);
-    }
-
-    public void addFusions(final List<VisFusionFile> fusions) { mFusions.addAll(fusions); }
-
-    public void writeOutput(final List<SvCluster> clusters, final List<SvVarData> variants, final Map<String,List<SvCNData>> chrCnDataMap)
+    public synchronized void writeOutput(
+            final VisSampleData sampleData, final List<SvCluster> clusters, final List<SvVarData> variants,
+            final Map<String,List<SvCNData>> chrCnDataMap)
     {
         if(!mEnabled)
             return;
 
-        writeSvData(variants);
-        writeSegmentData(clusters);
-        writeGeneData();
-        writeCopyNumberData(chrCnDataMap);
-        writeFusions();
+        writeSvData(sampleData, variants);
+        writeSegmentData(sampleData, clusters);
+        writeGeneData(sampleData);
+        writeCopyNumberData(sampleData, chrCnDataMap);
+        writeFusions(sampleData);
     }
 
-    private void writeSvData(final List<SvVarData> variants)
+    private void writeSvData(final VisSampleData sampleData, final List<SvVarData> variants)
     {
         List<VisSvDataFile> svDataList = Lists.newArrayList();
 
@@ -193,7 +147,7 @@ public class VisDataWriter
                 final SvBreakend beStart = var.getBreakend(true);
                 final SvBreakend beEnd = var.getBreakend(false);
 
-                svDataList.add(new VisSvDataFile(mSampleId, cluster.id(), chainId, var.id(),
+                svDataList.add(new VisSvDataFile(sampleData.sampleId(), cluster.id(), chainId, var.id(),
                         var.type(), cluster.getResolvedType(), cluster.isSyntheticType(),
                         beStart.chromosome(), beEnd != null ? beEnd.chromosome() : "-1",
                         beStart.position(), beEnd != null ? beEnd.position() : 0,
@@ -216,7 +170,7 @@ public class VisDataWriter
             }
             else
             {
-                VisSvDataFile.write(VisSvDataFile.generateFilename(mOutputDir, mSampleId), svDataList);
+                VisSvDataFile.write(VisSvDataFile.generateFilename(mOutputDir, sampleData.sampleId()), svDataList);
             }
         }
         catch(IOException e)
@@ -225,7 +179,7 @@ public class VisDataWriter
         }
     }
 
-    private void writeSegmentData(final List<SvCluster> clusters)
+    private void writeSegmentData(final VisSampleData sampleData, final List<SvCluster> clusters)
     {
         // write out the links from each chain and a link from the chain-end breakends to telomere or centromere
         List<VisSegmentFile> segments = Lists.newArrayList();
@@ -273,7 +227,7 @@ public class VisDataWriter
 
                     if (breakend != null)
                     {
-                        segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
+                        segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
                                 getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
@@ -305,7 +259,7 @@ public class VisDataWriter
                     final SvBreakend beStart = pair.getBreakend(true);
                     final SvBreakend beEnd = pair.getBreakend(false);
 
-                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), beStart.chromosome(),
+                    segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), beStart.chromosome(),
                             Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy, chain.isDoubleMinute()));
                 }
 
@@ -316,7 +270,7 @@ public class VisDataWriter
 
                     if (breakend != null && !startsOnEnd)
                     {
-                        segments.add(new VisSegmentFile(mSampleId, cluster.id(), chain.id(), breakend.chromosome(),
+                        segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), breakend.chromosome(),
                                 getPositionValue(breakend, true), getPositionValue(breakend, false), chainPloidy, false));
                     }
                 }
@@ -334,7 +288,7 @@ public class VisDataWriter
                     if (breakend == null)
                         continue;
 
-                    segments.add(new VisSegmentFile(mSampleId, cluster.id(), chainId, breakend.chromosome(),
+                    segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chainId, breakend.chromosome(),
                             getPositionValue(breakend, true), getPositionValue(breakend, false), var.jcn(), false));
                 }
             }
@@ -352,7 +306,7 @@ public class VisDataWriter
             }
             else
             {
-                VisSegmentFile.write(VisSegmentFile.generateFilename(mOutputDir, mSampleId), segments);
+                VisSegmentFile.write(VisSegmentFile.generateFilename(mOutputDir, sampleData.sampleId()), segments);
             }
         }
         catch (final IOException e)
@@ -383,7 +337,7 @@ public class VisDataWriter
         }
     }
 
-    private void writeGeneData()
+    private void writeGeneData(final VisSampleData sampleData)
     {
         if(!mEnabled)
             return;
@@ -391,15 +345,15 @@ public class VisDataWriter
         final List<VisGeneExonFile> geneExonList = Lists.newArrayList();
         final List<VisProteinDomainFile> proteinList = Lists.newArrayList();
 
-        for(final VisGeneData geneData : mGeneData)
+        for(final VisGeneData geneData : sampleData.getGeneData())
         {
             if(geneData.ClusterId < 0) // skip genes not linked to a cluster
                 continue;
 
-            if(checkAddIgExonRegions(geneData, geneExonList))
+            if(checkAddIgExonRegions(sampleData.sampleId(), geneData, geneExonList))
                 continue;
 
-            final TranscriptData transData = mGeneTranscriptCollection.getTranscriptData(geneData.GeneId, geneData.TransName);
+            final TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, geneData.TransName);
 
             if(transData == null || transData.exons().isEmpty())
                 continue;
@@ -408,7 +362,7 @@ public class VisDataWriter
             {
                 if(geneData.ExonPositionOffsets.isEmpty())
                 {
-                    geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
+                    geneExonList.add(new VisGeneExonFile(sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
                             geneData.Chromosome, geneData.AnnotationType.toString(), exonData.Rank, exonData.Start, exonData.End));
                 }
                 else
@@ -420,12 +374,12 @@ public class VisDataWriter
                     int exonStart = exonData.Start + exonPosOffsets[SE_START];
                     int exonEnd = exonData.End + exonPosOffsets[SE_END];
 
-                    geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
+                    geneExonList.add(new VisGeneExonFile(sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
                             geneData.Chromosome, geneData.AnnotationType.toString(), exonData.Rank, exonStart, exonEnd));
 
                     if(exonsLost != null)
                     {
-                        geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.GeneName, transData.TransName,
+                        geneExonList.add(new VisGeneExonFile(sampleData.sampleId(), geneData.ClusterId, geneData.GeneName, transData.TransName,
                                 geneData.Chromosome, EXON_LOST.toString(), exonData.Rank,
                                 exonStart + exonsLost[SE_START], exonEnd + exonsLost[SE_END]));
                     }
@@ -434,7 +388,7 @@ public class VisDataWriter
 
             int transId = geneData.TransId > 0 ? geneData.TransId : transData.TransId;
 
-            final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(transId);
+            final List<TranscriptProteinData> transProteinData = mGeneDataCache.getTranscriptProteinDataMap().get(transId);
 
             if (transProteinData != null)
             {
@@ -444,7 +398,7 @@ public class VisDataWriter
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {
-                        proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                        proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                                 domainPositions[SE_START], domainPositions[SE_END], proteinData.HitDescription));
                     }
                 }
@@ -461,19 +415,19 @@ public class VisDataWriter
 
                 if(fivePrimeUtrStart < fivePrimeUtrEnd)
                 {
-                    proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                    proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                             fivePrimeUtrStart, fivePrimeUtrEnd, PD_FIVE_PRIME_UTR));
                 }
 
                 if(threePrimeUtrStart < threePrimeUtrEnd)
                 {
-                    proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                    proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                             threePrimeUtrStart, threePrimeUtrEnd, PD_THREE_PRIME_UTR));
                 }
             }
             else
             {
-                proteinList.add(new VisProteinDomainFile(mSampleId, geneData.ClusterId, transData.TransName, geneData.Chromosome,
+                proteinList.add(new VisProteinDomainFile(sampleData.sampleId(), geneData.ClusterId, transData.TransName, geneData.Chromosome,
                         transData.TransStart, transData.TransEnd, PD_NON_CODING));
             }
         }
@@ -496,8 +450,8 @@ public class VisDataWriter
             }
             else
             {
-                VisGeneExonFile.write(VisGeneExonFile.generateFilename(mOutputDir, mSampleId), geneExonList);
-                VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mOutputDir, mSampleId), proteinList);
+                VisGeneExonFile.write(VisGeneExonFile.generateFilename(mOutputDir, sampleData.sampleId()), geneExonList);
+                VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mOutputDir, sampleData.sampleId()), proteinList);
             }
         }
         catch (final IOException e)
@@ -506,7 +460,7 @@ public class VisDataWriter
         }
     }
 
-    private boolean checkAddIgExonRegions(final VisGeneData geneData, final List<VisGeneExonFile> geneExonList)
+    private boolean checkAddIgExonRegions(final String sampleId, final VisGeneData geneData, final List<VisGeneExonFile> geneExonList)
     {
         if(!geneData.AnnotationType.equals(FUSION))
             return false;
@@ -545,13 +499,13 @@ public class VisDataWriter
             posEnd = RG_VERSION.is37() ? 23265085 : 22922913;
         }
 
-        geneExonList.add(new VisGeneExonFile(mSampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
+        geneExonList.add(new VisGeneExonFile(sampleId, geneData.ClusterId, geneData.TransName, geneData.TransName,
                 geneData.Chromosome, geneData.AnnotationType.toString(), 1, posStart, posEnd));
 
         return true;
     }
 
-    private void writeCopyNumberData(final Map<String,List<SvCNData>> chrCNDataMap)
+    private void writeCopyNumberData(final VisSampleData sampleData, final Map<String,List<SvCNData>> chrCNDataMap)
     {
         List<VisCopyNumberFile> cnDataList = Lists.newArrayList();
 
@@ -562,7 +516,7 @@ public class VisDataWriter
             for(SvCNData cnData : entry.getValue())
             {
                 cnDataList.add(new VisCopyNumberFile(
-                        mSampleId, chromosome, cnData.StartPos, cnData.EndPos, cnData.CopyNumber, cnData.ActualBaf));
+                        sampleData.sampleId(), chromosome, cnData.StartPos, cnData.EndPos, cnData.CopyNumber, cnData.ActualBaf));
             }
         }
 
@@ -578,7 +532,7 @@ public class VisDataWriter
             }
             else
             {
-                VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mOutputDir, mSampleId), cnDataList);
+                VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mOutputDir, sampleData.sampleId()), cnDataList);
             }
         }
         catch(IOException e)
@@ -587,13 +541,13 @@ public class VisDataWriter
         }
     }
 
-    private void writeFusions()
+    private void writeFusions(final VisSampleData sampleData)
     {
         try
         {
             if (mBatchOutput)
             {
-                for (final VisFusionFile visFusion : mFusions)
+                for (final VisFusionFile visFusion : sampleData.getFusions())
                 {
                     mFusionFileWriter.write(VisFusionFile.toString(visFusion));
                     mFusionFileWriter.newLine();
@@ -601,7 +555,7 @@ public class VisDataWriter
             }
             else
             {
-                VisFusionFile.write(VisFusionFile.generateFilename(mOutputDir, mSampleId), mFusions);
+                VisFusionFile.write(VisFusionFile.generateFilename(mOutputDir, sampleData.sampleId()), sampleData.getFusions());
             }
         }
         catch (IOException e)

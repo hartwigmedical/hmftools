@@ -24,27 +24,20 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneData;
-import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 
 public class PseudoGeneFinder
 {
-    private final VisDataWriter mVisWriter;
-    private EnsemblDataCache mGeneTransCache;
+    private final EnsemblDataCache mGeneDataCache;
 
-    public PseudoGeneFinder(final VisDataWriter visWriter)
+    public PseudoGeneFinder(final EnsemblDataCache geneDataCache)
     {
-        mVisWriter = visWriter;
-        mGeneTransCache = null;
+        mGeneDataCache = geneDataCache;
     }
 
-    public void setGeneTransCache(final EnsemblDataCache geneTransCache)
+    public void checkPseudoGeneAnnotations(final List<SvCluster> clusters, final VisSampleData visSampleData)
     {
-        mGeneTransCache = geneTransCache;
-    }
-
-    public void checkPseudoGeneAnnotations(final List<SvCluster> clusters)
-    {
-        if(mGeneTransCache == null)
+        if(mGeneDataCache == null)
             return;
 
         for(final SvCluster cluster : clusters)
@@ -140,7 +133,7 @@ public class PseudoGeneFinder
                             }
                         }
 
-                        final TranscriptData transData = mGeneTransCache.getTranscriptData(geneData.GeneId, geneData.TransName);
+                        final TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, geneData.TransName);
 
                         if(transData == null || transData.exons().isEmpty())
                             continue;
@@ -183,7 +176,7 @@ public class PseudoGeneFinder
                             }
                         }
 
-                        mVisWriter.addGeneExonData(geneData);
+                        visSampleData.addGeneExonData(geneData);
                     }
                 }
             }
@@ -195,7 +188,7 @@ public class PseudoGeneFinder
     {
         List<PseudoGeneMatch> pseudoMatches = Lists.newArrayList();
 
-        List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(gene.StableId);
+        List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.StableId);
 
         for(final TranscriptData transData : transDataList)
         {
@@ -362,7 +355,7 @@ public class PseudoGeneFinder
 
     public boolean variantMatchesPseudogeneExons(final SvVarData var)
     {
-        if(mGeneTransCache == null)
+        if(mGeneDataCache == null)
             return false;
 
         if(var.isSglBreakend())
@@ -385,7 +378,7 @@ public class PseudoGeneFinder
             if(!genesEnd.stream().anyMatch(x -> x.GeneName.equals(gene.GeneName)))
                 continue;
 
-            List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(gene.StableId);
+            List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.StableId);
 
             for(final TranscriptData transData : transDataList)
             {

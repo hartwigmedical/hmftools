@@ -291,8 +291,6 @@ public class ChainingActualTest
 
         // Configurator.setRootLevel(Level.DEBUG);
 
-        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
-
         /* SOLUTION: a closed loop:
 
              cluster(0) added chain(0) ploidy(2.0) with 8 linked pairs:
@@ -338,8 +336,6 @@ public class ChainingActualTest
         // based on an MDM2 AMP - ends up with 1 high-ploidy chain, another with some extra low-ploidy SVs, and 2 more disconnected
 
         LinxTester tester = new LinxTester();
-
-        tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("DM_SAMPLE2");
 

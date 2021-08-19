@@ -3,36 +3,30 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
-import static com.hartwig.hmftools.linx.SvFileLoader.loadSvDataFromGermlineVcf;
-import static com.hartwig.hmftools.linx.SvFileLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.common.sv.StructuralVariantData;
-import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
-import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
-import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -72,7 +66,7 @@ public class LinxApplication
 
         final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
-        boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && config.SvVcfFile != null) || config.IsGermline;
+        // boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && config.SvVcfFile != null) || config.IsGermline;
 
         List<String> samplesList = config.getSampleIds();
 
@@ -98,16 +92,10 @@ public class LinxApplication
         LNX_LOGGER.info("running SV analysis for {}",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
 
-        CohortDataWriter cohortDataWriter = new CohortDataWriter(config);
+        FusionResources fusionResources = new FusionResources(cmd);
 
-        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, cohortDataWriter);
-
+        /*
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
-
-        if(config.hasMultipleSamples())
-            cnDataLoader.establishCaches();
-
-        sampleAnalyser.setCnDataLoader(cnDataLoader);
 
         DriverGeneAnnotator driverGeneAnnotator = null;
         boolean checkDrivers = cmd.hasOption(CHECK_DRIVERS) && config.DriverGenes != null;
@@ -119,28 +107,29 @@ public class LinxApplication
         boolean breakendGeneLoading = (samplesList.size() == 1 && !checkDrivers) && config.RestrictedGeneIds.isEmpty() && !config.IsGermline;
         boolean applyPromotorDistance = checkFusions;
         boolean purgeInvalidTranscripts = true;
-
-        boolean reqProteinDomains = checkFusions;
-        boolean reqSplicePositions = checkFusions;
-        boolean canonicalOnly = config.IsGermline || !checkFusions;
+        */
 
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
                 new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
 
         if(ensemblDataCache != null)
         {
+            boolean reqProteinDomains = config.RunFusions;
+            boolean reqSplicePositions = config.RunFusions;
+            boolean canonicalOnly = config.IsGermline || !config.RunFusions;
+
             ensemblDataCache.setRequiredData(true, reqProteinDomains, reqSplicePositions, canonicalOnly);
 
             boolean ensemblLoadOk = false;
 
-            if(!breakendGeneLoading)
+            if(!config.breakendGeneLoading())
             {
                 if(!config.RestrictedGeneIds.isEmpty())
                 {
                     ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
                     ensemblLoadOk = ensemblDataCache.load(false);
                 }
-                else if(!checkFusions && checkDrivers)
+                else if(!config.RunFusions && config.RunDrivers)
                 {
                     // only load transcripts for the driver gene panel
                     ensemblLoadOk = ensemblDataCache.load(true);
@@ -171,11 +160,15 @@ public class LinxApplication
                 return;
             }
 
-            sampleAnalyser.setGeneCollection(ensemblDataCache);
-            sampleAnalyser.getVisWriter().setGeneDataCache(ensemblDataCache);
+            if(config.RunDrivers)
+                ensemblDataCache.createGeneNameIdMap();
+
+            // cohortDataWriter.getVisWriter().setGeneDataCache(ensemblDataCache);
 
             // always initialise since is used for transcript evaluation
-            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, cohortDataWriter);
+            /*
+            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, fusionResources, cohortDataWriter);
+
 
             if(!fusionAnalyser.validState())
                 return;
@@ -195,10 +188,53 @@ public class LinxApplication
 
             if(checkDrivers)
             {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, cnDataLoader);
-                driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
+                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, cnDataLoader, cohortDataWriter);
             }
+            */
         }
+
+        CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);
+
+        SvAnnotators svAnnotators = new SvAnnotators(config, ensemblDataCache, dbAccess, cohortDataWriter);
+
+        if(config.Threads > 1)
+        {
+            List<SampleAnalyser> sampleAnalysers = Lists.newArrayList();
+            List<List<String>> saSampleLists = Lists.newArrayList();
+
+            for(int i = 0; i < config.Threads; ++i)
+            {
+                sampleAnalysers.add(new SampleAnalyser(
+                        i, config, dbAccess, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter));
+
+                saSampleLists.add(Lists.newArrayList());
+            }
+
+            int saIndex = 0;
+            for (final String sampleId : samplesList)
+            {
+                saSampleLists.get(saIndex).add(sampleId);
+            }
+
+            for(int i = 0; i < config.Threads; ++i)
+            {
+                sampleAnalysers.get(i).setSampleIds(saSampleLists.get(i));
+            }
+
+            final List<Callable> callableList = sampleAnalysers.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, config.Threads);
+        }
+        else
+        {
+            SampleAnalyser sampleAnalyser = new SampleAnalyser(
+                    0, config, dbAccess, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter);
+
+            sampleAnalyser.setSampleIds(config.getSampleIds());
+            sampleAnalyser.processSamples();
+        }
+
+        /*
+        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, svAnnotators, ensemblDataCache, cohortDataWriter);
 
         PerformanceCounter prefCounter = new PerformanceCounter("Total");
 
@@ -284,6 +320,10 @@ public class LinxApplication
 
         if(driverGeneAnnotator != null)
             driverGeneAnnotator.close();
+        */
+
+        svAnnotators.close();
+        cohortDataWriter.close();
 
         if(config.isSingleSample())
         {
@@ -293,38 +333,6 @@ public class LinxApplication
         LNX_LOGGER.info("SV analysis complete for {}",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
     }
-
-    public static List<StructuralVariantData> loadSampleSvDataFromFile(
-            final LinxConfig config, final String sampleId, final CommandLine cmd)
-    {
-        String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
-
-        if(config.IsGermline)
-            return loadSvDataFromGermlineVcf(vcfFile);
-        else
-            return loadSvDataFromVcf(vcfFile);
-
-        // no longer supported
-        // return loadSvDataFromSvFile(sampleId, config.SampleDataPath);
-    }
-
-    private static List<SvVarData> createSvData(final List<StructuralVariantData> svRecords, final LinxConfig config)
-    {
-        List<SvVarData> svVarDataItems = Lists.newArrayList();
-
-        for (final StructuralVariantData svRecord : svRecords)
-        {
-            final String filter = svRecord.filter();
-
-            if(filter.isEmpty() || filter.equals(PASS) || filter.equals(INFERRED) || (config.IsGermline && filter.equals(PON_FILTER_PON)))
-            {
-                svVarDataItems.add(new SvVarData(svRecord));
-            }
-        }
-
-        return svVarDataItems;
-    }
-
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess, boolean filterQCPassOnly)
     {

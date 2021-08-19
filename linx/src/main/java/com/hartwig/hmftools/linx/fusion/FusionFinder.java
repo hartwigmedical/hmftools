@@ -49,37 +49,24 @@ public class FusionFinder
 {
     private final KnownFusionCache mKnownFusionCache;
 
-    private boolean mHasValidConfigData;
-
     private final EnsemblDataCache mGeneTransCache;
     public int mNextFusionId;
 
     private static boolean mLogInvalidReasons;
 
-    public FusionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache)
+    public FusionFinder(final EnsemblDataCache geneTransCache, final KnownFusionCache knownFusionCache)
     {
         mGeneTransCache = geneTransCache;
-        mKnownFusionCache = new KnownFusionCache();
+        mKnownFusionCache = knownFusionCache;
 
-        mHasValidConfigData = true;
         mNextFusionId = 0;
 
         FusionReportability.populateRequiredProteins();
 
-        if(cmd != null)
-        {
-            initialise(cmd);
-        }
-
         mLogInvalidReasons = false;
     }
 
-    private void initialise(@NotNull final CommandLine cmd)
-    {
-        mHasValidConfigData = mKnownFusionCache.loadFromFile(cmd);
-    }
-
-    public boolean hasValidConfigData() { return mHasValidConfigData; }
+    public boolean hasValidConfigData() { return mKnownFusionCache.hasValidData(); }
     public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
 
     public static void addCmdLineArgs(Options options)
@@ -100,7 +87,7 @@ public class FusionFinder
     {
         final List<GeneFusion> potentialFusions = Lists.newArrayList();
 
-        if(!mHasValidConfigData)
+        if(!hasValidConfigData())
             return potentialFusions;
 
         for (final BreakendGeneData startGene : breakendGenes1)

@@ -22,19 +22,18 @@ import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
-import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 
-public class FusionWriter
+public class FusionWriter implements CohortFileInterface
 {
     private final String mOutputDir;
     private final CohortDataWriter mCohortDataWriter;
-    private BufferedWriter mFusionWriter;
 
     public FusionWriter(final String outputDir, final CohortDataWriter cohortDataWriter)
     {
         mOutputDir = outputDir;
         mCohortDataWriter = cohortDataWriter;
-        mFusionWriter = null;
     }
 
     public static void convertBreakendsAndFusions(
@@ -115,6 +114,9 @@ public class FusionWriter
 
     public void writeSampleData(final String sampleId, final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
+        if(mOutputDir == null)
+            return;
+
         try
         {
             // write flat files for database loading
@@ -130,12 +132,13 @@ public class FusionWriter
         }
     }
 
-    public void initialiseCohortWriter()
-    {
-        mFusionWriter = mCohortDataWriter.getFusionWriter();
-    }
+    private static final String COHORT_WRITER_FUSION = "Fusion";
 
-    public static BufferedWriter initialiseCohortWriter(final String outputDir)
+    @Override
+    public String fileType() { return COHORT_WRITER_FUSION; }
+
+    @Override
+    public BufferedWriter createWriter(final String outputDir)
     {
         // initialise the integrated, verbose fusion and breakend output file
         try
@@ -191,13 +194,13 @@ public class FusionWriter
 
     public void writeVerboseFusionData(final GeneFusion fusion, final String sampleId)
     {
-        if(mFusionWriter == null)
+        BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
+
+        if(cohortWriter == null)
             return;
 
         try
         {
-            BufferedWriter writer = mFusionWriter;
-
             final FusionAnnotations annotations = fusion.getAnnotations();
 
             if(annotations == null)
@@ -206,10 +209,10 @@ public class FusionWriter
                 return;
             }
 
-            writer.write(String.format("%s,%s,%s,%s",
+            cohortWriter.write(String.format("%s,%s,%s,%s",
                     sampleId, fusion.reportable(), fusion.reportableReason(), fusion.knownTypeStr()));
 
-            writer.write(String.format(",%s,%s,%d,%d,%s",
+            cohortWriter.write(String.format(",%s,%s,%d,%d,%s",
                     fusion.phaseType(), fusion.knownExons(),
                     annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
 
@@ -220,26 +223,26 @@ public class FusionWriter
                 final BreakendTransData trans = fusion.transcripts()[fs];
                 final BreakendGeneData gene = trans.gene();
 
-                writer.write(String.format(",%d,%s,%d,%d,%s,%.6f",
+                cohortWriter.write(String.format(",%d,%s,%d,%d,%s,%.6f",
                         gene.id(), gene.chromosome(), gene.position(), gene.orientation(),
                         gene.type(), gene.jcn()));
 
-                writer.write(String.format(",%s,%s,%s,%d,%s,%s",
+                cohortWriter.write(String.format(",%s,%s,%s,%d,%s,%s",
                         gene.StableId, fusion.geneName(fs), trans.transName(),
                         gene.Strand, trans.regionType(), trans.codingType()));
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%s",
+                cohortWriter.write(String.format(",%d,%d,%d,%d,%d,%s",
                         isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
                         fusion.getFusedExon(isUpstream), fusion.getExonsSkipped()[fs],
                         trans.Phase, trans.exonCount(), trans.isDisruptive()));
 
-                writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%s,%s",
+                cohortWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%s,%s",
                         trans.CodingBases, trans.TotalCodingBases,
                         trans.codingStart(), trans.codingEnd(), trans.transStart(), trans.transEnd(),
                         trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
             }
 
-            writer.write(String.format(",%s,%s,%f,%d",
+            cohortWriter.write(String.format(",%s,%s,%f,%d",
                         fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
                         fusion.priority(), fusion.id()));
 
@@ -256,18 +259,13 @@ public class FusionWriter
                 chainInfo += ",-1;0;0;true;false";
             }
 
-            writer.write(String.format("%s", chainInfo));
+            cohortWriter.write(String.format("%s", chainInfo));
 
-            writer.newLine();
+            cohortWriter.newLine();
         }
         catch (final IOException e)
         {
             LNX_LOGGER.error("error writing fusions: {}", e.toString());
         }
-    }
-
-    public void close()
-    {
-        closeBufferedWriter(mFusionWriter);
     }
 }

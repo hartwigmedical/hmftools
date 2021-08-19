@@ -56,7 +56,7 @@ public class RnaFusionMapper
     private final RnaMatchWriter mWriter;
     private final FusionParameters mFusionParams;
     private final EnsemblDataCache mGeneTransCache;
-    private final Map<String, List<RnaFusionData>> mSampleRnaData;
+    private final Map<String,List<RnaFusionData>> mSampleRnaData;
     private final RnaFusionAnnotator mAnnotator;
 
     private final List<GeneFusion> mDnaFusions;

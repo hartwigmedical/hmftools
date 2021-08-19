@@ -53,7 +53,7 @@ public class ClusterAnnotations
     public static final String LINE_CHAINS = "LINE_CHAINS";
     public static final String UNDER_CLUSTERING = "UC";
 
-    public static boolean runAnnotation(final String annotationsList, final String annotation)
+    public static boolean runAnnotation(final List<String> annotationsList, final String annotation)
     {
         if(annotationsList.isEmpty())
             return false;

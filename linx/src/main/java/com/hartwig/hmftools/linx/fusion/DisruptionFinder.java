@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -41,8 +40,9 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.germline.GermlinePonCache;
 import com.hartwig.hmftools.linx.types.DbPair;
@@ -50,13 +50,13 @@ import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 
-public class DisruptionFinder
+public class DisruptionFinder implements CohortFileInterface
 {
     private final EnsemblDataCache mGeneTransCache;
     private final List<GeneData> mDisruptionGenes;
-    private final VisDataWriter mVisWriter;
+    private final VisSampleData mVisSampleData;
 
     private final List<SvDisruptionData> mDisruptions;
     private final Map<BreakendTransData,String> mRemovedDisruptions; // cached for diagnostic purposes
@@ -64,30 +64,26 @@ public class DisruptionFinder
     private final boolean mIsGermline;
     private final GermlinePonCache mGermlinePonCache;
 
-    private BufferedWriter mWriter;
+    private final CohortDataWriter mCohortDataWriter;
 
     public static final int MAX_NON_DISRUPTED_CHAIN_LENGTH = 5000;
 
-    public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache, final CohortDataWriter cohortDataWriter)
+    public DisruptionFinder(
+            final LinxConfig config, final EnsemblDataCache geneTransCache,
+            final GermlinePonCache germlinePonCache, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mGeneTransCache = geneTransCache;
 
         mIsGermline = config.IsGermline;
-        mGermlinePonCache = config.IsGermline ? new GermlinePonCache(config.CmdLineArgs) : null;
+        mGermlinePonCache = germlinePonCache;
 
         mDisruptionGenes = disruptionGeneIds(config.DriverGenes, !mIsGermline, geneTransCache);
 
-        mVisWriter = cohortDataWriter.getVisWriter();
+        mVisSampleData = visSampleData;
+        mCohortDataWriter = cohortDataWriter;
 
         mDisruptions = Lists.newArrayList();
         mRemovedDisruptions = Maps.newHashMap();
-
-        if(config.requireCohortWriters())
-        {
-            mWriter = cohortDataWriter.getDisruptionWriter();
-        }
-
-        mWriter = null;
     }
 
     public static List<GeneData> disruptionGeneIds(
@@ -597,9 +593,9 @@ public class DisruptionFinder
 
                         mDisruptions.add(disruptionData);
 
-                        if(mVisWriter != null)
+                        if(mVisSampleData != null)
                         {
-                            mVisWriter.addGeneExonData(
+                            mVisSampleData.addGeneExonData(
                                     var.getCluster().id(), gene.StableId, gene.GeneName,
                                     "", 0, gene.chromosome(), DISRUPTION);
                         }
@@ -703,7 +699,13 @@ public class DisruptionFinder
         }
     }
 
-    public static BufferedWriter initialiseOutputFile(final String outputDir, boolean isGermline)
+    private static final String COHORT_WRITER_DISRUPTION = "Disruption";
+
+    @Override
+    public String fileType() { return COHORT_WRITER_DISRUPTION; }
+
+    @Override
+    public BufferedWriter createWriter(final String outputDir)
     {
         try
         {
@@ -714,7 +716,7 @@ public class DisruptionFinder
             writer.write("SampleId,Reportable,SvId,IsStart,Type,ClusterId,Chromosome,Position,Orientation");
             writer.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
 
-            if(!isGermline)
+            if(!mIsGermline)
             {
                 writer.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
             }
@@ -735,7 +737,9 @@ public class DisruptionFinder
 
     public void writeMultiSampleData(final String sampleId, final List<SvVarData> svList)
     {
-        if(mWriter == null)
+        BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
+
+        if(cohortWriter == null)
             return;
 
         try
@@ -746,12 +750,12 @@ public class DisruptionFinder
                 boolean isSvStart = disruptionData.IsStart;
                 final GeneData gene = disruptionData.Gene;
 
-                mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
+                cohortWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
                         sampleId, disruptionData.Reportable, var.id(), isSvStart,
                         var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
                         disruptionData.Gene.Chromosome, var.position(isSvStart), var.orientation(isSvStart)));
 
-                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s",
+                cohortWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s",
                         gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
                         disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType));
 
@@ -759,18 +763,18 @@ public class DisruptionFinder
                 {
                     int ponCount = var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
 
-                    mWriter.write(String.format(",%s,%s,%d",
+                    cohortWriter.write(String.format(",%s,%s,%d",
                             var.getCluster().getResolvedType(), var.getSvData().filter(), ponCount));
                 }
                 else
                 {
-                    mWriter.write(String.format(",%.2f,,",
+                    cohortWriter.write(String.format(",%.2f,,",
                             gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
                             disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType,
                             disruptionData.UndisruptedCopyNumber));
                 }
 
-                mWriter.newLine();
+                cohortWriter.newLine();
             }
 
             if(!mIsGermline)
@@ -786,7 +790,7 @@ public class DisruptionFinder
                     final BreakendGeneData gene = transcript.gene();
                     final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
 
-                    mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
+                    cohortWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
                             sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
                             var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
                             gene.chromosome(), gene.position(), gene.orientation()));
@@ -802,12 +806,12 @@ public class DisruptionFinder
                         extraInfo = contextInfo[1];
                     }
 
-                    mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
+                    cohortWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
                             gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
                             transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
                             transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
 
-                    mWriter.newLine();
+                    cohortWriter.newLine();
                 }
             }
         }
@@ -816,10 +820,4 @@ public class DisruptionFinder
             LNX_LOGGER.error("error writing fusions: {}", e.toString());
         }
     }
-
-    public void close()
-    {
-        closeBufferedWriter(mWriter);
-    }
-
 }

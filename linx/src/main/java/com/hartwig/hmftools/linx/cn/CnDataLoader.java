@@ -71,9 +71,8 @@ public class CnDataLoader
         mRecordId = 0;
 
         mCnJcnCalcs = new CnJcnCalcs(mChrCnDataMap, mSvIdCnDataMap, mSvDataList);
+        mCnJcnCalcs.establishReadCountCache();
     }
-
-    public void establishCaches() { mCnJcnCalcs.establishReadCountCache(); }
 
     public final Map<Integer, JcnCalcData> getSvJcnCalcMap() { return mCnJcnCalcs.getSvJcnCalcMap(); }
     public final List<LohEvent> getLohData() { return mLohEventData; }

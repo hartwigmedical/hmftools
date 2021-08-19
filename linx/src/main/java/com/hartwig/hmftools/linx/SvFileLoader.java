@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
@@ -17,13 +20,27 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFile;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.linx.types.GermlineFilter;
+import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
+
+import org.apache.commons.cli.CommandLine;
 
 public class SvFileLoader
 {
     public static final String VCF_FILE = "sv_vcf";
 
-    public static List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
+    public static List<StructuralVariantData> loadSampleSvDataFromFile(
+            final LinxConfig config, final String sampleId, final CommandLine cmd)
+    {
+        String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
+
+        if(config.IsGermline)
+            return loadSvDataFromGermlineVcf(vcfFile);
+        else
+            return loadSvDataFromVcf(vcfFile);
+    }
+
+    private static List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
     {
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
@@ -50,7 +67,7 @@ public class SvFileLoader
         return svDataList;
     }
 
-    public static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
+    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
     {
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
@@ -73,6 +90,23 @@ public class SvFileLoader
         }
 
         return svDataList;
+    }
+
+    public static List<SvVarData> createSvData(final List<StructuralVariantData> svRecords, final LinxConfig config)
+    {
+        List<SvVarData> svVarDataItems = Lists.newArrayList();
+
+        for (final StructuralVariantData svRecord : svRecords)
+        {
+            final String filter = svRecord.filter();
+
+            if(filter.isEmpty() || filter.equals(PASS) || filter.equals(INFERRED) || (config.IsGermline && filter.equals(PON_FILTER_PON)))
+            {
+                svVarDataItems.add(new SvVarData(svRecord));
+            }
+        }
+
+        return svVarDataItems;
     }
 
     public static List<StructuralVariantData> loadSvDataFromSvFile(final String sampleId, final String svDataPath)

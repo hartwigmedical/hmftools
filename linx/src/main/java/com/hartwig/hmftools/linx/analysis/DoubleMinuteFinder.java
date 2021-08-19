@@ -35,6 +35,8 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.linx.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.SvChain;
@@ -44,7 +46,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class DoubleMinuteFinder
+public class DoubleMinuteFinder implements CohortFileInterface
 {
     private CnDataLoader mCnDataLoader;
     private EnsemblDataCache mGeneTransCache;
@@ -54,10 +56,11 @@ public class DoubleMinuteFinder
     private final List<Integer> mProcessedClusters;
     private final Map<Integer, DoubleMinuteData> mDoubleMinutes;
 
-    private BufferedWriter mFileWriter;
-    private boolean mLogCandidates;
-    private boolean mShowCandidates;
-    private boolean mSingleSample;
+    private final CohortDataWriter mCohortDataWriter;
+    private final BufferedWriter mSampleWriter;
+    private final boolean mLogCandidates;
+    private final boolean mShowCandidates;
+    private final LinxConfig mConfig;
 
     protected static final double JCN_UPPER_THRESHOLD = 8;
     private static final double JCN_THRESHOLD = 5;
@@ -65,7 +68,10 @@ public class DoubleMinuteFinder
     private static final double MIN_PERC_OF_MAX_JCN = 0.25;
     protected static final int MIN_SEGMENT_DEPTH_WINDOW_COUNT = 6;
 
-    public DoubleMinuteFinder(final Map<String, List<SvBreakend>> chrBreakendMap)
+    private static final String COHORT_WRITER_DM = "DoubleMinute";
+
+    public DoubleMinuteFinder(
+            final LinxConfig config, final CohortDataWriter cohortDataWriter, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         mChrBreakendMap = chrBreakendMap;
         mChainFinder = new ChainFinder();
@@ -74,32 +80,18 @@ public class DoubleMinuteFinder
 
         mProcessedClusters = Lists.newArrayList();
         mDoubleMinutes = Maps.newHashMap();
-        mLogCandidates = false;
-        mShowCandidates = false;
-        mSingleSample = false;
+        mConfig = config;
 
-        mFileWriter = null;
+        mLogCandidates = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
+        mShowCandidates = runAnnotation(config.RequiredAnnotations, "SHOW_DM");
+
+        mCohortDataWriter = cohortDataWriter;
+
+        mSampleWriter = mConfig.isSingleSample() ? initialiseWriter(mConfig.OutputDataPath, config.getSampleIds().get(0)) : null;
     }
 
     public void setGeneTransCache(final EnsemblDataCache geneDataCache) { mGeneTransCache = geneDataCache; }
     public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCnDataLoader = cnAnalyser; }
-
-    public void initialiseOutput(final LinxConfig config, final CohortDataWriter cohortDataWriter)
-    {
-        boolean dmAnnotations = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
-
-        if(dmAnnotations && !config.IsGermline)
-        {
-            String sampleId = config.isSingleSample() ? config.getSampleIds().get(0) : "";
-            mSingleSample = config.isSingleSample();
-
-            mFileWriter = config.hasMultipleSamples() ?
-                    cohortDataWriter.getDoubleMinuteWriter() : initialiseWriter(config.OutputDataPath, sampleId);
-        }
-
-        mLogCandidates = dmAnnotations;
-        mShowCandidates = runAnnotation(config.RequiredAnnotations, "SHOW_DM");
-    }
 
     public final Map<Integer, DoubleMinuteData> getDoubleMinutes() { return mDoubleMinutes; }
 
@@ -368,7 +360,16 @@ public class DoubleMinuteFinder
         return (int)chains.stream().filter(x -> x.couldCloseChain()).count();
     }
 
-    public static BufferedWriter initialiseWriter(final String outputDir, final String sampleId)
+    @Override
+    public String fileType() { return COHORT_WRITER_DM; }
+
+    @Override
+    public BufferedWriter createWriter(final String outputDir)
+    {
+        return initialiseWriter(outputDir, "");
+    }
+
+    private static BufferedWriter initialiseWriter(final String outputDir, final String sampleId)
     {
         if(outputDir == null || outputDir.isEmpty())
             return null;
@@ -403,7 +404,7 @@ public class DoubleMinuteFinder
 
     public void reportCluster(final String sampleId, final SvCluster cluster)
     {
-        if(mFileWriter == null)
+        if(!mLogCandidates)
             return;
 
         final DoubleMinuteData dmData = mDoubleMinutes.get(cluster.id());
@@ -466,29 +467,40 @@ public class DoubleMinuteFinder
 
         final String chromosomeStr = appendStrList(chromosomes, ITEM_DELIM_CHR);
 
+        BufferedWriter writer = null;
+
+        if(mConfig.isSingleSample())
+        {
+            writer = mSampleWriter;
+        }
+        else
+        {
+            writer = mCohortDataWriter.getWriter(this);
+        }
+
         try
         {
-            if(!mSingleSample)
+            if(!mConfig.isSingleSample())
             {
-                mFileWriter.write(String.format("%s,", sampleId));
+                writer.write(String.format("%s,", sampleId));
             }
 
-            mFileWriter.write(String.format("%d,%s,%s,%d",
+            writer.write(String.format("%d,%s,%s,%d",
                     cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
 
-            mFileWriter.write(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
+            writer.write(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
                     samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.ValidSVs.size(), dmTypesStr, svIds, chromosomeStr));
 
-            mFileWriter.write(String.format(",%d,%s,%d,%d,%d,%s",
+            writer.write(String.format(",%d,%s,%d,%d,%d,%s",
                     dmData.ValidChains.size(), dmData.FullyChained, dmData.ValidChains.stream().filter(x -> x.isClosedLoop()).count(),
                     dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
                     dmData.ValidChains.stream().anyMatch(x -> x.hasRepeatedSV())));
 
-            mFileWriter.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
+            writer.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
                     dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
                     dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal, dmData.SimpleDels));
 
-            mFileWriter.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
+            writer.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
 
             double minMinAmr = 0;
             if(dmData.SVs.size() == 1)
@@ -500,11 +512,11 @@ public class DoubleMinuteFinder
                         getMajorAlleleJcnRatio(var.getBreakend(false)));
             }
 
-            mFileWriter.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f,%.1f",
+            writer.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f,%.1f",
                     maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere,
                     dmData.MinAdjMAJcnRatio, minMinAmr));
 
-            mFileWriter.newLine();
+            writer.newLine();
         }
         catch (final IOException e)
         {
@@ -539,6 +551,6 @@ public class DoubleMinuteFinder
 
     public void close()
     {
-        closeBufferedWriter(mFileWriter);
+        closeBufferedWriter(mSampleWriter);
     }
 }

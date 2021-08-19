@@ -92,8 +92,6 @@ public class DoubleMinuteTest
     {
         // a cluster is not a DM if it has too high a ratio of open breakends, with simple DELs excluded
         LinxTester tester = new LinxTester();
-        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
-        tester.Analyser.getDoubleMinuteFinder().initialiseOutput(tester.Config, null);
 
         // the main DM structure, with open breakends
         SvVarData var1 = createTestSv(tester.nextVarId(),"1","2",1000,100,-1,1, BND,8);
@@ -123,8 +121,6 @@ public class DoubleMinuteTest
     {
         // a cluster is not a DM if it has too many breakends going from within a segment to outside, but  short TIs are excluded
         LinxTester tester = new LinxTester();
-        tester.Config.RequiredAnnotations = DOUBLE_MINUTES;
-        tester.Analyser.getDoubleMinuteFinder().initialiseOutput(tester.Config, null);
 
         // tester.logVerbose(true);
 

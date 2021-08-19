@@ -1,26 +1,25 @@
-package com.hartwig.hmftools.linx.analysis;
+package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.SvFileLoader.createSvData;
+import static com.hartwig.hmftools.linx.SvFileLoader.loadSampleSvDataFromFile;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator.LINX_DRIVER_CATALOG;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxLink;
@@ -32,23 +31,18 @@ import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxLink;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
-import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
-import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
-import com.hartwig.hmftools.linx.annotators.KataegisAnnotator;
-import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
+import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
+import com.hartwig.hmftools.linx.analysis.VariantPrep;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
-import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
-import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
-import com.hartwig.hmftools.linx.cn.JcnCalcData;
-import com.hartwig.hmftools.linx.cn.SvCNData;
+import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
+import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
+import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.linx.types.ArmCluster;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.LinkedPair;
-import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -56,110 +50,184 @@ import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
-public class SampleAnalyser
+public class SampleAnalyser implements Callable
 {
+    private final int mId;
     private final LinxConfig mConfig;
-    private final ClusterAnalyser mAnalyser;
+    private List<String> mSampleIds;
 
+    private final ClusterAnalyser mAnalyser;
+    private final DatabaseAccess mDbAccess;
+    private final EnsemblDataCache mEnsemblDataCache;
+
+    private final VisSampleData mVisSampleData;
     private final CohortDataWriter mCohortDataWriter;
 
+    private final SvAnnotators mSvAnnotators;
+    private final CnDataLoader mCnDataLoader;
+
     // data per run (ie sample)
-    private String mSampleId;
+    private String mCurrentSampleId;
     private final List<SvVarData> mAllVariants; // full list of SVs
 
-    private final FragileSiteAnnotator mFragileSiteAnnotator;
-    private final LineElementAnnotator mLineElementAnnotator;
-    private final ReplicationOriginAnnotator mReplicationOriginAnnotator;
-    private final KataegisAnnotator mKataegisAnnotator;
-    private CnDataLoader mCnDataLoader;
-    private final PseudoGeneFinder mPseudoGeneFinder;
-    private final IndelAnnotator mIndelAnnotator;
+    private final DriverGeneAnnotator mDriverGeneAnnotator;
+    private final FusionDisruptionAnalyser mFusionAnalyser;
 
     private boolean mIsValid;
 
+    private final PerformanceCounter mPcTotal;
     private final PerformanceCounter mPcPrep;
     private final PerformanceCounter mPcClusterAnalyse;
     private final PerformanceCounter mPcAnnotation;
     private final PerformanceCounter mPcWrite;
 
-    public SampleAnalyser(final LinxConfig config, final DatabaseAccess dbAccess, final CohortDataWriter cohortDataWriter)
+    public SampleAnalyser(
+            int instanceId, final LinxConfig config, final DatabaseAccess dbAccess, final SvAnnotators svAnnotators,
+            final EnsemblDataCache ensemblDataCache, final FusionResources fusionResources, final CohortDataWriter cohortDataWriter)
     {
+        mId = instanceId;
         mConfig = config;
-        mSampleId = "";
+        mSampleIds = Lists.newArrayList();
+
+        mVisSampleData = new VisSampleData();
+        mCurrentSampleId = "";
+
+        mDbAccess = dbAccess;
+        mEnsemblDataCache = ensemblDataCache;
 
         mCohortDataWriter = cohortDataWriter;
+        mSvAnnotators = svAnnotators;
 
         mAnalyser = new ClusterAnalyser(config, mCohortDataWriter);
 
+        mCnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
+
+        mDriverGeneAnnotator = mConfig.RunDrivers ?
+                new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
+
+        mFusionAnalyser = new FusionDisruptionAnalyser(
+                config.CmdLineArgs, config, ensemblDataCache, fusionResources, cohortDataWriter, mVisSampleData);
+
         mAllVariants = Lists.newArrayList();
-        mCnDataLoader = null;
 
         mIsValid = true;
 
-        mFragileSiteAnnotator = new FragileSiteAnnotator();
-        mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);
+        mAnalyser.setLineAnnotator(mSvAnnotators.LineElementAnnotator);
+        mAnalyser.setCnDataLoader(mCnDataLoader);
+        mAnalyser.setGeneCollection(ensemblDataCache);
 
-        mLineElementAnnotator = new LineElementAnnotator(mConfig.ProximityDistance);
-        mLineElementAnnotator.loadLineElementsFile(mConfig.LineElementFile);
-        mAnalyser.setLineAnnotator(mLineElementAnnotator);
-
-        mPseudoGeneFinder = new PseudoGeneFinder(mCohortDataWriter.getVisWriter());
-        mLineElementAnnotator.setPseudoGeneFinder(mPseudoGeneFinder);
-
-        mReplicationOriginAnnotator = new ReplicationOriginAnnotator();
-        mReplicationOriginAnnotator.loadReplicationOrigins(mConfig.ReplicationOriginsFile);
-
-        mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
-        mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
-
-        mIndelAnnotator = config.IndelAnnotation ? new IndelAnnotator(dbAccess, config) : null;
-
+        mPcTotal = new PerformanceCounter("Total");
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
         mPcAnnotation = new PerformanceCounter("Annotation");
         mPcWrite = new PerformanceCounter("WriteCSV");
     }
 
+    public void setSampleIds(final List<String> sampleIds)
+    {
+        mSampleIds.clear();
+        mSampleIds.addAll(sampleIds);
+    }
+
+    @Override
+    public Long call()
+    {
+        // processSample();
+        return (long)1;
+    }
+
+    public void processSamples()
+    {
+        if(mSampleIds.size() == 1)
+        {
+            mPcTotal.start();
+            processSample(mSampleIds.get(0));
+            mPcTotal.stop();
+            return;
+        }
+
+        LNX_LOGGER.info("%d: processing {} samples", mId, mSampleIds.size());
+
+        for(int i = 0; i < mSampleIds.size(); ++i)
+        {
+            mPcTotal.start();
+
+            processSample(mSampleIds.get(i));
+
+            if(i > 10 && (i % 10) == 0)
+            {
+                LNX_LOGGER.info("%d: procesed {} samples", mId, i);
+            }
+
+            mPcTotal.stop();
+        }
+    }
+
+    private void processSample(final String sampleId)
+    {
+        mCurrentSampleId = sampleId;
+        mVisSampleData.setSampleId(sampleId);
+
+        final List<StructuralVariantData> svRecords = mConfig.loadSampleDataFromFile() ?
+                loadSampleSvDataFromFile(mConfig, mCurrentSampleId, mConfig.CmdLineArgs) : mDbAccess.readStructuralVariantData(mCurrentSampleId);
+
+        final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
+
+        if(svDataList.isEmpty())
+        {
+            LNX_LOGGER.info("sample({}) has no passing SVs", mCurrentSampleId);
+
+            if(mConfig.isSingleSample())
+                writeSampleWithNoSVs();
+
+            return;
+        }
+
+        if(!mConfig.IsGermline)
+            mCnDataLoader.loadSampleData(mCurrentSampleId, svRecords);
+
+        setSampleSVs(svDataList);
+
+        if(mEnsemblDataCache != null)
+        {
+            VariantPrep.setSvGeneData(svDataList, mEnsemblDataCache, mConfig.RunFusions, mConfig.breakendGeneLoading());
+        }
+
+        analyse();
+
+        if(!inValidState())
+        {
+            LNX_LOGGER.info("exiting after sample({}), in invalid state", mCurrentSampleId);
+            return;
+        }
+
+        // when matching RNA, allow all transcripts regardless of their viability for fusions
+        boolean purgeInvalidTranscripts = !mFusionAnalyser.hasRnaSampleData();
+        mFusionAnalyser.annotateTranscripts(svDataList, purgeInvalidTranscripts);
+
+        annotate();
+
+        if(mDriverGeneAnnotator != null)
+            mDriverGeneAnnotator.annotateSVs(mCurrentSampleId, getChrBreakendMap());
+
+        if(mConfig.RunFusions || mConfig.IsGermline)
+            mFusionAnalyser.run(mCurrentSampleId, svDataList, mDbAccess, getClusters(), getChrBreakendMap());
+
+        writeOutput(mDbAccess);
+
+        LNX_LOGGER.info("sample({}) procesed {} SVs", sampleId, svDataList.size());
+    }
+
     public final List<SvVarData> getVariants() { return mAllVariants; }
     public final List<SvCluster> getClusters() { return mAnalyser.getClusters(); }
     public boolean inValidState() { return mIsValid; }
     public final Map<String, List<SvBreakend>> getChrBreakendMap() { return mAnalyser.getState().getChrBreakendMap(); }
-    public final VisDataWriter getVisWriter() { return mCohortDataWriter.getVisWriter(); }
-
-    public void setCnDataLoader(CnDataLoader cnAnalyser)
-    {
-        mCnDataLoader = cnAnalyser;
-        mAnalyser.setCnDataLoader(cnAnalyser);
-    }
-
-    public void setGeneCollection(final EnsemblDataCache geneDataCache)
-    {
-        mAnalyser.setGeneCollection(geneDataCache);
-        mPseudoGeneFinder.setGeneTransCache(geneDataCache);
-    }
-
-    private void clearState()
-    {
-        if(mSampleId.isEmpty())
-            return;
-
-        mSampleId = "";
-        mAllVariants.clear();
-    }
-
-    public void setSampleId(final String sampleId)
-    {
-        clearState();
-
-        mSampleId = sampleId;
-        mCohortDataWriter.getVisWriter().setSampleId(sampleId);
-    }
 
     public void setSampleSVs(final List<SvVarData> variants)
     {
@@ -171,136 +239,14 @@ public class SampleAnalyser
         if(!mConfig.IsGermline)
         {
             // look-up and cache relevant CN data into each SV
-            setSvCopyNumberData(
+            VariantPrep.setSvCopyNumberData(
                     mAllVariants,
                     mCnDataLoader.getSvJcnCalcMap(),
                     mCnDataLoader.getSvIdCnDataMap(),
                     mCnDataLoader.getChrCnDataMap());
         }
 
-        LNX_LOGGER.debug("loaded {} SVs", mAllVariants.size());
-    }
-
-    public static void setSvCopyNumberData(List<SvVarData> svList, final Map<Integer, JcnCalcData> svJcnCalcDataMap,
-            final Map<Integer,SvCNData[]> svIdCnDataMap, final Map<String,List<SvCNData>> chrCnDataMap)
-    {
-        if((svJcnCalcDataMap == null || svJcnCalcDataMap.isEmpty()) && svIdCnDataMap.isEmpty())
-            return;
-
-        List<SvCNData> cnDataList = null;
-        String currentChromosome = "";
-        for(final SvVarData var : svList)
-        {
-            if(svJcnCalcDataMap != null)
-            {
-                final JcnCalcData jcnData = svJcnCalcDataMap.get(var.id());
-                if (jcnData != null)
-                {
-                    double estJcn = jcnData.JcnEstimate;
-                    double estUncertainty = jcnData.JcnUncertainty;
-                    var.setJcnRecalcData(estJcn - estUncertainty, estJcn + estUncertainty);
-                }
-            }
-
-            final SvCNData[] cnDataPair = svIdCnDataMap.get(var.id());
-
-            if(cnDataPair == null)
-                continue;
-
-            for(int be = SE_START; be <= SE_END; ++be)
-            {
-                if(var.isSglBreakend() && be == SE_END)
-                    continue;
-
-                boolean isStart = isStart(be);
-
-                if(!currentChromosome.equals(var.chromosome(isStart)))
-                {
-                    currentChromosome = var.chromosome(isStart);
-                    cnDataList = chrCnDataMap.get(currentChromosome);
-                }
-
-                SvCNData cnDataPost = cnDataPair[be];
-
-                if(cnDataList == null || cnDataPost == null)
-                    continue;
-
-                SvCNData cnDataPrev = cnDataList.get(cnDataPost.getIndex() - 1);
-
-                var.setCopyNumberData(isStart, cnDataPrev, cnDataPost);
-            }
-        }
-    }
-
-    public static void setSvGeneData(
-            final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache, boolean applyPromotorDistance, boolean loadBreakendGenes)
-    {
-        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
-
-        if (loadBreakendGenes)
-        {
-            // only load transcript info for the genes covered
-            final List<String> restrictedGeneIds = Lists.newArrayList();
-
-            for (final SvVarData var : svList)
-            {
-                for (int be = SE_START; be <= SE_END; ++be)
-                {
-                    if (be == SE_END && var.isSglBreakend())
-                    {
-                        // special case of looking for mappings to locations containing genes so hotspot fusions can be found
-                        for(final SglMapping mapping : var.getSglMappings())
-                        {
-                            ensemblDataCache.populateGeneIdList(restrictedGeneIds, mapping.Chromosome, mapping.Position, upstreamDistance);
-                        }
-                    }
-                    else
-                    {
-                        boolean isStart = isStart(be);
-                        ensemblDataCache.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
-                    }
-                }
-            }
-
-            ensemblDataCache.getAlternativeGeneData().stream().filter(x -> !restrictedGeneIds.contains(x.GeneId))
-                    .forEach(x -> restrictedGeneIds.add(x.GeneId));
-
-            ensemblDataCache.loadTranscriptData(restrictedGeneIds);
-        }
-
-        // associate breakends with transcripts
-        for (final SvVarData var : svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                boolean isStart = isStart(be);
-                final List<BreakendGeneData> genesList = var.getGenesList(isStart);
-
-                if (be == SE_END && var.isSglBreakend())
-                {
-                    // special case of looking for mappings to locations containing genes so hotspot fusions can be found
-                    for(final SglMapping mapping : var.getSglMappings())
-                    {
-                        final List<BreakendGeneData> mappingGenes = ensemblDataCache.findGeneAnnotationsBySv(
-                                var.id(), isStart, mapping.Chromosome, mapping.Position, mapping.Orientation, upstreamDistance);
-
-                        mappingGenes.forEach(x -> x.setType(var.type()));
-
-                        genesList.addAll(mappingGenes);
-                    }
-                }
-                else
-                {
-                    genesList.addAll(ensemblDataCache.findGeneAnnotationsBySv(
-                            var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance));
-
-                    for (BreakendGeneData gene : genesList)
-                    {
-                        gene.setSvData(var.getSvData(), var.jcn());
-                    }
-                }
-            }
-        }
+        LNX_LOGGER.debug("sample({}) loaded {} SVs", mCurrentSampleId, mAllVariants.size());
     }
 
     public void analyse()
@@ -308,14 +254,14 @@ public class SampleAnalyser
         if(mAllVariants.isEmpty())
             return;
 
-        LNX_LOGGER.debug("sample({}) analysing {} variants", mSampleId, mAllVariants.size());
+        LNX_LOGGER.debug("sample({}) analysing {} variants", mCurrentSampleId, mAllVariants.size());
 
         mPcPrep.start();
 
         linkSglMappedInferreds(mAllVariants);
         annotateAndFilterVariants();
 
-        mAnalyser.setSampleData(mSampleId, mAllVariants);
+        mAnalyser.setSampleData(mCurrentSampleId, mAllVariants);
 
         mAnalyser.preClusteringPreparation();
 
@@ -324,8 +270,8 @@ public class SampleAnalyser
             buildGermlineCopyNumberData();
         }
 
-        mKataegisAnnotator.annotateVariants(mSampleId, mAnalyser.getState().getChrBreakendMap());
-        mReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
+        mSvAnnotators.KataegisAnnotator.annotateVariants(mCurrentSampleId, mAnalyser.getState().getChrBreakendMap());
+        mSvAnnotators.ReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
 
         mPcPrep.stop();
 
@@ -342,20 +288,20 @@ public class SampleAnalyser
 
         mAnalyser.annotateClusters();
 
-        mPseudoGeneFinder.checkPseudoGeneAnnotations(getClusters());
+        mSvAnnotators.PseudoGeneFinder.checkPseudoGeneAnnotations(getClusters(), mVisSampleData);
 
-        if(mIndelAnnotator != null)
+        if(mSvAnnotators.IndelAnnotator != null)
         {
-            mIndelAnnotator.loadIndels(mSampleId);
+            mSvAnnotators.IndelAnnotator.loadIndels(mCurrentSampleId);
 
-            if(!mIndelAnnotator.exceedsThresholds())
-                getClusters().forEach(x -> mIndelAnnotator.annotateCluster(x));
+            if(!mSvAnnotators.IndelAnnotator.exceedsThresholds())
+                getClusters().forEach(x -> mSvAnnotators.IndelAnnotator.annotateCluster(x));
         }
 
         mPcAnnotation.stop();
     }
 
-    public void writeOutput(final DatabaseAccess dbAccess)
+    private void writeOutput(final DatabaseAccess dbAccess)
     {
         // if processing a single sample, write flat-files and optionally load the same data to the DB
         // if running in batch mode, skip flat-file generation and DB load, and instead write verbose batch output files
@@ -372,21 +318,22 @@ public class SampleAnalyser
 
         if(mCohortDataWriter.writeCohortFiles())
         {
-            mCohortDataWriter.writeSvData(mSampleId, mAllVariants);
-            mCohortDataWriter.writeLinksData(mSampleId, mAnalyser.getClusters());
-            mCohortDataWriter.writeClusterData(mSampleId, mAnalyser.getClusters());
+            mCohortDataWriter.writeSvData(mCurrentSampleId, mAllVariants);
+            mCohortDataWriter.writeLinksData(mCurrentSampleId, mAnalyser.getClusters());
+            mCohortDataWriter.writeClusterData(mCurrentSampleId, mAnalyser.getClusters());
         }
 
-        mCohortDataWriter.getVisWriter().writeOutput(mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
+        mCohortDataWriter.getVisWriter().writeOutput(
+                mVisSampleData, mAnalyser.getClusters(), mAllVariants, mCnDataLoader.getChrCnDataMap());
 
         if(mConfig.isSingleSample())
         {
             try
             {
                 // write per-sample DB-style output
-                LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mSampleId), linxSvData);
-                LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mSampleId), clusterData);
-                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mSampleId), linksData);
+                LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linxSvData);
+                LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), clusterData);
+                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), linksData);
             }
             catch (IOException e)
             {
@@ -396,9 +343,9 @@ public class SampleAnalyser
 
         if(mConfig.UploadToDB && dbAccess != null)
         {
-            dbAccess.writeSvLinxData(mSampleId, linxSvData);
-            dbAccess.writeSvClusters(mSampleId, clusterData);
-            dbAccess.writeSvLinks(mSampleId, linksData);
+            dbAccess.writeSvLinxData(mCurrentSampleId, linxSvData);
+            dbAccess.writeSvClusters(mCurrentSampleId, clusterData);
+            dbAccess.writeSvLinks(mCurrentSampleId, linksData);
         }
 
         mPcWrite.stop();
@@ -408,24 +355,24 @@ public class SampleAnalyser
     {
         try
         {
-            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
-            LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
-            final String driverCatalogFile = mConfig.OutputDataPath + mSampleId + LINX_DRIVER_CATALOG;
+            final String driverCatalogFile = mConfig.OutputDataPath + mCurrentSampleId + LINX_DRIVER_CATALOG;
             DriverCatalogFile.write(driverCatalogFile, Lists.newArrayList());
 
-            VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            VisGeneExonFile.write(VisGeneExonFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
-            VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mSampleId), Lists.newArrayList());
+            VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            VisGeneExonFile.write(VisGeneExonFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
         }
         catch (IOException e)
         {
@@ -442,10 +389,10 @@ public class SampleAnalyser
             SvVarData var = mAllVariants.get(currentIndex);
 
             var.setFragileSites(
-                    mFragileSiteAnnotator.isFragileSite(var, true),
-                    mFragileSiteAnnotator.isFragileSite(var, false));
+                    mSvAnnotators.FragileSiteAnnotator.isFragileSite(var, true),
+                    mSvAnnotators.FragileSiteAnnotator.isFragileSite(var, false));
 
-            mLineElementAnnotator.setKnownLineElements(var);
+            mSvAnnotators.LineElementAnnotator.setKnownLineElements(var);
 
             ChromosomeArm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
@@ -472,7 +419,7 @@ public class SampleAnalyser
 
         mCnDataLoader.createChrCopyNumberMap();
 
-        setSvCopyNumberData(
+        VariantPrep.setSvCopyNumberData(
                 mAllVariants,
                 mCnDataLoader.getSvJcnCalcMap(),
                 mCnDataLoader.getSvIdCnDataMap(),
@@ -624,6 +571,7 @@ public class SampleAnalyser
 
     public void close()
     {
+        /* TODO
         if(mConfig.hasMultipleSamples() || LNX_LOGGER.isDebugEnabled())
         {
             // log perf stats
@@ -633,13 +581,8 @@ public class SampleAnalyser
             mPcAnnotation.logStats();
             mPcWrite.logStats();
         }
+        */
 
-        mCohortDataWriter.close();
-
-        mKataegisAnnotator.close();
         mAnalyser.close();
-
-        if(mIndelAnnotator != null)
-            mIndelAnnotator.close();
     }
 }

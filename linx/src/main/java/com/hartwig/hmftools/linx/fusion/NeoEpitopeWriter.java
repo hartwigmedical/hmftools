@@ -34,6 +34,7 @@ import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
 import org.apache.commons.compress.utils.Lists;
@@ -51,10 +52,10 @@ public class NeoEpitopeWriter
     private final List<NeoEpitopeFusion> mFusions;
 
     public NeoEpitopeWriter(
-            final String outputDir, boolean isMultiSample, final EnsemblDataCache geneDataCache, final KnownFusionCache knownFusionCache)
+            final String outputDir, final EnsemblDataCache geneDataCache, final KnownFusionCache knownFusionCache)
     {
         mOutputDir = outputDir;
-        mIsMultiSample = isMultiSample;
+        mIsMultiSample = false; // TODO: would need to use cohort data writer
         mGeneTransCache = geneDataCache;
         mKnownFusionCache = knownFusionCache;
 

@@ -41,7 +41,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -49,7 +49,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
+import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
@@ -79,7 +79,7 @@ public class FusionDisruptionAnalyser
     private final Map<GeneFusion,String> mInvalidFusions;
 
     private RnaFusionMapper mRnaFusionMapper;
-    private VisDataWriter mVisWriter;
+    private final VisSampleData mVisSampleData;
 
     private PerformanceCounter mPerfCounter;
 
@@ -91,17 +91,17 @@ public class FusionDisruptionAnalyser
     public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
 
     public FusionDisruptionAnalyser(
-            final CommandLine cmdLineArgs, final LinxConfig config,
-            final EnsemblDataCache ensemblDataCache, final CohortDataWriter cohortDataWriter)
+            final CommandLine cmdLineArgs, final LinxConfig config, final EnsemblDataCache ensemblDataCache,
+            final FusionResources fusionResources, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mOutputDir = config.OutputDataPath;
 
         mConfig = config;
         mGeneDataCache = ensemblDataCache;
-        mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
+        mFusionFinder = new FusionFinder(ensemblDataCache, fusionResources.knownFusionCache());
         mFusionWriter = new FusionWriter(mOutputDir, cohortDataWriter);
-        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, cohortDataWriter);
-        mVisWriter = cohortDataWriter.getVisWriter();
+        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, fusionResources.germlinePonCache(), cohortDataWriter, visSampleData);
+        mVisSampleData = visSampleData;
 
         mNeoEpitopeWriter = null;
 
@@ -165,22 +165,24 @@ public class FusionDisruptionAnalyser
 
         if (cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
         {
-            mRnaFusionMapper = new RnaFusionMapper(
-                    mOutputDir, cmdLineArgs, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
+            if(mConfig.Threads > 1 && mConfig.hasMultipleSamples())
+            {
+                LNX_LOGGER.error("RNA fusions mapping not yet supported in multi-threading mode");
+            }
+            else
+            {
+                mRnaFusionMapper = new RnaFusionMapper(
+                        mOutputDir, cmdLineArgs, mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
+            }
         }
 
         if(cmdLineArgs.hasOption(WRITE_NEO_EPITOPES))
         {
-            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, false, mGeneDataCache, mFusionFinder.getKnownFusionCache());
+            mNeoEpitopeWriter = new NeoEpitopeWriter(mOutputDir, mGeneDataCache, mFusionFinder.getKnownFusionCache());
         }
 
         if(mRunFusions)
         {
-            if(mConfig.hasMultipleSamples() || mLogAllPotentials)
-            {
-                mFusionWriter.initialiseCohortWriter();
-            }
-
             if(!mFusionFinder.hasValidConfigData())
                 mValidState = false;
 
@@ -1029,7 +1031,7 @@ public class FusionDisruptionAnalyser
 
     private void addVisualisationData(final List<GeneFusion> fusionList)
     {
-        if(mVisWriter == null || !mConfig.Output.WriteVisualisationData)
+        if(mVisSampleData == null || !mConfig.Output.WriteVisualisationData)
             return;
 
         final List<VisFusionFile> visFusions = Lists.newArrayList();
@@ -1043,10 +1045,10 @@ public class FusionDisruptionAnalyser
                 final BreakendTransData transUp = fusion.upstreamTrans();
                 final BreakendTransData transDown = fusion.downstreamTrans();
 
-                mVisWriter.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
+                mVisSampleData.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
                         transUp.transName(), transUp.transId(), transUp.gene().chromosome(), FUSION);
 
-                mVisWriter.addGeneExonData(clusterId, transDown.gene().StableId, transDown.gene().GeneName,
+                mVisSampleData.addGeneExonData(clusterId, transDown.gene().StableId, transDown.gene().GeneName,
                         transDown.transName(), transDown.transId(), transDown.gene().chromosome(), FUSION);
 
                 visFusions.add(new VisFusionFile(
@@ -1058,7 +1060,7 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        mVisWriter.addFusions(visFusions);
+        mVisSampleData.addFusions(visFusions);
     }
 
     public void close()
@@ -1068,14 +1070,8 @@ public class FusionDisruptionAnalyser
             mPerfCounter.logStats();
         }
 
-        if(mFusionFinder != null)
-            mFusionWriter.close();
-
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.close();
-
-        if(mDisruptionFinder != null)
-            mDisruptionFinder.close();
 
         if(mNeoEpitopeWriter != null)
             mNeoEpitopeWriter.close();

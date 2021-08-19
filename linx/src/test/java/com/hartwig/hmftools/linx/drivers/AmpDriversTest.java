@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -47,7 +48,8 @@ public class AmpDriversTest
 
         EnsemblDataCache geneTransCache = createGeneDataCache();
 
-        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        tester.initialiseDriverGeneAnnotator(geneTransCache);
+        DriverGeneAnnotator driverAnnotator = tester.DriverAnnotator;
 
         driverAnnotator.setSamplePurityData(2, false);
 

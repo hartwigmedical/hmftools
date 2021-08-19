@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.drivers;
 
+import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DEL_DISRUPTION;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
@@ -22,7 +23,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
+import com.hartwig.hmftools.linx.SampleAnalyser;
+import com.hartwig.hmftools.linx.analysis.VariantPrep;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -68,7 +70,8 @@ public class HomDisruptionsTest
         addTransExonData(geneTransCache, geneId, transDataList);
         addGeneData(geneTransCache, chromosome, geneList);
 
-        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        tester.initialiseDriverGeneAnnotator(geneTransCache);
+        DriverGeneAnnotator driverAnnotator = tester.DriverAnnotator;
         driverAnnotator.setSamplePurityData(2, false);
 
         // one pair of DELs form a DB but the DELs themselves are not disruptive and since there's no way of knowing if they're phased,
@@ -89,7 +92,7 @@ public class HomDisruptionsTest
 
         assertEquals(4, tester.Analyser.getClusters().size());
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
@@ -142,7 +145,8 @@ public class HomDisruptionsTest
         addTransExonData(geneTransCache, geneId, transDataList);
         addGeneData(geneTransCache, chromosome, geneList);
 
-        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        tester.initialiseDriverGeneAnnotator(geneTransCache);
+        DriverGeneAnnotator driverAnnotator = tester.DriverAnnotator;
         driverAnnotator.setSamplePurityData(2, false);
 
         // make a chain of SVs which contain one or more deletion bridges affecting the gene
@@ -157,7 +161,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
@@ -187,7 +191,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.clearResults(true);
@@ -242,7 +246,8 @@ public class HomDisruptionsTest
         addTransExonData(geneTransCache, geneId, transDataList);
         addGeneData(geneTransCache, chromosome, geneList);
 
-        DriverGeneAnnotator driverAnnotator = new DriverGeneAnnotator(null, geneTransCache, tester.Config, tester.CnDataLoader);
+        tester.initialiseDriverGeneAnnotator(geneTransCache);
+        DriverGeneAnnotator driverAnnotator = tester.DriverAnnotator;
         driverAnnotator.setSamplePurityData(2, false);
 
         // the DUP must be disruptive, ie duplicating at least 1 exon
@@ -253,7 +258,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());

@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotatio
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
-import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.setSimpleVariantLengths;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
@@ -79,13 +79,11 @@ public class ClusterAnalyser {
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
         mChainFinder = new ChainFinder();
-        mDmFinder = new DoubleMinuteFinder(mState.getChrBreakendMap());
+        mDmFinder = new DoubleMinuteFinder(config, cohortDataWriter, mState.getChrBreakendMap());
         mBfbFinder = new BfbFinder();
 
         if(mConfig.hasMultipleSamples())
             mChainFinder.initialiseOutput(mConfig);
-
-        mDmFinder.initialiseOutput(mConfig, cohortDataWriter);
 
         mChainFinder.setUseAllelePloidies(true); // can probably remove and assume always in place
         mChainFinder.setLogVerbose(mConfig.LogVerbose);
@@ -300,12 +298,14 @@ public class ClusterAnalyser {
         return true;
     }
 
-    public void findLimitedChains()
+    private void findLimitedChains()
     {
         // chain small clusters and only assembled links in larger ones
+        boolean checkDMs = !mConfig.IsGermline;
+
         for(SvCluster cluster : mClusters)
         {
-            if(isSimpleSingleSV(cluster))
+            if(checkDMs && isSimpleSingleSV(cluster))
             {
                 mDmFinder.analyseCluster(cluster);
                 setClusterResolvedState(cluster, false);
@@ -318,7 +318,7 @@ public class ClusterAnalyser {
             cluster.setAssemblyLinkedPairs(createAssemblyLinkedPairs(cluster));
             cluster.determineRequiresReplication();
 
-            if(isSimple)
+            if(checkDMs)
                 mDmFinder.analyseCluster(cluster);
 
             // then look for fully-linked clusters, ie chains involving all SVs

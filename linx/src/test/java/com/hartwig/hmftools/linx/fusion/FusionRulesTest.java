@@ -43,6 +43,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
@@ -279,8 +280,9 @@ public class FusionRulesTest
 
         assertNotNull(checkFusionLogic(trans1, trans2, params));
 
-        FusionFinder fusionFinder = new FusionFinder(null, null);
-        fusionFinder.getKnownFusionCache().addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", ""));
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        FusionFinder fusionFinder = new FusionFinder(null, knownFusionCache);
+        knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", ""));
         gene1.addTranscript(trans1);
         gene2.addTranscript(trans2);
         final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params);

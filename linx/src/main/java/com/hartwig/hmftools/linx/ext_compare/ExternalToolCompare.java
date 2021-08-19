@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.linx.LinxApplication.loadSampleSvDataFromFile;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -21,8 +20,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
-import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
+import com.hartwig.hmftools.linx.CohortDataWriter;
+import com.hartwig.hmftools.linx.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
@@ -59,14 +58,6 @@ public class ExternalToolCompare
 
         boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty() && cmd.hasOption(VCF_FILE);
 
-        /*
-        if(dbAccess == null)
-        {
-            LNX_LOGGER.error("no DB connection configured");
-            return;
-        }
-        */
-
         if (samplesList.isEmpty())
         {
             LNX_LOGGER.error("samples must be specified");
@@ -75,12 +66,8 @@ public class ExternalToolCompare
 
         LNX_LOGGER.info("running Linx external tool comparison for {} samples", samplesList.size());
 
-        CohortDataWriter cohortDataWriter = new CohortDataWriter(config);
-
-        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, cohortDataWriter);
-
-        CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
-        sampleAnalyser.setCnDataLoader(cnDataLoader);
+        // CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
+        // sampleAnalyser.setCnDataLoader(cnDataLoader);
 
         DriverGeneAnnotator driverGeneAnnotator = null;
         boolean checkDrivers = cmd.hasOption(CHECK_DRIVERS);
@@ -97,6 +84,8 @@ public class ExternalToolCompare
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
                 new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
 
+        CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);
+
         if(ensemblDataCache != null)
         {
             ensemblDataCache.setRequiredData(true, false, false, true);
@@ -107,6 +96,7 @@ public class ExternalToolCompare
                 return;
             }
 
+            /*
             sampleAnalyser.setGeneCollection(ensemblDataCache);
             sampleAnalyser.getVisWriter().setGeneDataCache(ensemblDataCache);
 
@@ -117,6 +107,7 @@ public class ExternalToolCompare
                 driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, cnDataLoader);
                 driverGeneAnnotator.setVisWriter(sampleAnalyser.getVisWriter());
             }
+            */
         }
 
         int count = 0;
@@ -124,9 +115,10 @@ public class ExternalToolCompare
         {
             ++count;
 
-            final List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                    loadSampleSvDataFromFile(config, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
+            // SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, cohortDataWriter);
+            // sampleAnalyser.processSample();
 
+            /*
             final List<SvVarData> svDataList = createSvData(svRecords);
 
             if(svDataList.isEmpty())
@@ -170,7 +162,9 @@ public class ExternalToolCompare
             }
 
             sampleAnalyser.writeOutput(dbAccess);
+            */
 
+            /*
             if(chainFinderCompare != null)
             {
                 chainFinderCompare.processSample(sampleId, svDataList, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
@@ -180,9 +174,8 @@ public class ExternalToolCompare
             {
                 ampliconCompare.processSample(sampleId, sampleAnalyser.getChrBreakendMap());
             }
+            */
         }
-
-        sampleAnalyser.close();
 
         if(driverGeneAnnotator != null)
             driverGeneAnnotator.close();
