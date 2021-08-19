@@ -241,7 +241,7 @@ public interface OrangeConfig {
         }
 
         if (report.maxEvidenceLevel() != null) {
-            LOGGER.info("Max reporting level configured to '{}'", report.maxEvidenceLevel());
+            LOGGER.info("Max reporting level configured to {}", report.maxEvidenceLevel());
         }
 
         return ImmutableOrangeConfig.builder()
