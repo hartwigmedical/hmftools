@@ -27,11 +27,11 @@ class HotspotStore(private val store: LocationStore) {
     }
 
     private fun containsPromiscuousLeg(variant: StructuralVariantContext): Boolean {
-        return store.contains(variant.startBreakend) || store.contains(variant.endBreakend!!)
+        return store.contains(variant.startBreakend, 0) || store.contains(variant.endBreakend!!, 0)
     }
 
     private fun containsPairedHotspot(variant: StructuralVariantContext): Boolean {
-        return store.contains(variant.breakpoint!!)
+        return store.contains(variant.breakpoint!!, 0, 0)
     }
 
 }

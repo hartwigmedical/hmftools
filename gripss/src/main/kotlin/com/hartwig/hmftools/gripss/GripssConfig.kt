@@ -138,6 +138,8 @@ data class GripssConfig(
     }
 }
 
+const val PON_BUFFER_DISTANCE = 4
+
 private const val HARD_MIN_TUMOR_QUAL_OPTION = "hard_min_tumor_qual"
 private const val HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_OPTION = "hard_max_normal_absolute_support"
 private const val HARD_MAX_NORMAL_RELATIVE_SUPPORT_OPTION = "hard_max_normal_relative_support"

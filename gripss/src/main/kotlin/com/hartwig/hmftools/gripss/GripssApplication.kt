@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
 
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
-        const val PON_ADDITIONAL_DISTANCE = 1
+        const val PON_ADDITIONAL_DISTANCE = 4
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
     }
