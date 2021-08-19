@@ -42,7 +42,7 @@ public final class SidePanel {
 
     @NotNull
     private static String pipelineVersion(@NotNull OrangeReport report) {
-        return report.pipelineVersion() != null ? report.pipelineVersion() : ReportResources.NOT_AVAILABLE;
+        return report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull

@@ -23,6 +23,8 @@ import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
@@ -66,7 +68,7 @@ public class OrangeAlgo {
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
-                .pipelineVersion(loadPipelineVersion(config))
+                .platinumVersion(determinePlatinumVersion(config))
                 .refSample(loadSampleData(config, false))
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
@@ -75,6 +77,7 @@ public class OrangeAlgo {
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
+                .peach(loadPeachData(config))
                 .protect(loadProtectData(config))
                 .plots(buildPlots(config))
                 .build();
@@ -107,14 +110,14 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static String loadPipelineVersion(@NotNull OrangeConfig config) throws IOException {
+    private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException {
         String pipelineVersionFile = config.pipelineVersionFile();
         if (pipelineVersionFile != null) {
-            String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            LOGGER.info("Loaded pipeline version '{}'", pipelineVersion);
-            return pipelineVersion;
+            String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+            LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+            return platinumVersion;
         } else {
-            LOGGER.info("No pipeline version file configured");
+            LOGGER.warn("No platinum version could be determined");
             return null;
         }
     }
@@ -193,8 +196,21 @@ public class OrangeAlgo {
     }
 
     @NotNull
+    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException {
+        LOGGER.info("Loading PEACH from {}", new File(config.peachGenotypeTsv()).getParent());
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(config.peachGenotypeTsv());
+        LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
+
+        return peachGenotypes;
+    }
+
+    @NotNull
     private static List<ProtectEvidence> loadProtectData(@NotNull OrangeConfig config) throws IOException {
-        return ProtectEvidenceFile.read(config.protectEvidenceTsv());
+        LOGGER.info("Loading PROTECT data from {}", new File(config.protectEvidenceTsv()).getParent());
+        List<ProtectEvidence> evidences = ProtectEvidenceFile.read(config.protectEvidenceTsv());
+        LOGGER.info(" Loaded {} PROTECT evidences from {}", evidences.size(), config.protectEvidenceTsv());
+
+        return evidences;
     }
 
     @NotNull

@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
+import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
@@ -49,7 +50,7 @@ public class GermlineFindingsChapter implements ReportChapter {
             addGermlineVariants(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
-            addPEACH(document);
+            addPharmacogenetics(document);
         } else {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         }
@@ -99,8 +100,8 @@ public class GermlineFindingsChapter implements ReportChapter {
         document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableTitleStyle()));
     }
 
-    private void addPEACH(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableTitleStyle()));
+    private void addPharmacogenetics(@NotNull Document document) {
+        String titlePharmacogenetics = "Pharmacogenetics (" + report.peach().size() + ")";
+        document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), report.peach()));
     }
-
 }

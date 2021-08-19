@@ -22,7 +22,8 @@ public final class GeneCopyNumberTable {
             return TableUtil.createEmptyTable(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width, new float[] { 1, 1, 1, 1, 1 },
+        Table table = TableUtil.createReportContentTable(width,
+                new float[] { 1, 1, 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("CN") });
 
