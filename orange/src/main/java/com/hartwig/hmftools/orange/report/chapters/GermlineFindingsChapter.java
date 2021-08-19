@@ -115,7 +115,7 @@ public class GermlineFindingsChapter implements ReportChapter {
         }
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth());
         table.addCell(TableUtil.createContentCell(germlineAberrations.toString()));
-        document.add(TableUtil.createWrappingReportTable(table, "Germline CN Aberrations (" + count + ")"));
+        document.add(TableUtil.createWrappingReportTable(table, "Germline CN aberrations (" + count + ")"));
     }
 
     private void addPharmacogenetics(@NotNull Document document) {
