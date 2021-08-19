@@ -101,11 +101,15 @@ public final class PurpleDataLoader {
         }
 
         List<ReportableVariant> reportableGermlineVariants = Lists.newArrayList();
+        List<SomaticVariant> unreportedGermlineVariants = Lists.newArrayList();
         if (referenceSample != null) {
             List<SomaticVariant> germlineVariants =
-                    SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, germlineVariantVcf);
+                    new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, germlineVariantVcf);
             reportableGermlineVariants = ReportableVariantFactory.toReportableGermlineVariants(germlineVariants, germlineDriverCatalog);
             LOGGER.info(" Loaded {} reportable germline variants from {}", reportableGermlineVariants.size(), germlineVariantVcf);
+
+            unreportedGermlineVariants = selectUnreportedVariants(germlineVariants);
+            LOGGER.info(" Loaded {} unreported germline variants from {}", unreportedGermlineVariants.size(), germlineVariantVcf);
         } else {
             LOGGER.info(" Skipped loading germline variants since no reference sample configured");
         }
@@ -116,7 +120,7 @@ public final class PurpleDataLoader {
                 ReportableVariantFactory.toReportableSomaticVariants(somaticVariants, somaticDriverCatalog);
         LOGGER.info(" Loaded {} reportable somatic variants from {}", reportableSomaticVariants.size(), somaticVariantVcf);
 
-        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedCodingVariants(somaticVariants);
+        List<SomaticVariant> unreportedSomaticVariants = selectUnreportedVariants(somaticVariants);
         LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVariantVcf);
 
         return ImmutablePurpleData.builder()
@@ -140,6 +144,7 @@ public final class PurpleDataLoader {
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .unreportedSomaticVariants(unreportedSomaticVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
+                .unreportedGermlineVariants(unreportedGermlineVariants)
                 .unreportedGainsLosses(unreportedGainsLosses)
                 .reportableGainsLosses(reportableGainsLosses)
                 .cnPerChromosome(cnPerChromosome)
@@ -147,14 +152,14 @@ public final class PurpleDataLoader {
     }
 
     @NotNull
-    private static List<SomaticVariant> selectUnreportedCodingVariants(@NotNull List<SomaticVariant> somaticVariants) {
-        List<SomaticVariant> variants = Lists.newArrayList();
-        for (SomaticVariant variant : somaticVariants) {
+    private static List<SomaticVariant> selectUnreportedVariants(@NotNull List<SomaticVariant> variants) {
+        List<SomaticVariant> filtered = Lists.newArrayList();
+        for (SomaticVariant variant : variants) {
             if (!variant.reported()) {
-                variants.add(variant);
+                filtered.add(variant);
             }
         }
-        return variants;
+        return filtered;
     }
 
     @VisibleForTesting
