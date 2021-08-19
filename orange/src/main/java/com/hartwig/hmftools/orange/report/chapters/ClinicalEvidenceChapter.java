@@ -65,7 +65,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
         if (reportConfig.maxEvidenceLevel() != null) {
             String maxEvidenceLevelString = reportConfig.maxEvidenceLevel().toString();
-            document.add(note(" * Treatments are reported up to a maximum evidence level of '" + maxEvidenceLevelString + "'.'"));
+            document.add(note(" * Treatments are reported up to a maximum evidence level of " + maxEvidenceLevelString + "."));
         }
 
         List<ProtectEvidence> noIclusion = EvidenceSelector.noIclusion(report.protect());
