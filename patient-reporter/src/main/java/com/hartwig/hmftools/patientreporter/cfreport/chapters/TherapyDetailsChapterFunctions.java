@@ -73,9 +73,10 @@ final class TherapyDetailsChapterFunctions {
     static Paragraph createChapterFootnote() {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("The Cancer Genome Interpreter (CGI) and CIViC knowledgebases are used to "
-                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with a high "
-                        + "level of evidence ( ")
+                .add("The above clinical evidence is gathered from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases "
+                        + "without further checks or interpretation. \n"
+                        + "Please always consult the underlying literature for determining its value and for further interpretation.\n"
+                        + "Note: only treatment associated evidence with a high level of evidence ( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
                 .add(" validated association; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
