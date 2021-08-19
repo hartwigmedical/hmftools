@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
+import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
@@ -43,7 +44,7 @@ public class LinxTester
     {
         Config = new LinxConfig();
 
-        Analyser = new ClusterAnalyser(Config);
+        Analyser = new ClusterAnalyser(Config, null);
         CnDataLoader = new CnDataLoader( "", null);
         Analyser.setCnDataLoader(CnDataLoader);
 
@@ -67,7 +68,7 @@ public class LinxTester
 
     public void initialiseFusions(EnsemblDataCache geneTransCache)
     {
-        FusionAnalyser = new FusionDisruptionAnalyser(null, Config, geneTransCache, null);
+        FusionAnalyser = new FusionDisruptionAnalyser(null, Config, geneTransCache, new CohortDataWriter(Config));
     }
 
     public final int nextVarId() { return mNextVarId++; }

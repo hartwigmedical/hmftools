@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
@@ -74,7 +75,9 @@ public class ExternalToolCompare
 
         LNX_LOGGER.info("running Linx external tool comparison for {} samples", samplesList.size());
 
-        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess);
+        CohortDataWriter cohortDataWriter = new CohortDataWriter(config);
+
+        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, cohortDataWriter);
 
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
         sampleAnalyser.setCnDataLoader(cnDataLoader);
@@ -107,7 +110,7 @@ public class ExternalToolCompare
             sampleAnalyser.setGeneCollection(ensemblDataCache);
             sampleAnalyser.getVisWriter().setGeneDataCache(ensemblDataCache);
 
-            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, sampleAnalyser.getVisWriter());
+            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, cohortDataWriter);
 
             if(checkDrivers)
             {

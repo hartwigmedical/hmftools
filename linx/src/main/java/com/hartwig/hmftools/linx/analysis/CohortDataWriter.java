@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.analysis;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -42,7 +41,8 @@ import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
-import com.hartwig.hmftools.linx.germline.GermlinePonCache;
+import com.hartwig.hmftools.linx.fusion.DisruptionFinder;
+import com.hartwig.hmftools.linx.fusion.FusionWriter;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.ArmCluster;
@@ -56,10 +56,17 @@ public class CohortDataWriter
 {
     private final LinxConfig mConfig;
 
+    // owns all the cohort-level writers
+
     private final BufferedWriter mSvFileWriter;
     private final BufferedWriter mClusterFileWriter;
     private final BufferedWriter mLinksFileWriter;
+
     private final VisDataWriter mVisWriter;
+
+    private BufferedWriter mFusionWriter;
+    private BufferedWriter mDoubleMinuteWriter;
+    private BufferedWriter mDisruptionWriter;
 
     public CohortDataWriter(final LinxConfig config)
     {
@@ -68,6 +75,10 @@ public class CohortDataWriter
         mSvFileWriter = createSvDataFile();
         mClusterFileWriter = createClusterFile();
         mLinksFileWriter = createLinksFile();
+
+        mDoubleMinuteWriter = null;
+        mFusionWriter = null;
+        mDisruptionWriter = null;
     }
 
     public final VisDataWriter getVisWriter() { return mVisWriter; }
@@ -543,6 +554,36 @@ public class CohortDataWriter
         {
             LNX_LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
+    }
+
+    public synchronized BufferedWriter getDoubleMinuteWriter()
+    {
+        if(mDoubleMinuteWriter == null)
+        {
+            mDoubleMinuteWriter = DoubleMinuteFinder.initialiseWriter(mConfig.OutputDataPath, "");
+        }
+
+        return mDoubleMinuteWriter;
+    }
+
+    public synchronized BufferedWriter getFusionWriter()
+    {
+        if(mFusionWriter == null)
+        {
+            mFusionWriter = FusionWriter.initialiseCohortWriter(mConfig.OutputDataPath);
+        }
+
+        return mFusionWriter;
+    }
+
+    public synchronized BufferedWriter getDisruptionWriter()
+    {
+        if(mDisruptionWriter == null)
+        {
+            mDisruptionWriter = DisruptionFinder.initialiseOutputFile(mConfig.OutputDataPath, mConfig.IsGermline);
+        }
+
+        return mDisruptionWriter;
     }
 
 }

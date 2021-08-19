@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
 import com.hartwig.hmftools.linx.analysis.SampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
@@ -97,7 +98,9 @@ public class LinxApplication
         LNX_LOGGER.info("running SV analysis for {}",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
 
-        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess);
+        CohortDataWriter cohortDataWriter = new CohortDataWriter(config);
+
+        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, cohortDataWriter);
 
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
 
@@ -172,7 +175,7 @@ public class LinxApplication
             sampleAnalyser.getVisWriter().setGeneDataCache(ensemblDataCache);
 
             // always initialise since is used for transcript evaluation
-            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, sampleAnalyser.getVisWriter());
+            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, cohortDataWriter);
 
             if(!fusionAnalyser.validState())
                 return;

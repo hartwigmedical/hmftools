@@ -11,6 +11,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -140,5 +141,18 @@ public class ReplicationOriginAnnotator
 
         return 0;
     }
+
+    private class ReplicationOriginRegion
+    {
+        public final ChrBaseRegion Region;
+        public final double OriginValue;
+
+        public ReplicationOriginRegion(final String chromosome, int start, int end, double originValue)
+        {
+            Region = new ChrBaseRegion(chromosome, start, end);
+            OriginValue = originValue;
+        }
+    }
+
 
 }

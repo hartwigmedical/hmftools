@@ -48,6 +48,7 @@ import org.jetbrains.annotations.NotNull;
 public class FusionFinder
 {
     private final KnownFusionCache mKnownFusionCache;
+
     private boolean mHasValidConfigData;
 
     private final EnsemblDataCache mGeneTransCache;
@@ -58,8 +59,8 @@ public class FusionFinder
     public FusionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache)
     {
         mGeneTransCache = geneTransCache;
-
         mKnownFusionCache = new KnownFusionCache();
+
         mHasValidConfigData = true;
         mNextFusionId = 0;
 

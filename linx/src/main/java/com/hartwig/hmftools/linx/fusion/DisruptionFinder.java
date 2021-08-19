@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.germline.GermlinePonCache;
 import com.hartwig.hmftools.linx.types.DbPair;
@@ -64,11 +65,10 @@ public class DisruptionFinder
     private final GermlinePonCache mGermlinePonCache;
 
     private BufferedWriter mWriter;
-    private final String mOutputDir;
 
     public static final int MAX_NON_DISRUPTED_CHAIN_LENGTH = 5000;
 
-    public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache, final VisDataWriter visWriter)
+    public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache, final CohortDataWriter cohortDataWriter)
     {
         mGeneTransCache = geneTransCache;
 
@@ -77,12 +77,16 @@ public class DisruptionFinder
 
         mDisruptionGenes = disruptionGeneIds(config.DriverGenes, !mIsGermline, geneTransCache);
 
-        mVisWriter = visWriter;
+        mVisWriter = cohortDataWriter.getVisWriter();
 
         mDisruptions = Lists.newArrayList();
         mRemovedDisruptions = Maps.newHashMap();
 
-        mOutputDir = config.OutputDataPath;
+        if(config.requireCohortWriters())
+        {
+            mWriter = cohortDataWriter.getDisruptionWriter();
+        }
+
         mWriter = null;
     }
 
@@ -699,34 +703,33 @@ public class DisruptionFinder
         }
     }
 
-    public void initialiseOutputFile(final String fileName)
+    public static BufferedWriter initialiseOutputFile(final String outputDir, boolean isGermline)
     {
         try
         {
-            if(mWriter == null)
+            String outputFilename = outputDir + "LNX_DISRUPTIONS.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFilename, false);
+
+            writer.write("SampleId,Reportable,SvId,IsStart,Type,ClusterId,Chromosome,Position,Orientation");
+            writer.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
+
+            if(!isGermline)
             {
-                String outputFilename = mOutputDir + fileName;
-
-                mWriter = createBufferedWriter(outputFilename, false);
-
-                mWriter.write("SampleId,Reportable,SvId,IsStart,Type,ClusterId,Chromosome,Position,Orientation");
-                mWriter.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
-
-                if(!mIsGermline)
-                {
-                    mWriter.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
-                }
-                else
-                {
-                    mWriter.write(",ResolvedType,Filter,PonCount");
-                }
-
-                mWriter.newLine();
+                writer.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
             }
+            else
+            {
+                writer.write(",ResolvedType,Filter,PonCount");
+            }
+
+            writer.newLine();
+            return writer;
         }
         catch (final IOException e)
         {
             LNX_LOGGER.error("error writing disruptions: {}", e.toString());
+            return null;
         }
     }
 

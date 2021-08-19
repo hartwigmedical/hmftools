@@ -39,13 +39,13 @@ public class SvFileLoader
             {
                 svDataList.add(convertSvData(var, svId++));
             }
+
+            LNX_LOGGER.info("loaded {} SV data records from VCF file: {}", svDataList.size(), vcfFile);
         }
         catch(IOException e)
         {
             LNX_LOGGER.error("failed to load SVs from VCF: {}", e.toString());
         }
-
-        LNX_LOGGER.info("loaded {} SV data records from VCF file: {}", svDataList.size(), vcfFile);
 
         return svDataList;
     }
@@ -64,13 +64,13 @@ public class SvFileLoader
             {
                 svDataList.add(convertGermlineSvData(var, svId++));
             }
+
+            LNX_LOGGER.info("loaded {} germline SV data records from VCF file: {}", svDataList.size(), vcfFile);
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             LNX_LOGGER.error("failed to load SVs from VCF: {}", e.toString());
         }
-
-        LNX_LOGGER.info("loaded {} germline SV data records from VCF file: {}", svDataList.size(), vcfFile);
 
         return svDataList;
     }

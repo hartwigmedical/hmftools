@@ -84,7 +84,7 @@ public class DoubleMinuteFinder
     public void setGeneTransCache(final EnsemblDataCache geneDataCache) { mGeneTransCache = geneDataCache; }
     public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCnDataLoader = cnAnalyser; }
 
-    public void initialiseOutput(final LinxConfig config)
+    public void initialiseOutput(final LinxConfig config, final CohortDataWriter cohortDataWriter)
     {
         boolean dmAnnotations = runAnnotation(config.RequiredAnnotations, DOUBLE_MINUTES);
 
@@ -92,7 +92,9 @@ public class DoubleMinuteFinder
         {
             String sampleId = config.isSingleSample() ? config.getSampleIds().get(0) : "";
             mSingleSample = config.isSingleSample();
-            initialiseWriter(config.OutputDataPath, sampleId);
+
+            mFileWriter = config.hasMultipleSamples() ?
+                    cohortDataWriter.getDoubleMinuteWriter() : initialiseWriter(config.OutputDataPath, sampleId);
         }
 
         mLogCandidates = dmAnnotations;
@@ -366,34 +368,36 @@ public class DoubleMinuteFinder
         return (int)chains.stream().filter(x -> x.couldCloseChain()).count();
     }
 
-    private void initialiseWriter(final String outputDir, final String sampleId)
+    public static BufferedWriter initialiseWriter(final String outputDir, final String sampleId)
     {
         if(outputDir == null || outputDir.isEmpty())
-            return;
+            return null;
 
         try
         {
             String outputFileName = !sampleId.isEmpty() ?
                     outputDir + sampleId + ".linx.ecdna.csv" : outputDir + "LNX_ECDNA.csv";
 
-            mFileWriter = createBufferedWriter(outputFileName, false);
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             if(sampleId.isEmpty())
-                mFileWriter.write("SampleId,");
+                writer.write("SampleId,");
 
-            mFileWriter.write("ClusterId,ClusterDesc,ResolvedType,ClusterCount");
-            mFileWriter.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
-            mFileWriter.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
-            mFileWriter.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
-            mFileWriter.write(",NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
-            mFileWriter.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
-            mFileWriter.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
-            mFileWriter.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinOfMaxAdjMajRatio,MinOfMinAdjMajRatio");
-            mFileWriter.newLine();
+            writer.write("ClusterId,ClusterDesc,ResolvedType,ClusterCount");
+            writer.write(",SamplePurity,SamplePloidy,IsDM,DMSvCount,DMSvTypes,SvIds,Chromosomes");
+            writer.write(",Chains,FullyChained,ClosedChains,ClosedSegLength,ChainedSVs,Replication");
+            writer.write(",ClosedBreakends,ClosedJcnTotal,OpenBreakends,OpenJcnTotal,OpenJcnMax");
+            writer.write(",NonSegFoldbacks,NonSegFoldbackJcnTotal,SimpleDels");
+            writer.write(",IntExtCount,IntExtJcnTotal,IntExtMaxJcn,FbIntCount,FbIntJcnTotal,FbIntJcnMax");
+            writer.write(",SglbIntCount,SglIntJcnTotal,SglIntJcnMax,InfIntCount,InfIntJcnTotal,InfIntJcnMax");
+            writer.write(",MaxCopyNumber,MinJcn,MaxJcn,AmpGenes,CrossCentro,MinOfMaxAdjMajRatio,MinOfMinAdjMajRatio");
+            writer.newLine();
+            return writer;
         }
         catch (final IOException e)
         {
             LNX_LOGGER.error("error initialising DM file: {}", e.toString());
+            return null;
         }
     }
 

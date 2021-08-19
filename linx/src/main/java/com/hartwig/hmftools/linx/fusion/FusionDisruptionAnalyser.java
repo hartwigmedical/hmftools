@@ -41,6 +41,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -91,16 +92,16 @@ public class FusionDisruptionAnalyser
 
     public FusionDisruptionAnalyser(
             final CommandLine cmdLineArgs, final LinxConfig config,
-            final EnsemblDataCache ensemblDataCache, final VisDataWriter writer)
+            final EnsemblDataCache ensemblDataCache, final CohortDataWriter cohortDataWriter)
     {
         mOutputDir = config.OutputDataPath;
 
         mConfig = config;
         mGeneDataCache = ensemblDataCache;
         mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
-        mFusionWriter = new FusionWriter(mOutputDir);
-        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, writer);
-        mVisWriter = writer;
+        mFusionWriter = new FusionWriter(mOutputDir, cohortDataWriter);
+        mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, cohortDataWriter);
+        mVisWriter = cohortDataWriter.getVisWriter();
 
         mNeoEpitopeWriter = null;
 
@@ -162,11 +163,6 @@ public class FusionDisruptionAnalyser
             mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
         }
 
-        if(mConfig.hasMultipleSamples() || mConfig.Output.WriteCohortFiles)
-        {
-            mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
-        }
-
         if (cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
         {
             mRnaFusionMapper = new RnaFusionMapper(
@@ -182,7 +178,7 @@ public class FusionDisruptionAnalyser
         {
             if(mConfig.hasMultipleSamples() || mLogAllPotentials)
             {
-                mFusionWriter.initialiseOutputFiles();
+                mFusionWriter.initialiseCohortWriter();
             }
 
             if(!mFusionFinder.hasValidConfigData())

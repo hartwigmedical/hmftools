@@ -22,15 +22,18 @@ import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.linx.analysis.CohortDataWriter;
 
 public class FusionWriter
 {
     private final String mOutputDir;
+    private final CohortDataWriter mCohortDataWriter;
     private BufferedWriter mFusionWriter;
 
-    public FusionWriter(final String outputDir)
+    public FusionWriter(final String outputDir, final CohortDataWriter cohortDataWriter)
     {
         mOutputDir = outputDir;
+        mCohortDataWriter = cohortDataWriter;
         mFusionWriter = null;
     }
 
@@ -127,58 +130,62 @@ public class FusionWriter
         }
     }
 
-    public void initialiseOutputFiles()
+    public void initialiseCohortWriter()
+    {
+        mFusionWriter = mCohortDataWriter.getFusionWriter();
+    }
+
+    public static BufferedWriter initialiseCohortWriter(final String outputDir)
     {
         // initialise the integrated, verbose fusion and breakend output file
         try
         {
-            if(mFusionWriter == null)
+            BufferedWriter writer = createBufferedWriter(outputDir + "LNX_FUSIONS.csv", false);
+
+            writer.write("SampleId,Reportable,ReportableReason,KnownType,Phased,KnownExons,ClusterId,ClusterCount,ResolvedType");
+
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                mFusionWriter = createBufferedWriter(mOutputDir + "LNX_FUSIONS.csv", false);
+                String upDown = se == SE_START ? "Up" : "Down";
 
-                mFusionWriter.write("SampleId,Reportable,ReportableReason,KnownType,Phased,KnownExons,ClusterId,ClusterCount,ResolvedType");
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    String upDown = se == SE_START ? "Up" : "Down";
-
-                    String fieldsStr = ",SvId" + upDown;
-                    fieldsStr += ",Chr" + upDown;
-                    fieldsStr += ",Pos" + upDown;
-                    fieldsStr += ",Orient" + upDown;
-                    fieldsStr += ",Type" + upDown;
-                    fieldsStr += ",Ploidy" + upDown;
-                    fieldsStr += ",GeneId" + upDown;
-                    fieldsStr += ",GeneName" + upDown;
-                    fieldsStr += ",Transcript" + upDown;
-                    fieldsStr += ",Strand" + upDown;
-                    fieldsStr += ",RegionType" + upDown;
-                    fieldsStr += ",CodingType" + upDown;
-                    fieldsStr += ",BreakendExon" + upDown;
-                    fieldsStr += ",FusedExon" + upDown;
-                    fieldsStr += ",ExonsSkipped" + upDown;
-                    fieldsStr += ",Phase" + upDown;
-                    fieldsStr += ",ExonMax" + upDown;
-                    fieldsStr += ",Disruptive" + upDown;
-                    fieldsStr += ",CodingBases" + upDown;
-                    fieldsStr += ",TotalCoding" + upDown;
-                    fieldsStr += ",CodingStart" + upDown;
-                    fieldsStr += ",CodingEnd" + upDown;
-                    fieldsStr += ",TransStart" + upDown;
-                    fieldsStr += ",TransEnd" + upDown;
-                    fieldsStr += ",DistancePrev" + upDown;
-                    fieldsStr += ",Canonical" + upDown;
-                    fieldsStr += ",Biotype" + upDown;
-                    mFusionWriter.write(fieldsStr);
-                }
-
-                mFusionWriter.write(",ProteinsKept,ProteinsLost,PriorityScore,FusionId,ChainTerminatedUp,ChainTerminatedDown,ChainInfo");
-                mFusionWriter.newLine();
+                String fieldsStr = ",SvId" + upDown;
+                fieldsStr += ",Chr" + upDown;
+                fieldsStr += ",Pos" + upDown;
+                fieldsStr += ",Orient" + upDown;
+                fieldsStr += ",Type" + upDown;
+                fieldsStr += ",Ploidy" + upDown;
+                fieldsStr += ",GeneId" + upDown;
+                fieldsStr += ",GeneName" + upDown;
+                fieldsStr += ",Transcript" + upDown;
+                fieldsStr += ",Strand" + upDown;
+                fieldsStr += ",RegionType" + upDown;
+                fieldsStr += ",CodingType" + upDown;
+                fieldsStr += ",BreakendExon" + upDown;
+                fieldsStr += ",FusedExon" + upDown;
+                fieldsStr += ",ExonsSkipped" + upDown;
+                fieldsStr += ",Phase" + upDown;
+                fieldsStr += ",ExonMax" + upDown;
+                fieldsStr += ",Disruptive" + upDown;
+                fieldsStr += ",CodingBases" + upDown;
+                fieldsStr += ",TotalCoding" + upDown;
+                fieldsStr += ",CodingStart" + upDown;
+                fieldsStr += ",CodingEnd" + upDown;
+                fieldsStr += ",TransStart" + upDown;
+                fieldsStr += ",TransEnd" + upDown;
+                fieldsStr += ",DistancePrev" + upDown;
+                fieldsStr += ",Canonical" + upDown;
+                fieldsStr += ",Biotype" + upDown;
+                writer.write(fieldsStr);
             }
+
+            writer.write(",ProteinsKept,ProteinsLost,PriorityScore,FusionId,ChainTerminatedUp,ChainTerminatedDown,ChainInfo");
+            writer.newLine();
+            return writer;
         }
         catch (final IOException e)
         {
             LNX_LOGGER.error("error writing fusions: {}", e.toString());
+            return null;
         }
     }
 

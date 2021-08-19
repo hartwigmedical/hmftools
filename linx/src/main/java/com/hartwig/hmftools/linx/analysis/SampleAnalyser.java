@@ -66,6 +66,7 @@ public class SampleAnalyser
 {
     private final LinxConfig mConfig;
     private final ClusterAnalyser mAnalyser;
+
     private final CohortDataWriter mCohortDataWriter;
 
     // data per run (ie sample)
@@ -87,19 +88,19 @@ public class SampleAnalyser
     private final PerformanceCounter mPcAnnotation;
     private final PerformanceCounter mPcWrite;
 
-    public SampleAnalyser(final LinxConfig config, DatabaseAccess dbAccess)
+    public SampleAnalyser(final LinxConfig config, final DatabaseAccess dbAccess, final CohortDataWriter cohortDataWriter)
     {
         mConfig = config;
         mSampleId = "";
 
-        mAnalyser = new ClusterAnalyser(config);
+        mCohortDataWriter = cohortDataWriter;
+
+        mAnalyser = new ClusterAnalyser(config, mCohortDataWriter);
 
         mAllVariants = Lists.newArrayList();
         mCnDataLoader = null;
 
         mIsValid = true;
-
-        mCohortDataWriter = new CohortDataWriter(config);
 
         mFragileSiteAnnotator = new FragileSiteAnnotator();
         mFragileSiteAnnotator.loadFragileSitesFile(mConfig.FragileSiteFile);

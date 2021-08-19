@@ -64,7 +64,7 @@ public class ClusterAnalyser {
 
     private static final int SMALL_CLUSTER_SIZE = 3;
 
-    public ClusterAnalyser(final LinxConfig config)
+    public ClusterAnalyser(final LinxConfig config, final CohortDataWriter cohortDataWriter)
     {
         mConfig = config;
         mState = new ClusteringState();
@@ -85,7 +85,7 @@ public class ClusterAnalyser {
         if(mConfig.hasMultipleSamples())
             mChainFinder.initialiseOutput(mConfig);
 
-        mDmFinder.initialiseOutput(mConfig);
+        mDmFinder.initialiseOutput(mConfig, cohortDataWriter);
 
         mChainFinder.setUseAllelePloidies(true); // can probably remove and assume always in place
         mChainFinder.setLogVerbose(mConfig.LogVerbose);

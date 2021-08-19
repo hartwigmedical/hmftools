@@ -197,6 +197,7 @@ public class LinxConfig
     public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
+    public boolean requireCohortWriters() { return hasMultipleSamples() || Output.WriteCohortFiles; }
 
     public static List<String> sampleListFromConfigStr(final String configSampleStr)
     {
