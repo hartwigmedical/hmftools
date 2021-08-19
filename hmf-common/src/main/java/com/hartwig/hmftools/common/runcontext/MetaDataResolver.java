@@ -180,7 +180,7 @@ public final class MetaDataResolver {
     }
 
     @Nullable
-    private static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
+    public static String readPipelineVersion(@NotNull File pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(pipelineVersionFile.toPath());
         if (lines.isEmpty()) {
             throw new IOException("Pipeline version file seems empty on " + pipelineVersionFile.getPath());
