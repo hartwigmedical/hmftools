@@ -81,7 +81,7 @@ public class DisruptionTest
         assertEquals(8, tester.Analyser.getClusters().size());
 
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
-        disruptionFinder.addDisruptionGene(geneId);
+        disruptionFinder.addDisruptionGene(geneTransCache.getGeneDataById(geneId));
 
         SampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);

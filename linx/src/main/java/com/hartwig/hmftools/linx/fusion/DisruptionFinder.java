@@ -1,16 +1,27 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
+import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
+import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
@@ -32,6 +43,7 @@ import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.germline.GermlinePonCache;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -42,11 +54,14 @@ import com.hartwig.hmftools.linx.visualiser.file.VisDataWriter;
 public class DisruptionFinder
 {
     private final EnsemblDataCache mGeneTransCache;
-    private final List<String> mDisruptionGeneIds;
+    private final List<GeneData> mDisruptionGenes;
     private final VisDataWriter mVisWriter;
 
-    private final List<BreakendTransData> mDisruptions;
+    private final List<SvDisruptionData> mDisruptions;
     private final Map<BreakendTransData,String> mRemovedDisruptions; // cached for diagnostic purposes
+
+    private final boolean mIsGermline;
+    private final GermlinePonCache mGermlinePonCache;
 
     private BufferedWriter mWriter;
     private final String mOutputDir;
@@ -56,7 +71,12 @@ public class DisruptionFinder
     public DisruptionFinder(final LinxConfig config, final EnsemblDataCache geneTransCache, final VisDataWriter visWriter)
     {
         mGeneTransCache = geneTransCache;
-        mDisruptionGeneIds = disruptionGeneIds(config.DriverGenes, geneTransCache);
+
+        mIsGermline = config.IsGermline;
+        mGermlinePonCache = config.IsGermline ? new GermlinePonCache(config.CmdLineArgs) : null;
+
+        mDisruptionGenes = disruptionGeneIds(config.DriverGenes, !mIsGermline, geneTransCache);
+
         mVisWriter = visWriter;
 
         mDisruptions = Lists.newArrayList();
@@ -66,26 +86,26 @@ public class DisruptionFinder
         mWriter = null;
     }
 
-    public static List<String> disruptionGeneIds(final List<DriverGene> driverGenes, final EnsemblDataCache geneTransCache)
+    public static List<GeneData> disruptionGeneIds(
+            final List<DriverGene> driverGenes, boolean onlyReportable, final EnsemblDataCache geneTransCache)
     {
         return driverGenes.stream()
-                .filter(x -> x.reportDisruption())
+                .filter(x -> !onlyReportable || x.reportDisruption())
                 .map(x -> geneTransCache.getGeneDataByName(x.gene()))
                 .filter(x -> x != null)
-                .map(x -> x.GeneId)
                 .collect(Collectors.toList());
     }
 
-    public final List<BreakendTransData> getDisruptions() { return mDisruptions; }
+    public final List<SvDisruptionData> getDisruptions() { return mDisruptions; }
 
     public boolean matchesDisruptionGene(final BreakendGeneData gene)
     {
-        return mDisruptionGeneIds.stream().anyMatch(geneId -> gene.StableId.equals(geneId));
+        return mDisruptionGenes.stream().anyMatch(x -> gene.StableId.equals(x.GeneId));
     }
 
-    public void addDisruptionGene(final String geneId)
+    public void addDisruptionGene(final GeneData geneData)
     {
-        mDisruptionGeneIds.add(geneId);
+        mDisruptionGenes.add(geneData);
     }
 
     public void markTranscriptsDisruptive(final List<SvVarData> svList)
@@ -458,6 +478,9 @@ public class DisruptionFinder
 
     private void registerNonDisruptedTranscript(final BreakendTransData transcript, final String context)
     {
+        if(mIsGermline)
+            return;
+
         if(mRemovedDisruptions.containsKey(transcript))
             return;
 
@@ -562,7 +585,13 @@ public class DisruptionFinder
                                 formatJcn(transcript.undisruptedCopyNumber()));
 
                         transcript.setReportableDisruption(true);
-                        mDisruptions.add(transcript);
+
+                        SvDisruptionData disruptionData = new SvDisruptionData(
+                                var,  gene.isStart(), true, gene.getGeneData(), transcript.TransData,
+                                new int[] { transcript.ExonUpstream, transcript.ExonDownstream },
+                                transcript.codingType(), transcript.regionType(), transcript.undisruptedCopyNumber());
+
+                        mDisruptions.add(disruptionData);
 
                         if(mVisWriter != null)
                         {
@@ -589,6 +618,87 @@ public class DisruptionFinder
         return cnLowSide;
     }
 
+    public void findGermlineGeneDeletions(final List<SvCluster> clusters)
+    {
+        for(SvCluster cluster : clusters)
+        {
+            if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DEL)
+                continue;
+
+            if(cluster.getSvCount() == 1)
+            {
+                if(cluster.getSV(0).type() != DEL)
+                    continue;
+            }
+            else
+            {
+                // must be fully chained and not LINE
+                if(cluster.getResolvedType() == LINE)
+                    continue;
+
+                if(!cluster.isFullyChained(true))
+                    continue;
+            }
+
+            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            {
+                final String chromosome = entry.getKey();
+                final List<SvBreakend> breakendList = entry.getValue();
+
+                int startIndex = findStartIndex(breakendList);
+                int endIndex = findEndIndex(breakendList);
+
+                // find stand-alone DELs and clustered deletion bridges, then look within them for driver genes which have been deleted
+                for(int i = startIndex; i <= endIndex - 1; ++i)
+                {
+                    final SvBreakend breakend = breakendList.get(i);
+                    final SvVarData var = breakend.getSV();
+                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+
+                    boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
+
+                    boolean isSimpleDel = !isDB && var.type() == DEL
+                            && breakend.orientation() == 1 && nextBreakend.getSV() == var;
+
+                    if(isDB || isSimpleDel)
+                    {
+                        int delStart = breakend.position();
+                        int delEnd = nextBreakend.position();
+
+                        for(GeneData geneData : mDisruptionGenes)
+                        {
+                            if(!geneData.Chromosome.equals(chromosome))
+                                continue;
+
+                            if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
+                            {
+                                TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+
+                                if(canonicalTrans == null)
+                                {
+                                    LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
+                                    continue;
+                                }
+
+                                SvDisruptionData upDisruptionData = new SvDisruptionData(
+                                        breakend.getSV(), breakend.usesStart(), true, geneData, canonicalTrans,
+                                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
+
+                                mDisruptions.add(upDisruptionData);
+
+                                SvDisruptionData downDisruptionData = new SvDisruptionData(
+                                        nextBreakend.getSV(), nextBreakend.usesStart(), true, geneData, canonicalTrans,
+                                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM, 1.0);
+
+                                mDisruptions.add(downDisruptionData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void initialiseOutputFile(final String fileName)
     {
         try
@@ -601,7 +711,16 @@ public class DisruptionFinder
 
                 mWriter.write("SampleId,Reportable,SvId,IsStart,Type,ClusterId,Chromosome,Position,Orientation");
                 mWriter.write(",GeneId,GeneName,Strand,TransId,ExonUp,ExonDown,CodingType,RegionType");
-                mWriter.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
+
+                if(!mIsGermline)
+                {
+                    mWriter.write(",UndisruptedCN,ExcludedReason,ExtraInfo");
+                }
+                else
+                {
+                    mWriter.write(",ResolvedType,Filter,PonCount");
+                }
+
                 mWriter.newLine();
             }
         }
@@ -618,58 +737,75 @@ public class DisruptionFinder
 
         try
         {
-            for(final BreakendTransData transcript : mDisruptions)
+            for(final SvDisruptionData disruptionData : mDisruptions)
             {
-                final BreakendGeneData gene = transcript.gene();
-                final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
+                final SvVarData var = disruptionData.Var;
+                boolean isSvStart = disruptionData.IsStart;
+                final GeneData gene = disruptionData.Gene;
 
                 mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
-                        sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
+                        sampleId, disruptionData.Reportable, var.id(), isSvStart,
                         var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
-                        gene.chromosome(), gene.position(), gene.orientation()));
+                        disruptionData.Gene.Chromosome, var.position(isSvStart), var.orientation(isSvStart)));
 
-                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,,",
-                        gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
-                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType(),
-                        transcript.undisruptedCopyNumber()));
+                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s",
+                        gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
+                        disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType));
+
+                if(mIsGermline)
+                {
+                    int ponCount = var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
+
+                    mWriter.write(String.format(",%s,%s,%d",
+                            var.getCluster().getResolvedType(), var.getSvData().filter(), ponCount));
+                }
+                else
+                {
+                    mWriter.write(String.format(",%.2f,,",
+                            gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
+                            disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType,
+                            disruptionData.UndisruptedCopyNumber));
+                }
 
                 mWriter.newLine();
             }
 
-            for(Map.Entry<BreakendTransData,String> entry : mRemovedDisruptions.entrySet())
+            if(!mIsGermline)
             {
-                final String exclusionInfo = entry.getValue();
-
-                if(exclusionInfo.equals(NON_DISRUPT_REASON_SIMPLE_SV))
-                    continue;
-
-                final BreakendTransData transcript = entry.getKey();
-                final BreakendGeneData gene = transcript.gene();
-                final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
-
-                mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
-                    sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
-                    var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
-                    gene.chromosome(), gene.position(), gene.orientation()));
-
-
-                String exclusionReason = exclusionInfo;
-                String extraInfo = "";
-
-                String[] contextInfo = exclusionInfo.split(ITEM_DELIM);
-
-                if(contextInfo.length == 2)
+                for(Map.Entry<BreakendTransData, String> entry : mRemovedDisruptions.entrySet())
                 {
-                    exclusionReason = contextInfo[0];
-                    extraInfo = contextInfo[1];
+                    final String exclusionInfo = entry.getValue();
+
+                    if(exclusionInfo.equals(NON_DISRUPT_REASON_SIMPLE_SV))
+                        continue;
+
+                    final BreakendTransData transcript = entry.getKey();
+                    final BreakendGeneData gene = transcript.gene();
+                    final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
+
+                    mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
+                            sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
+                            var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
+                            gene.chromosome(), gene.position(), gene.orientation()));
+
+                    String exclusionReason = exclusionInfo;
+                    String extraInfo = "";
+
+                    String[] contextInfo = exclusionInfo.split(ITEM_DELIM);
+
+                    if(contextInfo.length == 2)
+                    {
+                        exclusionReason = contextInfo[0];
+                        extraInfo = contextInfo[1];
+                    }
+
+                    mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
+                            gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
+                            transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
+                            transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
+
+                    mWriter.newLine();
                 }
-
-                mWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
-                        gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
-                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
-                        transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
-
-                mWriter.newLine();
             }
         }
         catch (final IOException e)

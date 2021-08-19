@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
 
@@ -163,8 +165,9 @@ public class ClusterMetrics
         }
     }
 
-    private int findStartIndex(final List<SvBreakend> breakendList)
+    public static int findStartIndex(final List<SvBreakend> breakendList)
     {
+        // first the first breakend in a cluster (on the chromosome), ignoring short TIs
         int startIndex = 0;
         for(; startIndex < breakendList.size() - 1; )
         {
@@ -172,7 +175,7 @@ public class ClusterMetrics
             final SvBreakend upperBreakend = breakendList.get(startIndex + 1);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-                    && lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1
+                    && lowerBreakend.orientation() == NEG_ORIENT && upperBreakend.orientation() == POS_ORIENT
                     && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 startIndex += 2;
@@ -185,7 +188,7 @@ public class ClusterMetrics
         return startIndex;
     }
 
-    private int findEndIndex(final List<SvBreakend> breakendList)
+    public static int findEndIndex(final List<SvBreakend> breakendList)
     {
         int endIndex = breakendList.size() - 1;
 
@@ -195,7 +198,7 @@ public class ClusterMetrics
             final SvBreakend upperBreakend = breakendList.get(endIndex);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-                    && lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1
+                    && lowerBreakend.orientation() == NEG_ORIENT && upperBreakend.orientation() == POS_ORIENT
                     && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 endIndex -= 2;

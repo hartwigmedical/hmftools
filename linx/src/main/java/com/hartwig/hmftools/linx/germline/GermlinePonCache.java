@@ -71,6 +71,9 @@ public class GermlinePonCache
 
     private void loadPonSvFile(final String filename)
     {
+        if(filename == null)
+            return;
+
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
@@ -116,6 +119,9 @@ public class GermlinePonCache
 
     private void loadPonSglFile(final String filename)
     {
+        if(filename == null)
+            return;
+
         try
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));

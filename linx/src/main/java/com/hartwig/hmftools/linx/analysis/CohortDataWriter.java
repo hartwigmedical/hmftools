@@ -60,15 +60,11 @@ public class CohortDataWriter
     private final BufferedWriter mClusterFileWriter;
     private final BufferedWriter mLinksFileWriter;
     private final VisDataWriter mVisWriter;
-    private final GermlinePonCache mGermlinePonCache;
 
     public CohortDataWriter(final LinxConfig config)
     {
         mConfig = config;
         mVisWriter = new VisDataWriter(config.OutputDataPath, config.Output.WriteVisualisationData, config.hasMultipleSamples());
-
-        mGermlinePonCache = config.IsGermline ? new GermlinePonCache(config.CmdLineArgs) : null;
-
         mSvFileWriter = createSvDataFile();
         mClusterFileWriter = createClusterFile();
         mLinksFileWriter = createLinksFile();
@@ -295,12 +291,6 @@ public class CohortDataWriter
                     mSvFileWriter.write(String.format(",%s,%s,%s,%d,%d",
                             dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
                             dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
-                }
-
-                if(mConfig.IsGermline)
-                {
-                    int ponCount = var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
-                    mSvFileWriter.write(String.format(",%s,%d", var.getSvData().filter(), ponCount));
                 }
 
                 mSvFileWriter.newLine();

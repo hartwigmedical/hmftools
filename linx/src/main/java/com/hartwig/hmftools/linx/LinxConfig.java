@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -96,7 +97,6 @@ public class LinxConfig
     private static final String GERMLINE = "germline";
 
     // logging options
-    public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_VERBOSE = "log_verbose";
 
     // global Linx logger
@@ -326,7 +326,8 @@ public class LinxConfig
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
         options.addOption(INDEL_FILE, true, "Optional: cached set of INDELs");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+
+        ConfigUtils.addLoggingOptions(options);
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
 
         LinxOutput.addCmdLineArgs(options);

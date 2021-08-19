@@ -162,7 +162,7 @@ public class FusionDisruptionAnalyser
             mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
         }
 
-        if(mConfig.hasMultipleSamples())
+        if(mConfig.hasMultipleSamples() || mConfig.Output.WriteCohortFiles)
         {
             mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
         }
@@ -302,6 +302,9 @@ public class FusionDisruptionAnalyser
 
         mDisruptionFinder.findReportableDisruptions(svList);
 
+        if(mConfig.IsGermline)
+            mDisruptionFinder.findGermlineGeneDeletions(clusters);
+
         if(mRunFusions)
         {
             mUniqueFusions.addAll(extractUniqueFusions());
@@ -333,7 +336,10 @@ public class FusionDisruptionAnalyser
             fusionList.stream()
                     .filter(x -> x.reportable() || !mLogReportableOnly)
                     .forEach(x -> mFusionWriter.writeVerboseFusionData(x, mSampleId));
+        }
 
+        if(mConfig.hasMultipleSamples() || mConfig.Output.WriteCohortFiles)
+        {
             mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
         }
 

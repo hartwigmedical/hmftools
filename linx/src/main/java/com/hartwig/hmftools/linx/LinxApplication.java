@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
@@ -8,8 +9,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvFileLoader.loadSvDataFromGermlineVcf;
@@ -40,8 +39,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class LinxApplication
@@ -56,14 +53,7 @@ public class LinxApplication
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_VERBOSE))
-        {
-            Configurator.setRootLevel(Level.TRACE);
-        }
-        else if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         if(!LinxConfig.validConfig(cmd))
         {
@@ -122,16 +112,21 @@ public class LinxApplication
         FusionDisruptionAnalyser fusionAnalyser = null;
         boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
 
-        boolean breakendGeneLoading = (samplesList.size() == 1 && !checkDrivers) && config.RestrictedGeneIds.isEmpty();
+        // check whether to only load genes which are hit by an SV breakend
+        boolean breakendGeneLoading = (samplesList.size() == 1 && !checkDrivers) && config.RestrictedGeneIds.isEmpty() && !config.IsGermline;
         boolean applyPromotorDistance = checkFusions;
         boolean purgeInvalidTranscripts = true;
+
+        boolean reqProteinDomains = checkFusions;
+        boolean reqSplicePositions = checkFusions;
+        boolean canonicalOnly = config.IsGermline || !checkFusions;
 
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
                 new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
 
         if(ensemblDataCache != null)
         {
-            ensemblDataCache.setRequiredData(true, checkFusions, checkFusions, !checkFusions);
+            ensemblDataCache.setRequiredData(true, reqProteinDomains, reqSplicePositions, canonicalOnly);
 
             boolean ensemblLoadOk = false;
 

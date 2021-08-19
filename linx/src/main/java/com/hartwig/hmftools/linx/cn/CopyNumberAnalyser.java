@@ -7,12 +7,12 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -32,6 +32,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -44,6 +45,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
+
+import sun.security.krb5.Config;
 
 public class CopyNumberAnalyser
 {
@@ -99,7 +102,7 @@ public class CopyNumberAnalyser
         options.addOption(WRITE_JCN_TO_FILE, false, "Write adjusted JCN to CSV");
         options.addOption(WRITE_CHR_ARM_DATA, false, "Write chromosomal arm data");
         options.addOption(WRITE_CN_SEGMENT_DATA, false, "Write CN segment data to CSV");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        ConfigUtils.addLoggingOptions(options);
     }
 
     public boolean loadConfig(final CommandLine cmd)

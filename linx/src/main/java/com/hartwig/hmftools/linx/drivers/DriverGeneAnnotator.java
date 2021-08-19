@@ -17,6 +17,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -79,7 +80,11 @@ public class DriverGeneAnnotator
 
         mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
-        mDelDrivers = new DeletionDrivers(disruptionGeneIds(config.DriverGenes, geneTransCache), mDataCache);
+
+        List<String> disruptionGeneIds = disruptionGeneIds(config.DriverGenes, true, geneTransCache).stream()
+                .map(x -> x.GeneId).collect(Collectors.toList());
+
+        mDelDrivers = new DeletionDrivers(disruptionGeneIds, mDataCache);
 
         mVisWriter = null;
 
