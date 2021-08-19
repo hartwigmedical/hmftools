@@ -32,8 +32,8 @@ public class ImmunologyChapter implements ReportChapter {
     @Override
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
-        document.add(new Paragraph("TODO: Add HLA types for patient + status in tumor").addStyle(ReportResources.tableTitleStyle()));
-        document.add(new Paragraph("TODO: Add list of neo-epitopes with predicted binding affinity").addStyle(ReportResources.tableTitleStyle()));
-        document.add(new Paragraph("TODO: Add details about RNA tumor micro-environment").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("Coming soon: HLA types for patient + status in tumor").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("Coming soon: List of neo-epitopes with predicted binding affinity").addStyle(ReportResources.tableTitleStyle()));
+        document.add(new Paragraph("Coming soon: Details about RNA tumor micro-environment").addStyle(ReportResources.tableTitleStyle()));
     }
 }
