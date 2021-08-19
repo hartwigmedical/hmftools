@@ -16,9 +16,13 @@ import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
+import com.hartwig.hmftools.common.flagstat.Flagstat;
+import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
+import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
@@ -27,6 +31,8 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.algo.data.ImmutableSampleData;
+import com.hartwig.hmftools.orange.algo.data.SampleData;
 import com.hartwig.hmftools.orange.cuppa.CuppaData;
 import com.hartwig.hmftools.orange.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.orange.cuppa.CuppaEntry;
@@ -59,30 +65,19 @@ public class OrangeAlgo {
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
-                .pipelineVersion(loadPipelineVersion(config))
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
-                .cuppa(loadCuppaData(config))
+                .pipelineVersion(loadPipelineVersion(config))
+                .refSample(loadSampleData(config, false))
+                .tumorSample(loadSampleData(config, true))
+                .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .purple(loadPurpleData(config))
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
+                .cuppa(loadCuppaData(config))
                 .protect(loadProtectData(config))
-                .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
                 .plots(buildPlots(config))
                 .build();
-    }
-
-    @Nullable
-    private static String loadPipelineVersion(@NotNull OrangeConfig config) throws IOException {
-        String pipelineVersionFile = config.pipelineVersionFile();
-        if (pipelineVersionFile != null) {
-            String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            LOGGER.info("Loaded pipeline version '{}'", pipelineVersion);
-            return pipelineVersion;
-        } else {
-            LOGGER.info("No pipeline version file configured");
-            return null;
-        }
     }
 
     @NotNull
@@ -111,16 +106,48 @@ public class OrangeAlgo {
         return null;
     }
 
+    @Nullable
+    private static String loadPipelineVersion(@NotNull OrangeConfig config) throws IOException {
+        String pipelineVersionFile = config.pipelineVersionFile();
+        if (pipelineVersionFile != null) {
+            String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+            LOGGER.info("Loaded pipeline version '{}'", pipelineVersion);
+            return pipelineVersion;
+        } else {
+            LOGGER.info("No pipeline version file configured");
+            return null;
+        }
+    }
+
     @NotNull
-    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading Cuppa from {}", new File(config.cuppaConclusionTxt()).getParent());
-        String cuppaTumorLocation = MolecularTissueOriginFile.read(config.cuppaConclusionTxt()).conclusion();
-        LOGGER.info(" Cuppa predicted primary tumor: {}", cuppaTumorLocation);
+    private static SampleData loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
+        if (loadTumorSample){
+            LOGGER.info("Loading sample data for tumor sample");
+        } else {
+            LOGGER.info("Loading sample data for reference sample");
+        }
 
-        List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
-        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+        String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.refSampleWGSMetricsFile();
+        WGSMetrics metrics = WGSMetricsFile.read(metricsFile);
+        LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
-        return CuppaFactory.build(cuppaTumorLocation, cuppaEntries);
+        String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.refSampleFlagstatFile();
+        Flagstat flagstat = FlagstatFile.read(flagstatFile);
+        LOGGER.info(" Loaded flagstat from {}", flagstatFile);
+
+        return ImmutableSampleData.builder().metrics(metrics).flagstat(flagstat).build();
+    }
+
+    @NotNull
+    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
+        Map<String, Double> mvlhPerGene = Maps.newHashMap();
+        List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] values = line.split("\t");
+            double mvlh = Double.parseDouble(values[1].substring(0, values[1].length() - 1)) / 100D;
+            mvlhPerGene.put(values[0], mvlh);
+        }
+        return mvlhPerGene;
     }
 
     @NotNull
@@ -154,20 +181,20 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static List<ProtectEvidence> loadProtectData(@NotNull OrangeConfig config) throws IOException {
-        return ProtectEvidenceFile.read(config.protectEvidenceTsv());
+    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
+        LOGGER.info("Loading Cuppa from {}", new File(config.cuppaConclusionTxt()).getParent());
+        String cuppaTumorLocation = MolecularTissueOriginFile.read(config.cuppaConclusionTxt()).conclusion();
+        LOGGER.info(" Cuppa predicted primary tumor: {}", cuppaTumorLocation);
+
+        List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
+
+        return CuppaFactory.build(cuppaTumorLocation, cuppaEntries);
     }
 
     @NotNull
-    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
-        Map<String, Double> mvlhPerGene = Maps.newHashMap();
-        List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
-        for (String line : lines.subList(1, lines.size())) {
-            String[] values = line.split("\t");
-            double mvlh = Double.parseDouble(values[1].substring(0, values[1].length() - 1)) / 100D;
-            mvlhPerGene.put(values[0], mvlh);
-        }
-        return mvlhPerGene;
+    private static List<ProtectEvidence> loadProtectData(@NotNull OrangeConfig config) throws IOException {
+        return ProtectEvidenceFile.read(config.protectEvidenceTsv());
     }
 
     @NotNull

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.orange.algo.data.SampleData;
 import com.hartwig.hmftools.orange.cuppa.CuppaData;
 
 import org.immutables.value.Value;
@@ -23,11 +24,20 @@ public abstract class OrangeReport {
     @NotNull
     public abstract String sampleId();
 
+    @NotNull
+    public abstract Set<DoidNode> configuredPrimaryTumor();
+
     @Nullable
     public abstract String pipelineVersion();
 
     @NotNull
-    public abstract Set<DoidNode> configuredPrimaryTumor();
+    public abstract SampleData refSample();
+
+    @NotNull
+    public abstract SampleData tumorSample();
+
+    @NotNull
+    public abstract Map<String, Double> germlineMVLHPerGene();
 
     @NotNull
     public abstract PurpleData purple();
@@ -46,9 +56,6 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract List<ProtectEvidence> protect();
-
-    @NotNull
-    public abstract Map<String, Double> germlineMVLHPerGene();
 
     @NotNull
     public abstract OrangePlots plots();

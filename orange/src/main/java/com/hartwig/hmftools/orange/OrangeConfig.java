@@ -40,6 +40,10 @@ public interface OrangeConfig {
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
+    String REF_SAMPLE_WGS_METRICS_FILE = "ref_sample_wgs_metrics_file";
+    String REF_SAMPLE_FLAGSTAT_FILE = "ref_sample_flagstat_file";
+    String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
+    String TUMOR_SAMPLE_FLAGSTAT_FILE = "tumor_sample_flagstat_file";
     String SAGE_GERMLINE_GENE_COVERAGE_TSV = "sage_germline_gene_coverage_tsv";
     String SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT = "sage_somatic_ref_sample_bqr_plot";
     String SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT = "sage_somatic_tumor_sample_bqr_plot";
@@ -81,6 +85,10 @@ public interface OrangeConfig {
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
+        options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
+        options.addOption(REF_SAMPLE_FLAGSTAT_FILE, true, "Path towards the ref sample flagstat file.");
+        options.addOption(TUMOR_SAMPLE_WGS_METRICS_FILE, true, "Path towards the tumor sample WGS metrics file.");
+        options.addOption(TUMOR_SAMPLE_FLAGSTAT_FILE, true, "Path towards the tumor sample flagstat file.");
         options.addOption(SAGE_GERMLINE_GENE_COVERAGE_TSV, true, "Path towards the SAGE germline gene coverage TSV.");
         options.addOption(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic ref sample BQR plot.");
         options.addOption(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT, true, "Path towards the SAGE somatic tumor sample BQR plot.");
@@ -132,6 +140,18 @@ public interface OrangeConfig {
 
     @Nullable
     String pipelineVersionFile();
+
+    @NotNull
+    String refSampleWGSMetricsFile();
+
+    @NotNull
+    String refSampleFlagstatFile();
+
+    @NotNull
+    String tumorSampleWGSMetricsFile();
+
+    @NotNull
+    String tumorSampleFlagstatFile();
 
     @NotNull
     String sageGermlineGeneCoverageTsv();
@@ -232,6 +252,10 @@ public interface OrangeConfig {
                 .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
                 .pipelineVersionFile(optionalValue(cmd, PIPELINE_VERSION_FILE))
+                .refSampleWGSMetricsFile(nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
+                .refSampleFlagstatFile(nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
+                .tumorSampleWGSMetricsFile(nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
+                .tumorSampleFlagstatFile(nonOptionalValue(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
                 .sageGermlineGeneCoverageTsv(nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
                 .sageSomaticRefSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
                 .sageSomaticTumorSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
