@@ -11,7 +11,7 @@
     <artifactId>lilac</artifactId>
     <packaging>jar</packaging>
     <version>${lilac.version}</version>
-    <name>HMF Tools - LILAC</name>
+    <name>HMF Tools - Lilac</name>
 
     <dependencies>
         <dependency>

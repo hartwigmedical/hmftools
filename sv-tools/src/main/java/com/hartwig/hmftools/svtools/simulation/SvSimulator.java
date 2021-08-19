@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.svtools.simulation;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -47,7 +49,7 @@ public class SvSimulator
     {
         final Options options = new Options();
         options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Verbose logging");
+        ConfigUtils.addLoggingOptions(options);
         ShatteringConfig.addCommandLineOptions(options);
         return options;
     }
@@ -64,10 +66,7 @@ public class SvSimulator
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         String outputDir = parseOutputDir(cmd);
 

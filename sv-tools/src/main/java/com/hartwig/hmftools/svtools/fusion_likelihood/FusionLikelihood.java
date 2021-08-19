@@ -5,11 +5,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MIN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.GENE_PAIR_DELIM;
@@ -635,16 +636,13 @@ public class FusionLikelihood
         final Options options = new Options();
         addCmdLineArgs(options);
         options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log in verbose mode");
+        addLoggingOptions(options);
         options.addOption(ENSEMBL_DATA_DIR, true, "Ensembl gene transcript data cache directory");
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        if(cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 
