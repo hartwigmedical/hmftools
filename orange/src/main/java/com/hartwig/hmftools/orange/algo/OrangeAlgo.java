@@ -122,9 +122,9 @@ public class OrangeAlgo {
     @NotNull
     private static SampleData loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
         if (loadTumorSample){
-            LOGGER.info("Loading sample data for tumor sample");
+            LOGGER.info("Loading tumor sample data");
         } else {
-            LOGGER.info("Loading sample data for reference sample");
+            LOGGER.info("Loading reference sample data");
         }
 
         String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.refSampleWGSMetricsFile();
