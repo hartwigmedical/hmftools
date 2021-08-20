@@ -50,7 +50,7 @@ public final class VariantUtil {
         }
         String codon = codonAppender.toString();
         if (codon.isEmpty()) {
-            LOGGER.warn("Could not extract codon from in {}", hgvsCoding);
+            LOGGER.warn("Could not extract codon from {}", hgvsCoding);
             return -1;
         } else {
             return Integer.parseInt(codon);
