@@ -28,6 +28,8 @@ import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_DIFF_EXPONENT
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_CSS_THRESHOLD;
 import static com.hartwig.hmftools.cup.common.CupConstants.SNV_POS_FREQ_DIFF_EXPONENT;
+import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
+import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_SIG_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
@@ -367,7 +369,7 @@ public class SomaticClassifier implements CuppaClassifier
             if(!isKnownCancerType(cancerType))
                 continue;
 
-            double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true);
+            double percentile = getPercentile(cancerPercentiles.getValue(), snvTotal, true, UNDEFINED_PERC_MAX_MULTIPLE);
             cancerTypeValues.put(cancerType, percentile);
         }
 
@@ -685,7 +687,7 @@ public class SomaticClassifier implements CuppaClassifier
                 }
                 else
                 {
-                    double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true);
+                    double percentile = getPercentile(refSigPercentiles, sampleSigContrib, true, UNDEFINED_SIG_PERC_MAX_MULTIPLE);
                     cancerResults.put(cancerType, percentile);
                 }
             }

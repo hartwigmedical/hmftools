@@ -13,10 +13,10 @@ public final class Percentiles
 
     public static double getPercentile(final double[] percentileValues, double value)
     {
-        return getPercentile(percentileValues, value, false);
+        return getPercentile(percentileValues, value, false, 0);
     }
 
-    public static double getPercentile(final double[] percentileValues, double value, boolean useMaxMultiple)
+    public static double getPercentile(final double[] percentileValues, double value, boolean useMaxMultiple, double undefinedMaxMultiple)
     {
         // find the position of a value within a set of percentile values
         if(percentileValues == null || percentileValues.length != PERCENTILE_COUNT)
@@ -34,10 +34,11 @@ public final class Percentiles
         }
         else if(value > percentileValues[percentileValues.length - 1])
         {
+            // all values in the distribution are zero, so the multiple is undefined
             if(useMaxMultiple)
             {
                 double maxValue = percentileValues[percentileValues.length - 1];
-                return maxValue > 0 ? value / maxValue : 1.01;
+                return maxValue > 0 ? value / maxValue : undefinedMaxMultiple;
             }
 
             return (percentileValues.length - 1) * 0.01;

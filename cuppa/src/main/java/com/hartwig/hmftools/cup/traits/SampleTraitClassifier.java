@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.ResultType.PREVALENCE;
@@ -247,7 +248,7 @@ public class SampleTraitClassifier implements CuppaClassifier
                 if(!isKnownCancerType(cancerType))
                     continue;
 
-                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true);
+                double percentile = getPercentile(cancerPercentiles.getValue(), traitValue, true, UNDEFINED_PERC_MAX_MULTIPLE);
                 cancerTypeValues.put(cancerType, percentile);
             }
 

@@ -52,7 +52,7 @@ public class PercentilesTest
 
         assertEquals(0, getPercentile(percentileValues, 0.5), 0.01);
         assertEquals(1.0, getPercentile(percentileValues, 6.0), 0.01);
-        assertEquals(2.0, getPercentile(percentileValues, 12, true), 0.01); // reports multiple of highest value
+        assertEquals(2.0, getPercentile(percentileValues, 12, true, 0), 0.01); // reports multiple of highest value
         assertEquals(0.4, getPercentile(percentileValues, 3.0), 0.01);
         assertEquals(0.7, getPercentile(percentileValues, 4.5), 0.01);
 
@@ -61,6 +61,12 @@ public class PercentilesTest
         percentileValues = buildPercentiles(values);
 
         assertEquals(0.2, getPercentile(percentileValues, 0), 0.01);
+
+        // test with zeros for all percentiles
+        values = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        percentileValues = buildPercentiles(values);
+
+        assertEquals(10.0, getPercentile(percentileValues, 1, true, 10.0), 0.01);
 
         // same value higher up
         values = new double[] { 1, 2, 3, 4, 4, 4, 4, 4, 5, 6, 7 };
