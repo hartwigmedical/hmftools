@@ -29,13 +29,15 @@ public final class SomaticVariantSelector {
         for (SomaticVariant variant : unreportedVariants) {
             boolean isHotspot = variant.isHotspot();
             boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.genomicEvent());
-            boolean hasPhasedReportedVariant = hasReportedVariantWithPhase(reportedSomaticVariants, variant.localPhaseSet());
+            boolean isCodingAndHasPhasedReportedVariant =
+                    !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.localPhaseSet());
             boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
 
-            if (isHotspot || hasEvidence || hasPhasedReportedVariant || isCuppaRelevantVariant) {
+            if (isHotspot || hasEvidence || isCodingAndHasPhasedReportedVariant || isCuppaRelevantVariant) {
                 filtered.add(toReportable(variant));
             }
-        } return filtered;
+        }
+        return filtered;
     }
 
     private static boolean hasReportedVariantWithPhase(@NotNull List<ReportableVariant> reportedVariants,
