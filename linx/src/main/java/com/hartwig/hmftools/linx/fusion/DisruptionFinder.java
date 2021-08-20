@@ -478,6 +478,7 @@ public class DisruptionFinder implements CohortFileInterface
 
     private void registerNonDisruptedTranscript(final BreakendTransData transcript, final String context)
     {
+        // keep track of non-disruptive breakends purely for logging purposes
         if(mIsGermline)
             return;
 

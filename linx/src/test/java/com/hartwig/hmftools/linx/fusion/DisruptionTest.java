@@ -262,7 +262,6 @@ public class DisruptionTest
         assertTrue(var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
         assertTrue(!var5.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-
     }
 
     @Test
