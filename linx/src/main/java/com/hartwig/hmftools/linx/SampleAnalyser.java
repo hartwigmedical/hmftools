@@ -131,11 +131,17 @@ public class SampleAnalyser implements Callable
         mPerfCounters.put(PERF_COUNTER_WRITE, new PerformanceCounter(PERF_COUNTER_WRITE));
         mPerfCounters.put(PERF_COUNTER_ANNOTATE, new PerformanceCounter(PERF_COUNTER_ANNOTATE));
 
-        PerformanceCounter fusionPc = mFusionAnalyser.getPerfCounter();
-        mPerfCounters.put(fusionPc.getName(), fusionPc);
+        if(mConfig.RunFusions)
+        {
+            PerformanceCounter fusionPc = mFusionAnalyser.getPerfCounter();
+            mPerfCounters.put(fusionPc.getName(), fusionPc);
+        }
 
-        PerformanceCounter driverPc = mDriverGeneAnnotator.getPerfCounter();
-        mPerfCounters.put(driverPc.getName(), driverPc);
+        if(mDriverGeneAnnotator != null)
+        {
+            PerformanceCounter driverPc = mDriverGeneAnnotator.getPerfCounter();
+            mPerfCounters.put(driverPc.getName(), driverPc);
+        }
     }
 
     public Map<String,PerformanceCounter> getPerfCounters() { return mPerfCounters; }
