@@ -130,7 +130,7 @@ public class PatientReporterApplication {
     @VisibleForTesting
     @NotNull
     static String convertToJson(@NotNull PatientReport report) {
-        return new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
+        return new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().setPrettyPrinting().create().toJson(report);
     }
 
     @NotNull
