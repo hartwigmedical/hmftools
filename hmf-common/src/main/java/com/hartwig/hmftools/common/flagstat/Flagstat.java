@@ -25,5 +25,4 @@ public abstract class Flagstat {
     public abstract double withItselfAndMateMappedProportion();
 
     public abstract double singletonProportion();
-
 }

@@ -2,19 +2,27 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.text.DecimalFormat;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.selection.GermlineVariantSelector;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
+import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter {
@@ -49,28 +57,29 @@ public class GermlineFindingsChapter implements ReportChapter {
             addGermlineVariants(document);
             addMVLHAnalysis(document);
             addGermlineCNAberrations(document);
-            addPEACH(document);
+            addPharmacogenetics(document);
         } else {
             document.add(new Paragraph(ReportResources.NOT_AVAILABLE).addStyle(ReportResources.tableContentStyle()));
         }
     }
 
     private void addGermlineVariants(@NotNull Document document) {
-        String germlineDriversTitle = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
-        Table germlineDriversTable =
-                GermlineVariantTable.build(germlineDriversTitle, contentWidth(), report.purple().reportableGermlineVariants());
-        document.add(germlineDriversTable);
+        String titleDrivers = "Driver variants (" + report.purple().reportableGermlineVariants().size() + ")";
+        document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), report.purple().reportableGermlineVariants()));
 
-        document.add(new Paragraph("TODO: Add other potentially other germline variants").addStyle(ReportResources.tableTitleStyle()));
+        List<ReportableVariant> nonDriverVariants = GermlineVariantSelector.selectNonDrivers(report.purple().unreportedGermlineVariants());
+        String titleNonDrivers = "Other potentially relevant variants (" + nonDriverVariants.size() + ")";
+        document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), nonDriverVariants));
     }
 
     private void addMVLHAnalysis(@NotNull Document document) {
         Table table = TableUtil.createReportContentTable(contentWidth(),
                 new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell(""),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"), TableUtil.createHeaderCell("") });
+                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"),
+                        TableUtil.createHeaderCell(Strings.EMPTY), TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"),
+                        TableUtil.createHeaderCell(Strings.EMPTY), TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"),
+                        TableUtil.createHeaderCell(Strings.EMPTY), TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("MVLH"),
+                        TableUtil.createHeaderCell(Strings.EMPTY) });
 
         int count = 0;
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
@@ -81,14 +90,14 @@ public class GermlineFindingsChapter implements ReportChapter {
                 count++;
                 table.addCell(TableUtil.createContentCell(gene));
                 table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(mvlh * 100)));
-                table.addCell(TableUtil.createContentCell(""));
+                table.addCell(TableUtil.createContentCell(Strings.EMPTY));
             }
         }
 
         // Make sure all rows are properly filled in case table is sparse.
         if (count % 4 != 0) {
             for (int i = 0; i < 12 - 3 * (count % 4); i++) {
-                table.addCell(TableUtil.createContentCell(""));
+                table.addCell(TableUtil.createContentCell(Strings.EMPTY));
             }
         }
 
@@ -96,11 +105,21 @@ public class GermlineFindingsChapter implements ReportChapter {
     }
 
     private void addGermlineCNAberrations(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add Germline CN aberrations").addStyle(ReportResources.tableTitleStyle()));
+        int count = 0;
+        StringJoiner germlineAberrations = new StringJoiner(", ");
+        for (GermlineAberration aberration : report.purple().qc().germlineAberrations()) {
+            if (aberration != GermlineAberration.NONE) {
+                count++;
+            }
+            germlineAberrations.add(aberration.toString());
+        }
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1 })).setWidth(contentWidth());
+        table.addCell(TableUtil.createContentCell(germlineAberrations.toString()));
+        document.add(TableUtil.createWrappingReportTable(table, "Germline CN aberrations (" + count + ")"));
     }
 
-    private void addPEACH(@NotNull Document document) {
-        document.add(new Paragraph("TODO: Add PEACH").addStyle(ReportResources.tableTitleStyle()));
+    private void addPharmacogenetics(@NotNull Document document) {
+        String titlePharmacogenetics = "Pharmacogenetics (" + report.peach().size() + ")";
+        document.add(PharmacogeneticsTable.build(titlePharmacogenetics, contentWidth(), report.peach()));
     }
-
 }

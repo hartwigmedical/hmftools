@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -13,6 +12,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.algo.selection.EvidenceSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
@@ -23,7 +23,6 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,43 +64,21 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
 
         if (reportConfig.maxEvidenceLevel() != null) {
-            document.add(note(" * Treatments are reported up to a maximum evidence level of '" + reportConfig.maxEvidenceLevel().toString()
-                    + "'.'"));
+            String maxEvidenceLevelString = reportConfig.maxEvidenceLevel().toString();
+            document.add(note(" * Treatments are reported up to a maximum evidence level of " + maxEvidenceLevelString + "."));
         }
 
-        List<ProtectEvidence> noIclusion = noIclusion(report.protect());
+        List<ProtectEvidence> noIclusion = EvidenceSelector.noIclusion(report.protect());
+        Map<String, List<ProtectEvidence>> onLabelTreatments =
+                EvidenceSelector.buildTreatmentMap(noIclusion, reportConfig.reportGermline(), true);
+        Map<String, List<ProtectEvidence>> offLabelTreatments =
+                EvidenceSelector.buildTreatmentMap(noIclusion, reportConfig.reportGermline(), false);
+        document.add(createTreatmentTable("On-Label Evidence", onLabelTreatments));
+        document.add(createTreatmentTable("Off-Label Evidence", offLabelTreatments));
 
-        Table onLabelTable = createTreatmentTable("On-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), true));
-        document.add(onLabelTable);
-
-        Table offLabelTable = createTreatmentTable("Off-Label Evidence", toTreatmentMap(noIclusion, reportConfig.reportGermline(), false));
-        document.add(offLabelTable);
-
-        List<ProtectEvidence> iclusion = iclusionOnly(report.protect());
-        Table trialTable = createTreatmentTable("Trials", toTreatmentMap(iclusion, reportConfig.reportGermline(), true));
-        document.add(trialTable);
-    }
-
-    @NotNull
-    private static List<ProtectEvidence> iclusionOnly(@NotNull List<ProtectEvidence> evidences) {
-        List<ProtectEvidence> filtered = Lists.newArrayList();
-        for (ProtectEvidence evidence : evidences) {
-            if (evidence.sources().contains(Knowledgebase.ICLUSION)) {
-                filtered.add(evidence);
-            }
-        }
-        return filtered;
-    }
-
-    @NotNull
-    private static List<ProtectEvidence> noIclusion(@NotNull List<ProtectEvidence> evidences) {
-        List<ProtectEvidence> filtered = Lists.newArrayList();
-        for (ProtectEvidence evidence : evidences) {
-            if (!evidence.sources().contains(Knowledgebase.ICLUSION)) {
-                filtered.add(evidence);
-            }
-        }
-        return filtered;
+        List<ProtectEvidence> iclusion = EvidenceSelector.iclusionOnly(report.protect());
+        Map<String, List<ProtectEvidence>> trials = EvidenceSelector.buildTreatmentMap(iclusion, reportConfig.reportGermline(), true);
+        document.add(createTreatmentTable("Trials", trials));
     }
 
     @NotNull
@@ -110,41 +87,9 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Map<String, List<ProtectEvidence>> toTreatmentMap(@NotNull List<ProtectEvidence> evidences, boolean reportGermline,
-            boolean requireOnLabel) {
-        Map<String, List<ProtectEvidence>> evidencePerTreatmentMap = Maps.newHashMap();
-
-        for (ProtectEvidence evidence : evidences) {
-            if ((reportGermline || !evidence.germline()) && evidence.onLabel() == requireOnLabel) {
-                List<ProtectEvidence> treatmentEvidences = evidencePerTreatmentMap.get(evidence.treatment());
-                if (treatmentEvidences == null) {
-                    treatmentEvidences = Lists.newArrayList();
-                }
-                if (!hasHigherOrEqualEvidenceForEventAndTreatment(treatmentEvidences, evidence)) {
-                    treatmentEvidences.add(evidence);
-                }
-                evidencePerTreatmentMap.put(evidence.treatment(), treatmentEvidences);
-            }
-        }
-        return evidencePerTreatmentMap;
-    }
-
-    private static boolean hasHigherOrEqualEvidenceForEventAndTreatment(@NotNull List<ProtectEvidence> evidences,
-            @NotNull ProtectEvidence evidenceToCheck) {
-        for (ProtectEvidence evidence : evidences) {
-            if (evidence.treatment().equals(evidenceToCheck.treatment()) && evidence.genomicEvent()
-                    .equals(evidenceToCheck.genomicEvent())) {
-                if (!evidenceToCheck.level().isHigher(evidence.level())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @NotNull
     private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap) {
-        Table treatmentTable = TableUtil.createReportContentTable(contentWidth(), new float[] { 1, 1, 1 },
+        Table treatmentTable = TableUtil.createReportContentTable(contentWidth(),
+                new float[] { 1, 1, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment"), TableUtil.createHeaderCell("Responsive Evidence"),
                         TableUtil.createHeaderCell("Resistance Evidence") });
 

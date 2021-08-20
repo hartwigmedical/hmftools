@@ -135,7 +135,7 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addStructuralDriverPlots(@NotNull Document document) {
-        String title = "Structural driver plots ( " + report.plots().linxDriverPlots().size() + ")";
+        String title = "Structural driver plots (" + report.plots().linxDriverPlots().size() + ")";
         document.add(new Paragraph(title).addStyle(ReportResources.tableTitleStyle()));
         Table table = new Table(2);
         for (String plot : report.plots().linxDriverPlots()) {

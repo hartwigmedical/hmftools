@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
@@ -65,6 +64,9 @@ public interface PurpleData {
 
     @NotNull
     List<ReportableVariant> reportableGermlineVariants();
+
+    @NotNull
+    List<SomaticVariant> unreportedGermlineVariants();
 
     @NotNull
     List<ReportableGainLoss> reportableGainsLosses();

@@ -11,7 +11,7 @@ public final class CuppaFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(CuppaFactory.class);
 
-    private static final String TRAIT_CATEGORY = "SV";
+    private static final String SV_TRAIT_CATEGORY = "SV";
 
     private CuppaFactory() {
     }
@@ -40,7 +40,7 @@ public final class CuppaFactory {
     @Nullable
     private static CuppaEntry findEntry(@NotNull List<CuppaEntry> cuppaEntries, @NotNull String dataType) {
         for (CuppaEntry entry : cuppaEntries) {
-            if (entry.category().equals(TRAIT_CATEGORY) && entry.dataType().equals(dataType)) {
+            if (entry.category().equals(SV_TRAIT_CATEGORY) && entry.dataType().equals(dataType)) {
                 return entry;
             }
         }
