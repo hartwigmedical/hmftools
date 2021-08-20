@@ -89,6 +89,8 @@ public class DriverGeneAnnotator implements CohortFileInterface
         mPerfCounter = new PerformanceCounter("Drivers");
     }
 
+    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
+
     public void setSamplePurityData(double ploidy, boolean isMale)
     {
         mDataCache.setSamplePurityData(ploidy, isMale);
@@ -376,13 +378,5 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         if(clearDrivers)
             mDataCache.getDriverCatalog().clear();
-    }
-
-    public void close()
-    {
-        if(LNX_LOGGER.isDebugEnabled() || mConfig.hasMultipleSamples())
-        {
-            // mPerfCounter.logStats();
-        }
     }
 }

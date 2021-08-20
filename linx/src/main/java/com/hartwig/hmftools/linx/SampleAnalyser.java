@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
@@ -30,7 +31,6 @@ import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxLink;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.analysis.VariantPrep;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
@@ -81,11 +81,13 @@ public class SampleAnalyser implements Callable
 
     private boolean mIsValid;
 
-    private final PerformanceCounter mPcTotal;
-    private final PerformanceCounter mPcPrep;
-    private final PerformanceCounter mPcClusterAnalyse;
-    private final PerformanceCounter mPcAnnotation;
-    private final PerformanceCounter mPcWrite;
+    private final Map<String,PerformanceCounter> mPerfCounters;
+
+    public static final String PERF_COUNTER_TOTAL = "Total";
+    public static final String PERF_COUNTER_PREP = "Preparation";
+    public static final String PERF_COUNTER_CLUSTER = "ClusterAndAnalyse";
+    public static final String PERF_COUNTER_ANNOTATE = "Annotation";
+    public static final String PERF_COUNTER_WRITE = "WriteAndUpload";
 
     public SampleAnalyser(
             int instanceId, final LinxConfig config, final DatabaseAccess dbAccess, final SvAnnotators svAnnotators,
@@ -122,12 +124,21 @@ public class SampleAnalyser implements Callable
         mAnalyser.setCnDataLoader(mCnDataLoader);
         mAnalyser.setGeneCollection(ensemblDataCache);
 
-        mPcTotal = new PerformanceCounter("Total");
-        mPcPrep = new PerformanceCounter("Preparation");
-        mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
-        mPcAnnotation = new PerformanceCounter("Annotation");
-        mPcWrite = new PerformanceCounter("WriteCSV");
+        mPerfCounters = Maps.newHashMap();
+        mPerfCounters.put(PERF_COUNTER_TOTAL, new PerformanceCounter(PERF_COUNTER_TOTAL));
+        mPerfCounters.put(PERF_COUNTER_PREP, new PerformanceCounter(PERF_COUNTER_PREP));
+        mPerfCounters.put(PERF_COUNTER_CLUSTER, new PerformanceCounter(PERF_COUNTER_CLUSTER));
+        mPerfCounters.put(PERF_COUNTER_WRITE, new PerformanceCounter(PERF_COUNTER_WRITE));
+        mPerfCounters.put(PERF_COUNTER_ANNOTATE, new PerformanceCounter(PERF_COUNTER_ANNOTATE));
+
+        PerformanceCounter fusionPc = mFusionAnalyser.getPerfCounter();
+        mPerfCounters.put(fusionPc.getName(), fusionPc);
+
+        PerformanceCounter driverPc = mDriverGeneAnnotator.getPerfCounter();
+        mPerfCounters.put(driverPc.getName(), driverPc);
     }
+
+    public Map<String,PerformanceCounter> getPerfCounters() { return mPerfCounters; }
 
     public void setSampleIds(final List<String> sampleIds)
     {
@@ -146,9 +157,9 @@ public class SampleAnalyser implements Callable
     {
         if(mSampleIds.size() == 1)
         {
-            mPcTotal.start();
+            mPerfCounters.get(PERF_COUNTER_TOTAL).start();
             processSample(mSampleIds.get(0));
-            mPcTotal.stop();
+            mPerfCounters.get(PERF_COUNTER_TOTAL).stop();
             return;
         }
 
@@ -156,16 +167,16 @@ public class SampleAnalyser implements Callable
 
         for(int i = 0; i < mSampleIds.size(); ++i)
         {
-            mPcTotal.start();
+            mPerfCounters.get(PERF_COUNTER_TOTAL).start();
 
             processSample(mSampleIds.get(i));
 
             if(i > 10 && (i % 10) == 0)
             {
-                LNX_LOGGER.info("%d: processed {} samples", mId, i);
+                LNX_LOGGER.info("{}: processed {} samples", mId, i);
             }
 
-            mPcTotal.stop();
+            mPerfCounters.get(PERF_COUNTER_TOTAL).stop();
 
             if(!inValidState())
                 break;
@@ -264,7 +275,7 @@ public class SampleAnalyser implements Callable
 
         LNX_LOGGER.debug("sample({}) analysing {} variants", mCurrentSampleId, mAllVariants.size());
 
-        mPcPrep.start();
+        mPerfCounters.get(PERF_COUNTER_PREP).start();
 
         linkSglMappedInferreds(mAllVariants);
         annotateAndFilterVariants();
@@ -281,18 +292,18 @@ public class SampleAnalyser implements Callable
         mSvAnnotators.KataegisAnnotator.annotateVariants(mCurrentSampleId, mAnalyser.getState().getChrBreakendMap());
         mSvAnnotators.ReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
 
-        mPcPrep.stop();
+        mPerfCounters.get(PERF_COUNTER_PREP).stop();
 
-        mPcClusterAnalyse.start();
+        mPerfCounters.get(PERF_COUNTER_CLUSTER).start();
 
         mIsValid = mAnalyser.clusterAndAnalyse();
 
-        mPcClusterAnalyse.stop();
+        mPerfCounters.get(PERF_COUNTER_CLUSTER).stop();
     }
 
     public void annotate()
     {
-        mPcAnnotation.start();
+        mPerfCounters.get(PERF_COUNTER_ANNOTATE).start();
 
         mAnalyser.annotateClusters();
 
@@ -306,7 +317,7 @@ public class SampleAnalyser implements Callable
                 getClusters().forEach(x -> mSvAnnotators.IndelAnnotator.annotateCluster(x));
         }
 
-        mPcAnnotation.stop();
+        mPerfCounters.get(PERF_COUNTER_ANNOTATE).stop();
     }
 
     private void writeOutput()
@@ -316,7 +327,7 @@ public class SampleAnalyser implements Callable
         if(mConfig.OutputDataPath.isEmpty())
             return;
 
-        mPcWrite.start();
+        mPerfCounters.get(PERF_COUNTER_WRITE).start();
 
         boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
 
@@ -354,7 +365,7 @@ public class SampleAnalyser implements Callable
             writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData);
         }
 
-        mPcWrite.stop();
+        mPerfCounters.get(PERF_COUNTER_WRITE).stop();
     }
 
     private synchronized static void writeToDatabase(

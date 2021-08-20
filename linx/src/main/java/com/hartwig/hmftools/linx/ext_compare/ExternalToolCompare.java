@@ -177,9 +177,6 @@ public class ExternalToolCompare
             */
         }
 
-        if(driverGeneAnnotator != null)
-            driverGeneAnnotator.close();
-
         if(chainFinderCompare != null)
             chainFinderCompare.close();
 

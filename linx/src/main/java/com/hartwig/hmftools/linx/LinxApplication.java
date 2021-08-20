@@ -15,11 +15,13 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
@@ -168,9 +170,10 @@ public class LinxApplication
 
         SvAnnotators svAnnotators = new SvAnnotators(config, ensemblDataCache, dbAccess, cohortDataWriter);
 
+        List<SampleAnalyser> sampleAnalysers = Lists.newArrayList();
+
         if(config.Threads > 1)
         {
-            List<SampleAnalyser> sampleAnalysers = Lists.newArrayList();
             List<List<String>> saSampleLists = Lists.newArrayList();
 
             for(int i = 0; i < config.Threads; ++i)
@@ -204,101 +207,38 @@ public class LinxApplication
             SampleAnalyser sampleAnalyser = new SampleAnalyser(
                     0, config, dbAccess, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter);
 
+            sampleAnalysers.add(sampleAnalyser);
             sampleAnalyser.setSampleIds(config.getSampleIds());
             sampleAnalyser.processSamples();
         }
 
-        /*
-        SampleAnalyser sampleAnalyser = new SampleAnalyser(config, dbAccess, svAnnotators, ensemblDataCache, cohortDataWriter);
-
-        PerformanceCounter prefCounter = new PerformanceCounter("Total");
-
-        int count = 0;
-        for (final String sampleId : samplesList)
-        {
-            ++count;
-
-            prefCounter.start();
-
-            final List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                    loadSampleSvDataFromFile(config, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
-
-            final List<SvVarData> svDataList = createSvData(svRecords, config);
-
-            sampleAnalyser.setSampleId(sampleId);
-
-            if(svDataList.isEmpty())
-            {
-                LNX_LOGGER.info("sample({}) has no passing SVs", sampleId);
-
-                if(config.isSingleSample())
-                    sampleAnalyser.writeSampleWithNoSVs();
-
-                continue;
-            }
-
-            if(config.hasMultipleSamples())
-            {
-                LNX_LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
-            }
-
-            if(!config.IsGermline)
-                cnDataLoader.loadSampleData(sampleId, svRecords);
-
-            sampleAnalyser.setSampleSVs(svDataList);
-
-            if(ensemblDataCache != null)
-            {
-                sampleAnalyser.setSvGeneData(svDataList, ensemblDataCache, applyPromotorDistance, breakendGeneLoading);
-            }
-
-            sampleAnalyser.analyse();
-
-            if(!sampleAnalyser.inValidState())
-            {
-                LNX_LOGGER.info("exiting after sample({}), in invalid state", sampleId);
-                break;
-            }
-
-            if(fusionAnalyser != null)
-            {
-                // when matching RNA, allow all transcripts regardless of their viability for fusions
-                fusionAnalyser.annotateTranscripts(svDataList, purgeInvalidTranscripts);
-            }
-
-            sampleAnalyser.annotate();
-
-            if(checkDrivers)
-            {
-                driverGeneAnnotator.annotateSVs(sampleId, sampleAnalyser.getChrBreakendMap());
-            }
-
-            if(checkFusions || config.IsGermline)
-            {
-                fusionAnalyser.run(sampleId, svDataList, dbAccess, sampleAnalyser.getClusters(), sampleAnalyser.getChrBreakendMap());
-            }
-
-            sampleAnalyser.writeOutput(dbAccess);
-
-            prefCounter.stop();
-        }
+        svAnnotators.close();
+        cohortDataWriter.close();
 
         if(LNX_LOGGER.isDebugEnabled() || config.hasMultipleSamples())
         {
-            prefCounter.logStats();
+            // combine and log performance counters
+            Map<String,PerformanceCounter> combinedPerfCounters = sampleAnalysers.get(0).getPerfCounters();
+
+            for(int i = 1; i < sampleAnalysers.size(); ++i)
+            {
+                Map<String,PerformanceCounter> saPerfCounters = sampleAnalysers.get(i).getPerfCounters();
+
+                for(Map.Entry<String,PerformanceCounter> entry : combinedPerfCounters.entrySet())
+                {
+                    PerformanceCounter combinedPc = entry.getValue();
+                    PerformanceCounter saPc = saPerfCounters.get(entry.getKey());
+
+                    if(combinedPc != null)
+                        combinedPc.merge(saPc);
+                }
+            }
+
+            for(Map.Entry<String,PerformanceCounter> entry : combinedPerfCounters.entrySet())
+            {
+                entry.getValue().logStats();
+            }
         }
-
-        sampleAnalyser.close();
-
-        if(fusionAnalyser != null)
-            fusionAnalyser.close();
-
-        if(driverGeneAnnotator != null)
-            driverGeneAnnotator.close();
-        */
-
-        svAnnotators.close();
-        cohortDataWriter.close();
 
         if(config.isSingleSample())
         {

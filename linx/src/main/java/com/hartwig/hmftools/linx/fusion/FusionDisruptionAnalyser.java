@@ -137,6 +137,8 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
     }
 
+    public PerformanceCounter getPerfCounter() { return mPerfCounter; }
+
     public static boolean validConfig(final CommandLine cmd)
     {
         return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
@@ -1065,11 +1067,6 @@ public class FusionDisruptionAnalyser
 
     public void close()
     {
-        if(mConfig.hasMultipleSamples() || LNX_LOGGER.isDebugEnabled())
-        {
-            mPerfCounter.logStats();
-        }
-
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.close();
 
