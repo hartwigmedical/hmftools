@@ -101,7 +101,12 @@ public class GermlineFindingsChapter implements ReportChapter {
             }
         }
 
-        document.add(TableUtil.createWrappingReportTable(table, "Genes with missed variant likelihood > 1% (" + count + ")"));
+        String title = "Genes with missed variant likelihood > 1% (" + count + ")";
+        if (count == 0) {
+            document.add(TableUtil.createEmptyTable(title, contentWidth()));
+        } else {
+            document.add(TableUtil.createWrappingReportTable(table, title));
+        }
     }
 
     private void addGermlineCNAberrations(@NotNull Document document) {
