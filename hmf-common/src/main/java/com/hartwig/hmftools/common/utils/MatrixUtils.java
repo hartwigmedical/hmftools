@@ -98,75 +98,86 @@ public class MatrixUtils
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
 
-            // read field names
-            if(fileData.size() <= 1)
-            {
-                LOGGER.error("empty data CSV file({})", filename);
-                return null;
-            }
+            Matrix matrix = loadMatrixDataFile(fileData, columnNames, ignoreFields);
 
-            final String header = fileData.get(0);
-            columnNames.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
-            fileData.remove(0);
-
-            List<Integer> ignoreCols = Lists.newArrayList();
-
-            if(ignoreFields != null)
-            {
-                for(int i = 0; i < columnNames.size(); ++i)
-                {
-                    if(ignoreFields.contains(columnNames.get(i)))
-                    {
-                        ignoreCols.add(i);
-
-                        if(ignoreCols.size() == ignoreFields.size())
-                            break;
-                    }
-                }
-
-                ignoreFields.forEach(x -> columnNames.remove(x));
-            }
-
-            int colCount = columnNames.size();
-            int rowCount = fileData.size();
-            int invalidRowCount = 0;
-
-            Matrix matrix = new Matrix(rowCount, colCount);
-            final double[][] matrixData = matrix.getData();
-
-            for(int r = 0; r < rowCount; ++r)
-            {
-                final String line = fileData.get(r);
-                final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
-
-                if(items.length != colCount + ignoreCols.size())
-                {
-                    ++invalidRowCount;
-                    continue;
-                }
-
-                int c = 0;
-                for(int i = 0; i < items.length; ++i)
-                {
-                    if(ignoreCols.contains(i))
-                        continue;
-
-                    matrixData[r][c] = Double.parseDouble(items[i]);
-                    ++c;
-                }
-            }
-
-            LOGGER.info("loaded matrix(rows={} cols={}) from file({}) {}",
-                    rowCount, colCount, filename, invalidRowCount > 0 ? String.format(", invalidRowCount(%d)", invalidRowCount) : "");
+            LOGGER.info("loaded matrix(rows={} cols={}) from file({})", matrix.Rows, matrix.Cols, filename);
 
             return matrix;
-
         }
         catch (IOException exception)
         {
             LOGGER.error("failed to read matrix data file({}): {}", filename, exception.toString());
             return null;
         }
+
+    }
+
+    public static Matrix loadMatrixDataFile(final List<String> fileData, final List<String> columnNames, final List<String> ignoreFields)
+    {
+        // read field names
+        if(fileData.size() <= 1)
+        {
+            LOGGER.error("empty matrix data");
+            return null;
+        }
+
+        final String header = fileData.get(0);
+        columnNames.addAll(Lists.newArrayList(header.split(DEFAULT_MATRIX_DELIM, -1)));
+        fileData.remove(0);
+
+        List<Integer> ignoreCols = Lists.newArrayList();
+
+        if(ignoreFields != null)
+        {
+            for(int i = 0; i < columnNames.size(); ++i)
+            {
+                if(ignoreFields.contains(columnNames.get(i)))
+                {
+                    ignoreCols.add(i);
+
+                    if(ignoreCols.size() == ignoreFields.size())
+                        break;
+                }
+            }
+
+            ignoreFields.forEach(x -> columnNames.remove(x));
+        }
+
+        int colCount = columnNames.size();
+        int rowCount = fileData.size();
+        int invalidRowCount = 0;
+
+        Matrix matrix = new Matrix(rowCount, colCount);
+        final double[][] matrixData = matrix.getData();
+
+        for(int r = 0; r < rowCount; ++r)
+        {
+            final String line = fileData.get(r);
+            final String[] items = line.split(DEFAULT_MATRIX_DELIM, -1);
+
+            if(items.length != colCount + ignoreCols.size())
+            {
+                ++invalidRowCount;
+                continue;
+            }
+
+            int c = 0;
+            for(int i = 0; i < items.length; ++i)
+            {
+                if(ignoreCols.contains(i))
+                    continue;
+
+                matrixData[r][c] = Double.parseDouble(items[i]);
+                ++c;
+            }
+        }
+
+        if(invalidRowCount > 0)
+        {
+            LOGGER.warn("matrix(rows={} cols={}) has {} invalid rows", matrix.Rows, matrix.Cols, invalidRowCount);
+        }
+
+        return matrix;
     }
 
     public static void writeMatrixData(
