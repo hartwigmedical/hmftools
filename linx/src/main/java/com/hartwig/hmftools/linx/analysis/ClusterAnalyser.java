@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.LinxConfig;
+import com.hartwig.hmftools.linx.annotators.LineClusterState;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
@@ -71,14 +72,14 @@ public class ClusterAnalyser {
         mClusters = Lists.newArrayList();
 
         mFilters = new SvFiltering(mState);
-        mSimpleClustering = new SimpleClustering(mState, mConfig);
+        mSimpleClustering = new SimpleClustering(mConfig, mState, cohortDataWriter);
         mComplexClustering = new ComplexClustering(mState, mClusters, mSimpleClustering);
 
         mCnDataLoader = null;
         mLineElementAnnotator = null;
         mSampleId = "";
         mAllVariants = Lists.newArrayList();
-        mChainFinder = new ChainFinder();
+        mChainFinder = new ChainFinder(cohortDataWriter);
         mDmFinder = new DoubleMinuteFinder(config, cohortDataWriter, mState.getChrBreakendMap());
         mBfbFinder = new BfbFinder();
 
@@ -462,8 +463,6 @@ public class ClusterAnalyser {
     public void close()
     {
         mDmFinder.close();
-        mChainFinder.close();
-        mSimpleClustering.close();
     }
 
     public void logStats()

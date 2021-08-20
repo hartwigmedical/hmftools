@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.linx.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
@@ -51,20 +53,20 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class SimpleClustering
+public class SimpleClustering implements CohortFileInterface
 {
     private ClusteringState mState;
     private final LinxConfig mConfig;
     private String mSampleId;
 
     private int mClusteringIndex;
-    private BufferedWriter mClusterHistoryWriter;
+    private final CohortDataWriter mCohortDataWriter;
 
-    public SimpleClustering(ClusteringState state, final LinxConfig config)
+    public SimpleClustering(final LinxConfig config, final ClusteringState state, final CohortDataWriter cohortDataWriter)
     {
         mState = state;
         mConfig = config;
-        mClusterHistoryWriter = null;
+        mCohortDataWriter = cohortDataWriter;
     }
 
     private int getNextClusterId() { return mState.getNextClusterId(); }
@@ -206,48 +208,51 @@ public class SimpleClustering
         }
     }
 
+    private static final String COHORT_WRITER_CLUSTER_HISTORY = "ClusterHistory";
+
+    @Override
+    public String fileType() { return COHORT_WRITER_CLUSTER_HISTORY; }
+
+    @Override
+    public BufferedWriter createWriter(final String outputDir)
+    {
+        try
+        {
+            String outputFileName = outputDir + "LNX_CLUSTERING_HISTORY.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            // definitional fields
+            writer.write("SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2");
+            writer.write(",Reason,MinDistance");
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            LNX_LOGGER.error("failed to open and write output file headers");
+            return null;
+        }
+    }
+
     protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final ClusteringReason reason)
     {
         if(!mConfig.Output.WriteClusterHistory)
             return;
 
-        try
-        {
-            if(mClusterHistoryWriter == null)
-            {
-                String outputFileName = mConfig.OutputDataPath + "LNX_CLUSTERING_HISTORY.csv";
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%s,%d", mSampleId, mClusteringIndex));
 
-                mClusterHistoryWriter = createBufferedWriter(outputFileName, false);
+        sb.append(String.format(",%d,%d,%d,%d,%d,%d",
+                var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
+                var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount()));
 
-                // definitional fields
-                mClusterHistoryWriter.write("SampleId,MergeIndex,ClusterId1,SvId1,ClusterCount1,ClusterId2,SvId2,ClusterCount2");
-                mClusterHistoryWriter.write(",Reason,MinDistance");
-                mClusterHistoryWriter.newLine();
-            }
+        int breakendDistance = getProximity(var1, var2);
+        sb.append(String.format(",%s,%d", reason, breakendDistance));
 
-            int breakendDistance = getProximity(var1, var2);
-
-            mClusterHistoryWriter.write(String.format("%s,%d", mSampleId, mClusteringIndex));
-
-            mClusterHistoryWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
-                    var1.getCluster().id(), var1.id(), var1.getCluster().getSvCount(),
-                    var2.getCluster().id(), var2.id(), var2.getCluster().getSvCount()));
-
-            mClusterHistoryWriter.write(String.format(",%s,%d", reason, breakendDistance));
-
-            mClusterHistoryWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            LNX_LOGGER.error("failed to open and write output file headers");
-        }
+        mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
 
         ++mClusteringIndex;
-    }
-
-    public void close()
-    {
-        closeBufferedWriter(mClusterHistoryWriter);
     }
 
     public void mergeClusters(List<SvCluster> clusters)

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.drivers;
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -298,73 +297,67 @@ public class DriverGeneAnnotator implements CohortFileInterface
         if(!mConfig.hasMultipleSamples())
             return;
 
-        BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
+        final DriverCatalog driverGene = dgData.DriverData;
+        final GeneData geneData = dgData.GeneData;
 
-        if(cohortWriter == null)
-            return;
+        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
 
-        try
+        double centromereCopyNumber = 0;
+        double telomereCopyNumber = 0;
+
+        if(tcData == null)
         {
-            final DriverCatalog driverGene = dgData.DriverData;
-            final GeneData geneData = dgData.GeneData;
+            LNX_LOGGER.warn("chromosome({}) missing centro-telo data", dgData.GeneData.Chromosome);
+        }
+        else
+        {
+            centromereCopyNumber = dgData.Arm == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
+            telomereCopyNumber = dgData.Arm == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
+        }
 
-            final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
+        List<String> outputLines = Lists.newArrayList();
 
-            double centromereCopyNumber = 0;
-            double telomereCopyNumber = 0;
+        for(final DriverGeneEvent driverEvent : dgData.getEvents())
+        {
+            final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
 
-            if(tcData == null)
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(String.format("%s,%s,%s,%s,%s,%.2f,%s,%s",
+                    mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(),
+                    driverGene.likelihoodMethod(), driverGene.driverLikelihood(), dgData.fullyMatched(), driverEvent.Type));
+
+            final SvCluster cluster = driverEvent.getCluster();
+
+            if(cluster != null)
             {
-                LNX_LOGGER.warn("chromosome({}) missing centro-telo data", dgData.GeneData.Chromosome);
+                sb.append(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
             }
             else
             {
-                centromereCopyNumber = dgData.Arm == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
-                telomereCopyNumber = dgData.Arm == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
+                sb.append(String.format(",-1,0,"));
             }
 
-            for(final DriverGeneEvent driverEvent : dgData.getEvents())
-            {
-                final SvBreakend[] breakendPair = driverEvent.getBreakendPair();
+            // breakend info if present
 
-                cohortWriter.write(String.format("%s,%s,%s,%s,%s,%.2f,%s,%s",
-                        mSampleId, driverGene.gene(), driverGene.category(), driverGene.driver(),
-                        driverGene.likelihoodMethod(), driverGene.driverLikelihood(), dgData.fullyMatched(), driverEvent.Type));
+            // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain,SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
 
-                final SvCluster cluster = driverEvent.getCluster();
+            sb.append(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
+                    geneData.Chromosome, dgData.Arm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
+                    centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
 
-                if(cluster != null)
-                {
-                    cohortWriter.write(String.format(",%d,%d,%s", cluster.id(), cluster.getSvCount(), cluster.getResolvedType()));
-                }
-                else
-                {
-                    cohortWriter.write(String.format(",-1,0,"));
-                }
+            int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
+            int posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
+            String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
+            String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
 
-                // breakend info if present
+            sb.append(String.format(",%s,%s,%d,%d,%s",
+                    svIdStart, svIdEnd, posStart, posEnd, driverEvent.getSvInfo()));
 
-                // Chromosome,Arm,SamplePloidy,GeneMinCN,CentromereCN,TelomereCN,CNGain,SvIdStart,SvIdEnd,SvPosStart,SvPosEnd,SvMatchType
-
-                cohortWriter.write(String.format(",%s,%s,%.2f,%.2f,%.2f,%.2f,%.2f",
-                        geneData.Chromosome, dgData.Arm, mDataCache.samplePloidy(), dgData.CopyNumberRegion.MinCopyNumber,
-                        centromereCopyNumber, telomereCopyNumber, driverEvent.getCopyNumberGain()));
-
-                int posStart = breakendPair[SE_START] != null ? breakendPair[SE_START].position() : 0;
-                int posEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].position() : 0;
-                String svIdStart = breakendPair[SE_START] != null ? breakendPair[SE_START].getSV().idStr() : "-1";
-                String svIdEnd = breakendPair[SE_END] != null ? breakendPair[SE_END].getSV().idStr() : "-1";
-
-                cohortWriter.write(String.format(",%s,%s,%d,%d,%s",
-                        svIdStart, svIdEnd, posStart, posEnd, driverEvent.getSvInfo()));
-
-                cohortWriter.newLine();
-            }
+            outputLines.add(sb.toString());
         }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing cohort driver data: {}", e.toString());
-        }
+
+        mCohortDataWriter.write(this, outputLines);
     }
 
     @VisibleForTesting

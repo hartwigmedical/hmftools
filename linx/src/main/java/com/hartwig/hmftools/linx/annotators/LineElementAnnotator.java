@@ -39,7 +39,6 @@ public class LineElementAnnotator {
     private final List<ChrBaseRegion> mKnownLineElements;
     private PseudoGeneFinder mPseudoGeneFinder;
     private final int mProximityDistance;
-    private LineClusterState mLineState;
 
     public static final int LINE_ELEMENT_PROXIMITY_DISTANCE = 5000;
 
@@ -56,7 +55,6 @@ public class LineElementAnnotator {
         mProximityDistance = proximityDistance;
         mPseudoGeneFinder = null;
         mKnownLineElements = Lists.newArrayList();
-        mLineState = new LineClusterState(proximityDistance);
     }
 
     public void setPseudoGeneFinder(final PseudoGeneFinder pseudoGeneFinder)
@@ -161,13 +159,15 @@ public class LineElementAnnotator {
         if(isFilteredResolvedType(cluster.getResolvedType()))
             return;
 
+        LineClusterState lineState = new LineClusterState(mProximityDistance);
+
         boolean hasSuspected = false;
 
         for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
-            mLineState.clear();
+            lineState.clear();
 
             for (int i = 0; i < breakendList.size(); ++i)
             {
@@ -176,9 +176,9 @@ public class LineElementAnnotator {
                 if(breakend.hasLineElement(SUSPECT))
                     continue; // breakends may have already been marked if proximate to an earlier suspect site
 
-                mLineState.addBreakend(breakend);
+                lineState.addBreakend(breakend);
 
-                if(!mLineState.isSuspected())
+                if(!lineState.isSuspected())
                     continue;
 
                 // gather up all breakends within 5K of this suspect line element
@@ -222,7 +222,7 @@ public class LineElementAnnotator {
                 }
 
                 LNX_LOGGER.debug("cluster({}) chromosome({}) marking {} breakends as suspect, state({})",
-                        cluster.id(), breakend.chromosome(), proximateBreakends.size(), mLineState.toString());
+                        cluster.id(), breakend.chromosome(), proximateBreakends.size(), lineState.toString());
 
                 // mark every breakend in this local range as suspect line
                 for(SvBreakend proxBreakend : proximateBreakends)
@@ -231,16 +231,14 @@ public class LineElementAnnotator {
                         continue;
 
                     proxBreakend.getSV().addLineElement(SUSPECT, proxBreakend.usesStart());
-                    proxBreakend.getSV().addAnnotation(String.format("SLR=%s", mLineState.suspectReason()));
+                    proxBreakend.getSV().addAnnotation(String.format("SLR=%s", lineState.suspectReason()));
                 }
 
                 hasSuspected = true;
             }
         }
 
-        checkIsLineCluster(cluster, hasSuspected, mLineState.hasInsertBreakends());
-
-        mLineState.clear();
+        checkIsLineCluster(cluster, hasSuspected, lineState.hasInsertBreakends());
     }
 
     private void checkIsLineCluster(SvCluster cluster, boolean hasSuspected, boolean hasInsertSites)

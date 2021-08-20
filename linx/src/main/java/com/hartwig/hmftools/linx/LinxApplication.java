@@ -100,6 +100,15 @@ public class LinxApplication
             System.exit(1);
         }
 
+        if(!cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+        {
+            if(config.RunFusions || config.RunDrivers || config.IsGermline)
+            {
+                LNX_LOGGER.info("missing Ensembl data cache, exiting");
+                System.exit(1);
+            }
+        }
+
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
                 new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
 
@@ -176,6 +185,10 @@ public class LinxApplication
             for (final String sampleId : samplesList)
             {
                 saSampleLists.get(saIndex).add(sampleId);
+                ++saIndex;
+
+                if(saIndex >= config.Threads)
+                    saIndex = 0;
             }
 
             for(int i = 0; i < config.Threads; ++i)

@@ -138,7 +138,7 @@ public class SampleAnalyser implements Callable
     @Override
     public Long call()
     {
-        // processSample();
+        processSamples();
         return (long)1;
     }
 
@@ -152,7 +152,7 @@ public class SampleAnalyser implements Callable
             return;
         }
 
-        LNX_LOGGER.info("%d: processing {} samples", mId, mSampleIds.size());
+        LNX_LOGGER.info("{}: processing {} samples", mId, mSampleIds.size());
 
         for(int i = 0; i < mSampleIds.size(); ++i)
         {
@@ -162,7 +162,7 @@ public class SampleAnalyser implements Callable
 
             if(i > 10 && (i % 10) == 0)
             {
-                LNX_LOGGER.info("%d: procesed {} samples", mId, i);
+                LNX_LOGGER.info("%d: processed {} samples", mId, i);
             }
 
             mPcTotal.stop();
@@ -170,6 +170,8 @@ public class SampleAnalyser implements Callable
             if(!inValidState())
                 break;
         }
+
+        LNX_LOGGER.info("{}: completed processing of {} samples", mId, mSampleIds.size());
     }
 
     private void processSample(final String sampleId)
@@ -235,6 +237,8 @@ public class SampleAnalyser implements Callable
 
     public void setSampleSVs(final List<SvVarData> variants)
     {
+        mAllVariants.clear();
+
         if (variants.isEmpty())
             return;
 

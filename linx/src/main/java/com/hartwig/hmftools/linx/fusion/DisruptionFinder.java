@@ -737,87 +737,80 @@ public class DisruptionFinder implements CohortFileInterface
 
     public void writeMultiSampleData(final String sampleId, final List<SvVarData> svList)
     {
-        BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
+        List<String> outputLines = Lists.newArrayList();
 
-        if(cohortWriter == null)
-            return;
-
-        try
+        for(final SvDisruptionData disruptionData : mDisruptions)
         {
-            for(final SvDisruptionData disruptionData : mDisruptions)
-            {
-                final SvVarData var = disruptionData.Var;
-                boolean isSvStart = disruptionData.IsStart;
-                final GeneData gene = disruptionData.Gene;
+            final SvVarData var = disruptionData.Var;
+            boolean isSvStart = disruptionData.IsStart;
+            final GeneData gene = disruptionData.Gene;
 
-                cohortWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
-                        sampleId, disruptionData.Reportable, var.id(), isSvStart,
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
+                    sampleId, disruptionData.Reportable, var.id(), isSvStart,
+                    var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
+                    disruptionData.Gene.Chromosome, var.position(isSvStart), var.orientation(isSvStart)));
+
+            sb.append(String.format(",%s,%s,%d,%s,%d,%d,%s,%s",
+                    gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
+                    disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType));
+
+            if(mIsGermline)
+            {
+                int ponCount = var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
+
+                sb.append(String.format(",%s,%s,%d",
+                        var.getCluster().getResolvedType(), var.getSvData().filter(), ponCount));
+            }
+            else
+            {
+                sb.append(String.format(",%.2f,,",disruptionData.UndisruptedCopyNumber));
+            }
+
+            outputLines.add(sb.toString());
+        }
+
+        if(!mIsGermline)
+        {
+            for(Map.Entry<BreakendTransData, String> entry : mRemovedDisruptions.entrySet())
+            {
+                final String exclusionInfo = entry.getValue();
+
+                if(exclusionInfo.equals(NON_DISRUPT_REASON_SIMPLE_SV))
+                    continue;
+
+                final BreakendTransData transcript = entry.getKey();
+                final BreakendGeneData gene = transcript.gene();
+                final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
+
+                StringBuilder sb = new StringBuilder();
+
+                sb.append(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
+                        sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
                         var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
-                        disruptionData.Gene.Chromosome, var.position(isSvStart), var.orientation(isSvStart)));
+                        gene.chromosome(), gene.position(), gene.orientation()));
 
-                cohortWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s",
-                        gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
-                        disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType));
+                String exclusionReason = exclusionInfo;
+                String extraInfo = "";
 
-                if(mIsGermline)
+                String[] contextInfo = exclusionInfo.split(ITEM_DELIM);
+
+                if(contextInfo.length == 2)
                 {
-                    int ponCount = var.getSvData().filter().equals(PON_FILTER_PON) ? mGermlinePonCache.getPonCount(var) : 0;
-
-                    cohortWriter.write(String.format(",%s,%s,%d",
-                            var.getCluster().getResolvedType(), var.getSvData().filter(), ponCount));
-                }
-                else
-                {
-                    cohortWriter.write(String.format(",%.2f,,",
-                            gene.GeneId, gene.GeneName, gene.Strand, disruptionData.Transcript.TransName,
-                            disruptionData.Exons[FS_UP], disruptionData.Exons[FS_DOWN], disruptionData.CodingType, disruptionData.RegionType,
-                            disruptionData.UndisruptedCopyNumber));
+                    exclusionReason = contextInfo[0];
+                    extraInfo = contextInfo[1];
                 }
 
-                cohortWriter.newLine();
-            }
+                sb.append(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
+                        gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
+                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
+                        transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
 
-            if(!mIsGermline)
-            {
-                for(Map.Entry<BreakendTransData, String> entry : mRemovedDisruptions.entrySet())
-                {
-                    final String exclusionInfo = entry.getValue();
-
-                    if(exclusionInfo.equals(NON_DISRUPT_REASON_SIMPLE_SV))
-                        continue;
-
-                    final BreakendTransData transcript = entry.getKey();
-                    final BreakendGeneData gene = transcript.gene();
-                    final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
-
-                    cohortWriter.write(String.format("%s,%s,%d,%s,%s,%d,%s,%d,%d",
-                            sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
-                            var != null ? var.type() : "", var != null ? var.getCluster().id() : -1,
-                            gene.chromosome(), gene.position(), gene.orientation()));
-
-                    String exclusionReason = exclusionInfo;
-                    String extraInfo = "";
-
-                    String[] contextInfo = exclusionInfo.split(ITEM_DELIM);
-
-                    if(contextInfo.length == 2)
-                    {
-                        exclusionReason = contextInfo[0];
-                        extraInfo = contextInfo[1];
-                    }
-
-                    cohortWriter.write(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%.2f,%s,%s",
-                            gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
-                            transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(),
-                            transcript.regionType(), transcript.undisruptedCopyNumber(), exclusionReason, extraInfo));
-
-                    cohortWriter.newLine();
-                }
+                outputLines.add(sb.toString());
             }
         }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing fusions: {}", e.toString());
-        }
+
+        mCohortDataWriter.write(this, outputLines);
     }
 }

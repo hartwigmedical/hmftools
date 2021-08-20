@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getProximity;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_LINE;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
@@ -94,10 +95,12 @@ public class CohortDataWriter
         return mConfig.hasMultipleSamples() || mConfig.Output.WriteCohortFiles;
     }
 
-    public synchronized BufferedWriter getWriter(final CohortFileInterface cohortFile)
+    public boolean hasWriter(final String fileType) { return mWriters.containsKey(fileType); }
+
+    public synchronized void write(final CohortFileInterface cohortFile, final List<String> lines)
     {
         if(mConfig.OutputDataPath == null)
-            return null;
+            return;
 
         BufferedWriter writer = mWriters.get(cohortFile.fileType());
 
@@ -107,7 +110,21 @@ public class CohortDataWriter
             mWriters.put(cohortFile.fileType(), writer);
         }
 
-        return writer;
+        if(writer == null)
+            return;
+
+        try
+        {
+            for(String line : lines)
+            {
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            LNX_LOGGER.error("failed to write to {} file: {}", cohortFile.fileType(), e.toString());
+        }
     }
 
     private BufferedWriter createSvDataFile()

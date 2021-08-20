@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -109,7 +110,7 @@ public class ChainFinder
     // self-analysis only
     private final ChainDiagnostics mDiagnostics;
 
-    public ChainFinder()
+    public ChainFinder(final CohortDataWriter cohortDataWriter)
     {
         mSvList = Lists.newArrayList();
         mFoldbacks = Lists.newArrayList();
@@ -136,7 +137,7 @@ public class ChainFinder
                 mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
                 mAdjacentMatchingPairs, mAdjacentPairs, mChains);
 
-        mLineChainer = new LineChainer();
+        mLineChainer = new LineChainer(cohortDataWriter);
 
         mHasReplication = false;
         mLogVerbose = false;
@@ -147,16 +148,16 @@ public class ChainFinder
         mUseAlleleJCNs = false;
 
         mDiagnostics = new ChainDiagnostics(
-                mLinkAllocator.getSvConnections(), mLinkAllocator.getSvCompletedConnections(), mChains, mUniqueChains,
+                cohortDataWriter, mLinkAllocator.getSvConnections(), mLinkAllocator.getSvCompletedConnections(), mChains, mUniqueChains,
                 mSvBreakendPossibleLinks, mDoubleMinuteSVs, mLinkAllocator.getUniquePairs());
     }
 
     public void initialiseOutput(final LinxConfig config)
     {
-        mDiagnostics.setOutputDir(config.OutputDataPath, config.Output.LogChainingMaxSize);
+        mDiagnostics.setLogClusterSize(config.Output.LogChainingMaxSize);
 
         if(runAnnotation(config.RequiredAnnotations, LINE_CHAINS))
-            mLineChainer.initialiseOutput(config.OutputDataPath);
+            mLineChainer.enableLogging();
     }
 
     public void clear()
@@ -286,12 +287,6 @@ public class ChainFinder
     public double getValidAllelePloidySegmentPerc() { return mClusterJcnLimits.getValidAlleleJcnSegmentPerc(); }
     public final long[] calcRangeData() { return mClusterJcnLimits.calcRangeData(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
-
-    public void close()
-    {
-        mDiagnostics.close();
-        mLineChainer.close();
-    }
 
     public void formChains(boolean assembledLinksOnly)
     {

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx.chaining;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
@@ -12,16 +11,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.CohortDataWriter;
+import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class ChainDiagnostics
+public class ChainDiagnostics implements CohortFileInterface
 {
+    private final CohortDataWriter mCohortDataWriter;
     private List<String> mLogMessages;
-    private String mOutputDir;
-    private int mMaxClusterSize;
-    private BufferedWriter mFileWriter;
+    private int mLogMaxClusterSize;
 
     private final List<SvVarData> mInitialComplexDup;
     private final List<SvVarData> mInitialFoldbacks;
@@ -43,7 +43,8 @@ public class ChainDiagnostics
     private final List<SvVarData> mDoubleMinuteSVs;
     private final List<LinkedPair> mUniquePairs;
 
-    public ChainDiagnostics(final SvChainConnections svConnMap, final List<ChainState> svCompleteConns,
+    public ChainDiagnostics(
+            final CohortDataWriter cohortDataWriter, final SvChainConnections svConnMap, final List<ChainState> svCompleteConns,
             final List<SvChain> chains, final List<SvChain> uniqueChains,
             final Map<SvBreakend, List<LinkedPair>> svBreakendPossibleLinks,
             final List<SvVarData> doubleMinuteSVs, final List<LinkedPair> uniquePairs)
@@ -51,9 +52,6 @@ public class ChainDiagnostics
         mLogMessages = Lists.newArrayList();
         mInitialComplexDup = Lists.newArrayList();
         mInitialFoldbacks = Lists.newArrayList();
-        mOutputDir = null;
-        mFileWriter = null;
-        mMaxClusterSize = 0;
         mUnlinkedSvCount = 0;
         mUnlinkedBreakendCount = 0;
         mWarnings = 0;
@@ -68,12 +66,14 @@ public class ChainDiagnostics
         mSvBreakendPossibleLinks = svBreakendPossibleLinks;
         mDoubleMinuteSVs = doubleMinuteSVs;
         mUniquePairs = uniquePairs;
+
+        mCohortDataWriter = cohortDataWriter;
+        mLogMaxClusterSize = 0;
     }
 
-    public void setOutputDir(final String dir, int maxLogSize)
+    public void setLogClusterSize(int maxLogSize)
     {
-        mOutputDir = dir;
-        mMaxClusterSize = maxLogSize;
+        mLogMaxClusterSize = maxLogSize;
     }
 
     public void setSampleId(final String sampleId) { mSampleId = sampleId; }
@@ -113,7 +113,7 @@ public class ChainDiagnostics
 
     public void diagnoseChains()
     {
-        if(mChains.isEmpty() || mClusterCount < 3 || mClusterCount > mMaxClusterSize)
+        if(mLogMaxClusterSize == 0 || mChains.isEmpty() || mClusterCount < 3 || mClusterCount > mLogMaxClusterSize)
             return;
 
         if(!mDoubleMinuteSVs.isEmpty()) // for now skip these
@@ -197,7 +197,7 @@ public class ChainDiagnostics
 
     public void logCsv(final String type, final SvVarData var, final String otherInfo)
     {
-        if(mMaxClusterSize == 0)
+        if(mLogMaxClusterSize == 0)
             return;
 
         LNX_LOGGER.info("CHAIN_DIAG: {},{},{},{},{}", type, mSampleId, mClusterId, var.id(), otherInfo);
@@ -232,51 +232,53 @@ public class ChainDiagnostics
         }
     }
 
-    private void writeResults(final List<ChainState> svConnections, int invalidBreakends)
-    {
-        if(mOutputDir == null)
-            return;
+    private static final String COHORT_WRITER_CHAIN_DIAGS = "ChainDiagnostics";
 
+    @Override
+    public String fileType() { return COHORT_WRITER_CHAIN_DIAGS; }
+
+    @Override
+    public BufferedWriter createWriter(final String outputDir)
+    {
         try
         {
-            if (mFileWriter == null)
-            {
-                String outputFileName = mOutputDir;
+            String outputFileName = outputDir + "LNX_CHAINS.csv";
 
-                outputFileName += "LNX_CHAINS.csv";
-
-                mFileWriter = createBufferedWriter(outputFileName, false);
-
-                mFileWriter.write("SampleId,ClusterId,Replication,SvCount,JcnTotal,Chains,RepeatedChains,SGLs,Warnings");
-                mFileWriter.write(",MaxJcn,UnlinksSVs,UnlinkedBEs,InvalidBEs,Foldbacks,CompDups");
-                mFileWriter.newLine();
-            }
-
-            int sglCount = (int) svConnections.stream().filter(x -> x.SV.isSglBreakend()).count();
-
-            double jcnTotal = svConnections.stream().mapToDouble(x -> x.Jcn).sum();
-
-            double maxJcn = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Jcn).max().getAsDouble() : 1;
-
-            mFileWriter.write(String.format("%s,%d,%s,%d,%.1f,%d,%d,%d,%d",
-                    mSampleId, mClusterId, mHasReplication, mClusterCount, jcnTotal,
-                    mUniqueChains.size(), mChains.size() - mUniqueChains.size(), sglCount, mWarnings));
-
-            mFileWriter.write(String.format(",%.1f,%d,%d,%d,%d,%d",
-                    maxJcn, mUnlinkedSvCount, mUnlinkedBreakendCount, invalidBreakends,
-                    mInitialFoldbacks.size(), mInitialComplexDup.size()));
-
-            mFileWriter.newLine();
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("SampleId,ClusterId,Replication,SvCount,JcnTotal,Chains,RepeatedChains,SGLs,Warnings");
+            writer.write(",MaxJcn,UnlinksSVs,UnlinkedBEs,InvalidBEs,Foldbacks,CompDups");
+            writer.newLine();
+            return writer;
         }
         catch (final IOException e)
         {
-            LNX_LOGGER.error("error writing DM data: {}", e.toString());
+            LNX_LOGGER.error("error initialising chain diagnostics file: {}", e.toString());
+            return null;
         }
     }
 
-    public void close()
+    private void writeResults(final List<ChainState> svConnections, int invalidBreakends)
     {
-        closeBufferedWriter(mFileWriter);
+        if(mLogMaxClusterSize == 0 || mCohortDataWriter == null)
+            return;
+
+        StringBuilder sb = new StringBuilder();
+
+        int sglCount = (int) svConnections.stream().filter(x -> x.SV.isSglBreakend()).count();
+
+        double jcnTotal = svConnections.stream().mapToDouble(x -> x.Jcn).sum();
+
+        double maxJcn = mHasReplication ? svConnections.stream().mapToDouble(x -> x.Jcn).max().getAsDouble() : 1;
+
+        sb.append(String.format("%s,%d,%s,%d,%.1f,%d,%d,%d,%d",
+                mSampleId, mClusterId, mHasReplication, mClusterCount, jcnTotal,
+                mUniqueChains.size(), mChains.size() - mUniqueChains.size(), sglCount, mWarnings));
+
+        sb.append(String.format(",%.1f,%d,%d,%d,%d,%d",
+                maxJcn, mUnlinkedSvCount, mUnlinkedBreakendCount, invalidBreakends,
+                mInitialFoldbacks.size(), mInitialComplexDup.size()));
+
+        mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
     }
 
     public void checkProgress(int linkIndex)

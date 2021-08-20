@@ -74,7 +74,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
             final LinxConfig config, final CohortDataWriter cohortDataWriter, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         mChrBreakendMap = chrBreakendMap;
-        mChainFinder = new ChainFinder();
+        mChainFinder = new ChainFinder(null);
         mCnDataLoader = null;
         mGeneTransCache = null;
 
@@ -474,61 +474,61 @@ public class DoubleMinuteFinder implements CohortFileInterface
 
         final String chromosomeStr = appendStrList(chromosomes, ITEM_DELIM_CHR);
 
-        BufferedWriter writer = null;
+        StringBuilder sb = new StringBuilder();
+
+        if(!mConfig.isSingleSample())
+        {
+            sb.append(String.format("%s,", sampleId));
+        }
+
+        sb.append(String.format("%d,%s,%s,%d",
+                cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
+
+        sb.append(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
+                samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.ValidSVs.size(), dmTypesStr, svIds, chromosomeStr));
+
+        sb.append(String.format(",%d,%s,%d,%d,%d,%s",
+                dmData.ValidChains.size(), dmData.FullyChained, dmData.ValidChains.stream().filter(x -> x.isClosedLoop()).count(),
+                dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
+                dmData.ValidChains.stream().anyMatch(x -> x.hasRepeatedSV())));
+
+        sb.append(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
+                dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
+                dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal, dmData.SimpleDels));
+
+        sb.append(String.format(",%s", dmData.internalTypeCountsAsStr()));
+
+        double minMinAmr = 0;
+        if(dmData.SVs.size() == 1)
+        {
+            final SvVarData var = dmData.SVs.get(0);
+
+            minMinAmr = min(
+                    getMajorAlleleJcnRatio(var.getBreakend(true)),
+                    getMajorAlleleJcnRatio(var.getBreakend(false)));
+        }
+
+        sb.append(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f,%.1f",
+                maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere,
+                dmData.MinAdjMAJcnRatio, minMinAmr));
 
         if(mConfig.isSingleSample())
         {
-            writer = mSampleWriter;
+            try
+            {
+                mSampleWriter.write(sb.toString());
+                mSampleWriter.newLine();
+            }
+            catch (final IOException e)
+            {
+                LNX_LOGGER.error("error writing DM data: {}", e.toString());
+            }
         }
         else
         {
-            writer = mCohortDataWriter.getWriter(this);
+            mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
         }
 
-        try
-        {
-            if(!mConfig.isSingleSample())
-            {
-                writer.write(String.format("%s,", sampleId));
-            }
-
-            writer.write(String.format("%d,%s,%s,%d",
-                    cluster.id(), cluster.getDesc(), cluster.getResolvedType(), cluster.getSvCount()));
-
-            writer.write(String.format(",%.1f,%.1f,%s,%d,%s,%s,%s",
-                    samplePurity, samplePloidy, dmData.isDoubleMinute(), dmData.ValidSVs.size(), dmTypesStr, svIds, chromosomeStr));
-
-            writer.write(String.format(",%d,%s,%d,%d,%d,%s",
-                    dmData.ValidChains.size(), dmData.FullyChained, dmData.ValidChains.stream().filter(x -> x.isClosedLoop()).count(),
-                    dmData.ClosedSegmentLength, dmData.SVs.size() - dmData.UnchainedSVs.size(),
-                    dmData.ValidChains.stream().anyMatch(x -> x.hasRepeatedSV())));
-
-            writer.write(String.format(",%d,%.1f,%d,%.1f,%.1f,%d,%.1f,%d",
-                    dmData.ClosedBreakends, dmData.ClosedJcnTotal, dmData.OpenBreakends, dmData.OpenJcnTotal, dmData.OpenJcnMax,
-                    dmData.NonSegmentFoldbacks, dmData.NonSegmentFoldbackJcnTotal, dmData.SimpleDels));
-
-            writer.write(String.format(",%s", dmData.internalTypeCountsAsStr()));
-
-            double minMinAmr = 0;
-            if(dmData.SVs.size() == 1)
-            {
-                final SvVarData var = dmData.SVs.get(0);
-
-                minMinAmr = min(
-                        getMajorAlleleJcnRatio(var.getBreakend(true)),
-                        getMajorAlleleJcnRatio(var.getBreakend(false)));
-            }
-
-            writer.write(String.format(",%.1f,%.1f,%.1f,%s,%s,%.1f,%.1f",
-                    maxDMCopyNumber, minDMJcn, dmData.MaxJcn, amplifiedGenesStr, dmData.ChainsCentromere,
-                    dmData.MinAdjMAJcnRatio, minMinAmr));
-
-            writer.newLine();
-        }
-        catch (final IOException e)
-        {
-            LNX_LOGGER.error("error writing DM data: {}", e.toString());
-        }
     }
 
     private String getAmplifiedGenesList(final SvChain chain)

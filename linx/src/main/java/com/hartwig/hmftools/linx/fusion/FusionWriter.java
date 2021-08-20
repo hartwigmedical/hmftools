@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
@@ -194,78 +195,68 @@ public class FusionWriter implements CohortFileInterface
 
     public void writeVerboseFusionData(final GeneFusion fusion, final String sampleId)
     {
-        BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
+        final FusionAnnotations annotations = fusion.getAnnotations();
 
-        if(cohortWriter == null)
+        if(annotations == null)
+        {
+            LNX_LOGGER.error("fusion({}) annotations not set", fusion.name());
             return;
-
-        try
-        {
-            final FusionAnnotations annotations = fusion.getAnnotations();
-
-            if(annotations == null)
-            {
-                LNX_LOGGER.error("fusion({}) annotations not set", fusion.name());
-                return;
-            }
-
-            cohortWriter.write(String.format("%s,%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.reportableReason(), fusion.knownTypeStr()));
-
-            cohortWriter.write(String.format(",%s,%s,%d,%d,%s",
-                    fusion.phaseType(), fusion.knownExons(),
-                    annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
-
-            // write upstream SV, transcript and exon info
-            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
-            {
-                boolean isUpstream = (fs == FS_UP);
-                final BreakendTransData trans = fusion.transcripts()[fs];
-                final BreakendGeneData gene = trans.gene();
-
-                cohortWriter.write(String.format(",%d,%s,%d,%d,%s,%.6f",
-                        gene.id(), gene.chromosome(), gene.position(), gene.orientation(),
-                        gene.type(), gene.jcn()));
-
-                cohortWriter.write(String.format(",%s,%s,%s,%d,%s,%s",
-                        gene.StableId, fusion.geneName(fs), trans.transName(),
-                        gene.Strand, trans.regionType(), trans.codingType()));
-
-                cohortWriter.write(String.format(",%d,%d,%d,%d,%d,%s",
-                        isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
-                        fusion.getFusedExon(isUpstream), fusion.getExonsSkipped()[fs],
-                        trans.Phase, trans.exonCount(), trans.isDisruptive()));
-
-                cohortWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%s,%s",
-                        trans.CodingBases, trans.TotalCodingBases,
-                        trans.codingStart(), trans.codingEnd(), trans.transStart(), trans.transEnd(),
-                        trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
-            }
-
-            cohortWriter.write(String.format(",%s,%s,%f,%d",
-                        fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
-                        fusion.priority(), fusion.id()));
-
-            String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
-
-            if(annotations.chainInfo() != null)
-            {
-                chainInfo += String.format(",%d;%d;%d;%s;%s",
-                        annotations.chainInfo().chainId(), annotations.chainInfo().chainLinks(), annotations.chainInfo().chainLength(),
-                        annotations.chainInfo().validTraversal(), annotations.chainInfo().traversalAssembled());
-            }
-            else
-            {
-                chainInfo += ",-1;0;0;true;false";
-            }
-
-            cohortWriter.write(String.format("%s", chainInfo));
-
-            cohortWriter.newLine();
         }
-        catch (final IOException e)
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(String.format("%s,%s,%s,%s",
+                sampleId, fusion.reportable(), fusion.reportableReason(), fusion.knownTypeStr()));
+
+        sb.append(String.format(",%s,%s,%d,%d,%s",
+                fusion.phaseType(), fusion.knownExons(),
+                annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
+
+        // write upstream SV, transcript and exon info
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            LNX_LOGGER.error("error writing fusions: {}", e.toString());
+            boolean isUpstream = (fs == FS_UP);
+            final BreakendTransData trans = fusion.transcripts()[fs];
+            final BreakendGeneData gene = trans.gene();
+
+            sb.append(String.format(",%d,%s,%d,%d,%s,%.6f",
+                    gene.id(), gene.chromosome(), gene.position(), gene.orientation(),
+                    gene.type(), gene.jcn()));
+
+            sb.append(String.format(",%s,%s,%s,%d,%s,%s",
+                    gene.StableId, fusion.geneName(fs), trans.transName(),
+                    gene.Strand, trans.regionType(), trans.codingType()));
+
+            sb.append(String.format(",%d,%d,%d,%d,%d,%s",
+                    isUpstream ? trans.ExonUpstream : trans.ExonDownstream,
+                    fusion.getFusedExon(isUpstream), fusion.getExonsSkipped()[fs],
+                    trans.Phase, trans.exonCount(), trans.isDisruptive()));
+
+            sb.append(String.format(",%d,%d,%d,%d,%d,%d,%d,%s,%s",
+                    trans.CodingBases, trans.TotalCodingBases,
+                    trans.codingStart(), trans.codingEnd(), trans.transStart(), trans.transEnd(),
+                    trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
         }
+
+        sb.append(String.format(",%s,%s,%f,%d",
+                    fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
+                    fusion.priority(), fusion.id()));
+
+        String chainInfo = String.format(",%s,%s", annotations.terminatedUp(), annotations.terminatedDown());
+
+        if(annotations.chainInfo() != null)
+        {
+            chainInfo += String.format(",%d;%d;%d;%s;%s",
+                    annotations.chainInfo().chainId(), annotations.chainInfo().chainLinks(), annotations.chainInfo().chainLength(),
+                    annotations.chainInfo().validTraversal(), annotations.chainInfo().traversalAssembled());
+        }
+        else
+        {
+            chainInfo += ",-1;0;0;true;false";
+        }
+
+        sb.append(String.format("%s", chainInfo));
+
+        mCohortDataWriter.write(this, Lists.newArrayList(sb.toString()));
     }
 }

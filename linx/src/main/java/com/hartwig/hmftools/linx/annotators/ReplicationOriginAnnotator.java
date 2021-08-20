@@ -119,29 +119,6 @@ public class ReplicationOriginAnnotator
         }
     }
 
-    // general purpose method
-    public double getReplicationOriginValue(final String chromosome, int position)
-    {
-        if(mReplicationOrigins.isEmpty())
-            return 0;
-
-        List<ReplicationOriginRegion> regions = mReplicationOrigins.get(chromosome);
-
-        if(regions == null || regions.isEmpty())
-            return 0;
-
-        for(final ReplicationOriginRegion region : regions)
-        {
-            if(region.Region.containsPosition(position))
-            {
-                return region.OriginValue;
-
-            }
-        }
-
-        return 0;
-    }
-
     private class ReplicationOriginRegion
     {
         public final ChrBaseRegion Region;
