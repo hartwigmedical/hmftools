@@ -218,8 +218,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
     {
         if(mConfig.UploadToDB && mDbAccess != null)
         {
-            mDbAccess.writeLinxDriverCatalog(mSampleId, mDataCache.getDriverCatalog());
-            mDbAccess.writeSvDrivers(mSampleId, mDriverOutputList);
+            writeToDatabase(mSampleId, mDbAccess, mDataCache.getDriverCatalog(), mDriverOutputList);
         }
 
         if(mConfig.hasMultipleSamples() || mOutputDir == null)
@@ -238,6 +237,14 @@ public class DriverGeneAnnotator implements CohortFileInterface
         {
             LNX_LOGGER.error("failed to write drivers file: {}", e.toString());
         }
+    }
+
+    private synchronized static void writeToDatabase(
+            final String sampleId, final DatabaseAccess dbAccess,
+            final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
+    {
+        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs);
+        dbAccess.writeSvDrivers(sampleId, linxDrivers);
     }
 
     private static final String COHORT_WRITER_DRIVER = "Driver";
@@ -287,6 +294,9 @@ public class DriverGeneAnnotator implements CohortFileInterface
                         "", 0, dgData.GeneData.Chromosome, DRIVER);
             }
         }
+
+        if(!mConfig.hasMultipleSamples())
+            return;
 
         BufferedWriter cohortWriter = mCohortDataWriter.getWriter(this);
 

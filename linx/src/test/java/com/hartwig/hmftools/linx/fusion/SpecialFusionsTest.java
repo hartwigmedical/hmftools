@@ -355,8 +355,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -388,8 +387,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -422,8 +420,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -458,8 +455,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -507,8 +503,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -581,8 +576,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -608,8 +602,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -634,8 +627,7 @@ public class SpecialFusionsTest
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 

@@ -62,12 +62,12 @@ public class FusionDisruptionAnalyser
     private DisruptionFinder mDisruptionFinder;
     private FusionWriter mFusionWriter;
     private NeoEpitopeWriter mNeoEpitopeWriter;
-    private boolean mValidState;
 
     private String mSampleId;
     private final String mOutputDir;
     private final EnsemblDataCache mGeneDataCache;
-    private LinxConfig mConfig;
+    private final LinxConfig mConfig;
+    private final DatabaseAccess mDbAccess;
 
     private final boolean mRunFusions;
     private final FusionParameters mFusionParams;
@@ -91,13 +91,14 @@ public class FusionDisruptionAnalyser
     public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
 
     public FusionDisruptionAnalyser(
-            final CommandLine cmdLineArgs, final LinxConfig config, final EnsemblDataCache ensemblDataCache,
+            final CommandLine cmdLineArgs, final LinxConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
             final FusionResources fusionResources, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mOutputDir = config.OutputDataPath;
 
         mConfig = config;
         mGeneDataCache = ensemblDataCache;
+        mDbAccess = dbAccess;
         mFusionFinder = new FusionFinder(ensemblDataCache, fusionResources.knownFusionCache());
         mFusionWriter = new FusionWriter(mOutputDir, cohortDataWriter);
         mDisruptionFinder = new DisruptionFinder(config, ensemblDataCache, fusionResources.germlinePonCache(), cohortDataWriter, visSampleData);
@@ -119,7 +120,6 @@ public class FusionDisruptionAnalyser
 
         mPerfCounter = new PerformanceCounter("Fusions");
 
-        mValidState = true;
         initialise(cmdLineArgs);
     }
 
@@ -183,9 +183,6 @@ public class FusionDisruptionAnalyser
 
         if(mRunFusions)
         {
-            if(!mFusionFinder.hasValidConfigData())
-                mValidState = false;
-
             LNX_LOGGER.debug("fusion config: requirePhaseMatch({}) allowExonSkipping({}) requireUpstreamBiotypes({})",
                     mFusionParams.RequirePhaseMatch, mFusionParams.AllowExonSkipping, mFusionParams.RequireUpstreamBiotypes);
 
@@ -238,7 +235,6 @@ public class FusionDisruptionAnalyser
     public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
     public final List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
-    public boolean validState() { return mValidState; }
     public final Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
     public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
@@ -285,7 +281,7 @@ public class FusionDisruptionAnalyser
         }
     }
 
-    public void run(final String sampleId, final List<SvVarData> svList, final DatabaseAccess dbAccess,
+    public void run(final String sampleId, final List<SvVarData> svList,
             final List<SvCluster> clusters, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         mPerfCounter.start();
@@ -295,7 +291,7 @@ public class FusionDisruptionAnalyser
         mUniqueFusions.clear();
         mFusionFinder.reset();
 
-        if(mRunFusions)
+        if(mRunFusions && mFusionFinder.hasValidConfigData())
             findFusions(svList, clusters);
 
         mDisruptionFinder.findReportableDisruptions(svList);
@@ -361,18 +357,22 @@ public class FusionDisruptionAnalyser
             }
         }
 
-        if(dbAccess != null && mConfig.UploadToDB)
-        {
-            LNX_LOGGER.debug("persisting {} breakends and {} fusions to database", breakends.size(), fusions.size());
-
-            final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
-            annotationDAO.writeBreakendsAndFusions(mSampleId, breakends, fusions);
-        }
+        if(mDbAccess != null && mConfig.UploadToDB)
+            writeToDatabase(mSampleId, mDbAccess, breakends, fusions);
 
         if(mRnaFusionMapper != null)
             mRnaFusionMapper.assessRnaFusions(sampleId, chrBreakendMap);
 
         mPerfCounter.stop();
+    }
+
+    private synchronized static void writeToDatabase(
+            final String sampleId, final DatabaseAccess dbAccess, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
+    {
+        LNX_LOGGER.debug("persisting {} breakends and {} fusions to database", breakends.size(), fusions.size());
+
+        final StructuralVariantFusionDAO annotationDAO = new StructuralVariantFusionDAO(dbAccess.context());
+        annotationDAO.writeBreakendsAndFusions(sampleId, breakends, fusions);
     }
 
     private void findFusions(final List<SvVarData> svList, final List<SvCluster> clusters)

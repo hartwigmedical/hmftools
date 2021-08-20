@@ -112,7 +112,7 @@ public class SampleAnalyser implements Callable
                 new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
 
         mFusionAnalyser = new FusionDisruptionAnalyser(
-                config.CmdLineArgs, config, ensemblDataCache, fusionResources, cohortDataWriter, mVisSampleData);
+                config.CmdLineArgs, config, ensemblDataCache, dbAccess, fusionResources, cohortDataWriter, mVisSampleData);
 
         mAllVariants = Lists.newArrayList();
 
@@ -166,6 +166,9 @@ public class SampleAnalyser implements Callable
             }
 
             mPcTotal.stop();
+
+            if(!inValidState())
+                break;
         }
     }
 
@@ -217,9 +220,10 @@ public class SampleAnalyser implements Callable
             mDriverGeneAnnotator.annotateSVs(mCurrentSampleId, getChrBreakendMap());
 
         if(mConfig.RunFusions || mConfig.IsGermline)
-            mFusionAnalyser.run(mCurrentSampleId, svDataList, mDbAccess, getClusters(), getChrBreakendMap());
+            mFusionAnalyser.run(mCurrentSampleId, svDataList, getClusters(), getChrBreakendMap());
 
-        writeOutput(mDbAccess);
+        writeOutput();
+        close();
 
         LNX_LOGGER.info("sample({}) procesed {} SVs", sampleId, svDataList.size());
     }
@@ -301,7 +305,7 @@ public class SampleAnalyser implements Callable
         mPcAnnotation.stop();
     }
 
-    private void writeOutput(final DatabaseAccess dbAccess)
+    private void writeOutput()
     {
         // if processing a single sample, write flat-files and optionally load the same data to the DB
         // if running in batch mode, skip flat-file generation and DB load, and instead write verbose batch output files
@@ -341,14 +345,21 @@ public class SampleAnalyser implements Callable
             }
         }
 
-        if(mConfig.UploadToDB && dbAccess != null)
+        if(mConfig.UploadToDB && mDbAccess != null)
         {
-            dbAccess.writeSvLinxData(mCurrentSampleId, linxSvData);
-            dbAccess.writeSvClusters(mCurrentSampleId, clusterData);
-            dbAccess.writeSvLinks(mCurrentSampleId, linksData);
+            writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData);
         }
 
         mPcWrite.stop();
+    }
+
+    private synchronized static void writeToDatabase(
+            final String sampleId, final DatabaseAccess dbAccess,
+            final List<LinxSvAnnotation> linxSvData, final List<LinxCluster> clusterData, final List<LinxLink> linksData)
+    {
+        dbAccess.writeSvLinxData(sampleId, linxSvData);
+        dbAccess.writeSvClusters(sampleId, clusterData);
+        dbAccess.writeSvLinks(sampleId, linksData);
     }
 
     public void writeSampleWithNoSVs()
@@ -358,7 +369,6 @@ public class SampleAnalyser implements Callable
             LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            LinxViralInsertion.write(LinxViralInsertion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
             LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());

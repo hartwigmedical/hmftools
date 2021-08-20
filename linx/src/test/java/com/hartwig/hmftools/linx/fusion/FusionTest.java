@@ -356,8 +356,7 @@ public class FusionTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -396,8 +395,7 @@ public class FusionTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
@@ -437,8 +435,7 @@ public class FusionTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(3, tester.FusionAnalyser.getFusions().size());
 
@@ -504,8 +501,7 @@ public class FusionTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(2, tester.FusionAnalyser.getFusions().size());
         assertEquals(1, tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).count());
@@ -518,8 +514,7 @@ public class FusionTest
         assertFalse(validateFusionAnnotations(fusion, false, false));
 
         // repeat again but this time allowing for invalid traversal in a known pair
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(2, tester.FusionAnalyser.getFusions().size());
 
@@ -556,8 +551,7 @@ public class FusionTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertTrue(tester.FusionAnalyser.getFusions().isEmpty());
         assertEquals(1, tester.FusionAnalyser.getInvalidFusions().size());
@@ -599,8 +593,7 @@ public class FusionTest
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
-                tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
+        tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, tester.getClusters(), tester.Analyser.getState().getChrBreakendMap());
 
         assertEquals(1, tester.FusionAnalyser.getUniqueFusions().size());
 

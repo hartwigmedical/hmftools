@@ -86,7 +86,7 @@ public class LinxApplication
         if (samplesList.isEmpty())
         {
             LNX_LOGGER.info("not samples loaded, exiting");
-            return;
+            System.exit(1);
         }
 
         LNX_LOGGER.info("running SV analysis for {}",
@@ -94,20 +94,11 @@ public class LinxApplication
 
         FusionResources fusionResources = new FusionResources(cmd);
 
-        /*
-        CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
-
-        DriverGeneAnnotator driverGeneAnnotator = null;
-        boolean checkDrivers = cmd.hasOption(CHECK_DRIVERS) && config.DriverGenes != null;
-
-        FusionDisruptionAnalyser fusionAnalyser = null;
-        boolean checkFusions = cmd.hasOption(CHECK_FUSIONS);
-
-        // check whether to only load genes which are hit by an SV breakend
-        boolean breakendGeneLoading = (samplesList.size() == 1 && !checkDrivers) && config.RestrictedGeneIds.isEmpty() && !config.IsGermline;
-        boolean applyPromotorDistance = checkFusions;
-        boolean purgeInvalidTranscripts = true;
-        */
+        if(config.RunFusions && !fusionResources.knownFusionCache().hasValidData())
+        {
+            LNX_LOGGER.info("invalid fusion config, exiting");
+            System.exit(1);
+        }
 
         final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
                 new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
@@ -157,40 +148,11 @@ public class LinxApplication
             if(!ensemblLoadOk)
             {
                 LNX_LOGGER.error("Ensembl data cache load failed, exiting");
-                return;
+                System.exit(1);
             }
 
             if(config.RunDrivers)
                 ensemblDataCache.createGeneNameIdMap();
-
-            // cohortDataWriter.getVisWriter().setGeneDataCache(ensemblDataCache);
-
-            // always initialise since is used for transcript evaluation
-            /*
-            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, fusionResources, cohortDataWriter);
-
-
-            if(!fusionAnalyser.validState())
-                return;
-
-            if(checkFusions)
-            {
-                purgeInvalidTranscripts = !fusionAnalyser.hasRnaSampleData();
-
-                if(fusionAnalyser.hasRnaSampleData() && samplesList.size() > 1)
-                {
-                    samplesList.clear();
-                    samplesList.addAll(fusionAnalyser.getRnaSampleIds());
-
-                    LNX_LOGGER.info("running {} sample based on RNA fusion input", samplesList.size());
-                }
-            }
-
-            if(checkDrivers)
-            {
-                driverGeneAnnotator = new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, cnDataLoader, cohortDataWriter);
-            }
-            */
         }
 
         CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);

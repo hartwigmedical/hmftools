@@ -87,7 +87,14 @@ public class DoubleMinuteFinder implements CohortFileInterface
 
         mCohortDataWriter = cohortDataWriter;
 
-        mSampleWriter = mConfig.isSingleSample() ? initialiseWriter(mConfig.OutputDataPath, config.getSampleIds().get(0)) : null;
+        if(mLogCandidates && mConfig.isSingleSample())
+        {
+            mSampleWriter = initialiseWriter(mConfig.OutputDataPath, config.getSampleIds().get(0));
+        }
+        else
+        {
+            mSampleWriter = null;
+        }
     }
 
     public void setGeneTransCache(final EnsemblDataCache geneDataCache) { mGeneTransCache = geneDataCache; }
