@@ -82,7 +82,7 @@ public class ReportWriter {
             LOGGER.info("Writing report to {}", outputFilePath);
             writer = new PdfWriter(outputFilePath);
         } else {
-            LOGGER.info("Generating report {}", report);
+            LOGGER.info("Generating in-memory report");
             writer = new PdfWriter(new ByteArrayOutputStream());
         }
 
