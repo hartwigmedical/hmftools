@@ -2,6 +2,16 @@ package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.ASRP;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.BASRP;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.BVF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.QUAL;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.REF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.REFPAIR;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.RP;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.SB;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.SR;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VF;
 
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -14,27 +24,6 @@ public class GermlineFilters implements VariantContextFilter
 {
     private GermlineVcfConfig mConfig;
 
-    // VCF field identifiers
-    public static final String QUAL = "QUAL";
-    public static final String SR = "SR";
-    public static final String SRQ = "SRQ";
-    public static final String VF = "VF";
-    public static final String RP = "RP";
-    public static final String RPQ = "RPQ";
-    public static final String REF = "REF";
-    public static final String BEID = "BEID";
-    public static final String BEIDL = "BEIDL";
-    public static final String HOMSEQ = "HOMSEQ";
-
-    public static final String AS = "AS";
-    public static final String CAS = "CAS";
-    public static final String RAS = "RAS";
-
-    private static final String BASRP = "BASRP";
-    private static final String ASRP = "ASRP";
-    private static final String SB = "SB";
-    private static final String BVF = "BVF";
-    private static final String REFPAIR = "REFPAIR";
 
     private static final int SHORT_DEL_DUP_LENGTH = 1000;
     private static final String LONG_POLY_C = "CCCCCCCCCCCCCCCC";
@@ -64,7 +53,7 @@ public class GermlineFilters implements VariantContextFilter
 
     public String applyFilters(final StructuralVariant sv, final VariantContext variant)
     {
-        if(!variant.getFilters().isEmpty() && mConfig.RequirePass)
+        if(!variant.getFilters().isEmpty() && mConfig.RequireGridssPass)
             return "GRIDSS_FILTERED";
 
         if(GermlineFilters.isImprecise(variant))

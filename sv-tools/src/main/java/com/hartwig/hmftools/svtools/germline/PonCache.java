@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.germline;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -14,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -24,8 +25,8 @@ public class PonCache
     private final Map<String,List<PonSvRegion>> mSvRegions;
     private final Map<String,List<PonSglRegion>> mSglRegions;
 
-    private static final String GERMLINE_PON_BED_SV_FILE = "germine_pon_sv_file";
-    private static final String GERMLINE_PON_BED_SGL_FILE = "germine_pon_sgl_file";
+    private static final String GERMLINE_PON_BED_SV_FILE = "pon_sv_file";
+    private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
 
     public PonCache(final CommandLine cmd)
     {
@@ -39,11 +40,11 @@ public class PonCache
         }
     }
 
-    public int getPonCount(final SvVarData var)
+    public int getPonCount(final SvData var)
     {
-        if(var.isSglBreakend())
+        if(var.isSgl())
         {
-            List<PonSglRegion> regions = mSglRegions.get(var.chromosome(true));
+            List<PonSglRegion> regions = mSglRegions.get(var.chromosomeStart());
             if(regions != null)
             {
                 for(PonSglRegion region : regions)
@@ -55,7 +56,7 @@ public class PonCache
         }
         else
         {
-            List<PonSvRegion> regions = mSvRegions.get(var.chromosome(true));
+            List<PonSvRegion> regions = mSvRegions.get(var.chromosomeStart());
             if(regions != null)
             {
                 for(PonSvRegion region : regions)
@@ -187,12 +188,12 @@ public class PonCache
             PonCount = ponCount;
         }
 
-        public boolean matches(final SvVarData var)
+        public boolean matches(final SvData var)
         {
-            return RegionStart.containsPosition(var.chromosome(true), var.position(true))
-                    && OrientStart == var.orientation(true)
-                    && RegionEnd.containsPosition(var.chromosome(false), var.position(false))
-                    && OrientEnd == var.orientation(false);
+            return RegionStart.containsPosition(var.chromosomeStart(), var.posStart())
+                    && OrientStart == var.orientations()[SE_START]
+                    && RegionEnd.containsPosition(var.chromosomeEnd(), var.posEnd())
+                    && OrientEnd == var.orientations()[SE_END];
         }
     }
 
@@ -209,9 +210,9 @@ public class PonCache
             PonCount = ponCount;
         }
 
-        public boolean matches(final SvVarData var)
+        public boolean matches(final SvData var)
         {
-            return Region.containsPosition(var.position(true)) && Orient == var.orientation(true);
+            return Region.containsPosition(var.posEnd()) && Orient == var.orientStart();
         }
 
     }

@@ -3,11 +3,18 @@ package com.hartwig.hmftools.svtools.germline;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.AS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.BEID;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.BEIDL;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.CAS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.RAS;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+
+import htsjdk.variant.variantcontext.CommonInfo;
 
 public class LinkAnalyser
 {
@@ -28,6 +35,34 @@ public class LinkAnalyser
     {
         mSvAssemblyData.add(asmData);
     }
+
+    public void cacheAssemblyData(final SvData sv)
+    {
+        final CommonInfo variantCI = sv.contextStart().getCommonInfo();
+
+        if(variantCI.getAttributeAsInt(AS, 0) + variantCI.getAttributeAsInt(CAS, 0)
+                + variantCI.getAttributeAsInt(RAS, 0) < 2)
+        {
+            return;
+        }
+
+        // cache assembly info
+        final String startBeId = sv.contextStart().getAttributeAsString(BEID,"");
+        final String startBeIdl = sv.contextStart().getAttributeAsString(BEIDL,"");
+
+        final String endBeId = sv.contextEnd() != null ? sv.contextEnd().getAttributeAsString(BEID,"") : "";
+        final String endBeIdl = sv.contextEnd() != null ? sv.contextEnd().getAttributeAsString(BEIDL,"") : "";
+
+        if(startBeId.isEmpty() && endBeId.isEmpty())
+            return;
+
+        final String[] beIdStr = {startBeId, endBeId};
+        final String[] beIdlStr = {startBeIdl, endBeIdl};
+
+        AssemblyData asmData = new AssemblyData(sv.id(), beIdStr, beIdlStr);
+        add(asmData);
+    }
+
 
     public void annotateAssembledLinks()
     {
@@ -63,16 +98,15 @@ public class LinkAnalyser
         }
     }
 
-    public void populateAssemblyLinks(final GermlineSV germlineSV)
+    public void populateAssemblyLinks(final SvData svData)
     {
-        final StructuralVariant sv = germlineSV.sv();
-        final AssemblyData asmData = mSvAssemblyData.stream().filter(x -> x.VcfId.equals(sv.id())).findFirst().orElse(null);
+        final AssemblyData asmData = mSvAssemblyData.stream().filter(x -> x.VcfId.equals(svData.id())).findFirst().orElse(null);
 
         if(asmData == null)
             return;
 
-        germlineSV.setAssemblySvId(SE_START, asmData.getLinkedSvIds()[SE_START]);
-        germlineSV.setAssemblySvId(SE_END, asmData.getLinkedSvIds()[SE_END]);
+        svData.setAssemblySvId(SE_START, asmData.getLinkedSvIds()[SE_START]);
+        svData.setAssemblySvId(SE_END, asmData.getLinkedSvIds()[SE_END]);
     }
 
 }
