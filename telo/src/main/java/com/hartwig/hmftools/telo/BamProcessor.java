@@ -26,25 +26,27 @@ public class BamProcessor
 {
     public static void processBam(TeloConfig config) throws InterruptedException
     {
-        final Queue<ChrBaseRegion> baseRegionQ = new ConcurrentLinkedQueue<>();
+        final Queue<BamReader.Task> bamReaderTaskQ = new ConcurrentLinkedQueue<>();
         final BlockingQueue<TelBamRecord> telBamRecordQ = new LinkedBlockingDeque<>();
         final Set<String> incompleteReadNames = Collections.newSetFromMap(new ConcurrentHashMap<>());
         BamRecordWriter writer = new BamRecordWriter(config, telBamRecordQ, incompleteReadNames);
         writer.setProcessingMateRegions(false);
         final List<BamReader> bamReaders = new ArrayList<>();
 
+        // add unmapped read first cause it is slower to process
+        bamReaderTaskQ.add(BamReader.Task.fromQueryUnmapped());
+
         List<ChrBaseRegion> partitions = createPartitions(config);
 
-        // add unmapped base region, add it first cause it is slower to process
-        partitions.add(0, TeloConstants.UNMAPPED_BASE_REGION);
-
         // put all into the queue
-        baseRegionQ.addAll(partitions);
+        partitions.forEach(x -> { bamReaderTaskQ.add(BamReader.Task.fromBaseRegion(x)); });
 
         // create all the bam readers
-        for(int i = 0; i < config.Threads; ++i)
+        // we create one less for the bam writer
+        int numBamReaders = Math.max(config.Threads - 1, 1);
+        for(int i = 0; i < numBamReaders; ++i)
         {
-            BamReader bamReader = new BamReader(config, baseRegionQ, telBamRecordQ, Collections.unmodifiableSet(incompleteReadNames));
+            BamReader bamReader = new BamReader(config, bamReaderTaskQ, telBamRecordQ, Collections.unmodifiableSet(incompleteReadNames));
             bamReaders.add(bamReader);
         }
 
@@ -53,22 +55,24 @@ public class BamProcessor
 
         TE_LOGGER.info("initial BAM file processing complete");
 
+        // add unmapped read first cause it is slower to process
+        bamReaderTaskQ.add(BamReader.Task.fromQueryUnmapped());
+
         // now we process the incomplete groups, sicne the threads have already finished there is no
         // concurrency problem
-        List<ChrBaseRegion> mateRegions = getIncompleteReadGroupMateRegions(writer.getmIncompleteReadGroups());
+        List<ChrBaseRegion> mateRegions = getIncompleteReadGroupMateRegions(writer.getIncompleteReadGroups());
 
         if(!mateRegions.isEmpty())
         {
             TE_LOGGER.info("processing {} mate regions", mateRegions.size());
-            baseRegionQ.addAll(mateRegions);
+            mateRegions.forEach(x -> { bamReaderTaskQ.add(BamReader.Task.fromBaseRegion(x)); });
         }
 
         writer.setProcessingMateRegions(true);
 
         // start processing threads and run til completion
         runThreadsTillCompletion(telBamRecordQ, bamReaders, writer);
-        writer.writeAllIncompleteReadGroups();
-        writer.close();
+        writer.finish();
     }
 
     // run the bam reader and record writer threads till completion
@@ -100,7 +104,6 @@ public class BamProcessor
     private static List<ChrBaseRegion> getIncompleteReadGroupMateRegions(Map<String, ReadGroup> incompleteReadGroups)
     {
         List<ChrBaseRegion> mateRegions = new ArrayList<>();
-        boolean addUnmapped = false;
         for(ReadGroup readGroup : incompleteReadGroups.values())
         {
             for(SAMRecord read : readGroup.Reads)
@@ -110,9 +113,14 @@ public class BamProcessor
                     continue;
                 }
 
-                if(read.getMateUnmappedFlag())
+                if(read.getMateReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX)
                 {
-                    addUnmapped = true;
+                    // note that even if the mate unmapped flag is set, we still might not be there
+                }
+                else if(read.getMateReferenceName().isEmpty() || read.getMateAlignmentStart() <= 0)
+                {
+                    // this shouldn't happen
+                    TE_LOGGER.warn("read({}) invalid mate reference, mate ref index({})", read, read.getMateReferenceIndex());
                 }
                 else
                 {
@@ -152,10 +160,6 @@ public class BamProcessor
             mateRegions = compactMateRegions;
         }
 
-        if (addUnmapped)
-        {
-            mateRegions.add(0, TeloConstants.UNMAPPED_BASE_REGION);
-        }
         return mateRegions;
     }
 }

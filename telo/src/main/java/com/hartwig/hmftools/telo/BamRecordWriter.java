@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.telo;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.zip.GZIPOutputStream;
 
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -30,9 +27,9 @@ public class BamRecordWriter implements Runnable
 
     private final Set<String> mIncompleteReadNames;
     private final Map<String, ReadGroup> mIncompleteReadGroups = new HashMap<>();
-    private final BufferedWriter mCsvWriter;
+    private final Writer mCsvWriter;
     private final SAMFileWriter mBamFileWriter;
-    private int mCompletedGroups = 0;
+    private int mNumCompletedGroups = 0;
     private volatile boolean mProcessingMateRegions = false;
 
     public BamRecordWriter(final TeloConfig config, BlockingQueue<TelBamRecord> telBamRecordQ, Set<String> incompleteReadNames)
@@ -41,7 +38,7 @@ public class BamRecordWriter implements Runnable
         mIncompleteReadNames = incompleteReadNames;
 
         String sampleBamFileBasename = new File(config.BamFile).getName();
-        final String csvOutputFile = config.OutputDir + "/" + sampleBamFileBasename + ".telo_read_data.csv";
+        final String csvOutputFile = config.OutputDir + "/" + sampleBamFileBasename + ".telo_read_data.csv.gz";
         mCsvWriter = createReadDataWriter(csvOutputFile);
 
         SamReader samReader = TeloUtils.openSamReader(config);
@@ -72,23 +69,37 @@ public class BamRecordWriter implements Runnable
         }
     }
 
-    public Map<String, ReadGroup> getmIncompleteReadGroups() { return mIncompleteReadGroups; }
+    public Map<String, ReadGroup> getIncompleteReadGroups() { return mIncompleteReadGroups; }
     public void setProcessingMateRegions(boolean b) { mProcessingMateRegions = b; }
 
-    public void close()
+    public void finish()
     {
-        closeBufferedWriter(mCsvWriter);
+        // we write out the final incomplete group
+        mIncompleteReadGroups.values().forEach(this::writeReadGroup);
+
+        try
+        {
+            mCsvWriter.close();
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException("Could not close buffered writer: " + mCsvWriter + ": " + e.getMessage());
+        }
+
         mBamFileWriter.close();
+        TE_LOGGER.info("wrote {} read groups, complete({}), incomplete({})",
+                mNumCompletedGroups + mIncompleteReadGroups.size(),
+                mNumCompletedGroups, mIncompleteReadGroups.size());
     }
 
-    private static BufferedWriter createReadDataWriter(final String outputFile)
+    private static Writer createReadDataWriter(final String outputFile)
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(outputFile, false);
+            Writer writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile, false)));
             writer.write("ReadId,Chromosome,PosStart,PosEnd,MateChr,MatePosStart,HasTeloContent");
             writer.write(",Cigar,InsertSize,FirstInPair,Unmapped,MateUnmapped,Flags,SuppData,CompleteFrag,ReadBases");
-            writer.newLine();
+            writer.write('\n');
             return writer;
         }
         catch (IOException e)
@@ -100,6 +111,11 @@ public class BamRecordWriter implements Runnable
 
     private void processReadRecord(final SAMRecord record, boolean hasTelomereContent)
     {
+        if(mProcessingMateRegions && !record.getReadPairedFlag())
+        {
+            return;
+        }
+
         ReadGroup readGroup = mIncompleteReadGroups.get(record.getReadName());
 
         if(readGroup == null)
@@ -124,7 +140,15 @@ public class BamRecordWriter implements Runnable
         }
         else
         {
-            readGroup.Reads.add(record);
+            // a group already exist. This should be the mate of the record that is
+            // already in the read group, check to see if that's the case
+            // note: the following have to read how queryMate function is implemented in htsjdk SamReader to work out
+            // what is the correct way to find the mate of a read. See htsjdk/samtools/SamReader.java
+            SAMRecord mateRecord = readGroup.Reads.get(0);
+            if(mateRecord.getFirstOfPairFlag() != record.getFirstOfPairFlag())
+            {
+                readGroup.Reads.add(record);
+            }
         }
 
         if(readGroup.isComplete())
@@ -139,12 +163,12 @@ public class BamRecordWriter implements Runnable
 
             if (readGroup.Reads.size() > 2)
             {
-                TE_LOGGER.info("read group size: {}", readGroup.Reads.size());
+                TE_LOGGER.debug("read group size: {}", readGroup.Reads.size());
             }
 
             writeReadGroup(readGroup);
 
-            ++mCompletedGroups;
+            ++mNumCompletedGroups;
         }
     }
 
@@ -175,7 +199,7 @@ public class BamRecordWriter implements Runnable
                     mCsvWriter.write(String.format(",%s,%s,%s",
                             suppAlignmentData, completeGroup, readRecord.ReadBases));
 
-                    mCsvWriter.newLine();
+                    mCsvWriter.write('\n');
                 }
             }
             catch(IOException e)
@@ -191,12 +215,5 @@ public class BamRecordWriter implements Runnable
                 mBamFileWriter.addAlignment(samRecord);
             }
         }
-    }
-
-    public void writeAllIncompleteReadGroups()
-    {
-        // we write out the final incomplete group
-        TE_LOGGER.info("writing final {} incomplete groups", mIncompleteReadGroups.size());
-        mIncompleteReadGroups.values().forEach(this::writeReadGroup);
     }
 }

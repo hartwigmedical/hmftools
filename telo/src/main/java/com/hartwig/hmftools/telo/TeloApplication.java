@@ -2,9 +2,7 @@ package com.hartwig.hmftools.telo;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
-import static com.hartwig.hmftools.telo.TeloUtils.createPartitions;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.Duration;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -82,5 +80,4 @@ public class TeloApplication
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }
