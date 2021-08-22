@@ -846,13 +846,14 @@ Additionally, Linx checks that the protein domains retained in the 3’ partner 
 Finally linx sets a likelihood for each reported fusion. KNOWN_PAIR, IG_KNOWN_PAIR and EXON_DEL_DUP are set to HIGH likelihood. PROMISCUOUS fusions are set to HIGH likelihood only if the fused exon matches the known exon range, or else LOW otherwise.
 
 
-
 #### Amplification, deletion and disruption drivers
 
 ##### Homozygous disruption drivers
 Linx can optionally take as input a catalog of point mutation, amplification and homozygous deletion drivers which is created by PURPLE based on the raw somatic variant data and determined copy number profile. Linx leverages it’s chaining logic to extend the driver catalog by searching for 2 additional types of biallelic disruptions which disrupt all copies of the gene but do not cause a homozygous deletion in an exonic segment (which is PURPLE’s criteria for homozygous deletion). Specifically Linx searches for 2 additional types of homozygous disruptions:
 * Disruptive Breakends - Any pair of disruptive breakends that form a deletion bridge or are oriented away from each other and both cause the copy number to drop to <0.5 after allowing for the JCN of any overlapping deletion bridges. 
-* Disruptive Duplications - Any duplication which has both breakends disruptive in the transcript and a JCN >= flanking copy number at both ends.  
+* Disruptive Duplications - Any duplication which has both breakends disruptive in the transcript and a JCN >= flanking copy number at both ends.
+
+Non-homozygous disruptions are not marked as reportable, but can be identified by searching for genes with breakends marked as disruptive
 
 ##### Linkage of drivers to contributing structural variant clusters 
 We link each driver in the catalog that is affected by genomic rearrangements (ie. high level amplifications, homozygous deletions and biallelic point mutations in TSG with LOH and the homozygous disruptions found by Linx) to each structural variant cluster which contributed to the driver. 1 or more structural variant clusters may contribute to each event and/or the driver may be caused by a whole chromosome or whole arm event which cannot be mapped to a specific variant but which has caused significant copy number gain or loss
