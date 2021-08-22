@@ -27,7 +27,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.linx.SampleAnalyser;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 

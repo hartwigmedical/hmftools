@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx.chaining;
 
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
 import static com.hartwig.hmftools.linx.chaining.ChainUtils.identicalChain;
 import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;

@@ -21,8 +21,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.CohortDataWriter;
-import com.hartwig.hmftools.linx.SampleAnalyser;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -188,17 +186,17 @@ public class ExternalToolCompare
 
     private static List<SvVarData> createSvData(List<StructuralVariantData> svRecords)
     {
-        List<SvVarData> svVarDataItems = Lists.newArrayList();
+        List<SvVarData> svDataItems = Lists.newArrayList();
 
         for (final StructuralVariantData svRecord : svRecords)
         {
             if(svRecord.filter().isEmpty() || svRecord.filter().equals(PASS) || svRecord.filter().equals(INFERRED))
             {
-                svVarDataItems.add(new SvVarData(svRecord));
+                svDataItems.add(new SvVarData(svRecord));
             }
         }
 
-        return svVarDataItems;
+        return svDataItems;
     }
 
     private static Options createBasicOptions()

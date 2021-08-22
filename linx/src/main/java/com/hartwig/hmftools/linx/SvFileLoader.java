@@ -94,7 +94,7 @@ public class SvFileLoader
 
     public static List<SvVarData> createSvData(final List<StructuralVariantData> svRecords, final LinxConfig config)
     {
-        List<SvVarData> svVarDataItems = Lists.newArrayList();
+        List<SvVarData> svDataItems = Lists.newArrayList();
 
         for (final StructuralVariantData svRecord : svRecords)
         {
@@ -102,11 +102,11 @@ public class SvFileLoader
 
             if(filter.isEmpty() || filter.equals(PASS) || filter.equals(INFERRED) || (config.IsGermline && filter.equals(PON_FILTER_PON)))
             {
-                svVarDataItems.add(new SvVarData(svRecord));
+                svDataItems.add(new SvVarData(svRecord));
             }
         }
 
-        return svVarDataItems;
+        return svDataItems;
     }
 
     public static List<StructuralVariantData> loadSvDataFromSvFile(final String sampleId, final String svDataPath)

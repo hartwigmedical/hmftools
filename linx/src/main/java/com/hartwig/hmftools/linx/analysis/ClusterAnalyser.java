@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.LinxConfig;
-import com.hartwig.hmftools.linx.annotators.LineClusterState;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;

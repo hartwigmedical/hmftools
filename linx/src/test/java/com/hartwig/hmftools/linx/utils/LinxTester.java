@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.ALL_ANNOTATIONS;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.populateChromosomeBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvCopyNumberData;
@@ -12,9 +11,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.CohortDataWriter;

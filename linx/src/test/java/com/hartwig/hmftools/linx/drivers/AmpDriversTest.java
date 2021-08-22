@@ -30,7 +30,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;

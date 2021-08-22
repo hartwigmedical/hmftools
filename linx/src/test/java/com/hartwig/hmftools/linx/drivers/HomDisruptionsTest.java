@@ -23,8 +23,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.linx.SampleAnalyser;
-import com.hartwig.hmftools.linx.analysis.VariantPrep;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
