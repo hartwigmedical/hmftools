@@ -93,4 +93,6 @@ investigate potential causes for QC failure.
  - Various plots from [PURPLE](../purple)  
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
-
+### Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.0)
+  - Initial release
