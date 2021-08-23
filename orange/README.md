@@ -35,7 +35,7 @@ max_evidence_level | If set, filters evidence down to this level. For example, i
 ### Clinical Evidence 
 
 The following algo is used to render clinical evidence in the ORANGE report based on [PROTECT](../protect) output:
- 1. Evidence is split up based on reported yes/no.
+ 1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
  1. Evidence is split between trials and non-trials which are further split up based on on/off label. 
  1. Evidence is grouped by treatment and split up between responsive and resistance evidence.
  1. Evidence is filtered based on the optional configuration (germline, max_reporting_level). 
