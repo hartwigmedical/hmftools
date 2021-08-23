@@ -25,6 +25,9 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.commons.cli.CommandLine;
 
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
+
 public class SvFileLoader
 {
     public static final String VCF_FILE = "sv_vcf";
@@ -73,7 +76,7 @@ public class SvFileLoader
 
         try
         {
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter(true));
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter());
 
             int svId = 0;
 

@@ -162,6 +162,7 @@ public class GeneTestUtils
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(TSG)
+                .reportGermlineDisruption(false)
                 .build();
     }
     public static BreakendTransData createTranscript(

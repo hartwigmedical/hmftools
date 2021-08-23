@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface DriverGene extends Comparable<DriverGene>
 {
-
     @NotNull
     String gene();
 
@@ -36,6 +35,8 @@ public interface DriverGene extends Comparable<DriverGene>
 
     @NotNull
     DriverCategory likelihoodType();
+
+    boolean reportGermlineDisruption();
 
     @Override
     default int compareTo(@NotNull final DriverGene o)

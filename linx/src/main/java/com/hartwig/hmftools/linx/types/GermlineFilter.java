@@ -8,12 +8,7 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class GermlineFilter implements VariantContextFilter
 {
-    private final boolean mAllowPon;
-
-    public GermlineFilter(boolean allowPon)
-    {
-        mAllowPon = allowPon;
-    }
+    public GermlineFilter() {}
 
     @Override
     public boolean test(final VariantContext record)
@@ -24,12 +19,6 @@ public class GermlineFilter implements VariantContextFilter
         if(record.getFilters().size() > 1)
             return false;
 
-        if(record.getFilters().stream().anyMatch(x -> x.equals(PASS)))
-            return true;
-
-        if(mAllowPon && record.getFilters().stream().anyMatch(x -> x.equals(PON_FILTER_PON)))
-            return true;
-
-        return false;
+        return record.getFilters().stream().anyMatch(x -> x.equals(PASS) || x.equals(PON_FILTER_PON));
     }
 }

@@ -199,6 +199,7 @@ public final class PurpleDataLoader {
                     .reportSomaticHotspot(false)
                     .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                     .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
+                    .reportGermlineDisruption(false)
                     .likelihoodType(DriverCategory.ONCO)
                     .build());
         }
