@@ -89,9 +89,10 @@ Do note that RNA features and cohort comparison thereof are only included if pla
  
 ### Quality Control
 
-While the overall QC is usually reliable, the quality control chapter displays all stats and plots relevant for interpreting the overall QC:
+The quality control chapter provides extensive details that can help with interpreting the overall [PURPLE](../purple) QC status or 
+investigate potential causes for QC failure.
  - The high-level QC from [PURPLE](../purple)
- - Various details from the sample's flagstats and coverage stats
+ - Various details from the tumor and reference samples flagstats and coverage stats
  - Various plots from [PURPLE](../purple)  
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
