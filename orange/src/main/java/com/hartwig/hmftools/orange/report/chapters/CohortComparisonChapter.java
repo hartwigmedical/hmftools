@@ -36,13 +36,23 @@ public class CohortComparisonChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        addCuppaReportPlot(document);
+        addCuppaSummaryPlot(document);
+        addCuppaFeaturePlot(document);
     }
 
-    private void addCuppaReportPlot(@NotNull Document document) {
-        Image cuppaReportImage = ImageUtil.build(report.plots().cuppaReportPlot());
-        cuppaReportImage.setMaxWidth(740);
-        cuppaReportImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        document.add(cuppaReportImage);
+    private void addCuppaSummaryPlot(@NotNull Document document) {
+        Image cuppaSummaryImage = ImageUtil.build(report.plots().cuppaSummaryPlot());
+        cuppaSummaryImage.setMaxWidth(740);
+        cuppaSummaryImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        document.add(cuppaSummaryImage);
+    }
+
+    private void addCuppaFeaturePlot(@NotNull Document document) {
+        if (report.plots().cuppaFeaturePlot() != null) {
+            Image cuppaFeatureImage = ImageUtil.build(report.plots().cuppaFeaturePlot());
+            cuppaFeatureImage.setMaxWidth(740);
+            cuppaFeatureImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            document.add(cuppaFeatureImage);
+        }
     }
 }

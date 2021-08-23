@@ -41,5 +41,8 @@ public abstract class OrangePlots {
     public abstract List<String> linxDriverPlots();
 
     @NotNull
-    public abstract String cuppaReportPlot();
+    public abstract String cuppaSummaryPlot();
+
+    @Nullable
+    public abstract String cuppaFeaturePlot();
 }

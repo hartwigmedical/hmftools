@@ -63,7 +63,8 @@ public interface OrangeConfig {
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
-    String CUPPA_REPORT_PLOT = "cuppa_report_plot";
+    String CUPPA_SUMMARY_PLOT = "cuppa_summary_plot";
+    String CUPPA_FEATURE_PLOT = "cuppa_feature_plot";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
     String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
@@ -108,7 +109,8 @@ public interface OrangeConfig {
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the Cuppa conclusion TXT.");
         options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
-        options.addOption(CUPPA_REPORT_PLOT, true, "Path towards the Cuppa report plot PNG.");
+        options.addOption(CUPPA_SUMMARY_PLOT, true, "Path towards the Cuppa report summary plot PNG.");
+        options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
         options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
@@ -211,7 +213,10 @@ public interface OrangeConfig {
     String cuppaResultCsv();
 
     @NotNull
-    String cuppaReportPlot();
+    String cuppaSummaryPlot();
+
+    @Nullable
+    String cuppaFeaturePlot();
 
     @NotNull
     String annotatedVirusTsv();
@@ -275,7 +280,8 @@ public interface OrangeConfig {
                 .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .cuppaConclusionTxt(nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
                 .cuppaResultCsv(nonOptionalFile(cmd, CUPPA_RESULT_CSV))
-                .cuppaReportPlot(nonOptionalFile(cmd, CUPPA_REPORT_PLOT))
+                .cuppaSummaryPlot(nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
+                .cuppaFeaturePlot(optionalFile(cmd, CUPPA_FEATURE_PLOT))
                 .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .peachGenotypeTsv(nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
                 .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
@@ -336,6 +342,17 @@ public interface OrangeConfig {
         String value = nonOptionalValue(cmd, param);
 
         if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
+        }
+
+        return value;
+    }
+
+    @Nullable
+    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = optionalValue(cmd, param);
+
+        if (value != null && !pathExists(value)) {
             throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
         }
 
