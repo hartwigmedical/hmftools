@@ -69,10 +69,10 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
 
         List<ProtectEvidence> reported = EvidenceSelector.reported(report.protect());
-        addTreatmentSection(document, "Reported", reported);
+        addTreatmentSection(document, "Applicable", reported);
 
         List<ProtectEvidence> unreported = EvidenceSelector.unreported(report.protect());
-        addTreatmentSection(document, "Unreported", unreported);
+        addTreatmentSection(document, "Other potentially interesting", unreported);
     }
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
