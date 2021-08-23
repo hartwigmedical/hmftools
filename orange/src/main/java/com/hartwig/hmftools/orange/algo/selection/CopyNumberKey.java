@@ -1,17 +1,17 @@
-package com.hartwig.hmftools.orange.report.util;
+package com.hartwig.hmftools.orange.algo.selection;
 
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LocationKey {
+class CopyNumberKey {
 
     @NotNull
     private final String chromosome;
     @NotNull
     private final String chromosomeBand;
 
-    public LocationKey(@NotNull final String chromosome, @NotNull final String chromosomeBand) {
+    public CopyNumberKey(@NotNull final String chromosome, @NotNull final String chromosomeBand) {
         this.chromosome = chromosome;
         this.chromosomeBand = chromosomeBand;
     }
@@ -24,7 +24,7 @@ public class LocationKey {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final LocationKey that = (LocationKey) o;
+        final CopyNumberKey that = (CopyNumberKey) o;
         return chromosome.equals(that.chromosome) && chromosomeBand.equals(that.chromosomeBand);
     }
 

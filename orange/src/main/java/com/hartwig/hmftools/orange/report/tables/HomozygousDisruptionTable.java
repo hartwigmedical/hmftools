@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.orange.report.util.GeneUtil;
+import com.hartwig.hmftools.orange.report.util.ChromosomeUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
@@ -40,8 +40,8 @@ public final class HomozygousDisruptionTable {
     @NotNull
     private static List<ReportableHomozygousDisruption> sort(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         return homozygousDisruptions.stream().sorted((disruption1, disruption2) -> {
-            String location1 = GeneUtil.zeroPrefixed(disruption1.chromosome() + disruption1.chromosomeBand());
-            String location2 = GeneUtil.zeroPrefixed(disruption2.chromosome() + disruption2.chromosomeBand());
+            String location1 = ChromosomeUtil.zeroPrefixed(disruption1.chromosome() + disruption1.chromosomeBand());
+            String location2 = ChromosomeUtil.zeroPrefixed(disruption2.chromosome() + disruption2.chromosomeBand());
 
             if (location1.equals(location2)) {
                 return disruption1.gene().compareTo(disruption2.gene());

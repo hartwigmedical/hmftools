@@ -2,9 +2,9 @@ package com.hartwig.hmftools.orange.report.util;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GeneUtil {
+public final class ChromosomeUtil {
 
-    private GeneUtil() {
+    private ChromosomeUtil() {
     }
 
     @NotNull

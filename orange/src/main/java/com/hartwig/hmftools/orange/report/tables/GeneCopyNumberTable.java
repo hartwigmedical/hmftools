@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.orange.report.util.GeneUtil;
+import com.hartwig.hmftools.orange.report.util.ChromosomeUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
@@ -41,8 +41,8 @@ public final class GeneCopyNumberTable {
     @NotNull
     private static List<ReportableGainLoss> sort(@NotNull List<ReportableGainLoss> reportableGainsAndLosses) {
         return reportableGainsAndLosses.stream().sorted((gainLoss1, gainLoss2) -> {
-            String location1 = GeneUtil.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.chromosomeBand());
-            String location2 = GeneUtil.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.chromosomeBand());
+            String location1 = ChromosomeUtil.zeroPrefixed(gainLoss1.chromosome() + gainLoss1.chromosomeBand());
+            String location2 = ChromosomeUtil.zeroPrefixed(gainLoss2.chromosome() + gainLoss2.chromosomeBand());
 
             if (location1.equals(location2)) {
                 return gainLoss1.gene().compareTo(gainLoss2.gene());
