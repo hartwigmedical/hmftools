@@ -26,6 +26,28 @@ public final class EvidenceSelector {
     }
 
     @NotNull
+    public static List<ProtectEvidence> reported(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.reported()) {
+                filtered.add(evidence);
+            }
+        }
+        return filtered;
+    }
+
+    @NotNull
+    public static List<ProtectEvidence> unreported(@NotNull List<ProtectEvidence> evidences) {
+        List<ProtectEvidence> filtered = Lists.newArrayList();
+        for (ProtectEvidence evidence : evidences) {
+            if (!evidence.reported()) {
+                filtered.add(evidence);
+            }
+        }
+        return filtered;
+    }
+
+    @NotNull
     public static List<ProtectEvidence> iclusionOnly(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
