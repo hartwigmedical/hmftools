@@ -193,7 +193,7 @@ data class GripssFilterConfig(
             options.addOption(MAX_HOM_LENGTH_SHORT_INV_OPTION, true, "Max homology length short inversion [${defaultConfig.maxHomLengthShortInversion}]")
             options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, true, "Max inexact homology length short del [${defaultConfig.maxInexactHomLengthShortDel}]")
             options.addOption(MIN_LENGTH_OPTION, true, "Min length [${defaultConfig.minLength}]")
-            options.addOption(GripssConfig.requiredOption(PON_DISTANCE, "PON permitted margin [${defaultConfig.ponDistance}]"))
+            options.addOption(PON_DISTANCE, true, "PON permitted margin [${defaultConfig.ponDistance}]")
 
             return options
         }
