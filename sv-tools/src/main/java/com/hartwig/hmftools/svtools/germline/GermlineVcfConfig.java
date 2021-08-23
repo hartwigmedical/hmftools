@@ -55,7 +55,7 @@ public class GermlineVcfConfig
     private static final String REQUIRE_PASS = "require_pass";
     private static final String LOG_FILTERED = "log_filtered";
     private static final String QUAL_SCORE_THRESHOLD = "qs_threshold";
-    private static final String RESTRICTED_CHROMOSOMES = "restrict_chromosomes";
+    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String REQUIRE_GENE = "require_gene";
 
     public GermlineVcfConfig(final CommandLine cmd)
@@ -68,8 +68,8 @@ public class GermlineVcfConfig
         BatchRunRootDir = cmd.getOptionValue(BATCH_ROOT_DIR, "");
         OutputVcfFile = cmd.getOptionValue(VCF_FILE, "");
 
-        RestrictedChromosomes = cmd.hasOption(RESTRICTED_CHROMOSOMES) ?
-                Arrays.stream(cmd.getOptionValue(RESTRICTED_CHROMOSOMES, "")
+        RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
+                Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES, "")
                 .split(";")).collect(Collectors.toList()) : Lists.newArrayList();
 
         // unused
@@ -119,7 +119,7 @@ public class GermlineVcfConfig
 
         options.addOption(REQUIRE_PASS, false, "Require variants to have GRIDSS filter = PASS");
         options.addOption(QUAL_SCORE_THRESHOLD, true, "Qual score threshold");
-        options.addOption(RESTRICTED_CHROMOSOMES, true, "Optional set of chromosomes to restrict search to");
+        options.addOption(SPECIFIC_CHROMOSOMES, true, "Optional set of chromosomes to restrict search to");
         options.addOption(LOG_FILTERED, false, "Log filtered variants");
         options.addOption(REQUIRE_GENE, false, "Only log SVs linked to a gene panel entry");
 

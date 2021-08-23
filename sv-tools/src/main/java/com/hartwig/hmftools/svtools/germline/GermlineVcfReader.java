@@ -53,7 +53,7 @@ public class GermlineVcfReader
         mLinkAnalyser = new LinkAnalyser();
 
         GM_LOGGER.info("loading reference data");
-        mPonCache = new PonCache(cmd);
+        mPonCache = new PonCache(cmd, mConfig.RestrictedChromosomes);
         mHotspotCache = new HotspotCache(cmd);
 
         mHardFilters = new HardFilters(mHotspotCache);
@@ -126,6 +126,9 @@ public class GermlineVcfReader
 
             reader.iterator().forEach(x -> processVariant(x));
 
+            GM_LOGGER.info("sample({}) read VCF: unmatched({}) results({})",
+                    mConfig.SampleId, mSvFactory.unmatched().size(), mSvFactory.results().size());
+
             if(mSampleSvData.isEmpty())
                 return;
 
@@ -145,8 +148,9 @@ public class GermlineVcfReader
         }
 
         int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
-        GM_LOGGER.info("sample({}) read {} variants: hardFiltered({})",
-                mConfig.SampleId, mProcessedVariants, hardFiltered);
+
+        GM_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",
+                mConfig.SampleId, mProcessedVariants, hardFiltered, mSampleSvData.size());
     }
 
     private void processVariant(final VariantContext variant)
@@ -157,7 +161,8 @@ public class GermlineVcfReader
 
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
-            GM_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
+            GM_LOGGER.debug("sample({}) processed {} variants, VCF-unmatched({})",
+                    mConfig.SampleId, mProcessedVariants, mSvFactory.unmatched().size());
         }
 
         int currentSvCount = mSvFactory.results().size();
@@ -185,11 +190,8 @@ public class GermlineVcfReader
         if(mConfig.excludeVariant(sv))
             return;
 
-
         SvData svData = SvData.from(sv);
-
-        if(mSampleSvData.size() <= 10000)
-            mSampleSvData.add(svData);
+        mSampleSvData.add(svData);
     }
 
     private void registerFilter(final FilterType type)
