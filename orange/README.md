@@ -8,8 +8,7 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
  This effectively means that everything reported by [patient-reporter](../patient-reporter) is present in the ORANGE pdf.
  1. An additional exhaustive WGS scan is performed for anything interesting that may be potentially relevant but not picked up as a driver.
  Details of what is considered interesting are described in below.
- 1. A broad range of QC measures and plots is displayed which should make it clear what the quality of the tumor sample is without having to 
- dig into additional outputs of QC steps.     
+ 1. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the tumor sample. 
  
 An example report based on the publicly available melanoma cell line COLO829 can be found [here](src/main/resources/Test.orange.pdf).
 

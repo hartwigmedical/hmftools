@@ -15,7 +15,7 @@ import com.itextpdf.layout.property.VerticalAlignment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TableUtil {
+public final class TableUtil {
 
     private static final float TABLE_BOTTOM_MARGIN = 20;
 
