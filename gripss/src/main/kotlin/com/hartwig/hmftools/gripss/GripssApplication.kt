@@ -51,7 +51,6 @@ fun main(args: Array<String>) {
 
 class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runnable {
     companion object {
-        const val PON_ADDITIONAL_DISTANCE = 4
         val logger = LogManager.getLogger(this::class.java)
         val version = VersionInfo("gripss.version")
     }
@@ -153,7 +152,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
     private fun ponFiltered(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
         val breakends = Breakend.fromBedFile(config.singlePonFile)
         val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
-        val ponStore = LocationStore(contigComparator, breakends, breakpoints, PON_ADDITIONAL_DISTANCE)
+        val ponStore = LocationStore(contigComparator, breakends, breakpoints, config.filterConfig.ponDistance)
 
         logger.info("Applying PON file")
         return variants.filter { ponStore.contains(it) }.map { it.vcfId }.toSet()

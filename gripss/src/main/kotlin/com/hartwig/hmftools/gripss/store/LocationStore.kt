@@ -4,7 +4,6 @@ import com.hartwig.hmftools.bedpe.Breakend
 import com.hartwig.hmftools.bedpe.Breakpoint
 import com.hartwig.hmftools.bedpe.Location
 import com.hartwig.hmftools.gripss.ContigComparator
-import com.hartwig.hmftools.gripss.PON_BUFFER_DISTANCE
 import com.hartwig.hmftools.gripss.StructuralVariantContext
 import java.io.Serializable
 
