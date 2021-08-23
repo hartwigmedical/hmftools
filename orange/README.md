@@ -54,15 +54,15 @@ interesting and added to the report:
     1. Variants that are considered relevant for tumor type classification according to CUPPA.
  - Other regions with amps or autosomal losses:
     1. Any chromosomal band location with at least one gene lost or fully amplified or loss is considered potentially interesting.
-    1. For a band with at least one gene amplified, the gene with the highest minimum copy number is picked.
-    1. For a band with a loss that has no losses reported in this band already, a random gene is picked.
+        - For a band with at least one gene amplified, the gene with the highest minimum copy number is picked.
+        - For a band with a loss that has no losses reported in this band already, a random gene is picked.
     1. A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting. 
  - Other potentially relevant fusions:
     1. Any fusion that is not reported and has a reported type other than NONE is picked. 
     1. Any fusion with clinical evidence is picked. 
     1. A maximum of 10 additional fusions (randomly picked) are reported as potentially interesting.
  - Other viral presence
-    * Any viral presence that is not otherwise reported is reported as potentially interesting. 
+    1. Any viral presence that is not otherwise reported is reported as potentially interesting. 
     
 ### Germline Findings
 
