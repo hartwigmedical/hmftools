@@ -52,10 +52,8 @@ public class Footer {
             String displayString = pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
-            canvas.showTextAligned(new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle()),
-                    0,
-                    0,
-                    TextAlignment.LEFT);
+            Paragraph pageNumberParagraph = new Paragraph().add(displayString).addStyle(ReportResources.pageNumberStyle());
+            canvas.showTextAligned(pageNumberParagraph, 0, 0, TextAlignment.LEFT);
         }
     }
 }

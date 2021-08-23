@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.orange.report.util.LocationKey;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -24,9 +23,9 @@ public final class CopyNumberSelector {
                 .filter(gainLoss -> gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
                 .collect(Collectors.toList());
 
-        Map<LocationKey, ReportableGainLoss> maxGainPerLocation = Maps.newHashMap();
+        Map<CopyNumberKey, ReportableGainLoss> maxGainPerLocation = Maps.newHashMap();
         for (ReportableGainLoss gain : unreportedFullGains) {
-            LocationKey key = new LocationKey(gain.chromosome(), gain.chromosomeBand());
+            CopyNumberKey key = new CopyNumberKey(gain.chromosome(), gain.chromosomeBand());
             ReportableGainLoss maxGain = maxGainPerLocation.get(key);
             if (maxGain == null || gain.copies() > maxGain.copies()) {
                 maxGainPerLocation.put(key, gain);
@@ -59,9 +58,9 @@ public final class CopyNumberSelector {
             }
         }
 
-        Map<LocationKey, ReportableGainLoss> oneLossPerLocation = Maps.newHashMap();
+        Map<CopyNumberKey, ReportableGainLoss> oneLossPerLocation = Maps.newHashMap();
         for (ReportableGainLoss loss : lossesNoAllosomes) {
-            LocationKey key = new LocationKey(loss.chromosome(), loss.chromosomeBand());
+            CopyNumberKey key = new CopyNumberKey(loss.chromosome(), loss.chromosomeBand());
             if (!oneLossPerLocation.containsKey(key)) {
                 oneLossPerLocation.put(key, loss);
             }

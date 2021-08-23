@@ -240,7 +240,8 @@ public class OrangeAlgo {
                 .purplePurityRangePlot(config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".purity.range.png")
                 .purpleKataegisPlot(kataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppaReportPlot(config.cuppaReportPlot())
+                .cuppaSummaryPlot(config.cuppaSummaryPlot())
+                .cuppaFeaturePlot(config.cuppaFeaturePlot())
                 .build();
     }
 }

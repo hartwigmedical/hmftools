@@ -43,6 +43,8 @@ public final class FusionTable {
                     fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")"));
             details.addCell(TableUtil.createKeyCell("Junction CN"));
             details.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
+            details.addCell(TableUtil.createKeyCell("RNA expression"));
+            details.addCell(TableUtil.createValueCell(ReportResources.NOT_AVAILABLE));
             details.addCell(TableUtil.createKeyCell("Phasing"));
             details.addCell(TableUtil.createValueCell(fusion.phased().display()));
             details.addCell(TableUtil.createKeyCell("Reported type (DL)"));
