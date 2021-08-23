@@ -19,14 +19,11 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFile;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
-import com.hartwig.hmftools.linx.types.GermlineFilter;
+import com.hartwig.hmftools.linx.germline.GermlineFilter;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.commons.cli.CommandLine;
-
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class SvFileLoader
 {

@@ -100,7 +100,7 @@ public class DisruptionTest
         assertFalse(var9.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertFalse(var10.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
-        disruptionFinder.findReportableDisruptions(tester.AllVariants);
+        disruptionFinder.findReportableDisruptions(tester.AllVariants, tester.Analyser.getClusters());
         assertEquals(8, disruptionFinder.getDisruptions().size());
     }
 

@@ -296,10 +296,7 @@ public class FusionDisruptionAnalyser
         if(mRunFusions && mFusionFinder.hasValidConfigData())
             findFusions(svList, clusters);
 
-        mDisruptionFinder.findReportableDisruptions(svList);
-
-        if(mConfig.IsGermline)
-            mDisruptionFinder.findGermlineGeneDeletions(clusters);
+        mDisruptionFinder.findReportableDisruptions(svList, clusters);
 
         if(mRunFusions)
         {
@@ -336,7 +333,7 @@ public class FusionDisruptionAnalyser
 
         if(mConfig.hasMultipleSamples() || mConfig.Output.WriteCohortFiles)
         {
-            mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
+            mDisruptionFinder.writeCohortData(mSampleId, svList);
         }
 
         if(mRunFusions)
