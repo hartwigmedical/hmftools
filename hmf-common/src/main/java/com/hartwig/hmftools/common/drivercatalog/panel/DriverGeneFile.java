@@ -50,7 +50,10 @@ public final class DriverGeneFile
         int deletionIndex = fieldsIndexMap.get("reportDeletion");
         int disruptionIndex = fieldsIndexMap.get("reportDisruption");
         int amplificationIndex = fieldsIndexMap.get("reportAmplification");
-        int somaticHotspotIndex = fieldsIndexMap.get("reportSomaticHotspot");
+
+        int somaticHotspotIndex = fieldsIndexMap.containsKey("reportSomaticHotspot") ?
+                fieldsIndexMap.get("reportSomaticHotspot") : fieldsIndexMap.get("reportHotspot"); // for older files
+
         int likelihoodTypeIndex = fieldsIndexMap.get("likelihoodType");
         Integer germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
         Integer germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
