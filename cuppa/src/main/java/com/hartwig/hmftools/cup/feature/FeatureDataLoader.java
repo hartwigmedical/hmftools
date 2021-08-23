@@ -310,11 +310,14 @@ public class FeatureDataLoader
                         .integrations(record.getValue(VIRUSANNOTATION.INTEGRATIONS))
                         .build();
 
-            final List<AnnotatedVirus> annotatedVirusList = sampleVirusMap.get(sampleId);
+            List<AnnotatedVirus> annotatedVirusList = sampleVirusMap.get(sampleId);
             if(annotatedVirusList == null)
-                sampleVirusMap.put(sampleId, Lists.newArrayList(annotatedVirusList));
-            else
-                annotatedVirusList.add(annotatedVirus);
+            {
+                annotatedVirusList = Lists.newArrayList();
+                sampleVirusMap.put(sampleId, annotatedVirusList);
+            }
+
+            annotatedVirusList.add(annotatedVirus);
         }
 
         return sampleVirusMap;
