@@ -44,8 +44,8 @@ public final class BindConstants
 
     public static final double AMINO_ACID_C_FREQ_ADJUST = 3;
 
-    public static final double DEFAULT_PEPTIDE_LENGTH_WEIGHT = 1000;
-    public static final double DEFAULT_ALLELE_MOTIF_WEIGHT = 2000;
+    public static final double DEFAULT_PEPTIDE_LENGTH_WEIGHT = 200;
+    public static final double DEFAULT_ALLELE_MOTIF_WEIGHT = 400;
     public static final double DEFAULT_WEIGHT_EXPONENT = 1.5;
 
     public static final int MIN_LIKELIHOOD_ALLELE_BIND_COUNT = 200;
