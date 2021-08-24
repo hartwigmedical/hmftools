@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
@@ -176,7 +178,9 @@ public class LinxApplication
         {
             List<List<String>> saSampleLists = Lists.newArrayList();
 
-            for(int i = 0; i < config.Threads; ++i)
+            int threads = min(config.Threads, samplesList.size());
+
+            for(int i = 0; i < threads; ++i)
             {
                 sampleAnalysers.add(new SampleAnalyser(
                         i, config, dbAccess, svAnnotators, ensemblDataCache, fusionResources, cohortDataWriter));
@@ -190,17 +194,17 @@ public class LinxApplication
                 saSampleLists.get(saIndex).add(sampleId);
                 ++saIndex;
 
-                if(saIndex >= config.Threads)
+                if(saIndex >= threads)
                     saIndex = 0;
             }
 
-            for(int i = 0; i < config.Threads; ++i)
+            for(int i = 0; i < threads; ++i)
             {
                 sampleAnalysers.get(i).setSampleIds(saSampleLists.get(i));
             }
 
             final List<Callable> callableList = sampleAnalysers.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, config.Threads);
+            TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
         {

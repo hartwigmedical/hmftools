@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
@@ -452,6 +454,7 @@ public class FusionTest
         String geneId3 = "ENSG0003";
         String remoteChromosome = "4";
 
+        geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId3, geneName3, remoteChromosome, 1, 1000, 3000));
         addGeneData(geneTransCache, remoteChromosome, geneList);
 
@@ -526,16 +529,89 @@ public class FusionTest
         assertNotNull(fusion);
         assertEquals(KNOWN_PAIR, fusion.knownType());
         assertFalse(fusion.validChainTraversal());
+    }
 
+    @Test
+    public void testChainedFusionDisuptions()
+    {
+        LinxTester tester = new LinxTester();
 
-        // test 5: non-disruptive chain, doesn't register a fusion
+        EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        tester.initialiseFusions(geneTransCache);
+
+        List<GeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, 1, 1000, 2000));
+
+        List<TranscriptData> transDataList = Lists.newArrayList();
+
+        String transName1 = "ENST0001";
+        int transId1 = 1;
+
+        boolean isCanonical = true;
+        int transStart = 1000;
+        int transEnd = 2000;
+        int codingStart = 1401;
+        int codingEnd = 1900;
+
+        TranscriptData transData = new TranscriptData(transId1, transName1, GENE_ID_1, isCanonical, POS_STRAND, transStart, transEnd,
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+
+        List<ExonData> exons = Lists.newArrayList();
+
+        exons.add(new ExonData(transId1, 1000, 1100, 1, -1, -1));
+        exons.add(new ExonData(transId1, 1300, 1500, 2, -1, 1));
+        exons.add(new ExonData(transId1, 1600, 1700, 3, 1, 0));
+        exons.add(new ExonData(transId1, 1800, 1900, 4, 0, -1));
+
+        transData.setExons(exons);
+        transDataList.add(transData);
+
+        addTransExonData(geneTransCache, GENE_ID_1, transDataList);
+
+        transDataList = Lists.newArrayList();
+
+        String geneName2 = "GENE2";
+        String geneId2 = "ENSG0002";
+
+        geneList.add(createEnsemblGeneData(geneId2, geneName2, CHR_1, POS_STRAND, 10000, 12000));
+        addGeneData(geneTransCache, CHR_1, geneList);
+
+        String transName2 = "ENST0002";
+        int transId2 = 2;
+
+        transStart = 11000;
+        transEnd = 12000;
+        codingStart = 11049;
+        codingEnd = 11980;
+
+        transData = new TranscriptData(transId2, transName2, geneId2, isCanonical, POS_STRAND, transStart, transEnd,
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+
+        exons = Lists.newArrayList();
+
+        exons.add(new ExonData(transId1, 11000, 11100, 1, -1, 1));
+        exons.add(new ExonData(transId1, 11300, 11501, 2, 1, 2));
+        exons.add(new ExonData(transId1, 11600, 11699, 3, 2, 0));
+        exons.add(new ExonData(transId1, 11950, 12000, 4, 0, -1));
+
+        transData.setExons(exons);
+        transDataList.add(transData);
+
+        addTransExonData(geneTransCache, geneId2, transDataList);
+
+        // set known fusion genes
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionCache()
+                .addData(new KnownFusionData(KNOWN_PAIR, GENE_NAME_1, geneName2, "", ""));
+
+        // test 1: non-disruptive chain, doesn't register a fusion
         PRE_GENE_PROMOTOR_DISTANCE = 30000;
 
         tester.clearClustersAndSVs();
 
-        // inv coming in before the gene
-        var1 = createBnd(1, "1", 1510, 1, "2", 1000, -1);
-        var2 = createBnd(2, "1", 1580, -1, "2", 1100, 1);
+        // an INV coming in before the gene
+        SvVarData var1 = createBnd(1, "1", 1510, 1, "2", 1000, -1);
+        SvVarData var2 = createBnd(2, "1", 1580, -1, "2", 1100, 1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -544,7 +620,7 @@ public class FusionTest
         tester.Analyser.clusterAndAnalyse();
 
         assertEquals(1, tester.Analyser.getClusters().size());
-        cluster = tester.Analyser.getClusters().get(0);
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertEquals(1, cluster.getChains().size());
 
         setSvGeneData(tester.AllVariants, geneTransCache, true, false);
@@ -557,7 +633,7 @@ public class FusionTest
         assertTrue(tester.FusionAnalyser.getInvalidFusions().keySet().iterator().next().nonDisruptiveChain());
 
 
-        // test 6: a chained fusion with non-disrputive SVs at both ends, means the fusion is not chain terminated
+        // test 2: a chained fusion with non-disruptive SVs at both ends, means the fusion is not chain terminated
         tester.clearClustersAndSVs();
 
         // fully intronic, non-disruptive del
@@ -567,11 +643,11 @@ public class FusionTest
         var2 = createDup(1, CHR_1, 1525,1575);
 
         // fuses the 2 genes
-        var3 = createDel(2, CHR_1, 1750,11525);
+        SvVarData var3 = createDel(2, CHR_1, 1750,11525);
 
         // fully intronic, non-disruptive TI
-        var4 = createBnd(3, CHR_1, 11750, 1, CHR_2, 50000, -1);
-        var5 = createBnd(4, CHR_1, 11850, -1, CHR_2, 50100, 1);
+        SvVarData var4 = createBnd(3, CHR_1, 11750, 1, CHR_2, 50000, -1);
+        SvVarData var5 = createBnd(4, CHR_1, 11850, -1, CHR_2, 50100, 1);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -596,7 +672,7 @@ public class FusionTest
 
         assertEquals(1, tester.FusionAnalyser.getUniqueFusions().size());
 
-        fusion = tester.FusionAnalyser.getUniqueFusions().stream().filter(x -> x.reportable()).findFirst().orElse(null);
+        GeneFusion fusion = tester.FusionAnalyser.getUniqueFusions().stream().filter(x -> x.reportable()).findFirst().orElse(null);
         assertTrue(fusion != null);
         assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
         assertEquals(var3.id(), fusion.downstreamTrans().gene().id());

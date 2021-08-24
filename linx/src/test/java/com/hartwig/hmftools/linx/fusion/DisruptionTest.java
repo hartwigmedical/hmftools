@@ -143,8 +143,6 @@ public class DisruptionTest
         addTestGeneData(geneTransCache, chromosome, geneId);
         addTestGeneData(geneTransCache, chromosome2, geneId2);
 
-        final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
-
         // scenarios (TRUE - disruptive, FALSE - not disruptive)
         // - FALSE: chain which goes out and back without traversing another splice acceptor, ends on correct orientation
         // - TRUE: chain which goes out and back but traverses another splice acceptor
@@ -169,6 +167,27 @@ public class DisruptionTest
         assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
+        // same again but with 2 INVs (reciprocal INV) within an intron
+        tester.clearClustersAndSVs();
+
+        var1 = createInv(tester.nextVarId(), chromosome, 11000, 14000, 1);
+        var2 = createInv(tester.nextVarId(), chromosome, 13900, 18000, -1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+
+        tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
+
+        assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
 
         // same again but with a longer chain
         tester.clearClustersAndSVs();
@@ -222,8 +241,9 @@ public class DisruptionTest
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
         assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
         // now with an invalid traversal
@@ -325,7 +345,9 @@ public class DisruptionTest
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));
 
-        assertTrue(var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var1.getGenesList(true).isEmpty());
+        assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
     }
 
