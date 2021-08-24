@@ -38,6 +38,8 @@ public class HlaSequences
 
     public boolean isValid() { return mIsValid; }
 
+    public boolean hasAlleleDefinition(final String allele) { return mAllelePositionSequences.containsKey(allele); }
+
     public String getSequence(final String allele, int peptidePosition)
     {
         List<String> posSequences = mAllelePositionSequences.get(allele);

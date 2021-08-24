@@ -67,6 +67,19 @@ public class BindTrainer
             System.exit(1);
         }
 
+        // check that the HLA defintions cover the training and required (if specified) alleles if specified
+        Set<String> allAlleles = mAllelePeptideData.keySet().stream().collect(Collectors.toSet());
+        mConfig.RequiredOutputAlleles.forEach(x -> allAlleles.add(x));
+
+        List<String> missingAlleleDefinitions = allAlleles.stream()
+                .filter(x -> !mHlaSequences.hasAlleleDefinition(x)).collect(Collectors.toList());
+
+        if(!missingAlleleDefinitions.isEmpty())
+        {
+            NE_LOGGER.error("HLA definitions are missing the following alleles: {}", missingAlleleDefinitions);
+            System.exit(1);
+        }
+
         buildBindCountsData();
         buildPositionWeightMatrices();
 
