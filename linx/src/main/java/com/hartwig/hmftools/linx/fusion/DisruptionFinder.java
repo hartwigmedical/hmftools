@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -121,6 +122,7 @@ public class DisruptionFinder implements CohortFileInterface
         }
     }
 
+    private static final String NON_DISRUPT_REASON_PARTIAL_DUP = "PartialDUP";
     private static final String NON_DISRUPT_REASON_SIMPLE_SV = "SimpleSV";
     private static final String NON_DISRUPT_REASON_LINE = "LINE";
 
@@ -178,7 +180,10 @@ public class DisruptionFinder implements CohortFileInterface
 
         if(isSimpleSV)
         {
-            markNonDisruptiveGeneTranscripts(var, genesStart, genesEnd, NON_DISRUPT_REASON_SIMPLE_SV);
+            markNonDisruptiveGeneTranscripts(genesStart, genesEnd, NON_DISRUPT_REASON_SIMPLE_SV);
+
+            if(var.type() == DUP)
+                markNonDisruptiveDup(var);
         }
 
         final List<SvChain> chains = cluster.findChains(var);
@@ -479,8 +484,9 @@ public class DisruptionFinder implements CohortFileInterface
     }
 
     private void markNonDisruptiveGeneTranscripts(
-            final SvVarData var, final List<BreakendGeneData> genesStart, final List<BreakendGeneData> genesEnd, final String context)
+            final List<BreakendGeneData> genesStart, final List<BreakendGeneData> genesEnd, final String context)
     {
+        // check for breakend transcripts from DELs and DUPs which start and end in the same intron
         for(final BreakendGeneData geneStart : genesStart)
         {
             final BreakendGeneData geneEnd = genesEnd.stream()
@@ -488,13 +494,6 @@ public class DisruptionFinder implements CohortFileInterface
 
             if(geneEnd == null)
                 continue;
-
-            if(var.type() == DUP)
-            {
-                markNonDisruptiveDups(
-                        geneStart.isUpstream() ? geneStart.transcripts() : geneEnd.transcripts(),
-                        !geneEnd.isUpstream() ? geneEnd.transcripts() : geneStart.transcripts());
-            }
 
             markNonDisruptiveTranscripts(geneStart.transcripts(), geneEnd.transcripts(), context);
         }
@@ -524,29 +523,71 @@ public class DisruptionFinder implements CohortFileInterface
         return foundMatchingTrans;
     }
 
-    private boolean markNonDisruptiveDups(final List<BreakendTransData> upstreamTransList, final List<BreakendTransData> downstreamTransList)
+    private void markNonDisruptiveDup(final SvVarData var)
     {
-        // special case of a DUP around the 1st exon which since it doesn't have a splice acceptor does not change the transcript
-        boolean foundMatchingTrans = false;
-
-        for (final BreakendTransData upTrans : upstreamTransList)
+        // DUPs are only disruptive if both ends are within the same transcript,
+        // so need to test each end in turn for a matching transcript
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            final BreakendTransData downTrans = downstreamTransList.stream()
-                    .filter(x -> x.transName().equals(upTrans.transName())).findFirst().orElse(null);
+            List<BreakendGeneData> genesList = var.getGenesList(isStart(se));
 
-            if(downTrans == null)
+            if(genesList.isEmpty())
                 continue;
 
-            if(upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
-            {
-                foundMatchingTrans = true;
+            List<BreakendGeneData> otherGenesList = var.getGenesList(!isStart(se));
 
-                markNonDisruptiveTranscript(upTrans, NON_DISRUPT_REASON_SIMPLE_SV);
-                markNonDisruptiveTranscript(downTrans, NON_DISRUPT_REASON_SIMPLE_SV);
+            for(BreakendGeneData gene : genesList)
+            {
+                BreakendGeneData otherGene = otherGenesList.stream()
+                        .filter(x -> x.StableId.equals(gene.StableId)).findFirst().orElse(null);
+
+                if(otherGene == null)
+                {
+                    // other breakend isn't in any genic region
+                    gene.transcripts().forEach(x -> markNonDisruptiveTranscript(x, NON_DISRUPT_REASON_PARTIAL_DUP));
+                    continue;
+                }
+                else
+                {
+                    for(BreakendTransData trans : gene.transcripts())
+                    {
+                        BreakendTransData matchingTrans = otherGene.transcripts().stream()
+                                .filter(x -> x.transId() == trans.transId()).findFirst().orElse(null);
+
+                        if(matchingTrans == null)
+                        {
+                            markNonDisruptiveTranscript(trans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                        }
+                        else
+                        {
+                            boolean withinTrans = trans.regionType() == EXONIC || trans.regionType() == INTRONIC;
+                            boolean withinOtherTrans = matchingTrans.regionType() == EXONIC || matchingTrans.regionType() == INTRONIC;
+
+                            if(!withinTrans || !withinOtherTrans)
+                            {
+                                markNonDisruptiveTranscript(trans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                                markNonDisruptiveTranscript(matchingTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                            }
+                        }
+                    }
+                }
+
+                if(gene.isUpstream())
+                {
+                    for(BreakendTransData upTrans : gene.transcripts())
+                    {
+                        final BreakendTransData downTrans = otherGene.transcripts().stream()
+                                .filter(x -> x.transId() == upTrans.transId()).findFirst().orElse(null);
+
+                        if(upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
+                        {
+                            markNonDisruptiveTranscript(upTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                            markNonDisruptiveTranscript(downTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                        }
+                    }
+                }
             }
         }
-
-        return foundMatchingTrans;
     }
 
     private void markNonDisruptiveTranscript(final BreakendTransData transcript, final String context)

@@ -60,9 +60,13 @@ public class DisruptionTest
         SvVarData var7 = createDel(tester.nextVarId(), chromosome, 68000,72000);
         SvVarData var8 = createDup(tester.nextVarId(), chromosome, 78000,96000);
 
-        // a DUP repeating the first exon (which has no splice acceptor)
+        // a DUP repeating the first exon (which has no splice acceptor) is not disruptive
         SvVarData var9 = createDup(tester.nextVarId(), chromosome, 10050,10500);
         SvVarData var10 = createDup(tester.nextVarId(), chromosome, 9500,10500);
+
+        // DUPs which have only 1 end in a transcript or gene
+        SvVarData var11 = createDup(tester.nextVarId(), chromosome, 200,10500);
+        SvVarData var12 = createDup(tester.nextVarId(), chromosome, 10500,15000);
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -74,6 +78,8 @@ public class DisruptionTest
         tester.AllVariants.add(var8);
         tester.AllVariants.add(var9);
         tester.AllVariants.add(var10);
+        tester.AllVariants.add(var11);
+        tester.AllVariants.add(var12);
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
@@ -97,8 +103,15 @@ public class DisruptionTest
         assertTrue(var6.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var7.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var8.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+
         assertFalse(var9.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var9.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+
         assertFalse(var10.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var10.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+
+        assertFalse(var11.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var12.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
         disruptionFinder.findReportableDisruptions(tester.AllVariants, tester.Analyser.getClusters());
         assertEquals(8, disruptionFinder.getDisruptions().size());

@@ -43,6 +43,9 @@ public class SvDisruptionData
     public boolean reportable() { return mReportable; }
     public void setReportable(boolean reportable) { mReportable = reportable; }
 
+    public String toString() { return String.format("%s: reportable(%s) gene(%s)",
+            Var.toString(), mReportable, Gene.GeneName); }
+
     public String asCsv()
     {
         StringBuilder sb = new StringBuilder();

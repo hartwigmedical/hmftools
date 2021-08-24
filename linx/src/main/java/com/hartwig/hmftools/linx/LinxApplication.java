@@ -68,6 +68,8 @@ public class LinxApplication
             return;
         }
 
+        long startTime = System.currentTimeMillis();
+
         final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
         // boolean sampleDataFromFile = (!config.PurpleDataPath.isEmpty() && config.SvVcfFile != null) || config.IsGermline;
@@ -249,8 +251,17 @@ public class LinxApplication
             try { version.write(config.OutputDataPath); } catch(IOException e) {}
         }
 
-        LNX_LOGGER.info("SV analysis complete for {}",
-                config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
+        if(config.isSingleSample())
+        {
+            LNX_LOGGER.info("SV analysis complete for {}", samplesList.get(0));
+        }
+        else
+        {
+            double runTime = (System.currentTimeMillis() - startTime) / 1000.0;
+
+            LNX_LOGGER.info("SV analysis complete for {} samples, run time({})s",
+                    samplesList.size(), String.format("%.2f", runTime));
+        }
     }
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess, boolean filterQCPassOnly)
