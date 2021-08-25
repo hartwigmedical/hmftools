@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -357,44 +355,11 @@ public class DisruptionFinder implements CohortFileInterface
     // chaining checks
     private void checkChainedBreakends(final SvChain chain)
     {
-        // unmark chain start & end if opposite orientation and within same intron
-        // checkChainOpenBreakends(chain);
-
         // unmark a fully-intronic linked pair of breakends (INV or BND) if their other breakends are both non-genic
         checkOtherEndsNonGenic(chain);
 
-        // unmark a fully-intronic linked pair of breakends if their other breakends are not already
-        // disruptive DEL or DUP (implying other end is outside same intron)
-        // checkSameIntronLinks(chain);
-
         // unmark breakend(s) if a) disruptive and b) follows a set of links which return to same intron in opposite orientation
         checkTraverseToSameIntron(chain);
-    }
-
-    private void checkChainOpenBreakends(final SvChain chain)
-    {
-        // the open ones are non-disruptive if they have opposite orientations and are both within the same intronic section
-        SvBreakend chainStart = chain.getOpenBreakend(true);
-        SvBreakend chainEnd = chain.getOpenBreakend(false);
-
-        if(chainStart == null || chainEnd == null || chainStart.orientation() == chainEnd.orientation())
-            return;
-
-        List<BreakendGeneData> genesStart = chainStart.getGenesList();
-        List<BreakendGeneData> genesEnd = chainEnd.getGenesList();
-
-        if(genesStart.isEmpty() || genesEnd.isEmpty())
-            return;
-
-        for(BreakendGeneData geneStart : genesStart)
-        {
-            BreakendGeneData geneEnd = genesEnd.stream().filter(x -> x.GeneName.equals(geneStart.GeneName)).findFirst().orElse(null);
-
-            if(geneEnd == null)
-                continue;
-
-            markNonDisruptiveTranscripts(geneStart.transcripts(), geneEnd.transcripts(), "ChainEnds");
-        }
     }
 
     private void checkOtherEndsNonGenic(final SvChain chain)
@@ -436,48 +401,6 @@ public class DisruptionFinder implements CohortFileInterface
         }
     }
 
-    private void checkSameIntronLinks(final SvChain chain)
-    {
-        // check each link in the chain, marking as non-disruptive any linked pair which is either fully contained with the same intron
-        // or non-genic, and none can pass through another splice acceptor
-        for(LinkedPair pair : chain.getLinkedPairs())
-        {
-            boolean traversesGene = pairTraversesGene(pair, 0, false);
-
-            if(traversesGene)
-                continue;
-
-            SvBreakend breakend1 = pair.firstBreakend();
-            SvBreakend breakend2 = pair.secondBreakend();
-
-            List<BreakendGeneData> genes1 = breakend1.getGenesList();
-            List<BreakendGeneData> genes2 = breakend2.getGenesList();
-
-            if(genes1.isEmpty() || genes2.isEmpty())
-                continue;
-
-            List<BreakendTransData> transList1 = getDisruptedTranscripts(genes1);
-            List<BreakendTransData> transList2 = getDisruptedTranscripts(genes2);
-
-            if(transList1.isEmpty() || transList2.isEmpty())
-                continue;
-
-            // DELs and DUPs with disruptive breakends cannot then be marked non-disruptive just because they form an intronic TI
-            if(breakend1.getSV().isSimpleType() || breakend2.getSV().isSimpleType())
-                continue;
-
-            for(BreakendGeneData gene1 : genes1)
-            {
-                BreakendGeneData gene2 = genes2.stream().filter(x -> x.GeneName.equals(gene1.GeneName)).findFirst().orElse(null);
-
-                if(gene2 == null)
-                    continue;
-
-                markNonDisruptiveTranscripts(gene1.transcripts(), gene2.transcripts(), NON_DISRUPT_REASON_SAME_INTRON);
-            }
-        }
-    }
-
     private void checkTraverseToSameIntron(final SvChain chain)
     {
         if(chain.getOpenBreakend(true) == null || chain.getOpenBreakend(false) == null)
@@ -485,7 +408,6 @@ public class DisruptionFinder implements CohortFileInterface
 
         // walk through the chain from start to end, breakend by breakend
         int linkIndex = -1;
-        // boolean useFirst = true;
 
         List<LinkedPair> links = chain.getLinkedPairs();
 
@@ -497,7 +419,6 @@ public class DisruptionFinder implements CohortFileInterface
                 break;
 
             LinkedPair pair = links.get(linkIndex);
-            // SvBreakend breakend = useFirst ? pair.firstBreakend() : pair.secondBreakend();
             SvBreakend breakend = pair.firstBreakend().getOtherBreakend();
 
             List<BreakendGeneData> genes = breakend.getGenesList();
@@ -588,140 +509,6 @@ public class DisruptionFinder implements CohortFileInterface
 
             if(foundSameIntronBreakend)
                 linkIndex = nextLinkIndex;
-        }
-
-        /*
-        for(SvVarData var : chain.getSvList())
-        {
-            if(var.isSglBreakend())
-                continue;
-
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                SvBreakend breakend = var.getBreakend(se);
-
-                List<BreakendGeneData> genes = var.getGenesList(breakend.usesStart());
-                if(genes.isEmpty())
-                    continue;
-
-                List<BreakendTransData> transList = getDisruptedTranscripts(genes);
-                if(transList.isEmpty())
-                    continue;
-
-                checkChainedTranscripts(breakend, chain, genes, transList);
-            }
-        }
-        */
-    }
-
-    private void checkChainedTranscripts(
-            final SvBreakend breakend, final SvChain chain, final List<BreakendGeneData> genes, final List<BreakendTransData> transList)
-    {
-        // check whether this breakend follows a chain which comes back to the same intron with correct orientation and
-        // without traversing a splice acceptor. If so, any links it passes through are also marked as non-disruptive
-
-        final List<LinkedPair> links = chain.getLinkedPairs();
-
-        final List<LinkedPair> traversedPairs = Lists.newArrayList();
-
-        for(int i = 0; i < links.size(); ++i)
-        {
-            int startIndex = 0;
-            boolean traverseUp = false;
-
-            if(i == 0 && chain.getOpenBreakend(true) == breakend)
-            {
-                startIndex = -1;
-                traverseUp = true;
-            }
-            else if(i == links.size() - 1 && chain.getOpenBreakend(false) == breakend)
-            {
-                startIndex = links.size();
-                traverseUp = false;
-            }
-            else if(links.get(i).hasBreakend(breakend))
-            {
-                startIndex = i;
-                traverseUp = links.get(i).secondBreakend() == breakend;
-            }
-            else
-            {
-                continue;
-            }
-
-            int index = startIndex;
-            long chainLength = 0;
-
-            while(true)
-            {
-                index += traverseUp ? 1 : -1;
-
-                if(index < 0 || index >= links.size())
-                    break;
-
-                final LinkedPair nextPair = links.get(index);
-
-                // does this next link traverse another splice acceptor?
-                boolean traversesGene = pairTraversesGene(nextPair, 0, false);
-
-                if(traversesGene)
-                    return;
-
-                chainLength += nextPair.length();
-
-                if(chainLength > MAX_NON_DISRUPTED_CHAIN_LENGTH)
-                    return;
-
-                // keep track of traversed pairs since they may be marked as non-disruptive too
-                traversedPairs.add(nextPair);
-
-                // does it return to the same intron and correct orientation for any transcripts
-                final SvBreakend nextBreakend = traverseUp ?
-                        nextPair.secondBreakend().getOtherBreakend() : nextPair.firstBreakend().getOtherBreakend();
-
-                if(nextBreakend == null)
-                    continue;
-
-                if(nextBreakend.orientation() == breakend.orientation() || !nextBreakend.chromosome().equals(breakend.chromosome()))
-                    continue;
-
-                List<BreakendGeneData> otherGenes = nextBreakend.getGenesList();
-
-                if(otherGenes.isEmpty() || otherGenes.stream().noneMatch(x -> genes.stream().anyMatch(y -> x.GeneName.equals(y.GeneName))))
-                    continue;
-
-                List<BreakendTransData> otherTransList = getDisruptedTranscripts(otherGenes);
-
-                if(!otherTransList.isEmpty())
-                {
-                    if (markNonDisruptiveTranscripts(transList, otherTransList, NON_DISRUPT_REASON_SAME_INTRON))
-                    {
-                        // mark any traversed pair's breakends non-disruptive regardless of their transcripts since in the context
-                        // of this chain they aren't disruptive to other introns
-                        for(LinkedPair traversedPair : traversedPairs)
-                        {
-                            SvBreakend breakend1 = traversedPair.firstBreakend();
-                            SvBreakend breakend2 = traversedPair.secondBreakend();
-
-                            List<BreakendTransData> traversedTrans1 = getDisruptedTranscripts(breakend1.getGenesList());
-                            List<BreakendTransData> traversedTrans2 = getDisruptedTranscripts(breakend2.getGenesList());
-
-                            if(!traversedTrans1.isEmpty() && !traversedTrans2.isEmpty())
-                            {
-                                markNonDisruptiveTranscripts(traversedTrans1, traversedTrans2, NON_DISRUPT_REASON_TRAVERSED_SAME_INTRON);
-                            }
-                        }
-
-                        removeNonDisruptedTranscripts(transList);
-
-                        LNX_LOGGER.debug("breakends({} & {}) return to same intron, chain({}) links({}) length({}) traversedPairs({})",
-                                breakend, nextBreakend, chain.id(), abs(index - startIndex), chainLength, traversedPairs.size());
-
-                        if (transList.isEmpty())
-                            return;
-                    }
-                }
-            }
         }
     }
 
@@ -902,7 +689,6 @@ public class DisruptionFinder implements CohortFileInterface
 
         return false;
     }
-
 
     private static final String COHORT_WRITER_DISRUPTION = "Disruption";
 
