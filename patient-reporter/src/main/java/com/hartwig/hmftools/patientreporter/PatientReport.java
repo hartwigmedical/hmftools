@@ -14,19 +14,18 @@ public interface PatientReport {
     default String user() {
         String systemUser = System.getProperty("user.name");
         String userName = Strings.EMPTY;
-        String userString = Strings.EMPTY;
         if (systemUser.equals("lieke") || systemUser.equals("liekeschoenmaker")) {
-            userName = "Lieke Schoenmaker";
+            userName = " (Lieke Schoenmaker)";
         } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn")) {
-            userName = "Korneel Duyvesteyn";
+            userName = " (Korneel Duyvesteyn)";
         } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek")) {
-            userName = "Sandra van den Broek";
+            userName = " (Sandra van den Broek)";
         } else if (systemUser.equals("root")) {
-            userString = "trained IT employee and trained clinical molecular biologist (KMBP)";
+            userName = Strings.EMPTY;
         } else {
             userName = systemUser;
         }
-        return userString.isEmpty() ? "trained IT employee (" + userName + ") and trained clinical molecular biologist (KMBP)" : userString;
+        return "trained IT employee" + userName + " and trained clinical molecular biologist (KMBP)";
     }
 
     @NotNull
