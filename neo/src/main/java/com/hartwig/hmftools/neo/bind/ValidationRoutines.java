@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
@@ -237,7 +238,7 @@ public class ValidationRoutines
 
                 double score = matrix.calcScore(bindData.Peptide);
                 double rankPercentile = mRandomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
-                bindData.setScoreData(score, rankPercentile, -1);
+                bindData.setScoreData(score, rankPercentile, INVALID_SCORE, INVALID_SCORE);
 
                 writePeptideResults(targetAllele, bindData);
             }

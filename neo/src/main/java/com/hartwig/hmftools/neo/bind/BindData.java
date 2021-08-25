@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
+import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -40,6 +41,7 @@ public class BindData
     private double mScore;
     private double mRankPercentile;
     private double mLikelihood;
+    private double mLikelihoodRank;
 
     private double mGlobalScore;
     private double mGlobalRankPercentile;
@@ -59,9 +61,10 @@ public class BindData
         mPresentationPercentile = -1;
         mAffinityPercentile = -1;
 
-        mScore = 0;
-        mRankPercentile = -1;
-        mLikelihood = -1;
+        mScore = INVALID_SCORE;
+        mRankPercentile = INVALID_SCORE;
+        mLikelihood = INVALID_SCORE;
+        mLikelihoodRank = INVALID_SCORE;
 
         mGlobalScore = 0;
         mGlobalRankPercentile = -1;
@@ -96,16 +99,18 @@ public class BindData
     public double presentationScore() { return mPresentationScore; }
     public double presentationPercentile() { return mPresentationPercentile; }
 
-    public void setScoreData(double score, double rankPerc, double likelihood)
+    public void setScoreData(double score, double rankPerc, double likelihood, double likelihoodRank)
     {
         mScore = score;
         mRankPercentile = rankPerc;
         mLikelihood = likelihood;
+        mLikelihoodRank = likelihoodRank;
     }
 
     public double score() { return mScore; }
     public double rankPercentile() { return mRankPercentile; }
     public double likelihood() { return mLikelihood; }
+    public double likelihoodRank() { return mLikelihoodRank; }
 
     public void setGlobalScoreData(double score, double rankPerc)
     {

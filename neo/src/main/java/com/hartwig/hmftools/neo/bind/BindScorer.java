@@ -147,7 +147,9 @@ public class BindScorer
                     double likelihood = mBindingLikelihood != null && mBindingLikelihood.hasData() ?
                             mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, rankPercentile) : 0;
 
-                    bindData.setScoreData(score, rankPercentile, likelihood);
+                    double likelihoodRank = mRandomDistribution.getLikelihoodRank(allele, likelihood);
+
+                    bindData.setScoreData(score, rankPercentile, likelihood, likelihoodRank);
 
                     // add global scores if the matrix is present
                     if(globalMatrixMap != null && globalMatrixMap.containsKey(bindData.peptideLength()))
@@ -165,6 +167,73 @@ public class BindScorer
         closeBufferedWriter(alleleWriter);
 
         writePeptideScores();
+    }
+
+    private void writePeptideScores()
+    {
+        if(mConfig.WritePeptideType == PeptideWriteType.NONE)
+            return;
+
+        NE_LOGGER.info("writing peptide scores");
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
+            writer.write("Allele,Peptide,Source,Score,Rank,Likelihood,LikelihoodRank");
+
+            boolean hasPredictionData = false;
+            boolean hasMeasuredAffinity = false;
+
+            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasMeasuredAffinity())))
+            {
+                hasMeasuredAffinity = true;
+                writer.write(",MeasuredAffinity");
+            }
+
+            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasPredictionData())))
+            {
+                hasPredictionData = true;
+                writer.write(",PredictedAffinity,AffinityPerc,PresScore,PresPerc");
+            }
+
+            writer.newLine();
+
+            for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
+            {
+                final String allele = alleleEntry.getKey();
+                final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
+
+                for(List<BindData> bindDataList : pepLenBindDataMap.values())
+                {
+                    for(BindData bindData : bindDataList)
+                    {
+                        writer.write(String.format("%s,%s,%s,%.2f,%.6f,%.6f,%.6f",
+                                allele, bindData.Peptide, bindData.Source,
+                                bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank()));
+
+                        if(hasMeasuredAffinity)
+                        {
+                            writer.write(String.format(",%.2f", bindData.measuredAffinity()));
+                        }
+
+                        if(hasPredictionData)
+                        {
+                            writer.write(String.format(",%.2f,%.6f,%.4f,%.6f",
+                                    bindData.predictedAffinity(), bindData.affinityPercentile(),
+                                    bindData.presentationScore(), bindData.presentationPercentile()));
+                        }
+
+                        writer.newLine();
+                    }
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write peptide scores file: {}", e.toString());
+        }
     }
 
     private BufferedWriter initAlleleSummaryWriter()
@@ -240,73 +309,6 @@ public class BindScorer
         catch(IOException e)
         {
             NE_LOGGER.error("failed to write allele summary data: {}", e.toString());
-        }
-    }
-
-    private void writePeptideScores()
-    {
-        if(mConfig.WritePeptideType == PeptideWriteType.NONE)
-            return;
-
-        NE_LOGGER.info("writing peptide scores");
-
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
-            writer.write("Allele,Peptide,Source,Score,Rank,Likelihood");
-
-            boolean hasPredictionData = false;
-            boolean hasMeasuredAffinity = false;
-
-            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasMeasuredAffinity())))
-            {
-                hasMeasuredAffinity = true;
-                writer.write(",MeasuredAffinity");
-            }
-
-            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasPredictionData())))
-            {
-                hasPredictionData = true;
-                writer.write(",PredictedAffinity,AffinityPerc,PresScore,PresPerc");
-            }
-
-            writer.newLine();
-
-            for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
-            {
-                final String allele = alleleEntry.getKey();
-                final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
-
-                for(List<BindData> bindDataList : pepLenBindDataMap.values())
-                {
-                    for(BindData bindData : bindDataList)
-                    {
-                        writer.write(String.format("%s,%s,%s,%.2f,%.6f,%.6f",
-                                allele, bindData.Peptide, bindData.Source,
-                                bindData.score(), bindData.rankPercentile(), bindData.likelihood()));
-
-                        if(hasMeasuredAffinity)
-                        {
-                            writer.write(String.format(",%.2f", bindData.measuredAffinity()));
-                        }
-
-                        if(hasPredictionData)
-                        {
-                            writer.write(String.format(",%.2f,%.6f,%.4f,%.6f",
-                                    bindData.predictedAffinity(), bindData.affinityPercentile(),
-                                    bindData.presentationScore(), bindData.presentationPercentile()));
-                        }
-
-                        writer.newLine();
-                    }
-                }
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write peptide scores file: {}", e.toString());
         }
     }
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_LENGTH;
 
 import java.util.Map;
 
@@ -36,6 +37,18 @@ public class ScoreDistributionData
                 Integer.parseInt(items[fieldsDataMap.get(FLD_PEPTIDE_LEN)]),
                 Double.parseDouble(items[fieldsDataMap.get("ScoreBucket")]),
                 Double.parseDouble(items[fieldsDataMap.get("Score")]),
+                0, 0);
+    }
+
+    public static ScoreDistributionData fromLikelihoodCsv(final String data, final Map<String,Integer> fieldsDataMap)
+    {
+        final String[] items = data.split(DELIM, -1);
+
+        return new ScoreDistributionData(
+                items[fieldsDataMap.get(FLD_ALLELE)],
+                PAN_PEPTIDE_LENGTH,
+                Double.parseDouble(items[fieldsDataMap.get("Bucket")]),
+                Double.parseDouble(items[fieldsDataMap.get("Likelihood")]),
                 0, 0);
     }
 

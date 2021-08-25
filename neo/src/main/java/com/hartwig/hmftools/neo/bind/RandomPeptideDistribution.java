@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
 import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
@@ -36,8 +37,6 @@ public class RandomPeptideDistribution
     private static final int SCORE_SIZE = 0;
     private static final int SCORE_BRACKET = 1;
 
-    public static final double INVALID_RANK = -1;
-
     public RandomPeptideDistribution(final RandomPeptideConfig config)
     {
         mConfig = config;
@@ -56,7 +55,7 @@ public class RandomPeptideDistribution
 
     public boolean loadData()
     {
-        mDataLoaded = loadDistribution();
+        mDataLoaded = loadDistribution() && loadLikelihoodDistribution();
         return mDataLoaded;
     }
 
@@ -69,26 +68,41 @@ public class RandomPeptideDistribution
         Map<Integer,List<ScoreDistributionData>> peptideLengthMap = mAlleleScoresMap.get(allele);
 
         if(peptideLengthMap == null)
-            return INVALID_RANK;
+            return INVALID_SCORE;
 
         List<ScoreDistributionData> scores = peptideLengthMap.get(peptideLength);
 
         if(scores == null || scores.size() < 2)
-            return INVALID_RANK;
+            return INVALID_SCORE;
 
-        boolean isAscending = scores.get(0).Score < scores.get(1).Score;
+        return getRank(scores, score);
+    }
 
-        if((isAscending && score < scores.get(0).Score) || (!isAscending && score > scores.get(0).Score))
+    public double getLikelihoodRank(final String allele, double likelihood)
+    {
+        List<ScoreDistributionData> likelihoodDist = mAlleleLikelihoodsMap.get(allele);
+
+        if(likelihoodDist == null || likelihoodDist.size() < 2)
+            return INVALID_SCORE;
+
+        return getRank(likelihoodDist, likelihood);
+    }
+
+    private static double getRank(final List<ScoreDistributionData> distribution, double score)
+    {
+        boolean isAscending = distribution.get(0).Score < distribution.get(1).Score;
+
+        if((isAscending && score < distribution.get(0).Score) || (!isAscending && score > distribution.get(0).Score))
             return 0; // zero-th percentile if the score is better than any in the random distribution
 
-        for(int i = 0; i < scores.size(); ++i)
+        for(int i = 0; i < distribution.size(); ++i)
         {
-            ScoreDistributionData scoreData = scores.get(i);
+            ScoreDistributionData scoreData = distribution.get(i);
 
             if(Doubles.equal(score, scoreData.Score))
                 return scoreData.ScoreBucket;
 
-            ScoreDistributionData nextScoreData = i < scores.size() - 1 ? scores.get(i + 1) : null;
+            ScoreDistributionData nextScoreData = i < distribution.size() - 1 ? distribution.get(i + 1) : null;
 
             if(nextScoreData != null && Doubles.equal(score, nextScoreData.Score))
                 return nextScoreData.ScoreBucket;
@@ -100,7 +114,7 @@ public class RandomPeptideDistribution
 
                 if((isAscending && score < nextScoreData.Score) || (!isAscending && score > nextScoreData.Score))
                 {
-                    // interpolate between the scores to set the rank
+                    // interpolate between the distribution to set the rank
                     if(isAscending)
                     {
                         double upperPerc = (score - scoreData.Score) / (nextScoreData.Score - scoreData.Score);
@@ -456,4 +470,43 @@ public class RandomPeptideDistribution
 
         return true;
     }
+
+    private boolean loadLikelihoodDistribution()
+    {
+        if(mConfig.RandomLikelihoodDistributionFile == null)
+            return true;
+
+        try
+        {
+            final List<String> lines = Files.readAllLines(new File(mConfig.RandomLikelihoodDistributionFile).toPath());
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            lines.remove(0);
+
+            for(String line : lines)
+            {
+                ScoreDistributionData data = ScoreDistributionData.fromLikelihoodCsv(line, fieldsIndexMap);
+
+                List<ScoreDistributionData> dataList = mAlleleLikelihoodsMap.get(data.Allele);
+
+                if(dataList == null)
+                {
+                    dataList = Lists.newArrayList();
+                    mAlleleLikelihoodsMap.put(data.Allele, dataList);
+                }
+
+                dataList.add(data);
+            }
+
+            NE_LOGGER.info("loaded {} alleles with random peptide likelihood distribution data", mAlleleScoresMap.size());
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to read random likelihood distribution file: {}", e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
 }
