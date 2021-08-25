@@ -26,7 +26,10 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 public class BindingLikelihood
 {
+    // statically-defined rank buckets in exponentially increasing size
     private final List<Double> mScoreRankBuckets;
+
+    // map of allele to a matrix of peptide-length and rank buckets, containing the likelihood values
     private final Map<String,double[][]> mAlleleLikelihoodMap;
 
     private BufferedWriter mWriter;
@@ -154,7 +157,12 @@ public class BindingLikelihood
         if(peptideLength < MIN_PEPTIDE_LENGTH || peptideLength > REF_PEPTIDE_LENGTH)
             return INVALID_PEP_LEN;
 
-        return peptideLength - 8;
+        return peptideLength - MIN_PEPTIDE_LENGTH;
+    }
+
+    private static int peptideLengthFromIndex(int index)
+    {
+        return MIN_PEPTIDE_LENGTH + index;
     }
 
     public void buildAllelePeptideLikelihoods(
@@ -231,6 +239,8 @@ public class BindingLikelihood
             buildAllelePeptideLikelihoods(sharedAlleleEntry.getKey(), sharedAlleleEntry.getValue());
         }
 
+        mHasData = true;
+
         closeBufferedWriter(mWriter);
     }
 
@@ -291,37 +301,50 @@ public class BindingLikelihood
             }
         }
 
-        Map<Integer,double[]> pepLenLikelihoods = Maps.newHashMap();
+        // Map<Integer,double[]> pepLenLikelihoods = Maps.newHashMap();
         double totalAdjustedCounts = 0;
+
+        double[][] pepLenLikelihoods = new double[PEPTIDE_LENGTHS][totalBuckets];
 
         for(Map.Entry<Integer,List<Double>> entry : pepLenRanks.entrySet())
         {
             int peptideLength = entry.getKey();
+            int pepLenIndex = peptideLengthIndex(peptideLength);
 
-            double[] likelihoods = new double[totalBuckets];
-            pepLenLikelihoods.put(peptideLength, likelihoods);
+            // double[] likelihoods = new double[totalBuckets];
+            // pepLenLikelihoods.put(peptideLength, likelihoods);
 
             final int[] rankCounts = pepLenRankCounts.get(peptideLength);
 
             for(int i = rankCounts.length - 1; i >= 0; --i)
             {
-                // MAX(D4/($B4/0.00005),IF($B5>$B4,I5,0))
                 double adjCount = rankCounts[i] / (mScoreRankBuckets.get(i) / MIN_BUCKET_RANK);
 
                 if(i == rankCounts.length - 1)
                 {
-                    likelihoods[i] = adjCount;
+                    pepLenLikelihoods[pepLenIndex][i] = adjCount;
                 }
                 else
                 {
                     // will always be at least as high as the next bucket up
-                    likelihoods[i] = max(adjCount, likelihoods[i + 1]);
+                    pepLenLikelihoods[pepLenIndex][i] = max(adjCount, pepLenLikelihoods[pepLenIndex][i + 1]);
                 }
 
-                totalAdjustedCounts += likelihoods[i];
+                totalAdjustedCounts += pepLenLikelihoods[pepLenIndex][i];
             }
         }
 
+        for(int pl = 0; pl < pepLenLikelihoods.length; ++pl)
+        {
+            for(int i = 0; i < totalBuckets; ++i)
+            {
+                pepLenLikelihoods[pl][i] /= totalAdjustedCounts;
+            }
+        }
+
+        mAlleleLikelihoodMap.put(allele, pepLenLikelihoods);
+
+        /*
         for(Map.Entry<Integer,List<Double>> entry : pepLenRanks.entrySet())
         {
             int peptideLength = entry.getKey();
@@ -333,6 +356,7 @@ public class BindingLikelihood
                 likelihoods[i] /= totalAdjustedCounts;
             }
         }
+        */
 
         writeAlleleData(allele, pepLenLikelihoods);
     }
@@ -356,18 +380,32 @@ public class BindingLikelihood
         }
         catch (IOException e)
         {
-            NE_LOGGER.error("failed to initialise relative presentation file file({}): {}", filename, e.toString());
+            NE_LOGGER.error("failed to initialise binding likelihood file file({}): {}", filename, e.toString());
             return null;
         }
     }
 
-    private void writeAlleleData(final String allele, final Map<Integer,double[]> pepLenLikelihoodMap)
+    private void writeAlleleData(final String allele, final double[][] pepLenLikelihoods)
     {
         if(mWriter == null)
             return;
 
         try
         {
+            for(int pl = 0; pl < pepLenLikelihoods.length; ++pl)
+            {
+                mWriter.write(String.format("%s,%d", allele, peptideLengthFromIndex(pl)));
+
+                for(int i = 0; i < mScoreRankBuckets.size(); ++i)
+                {
+                    mWriter.write(String.format(",%.6f", pepLenLikelihoods[pl][i]));
+                    // pepLenLikelihoods[pl][i] /= totalAdjustedCounts;
+                }
+
+                mWriter.newLine();
+            }
+
+            /*
             for(Map.Entry<Integer,double[]> entry : pepLenLikelihoodMap.entrySet())
             {
                 int peptideLength = entry.getKey();
@@ -382,10 +420,11 @@ public class BindingLikelihood
 
                 mWriter.newLine();
             }
+            */
         }
         catch (IOException e)
         {
-            NE_LOGGER.error("failed to initialise relative presentation file: {}", e.toString());
+            NE_LOGGER.error("failed to initialise binding likelihood file: {}", e.toString());
         }
     }
 

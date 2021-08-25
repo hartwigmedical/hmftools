@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
 import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 
@@ -30,6 +30,7 @@ public class RandomPeptideDistribution
     private final List<String> mRefRandomPeptides;
 
     private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoresMap; // allele to peptide length to distribution
+    private final Map<String,List<ScoreDistributionData>> mAlleleLikelihoodsMap; // allele to distribution of likelihoods
     private final List<double[]> mDiscreteScoreData;
 
     private static final int SCORE_SIZE = 0;
@@ -43,6 +44,7 @@ public class RandomPeptideDistribution
 
         mRefRandomPeptides = Lists.newArrayList();
         mAlleleScoresMap = Maps.newHashMap();
+        mAlleleLikelihoodsMap = Maps.newHashMap();
         mDataLoaded = false;
 
         mDiscreteScoreData = Lists.newArrayList();
@@ -165,7 +167,6 @@ public class RandomPeptideDistribution
 
             for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
             {
-
                 List<Double> peptideScores = Lists.newArrayListWithExpectedSize(mRefRandomPeptides.size());
 
                 int count = 0;
@@ -200,6 +201,64 @@ public class RandomPeptideDistribution
 
         if(mConfig.WriteRandomDistribution)
             writeDistribution();
+    }
+
+    public void buildLikelihoodDistribution(
+            final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrixMap, final BindingLikelihood bindingLikelihood)
+    {
+        if(mRefRandomPeptides.isEmpty())
+            return;
+
+        int alleleCount = 0;
+
+        for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
+        {
+            final String allele = alleleEntry.getKey();
+
+            if(!allele.equals(GLOBAL_COUNTS) && !mConfig.RequiredOutputAlleles.isEmpty() && !mConfig.RequiredOutputAlleles.contains(allele))
+                continue;
+
+            NE_LOGGER.debug("building likelihood distribution for allele({})", allele);
+
+            List<Double> likelihoodScores = Lists.newArrayList();
+            final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
+
+            for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
+            {
+                int count = 0;
+
+                for(String peptide : mRefRandomPeptides)
+                {
+                    if(peptide.length() > matrix.PeptideLength)
+                        peptide = peptide.substring(0, matrix.PeptideLength);
+
+                    double score = matrix.calcScore(peptide);
+                    double rank = getScoreRank(allele, matrix.PeptideLength, score);
+                    double likelihood = bindingLikelihood.getBindingLikelihood(allele, peptide, rank);
+
+                    VectorUtils.optimisedAdd(likelihoodScores, likelihood, false);
+
+                    ++count;
+
+                    if(count > 0 && (count % 500000) == 0)
+                    {
+                        NE_LOGGER.debug("added {} sorted random peptide likelihood scores", count);
+                    }
+                }
+            }
+
+            List<ScoreDistributionData> likelihoodDistributions = generateDistribution(allele, PAN_PEPTIDE_LENGTH, likelihoodScores);
+            mAlleleLikelihoodsMap.put(allele, likelihoodDistributions);
+
+            ++alleleCount;
+
+            if(alleleCount > 0 && (alleleCount % 10) == 0)
+            {
+                NE_LOGGER.info("generated likelihood distributions for {} alleles", alleleCount);
+            }
+        }
+
+        writeLikelihoodDistribution();
     }
 
     public List<ScoreDistributionData> generateDistribution(final String allele, final int peptideLength, final List<Double> peptideScores)
@@ -280,7 +339,6 @@ public class RandomPeptideDistribution
                         scoreDist.Allele, scoreDist.PeptideLength, scoreDist.ScoreBucket, scoreDist.Score,
                         scoreDist.BucketCount, scoreDist.CumulativeCount));
 
-                //writer.write(String.format(",%d,%f,%f,%f", currentScores, currentSize, currentBracket, currentSizeTotal));
                 writer.newLine();
             }
         }
@@ -302,11 +360,8 @@ public class RandomPeptideDistribution
         {
             BufferedWriter writer = initialiseWriter(distFilename);
 
-            // score each against each allele and build up a percentiles for each
             for(Map.Entry<String,Map<Integer,List<ScoreDistributionData>>> alleleEntry : mAlleleScoresMap.entrySet())
             {
-                String allele = alleleEntry.getKey();
-
                 final Map<Integer,List<ScoreDistributionData>> pepLenDistMap = alleleEntry.getValue();
 
                 for(List<ScoreDistributionData> pepLenScoreDist : pepLenDistMap.values())
@@ -320,6 +375,39 @@ public class RandomPeptideDistribution
         catch(IOException e)
         {
             NE_LOGGER.error("failed to write random peptide file: {}", e.toString());
+        }
+    }
+
+    private void writeLikelihoodDistribution()
+    {
+        NE_LOGGER.info("writing random peptide likelihood distribution for {} alleles",
+                !mConfig.RequiredOutputAlleles.isEmpty() ? mConfig.RequiredOutputAlleles.size() : "all");
+
+        final String filename = formFilename("random_peptide_likelihood_dist", mConfig.OutputDir, mConfig.OutputId);
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("Allele,Bucket,Likelihood");
+            writer.newLine();
+
+            for(Map.Entry<String,List<ScoreDistributionData>> alleleEntry : mAlleleLikelihoodsMap.entrySet())
+            {
+                for(ScoreDistributionData scoreDist : alleleEntry.getValue())
+                {
+                    writer.write(String.format("%s,%f,%.8f",
+                            scoreDist.Allele, scoreDist.ScoreBucket, scoreDist.Score));
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write random peptide likelihood file: {}", e.toString());
         }
     }
 

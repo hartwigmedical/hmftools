@@ -260,7 +260,7 @@ public class LinxApplication
             double runTime = (System.currentTimeMillis() - startTime) / 1000.0;
 
             LNX_LOGGER.info("SV analysis complete for {} samples, run time({})s",
-                    samplesList.size(), String.format("%.2f", runTime));
+                    samplesList.size(), String.format("%.3f", runTime));
         }
     }
 

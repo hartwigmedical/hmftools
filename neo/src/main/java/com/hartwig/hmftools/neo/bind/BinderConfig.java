@@ -29,7 +29,6 @@ public class BinderConfig
     public final String ValidationDataFile;
     public final String BindMatrixFile; // file with computed and cached binding matrix per allele
     public final String BindLikelihoodFile;
-    public final String RandomPeptidePredictionsFile; // predictions per allele for random peptides
 
     public final CalcConstants Constants;
     public final boolean RunScoring;
@@ -45,6 +44,7 @@ public class BinderConfig
     public final PeptideWriteType WritePeptideType;
     public final boolean WriteSummaryData;
     public final boolean WriteLikelihood;
+    public final boolean WritePanLengthDistribution;
     public final boolean RunValidation;
 
     // the set of alleles which ensured to exist in the training output data (ie PWM values)
@@ -56,7 +56,6 @@ public class BinderConfig
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String VALIDATION_DATA_FILE = "validation_data_file";
-    private static final String RANDOM_PEPTIDE_PRED_FILE = "random_peptide_pred_file";
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
     private static final String BIND_LIKELIHOOD_FILE = "bind_likelihood_file";
 
@@ -75,6 +74,7 @@ public class BinderConfig
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
     private static final String WRITE_LIKELIHOOD = "write_likelihood";
+    public static final String WRITE_PAN_LENGTH_DIST = "write_pan_length_dist";
     private static final String RUN_VALIDATION = "run_validation";
 
     public static final String REQUIRED_OUTPUT_ALLELES = "required_output_alleles";
@@ -85,7 +85,6 @@ public class BinderConfig
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
-        RandomPeptidePredictionsFile = cmd.getOptionValue(RANDOM_PEPTIDE_PRED_FILE);
         BindMatrixFile = cmd.getOptionValue(BIND_MATRIX_FILE);
         BindLikelihoodFile = cmd.getOptionValue(BIND_LIKELIHOOD_FILE);
 
@@ -139,6 +138,7 @@ public class BinderConfig
         WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
         WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
         WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
+        WritePanLengthDistribution = cmd.hasOption(WRITE_PAN_LENGTH_DIST);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
     }
 
@@ -182,7 +182,6 @@ public class BinderConfig
         RandomPeptideConfig.addCmdLineArgs(options);
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
         options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
-        options.addOption(RANDOM_PEPTIDE_PRED_FILE, true, "Random peptide predictions file");
         options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
         options.addOption(BIND_LIKELIHOOD_FILE, true, "Binding relative likelihood file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
@@ -201,6 +200,7 @@ public class BinderConfig
         options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
         options.addOption(WRITE_SUMMARY_DATA, false, "Write allele summary data including AUC");
         options.addOption(WRITE_LIKELIHOOD, false, "Write relative likelihood data");
+        options.addOption(WRITE_PAN_LENGTH_DIST, false, "Write pan-peptide length distribution data");
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
 
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");

@@ -39,6 +39,7 @@ public final class BindConstants
     public static final int MIN_PEPTIDE_LENGTH = 8;
     public static final int ALLELE_POS_MAPPING_PEPTIDE_LENGTH = 9;
     public static final int REF_PEPTIDE_LEFT_FIXED_POS = 4;
+    public static final int PAN_PEPTIDE_LENGTH = 0;
 
     public static final double MIN_OBSERVED_AA_POS_FREQ = 0.005;
 

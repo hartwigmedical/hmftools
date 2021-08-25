@@ -62,7 +62,7 @@ public class BindTrainer
         NE_LOGGER.info("building training data from {} alleles for {} required alleles",
                 mAllelePeptideData.size(), mConfig.RequiredOutputAlleles.size());
 
-        if(!loadTrainingData() || !loadRandomPredictionsData())
+        if(!loadTrainingData())
         {
             System.exit(1);
         }
@@ -99,9 +99,14 @@ public class BindTrainer
 
                 if(mConfig.WriteLikelihood)
                 {
-                    BindingLikelihood compBinding = new BindingLikelihood();
+                    BindingLikelihood bindingLikelihood = new BindingLikelihood();
                     final String relativeLikelihoodFile = mConfig.formFilename("rel_likelihood");
-                    compBinding.buildAllelePeptideLikelihoods(mAllelePeptideData, relativeLikelihoodFile);
+                    bindingLikelihood.buildAllelePeptideLikelihoods(mAllelePeptideData, relativeLikelihoodFile);
+
+                    if(mConfig.WritePanLengthDistribution)
+                    {
+                        randomDistribution.buildLikelihoodDistribution(mAlleleBindMatrices, bindingLikelihood);
+                    }
                 }
             }
         }
@@ -299,20 +304,6 @@ public class BindTrainer
     }
 
     private int getMaxPeptideLength() { return mDistinctPeptideLengths.stream().mapToInt(x -> x.intValue()).max().orElse(0); }
-
-    private boolean loadRandomPredictionsData()
-    {
-        if(!loadBindData(
-                mConfig.RandomPeptidePredictionsFile, false, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAllelePeptideData))
-        {
-            return false;
-        }
-
-        if(mConfig.RandomPeptidePredictionsFile == null)
-            return true; // not required
-
-        return true;
-    }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
