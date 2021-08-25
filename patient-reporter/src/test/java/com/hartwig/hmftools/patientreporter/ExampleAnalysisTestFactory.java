@@ -286,8 +286,10 @@ public final class ExampleAnalysisTestFactory {
             @NotNull LimsCohortConfig cohort) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(Strings.EMPTY)
+                .refSampleRunId(Strings.EMPTY)
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sample)
+                .tumorSampleRunId(sample)
                 .tumorSampleBarcode("FR12345678")
                 .build();
 

@@ -300,8 +300,10 @@ public class CFReportWriterTest {
             @NotNull LimsCohortConfig limsCohortConfig) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId("x")
+                .refSampleRunId("FR12123488")
                 .refSampleBarcode("FR12123488")
                 .tumorSampleId(sampleId)
+                .tumorSampleRunId("FR12345678")
                 .tumorSampleBarcode("FR12345678")
                 .build();
 

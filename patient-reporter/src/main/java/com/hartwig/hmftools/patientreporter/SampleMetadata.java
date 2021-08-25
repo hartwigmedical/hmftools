@@ -13,10 +13,16 @@ public abstract class SampleMetadata {
     public abstract String refSampleId();
 
     @Nullable
+    public abstract String refSampleRunId();
+
+    @Nullable
     public abstract String refSampleBarcode();
 
     @NotNull
     public abstract String tumorSampleId();
+
+    @NotNull
+    public abstract String tumorSampleRunId();
 
     @NotNull
     public abstract String tumorSampleBarcode();
