@@ -114,10 +114,10 @@ public class BreakendTransData
             Phase = phase;
         }
 
-        if(mRegionType == UPSTREAM || mRegionType == DOWNSTREAM)
-            mIsDisruptive = false;
-        else
+        if(mRegionType == EXONIC || mRegionType == INTRONIC)
             mIsDisruptive = true;
+        else
+            mIsDisruptive = false;
 
         mReportableDisruption = false;
         mUndisruptedCopyNumber = 0;

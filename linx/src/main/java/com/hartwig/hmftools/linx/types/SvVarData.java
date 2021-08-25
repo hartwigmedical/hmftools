@@ -155,19 +155,19 @@ public class SvVarData
         mAnnotationList = null;
     }
 
-    public final int id() { return mSVData.id(); }
-    public final String idStr() { return String.valueOf(mSVData.id()); }
+    public int id() { return mSVData.id(); }
+    public String idStr() { return String.valueOf(mSVData.id()); }
 
     public String toString() { return posId() + " " + typeStr(); }
 
-    public final StructuralVariantData getSvData() { return mSVData; }
+    public StructuralVariantData getSvData() { return mSVData; }
 
     // for convenience
-    public final String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
-    public final int position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
-    public final byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
-    public final double copyNumber(boolean isStart){ return mCopyNumber[seIndex(isStart)]; }
-    public final StructuralVariantType type() { return mSVData.type(); }
+    public String chromosome(boolean isStart) { return isStart ? mSVData.startChromosome() : mSVData.endChromosome(); }
+    public int position(boolean isStart) { return isStart ? mSVData.startPosition() : mSVData.endPosition(); }
+    public byte orientation(boolean isStart){ return isStart ? mSVData.startOrientation() : mSVData.endOrientation(); }
+    public double copyNumber(boolean isStart){ return mCopyNumber[seIndex(isStart)]; }
+    public StructuralVariantType type() { return mSVData.type(); }
 
     public SvBreakend getBreakend(int seIndex) { return mBreakend[seIndex]; }
     public SvBreakend getBreakend(boolean isStart) { return mBreakend[seIndex(isStart)]; }
@@ -176,7 +176,7 @@ public class SvVarData
     public boolean isSglBreakend() { return type() == SGL || type() == INF; }
     public boolean isInferredSgl() { return type() == INF; }
 
-    public final String posId()
+    public String posId()
     {
         if(isSglBreakend())
         {
@@ -191,14 +191,14 @@ public class SvVarData
         }
     }
 
-    public final String posId(boolean useStart)
+    public String posId(boolean useStart)
     {
         return String.format("%s: %s %s:%d:%d",
                 id(), useStart ? "start" :"end", mChr[seIndex(useStart)], orientation(useStart), position(useStart));
     }
 
-    public final ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }
-    public final String chrShort(boolean isStart) { return mChr[seIndex(isStart)]; }
+    public ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }
+    public String chrShort(boolean isStart) { return mChr[seIndex(isStart)]; }
 
     public void setChromosomalArms(final ChromosomeArm start, final ChromosomeArm end)
     {
@@ -211,10 +211,10 @@ public class SvVarData
             mBreakend[SE_END] = new SvBreakend(this, false);
     }
 
-    public final SvCluster getCluster() { return mCluster; }
+    public SvCluster getCluster() { return mCluster; }
     public void setCluster(final SvCluster cluster) { mCluster = cluster; }
 
-    public final int length()
+    public int length()
     {
         if(type() == BND || isSglBreakend())
             return 0;
@@ -240,7 +240,7 @@ public class SvVarData
         }
     }
 
-    public final String getClusterReason() { return mClusterReason; }
+    public String getClusterReason() { return mClusterReason; }
     public boolean hasClusterReason(ClusteringReason reason) { return mClusterReason.contains(reason.toString()); }
 
     public double jcn() { return mJcn; }
@@ -292,16 +292,16 @@ public class SvVarData
     public boolean isLineElement(boolean useStart) { return !mLineElements.get(useStart).isEmpty(); }
     public boolean inLineElement() { return isLineElement(true) || isLineElement(false); }
     public boolean hasLineElement(LineElementType type, boolean isStart) { return mLineElements.get(isStart).contains(type); }
-    public final Set<LineElementType> getLineElement(boolean useStart) { return mLineElements.get(useStart); }
+    public Set<LineElementType> getLineElement(boolean useStart) { return mLineElements.get(useStart); }
 
-    public final List<LinkedPair> getLinkedPairs(boolean isStart) { return mTiLinks.get(isStart); }
+    public List<LinkedPair> getLinkedPairs(boolean isStart) { return mTiLinks.get(isStart); }
 
-    public final List<LinkedPair> getAssembledLinkedPairs(boolean isStart)
+    public List<LinkedPair> getAssembledLinkedPairs(boolean isStart)
     {
         return mTiLinks.get(isStart).stream().filter(LinkedPair::isAssembled).collect(Collectors.toList());
     }
 
-    public final LinkedPair getLinkedPair(boolean isStart)
+    public LinkedPair getLinkedPair(boolean isStart)
     {
         return mTiLinks.get(isStart).isEmpty() ? null : mTiLinks.get(isStart).get(0);
     }
@@ -335,13 +335,13 @@ public class SvVarData
         mTiLinks.End.clear();
     }
 
-    public final DbPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }
+    public DbPair getDBLink(boolean isStart) { return mDbLink[seIndex(isStart)]; }
     public void setDBLink(final DbPair link, boolean isStart)
     {
         mDbLink[seIndex(isStart)] = link;
     }
 
-    public final int getFoldbackId(boolean useStart)
+    public int getFoldbackId(boolean useStart)
     {
         if(mFoldbackBreakends[seIndex(useStart)] != null)
             return mFoldbackBreakends[seIndex(useStart)].getSV().id();
@@ -349,9 +349,9 @@ public class SvVarData
             return -1;
     }
 
-    public final SvBreakend getFoldbackBreakend(boolean isStart) { return mFoldbackBreakends[seIndex(isStart)]; }
+    public SvBreakend getFoldbackBreakend(boolean isStart) { return mFoldbackBreakends[seIndex(isStart)]; }
     public int getFoldbackLength(boolean isStart) { return mFoldbackLength[seIndex(isStart)]; }
-    public final String getFoldbackInfo(boolean isStart) { return mFoldbackInfo[seIndex(isStart)]; }
+    public String getFoldbackInfo(boolean isStart) { return mFoldbackInfo[seIndex(isStart)]; }
 
     public boolean isFoldback() { return mFoldbackBreakends[SE_START] != null || mFoldbackBreakends[SE_END] != null; }
 
@@ -377,7 +377,7 @@ public class SvVarData
             return false;
     }
 
-    public final SvBreakend getChainedFoldbackBreakend()
+    public SvBreakend getChainedFoldbackBreakend()
     {
         return mFoldbackBreakends[SE_START] != null ? mFoldbackBreakends[SE_START] : mFoldbackBreakends[SE_END];
     }
@@ -406,7 +406,7 @@ public class SvVarData
         mFoldbackInfo[seIndex(isStart)] = info;
     }
 
-    public final SvVarData getChainedFoldbackSv()
+    public SvVarData getChainedFoldbackSv()
     {
         if(!isChainedFoldback())
             return this;
@@ -414,7 +414,7 @@ public class SvVarData
         return mFoldbackBreakends[SE_START] != null ? mFoldbackBreakends[SE_START].getSV() : mFoldbackBreakends[SE_END].getSV();
     }
 
-    public final String typeStr()
+    public String typeStr()
     {
         if(isInferredSgl())
             return INF_SV_TYPE;
@@ -422,18 +422,18 @@ public class SvVarData
             return type().toString();
     }
 
-    public final boolean isLocal()
+    public boolean isLocal()
     {
         // means that both ends are within the same chromosomal arm
         return chromosome(true).equals(chromosome(false)) && mArm[SE_START].equals(mArm[SE_END]);
     }
 
-    public final boolean isCrossArm()
+    public boolean isCrossArm()
     {
         return !isSglBreakend() && !isLocal();
     }
 
-    public final boolean isSimpleType()
+    public boolean isSimpleType()
     {
         return (type() == DEL || type() == DUP || type() == INS);
     }
@@ -447,27 +447,27 @@ public class SvVarData
         setAssemblyData(true);
     }
 
-    public final List<String> getTIAssemblies(boolean isStart) { return mTIAssemblies.get(isStart); }
+    public List<String> getTIAssemblies(boolean isStart) { return mTIAssemblies.get(isStart); }
 
     public boolean isEquivBreakend()
     {
         return getAssemblyData(true).contains(ASSEMBLY_TYPE_EQV);
     }
 
-    public final List<SglMapping> getSglMappings() { return mSglMappings; }
+    public List<SglMapping> getSglMappings() { return mSglMappings; }
 
     public void setLinkedSVs(final SvVarData var1, final SvVarData var2)
     {
         mLinkedSVs = new SvVarData[] {var1, var2};
     }
 
-    public final SvVarData[] getLinkedSVs() { return mLinkedSVs; }
+    public SvVarData[] getLinkedSVs() { return mLinkedSVs; }
 
-    public final List<BreakendGeneData> getGenesList(boolean isStart) { return mGenes.get(isStart); }
+    public List<BreakendGeneData> getGenesList(boolean isStart) { return mGenes.get(isStart); }
 
     private static final int PRE_TRANSCRIPT_DISTANCE = 10000;
 
-    public final String getGeneInBreakend(boolean isStart, boolean includeId)
+    public String getGeneInBreakend(boolean isStart, boolean includeId)
     {
         // create a list of any genes which this breakend touches, but exclude the upstream distance used for fusions
         final List<BreakendGeneData> genesList = getGenesList(isStart).stream()
@@ -551,7 +551,7 @@ public class SvVarData
         return copyNumberChange(isStart) / copyNumber(isStart);
     }
 
-    public final SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
+    public SvCNData getCopyNumberData(boolean isStart, boolean isPrevious)
     {
         return isStart ? (isPrevious ? mCnDataPrevStart : mCnDataPostStart) : (isPrevious ? mCnDataPrevEnd : mCnDataPostEnd);
     }
@@ -600,9 +600,9 @@ public class SvVarData
         }
     }
 
-    public final List<String> getAnnotationList() { return mAnnotationList; }
+    public List<String> getAnnotationList() { return mAnnotationList; }
 
-    public final void addAnnotation(final String annotation)
+    public void addAnnotation(final String annotation)
     {
         if(mAnnotationList == null)
             mAnnotationList = Lists.newArrayList();

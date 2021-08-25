@@ -161,6 +161,7 @@ public class DisruptionTest
         // - TRUE: chain which goes out and back but traverses another splice acceptor
         // - TRUE: chain which goes out and back without traversing another splice acceptor, ends on incorrect orientation
 
+        // test 1: a pair of BNDs forming a remote TI contained within an intron
         SvVarData var1 = createBnd(tester.nextVarId(), chromosome, 11000, 1, "3", 100, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), chromosome, 12000, -1, "3", 200, 1);
 
@@ -180,7 +181,8 @@ public class DisruptionTest
         assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
-        // same again but with 2 INVs (reciprocal INV) within an intron
+
+        // test 2: same again but with 2 INVs (reciprocal INV) within an intron
         tester.clearClustersAndSVs();
 
         var1 = createInv(tester.nextVarId(), chromosome, 11000, 14000, 1);
@@ -202,7 +204,8 @@ public class DisruptionTest
         assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
 
-        // same again but with a longer chain
+
+        // test 3: same again but with a longer chain
         tester.clearClustersAndSVs();
 
         var1 = createDel(tester.nextVarId(), chromosome, 11000, 12000);
@@ -230,7 +233,8 @@ public class DisruptionTest
         assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
-        // now with invalid final orientation - even though it makes an intronic TI
+
+        // test 4: now with invalid final orientation - even though it makes an intronic TI
         tester.clearClustersAndSVs();
 
         var1 = createDel(tester.nextVarId(), chromosome, 11000, 12000);
@@ -255,9 +259,10 @@ public class DisruptionTest
 
         assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+
 
         // now with an invalid traversal
         tester.clearClustersAndSVs();
@@ -314,12 +319,7 @@ public class DisruptionTest
 
         addTestGeneData(geneTransCache, chromosome2, geneId2);
 
-        final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
-
-        // scenarios (TRUE - disruptive, FALSE - not disruptive)
-        // - FALSE: chain which starts outside genic regions and only has short TI inside same intron
-        // - TRUE: chain which starts inside genic regions and only has short TI inside same intron
-
+        // test 1: pair of INVs forming a remote TI contained within an intron, with the other ends non-genic
         SvVarData var1 = createInv(tester.nextVarId(), chromosome, 1000, 15000, 1);
         SvVarData var2 = createInv(tester.nextVarId(), chromosome, 2000, 14000, -1);
 
@@ -341,7 +341,8 @@ public class DisruptionTest
 
         tester.clearClustersAndSVs();
 
-        // now with one of the variants ending in another gene
+
+        // test 2: now with one of the variants ending in another gene - makes the first INV also disruptive
         var1 = createInv(tester.nextVarId(), chromosome, 1000, 15000, 1);
         var2 = createBnd(tester.nextVarId(), chromosome, 14000, -1, chromosome2, 25000, -1);
 
@@ -359,9 +360,65 @@ public class DisruptionTest
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));
 
         assertTrue(var1.getGenesList(true).isEmpty());
+        assertTrue(var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+
+
+        // test 3: small shattering within an intron and a remote TI - non disruptive
+        tester.clearClustersAndSVs();
+
+        String remoteChr = "3";
+        var1 = createInv(tester.nextVarId(), chromosome, 12000, 14000, 1);
+        var2 = createBnd(tester.nextVarId(), chromosome, 13000, -1, remoteChr, 100, -1);
+
+        SvVarData var3 = createBnd(tester.nextVarId(), chromosome, 17000, 1, remoteChr, 200, 1);
+        SvVarData var4 = createInv(tester.nextVarId(), chromosome, 16000, 18000, -1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+
+        assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+
+
+        // test 4: DEL which would otherwise be disruptive but jumps back to outside the gene
+        // no current logic to detect this, so will remain disruptive
+        /*
+        tester.clearClustersAndSVs();
+
+        var1 = createDel(tester.nextVarId(), chromosome, 1000, 22000);
+        var2 = createBnd(tester.nextVarId(), chromosome, 23000, 1, remoteChr, 100, -1);
+        var3 = createBnd(tester.nextVarId(), chromosome, 2000, -1, remoteChr, 200, 1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+
+        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
+        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+
+        assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        */
     }
 
 }

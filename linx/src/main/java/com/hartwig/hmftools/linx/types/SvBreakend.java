@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
@@ -165,5 +166,7 @@ public class SvBreakend {
         return mSV.isLineElement(mUsesStart);
     }
     public boolean hasLineElement(LineElementType type) { return mSV.hasLineElement(type, mUsesStart); }
+
+    public List<BreakendGeneData> getGenesList() { return mSV.getGenesList(mUsesStart); }
 
 }
