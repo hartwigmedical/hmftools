@@ -12,7 +12,6 @@ public interface PatientReport {
 
     @NotNull
     default String user() {
-        // ’<Naam> (trained IT employee) and trained Clinical Molecular Biologist (KMBP)
         String systemUser = System.getProperty("user.name");
         String userName = Strings.EMPTY;
         String userString = Strings.EMPTY;
