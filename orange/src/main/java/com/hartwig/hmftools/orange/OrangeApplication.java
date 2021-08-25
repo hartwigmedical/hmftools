@@ -52,6 +52,7 @@ public class OrangeApplication {
         ReportWriter writer = new ReportWriter(true, config.outputDir(), config.reportConfig());
         writer.write(report);
 
+
         LOGGER.info("Done!");
     }
 }
