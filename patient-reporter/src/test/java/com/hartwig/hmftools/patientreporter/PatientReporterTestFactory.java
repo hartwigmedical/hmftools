@@ -64,6 +64,7 @@ public final class PatientReporterTestFactory {
     public static PatientReporterConfig createTestReporterConfig() {
         return ImmutablePatientReporterConfig.builder()
                 .tumorSampleId(Strings.EMPTY)
+                .tumorSampleRunId(Strings.EMPTY)
                 .tumorSampleBarcode(Strings.EMPTY)
                 .outputDirReport(Strings.EMPTY)
                 .outputDirData(Strings.EMPTY)

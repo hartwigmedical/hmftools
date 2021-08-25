@@ -22,6 +22,7 @@ public interface PatientReporterConfig {
 
     // General params needed for every report
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    String TUMOR_SAMPLE_RUN_ID = "tumor_sample_run_id";
     String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
     String OUTPUT_DIRECTORY_DATA = "output_dir_data";
@@ -36,6 +37,7 @@ public interface PatientReporterConfig {
 
     // General params needed for every report but for QC fail it can be optional in some cases
     String REF_SAMPLE_ID = "ref_sample_id";
+    String REF_SAMPLE_RUN_ID = "ref_sample_run_id";
     String REF_SAMPLE_BARCODE = "ref_sample_barcode";
 
     // Params specific for QC Fail reports
@@ -85,6 +87,7 @@ public interface PatientReporterConfig {
         Options options = new Options();
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
+        options.addOption(TUMOR_SAMPLE_RUN_ID, true, "The sample ID that was used in the pipeline run.");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
         options.addOption(OUTPUT_DIRECTORY_DATA, true, "Path to where the data of the report will be written to.");
@@ -98,6 +101,7 @@ public interface PatientReporterConfig {
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
         options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which a report is generated.");
+        options.addOption(REF_SAMPLE_RUN_ID, true, "The reference sample ID that was used in the pipeline run.");
         options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the tumor sample for which a report is generated.");
 
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
@@ -143,10 +147,16 @@ public interface PatientReporterConfig {
     String refSampleId();
 
     @Nullable
+    String refSampleRunId();
+
+    @Nullable
     String refSampleBarcode();
 
     @NotNull
     String tumorSampleId();
+
+    @NotNull
+    String tumorSampleRunId();
 
     @NotNull
     String tumorSampleBarcode();
@@ -335,8 +345,10 @@ public interface PatientReporterConfig {
 
         return ImmutablePatientReporterConfig.builder()
                 .refSampleId(cmd.hasOption(REF_SAMPLE_ID) ? nonOptionalValue(cmd, REF_SAMPLE_ID) : null)
+                .refSampleRunId(cmd.hasOption(REF_SAMPLE_RUN_ID) ? nonOptionalValue(cmd, REF_SAMPLE_RUN_ID) : null)
                 .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE) : null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
+                .tumorSampleRunId(nonOptionalValue(cmd, TUMOR_SAMPLE_RUN_ID))
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
