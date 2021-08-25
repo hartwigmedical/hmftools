@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Optional;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public interface PatientReport {
@@ -11,18 +12,22 @@ public interface PatientReport {
 
     @NotNull
     default String user() {
+        // ’<Naam> (trained IT employee) and trained Clinical Molecular Biologist (KMBP)
         String systemUser = System.getProperty("user.name");
+        String userName = Strings.EMPTY;
+        String userString = Strings.EMPTY;
         if (systemUser.equals("lieke") || systemUser.equals("liekeschoenmaker")) {
-            return "Lieke Schoenmaker";
+            userName = "Lieke Schoenmaker";
         } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn")) {
-            return "Korneel Duyvesteyn";
+            userName = "Korneel Duyvesteyn";
         } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek")) {
-            return "Sandra van den Broek";
+            userName = "Sandra van den Broek";
         } else if (systemUser.equals("root")) {
-            return "trained IT employee and trained clinical molecular biologist (KMBP)";
+            userString = "trained IT employee and trained clinical molecular biologist (KMBP)";
         } else {
-            return systemUser;
+            userName = systemUser;
         }
+        return userString.isEmpty() ? "trained IT employee (" + userName + ") and trained clinical molecular biologist (KMBP)" : userString;
     }
 
     @NotNull

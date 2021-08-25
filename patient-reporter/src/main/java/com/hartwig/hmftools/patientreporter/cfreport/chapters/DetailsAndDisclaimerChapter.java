@@ -83,9 +83,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor and blood sample."));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
         String whoVerified = "This report is generated and verified by: " + patientReport.user();
-        if (!patientReport.clinicalSummary().isEmpty()) {
-            whoVerified += " and Paul Roepman";
-        }
+
         div.add(createContentParagraph(whoVerified));
         div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
