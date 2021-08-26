@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.sigs;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+
 import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -56,11 +58,11 @@ public class SnvSigUtils
 
         if(variant.ref().charAt(0) == 'A' || variant.ref().charAt(0) == 'G')
         {
-            baseChange = String.format("%c>%c", convertBase(variant.ref().charAt(0)), convertBase(variant.alt().charAt(0)));
+            baseChange = String.format("%c>%c", swapDnaBase(variant.ref().charAt(0)), swapDnaBase(variant.alt().charAt(0)));
 
             // convert the context as well
             context = String.format("%c%c%c",
-                    convertBase(rawContext.charAt(2)), convertBase(rawContext.charAt(1)), convertBase(rawContext.charAt(0)));
+                    swapDnaBase(rawContext.charAt(2)), swapDnaBase(rawContext.charAt(1)), swapDnaBase(rawContext.charAt(0)));
         }
         else
         {
@@ -69,14 +71,5 @@ public class SnvSigUtils
         }
 
         return baseChange + "_" + context;
-    }
-
-    public static char convertBase(char base)
-    {
-        if(base == 'A') return 'T';
-        if(base == 'T') return 'A';
-        if(base == 'C') return 'G';
-        if(base == 'G') return 'C';
-        return base;
     }
 }

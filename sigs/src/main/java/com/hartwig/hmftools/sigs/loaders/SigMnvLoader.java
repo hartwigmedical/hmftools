@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sigs.loaders;
 
-import static com.hartwig.hmftools.common.sigs.SnvSigUtils.convertBase;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getNewFile;
 import static com.hartwig.hmftools.sigs.loaders.SigSnvLoader.getBucketNameByIndex;
 
@@ -171,7 +171,7 @@ public class SigMnvLoader
         if(ref.equals("CA") || ref.equals("AA") || ref.equals("AG") || ref.equals("GA") || ref.equals("GG") || ref.equals("GT"))
         {
             return String.format("%c%c>%c%c",
-                    convertBase(ref.charAt(1)), convertBase(ref.charAt(0)), convertBase(alt.charAt(1)), convertBase(alt.charAt(0)));
+                    swapDnaBase(ref.charAt(1)), swapDnaBase(ref.charAt(0)), swapDnaBase(alt.charAt(1)), swapDnaBase(alt.charAt(0)));
 
             // paste(baseConvert(substr(ref,2,2)), baseConvert(substr(ref,1,1)), '>', baseConvert(substr(alt,2,2)), baseConvert(substr(alt,1,1)), sep='')
         }
@@ -182,7 +182,7 @@ public class SigMnvLoader
             if(alt.equals("CA") || alt.equals("AA") || alt.equals("AG") || alt.equals("GA") || alt.equals("GG") || alt.equals("GT"))
             {
                 // mutation = paste(ref, '>', baseConvert(substr(alt,2,2)), baseConvert(substr(alt,1,1)), sep='')
-                return String.format("%s>%c%c", ref, convertBase(alt.charAt(1)), convertBase(alt.charAt(0)));
+                return String.format("%s>%c%c", ref, swapDnaBase(alt.charAt(1)), swapDnaBase(alt.charAt(0)));
             }
         }
 

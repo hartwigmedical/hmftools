@@ -124,6 +124,8 @@ public final class VectorUtils
 
     public static void optimisedAdd(final List<Double> items, final double value, boolean ascending)
     {
+        // build a sorted list using a binary search
+
         // early exits
         if(items.isEmpty())
         {
