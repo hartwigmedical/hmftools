@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.stats;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.VectorUtils;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.logging.log4j.Level;

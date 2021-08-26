@@ -8,12 +8,12 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
 import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;
 import static com.hartwig.hmftools.common.sigs.DataUtils.lessThan;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.utils.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVectors;
+import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
 
 import java.util.Arrays;

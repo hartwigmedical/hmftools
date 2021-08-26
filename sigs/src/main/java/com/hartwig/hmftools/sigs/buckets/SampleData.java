@@ -3,10 +3,10 @@ package com.hartwig.hmftools.sigs.buckets;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MAX_NOISE_ALLOC_PERCENT;
 import static com.hartwig.hmftools.common.sigs.DataUtils.capValue;
 import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;

@@ -6,14 +6,12 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sigs.nmf;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.sigs.common.SigReporter;

@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sigs.buckets;
 
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MIN_DISCOVERY_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;

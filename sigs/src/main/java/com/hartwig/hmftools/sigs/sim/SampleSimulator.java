@@ -6,7 +6,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;

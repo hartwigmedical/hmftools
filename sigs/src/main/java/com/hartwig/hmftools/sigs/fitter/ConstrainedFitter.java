@@ -5,9 +5,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.sigs.buckets.BucketGroup.ratioRange;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 

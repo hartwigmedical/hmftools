@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.utils;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.sumMatrix;
 
 import org.apache.logging.log4j.LogManager;

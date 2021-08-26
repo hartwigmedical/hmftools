@@ -4,8 +4,8 @@ package com.hartwig.hmftools.common.sigs;
 // Package: edu.rit.numeric
 // Unit:    Class edu.rit.numeric.NonNegativeLeastSquares
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.initVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.initVector;
 import static com.hartwig.hmftools.common.utils.Matrix.copyMatrix;
 
 import org.apache.logging.log4j.LogManager;

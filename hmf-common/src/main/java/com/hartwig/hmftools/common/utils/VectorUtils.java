@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sigs;
+package com.hartwig.hmftools.common.utils;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
 
@@ -42,6 +42,11 @@ public final class VectorUtils
         }
 
         return output;
+    }
+
+    public static void clear(double[] vec)
+    {
+        initVector(vec, 0);
     }
 
     public static void initVector(double[] vec, double value)
