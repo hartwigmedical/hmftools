@@ -57,7 +57,7 @@ public class HlaSequences
     private void loadHlaPositions()
     {
         final List<String> lines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream("/ref/hla_allele_bind_positions.csv")))
+                HlaSequences.class.getResourceAsStream("/ref/hla_allele_bind_positions.csv")))
                 .lines().collect(Collectors.toList());
 
         String[] columns = lines.get(0).split(DELIM);

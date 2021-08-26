@@ -1,19 +1,36 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.clear;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_MAX;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_FACTOR;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_MAX;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
 import static com.hartwig.hmftools.neo.bind.NoiseModel.calcExpected;
 import static com.hartwig.hmftools.neo.bind.PosWeightModel.INVALID_POS;
-import static com.hartwig.hmftools.neo.bind.PosWeightModel.peptidePositionToRef;
-import static com.hartwig.hmftools.neo.bind.PosWeightModel.refPeptidePositionToActual;
+import static com.hartwig.hmftools.neo.bind.PosWeightModel.peptidePosToRef;
+import static com.hartwig.hmftools.neo.bind.PosWeightModel.refPeptidePosToActual;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 import org.junit.Test;
@@ -21,7 +38,9 @@ import org.junit.Test;
 public class BindModelTest
 {
     private static final String TEST_ALLELE_1 = "A0101";
-    private static final String TEST_ALLELE_2 = "A0102";
+    private static final String TEST_ALLELE_2 = "A0201";
+    private static final String TEST_ALLELE_3 = "A0301";
+    private static final String TEST_ALLELE_4 = "A0401";
 
     @Test
     public void testBindCounts()
@@ -56,22 +75,22 @@ public class BindModelTest
     @Test
     public void testPeptideLengthConversion()
     {
-        assertEquals(0, peptidePositionToRef(REF_PEPTIDE_LENGTH, 8, 0));
-        assertEquals(4, peptidePositionToRef(REF_PEPTIDE_LENGTH, 8, 4));
-        assertEquals(9, peptidePositionToRef(REF_PEPTIDE_LENGTH, 8, 5));
-        assertEquals(11, peptidePositionToRef(REF_PEPTIDE_LENGTH, 8, 7));
+        assertEquals(0, peptidePosToRef(REF_PEPTIDE_LENGTH, 8, 0));
+        assertEquals(4, peptidePosToRef(REF_PEPTIDE_LENGTH, 8, 4));
+        assertEquals(9, peptidePosToRef(REF_PEPTIDE_LENGTH, 8, 5));
+        assertEquals(11, peptidePosToRef(REF_PEPTIDE_LENGTH, 8, 7));
 
-        assertEquals(8, peptidePositionToRef(REF_PEPTIDE_LENGTH, 9, 5));
-        assertEquals(11, peptidePositionToRef(REF_PEPTIDE_LENGTH, 9, 8));
-        assertEquals(11, peptidePositionToRef(REF_PEPTIDE_LENGTH, 10, 9));
-        assertEquals(11, peptidePositionToRef(REF_PEPTIDE_LENGTH, 11, 10));
-        assertEquals(11, peptidePositionToRef(REF_PEPTIDE_LENGTH, 12, 11));
+        assertEquals(8, peptidePosToRef(REF_PEPTIDE_LENGTH, 9, 5));
+        assertEquals(11, peptidePosToRef(REF_PEPTIDE_LENGTH, 9, 8));
+        assertEquals(11, peptidePosToRef(REF_PEPTIDE_LENGTH, 10, 9));
+        assertEquals(11, peptidePosToRef(REF_PEPTIDE_LENGTH, 11, 10));
+        assertEquals(11, peptidePosToRef(REF_PEPTIDE_LENGTH, 12, 11));
 
-        assertEquals(5, refPeptidePositionToActual(REF_PEPTIDE_LENGTH, 8, 9));
-        assertEquals(7, refPeptidePositionToActual(REF_PEPTIDE_LENGTH, 8, 11));
-        assertEquals(11, refPeptidePositionToActual(REF_PEPTIDE_LENGTH, 12, 11));
+        assertEquals(5, refPeptidePosToActual(REF_PEPTIDE_LENGTH, 8, 9));
+        assertEquals(7, refPeptidePosToActual(REF_PEPTIDE_LENGTH, 8, 11));
+        assertEquals(11, refPeptidePosToActual(REF_PEPTIDE_LENGTH, 12, 11));
 
-        assertEquals(INVALID_POS, refPeptidePositionToActual(REF_PEPTIDE_LENGTH, 8, 8));
+        assertEquals(INVALID_POS, refPeptidePosToActual(REF_PEPTIDE_LENGTH, 8, 8));
     }
 
     @Test
@@ -94,71 +113,168 @@ public class BindModelTest
     public void testPeptideLengthWeights()
     {
         BindCountData bindCounts8 = new BindCountData(TEST_ALLELE_1, 8);
-
-        int pos = 3;
-        String peptide8 = "AAAAAAAA";
-
-        int pepLen8Count = 100;
-        for(int i = 0; i < pepLen8Count; ++i)
-        {
-            bindCounts8.processBindingPeptide(peptide8);
-        }
-
-        int aaIndex = aminoAcidIndex('A');
-
-        assertEquals(pepLen8Count, bindCounts8.totalBindCount());
-        assertEquals(100.0, bindCounts8.getBindCounts()[aaIndex][pos]);
-
         BindCountData bindCounts9 = new BindCountData(TEST_ALLELE_1, 9);
+        BindCountData bindCounts10 = new BindCountData(TEST_ALLELE_1, 10);
+        BindCountData bindCounts11 = new BindCountData(TEST_ALLELE_1, 11);
 
-        String peptide9 = "AAAAAAAAA";
+        int testPos = 0;
+        int aa = 0;
+        bindCounts8.getBindCounts()[aa][testPos] = 30;
+        bindCounts8.getBindCounts()[aa+1][testPos] = 300 - bindCounts8.getBindCounts()[aa][testPos];
 
-        int pepLen9Count = 400;
-        for(int i = 0; i < pepLen9Count; ++i)
-        {
-            bindCounts9.processBindingPeptide(peptide9);
-        }
+        bindCounts9.getBindCounts()[aa][testPos] = 80;
+        bindCounts9.getBindCounts()[aa+1][testPos] = 800 - bindCounts9.getBindCounts()[aa][testPos];
 
-        assertEquals(400.0, bindCounts9.getBindCounts()[aaIndex][pos]);
+        bindCounts10.getBindCounts()[aa][testPos] = 500;
+        bindCounts10.getBindCounts()[aa+1][testPos] = 1000 - bindCounts10.getBindCounts()[aa][testPos];
 
-        BindCountData bindCounts12 = new BindCountData(TEST_ALLELE_1, 12);
+        bindCounts11.getBindCounts()[aa][testPos] = 5;
+        bindCounts11.getBindCounts()[aa+1][testPos] = 50 - bindCounts11.getBindCounts()[aa][testPos];
 
-        String peptide12 = "AAAAAAAAAAAA";
+        List<BindCountData> bindCounts = Lists.newArrayList(bindCounts8, bindCounts9, bindCounts10, bindCounts11);
 
-        int pepLen12Count = 200;
-        for(int i = 0; i < pepLen12Count; ++i)
-        {
-            bindCounts12.processBindingPeptide(peptide12);
-        }
-
-        List<BindCountData> bindCounts = Lists.newArrayList(bindCounts8, bindCounts9, bindCounts12);
-
-        CalcConstants calcConstants = getTestCalcConstants();
+        CalcConstants calcConstants = new CalcConstants(0.1, 200,
+                0, 0, 0, 0, 0);
 
         PosWeightModel pwModel = new PosWeightModel(calcConstants, new HlaSequences());
 
         pwModel.buildWeightedCounts(bindCounts8, bindCounts);
         pwModel.buildWeightedCounts(bindCounts9, bindCounts);
-        pwModel.buildWeightedCounts(bindCounts12, bindCounts);
+        pwModel.buildWeightedCounts(bindCounts10, bindCounts);
+        pwModel.buildWeightedCounts(bindCounts11, bindCounts);
 
-        assertEquals(325, bindCounts8.getWeightedCounts()[aaIndex][0], 0.1);
-        assertEquals(325, bindCounts8.getWeightedCounts()[aaIndex][7], 0.1);
+        assertEquals(88.5, bindCounts8.getWeightedCounts()[aa][testPos], 0.1);
+        assertEquals(133.5, bindCounts9.getWeightedCounts()[aa][testPos], 0.1);
+        assertEquals(511.5, bindCounts10.getWeightedCounts()[aa][testPos], 0.1);
+        assertEquals(63.1, bindCounts11.getWeightedCounts()[aa][testPos], 0.1);
 
-        assertEquals(433.3, bindCounts9.getWeightedCounts()[aaIndex][0], 0.1);
-        assertEquals(433.3, bindCounts9.getWeightedCounts()[aaIndex][4], 0.1);
-        assertEquals(413.3, bindCounts9.getWeightedCounts()[aaIndex][5], 0.1);
-        assertEquals(433.3, bindCounts9.getWeightedCounts()[aaIndex][8], 0.1);
+        // check position translation
+        clearAll(bindCounts8);
+        clearAll(bindCounts11);
 
-        assertEquals(252.8, bindCounts12.getWeightedCounts()[aaIndex][0], 0.1);
-        assertEquals(252.8, bindCounts12.getWeightedCounts()[aaIndex][4], 0.1);
-        assertEquals(200.0, bindCounts12.getWeightedCounts()[aaIndex][5]);
-        assertEquals(200.0, bindCounts12.getWeightedCounts()[aaIndex][7]);
-        assertEquals(244.4, bindCounts12.getWeightedCounts()[aaIndex][8], 0.1);
-        assertEquals(252.8, bindCounts12.getWeightedCounts()[aaIndex][11], 0.1);
+        bindCounts8.getBindCounts()[aa][5] = 100; // 5 -> 8 in 11
+
+        bindCounts11.getBindCounts()[aa][testPos] = 0;
+        bindCounts11.getBindCounts()[aa+1][testPos] = 0;
+
+        bindCounts11.getBindCounts()[aa][6] = 100; // no impact
+        bindCounts11.getBindCounts()[aa][7] = 100; // no impact
+        bindCounts11.getBindCounts()[aa][8] = 100;
+
+        bindCounts = Lists.newArrayList(bindCounts8, bindCounts11);
+
+        pwModel.buildWeightedCounts(bindCounts8, bindCounts);
+        pwModel.buildWeightedCounts(bindCounts11, bindCounts);
+
+        assertEquals(110.0, bindCounts8.getWeightedCounts()[aa][5], 0.1);
+        assertEquals(110.0, bindCounts11.getWeightedCounts()[aa][8], 0.1);
+
+        assertEquals(100.0, bindCounts11.getWeightedCounts()[aa][6], 0.1);
+        assertEquals(100.0, bindCounts11.getWeightedCounts()[aa][7], 0.1);
     }
 
     @Test
-    public void setTestAlleleMotifWeights()
+    public void testAlleleMotifWeights()
+    {
+        // a test to match and demonstrate the documentation example calcs
+        List<BindCountData> allBindCounts = loadTestBindCounts("/allele_pos_counts_1.csv", 0);
+
+        Set<String> alleles = Sets.newHashSet();
+        allBindCounts.forEach(x -> alleles.add(x.Allele));
+        assertEquals(4, alleles.size());
+
+        HlaSequences hlaSequences = new HlaSequences();
+
+        Map<String,List<String>> allelePosSequences = hlaSequences.getAllelePositionSequences();
+        String seqOther = "AAA";
+        List<String> otherSequences = Lists.newArrayList(seqOther, seqOther, seqOther, seqOther, seqOther, seqOther, seqOther, seqOther);
+
+        List<String> sequences = Lists.newArrayList("AHV");
+        sequences.addAll(otherSequences);
+        allelePosSequences.put(TEST_ALLELE_1, sequences);
+
+        sequences = Lists.newArrayList("AHA");
+        sequences.addAll(otherSequences);
+        allelePosSequences.put(TEST_ALLELE_2, sequences);
+
+        sequences = Lists.newArrayList("AKA");
+        sequences.addAll(otherSequences);
+        allelePosSequences.put(TEST_ALLELE_3, sequences);
+
+        sequences = Lists.newArrayList("AHA");
+        sequences.addAll(otherSequences);
+        allelePosSequences.put(TEST_ALLELE_4, sequences);
+
+        CalcConstants calcConstants = new CalcConstants(0.2, 200,
+                0.2, 100, 0, 0, 0);
+
+        PosWeightModel pwModel = new PosWeightModel(calcConstants, hlaSequences);
+
+        for(String allele : alleles)
+        {
+            List<BindCountData> alleleBindCounts = allBindCounts.stream().filter(x -> x.Allele.equals(allele)).collect(Collectors.toList());
+            alleleBindCounts.forEach(x -> pwModel.buildWeightedCounts(x, alleleBindCounts));
+            pwModel.buildPositionAdjustedTotals(alleleBindCounts);
+        }
+
+        BindCountData bindCounts9 = allBindCounts.stream()
+                .filter(x -> x.PeptideLength == 9 && x.Allele.equals(TEST_ALLELE_4)).findFirst().orElse(null);
+        assertTrue(bindCounts9 != null);
+
+        int testPos = 0;
+        int testAa = 0;
+        assertEquals(854.0, bindCounts9.getAdjustedPosTotals()[testPos], 0.1);
+
+        // now test allele-motif weighting
+        List<BindCountData> pepLenBindCounts = allBindCounts.stream().filter(x -> x.PeptideLength == 9).collect(Collectors.toList());
+
+
+        pwModel.buildFinalWeightedCounts(bindCounts9, pepLenBindCounts);
+
+        assertEquals(161.4, bindCounts9.getFinalWeightedCounts()[testAa][testPos], 0.1);
+    }
+
+    private static void clearAll(final BindCountData bindCounts)
+    {
+        clear(bindCounts.getBindCounts());
+        clear(bindCounts.getWeightedCounts());
+        clear(bindCounts.getFinalWeightedCounts());
+        VectorUtils.clear(bindCounts.getAdjustedPosTotals());
+    }
+
+    private static List<BindCountData> loadTestBindCounts(final String bindCountsFile, int targetPosIndex)
+    {
+        List<BindCountData> bindCountDataList = Lists.newArrayList();
+
+        final List<String> lines = new BufferedReader(new InputStreamReader(
+                BindModelTest.class.getResourceAsStream(bindCountsFile))).lines().collect(Collectors.toList());
+
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        lines.remove(0);
+
+        int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
+        int pepLenIndex = fieldsIndexMap.get(FLD_PEPTIDE_LEN);
+        int aaCountIndex = fieldsIndexMap.get("AminoAcidCount");
+        int posTotalIndex = fieldsIndexMap.get("PositionTotal");
+
+        for(String line : lines)
+        {
+            final String[] values = line.split(DELIMITER, -1);
+
+            BindCountData bindCounts = new BindCountData(values[alleleIndex], Integer.parseInt(values[pepLenIndex]));
+            int aaCount = Integer.parseInt(values[aaCountIndex]);
+            int posTotal = Integer.parseInt(values[posTotalIndex]);
+            bindCounts.getBindCounts()[0][targetPosIndex] = aaCount;
+            bindCounts.getBindCounts()[1][targetPosIndex] = posTotal - aaCount;
+            bindCountDataList.add(bindCounts);
+        }
+
+        return bindCountDataList;
+    }
+
+    /*
+    @Test
+    public void testAlleleMotifWeights()
     {
         BindCountData bindCountsA1 = new BindCountData(TEST_ALLELE_1, 9);
 
@@ -216,6 +332,7 @@ public class BindModelTest
         assertEquals(402.5, bindCountsA2.getFinalWeightedCounts()[aaIndex][3], 0.1);
         assertEquals(420.0, bindCountsA2.getFinalWeightedCounts()[aaIndex][4], 0.1);
     }
+    */
 
     @Test
     public void testNoiseModel()
@@ -272,6 +389,7 @@ public class BindModelTest
 
     private static CalcConstants getTestCalcConstants()
     {
-        return new CalcConstants(100, 100, 1, 0, 0, 0);
+        return new CalcConstants(DEFAULT_PEP_LEN_WEIGHT_FACTOR, DEFAULT_PEP_LEN_WEIGHT_MAX,
+                DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR, DEFAULT_ALLELE_MOTIF_WEIGHT_MAX, 0, 0, 0);
     }
 }

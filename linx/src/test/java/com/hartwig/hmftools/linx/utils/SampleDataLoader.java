@@ -26,7 +26,7 @@ public class SampleDataLoader
 
     public static List<SvVarData> loadSampleTestData(@NotNull final String resource)
     {
-        final InputStream inputStream = StructuralVariantFile.class.getResourceAsStream("/sample_data/" + resource);
+        final InputStream inputStream = SampleDataLoader.class.getResourceAsStream("/sample_data/" + resource);
 
         final List<String> inputData = new BufferedReader(new InputStreamReader(inputStream)).lines()
                 .filter(x -> !x.startsWith("svId"))

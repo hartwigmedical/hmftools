@@ -93,7 +93,7 @@ public class BlosumMapping
     private void load()
     {
         final List<String> lines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream("/ref/blosum62.csv")))
+                BlosumMapping.class.getResourceAsStream("/ref/blosum62.csv")))
                 .lines().collect(Collectors.toList());
 
         String[] columns = lines.get(0).split(DELIM);

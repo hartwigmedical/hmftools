@@ -1,23 +1,26 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static org.apache.commons.math3.util.FastMath.log;
-
 public class CalcConstants
 {
-    public final double PeptideLengthWeight;
-    public final double AlleleWeight;
-    public final double WeightExponent;
+    public final double PeptideLengthWeightFactor;
+    public final double PeptideLengthWeightMax;
+
+    public final double AlleleWeightFactor;
+    public final double AlleleWeightMax;
+
     public final double NoiseProbability;
     public final double NoiseWeight;
     public final double GlobalWeight;
 
+
     public CalcConstants(
-            double peptideLengthWeight, double alleleWeight, double weightExponent,
+            double peptideLengthWeightFactor, double peptideLengthWeightMax, double alleleWeightFactor, double alleleWeightMax,
             double noiseProb, double noiseWeight, double globalWeight)
     {
-        PeptideLengthWeight = peptideLengthWeight;
-        AlleleWeight = alleleWeight;
-        WeightExponent = weightExponent;
+        PeptideLengthWeightFactor = peptideLengthWeightFactor;
+        PeptideLengthWeightMax = peptideLengthWeightMax;
+        AlleleWeightFactor = alleleWeightFactor;
+        AlleleWeightMax = alleleWeightMax;
         NoiseProbability = noiseProb;
         NoiseWeight = noiseWeight;
         GlobalWeight = globalWeight;

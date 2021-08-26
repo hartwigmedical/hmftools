@@ -208,11 +208,15 @@ public class BindTrainer
                 }
             }
 
+            // calculate weighted counts across peptide lengths per position and amino acid
             for(BindCountData bindCounts : pepLenBindCounts)
             {
                 totalAlelleCount += bindCounts.totalBindCount();
                 mPosWeightModel.buildWeightedCounts(bindCounts, pepLenBindCounts);
             }
+
+            // calculate position totals across the lengths for use when blending alleles
+            mPosWeightModel.buildPositionAdjustedTotals(pepLenBindCounts);
 
             alleleTotalCounts.put(allele, totalAlelleCount);
         }
@@ -241,7 +245,7 @@ public class BindTrainer
 
                 if(bindCounts != null)
                 {
-                    mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts, alleleTotalCounts);
+                    mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts);
                 }
             }
         }

@@ -44,7 +44,7 @@ public class AminoAcidFrequency
     private void loadFrequencies()
     {
         final List<String> lines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream("/ref/amino_acid_frequencies.csv")))
+                AminoAcidFrequency.class.getResourceAsStream("/ref/amino_acid_frequencies.csv")))
                 .lines().collect(Collectors.toList());
 
         final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);

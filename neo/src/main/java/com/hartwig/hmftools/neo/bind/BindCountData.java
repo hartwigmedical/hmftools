@@ -24,6 +24,7 @@ public class BindCountData
     private final double[][] mNoiseCounts; // adjusted for noise
 
     private final double[][] mWeightedCounts; // weighted across the peptide lengths for this allele, padded to reference length
+    private final double[] mAdjustedPosTotals; // weighted totals per position from all lengths
     private final double[][] mFinalWeightedCounts; // weighted across all other alleles, padded to reference length
 
     private final Map<String,Integer> mComboCounts;
@@ -39,6 +40,7 @@ public class BindCountData
         mNoiseCounts = new double[aminoAcidCount][PeptideLength];
         mWeightedCounts = new double[aminoAcidCount][PeptideLength];
         mFinalWeightedCounts = new double[aminoAcidCount][PeptideLength];
+        mAdjustedPosTotals = new double[PeptideLength];
 
         mComboCounts = Maps.newHashMap();
         mTotalBinds = 0;
@@ -48,6 +50,7 @@ public class BindCountData
     public Map<String,Integer> getComboData() { return mComboCounts; }
     public final double[][] getNoiseCounts() { return mNoiseCounts; }
     public final double[][] getWeightedCounts() { return mWeightedCounts; }
+    public final double[] getAdjustedPosTotals() { return mAdjustedPosTotals; }
     public final double[][] getFinalWeightedCounts() { return mFinalWeightedCounts; }
     public int totalBindCount() { return mTotalBinds; }
 
@@ -62,15 +65,7 @@ public class BindCountData
         if(bindData.Peptide.length() != PeptideLength || !bindData.Allele.equals(Allele))
             return;
 
-
         ++mTotalBinds; // every observation means the peptide does bind
-
-        /* from when affinity was used to judge likelihood of binding
-        double bindPerc = calcConstants.deriveAffinityPercent(bindData.Affinity);
-        boolean actualBind = bindData.Affinity < calcConstants.BindingAffinityHigh;
-        boolean predictedBind = bindData.predictedAffinity() < calcConstants.BindingAffinityHigh && actualBind;
-        */
-
 
         for(int pos = 0; pos < bindData.Peptide.length(); ++pos)
         {

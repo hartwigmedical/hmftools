@@ -5,10 +5,11 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_MAX;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTH_WEIGHT;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_WEIGHT_EXPONENT;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_FACTOR;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_MAX;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
@@ -60,8 +61,10 @@ public class BinderConfig
     private static final String BIND_LIKELIHOOD_FILE = "bind_likelihood_file";
 
     private static final String WEIGHT_EXPONENT = "weight_exponent";
-    private static final String LENGTH_WEIGHT = "length_weight";
-    private static final String ALLELE_MOTIF_WEIGHT = "allele_motif_weight";
+    private static final String PEP_LEN_WEIGHT_FACTOR = "pl_weight_factor";
+    private static final String PEP_LEN_WEIGHT_MAX = "pl_weight_max";
+    private static final String ALLELE_MOTIF_WEIGHT_FACTOR = "am_weight_factor";
+    private static final String ALLELE_MOTIF_WEIGHT_MAX = "am_weight_max";
     private static final String NOISE_PROB = "noise_prob";
     private static final String NOISE_WEIGHT = "noise_weight";
     private static final String GLOBAL_WEIGHT = "global_weight";
@@ -92,9 +95,10 @@ public class BinderConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         Constants = new CalcConstants(
-                Double.parseDouble(cmd.getOptionValue(LENGTH_WEIGHT, String.valueOf(DEFAULT_PEPTIDE_LENGTH_WEIGHT))),
-                Double.parseDouble(cmd.getOptionValue(ALLELE_MOTIF_WEIGHT, String.valueOf(DEFAULT_ALLELE_MOTIF_WEIGHT))),
-                Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(DEFAULT_WEIGHT_EXPONENT))),
+                Double.parseDouble(cmd.getOptionValue(PEP_LEN_WEIGHT_FACTOR, String.valueOf(DEFAULT_PEP_LEN_WEIGHT_FACTOR))),
+                Double.parseDouble(cmd.getOptionValue(PEP_LEN_WEIGHT_MAX, String.valueOf(DEFAULT_PEP_LEN_WEIGHT_MAX))),
+                Double.parseDouble(cmd.getOptionValue(ALLELE_MOTIF_WEIGHT_FACTOR, String.valueOf(DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR))),
+                Double.parseDouble(cmd.getOptionValue(ALLELE_MOTIF_WEIGHT_MAX, String.valueOf(DEFAULT_ALLELE_MOTIF_WEIGHT_MAX))),
                 Double.parseDouble(cmd.getOptionValue(NOISE_PROB, "0")), // String.valueOf(DEFAULT_NOISE_PROB)
                 Double.parseDouble(cmd.getOptionValue(NOISE_WEIGHT, "0")), // String.valueOf(DEFAULT_NOISE_WEIGHT)
                 Double.parseDouble(cmd.getOptionValue(GLOBAL_WEIGHT, "0")));
@@ -187,8 +191,8 @@ public class BinderConfig
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
 
         options.addOption(WEIGHT_EXPONENT, true, "Weight exponent");
-        options.addOption(ALLELE_MOTIF_WEIGHT, true, "Allele motif weight");
-        options.addOption(LENGTH_WEIGHT, true, "Length weight");
+        options.addOption(ALLELE_MOTIF_WEIGHT_MAX, true, "Allele motif weight");
+        options.addOption(PEP_LEN_WEIGHT_FACTOR, true, "Length weight");
         options.addOption(NOISE_PROB, true, "Noise target probability");
         options.addOption(NOISE_WEIGHT, true, "Noise weight");
         options.addOption(GLOBAL_WEIGHT, true, "Global counts weight");

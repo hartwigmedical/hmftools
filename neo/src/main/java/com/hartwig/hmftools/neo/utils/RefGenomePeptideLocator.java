@@ -4,7 +4,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -15,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -66,7 +66,7 @@ public class RefGenomePeptideLocator
 
         loadPeptides(cmd.getOptionValue(PEPTIDE_FILE));
 
-        mWriter = initialiseWriter(parseOutputDir(cmd));
+        mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
     }
 
     private void loadPeptides(final String filename)
@@ -147,11 +147,17 @@ public class RefGenomePeptideLocator
         closeBufferedWriter(mWriter);
     }
 
-    private BufferedWriter initialiseWriter(final String outputDir)
+    private BufferedWriter initialiseWriter(final String outputDir, final String outputId)
     {
         try
         {
-            String outputFile = outputDir + "peptide_search_results.csv";
+            String outputFile = outputDir + "peptide_search";
+
+            if(outputId != null)
+                outputFile += "_" + outputId;
+
+            outputFile += ".csv";
+
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("Peptide,GeneId,GeneName,TransId,AminoAcidPos,UpFlank,DownFlank");
@@ -282,6 +288,7 @@ public class RefGenomePeptideLocator
         options.addOption(PEPTIDE_FILE, true, "Peptides to search for");
         options.addOption(FLANK_LENGTH, true, "Number of amino acid flanks to retrieve");
         options.addOption(THREADS, true, "Threads (default none)");
+        options.addOption(OUTPUT_ID, true, "Output file identifier");
         addEnsemblDir(options);
         addLoggingOptions(options);
         addOutputDir(options);

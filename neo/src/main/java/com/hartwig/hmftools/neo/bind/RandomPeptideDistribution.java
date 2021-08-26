@@ -21,7 +21,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sigs.VectorUtils;
+import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 public class RandomPeptideDistribution

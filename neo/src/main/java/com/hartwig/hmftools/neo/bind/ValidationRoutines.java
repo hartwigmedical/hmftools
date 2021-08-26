@@ -203,7 +203,7 @@ public class ValidationRoutines
             // clear any previously set values
             MatrixUtils.clear(bindCounts.getFinalWeightedCounts());
             
-            mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts, mAlleleTotalCounts);
+            mPosWeightModel.buildFinalWeightedCounts(bindCounts, allBindCounts);
         }
 
         Map<Integer,BindCountData> pepLenBindCounts = mAlleleBindCounts.get(targetAllele);
