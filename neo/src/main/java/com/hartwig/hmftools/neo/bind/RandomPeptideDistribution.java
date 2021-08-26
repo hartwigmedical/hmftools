@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_LENGTH;
+import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_MAX_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
 import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 
@@ -239,6 +240,10 @@ public class RandomPeptideDistribution
 
             for(BindScoreMatrix matrix : peptideLengthMatrixMap.values())
             {
+                // for now hard-code exclusion of length 12 since other tools are 8-11
+                if(matrix.PeptideLength > PAN_PEPTIDE_MAX_LENGTH)
+                    continue;
+
                 int count = 0;
 
                 for(String peptide : mRefRandomPeptides)

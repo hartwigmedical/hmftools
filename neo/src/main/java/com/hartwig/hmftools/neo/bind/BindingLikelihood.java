@@ -301,7 +301,6 @@ public class BindingLikelihood
             }
         }
 
-        // Map<Integer,double[]> pepLenLikelihoods = Maps.newHashMap();
         double totalAdjustedCounts = 0;
 
         double[][] pepLenLikelihoods = new double[PEPTIDE_LENGTHS][totalBuckets];
@@ -310,9 +309,6 @@ public class BindingLikelihood
         {
             int peptideLength = entry.getKey();
             int pepLenIndex = peptideLengthIndex(peptideLength);
-
-            // double[] likelihoods = new double[totalBuckets];
-            // pepLenLikelihoods.put(peptideLength, likelihoods);
 
             final int[] rankCounts = pepLenRankCounts.get(peptideLength);
 
@@ -343,20 +339,6 @@ public class BindingLikelihood
         }
 
         mAlleleLikelihoodMap.put(allele, pepLenLikelihoods);
-
-        /*
-        for(Map.Entry<Integer,List<Double>> entry : pepLenRanks.entrySet())
-        {
-            int peptideLength = entry.getKey();
-
-            double[] likelihoods = pepLenLikelihoods.get(peptideLength);
-
-            for(int i = 0; i < likelihoods.length; ++i)
-            {
-                likelihoods[i] /= totalAdjustedCounts;
-            }
-        }
-        */
 
         writeAlleleData(allele, pepLenLikelihoods);
     }
@@ -399,28 +381,10 @@ public class BindingLikelihood
                 for(int i = 0; i < mScoreRankBuckets.size(); ++i)
                 {
                     mWriter.write(String.format(",%.6f", pepLenLikelihoods[pl][i]));
-                    // pepLenLikelihoods[pl][i] /= totalAdjustedCounts;
                 }
 
                 mWriter.newLine();
             }
-
-            /*
-            for(Map.Entry<Integer,double[]> entry : pepLenLikelihoodMap.entrySet())
-            {
-                int peptideLength = entry.getKey();
-                final double[] likelihoods = entry.getValue();
-
-                mWriter.write(String.format("%s,%d", allele, peptideLength));
-
-                for(int i = 0; i < likelihoods.length; ++i)
-                {
-                    mWriter.write(String.format(",%.6f", likelihoods[i]));
-                }
-
-                mWriter.newLine();
-            }
-            */
         }
         catch (IOException e)
         {
