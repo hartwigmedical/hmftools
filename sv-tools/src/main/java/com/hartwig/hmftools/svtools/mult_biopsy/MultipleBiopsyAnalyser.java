@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.svtools.mult_biopsy;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -52,10 +55,7 @@ public class MultipleBiopsyAnalyser
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         String outputDir = parseOutputDir(cmd);
 
@@ -74,8 +74,8 @@ public class MultipleBiopsyAnalyser
         final Options options = new Options();
         options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
         options.addOption(SVS_INPUT_FILE, true, "LINX SVs file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addOutputDir(options);
+        addLoggingOptions(options);
         return options;
     }
 

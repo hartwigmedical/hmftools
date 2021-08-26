@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.cohort;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -170,7 +171,7 @@ public class SampleSummaries
         Options options = new Options();
         options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs");
         options.addOption(SAMPLE_FILES_DIR, true, "Path to candidate-coverage files");
-        options.addOption(OUTPUT_DIR, true, "Path to output");
+        addOutputDir(options);
         SampleTruthSet.addCmdLineOptions(options);
         CohortFrequency.addCmdLineOptions(options);
 

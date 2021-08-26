@@ -4,10 +4,14 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.panelbed.RegionData.validate;
@@ -423,14 +427,13 @@ public class GenerateBedRegions
         options.addOption(TRANS_TSL_FILE, true, "Ensembl valid TSL transcript IDs");
         options.addOption(COMPARISON_BED_FILES, true, "Comparison BED file");
         options.addOption(OUTPUT_FILE, true, "Output BED filename");
-        options.addOption(ENSEMBL_DATA_DIR, true, "Path to the Ensembl data cache directory");
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version, 37 or 38 (default = 38)");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addEnsemblDir(options);
+        addRefGenomeConfig(options);
+        addLoggingOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         GenerateBedRegions generateBedRegions = new GenerateBedRegions(cmd);
         generateBedRegions.run();

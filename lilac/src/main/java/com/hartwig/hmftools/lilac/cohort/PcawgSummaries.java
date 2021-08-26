@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.cohort;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -156,7 +157,7 @@ public class PcawgSummaries
 
         Options options = new Options();
         options.addOption(PCAWG_TYPES_FILE, true, "PCAWG json file");
-        options.addOption(OUTPUT_DIR, true, "Path to output");
+        addOutputDir(options);
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);

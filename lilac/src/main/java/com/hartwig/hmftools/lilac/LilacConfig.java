@@ -5,10 +5,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -289,9 +292,8 @@ public class LilacConfig
         options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
         options.addOption(RUN_ID, true,"Only search for HLA-Y fragments");
         options.addOption(RESOURCE_DIR, true,"Path to resource files");
-        options.addOption(OUTPUT_DIR, true,"Path to output");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true,"Ref genome version V37 (default) or V38");
+        addOutputDir(options);
+        addRefGenomeConfig(options);
         options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold");
         options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required");
         options.addOption(MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,"Min high-qual fragment evidence factor");
@@ -306,8 +308,7 @@ public class LilacConfig
         options.addOption(SOMATIC_VARIANTS, true,"Path to somatic VCF");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");
-        options.addOption(LOG_DEBUG, false, "More detailed logging of phasing");
-        options.addOption(LOG_LEVEL, true, "Specify log level WARN, INFO, DEBUG or TRACE");
+        addLoggingOptions(options);
         options.addOption(THREADS, true,"Number of threads");
         DatabaseAccess.addDatabaseCmdLineArgs((Options) options);
         return options;

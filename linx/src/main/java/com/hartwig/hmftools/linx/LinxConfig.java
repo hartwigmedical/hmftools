@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -93,7 +94,6 @@ public class LinxConfig
     private static final String GERMLINE = "germline";
 
     // reference files
-    public static final String REF_GENOME_FILE = "ref_genome";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String INDEL_FILE = "indel_input_file";
@@ -336,7 +336,7 @@ public class LinxConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(PURPLE_DATA_DIR, true, "Sample purple data directory");
-        options.addOption(OUTPUT_DIR, true, "Linx output directory");
+        addOutputDir(options);
         options.addOption(SAMPLE_DATA_DIR, true, "Optional: directory for per-sample SV data, default is to use output_dir");
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");

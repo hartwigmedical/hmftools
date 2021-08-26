@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.svtools.sequence;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.Strings.reverseString;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -23,10 +25,8 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -48,7 +48,7 @@ public class RefSequenceGenerator
 
         try
         {
-            final String refGenomeFile = cmd.getOptionValue(REF_GENOME_FILE);
+            final String refGenomeFile = cmd.getOptionValue(REF_GENOME);
             IndexedFastaSequenceFile refGenome = new IndexedFastaSequenceFile(new File(refGenomeFile));
             mRefGenome = new RefGenomeSource(refGenome);
         }
@@ -208,15 +208,15 @@ public class RefSequenceGenerator
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(KMER_INPUT_FILE, true, "File specifying locations for which to produce K-mers");
         options.addOption(BED_FILE, true, "File specifying locations for which to produce ref-genome sequences");
-        options.addOption(REF_GENOME_FILE, true, "Ref genome file");
+        addRefGenomeConfig(options);
+        addOutputDir(options);
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         RefSequenceGenerator refSequenceGenerator = new RefSequenceGenerator(cmd);
         refSequenceGenerator.run();

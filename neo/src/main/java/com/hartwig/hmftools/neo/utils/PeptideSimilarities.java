@@ -35,6 +35,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
+// routine for finding the most similar peptide from a collection using Blosum amino-acid correlations
 public class PeptideSimilarities
 {
     private final String mPeptidesFile;

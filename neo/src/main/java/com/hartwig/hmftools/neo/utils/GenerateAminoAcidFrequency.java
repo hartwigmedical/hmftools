@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -102,9 +105,10 @@ public class GenerateAminoAcidFrequency
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(ENSEMBL_DATA_DIR, true, "Ensembl data dir");
+        addEnsemblDir(options);
         options.addOption(AMINO_ACID_FREQ_FILE, true, "Output filename");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        addLoggingOptions(options);
+        addOutputDir(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

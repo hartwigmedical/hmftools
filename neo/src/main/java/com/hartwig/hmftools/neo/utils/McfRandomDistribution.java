@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -47,6 +48,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
+// rather than use/trust McfFlurry's affinity and presentation score percentiles, rebuild a distribution for each of them using their
+// scores on a set of random peptides (eg 100K)
 public class McfRandomDistribution
 {
     private final RandomPeptideConfig mConfig;
@@ -277,10 +280,9 @@ public class McfRandomDistribution
         options.addOption(PREDICTIONS_FILE, true, "MCF predictions file");
         options.addOption(VALIDATION_FILE, true, "Binding validation file");
         options.addOption(USE_PRESENTATION, false, "Rank and score using presentation instead of affinity");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(OUTPUT_ID, true, "Output file id");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
         addLoggingOptions(options);
+        addOutputDir(options);
+        options.addOption(OUTPUT_ID, true, "Output file id");
 
         final CommandLine cmd = createCommandLine(args, options);
 

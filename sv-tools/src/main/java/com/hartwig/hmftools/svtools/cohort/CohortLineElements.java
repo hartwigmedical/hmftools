@@ -3,8 +3,11 @@ package com.hartwig.hmftools.svtools.cohort;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -14,7 +17,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
@@ -35,10 +37,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -81,9 +81,9 @@ public class CohortLineElements
 
         try
         {
-            if(cmd.hasOption(REF_GENOME_FILE))
+            if(cmd.hasOption(REF_GENOME))
             {
-                mRefGenomeFile = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME_FILE)));
+                mRefGenomeFile = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME)));
             }
         }
         catch (Exception e)
@@ -650,16 +650,15 @@ public class CohortLineElements
         options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
         options.addOption(POLYMORPHIC_DATA_FILE, true, "Polymorphic LINE data file");
         options.addOption(KNOWN_DATA_FILE, true, "Known LINE elements file");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
         options.addOption(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
         options.addOption(WRITE_LINE_SEQUENCES, false, "Write ref genome LINE element sequences");
-        options.addOption(REF_GENOME_FILE, true, "Path to the indexed ref genome fasta file");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addRefGenomeConfig(options);
+        addLoggingOptions(options);
+        addOutputDir(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         CohortLineElements cohortLineElements = new CohortLineElements(cmd);
         cohortLineElements.run();

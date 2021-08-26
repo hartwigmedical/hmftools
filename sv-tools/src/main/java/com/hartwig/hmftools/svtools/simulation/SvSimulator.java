@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svtools.simulation;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import com.hartwig.hmftools.common.utils.ConfigUtils;
@@ -48,7 +49,7 @@ public class SvSimulator
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        addOutputDir(options);
         ConfigUtils.addLoggingOptions(options);
         ShatteringConfig.addCommandLineOptions(options);
         return options;

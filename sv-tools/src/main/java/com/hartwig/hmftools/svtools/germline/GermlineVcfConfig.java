@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import java.util.Arrays;
@@ -107,15 +110,15 @@ public class GermlineVcfConfig
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
         options.addOption(BATCH_ROOT_DIR, true, "Path to the root directory for sample runs");
         options.addOption(PROCESSED_FILE, true, "Path to a previously-run output file");
-        options.addOption(ENSEMBL_DATA_DIR, true, "Ensembl data cache directory");
+        addEnsemblDir(options);
         options.addOption(GENE_PANEL_FILE, true, "Gene panel file");
         options.addOption(CHECK_DISRUPTIONS, false, "Check gene disruptions and filter out non-disruptive genes");
         options.addOption(LINK_BY_ASSEMBLY, false, "Look for assembled links");
         options.addOption(SCOPE, true, "Scope: germline or somatic");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
         options.addOption(OUTPUT_VCF, true, "Path to write results");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        addOutputDir(options);
+        addLoggingOptions(options);
+        addRefGenomeConfig(options);
 
         options.addOption(REQUIRE_PASS, false, "Require variants to have GRIDSS filter = PASS");
         options.addOption(QUAL_SCORE_THRESHOLD, true, "Qual score threshold");

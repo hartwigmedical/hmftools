@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,6 +20,12 @@ public class RefGenomeSource implements RefGenomeInterface
     private final IndexedFastaSequenceFile mRefGenome;
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeSource.class);
+
+    public static void addRefGenomeConfig(final Options options)
+    {
+        options.addOption(REF_GENOME_VERSION, true, "Ref genome version, 37 or 38 (default = 38)");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+    }
 
     public RefGenomeSource(final IndexedFastaSequenceFile refGenome)
     {

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -32,6 +33,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
+// looks for outlier studies in allele-peptide binding training data
 public class StudyChecker
 {
     private final Map<String,List<BindStudyData>> mAlleleDataMap;
@@ -58,7 +60,6 @@ public class StudyChecker
 
         loadTrainingData(dataFile);
 
-        // int maxDataPoints = mAlleleDataMap.values().stream().mapToInt(x -> x.size()).max().orElse(0);
         mFisherEt = new FisherExactTest();
         mFisherEt.initialise(1000000);
     }
@@ -226,7 +227,7 @@ public class StudyChecker
     {
         final Options options = new Options();
         options.addOption(STUDY_DATA_FILE, true, "Study binding data");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        addOutputDir(options);
         addLoggingOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);

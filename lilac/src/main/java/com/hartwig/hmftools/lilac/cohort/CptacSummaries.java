@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.cohort;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -140,7 +141,7 @@ public class CptacSummaries
         Options options = new Options();
         options.addOption(CPTAC_DIR, true, "Directory with CPTAC json file");
         options.addOption(CPTAC_SAMPLES, true, "File with CPTAC sampleIds");
-        options.addOption(OUTPUT_DIR, true, "Path to output");
+        addOutputDir(options);
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);

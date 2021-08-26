@@ -33,6 +33,8 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
+import org.apache.commons.cli.Options;
+
 public class EnsemblDataCache
 {
     private final String mDataPath;
@@ -56,8 +58,9 @@ public class EnsemblDataCache
     private final List<GeneData> mAlternativeGeneData;
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
-    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
+    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir"; // eventually deprecated
     public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
+    public static final String ENSEMBL_DATA_DIR_CFG = "Ensembl data file directory";
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {
@@ -77,6 +80,12 @@ public class EnsemblDataCache
         mRequireGeneSynonyms = false;
         mDownstreamGeneAnnotations = Maps.newHashMap();
         mAlternativeGeneData = Lists.newArrayList();
+    }
+
+    public static void addEnsemblDir(final Options options)
+    {
+        options.addOption(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_CFG);
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, ENSEMBL_DATA_DIR_CFG);
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)

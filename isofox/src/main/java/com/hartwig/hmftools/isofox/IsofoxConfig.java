@@ -2,6 +2,8 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -11,7 +13,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
@@ -59,9 +64,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class IsofoxConfig
 {
     // config items
-    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SAMPLE = "sample";
-    public static final String DATA_OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_ID = "output_id";
     public static final String FUNCTIONS = "functions";
 
@@ -412,7 +415,7 @@ public class IsofoxConfig
 
     public static boolean validConfigPaths(final CommandLine cmd)
     {
-        return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
+        return configPathValid(cmd, OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, ENSEMBL_DATA_DIR)
                 && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
                 && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE)
                 && configPathValid(cmd, NEO_EPITOPE_FILE);
@@ -537,7 +540,9 @@ public class IsofoxConfig
     {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
+        addEnsemblDir(options);
+        addOutputDir(options);
+        addLoggingOptions(options);
 
         options.addOption(FUNCTIONS, true, "Optional: list of functional routines to run (see documentation)");
         options.addOption(CANONICAL_ONLY, false, "Check all transcripts, not just canonical");
@@ -545,9 +550,6 @@ public class IsofoxConfig
         options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
         options.addOption(GENE_READ_LIMIT, true, "Per-gene limit on max reads processed (default=0, not applied)");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");

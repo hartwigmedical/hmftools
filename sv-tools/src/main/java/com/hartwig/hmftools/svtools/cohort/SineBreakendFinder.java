@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.svtools.cohort;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -326,15 +329,14 @@ public class SineBreakendFinder
         options.addOption(SAMPLE_ID_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(RM_TYPES, true, "External LINE data sample counts");
         options.addOption(REPEAT_MASKER_FILE, true, "Polymorphic LINE data file");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputDir(options);
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         SineBreakendFinder cohortLineElements = new SineBreakendFinder(cmd);
         cohortLineElements.run();

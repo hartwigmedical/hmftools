@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.EXON_DATA_DELIM;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
@@ -172,7 +173,7 @@ public class GenerateGenePanelRefSeq
         final Options options = new Options();
         options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
         EnsemblDAO.addCmdLineArgs(options);
-        options.addOption(ENSEMBL_DATA_DIR, true, "Path to Ensembl data cache files");
+        addEnsemblDir(options);
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         return options;

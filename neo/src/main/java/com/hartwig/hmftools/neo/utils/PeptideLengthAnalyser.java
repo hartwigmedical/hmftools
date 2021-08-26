@@ -32,6 +32,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
+// runs Fisher exact test to look for co-occurrence in amino-acid position vs peptide length
 public class PeptideLengthAnalyser
 {
     private final Map<String,List<BindPositionData>> mAlleleDataMap;

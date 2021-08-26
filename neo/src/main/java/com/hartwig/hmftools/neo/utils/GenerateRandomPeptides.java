@@ -5,9 +5,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -44,6 +47,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
+// routine for generating random peptides from the ref-genome for a given set of lengths and alleles (optional)
 public class GenerateRandomPeptides
 {
     private final int mRequiredPeptides;
@@ -334,15 +338,15 @@ public class GenerateRandomPeptides
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(ENSEMBL_DATA_DIR, true, "Ensembl data dir");
+        addEnsemblDir(options);
         options.addOption(OUTPUT_FILE, true, "Output filename");
         options.addOption(REQ_PEPTIDES, true, "Number of peptides to find randomly from the proteome");
         options.addOption(PEPTIDES_LENGTHS, true, "Peptide lengths, separated by ';'");
         options.addOption(ALLELES_FILE, true, "File with alleles to assign");
         options.addOption(PEPTIDE_EXCLUSIONS_FILE, true, "File with training set peptides to avoid replicating");
 
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputDir(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
