@@ -59,8 +59,8 @@ public class AnalysedPatientReporter {
                 reportData.taxonomyDb(),
                 reportData.virusInterpretationModel(),
                 reportData.virusBlackListModel());
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
-                sampleMetadata.refSampleId(),
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleRunId(),
+                sampleMetadata.refSampleRunId(),
                 config,
                 sampleReport.germlineReportingLevel());
 

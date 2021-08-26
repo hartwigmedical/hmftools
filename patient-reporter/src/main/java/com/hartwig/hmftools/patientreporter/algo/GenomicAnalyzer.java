@@ -62,9 +62,9 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleId, @Nullable String referenceSampleId, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@NotNull String tumorSampleRunId, @Nullable String referenceSampleRunId, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
-        PurpleData purpleData = PurpleDataLoader.load(tumorSampleId, referenceSampleId,
+        PurpleData purpleData = PurpleDataLoader.load(tumorSampleRunId, referenceSampleRunId,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),
