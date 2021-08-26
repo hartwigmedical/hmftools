@@ -3,8 +3,7 @@
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
 GRIPSS processes the GRIDSS output and produces a somatic vcf.
 
-Repeat masker and viral annotations must be included in the GRIDSS output before running GRIPSS. 
-Details on how to include these are available on the GRIDSS readme [here](https://github.com/PapenfussLab/gridss#how-do-i-do-repeatmasker-annotation-of-breakend-sequences) and [here](https://github.com/PapenfussLab/gridss#how-do-i-do-viral-annotation). 
+Repeat masker annotations must be included in the GRIDSS output before running GRIPSS. Details on how to include these are available on the GRIDSS readme [here](https://github.com/PapenfussLab/gridss#how-do-i-do-repeatmasker-annotation-of-breakend-sequences). 
 
 # Usage
 
