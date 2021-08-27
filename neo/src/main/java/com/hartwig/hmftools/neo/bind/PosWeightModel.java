@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.VectorUtils.clear;
 import static com.hartwig.hmftools.neo.bind.BindConstants.ALLELE_POS_MAPPING_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_C_FREQ_ADJUST;
@@ -46,7 +47,7 @@ public class PosWeightModel
 
     public final GlobalWeights getGlobalWeights() { return mGlobalWeights; }
 
-    private static int peptidePosToRef(int peptideLength, int position)
+    public static int peptidePosToRef(int peptideLength, int position)
     {
         return peptidePosToRef(REF_PEPTIDE_LENGTH, peptideLength, position);
     }
@@ -60,7 +61,7 @@ public class PosWeightModel
         return position + (refLength - peptideLength);
     }
 
-    private static int refPeptidePosToActual(int peptideLength, int refPosition)
+    public static int refPeptidePosToActual(int peptideLength, int refPosition)
     {
         return refPeptidePosToActual(REF_PEPTIDE_LENGTH, peptideLength, refPosition);
     }
@@ -112,9 +113,10 @@ public class PosWeightModel
         // PWM = PeptideLengthMaxWeight parameter
 
         // RC = raw bind count per amino acid
-        // PLWC = peptide-length weighted count
         // AOC = adjusted other-length AA count = otherCount * PWF
         // AOTC = adjusted other-length total count = sum(all AAs: otherCount) * PWF
+
+        // result: PLWC = peptide-length weighted count
         // PLWC = own-count + sum(AOC each PL) P13 * PLMW / max(PLMW, sum(AOTC each PL))
 
         final double[][] counts = mNoiseModel.enabled() ? bindCounts.getNoiseCounts() : bindCounts.getBindCounts();
@@ -129,6 +131,8 @@ public class PosWeightModel
         {
             // first get the totals across the other peptide-length counts
             double adjOtherTotal = 0;
+
+            clear(adjustedAACounts);
 
             for(BindCountData otherBindCounts : pepLenBindCounts)
             {
@@ -154,7 +158,7 @@ public class PosWeightModel
 
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
             {
-                weightedCounts[aa][pos] = counts[aa][pos] + adjustedAACounts[aa] * weightMax / max(weightMax, adjOtherTotal);
+                weightedCounts[aa][pos] = counts[aa][pos] + weightFactor * adjustedAACounts[aa] * weightMax / max(weightMax, adjOtherTotal);
             }
         }
     }

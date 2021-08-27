@@ -131,9 +131,14 @@ public class BindScorer
                 continue;
             }
 
+            TprCalc alleleTprCalc = new TprCalc();
+
             for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
                 final List<BindData> bindDataList = pepLenEntry.getValue();
+
+                // TprCalc pepLenPprCalc = new TprCalc();
+
                 for(BindData bindData : bindDataList)
                 {
                     BindScoreMatrix matrix = pepLenMatrixMap.get(bindData.peptideLength());
@@ -151,6 +156,9 @@ public class BindScorer
 
                     bindData.setScoreData(score, rankPercentile, likelihood, likelihoodRank);
 
+                    alleleTprCalc.addRank(likelihoodRank);
+                    // pepLenPprCalc.addRank(likelihoodRank);
+
                     // add global scores if the matrix is present
                     if(globalMatrixMap != null && globalMatrixMap.containsKey(bindData.peptideLength()))
                     {
@@ -161,7 +169,7 @@ public class BindScorer
             }
 
             if(mConfig.WriteSummaryData)
-                writeAlleleSummary(alleleWriter, allele);
+                writeAlleleSummary(alleleWriter, allele, alleleTprCalc);
         }
 
         closeBufferedWriter(alleleWriter);
@@ -241,7 +249,7 @@ public class BindScorer
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formFilename("allele_summary"), false);
-            writer.write("Allele,PeptideLength,Source,TrainingCount,RandomCount,AUC");
+            writer.write("Allele,BindCount,TPR");
             writer.newLine();
             return writer;
         }
@@ -249,6 +257,23 @@ public class BindScorer
         {
             NE_LOGGER.error("failed to init allele summary writer: {}", e.toString());
             return null;
+        }
+    }
+
+    private void writeAlleleSummary(final BufferedWriter writer, final String allele, final TprCalc alleleTprCalc)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            writer.write(String.format("%s,%d,%.4f",
+                    allele, alleleTprCalc.entryCount(), alleleTprCalc.calc()));
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write allele summary data: {}", e.toString());
         }
     }
 
