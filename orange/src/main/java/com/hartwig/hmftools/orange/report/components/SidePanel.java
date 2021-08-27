@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.components;
 
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.geom.Rectangle;
@@ -12,7 +11,7 @@ import com.itextpdf.layout.element.Paragraph;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SidePanel {
+public class SidePanel {
 
     private static final float ROW_SPACING = 35;
     private static final float VALUE_TEXT_Y_OFFSET = 18;
@@ -21,10 +20,17 @@ public final class SidePanel {
     private static final float RECTANGLE_WIDTH = 170;
     private static final float RECTANGLE_HEIGHT = 84;
 
-    private SidePanel() {
+    @NotNull
+    private final String sampleId;
+    @NotNull
+    private final String platinumVersion;
+
+    public SidePanel(@NotNull final String sampleId, @NotNull final String platinumVersion) {
+        this.sampleId = sampleId;
+        this.platinumVersion = platinumVersion;
     }
 
-    public static void renderSidePanel(@NotNull PdfPage page, @NotNull OrangeReport report) {
+    public void renderSidePanel(@NotNull PdfPage page) {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Rectangle pageSize = page.getPageSize();
         canvas.rectangle(pageSize.getWidth(), pageSize.getHeight(), -RECTANGLE_WIDTH, -RECTANGLE_HEIGHT);
@@ -34,15 +40,10 @@ public final class SidePanel {
         int sideTextIndex = 0;
         Canvas cv = new Canvas(canvas, page.getDocument(), page.getPageSize());
 
-        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Sample", report.sampleId()));
-        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Platinum version", pipelineVersion(report)));
+        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Sample", sampleId));
+        cv.add(createSidePanelDiv(pageSize, ++sideTextIndex, "Platinum version", platinumVersion));
 
         canvas.release();
-    }
-
-    @NotNull
-    private static String pipelineVersion(@NotNull OrangeReport report) {
-        return report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull

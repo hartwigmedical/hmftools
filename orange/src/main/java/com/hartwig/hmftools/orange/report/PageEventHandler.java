@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.report;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.components.Footer;
 import com.hartwig.hmftools.orange.report.components.Header;
 import com.hartwig.hmftools.orange.report.components.SidePanel;
@@ -18,23 +17,27 @@ import org.jetbrains.annotations.NotNull;
 public class PageEventHandler implements IEventHandler {
 
     @NotNull
-    private final OrangeReport report;
-
+    private final Header header;
     @NotNull
     private final Footer footer;
     @NotNull
-    private final Header header;
+    private final SidePanel sidePanel;
 
     private String chapterTitle = "Undefined";
     private boolean firstPageOfChapter = true;
-
     private PdfOutline outline = null;
 
-    PageEventHandler(@NotNull final OrangeReport report) {
-        this.report = report;
+    @NotNull
+    static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion) {
+        return new PageEventHandler(new Header(Resources.getResource("orange_circos.png")),
+                new Footer(),
+                new SidePanel(sampleId, platinumVersion));
+    }
 
-        this.header = new Header(Resources.getResource("orange_circos.png"));
-        this.footer = new Footer();
+    private PageEventHandler(@NotNull final Header header, @NotNull final Footer footer, @NotNull final SidePanel sidePanel) {
+        this.header = header;
+        this.footer = footer;
+        this.sidePanel = sidePanel;
     }
 
     @Override
@@ -50,7 +53,7 @@ public class PageEventHandler implements IEventHandler {
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
             }
 
-            SidePanel.renderSidePanel(page, report);
+            sidePanel.renderSidePanel(page);
             footer.renderFooter(page);
         }
     }
@@ -63,7 +66,7 @@ public class PageEventHandler implements IEventHandler {
         firstPageOfChapter = true;
     }
 
-    void writeDynamicTextParts(@NotNull PdfDocument document) {
+    void writeTotalPageCount(@NotNull PdfDocument document) {
         footer.writeTotalPageCount(document);
     }
 
