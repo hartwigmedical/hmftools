@@ -42,6 +42,7 @@ public class RefGenomePeptideLocator
 {
     private final int mFlankLength;
     private final int mThreads;
+    private final boolean mFindRepeats;
 
     private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
 
@@ -52,6 +53,7 @@ public class RefGenomePeptideLocator
     private static final String FLANK_LENGTH = "flank_length";
     private static final String PEPTIDE_FILE = "peptide_file";
     private static final String THREADS = "threads";
+    private static final String FIND_REPEATS = "find_repeats";
 
     public RefGenomePeptideLocator(final CommandLine cmd)
     {
@@ -63,6 +65,7 @@ public class RefGenomePeptideLocator
 
         mFlankLength = Integer.parseInt(cmd.getOptionValue(FLANK_LENGTH));
         mThreads = Integer.parseInt(cmd.getOptionValue(THREADS));
+        mFindRepeats = cmd.hasOption(FIND_REPEATS);
 
         loadPeptides(cmd.getOptionValue(PEPTIDE_FILE));
 
@@ -117,7 +120,7 @@ public class RefGenomePeptideLocator
             {
                 List<String> peptideList = Lists.newArrayList();
                 taskPeptideLists.add(peptideList);
-                searchTasks.add(new PeptideSearchTask(i, mTransAminoAcidMap, peptideList, mFlankLength, mWriter));
+                searchTasks.add(new PeptideSearchTask(i, mTransAminoAcidMap, peptideList, mFindRepeats, mFlankLength, mWriter));
             }
 
             int taskIndex = 0;
@@ -135,7 +138,8 @@ public class RefGenomePeptideLocator
         }
         else
         {
-            PeptideSearchTask searchTask = new PeptideSearchTask(0, mTransAminoAcidMap, mPeptides, mFlankLength, mWriter);
+            PeptideSearchTask searchTask = new PeptideSearchTask(
+                    0, mTransAminoAcidMap, mPeptides, mFindRepeats, mFlankLength, mWriter);
             searchTasks.add(searchTask);
             searchTask.run();
         }
@@ -160,7 +164,7 @@ public class RefGenomePeptideLocator
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("Peptide,GeneId,GeneName,TransId,AminoAcidPos,UpFlank,DownFlank");
+            writer.write("Peptide,GeneName,TransId,AminoAcidPos,UpFlank,DownFlank,MatchCount");
             writer.newLine();
             return writer;
         }
@@ -171,22 +175,23 @@ public class RefGenomePeptideLocator
         }
     }
 
-    protected synchronized void writeData(final BufferedWriter writer, final TranscriptAminoAcids transAminoAcids, final String peptide,
-            int aaPosition, final String upFlank, final String downFlank)
+    protected synchronized static void writeData(
+            final BufferedWriter writer, final TranscriptAminoAcids transAminoAcids, final String peptide,
+            int aaPosition, final String upFlank, final String downFlank, int repeatCount)
     {
         try
         {
             if(transAminoAcids != null)
             {
-                mWriter.write(String.format("%s,%s,%s,%d,%s,%s",
-                        peptide, transAminoAcids.GeneId, transAminoAcids.GeneName, aaPosition, upFlank, downFlank));
+                writer.write(String.format("%s,%s,%s,%d,%s,%s,%d",
+                        peptide, transAminoAcids.GeneName, transAminoAcids.TransName, aaPosition, upFlank, downFlank, repeatCount));
             }
             else
             {
-                mWriter.write(String.format("%s,NONE,NONE,-1,,",peptide));
+                writer.write(String.format("%s,NONE,NONE,-1,-,-,0",peptide));
             }
 
-            mWriter.newLine();
+            writer.newLine();
         }
         catch(IOException e)
         {
@@ -201,16 +206,18 @@ public class RefGenomePeptideLocator
         private final List<String> mPeptides;
         private final int mFlankLength;
         private final BufferedWriter mWriter;
+        private final boolean mFindRepeats;
         private int mFound;
 
         public PeptideSearchTask(
                 int taskId, final Map<String, TranscriptAminoAcids> transAminoAcidMap, final List<String> peptides,
-                final int flankLength, final BufferedWriter writer)
+                boolean findRepeats, final int flankLength, final BufferedWriter writer)
         {
             mTaskId = taskId;
             mFlankLength = flankLength;
             mTransAminoAcidMap = transAminoAcidMap;
             mPeptides = peptides;
+            mFindRepeats = findRepeats;
             mWriter = writer;
             mFound = 0;
         }
@@ -243,42 +250,56 @@ public class RefGenomePeptideLocator
 
         private void findPeptide(final String peptide)
         {
+            int matches = 0;
+
+            int matchedAaIndex = -1;
+            String upFlank = "";
+            String downFlank = "";
+            TranscriptAminoAcids matchedTrans = null;
+
             for(TranscriptAminoAcids transAminoAcids : mTransAminoAcidMap.values())
             {
                 int aaIndex = transAminoAcids.AminoAcids.indexOf(peptide);
                 if(aaIndex < 0)
                     continue;
 
-                ++mFound;
+                ++matches;
 
-                String upFlank = "";
-                String downFlank = "";
-
-                if(mFlankLength > 0)
+                if(matchedTrans == null)
                 {
-                    int upFlankBases = min(aaIndex, mFlankLength);
+                    ++mFound;
+                    matchedTrans = transAminoAcids;
+                    matchedAaIndex = aaIndex;
 
-                    if(upFlankBases > 0)
+                    if(mFlankLength > 0)
                     {
-                        upFlank = transAminoAcids.AminoAcids.substring(aaIndex - upFlankBases, aaIndex);
-                    }
+                        int upFlankBases = min(aaIndex, mFlankLength);
 
-                    int downFlankStartPos = aaIndex + peptide.length();
-                    int downFlankBases = min(transAminoAcids.AminoAcids.length() - downFlankStartPos - 1, mFlankLength);
+                        if(upFlankBases > 0)
+                        {
+                            upFlank = transAminoAcids.AminoAcids.substring(aaIndex - upFlankBases, aaIndex);
+                        }
 
-                    if(downFlankBases > 0)
-                    {
-                        downFlank = transAminoAcids.AminoAcids.substring(downFlankStartPos, downFlankStartPos + downFlankBases);
+                        int downFlankStartPos = aaIndex + peptide.length();
+                        int downFlankBases = min(transAminoAcids.AminoAcids.length() - downFlankStartPos - 1, mFlankLength);
+
+                        if(downFlankBases > 0)
+                        {
+                            downFlank = transAminoAcids.AminoAcids.substring(downFlankStartPos, downFlankStartPos + downFlankBases);
+                        }
                     }
                 }
 
-                writeData(mWriter, transAminoAcids, peptide, aaIndex, upFlank, downFlank);
-                return;
+                if(!mFindRepeats)
+                    break;
 
                 // NE_LOGGER.info("found {} random peptides from {} coding transcripts", totalPeptideCount, transCodingCount);
             }
 
-            writeData(mWriter, null, peptide, -1, "", "");
+            if(matchedTrans != null)
+                writeData(mWriter, matchedTrans, peptide, matchedAaIndex, upFlank, downFlank, matches);
+            else
+                writeData(mWriter, null, peptide, -1, "", "", 0);
         }
     }
 
@@ -287,6 +308,7 @@ public class RefGenomePeptideLocator
         final Options options = new Options();
         options.addOption(PEPTIDE_FILE, true, "Peptides to search for");
         options.addOption(FLANK_LENGTH, true, "Number of amino acid flanks to retrieve");
+        options.addOption(FIND_REPEATS, false, "Look for repeated matches, default false");
         options.addOption(THREADS, true, "Threads (default none)");
         options.addOption(OUTPUT_ID, true, "Output file identifier");
         addEnsemblDir(options);
