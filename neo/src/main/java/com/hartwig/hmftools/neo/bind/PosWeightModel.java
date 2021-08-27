@@ -328,35 +328,6 @@ public class PosWeightModel
         }
     }
 
-    private static double[] calcPositionEntropy(final double[][] counts, final int peptideLength)
-    {
-        double[] entropy = new double[peptideLength];
-
-        for(int pos = 0; pos < peptideLength; ++pos)
-        {
-            double posTotalCount = 0;
-
-            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-            {
-                posTotalCount += counts[aa][pos];
-            }
-
-            double entropyTotal = 0;
-
-            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-            {
-                double countsPerc = counts[aa][pos] / posTotalCount;
-
-                if(countsPerc > 0)
-                    entropyTotal -= countsPerc * log(2, countsPerc);
-            }
-
-            entropy[pos] = entropyTotal;
-        }
-
-        return entropy;
-    }
-
     public BindScoreMatrix createMatrix(final BindCountData bindCounts)
     {
         mGlobalWeights.buildMatrixData();
@@ -378,8 +349,6 @@ public class PosWeightModel
             double globalTotal = mGlobalPeptideLengthTotals.get(bindCounts.PeptideLength);
             globalReductionFactor = total / globalTotal;
         }
-
-        final double[] entropy = calcPositionEntropy(bindCounts.getWeightedCounts(), bindCounts.PeptideLength);
         */
 
         for(int pos = 0; pos < bindCounts.PeptideLength; ++pos)
@@ -392,8 +361,6 @@ public class PosWeightModel
             }
 
             posTotalCount = max(posTotalCount, 0.1); // for training data without observed counts in a peptide length
-
-            // double entropyAdjust = ENTROPY_ADJUST > 0 ? 1 - pow(entropy[pos] / ENTROPY_FACTOR, ENTROPY_ADJUST) : 1;
 
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
             {
@@ -414,8 +381,6 @@ public class PosWeightModel
                 {
                     adjustedCount = globalWeight * globalReductionFactor * globalCounts[aa][pos] + (1 - globalWeight) * adjustedCount;
                 }
-
-                double posWeight = entropyAdjust * log(2, adjustedCount / aaFrequency);
                 */
 
                 double posWeight = log(2, adjustedCount / aaFrequency);
