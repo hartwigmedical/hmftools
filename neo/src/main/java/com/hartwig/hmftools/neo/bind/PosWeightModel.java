@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.VectorUtils.clear;
@@ -17,7 +15,6 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static org.apache.commons.math3.util.FastMath.log;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
@@ -28,7 +25,6 @@ public class PosWeightModel
     private final BlosumMapping mBlosumMapping;
     private final HlaSequences mHlaSequences;
     private final NoiseModel mNoiseModel;
-    private final GlobalWeights mGlobalWeights;
 
     public PosWeightModel(final CalcConstants calcConstants, final HlaSequences hlaSequences)
     {
@@ -37,15 +33,12 @@ public class PosWeightModel
         mBlosumMapping = new BlosumMapping();
         mHlaSequences = hlaSequences;
         mNoiseModel = new NoiseModel(mAminoAcidFrequency, calcConstants.NoiseProbability, calcConstants.NoiseWeight);
-        mGlobalWeights = new GlobalWeights(calcConstants, mAminoAcidFrequency);
     }
 
     public boolean noiseEnabled() { return mNoiseModel.enabled(); }
     public final NoiseModel noiseModel() { return mNoiseModel; }
 
     public static final int INVALID_POS = -1;
-
-    public final GlobalWeights getGlobalWeights() { return mGlobalWeights; }
 
     public static int peptidePosToRef(int peptideLength, int position)
     {
@@ -330,26 +323,10 @@ public class PosWeightModel
 
     public BindScoreMatrix createMatrix(final BindCountData bindCounts)
     {
-        mGlobalWeights.buildMatrixData();
-
         final double[][] finalWeightedCounts = bindCounts.getFinalWeightedCounts();
 
         BindScoreMatrix matrix = new BindScoreMatrix(bindCounts.Allele, bindCounts.PeptideLength);
         final double[][] data = matrix.getBindScores();
-
-        /*
-        double globalWeight = mConstants.GlobalWeight;
-
-        double globalReductionFactor = 1;
-        double[][] globalCounts = mGlobalWeights.get(bindCounts.PeptideLength);
-
-        if(globalWeight > 0)
-        {
-            double total = calcCountsTotal(bindCounts.getFinalWeightedCounts());
-            double globalTotal = mGlobalPeptideLengthTotals.get(bindCounts.PeptideLength);
-            globalReductionFactor = total / globalTotal;
-        }
-        */
 
         for(int pos = 0; pos < bindCounts.PeptideLength; ++pos)
         {
@@ -375,13 +352,6 @@ public class PosWeightModel
 
                 // handle very low observation counts
                 adjustedCount = max(adjustedCount / posTotalCount, MIN_OBSERVED_AA_POS_FREQ);
-
-                /*
-                if(globalWeight > 0)
-                {
-                    adjustedCount = globalWeight * globalReductionFactor * globalCounts[aa][pos] + (1 - globalWeight) * adjustedCount;
-                }
-                */
 
                 double posWeight = log(2, adjustedCount / aaFrequency);
                 data[aa][pos] = posWeight;

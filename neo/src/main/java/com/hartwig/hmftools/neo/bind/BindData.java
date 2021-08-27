@@ -48,9 +48,6 @@ public class BindData
     private double mLikelihood;
     private double mLikelihoodRank;
 
-    private double mGlobalScore;
-    private double mGlobalRankPercentile;
-
     public BindData(final String allele, final String peptide, final String source)
     {
         this(allele, peptide, source, "", "");
@@ -77,9 +74,6 @@ public class BindData
         mRankPercentile = INVALID_SCORE;
         mLikelihood = INVALID_SCORE;
         mLikelihoodRank = INVALID_SCORE;
-
-        mGlobalScore = 0;
-        mGlobalRankPercentile = -1;
     }
 
     public int peptideLength() { return Peptide.length(); }
@@ -125,15 +119,6 @@ public class BindData
     public double rankPercentile() { return mRankPercentile; }
     public double likelihood() { return mLikelihood; }
     public double likelihoodRank() { return mLikelihoodRank; }
-
-    public void setGlobalScoreData(double score, double rankPerc)
-    {
-        mGlobalScore = score;
-        mGlobalRankPercentile = rankPerc;
-    }
-
-    public double globalScore() { return mGlobalScore; }
-    public double globalRankPercentile() { return mGlobalRankPercentile; }
 
     public String toString()
     {

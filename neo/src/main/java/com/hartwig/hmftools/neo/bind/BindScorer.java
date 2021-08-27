@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
-import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -116,7 +115,6 @@ public class BindScorer
         BufferedWriter alleleWriter = mConfig.WriteSummaryData ? initAlleleSummaryWriter() : null;
 
         // rank both the training and random peptide data using the newly created data and the random peptide distributions
-        Map<Integer,BindScoreMatrix> globalMatrixMap = mAlleleBindMatrices.get(GLOBAL_COUNTS);
 
         for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
@@ -155,13 +153,6 @@ public class BindScorer
                     bindData.setScoreData(score, rankPercentile, likelihood, likelihoodRank);
 
                     alleleTprCalc.addRank(likelihoodRank);
-
-                    // add global scores if the matrix is present
-                    if(globalMatrixMap != null && globalMatrixMap.containsKey(bindData.peptideLength()))
-                    {
-                        double globalScore = globalMatrixMap.get(bindData.peptideLength()).calcScore(bindData.Peptide);
-                        bindData.setGlobalScoreData(globalScore, mRandomDistribution.getScoreRank(GLOBAL_COUNTS, bindData.peptideLength(), globalScore));
-                    }
                 }
             }
 

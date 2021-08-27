@@ -134,7 +134,7 @@ public class BindModelTest
         List<BindCountData> bindCounts = Lists.newArrayList(bindCounts8, bindCounts9, bindCounts10, bindCounts11);
 
         CalcConstants calcConstants = new CalcConstants(0.1, 200,
-                0, 0, 0, 0, 0);
+                0, 0, 0, 0);
 
         PosWeightModel pwModel = new PosWeightModel(calcConstants, new HlaSequences());
 
@@ -206,7 +206,7 @@ public class BindModelTest
         allelePosSequences.put(TEST_ALLELE_4, sequences);
 
         CalcConstants calcConstants = new CalcConstants(0.2, 200,
-                0.2, 100, 0, 0, 0);
+                0.2, 100, 0, 0);
 
         PosWeightModel pwModel = new PosWeightModel(calcConstants, hlaSequences);
 
@@ -413,6 +413,6 @@ public class BindModelTest
     private static CalcConstants getTestCalcConstants()
     {
         return new CalcConstants(DEFAULT_PEP_LEN_WEIGHT_FACTOR, DEFAULT_PEP_LEN_WEIGHT_MAX,
-                DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR, DEFAULT_ALLELE_MOTIF_WEIGHT_MAX, 0, 0, 0);
+                DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR, DEFAULT_ALLELE_MOTIF_WEIGHT_MAX, 0, 0);
     }
 }

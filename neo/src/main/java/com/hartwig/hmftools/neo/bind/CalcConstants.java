@@ -18,7 +18,6 @@ public class CalcConstants
 
     public final double NoiseProbability;
     public final double NoiseWeight;
-    public final double GlobalWeight;
 
     private static final String PEP_LEN_WEIGHT_FACTOR = "pl_weight_factor";
     private static final String PEP_LEN_WEIGHT_MAX = "pl_weight_max";
@@ -26,11 +25,10 @@ public class CalcConstants
     private static final String ALLELE_MOTIF_WEIGHT_MAX = "am_weight_max";
     private static final String NOISE_PROB = "noise_prob";
     private static final String NOISE_WEIGHT = "noise_weight";
-    private static final String GLOBAL_WEIGHT = "global_weight";
 
     public CalcConstants(
             double peptideLengthWeightFactor, double peptideLengthWeightMax, double alleleWeightFactor, double alleleWeightMax,
-            double noiseProb, double noiseWeight, double globalWeight)
+            double noiseProb, double noiseWeight)
     {
         PeptideLengthWeightFactor = peptideLengthWeightFactor;
         PeptideLengthWeightMax = peptideLengthWeightMax;
@@ -38,7 +36,6 @@ public class CalcConstants
         AlleleWeightMax = alleleWeightMax;
         NoiseProbability = noiseProb;
         NoiseWeight = noiseWeight;
-        GlobalWeight = globalWeight;
     }
 
     public CalcConstants(final CommandLine cmd)
@@ -52,7 +49,6 @@ public class CalcConstants
         AlleleWeightMax = parseParam(cmd, ALLELE_MOTIF_WEIGHT_MAX, DEFAULT_ALLELE_MOTIF_WEIGHT_MAX);
         NoiseProbability = parseParam(cmd, NOISE_PROB, 0); // DEFAULT_NOISE_PROB)
         NoiseWeight = parseParam(cmd, NOISE_WEIGHT, 0); // DEFAULT_NOISE_WEIGHT)
-        GlobalWeight = parseParam(cmd, GLOBAL_WEIGHT, 0);
     }
 
     private static double parseParam(final CommandLine cmd, final String config, double defaultValue)
@@ -66,8 +62,6 @@ public class CalcConstants
         options.addOption(PEP_LEN_WEIGHT_FACTOR, true, "Length weight");
         options.addOption(NOISE_PROB, true, "Noise target probability");
         options.addOption(NOISE_WEIGHT, true, "Noise weight");
-        options.addOption(GLOBAL_WEIGHT, true, "Global counts weight");
-
     }
 
 }

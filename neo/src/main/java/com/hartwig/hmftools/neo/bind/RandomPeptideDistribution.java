@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_MAX_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
-import static com.hartwig.hmftools.neo.bind.GlobalWeights.GLOBAL_COUNTS;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -170,7 +169,7 @@ public class RandomPeptideDistribution
         {
             final String allele = alleleEntry.getKey();
 
-            if(!allele.equals(GLOBAL_COUNTS) && !mConfig.RequiredOutputAlleles.isEmpty() && !mConfig.RequiredOutputAlleles.contains(allele))
+            if(!mConfig.RequiredOutputAlleles.isEmpty() && !mConfig.RequiredOutputAlleles.contains(allele))
                 continue;
 
             NE_LOGGER.debug("building distribution for allele({})", allele);
@@ -230,7 +229,7 @@ public class RandomPeptideDistribution
         {
             final String allele = alleleEntry.getKey();
 
-            if(!allele.equals(GLOBAL_COUNTS) && !mConfig.RequiredOutputAlleles.isEmpty() && !mConfig.RequiredOutputAlleles.contains(allele))
+            if(!mConfig.RequiredOutputAlleles.isEmpty() && !mConfig.RequiredOutputAlleles.contains(allele))
                 continue;
 
             NE_LOGGER.debug("building likelihood distribution for allele({})", allele);
