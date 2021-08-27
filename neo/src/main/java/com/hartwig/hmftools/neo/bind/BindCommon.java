@@ -5,6 +5,9 @@ public final class BindCommon
     public static final String FLD_ALLELE = "Allele";
     public static final String FLD_PEPTIDE = "Peptide";
     public static final String FLD_POSITION = "Position";
+    public static final String FLD_SOURCE = "Source";
+    public static final String FLD_UP_FLANK = "UpFlank";
+    public static final String FLD_DOWN_FLANK = "DownFlank";
     public static final String FLD_AMINO_ACID = "AminoAcid";
     public static final String FLD_PEPTIDE_LEN = "PeptideLength";
 

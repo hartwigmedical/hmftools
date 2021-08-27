@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_SOURCE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 
@@ -26,6 +29,8 @@ public class BindData
 {
     public final String Allele;
     public final String Peptide;
+    public final String UpFlank;
+    public final String DownFlank;
     public final String Source;
 
     // optional fields
@@ -46,11 +51,18 @@ public class BindData
     private double mGlobalScore;
     private double mGlobalRankPercentile;
 
-    public BindData(final String allele, String peptide, final String source)
+    public BindData(final String allele, final String peptide, final String source)
+    {
+        this(allele, peptide, source, "", "");
+    }
+
+    public BindData(final String allele, final String peptide, final String source, final String upFlank, final String downFlank)
     {
         Allele = allele;
         Peptide = peptide;
         Source = source;
+        UpFlank = upFlank;
+        DownFlank = downFlank;
 
         mHasMeasuredAffinity = false;
         mMeasuredAffinity = -1;
@@ -73,6 +85,8 @@ public class BindData
     public int peptideLength() { return Peptide.length(); }
     public boolean isRandom() { return Source.equals(RANDOM_SOURCE); }
     public boolean isTraining() { return !isRandom(); }
+
+    public boolean hasFlanks() { return !UpFlank.isEmpty() || !DownFlank.isEmpty(); }
 
     public void setMeasuredAffinity(double affinity)
     {
@@ -150,7 +164,9 @@ public class BindData
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
 
             // all other fields are optional
-            Integer sourceIndex = fieldsIndexMap.get("Source");
+            Integer upFlankIndex = fieldsIndexMap.get(FLD_UP_FLANK);
+            Integer downFlankIndex = fieldsIndexMap.get(FLD_DOWN_FLANK);
+            Integer sourceIndex = fieldsIndexMap.get(FLD_SOURCE);
             Integer affinityIndex = fieldsIndexMap.get(FLD_AFFINITY);
             Integer predictedIndex = fieldsIndexMap.get(FLD_PRED_AFFINITY);
             Integer affinityPercIndex = fieldsIndexMap.get("AffinityPercentile");
@@ -187,8 +203,10 @@ public class BindData
                 ++itemCount;
 
                 String source = sourceIndex != null ? items[sourceIndex] : RANDOM_SOURCE;
+                String upFlank = upFlankIndex != null ? items[upFlankIndex] : "";
+                String downFlank = downFlankIndex != null ? items[downFlankIndex] : "";
 
-                BindData bindData = new BindData(allele, peptide, source);
+                BindData bindData = new BindData(allele, peptide, source, upFlank, downFlank);
 
                 if(affinityIndex != null)
                 {

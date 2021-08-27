@@ -36,6 +36,7 @@ public class BindTrainer
 
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
+    private final FlankCounts mFlankCounts;
 
     private final Set<Integer> mDistinctPeptideLengths;
 
@@ -55,6 +56,7 @@ public class BindTrainer
 
         mAlleleBindCounts = Maps.newHashMap();
         mAlleleBindMatrices = Maps.newHashMap();
+        mFlankCounts = new FlankCounts();
     }
 
     public void run()
@@ -150,6 +152,9 @@ public class BindTrainer
                     }
 
                     bindCounts.processBindData(bindData, mConfig.CalcPairs);
+
+                    if(mConfig.ApplyFlanks)
+                        mFlankCounts.processBindData(bindData);
                 }
             }
 
@@ -164,6 +169,12 @@ public class BindTrainer
                 if(mConfig.CalcPairs)
                     ComboCorrelations.writePairData(pairWriter, bindCounts);
             }
+        }
+
+        if(mConfig.WriteBindCounts && mConfig.ApplyFlanks)
+        {
+            mFlankCounts.logStats();
+            mFlankCounts.writeCounts(mConfig.formFilename("flank_counts"));
         }
 
         closeBufferedWriter(freqWriter);

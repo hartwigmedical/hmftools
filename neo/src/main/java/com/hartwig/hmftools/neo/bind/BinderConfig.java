@@ -5,11 +5,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_MAX;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_FACTOR;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_MAX;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
@@ -34,6 +30,7 @@ public class BinderConfig
     public final CalcConstants Constants;
     public final boolean RunScoring;
     public final boolean CalcPairs;
+    public final boolean ApplyFlanks;
 
     public final RandomPeptideConfig RandomPeptides;
 
@@ -60,14 +57,7 @@ public class BinderConfig
     private static final String BIND_MATRIX_FILE = "bind_matrix_file";
     private static final String BIND_LIKELIHOOD_FILE = "bind_likelihood_file";
 
-    private static final String WEIGHT_EXPONENT = "weight_exponent";
-    private static final String PEP_LEN_WEIGHT_FACTOR = "pl_weight_factor";
-    private static final String PEP_LEN_WEIGHT_MAX = "pl_weight_max";
-    private static final String ALLELE_MOTIF_WEIGHT_FACTOR = "am_weight_factor";
-    private static final String ALLELE_MOTIF_WEIGHT_MAX = "am_weight_max";
-    private static final String NOISE_PROB = "noise_prob";
-    private static final String NOISE_WEIGHT = "noise_weight";
-    private static final String GLOBAL_WEIGHT = "global_weight";
+    private static final String APPLY_FLANKS = "apply_flanks";
 
     private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
@@ -94,14 +84,7 @@ public class BinderConfig
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        Constants = new CalcConstants(
-                Double.parseDouble(cmd.getOptionValue(PEP_LEN_WEIGHT_FACTOR, String.valueOf(DEFAULT_PEP_LEN_WEIGHT_FACTOR))),
-                Double.parseDouble(cmd.getOptionValue(PEP_LEN_WEIGHT_MAX, String.valueOf(DEFAULT_PEP_LEN_WEIGHT_MAX))),
-                Double.parseDouble(cmd.getOptionValue(ALLELE_MOTIF_WEIGHT_FACTOR, String.valueOf(DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR))),
-                Double.parseDouble(cmd.getOptionValue(ALLELE_MOTIF_WEIGHT_MAX, String.valueOf(DEFAULT_ALLELE_MOTIF_WEIGHT_MAX))),
-                Double.parseDouble(cmd.getOptionValue(NOISE_PROB, "0")), // String.valueOf(DEFAULT_NOISE_PROB)
-                Double.parseDouble(cmd.getOptionValue(NOISE_WEIGHT, "0")), // String.valueOf(DEFAULT_NOISE_WEIGHT)
-                Double.parseDouble(cmd.getOptionValue(GLOBAL_WEIGHT, "0")));
+        Constants = new CalcConstants(cmd);
 
         RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
 
@@ -132,6 +115,7 @@ public class BinderConfig
         }
 
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
+        ApplyFlanks = cmd.hasOption(APPLY_FLANKS);
         RunScoring = cmd.hasOption(RUN_SCORING);
         RunValidation = cmd.hasOption(RUN_VALIDATION);
 
@@ -190,14 +174,10 @@ public class BinderConfig
         options.addOption(BIND_LIKELIHOOD_FILE, true, "Binding relative likelihood file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
 
-        options.addOption(WEIGHT_EXPONENT, true, "Weight exponent");
-        options.addOption(ALLELE_MOTIF_WEIGHT_MAX, true, "Allele motif weight");
-        options.addOption(PEP_LEN_WEIGHT_FACTOR, true, "Length weight");
-        options.addOption(NOISE_PROB, true, "Noise target probability");
-        options.addOption(NOISE_WEIGHT, true, "Noise weight");
-        options.addOption(GLOBAL_WEIGHT, true, "Global counts weight");
+        CalcConstants.addCmdLineArgs(options);
 
         options.addOption(RUN_SCORING, false, "Use binding matrix data to score training and random peptide data");
+        options.addOption(APPLY_FLANKS, false, "Use flanks for scoring if present");
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");
         options.addOption(WRITE_BIND_COUNTS, false, "Write interim bind counts data");

@@ -163,47 +163,6 @@ public class PosWeightModel
         }
     }
 
-    /* previous model
-    public void buildWeightedCounts(final BindCountData bindCounts, final List<BindCountData> peptideLengthCounts)
-    {
-        // translate the counts from various peptide lengths into this set of counts, normalising to the reference peptide length
-
-        final double[][] weightedCounts = bindCounts.getWeightedCounts();
-
-        for(BindCountData otherBindCounts : peptideLengthCounts)
-        {
-            final double[][] otherCounts = mNoiseModel.enabled() ? otherBindCounts.getNoiseCounts() : otherBindCounts.getBindCounts();
-            int otherPeptideLength = otherBindCounts.PeptideLength;
-
-            // use CountWeight for other peptide lengths' counts
-            // CountWeight = 1 (PeptideLengthDiff) * 1 / (1 + (observedCount / LHW) ^ WeightExponent)
-            double weight = 1;
-
-            if(otherPeptideLength != bindCounts.PeptideLength)
-            {
-                weight = 1.0 / abs(bindCounts.PeptideLength - otherPeptideLength)
-                        * 1 / (1 + pow(bindCounts.totalBindCount() / mConstants.PeptideLengthWeightFactor, mConstants.WeightExponent));
-            }
-
-            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-            {
-                for(int otherPos = 0; otherPos < otherPeptideLength; ++otherPos)
-                {
-                    int refPos = peptidePositionToRef(REF_PEPTIDE_LENGTH, otherPeptideLength, otherPos);
-                    int pos = refPeptidePositionToActual(REF_PEPTIDE_LENGTH, bindCounts.PeptideLength, refPos);
-
-                    if(pos == INVALID_POS)
-                        continue;
-
-                    weightedCounts[aa][pos] += weight * otherCounts[aa][otherPos];
-                }
-            }
-        }
-
-        mGlobalWeights.processBindCounts(bindCounts);
-    }
-     */
-
     public void buildPositionAdjustedTotals(final List<BindCountData> pepLenBindCounts)
     {
         final double weightFactor = mConstants.PeptideLengthWeightFactor;
@@ -369,84 +328,6 @@ public class PosWeightModel
         }
     }
 
-    /*
-    public void buildFinalWeightedCounts(
-            final BindCountData bindCounts, final List<BindCountData> allBindCounts, final Map<String,Integer> alleleTotalCounts)
-    {
-        // calculate Blosum similarity at this position vs all the other alleles from matching peptide lengths
-
-        // WCount(A,L,P,AA) = LWCount(A,L,P,AA) + SUM(a<>A)  [ LWCount(a,L,P,AA)
-        // * (2^(LogSim(m,M)) /  MAX(i=all motifs)[2^(LogSim(i,M))]] * [1 / ( 1+ Obs(A,L)/MHW)^E)]
-
-        final double[][] weightedCounts = bindCounts.getWeightedCounts();
-        final double[][] finalWeightedCounts = bindCounts.getFinalWeightedCounts();
-
-        int alleleTotalCount = alleleTotalCounts.get(bindCounts.Allele);
-
-        for(int pos = 0; pos < bindCounts.PeptideLength; ++pos)
-        {
-            // pos needs to be mapped to the 9-mer allele position peptide-position mapping
-            int refPos = peptidePositionToRef(REF_PEPTIDE_LENGTH, bindCounts.PeptideLength, pos);
-            int mappingPos = refPeptidePositionToActual(REF_PEPTIDE_LENGTH, ALLELE_POS_MAPPING_PEPTIDE_LENGTH, refPos);
-
-            if(mappingPos == INVALID_POS)
-            {
-                // cannot use other alleles
-                for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-                {
-                    finalWeightedCounts[aa][pos] = weightedCounts[aa][pos];
-                }
-
-                continue;
-            }
-
-            String positionMotif = mHlaSequences.getSequence(bindCounts.Allele, mappingPos);
-
-            if(positionMotif == null)
-                continue;
-
-            double selfScore = mBlosumMapping.calcSequenceBlosumScore(positionMotif);
-
-            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
-            {
-                for(BindCountData otherBindCounts : allBindCounts)
-                {
-                    if(otherBindCounts.Allele.equals(bindCounts.Allele))
-                    {
-                        // taken as is, no weighting
-                        finalWeightedCounts[aa][pos] += weightedCounts[aa][pos];
-                        continue;
-                    }
-
-                    double otherCount = otherBindCounts.getWeightedCounts()[aa][pos];
-
-                    if(otherCount == 0)
-                        continue;
-
-                    String otherPositionMotif = mHlaSequences.getSequence(otherBindCounts.Allele, mappingPos);
-
-                    if(otherPositionMotif == null)
-                        continue;
-
-                    double motifSimilarity = 1;
-
-                    if(!otherPositionMotif.equals(positionMotif))
-                    {
-                        double crossAlleleScore = mBlosumMapping.calcSequenceBlosumScore(positionMotif, otherPositionMotif);
-                        motifSimilarity = crossAlleleScore / selfScore;
-                    }
-
-                    double observationsWeight = 1 / (1 + pow(alleleTotalCount / mConstants.AlleleWeightFactor, mConstants.AlleleWeightMax));
-
-                    double otherWeightedCount = otherCount * observationsWeight * motifSimilarity;
-                    finalWeightedCounts[aa][pos] += otherWeightedCount;
-                }
-            }
-        }
-    }
-
-    */
-
     private static double[] calcPositionEntropy(final double[][] counts, final int peptideLength)
     {
         double[] entropy = new double[peptideLength];
@@ -518,14 +399,15 @@ public class PosWeightModel
             {
                 double aaFrequency = mAminoAcidFrequency.getAminoAcidFrequency(aa);
 
-                // Peptide Weight = log(max(posWeight(aa,pos) * AaAdjust, 0.005 * posWeightTotal)/AaFreq,2)
+                // Peptide Weight = log(max(posWeight(aa,pos), 0.005 * posWeightTotal)/AaFreq,2)
+                // Peptide Weight new = log(max(posWeight(aa,pos)/posWeightTotal, 0.005)/AaFreq,2) - now a % weight
                 double adjustedCount = finalWeightedCounts[aa][pos];
 
                 if(aa == 'C')
                     adjustedCount *= AMINO_ACID_C_FREQ_ADJUST;
 
                 // handle very low observation counts
-                adjustedCount = max(adjustedCount, posTotalCount * MIN_OBSERVED_AA_POS_FREQ);
+                adjustedCount = max(adjustedCount / posTotalCount, MIN_OBSERVED_AA_POS_FREQ);
 
                 /*
                 if(globalWeight > 0)

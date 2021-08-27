@@ -137,8 +137,6 @@ public class BindScorer
             {
                 final List<BindData> bindDataList = pepLenEntry.getValue();
 
-                // TprCalc pepLenPprCalc = new TprCalc();
-
                 for(BindData bindData : bindDataList)
                 {
                     BindScoreMatrix matrix = pepLenMatrixMap.get(bindData.peptideLength());
@@ -157,7 +155,6 @@ public class BindScorer
                     bindData.setScoreData(score, rankPercentile, likelihood, likelihoodRank);
 
                     alleleTprCalc.addRank(likelihoodRank);
-                    // pepLenPprCalc.addRank(likelihoodRank);
 
                     // add global scores if the matrix is present
                     if(globalMatrixMap != null && globalMatrixMap.containsKey(bindData.peptideLength()))
