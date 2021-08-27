@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
+import static com.hartwig.hmftools.neo.bind.BindCommon.COUNT_DATA_TYPES;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -110,9 +110,6 @@ public class BindCountData
             mBindCounts[aaIndex][pos] += 1;
         }
     }
-
-    private static final List<String> COUNT_DATA_TYPES = Lists.newArrayList(
-            "BindCounts", "NoiseCounts", "PeptideLengthWeighted", "AlleleMotifWeighted");
 
     public static void writeCounts(final BufferedWriter writer, final BindCountData bindCounts, int maxPeptideLength, boolean writeNoise)
     {

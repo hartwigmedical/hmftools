@@ -249,7 +249,7 @@ public class ValidationRoutines
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("validation_scores"), false);
+            BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("validation_scores"), false);
             writer.write("ExcludedAllele,Allele,Peptide,Score,Rank");
             writer.newLine();
 

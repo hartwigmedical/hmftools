@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_POS_WEIGHTS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
@@ -28,7 +29,7 @@ public class BindScoreMatrix
     public final String Allele;
     public final int PeptideLength;
 
-    private final double[][] mBindScores; // by amino acid and position
+    private final double[][] mPosWeights; // by amino acid and position
 
     private static final double INVALID_SCORE = -1000;
 
@@ -39,10 +40,10 @@ public class BindScoreMatrix
 
         int aminoAcidCount = AMINO_ACIDS.size();
 
-        mBindScores = new double[aminoAcidCount][PeptideLength];
+        mPosWeights = new double[aminoAcidCount][PeptideLength];
     }
 
-    public final double[][] getBindScores() { return mBindScores; }
+    public final double[][] getBindScores() { return mPosWeights; }
 
     public double calcScore(final String peptide)
     {
@@ -60,7 +61,7 @@ public class BindScoreMatrix
             if(aaIndex == INVALID_AMINO_ACID)
                 return INVALID_SCORE;
 
-            double aaPosScore = mBindScores[aaIndex][i];
+            double aaPosScore = mPosWeights[aaIndex][i];
 
             score += aaPosScore;
         }
@@ -91,8 +92,6 @@ public class BindScoreMatrix
             return null;
         }
     }
-
-    private static final String DATA_TYPE_POS_WEIGHTS = "PosWeights";
 
     public static void writeMatrixData(final BufferedWriter writer, final BindScoreMatrix matrix, int maxPeptideLength)
     {
@@ -182,7 +181,7 @@ public class BindScoreMatrix
         }
         catch(IOException e)
         {
-            NE_LOGGER.error(" failed to load matrix data file: {}" ,e.toString());
+            NE_LOGGER.error(" failed to load pos-weights data file: {}" ,e.toString());
         }
 
         return matrixList;

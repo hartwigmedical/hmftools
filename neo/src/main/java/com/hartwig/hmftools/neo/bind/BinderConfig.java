@@ -22,13 +22,18 @@ import org.apache.commons.compress.utils.Lists;
 
 public class BinderConfig
 {
-    public final String TrainingDataFile;
     public final String ValidationDataFile;
-    public final String BindMatrixFile; // file with computed and cached binding matrix per allele
+
+    public final String ScoreFileDir;
+    public final String ScoreFileId;
+
+    // the following reference scoring files can be read using the reference files id instead of specified individually
+    public final String TrainingDataFile;
+    public final String PosWeightsFile; // file with computed and cached binding matrix per allele
     public final String BindLikelihoodFile;
+    public final String FlankPosWeightsFile;
 
     public final CalcConstants Constants;
-    public final boolean RunScoring;
     public final boolean CalcPairs;
     public final boolean ApplyFlanks;
 
@@ -52,14 +57,20 @@ public class BinderConfig
     // set of peptide lengths processed from training data and ensured to exist in training output data
     public final List<Integer> RequiredPeptideLengths;
 
+    public static final String SCORE_FILE_ID = "score_file_id";
+    public static final String SCORE_FILE_DIR = "score_file_dir";
+
     private static final String TRAINING_DATA_FILE = "training_data_file";
     private static final String VALIDATION_DATA_FILE = "validation_data_file";
-    private static final String BIND_MATRIX_FILE = "bind_matrix_file";
-    private static final String BIND_LIKELIHOOD_FILE = "bind_likelihood_file";
+
+    public static final String FILE_ID_POS_WEIGHT = "pos_weight";
+    public static final String FILE_ID_LIKELIHOOD = "likelihood";
+    public static final String FILE_ID_RAND_DIST = "rand_dist";
+    public static final String FILE_ID_LIKELIHOOD_RAND_DIST = "likelihood_rand_dist";
+    public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
 
     private static final String APPLY_FLANKS = "apply_flanks";
 
-    private static final String RUN_SCORING = "run_scoring";
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
     private static final String WRITE_BIND_COUNTS = "write_bind_counts";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
@@ -78,8 +89,14 @@ public class BinderConfig
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
-        BindMatrixFile = cmd.getOptionValue(BIND_MATRIX_FILE);
-        BindLikelihoodFile = cmd.getOptionValue(BIND_LIKELIHOOD_FILE);
+
+        ScoreFileDir = cmd.getOptionValue(SCORE_FILE_DIR);
+        ScoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
+
+        // load reference files either by specific name or using the scoring data dir and file id
+        PosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_POS_WEIGHT);
+        FlankPosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_FLANK_POS_WEIGHT);
+        BindLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_LIKELIHOOD);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -116,7 +133,6 @@ public class BinderConfig
 
         CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
         ApplyFlanks = cmd.hasOption(APPLY_FLANKS);
-        RunScoring = cmd.hasOption(RUN_SCORING);
         RunValidation = cmd.hasOption(RUN_VALIDATION);
 
         RandomPeptides = new RandomPeptideConfig(cmd);
@@ -128,6 +144,37 @@ public class BinderConfig
         WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
         WritePanLengthDistribution = cmd.hasOption(WRITE_PAN_LENGTH_DIST);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
+    }
+
+    public static String scoreFileConfig(final String fileType) { return fileType + "_file"; }
+
+    public static String getScoringFilename(
+            final CommandLine cmd, final String scoreFileDir, final String scoreFileId, final String fileType)
+    {
+        // formFilename
+        String configStr = scoreFileConfig(fileType);
+        String configValue = cmd.getOptionValue(configStr);
+
+        if(scoreFileDir == null)
+            return configValue;
+
+        if(configValue != null)
+            return scoreFileDir + configValue;
+        else
+            return formFilename(fileType, scoreFileDir, scoreFileId);
+    }
+
+    public String formOutputFilename(final String fileType)
+    {
+        return formFilename(fileType, OutputDir, OutputId);
+    }
+
+    public static String formFilename(final String fileType, final String dir, final String fileId)
+    {
+        if(fileId == null || fileId.isEmpty())
+            return String.format("%sbind_%s.csv", dir, fileType);
+        else
+            return String.format("%sbind_%s_%s.csv", dir, fileId, fileType);
     }
 
     public static List<String> loadRequiredOutputAlleles(final String filename)
@@ -152,31 +199,21 @@ public class BinderConfig
         return requiredAlleles;
     }
 
-    public String formFilename(final String fileId)
-    {
-        return formFilename(fileId, OutputDir, OutputId);
-    }
-
-    public static String formFilename(final String fileId, final String outputDir, final String outputId)
-    {
-        if(outputId == null || outputId.isEmpty())
-            return String.format("%sbind_%s.csv", outputDir, fileId);
-        else
-            return String.format("%sbind_%s_%s.csv", outputDir, outputId, fileId);
-    }
-
     public static void addCmdLineArgs(Options options)
     {
         RandomPeptideConfig.addCmdLineArgs(options);
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
         options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
-        options.addOption(BIND_MATRIX_FILE, true, "Binding matrix data file");
-        options.addOption(BIND_LIKELIHOOD_FILE, true, "Binding relative likelihood file");
+
+        options.addOption(SCORE_FILE_ID, true, "Reference file id for scoring instead of specifying individual files");
+        options.addOption(SCORE_FILE_DIR, true, "Reference file directory");
+        options.addOption(scoreFileConfig(FILE_ID_POS_WEIGHT), true, "Binding position weights file");
+        options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD), true, "Binding likelihood file");
+
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
 
         CalcConstants.addCmdLineArgs(options);
 
-        options.addOption(RUN_SCORING, false, "Use binding matrix data to score training and random peptide data");
         options.addOption(APPLY_FLANKS, false, "Use flanks for scoring if present");
         options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
         options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");

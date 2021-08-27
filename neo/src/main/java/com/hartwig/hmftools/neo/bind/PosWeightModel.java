@@ -337,7 +337,7 @@ public class PosWeightModel
                 posTotalCount += finalWeightedCounts[aa][pos];
             }
 
-            posTotalCount = max(posTotalCount, 0.1); // for training data without observed counts in a peptide length
+            posTotalCount = max(posTotalCount, 0.001); // for training data without observed counts in a peptide length
 
             for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
             {

@@ -7,6 +7,9 @@ import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_FLANK_POS_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initFrequencyWriter;
 
@@ -84,30 +87,25 @@ public class BindTrainer
         buildBindCountsData();
         buildPositionWeightMatrices();
 
-        if(mConfig.RandomPeptides.WriteRandomDistribution || mConfig.RunScoring)
+        if(mConfig.RandomPeptides.WriteRandomDistribution)
         {
             RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig.RandomPeptides);
 
             if(!randomDistribution.loadData())
-            {
                 randomDistribution.buildDistribution(mAlleleBindMatrices);
-            }
 
-            if(mConfig.RunScoring || mConfig.WriteLikelihood)
+            if(mConfig.WriteLikelihood)
             {
-                BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution);
+                BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankCounts);
                 scorer.runScoring();
 
-                if(mConfig.WriteLikelihood)
-                {
-                    BindingLikelihood bindingLikelihood = new BindingLikelihood();
-                    final String relativeLikelihoodFile = mConfig.formFilename("rel_likelihood");
-                    bindingLikelihood.buildAllelePeptideLikelihoods(mAllelePeptideData, relativeLikelihoodFile);
+                BindingLikelihood bindingLikelihood = new BindingLikelihood();
+                final String relativeLikelihoodFile = mConfig.formOutputFilename(FILE_ID_LIKELIHOOD);
+                bindingLikelihood.buildAllelePeptideLikelihoods(mAllelePeptideData, relativeLikelihoodFile);
 
-                    if(mConfig.WritePanLengthDistribution)
-                    {
-                        randomDistribution.buildLikelihoodDistribution(mAlleleBindMatrices, bindingLikelihood);
-                    }
+                if(mConfig.WritePanLengthDistribution)
+                {
+                    randomDistribution.buildLikelihoodDistribution(mAlleleBindMatrices, bindingLikelihood);
                 }
             }
         }
@@ -118,10 +116,10 @@ public class BindTrainer
     private void buildBindCountsData()
     {
         BufferedWriter freqWriter = mConfig.WriteFrequencyData ?
-                initFrequencyWriter(mConfig.formFilename("pos_frequency")) : null;
+                initFrequencyWriter(mConfig.formOutputFilename("pos_frequency")) : null;
 
         BufferedWriter pairWriter = mConfig.CalcPairs ?
-                ComboCorrelations.initPairDataWriter(mConfig.formFilename("pair_score_prob")) : null;
+                ComboCorrelations.initPairDataWriter(mConfig.formOutputFilename("pair_score_prob")) : null;
 
         for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
@@ -173,7 +171,8 @@ public class BindTrainer
         if(mConfig.WriteBindCounts && mConfig.ApplyFlanks)
         {
             mFlankCounts.logStats();
-            mFlankCounts.writeCounts(mConfig.formFilename("flank_counts"));
+            mFlankCounts.createMatrix();
+            mFlankCounts.writeData(mConfig.formOutputFilename(FILE_ID_FLANK_POS_WEIGHT));
         }
 
         closeBufferedWriter(freqWriter);
@@ -261,7 +260,7 @@ public class BindTrainer
         }
 
         BufferedWriter matrixWriter = mConfig.WritePosWeightMatrix || mConfig.WriteBindCounts ?
-                initMatrixWriter(mConfig.formFilename("matrix_data"), getMaxPeptideLength(), mConfig.WriteBindCounts) : null;
+                initMatrixWriter(mConfig.formOutputFilename(FILE_ID_POS_WEIGHT), getMaxPeptideLength(), mConfig.WriteBindCounts) : null;
 
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {

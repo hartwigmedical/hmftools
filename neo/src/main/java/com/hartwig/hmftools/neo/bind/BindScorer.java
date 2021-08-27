@@ -30,6 +30,7 @@ public class BindScorer
 
     private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
+    private final FlankCounts mFlankCounts;
 
     private final RandomPeptideDistribution mRandomDistribution;
     private final BindingLikelihood mBindingLikelihood;
@@ -43,11 +44,13 @@ public class BindScorer
         mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
 
         mBindingLikelihood = new BindingLikelihood();
+        mFlankCounts = new FlankCounts();
     }
 
     public BindScorer(
             final BinderConfig config, final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
-            final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices, final RandomPeptideDistribution randomDistribution)
+            final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices, final RandomPeptideDistribution randomDistribution,
+            final FlankCounts flankCounts)
     {
         mConfig = config;
 
@@ -55,6 +58,7 @@ public class BindScorer
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
         mBindingLikelihood = null;
+        mFlankCounts = flankCounts;
     }
 
     public void run()
@@ -174,7 +178,7 @@ public class BindScorer
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("peptide_scores"), false);
+            BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("peptide_scores"), false);
             writer.write("Allele,Peptide,Source,Score,Rank,Likelihood,LikelihoodRank");
 
             boolean hasPredictionData = false;
@@ -236,7 +240,7 @@ public class BindScorer
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formFilename("allele_summary"), false);
+            BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("allele_summary"), false);
             writer.write("Allele,BindCount,TPR");
             writer.newLine();
             return writer;
@@ -327,9 +331,9 @@ public class BindScorer
 
     public boolean loadData()
     {
-        NE_LOGGER.info("loading matrix data from {}", mConfig.BindMatrixFile);
+        NE_LOGGER.info("loading matrix data from {}", mConfig.PosWeightsFile);
 
-        List<BindScoreMatrix> matrixList = BindScoreMatrix.loadFromCsv(mConfig.BindMatrixFile);
+        List<BindScoreMatrix> matrixList = BindScoreMatrix.loadFromCsv(mConfig.PosWeightsFile);
 
         for(BindScoreMatrix matrix : matrixList)
         {

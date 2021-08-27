@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.REQUIRED_OUTPUT_ALLELES;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.SCORE_FILE_DIR;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.SCORE_FILE_ID;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.getScoringFilename;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.loadRequiredOutputAlleles;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.scoreFileConfig;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
 import java.util.List;
@@ -24,16 +30,22 @@ public class RandomPeptideConfig
 
     private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
-    private static final String RANDOM_PEPTIDE_DIST_FILE = "random_peptide_dist_file";
-    private static final String RANDOM_LIKELIHOOD_DIST_FILE = "random_likelihood_dist_file";
+
+    // private static final String RANDOM_PEPTIDE_DIST_FILE = "rand_dist_file";
+    // private static final String RANDOM_LIKELIHOOD_DIST_FILE = "likelihood_rand_dist_file";
 
     public RandomPeptideConfig(final CommandLine cmd)
     {
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID, "");
         RandomPeptidesFile = cmd.getOptionValue(RANDOM_PEPTIDES_FILE);
-        RandomPeptideDistributionFile = cmd.getOptionValue(RANDOM_PEPTIDE_DIST_FILE);
-        RandomLikelihoodDistributionFile = cmd.getOptionValue(RANDOM_LIKELIHOOD_DIST_FILE);
+
+        String scoreFileDir = cmd.getOptionValue(SCORE_FILE_DIR);
+        String scoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
+
+        RandomPeptideDistributionFile = getScoringFilename(cmd, scoreFileDir, scoreFileId, FILE_ID_RAND_DIST);
+        RandomLikelihoodDistributionFile = getScoringFilename(cmd, scoreFileDir, scoreFileId, FILE_ID_LIKELIHOOD_RAND_DIST);
+
         WriteRandomDistribution = cmd.hasOption(WRITE_RAND_DIST);
 
         RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
@@ -42,8 +54,10 @@ public class RandomPeptideConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(RANDOM_PEPTIDES_FILE, true, "Random peptide file");
-        options.addOption(RANDOM_PEPTIDE_DIST_FILE, true, "Random peptide distribution file");
-        options.addOption(RANDOM_LIKELIHOOD_DIST_FILE, true, "Random likelihood distribution file");
+
+        options.addOption(scoreFileConfig(FILE_ID_RAND_DIST), true, "Random peptide distribution file");
+        options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD_RAND_DIST), true, "Random likelihood distribution file");
+
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         options.addOption(REQUIRED_OUTPUT_ALLELES, true, "Restricted set of alleles to write to file");
         options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
