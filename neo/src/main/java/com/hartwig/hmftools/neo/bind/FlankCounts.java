@@ -4,49 +4,40 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_BIND_COUNTS;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_POS_WEIGHTS;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
-import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
-import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_OBSERVED_AA_POS_FREQ;
 
 import static org.apache.commons.math3.util.FastMath.log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
 public class FlankCounts
 {
     // add in special placeholders for the start and end codons
-    private static final char START_AMINO_ACID = 'm';
+    public static final char START_AMINO_ACID_ID = 'm';
 
-    private static final double START_AMINO_ACID_FREQ = 0.00186249;
-    private static final double STOP_AMINO_ACID_FREQ = START_AMINO_ACID_FREQ;
+    public static final double START_AMINO_ACID_FREQ = 0.00186249;
+    public static final double STOP_AMINO_ACID_FREQ = START_AMINO_ACID_FREQ;
 
-    private static final List<Character> FLANK_AMINO_ACIDS = Lists.newArrayList();
+    public static final List<Character> FLANK_AMINO_ACIDS = Lists.newArrayList();
 
-    private static final int FLANK_BASE_COUNT = 3;
-    private static final int TOTAL_FLANK_BASE_COUNT = FLANK_BASE_COUNT * 2;
+    public static final int FLANK_BASE_COUNT = 3;
+    public static final int TOTAL_FLANK_BASE_COUNT = FLANK_BASE_COUNT * 2;
 
-    private static final Map<Character,Integer> FLANK_AMINO_ACID_INDICES = Maps.newHashMap();
+    public static final Map<Character,Integer> FLANK_AMINO_ACID_INDICES = Maps.newHashMap();
 
     static
     {
         FLANK_AMINO_ACIDS.addAll(AMINO_ACIDS);
-        FLANK_AMINO_ACIDS.add(START_AMINO_ACID);
+        FLANK_AMINO_ACIDS.add(START_AMINO_ACID_ID);
         FLANK_AMINO_ACIDS.add(STOP_AMINO_ACID);
 
         for(int i = 0; i < FLANK_AMINO_ACIDS.size(); ++i)
@@ -55,20 +46,19 @@ public class FlankCounts
         }
     }
 
-    private static final int FLANK_AMINO_ACID_COUNT = FLANK_AMINO_ACIDS.size();
+    public static final int FLANK_AMINO_ACID_COUNT = FLANK_AMINO_ACIDS.size();
 
-    private static int aminoAcidIndex(final char aminoAcid)
+    public static int flankAminoAcidIndex(final char aminoAcid)
     {
         Integer index = FLANK_AMINO_ACID_INDICES.get(aminoAcid);
         return index != null ? index : INVALID_AMINO_ACID;
     }
 
-    private static final int UP_1 = 2;
-    private static final int DOWN_1 = 3;
+    public static final int UP_1 = 2;
+    public static final int DOWN_1 = 3;
 
     // by amino acid and position
     private final int[][] mBindCounts;
-    private final double[][] mPosWeights;
 
     private int mTotalBinds;
     private int mTotalWithFlanks;
@@ -76,9 +66,10 @@ public class FlankCounts
     public FlankCounts()
     {
         mBindCounts = new int[FLANK_AMINO_ACID_COUNT][TOTAL_FLANK_BASE_COUNT];
-        mPosWeights = new double[FLANK_AMINO_ACID_COUNT][TOTAL_FLANK_BASE_COUNT];
         mTotalBinds = 0;
     }
+
+    public final int[][] getBindCounts() { return mBindCounts; }
 
     public void processBindData(final BindData bindData)
     {
@@ -112,7 +103,7 @@ public class FlankCounts
         }
         else
         {
-            ++mBindCounts[aminoAcidIndex(START_AMINO_ACID)][UP_1];
+            ++mBindCounts[flankAminoAcidIndex(START_AMINO_ACID_ID)][UP_1];
         }
 
         if(!bindData.DownFlank.isEmpty())
@@ -137,7 +128,7 @@ public class FlankCounts
         }
         else
         {
-            ++mBindCounts[aminoAcidIndex(STOP_AMINO_ACID)][DOWN_1];
+            ++mBindCounts[flankAminoAcidIndex(STOP_AMINO_ACID)][DOWN_1];
         }
     }
 
@@ -152,66 +143,14 @@ public class FlankCounts
         if(aminoAcid == STOP_AMINO_ACID)
             return;
 
-        int aaIndex = aminoAcidIndex(aminoAcid);
+        int aaIndex = flankAminoAcidIndex(aminoAcid);
         if(aaIndex == INVALID_AMINO_ACID)
             return;
 
         ++mBindCounts[aaIndex][flankPos];
     }
 
-    public void createMatrix()
-    {
-        AminoAcidFrequency aminoAcidFrequency = new AminoAcidFrequency();
-
-        for(int pos = 0; pos < TOTAL_FLANK_BASE_COUNT; ++pos)
-        {
-            double posTotalCount = 0;
-
-            for(int aa = 0; aa < FLANK_AMINO_ACID_COUNT; ++aa)
-            {
-                posTotalCount += mBindCounts[aa][pos];
-            }
-
-            posTotalCount = max(posTotalCount, 0.001); // for training data without observed counts in a peptide length
-
-            for(int aa = 0; aa < FLANK_AMINO_ACID_COUNT; ++aa)
-            {
-                char aminoAcid = FLANK_AMINO_ACIDS.get(aa);
-
-                if(aminoAcid == START_AMINO_ACID && pos != UP_1)
-                {
-                    mPosWeights[aa][pos] = 0;
-                    continue;
-                }
-                else if(aminoAcid == STOP_AMINO_ACID && pos != DOWN_1)
-                {
-                    mPosWeights[aa][pos] = 0;
-                    continue;
-                }
-
-                double aaFrequency;
-
-                if(aminoAcid == START_AMINO_ACID)
-                    aaFrequency = START_AMINO_ACID_FREQ;
-                else if(aminoAcid == STOP_AMINO_ACID)
-                    aaFrequency = STOP_AMINO_ACID_FREQ;
-                else
-                    aaFrequency = aminoAcidFrequency.getAminoAcidFrequency(aa);
-
-                // Peptide Weight = log(max(posWeight(aa,pos), 0.005 * posWeightTotal)/AaFreq,2)
-                // Peptide Weight new = log(max(posWeight(aa,pos)/posWeightTotal, 0.005)/AaFreq,2) - now a % weight
-                double adjustedCount = mBindCounts[aa][pos];
-
-                // handle very low observation counts
-                adjustedCount = max(adjustedCount / posTotalCount, MIN_OBSERVED_AA_POS_FREQ);
-
-                double posWeight = log(2, adjustedCount / aaFrequency);
-                mPosWeights[aa][pos] = posWeight;
-            }
-        }
-    }
-
-    public void writeData(final String filename)
+    public void writeData(final String filename, final FlankScores flankScores)
     {
         try
         {
@@ -232,19 +171,7 @@ public class FlankCounts
             writer.newLine();
 
             // write pos weights
-            for(int aa = 0; aa < FLANK_AMINO_ACID_COUNT; ++aa)
-            {
-                char aminoAcid = FLANK_AMINO_ACIDS.get(aa);
-
-                writer.write(String.format("%s,%c", DATA_TYPE_POS_WEIGHTS, aminoAcid));
-
-                for(int pos = 0; pos < TOTAL_FLANK_BASE_COUNT; ++pos)
-                {
-                    writer.write(String.format(",%.6f", mPosWeights[aa][pos]));
-                }
-
-                writer.newLine();
-            }
+            flankScores.writeData(writer);
 
             // write counts
             for(int aa = 0; aa < FLANK_AMINO_ACID_COUNT; ++aa)
@@ -268,40 +195,4 @@ public class FlankCounts
             NE_LOGGER.error("failed to write flank counts data: {}", e.toString());
         }
     }
-
-    public void loadPosWeights(final String filename)
-    {
-        try
-        {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
-            lines.remove(0);
-
-            int aaIndex = fieldsIndexMap.get(FLD_AMINO_ACID);
-            int peptideStartIndex = aaIndex + 1;
-
-            for(String line : lines)
-            {
-                String[] items = line.split(DELIM, -1);
-
-                // AminoAcid,U3,U2,U1,D1,D2,D3
-
-                char aminoAcid = items[aaIndex].charAt(0);
-                int aminoAcidIndex = aminoAcidIndex(aminoAcid);
-
-                int flankPos = 0;
-                for(int i = peptideStartIndex; i < items.length; ++i, ++flankPos)
-                {
-                    double value = Double.parseDouble(items[i]);
-                    mPosWeights[aminoAcidIndex][flankPos] = value;
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error(" failed to load flanking pos-weights data file: {}" ,e.toString());
-        }
-    }
-
 }

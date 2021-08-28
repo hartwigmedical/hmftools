@@ -14,6 +14,7 @@ public final class BindCommon
     public static final String FLD_DOWN_FLANK = "DownFlank";
     public static final String FLD_AMINO_ACID = "AminoAcid";
     public static final String FLD_PEPTIDE_LEN = "PeptideLength";
+    public static final String FLD_DATA_TYPE = "DataType";
 
     public static final String FLD_AFFINITY = "Affinity";
     public static final String FLD_PRED_AFFINITY = "PredictedAffinity";

@@ -30,7 +30,7 @@ public class BindScorer
 
     private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
-    private final FlankCounts mFlankCounts;
+    private final FlankScores mFlankScores;
 
     private final RandomPeptideDistribution mRandomDistribution;
     private final BindingLikelihood mBindingLikelihood;
@@ -44,13 +44,13 @@ public class BindScorer
         mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
 
         mBindingLikelihood = new BindingLikelihood();
-        mFlankCounts = new FlankCounts();
+        mFlankScores = new FlankScores();
     }
 
     public BindScorer(
             final BinderConfig config, final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
             final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices, final RandomPeptideDistribution randomDistribution,
-            final FlankCounts flankCounts)
+            final FlankScores flankScores)
     {
         mConfig = config;
 
@@ -58,7 +58,7 @@ public class BindScorer
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
         mBindingLikelihood = null;
-        mFlankCounts = flankCounts;
+        mFlankScores = flankScores;
     }
 
     public void run()
@@ -146,17 +146,9 @@ public class BindScorer
                     if(matrix == null)
                         continue;
 
-                    double score = matrix.calcScore(bindData.Peptide);
-                    double rankPercentile = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), score);
+                    calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood);
 
-                    double likelihood = mBindingLikelihood != null && mBindingLikelihood.hasData() ?
-                            mBindingLikelihood.getBindingLikelihood(allele, bindData.Peptide, rankPercentile) : 0;
-
-                    double likelihoodRank = mRandomDistribution.getLikelihoodRank(allele, likelihood);
-
-                    bindData.setScoreData(score, rankPercentile, likelihood, likelihoodRank);
-
-                    alleleTprCalc.addRank(likelihoodRank);
+                    alleleTprCalc.addRank(bindData.likelihoodRank());
                 }
             }
 
@@ -167,6 +159,43 @@ public class BindScorer
         closeBufferedWriter(alleleWriter);
 
         writePeptideScores();
+    }
+
+    public static double calcScore(
+            final BindScoreMatrix matrix, final FlankScores flankScores, final String peptide, final String upFlank, final String downFlank)
+    {
+        double score = matrix.calcScore(peptide);
+
+        if(flankScores != null)
+        {
+            double flankScore = flankScores.calcScore(upFlank, downFlank);
+            score += flankScore;
+        }
+
+        return score;
+    }
+
+    public static void calcScoreData(
+            final BindData bindData, final BindScoreMatrix matrix, final FlankScores flankScores,
+            final RandomPeptideDistribution randomDistribution, final BindingLikelihood bindingLikelihood)
+    {
+        double score = matrix.calcScore(bindData.Peptide);
+
+        double flankScore = 0;
+        if(flankScores != null && bindData.hasFlanks())
+        {
+            flankScore = flankScores.calcScore(bindData.UpFlank, bindData.DownFlank);
+            score += flankScore;
+        }
+
+        double rankPercentile = randomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
+
+        double likelihood = bindingLikelihood != null && bindingLikelihood.hasData() ?
+                bindingLikelihood.getBindingLikelihood(bindData.Allele, bindData.Peptide, rankPercentile) : 0;
+
+        double likelihoodRank = randomDistribution.getLikelihoodRank(bindData.Allele, likelihood);
+
+        bindData.setScoreData(score, flankScore, rankPercentile, likelihood, likelihoodRank);
     }
 
     private void writePeptideScores()
@@ -180,6 +209,9 @@ public class BindScorer
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("peptide_scores"), false);
             writer.write("Allele,Peptide,Source,Score,Rank,Likelihood,LikelihoodRank");
+
+            if(mConfig.ApplyFlanks)
+                writer.write(",FlankScore,UpFlank,DownFlank");
 
             boolean hasPredictionData = false;
             boolean hasMeasuredAffinity = false;
@@ -207,9 +239,14 @@ public class BindScorer
                 {
                     for(BindData bindData : bindDataList)
                     {
-                        writer.write(String.format("%s,%s,%s,%.2f,%.6f,%.6f,%.6f",
-                                allele, bindData.Peptide, bindData.Source,
-                                bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank()));
+                        writer.write(String.format("%s,%s,%s,%.4f,%.6f,%.6f,%.6f",
+                                allele, bindData.Peptide, bindData.Source, bindData.score(),
+                                bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank()));
+
+                        if(mConfig.ApplyFlanks)
+                        {
+                            writer.write(String.format(",%.4f,%s,%s", bindData.flankScore(), bindData.UpFlank, bindData.DownFlank));
+                        }
 
                         if(hasMeasuredAffinity)
                         {
@@ -354,6 +391,9 @@ public class BindScorer
             return false;
 
         if(mConfig.BindLikelihoodFile != null && !mBindingLikelihood.loadLikelihoods(mConfig.BindLikelihoodFile))
+            return false;
+
+        if(mConfig.FlankPosWeightsFile != null && mConfig.ApplyFlanks && !mFlankScores.loadPosWeights(mConfig.FlankPosWeightsFile))
             return false;
 
         return true;

@@ -39,6 +39,7 @@ public class BindTrainer
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
     private final FlankCounts mFlankCounts;
+    private final FlankScores mFlankScores;
 
     private final Set<Integer> mDistinctPeptideLengths;
 
@@ -59,6 +60,7 @@ public class BindTrainer
         mAlleleBindCounts = Maps.newHashMap();
         mAlleleBindMatrices = Maps.newHashMap();
         mFlankCounts = new FlankCounts();
+        mFlankScores = new FlankScores();
     }
 
     public void run()
@@ -92,11 +94,11 @@ public class BindTrainer
             RandomPeptideDistribution randomDistribution = new RandomPeptideDistribution(mConfig.RandomPeptides);
 
             if(!randomDistribution.loadData())
-                randomDistribution.buildDistribution(mAlleleBindMatrices);
+                randomDistribution.buildDistribution(mAlleleBindMatrices, mFlankScores);
 
             if(mConfig.WriteLikelihood)
             {
-                BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankCounts);
+                BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores);
                 scorer.runScoring();
 
                 BindingLikelihood bindingLikelihood = new BindingLikelihood();
@@ -105,7 +107,7 @@ public class BindTrainer
 
                 if(mConfig.WritePanLengthDistribution)
                 {
-                    randomDistribution.buildLikelihoodDistribution(mAlleleBindMatrices, bindingLikelihood);
+                    randomDistribution.buildLikelihoodDistribution(mAlleleBindMatrices, mFlankScores, bindingLikelihood);
                 }
             }
         }
@@ -168,11 +170,15 @@ public class BindTrainer
             }
         }
 
+        if(mConfig.ApplyFlanks)
+        {
+            mFlankScores.createMatrix(mFlankCounts.getBindCounts());
+        }
+
         if(mConfig.WriteBindCounts && mConfig.ApplyFlanks)
         {
             mFlankCounts.logStats();
-            mFlankCounts.createMatrix();
-            mFlankCounts.writeData(mConfig.formOutputFilename(FILE_ID_FLANK_POS_WEIGHT));
+            mFlankCounts.writeData(mConfig.formOutputFilename(FILE_ID_FLANK_POS_WEIGHT), mFlankScores);
         }
 
         closeBufferedWriter(freqWriter);

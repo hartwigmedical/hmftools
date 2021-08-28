@@ -44,6 +44,7 @@ public class BindData
     private double mPresentationPercentile;
 
     private double mScore;
+    private double mFlankScore;
     private double mRankPercentile;
     private double mLikelihood;
     private double mLikelihoodRank;
@@ -71,6 +72,7 @@ public class BindData
         mAffinityPercentile = -1;
 
         mScore = INVALID_SCORE;
+        mFlankScore = INVALID_SCORE;
         mRankPercentile = INVALID_SCORE;
         mLikelihood = INVALID_SCORE;
         mLikelihoodRank = INVALID_SCORE;
@@ -107,15 +109,17 @@ public class BindData
     public double presentationScore() { return mPresentationScore; }
     public double presentationPercentile() { return mPresentationPercentile; }
 
-    public void setScoreData(double score, double rankPerc, double likelihood, double likelihoodRank)
+    public void setScoreData(double score, double flankScore, double rankPerc, double likelihood, double likelihoodRank)
     {
         mScore = score;
+        mFlankScore = flankScore;
         mRankPercentile = rankPerc;
         mLikelihood = likelihood;
         mLikelihoodRank = likelihoodRank;
     }
 
     public double score() { return mScore; }
+    public double flankScore() { return mFlankScore; }
     public double rankPercentile() { return mRankPercentile; }
     public double likelihood() { return mLikelihood; }
     public double likelihoodRank() { return mLikelihoodRank; }

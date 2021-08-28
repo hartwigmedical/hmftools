@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_POS_WEIGHTS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AMINO_ACID;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DATA_TYPE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
@@ -140,7 +141,7 @@ public class BindScoreMatrix
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
-            int dataTypeIndex = fieldsIndexMap.get("DataType");
+            int dataTypeIndex = fieldsIndexMap.get(FLD_DATA_TYPE);
             int peptideLenIndex = fieldsIndexMap.get(FLD_PEPTIDE_LEN);
             int aaIndex = fieldsIndexMap.get(FLD_AMINO_ACID);
             int peptideStartIndex = max(aaIndex, dataTypeIndex) + 1;

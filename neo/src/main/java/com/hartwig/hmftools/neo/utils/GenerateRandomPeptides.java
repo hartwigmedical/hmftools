@@ -120,11 +120,14 @@ public class GenerateRandomPeptides
         mPeptideBaseGap = MAX_PER_GENE - (int)round(log10(mRequiredPeptides)); // smaller gaps when more peptides are required
         mMaxPeptidesPerGene = (int)max(mRequiredPeptides / 20000.0 * 3, MAX_PER_GENE); // from about 20K coding canonical trans
 
-        mWriter = initialiseWriter(parseOutputDir(cmd));
+        mWriter = initialiseWriter();
     }
 
     private void loadAlleleFrequencies(final String filename)
     {
+        if(filename == null)
+            return;
+
         try
         {
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
@@ -285,17 +288,23 @@ public class GenerateRandomPeptides
 
     private String getAllele()
     {
+        if(mAlleles.isEmpty())
+            return "NONE";
+
         int index = mRandom.nextInt(mAlleles.size());
         return mAlleles.get(index);
     }
 
-    private BufferedWriter initialiseWriter(final String outputDir)
+    private BufferedWriter initialiseWriter()
     {
         try
         {
             BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
-            writer.write("Allele,Peptide,Chromosome,GeneName,PosStart,PosEnd");
+            if(!mAlleles.isEmpty())
+                writer.write("Allele,");
+
+            writer.write("Peptide,Chromosome,GeneName,PosStart,PosEnd");
             writer.newLine();
             return writer;
         }
@@ -317,14 +326,22 @@ public class GenerateRandomPeptides
             }
             else
             {
-                for(String allele : mAlleles)
+                if(mAlleles.isEmpty())
                 {
-                    for(int peptideLength : mPeptideLengths)
+                    mWriter.write(String.format("%s,%s,%s,%d,%d", peptide, chromosome, geneName, posStart, posEnd));
+                    mWriter.newLine();
+                }
+                else
+                {
+                    for(String allele : mAlleles)
                     {
-                        String peptideByLength = peptide.length() > peptideLength ? peptide.substring(0, peptideLength) : peptide;
+                        for(int peptideLength : mPeptideLengths)
+                        {
+                            String peptideByLength = peptide.length() > peptideLength ? peptide.substring(0, peptideLength) : peptide;
 
-                        mWriter.write(String.format("%s,%s,%s,%s,%d,%d", allele, peptideByLength, chromosome, geneName, posStart, posEnd));
-                        mWriter.newLine();
+                            mWriter.write(String.format("%s,%s,%s,%s,%d,%d", allele, peptideByLength, chromosome, geneName, posStart, posEnd));
+                            mWriter.newLine();
+                        }
                     }
                 }
             }

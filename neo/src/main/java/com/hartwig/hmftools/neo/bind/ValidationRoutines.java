@@ -169,7 +169,7 @@ public class ValidationRoutines
 
         buildPositionWeightMatrixData(targetAllele, alleleBindMatrices);
 
-        mRandomDistribution.buildDistribution(alleleBindMatrices);
+        mRandomDistribution.buildDistribution(alleleBindMatrices, null);
 
         runScoring(targetAllele, alleleBindMatrices);
     }
@@ -236,9 +236,10 @@ public class ValidationRoutines
             {
                 BindScoreMatrix matrix = pepLenMatrixMap.get(bindData.peptideLength());
 
-                double score = matrix.calcScore(bindData.Peptide);
-                double rankPercentile = mRandomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
-                bindData.setScoreData(score, rankPercentile, INVALID_SCORE, INVALID_SCORE);
+                BindScorer.calcScoreData(bindData, matrix, null, mRandomDistribution, null);
+                //double score = matrix.calcScore(bindData.Peptide);
+                //double rankPercentile = mRandomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
+                //bindData.setScoreData(score, rankPercentile, INVALID_SCORE, INVALID_SCORE);
 
                 writePeptideResults(targetAllele, bindData);
             }
