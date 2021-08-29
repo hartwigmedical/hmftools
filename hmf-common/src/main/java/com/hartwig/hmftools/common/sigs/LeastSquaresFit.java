@@ -6,7 +6,7 @@ package com.hartwig.hmftools.common.sigs;
 
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.initVector;
-import static com.hartwig.hmftools.common.utils.Matrix.copyMatrix;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -105,8 +105,8 @@ public class LeastSquaresFit
 
     public void initialise(final double[][] factors, final double[] data)
     {
-        copyMatrix(factors, a);
-        copyMatrix(factors, mFactors);
+        copy(factors, a);
+        copy(factors, mFactors);
         copyVector(data, b);
         copyVector(data, mCounts);
 

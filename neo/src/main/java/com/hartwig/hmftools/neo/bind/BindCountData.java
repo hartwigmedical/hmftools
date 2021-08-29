@@ -2,6 +2,10 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_ALLELE_WEIGHTED;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_BIND_COUNTS;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_LENGTH_WEIGHTED;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DATA_TYPE_NOISE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACID_COUNT;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
@@ -14,6 +18,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 public class BindCountData
 {
@@ -111,40 +117,59 @@ public class BindCountData
         }
     }
 
+    public double[][] getCounts(final String dataType)
+    {
+        if(dataType.equals(DATA_TYPE_BIND_COUNTS))
+            return mBindCounts;
+        else if(dataType.equals(DATA_TYPE_NOISE))
+            return mNoiseCounts;
+        if(dataType.equals(DATA_TYPE_LENGTH_WEIGHTED))
+            return mWeightedCounts;
+        else if(dataType.equals(DATA_TYPE_ALLELE_WEIGHTED))
+            return mFinalWeightedCounts;
+        else
+            return null;
+    }
+
     public static void writeCounts(final BufferedWriter writer, final BindCountData bindCounts, int maxPeptideLength, boolean writeNoise)
+    {
+        for(int i = 0; i < COUNT_DATA_TYPES.size(); ++i)
+        {
+            String dataType = COUNT_DATA_TYPES.get(i);
+
+            if(!writeNoise && i == 1)
+                continue;
+
+            final double[][] counts = bindCounts.getCounts(dataType);
+
+            writeCounts(writer, bindCounts, dataType, counts, maxPeptideLength);
+        }
+    }
+
+    public static void writeCounts(
+            final BufferedWriter writer, final BindCountData bindCounts, final String dataType, final double[][] counts, int maxPeptideLength)
     {
         try
         {
-            for(int i = 0; i < COUNT_DATA_TYPES.size(); ++i)
+            for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
             {
-                String dataType = COUNT_DATA_TYPES.get(i);
+                char aminoAcid = AMINO_ACIDS.get(aa);
 
-                if(!writeNoise && i == 1)
-                    continue;
+                writer.write(String.format("%s,%s,%d,%c", dataType, bindCounts.Allele, bindCounts.PeptideLength, aminoAcid));
 
-                final double[][] counts = (i == 0) ? bindCounts.getBindCounts() : (i == 1) ? bindCounts.getNoiseCounts() :
-                        (i == 2) ? bindCounts.getWeightedCounts() : bindCounts.getFinalWeightedCounts();
-
-                for(int aa = 0; aa < AMINO_ACID_COUNT; ++aa)
+                for(int pos = 0; pos < maxPeptideLength; ++pos)
                 {
-                    char aminoAcid = AMINO_ACIDS.get(aa);
-
-                    writer.write(String.format("%s,%s,%d,%c", dataType, bindCounts.Allele, bindCounts.PeptideLength, aminoAcid));
-
-                    for(int pos = 0; pos < maxPeptideLength; ++pos)
+                    if(pos < bindCounts.PeptideLength)
                     {
-                        if(pos < bindCounts.PeptideLength)
-                        {
-                            writer.write(String.format(",%.1f", counts[aa][pos]));
-                        }
-                        else
-                        {
-                            writer.write(",0.0");
-                        }
+                        writer.write(String.format(",%.1f", counts[aa][pos]));
                     }
-
-                    writer.newLine();
+                    else
+                    {
+                        writer.write(",0.0");
+                    }
                 }
+
+                writer.newLine();
             }
         }
         catch (IOException e)
@@ -201,5 +226,4 @@ public class BindCountData
     {
         return String.format("%s L%d: totalBinds(%d)", Allele, PeptideLength, mTotalBinds);
     }
-
 }

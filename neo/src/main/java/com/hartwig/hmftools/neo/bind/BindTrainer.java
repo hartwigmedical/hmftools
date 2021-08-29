@@ -2,6 +2,7 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.clear;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -236,14 +238,10 @@ public class BindTrainer
             alleleTotalCounts.put(allele, totalAlelleCount);
         }
 
-        Map<Integer,List<BindCountData>> countsByLength = Maps.newHashMap();
-        mDistinctPeptideLengths.forEach(x -> countsByLength.put(x, Lists.newArrayList()));
-
         // now factor each allele's weighted counts into all the others
         for(Integer peptideLength : mDistinctPeptideLengths)
         {
             List<BindCountData> allBindCounts = Lists.newArrayList();
-            countsByLength.put(peptideLength, allBindCounts);
 
             for(Map<Integer,BindCountData> alleleEntry : mAlleleBindCounts.values())
             {
@@ -264,6 +262,8 @@ public class BindTrainer
                 }
             }
         }
+
+        logCalcAlleles();
 
         BufferedWriter matrixWriter = mConfig.WritePosWeightMatrix || mConfig.WriteBindCounts ?
                 initMatrixWriter(mConfig.formOutputFilename(FILE_ID_POS_WEIGHT), getMaxPeptideLength(), mConfig.WriteBindCounts) : null;
@@ -293,6 +293,49 @@ public class BindTrainer
         }
 
         closeBufferedWriter(matrixWriter);
+    }
+
+    private void logCalcAlleles()
+    {
+        if(mConfig.LogCalcAlleles.isEmpty())
+            return;
+
+        BufferedWriter writer = initMatrixWriter(mConfig.formOutputFilename("allele_motif_calc"), getMaxPeptideLength(), mConfig.WriteBindCounts);
+
+        for(String allele : mConfig.LogCalcAlleles)
+        {
+            Map<Integer,BindCountData> pepLenBindCounts = mAlleleBindCounts.get(allele);
+
+            for(Map.Entry<Integer,BindCountData> pepLenEntry : pepLenBindCounts.entrySet())
+            {
+                final BindCountData bindCounts = pepLenEntry.getValue();
+
+                for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
+                {
+                    final String otherAllele = alleleEntry.getKey();
+
+                    if(otherAllele.equals(allele))
+                        continue;
+
+                    final BindCountData otherBindCounts = alleleEntry.getValue().get(bindCounts.PeptideLength);
+
+                    BindCountData bindCountsTemp = new BindCountData(bindCounts.Allele, bindCounts.PeptideLength);
+
+                    MatrixUtils.copy(bindCounts.getBindCounts(), bindCountsTemp.getBindCounts());
+                    MatrixUtils.copy(bindCounts.getNoiseCounts(), bindCountsTemp.getNoiseCounts());
+                    MatrixUtils.copy(bindCounts.getWeightedCounts(), bindCountsTemp.getWeightedCounts());
+
+                    mPosWeightModel.buildFinalWeightedCounts(bindCountsTemp, Lists.newArrayList(otherBindCounts));
+
+                    BindCountData bindCountsLog = new BindCountData(
+                            String.format("%s->%s", otherAllele, bindCounts.Allele), bindCounts.PeptideLength);
+
+                    writeCounts(writer, bindCountsLog, "AlleleMotif", bindCountsTemp.getFinalWeightedCounts(), getMaxPeptideLength());
+                }
+            }
+        }
+
+        closeBufferedWriter(writer);
     }
 
     private boolean loadTrainingData()

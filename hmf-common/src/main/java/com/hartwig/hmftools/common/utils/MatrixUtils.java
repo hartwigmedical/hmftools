@@ -49,6 +49,23 @@ public class MatrixUtils
         }
     }
 
+    public static void copy(final double[][] source, final double[][] dest)
+    {
+        if(source.length != dest.length)
+            return;
+
+        int rows = source.length;
+        int cols = source[0].length;
+
+        for(int i = 0; i < rows; ++i)
+        {
+            for (int j = 0; j < cols; ++j)
+            {
+                dest[i][j] = source[i][j];
+            }
+        }
+    }
+
     public static Matrix createMatrixFromListData(final List<List<Double>> dataSet)
     {
         if(dataSet.isEmpty())

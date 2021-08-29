@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,6 +51,8 @@ public class BinderConfig
     public final boolean WritePanLengthDistribution;
     public final boolean RunValidation;
 
+    public final List<String> LogCalcAlleles;
+
     // the set of alleles which ensured to exist in the training output data (ie PWM values)
     // including for alleles which don't exist in the training data but which are required to score novel alleles
     public final List<String> RequiredOutputAlleles;
@@ -80,6 +83,7 @@ public class BinderConfig
     private static final String WRITE_LIKELIHOOD = "write_likelihood";
     public static final String WRITE_PAN_LENGTH_DIST = "write_pan_length_dist";
     private static final String RUN_VALIDATION = "run_validation";
+    private static final String LOG_CALC_ALLELES = "log_calc_alleles";
 
     public static final String REQUIRED_OUTPUT_ALLELES = "required_output_alleles";
     private static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
@@ -144,6 +148,13 @@ public class BinderConfig
         WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
         WritePanLengthDistribution = cmd.hasOption(WRITE_PAN_LENGTH_DIST);
         WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
+
+        LogCalcAlleles = Lists.newArrayList();
+
+        if(cmd.hasOption(LOG_CALC_ALLELES))
+        {
+            LogCalcAlleles.addAll(Arrays.stream(cmd.getOptionValue(LOG_CALC_ALLELES).split(ITEM_DELIM)).collect(Collectors.toList()));
+        }
     }
 
     public static String scoreFileConfig(final String fileType) { return fileType + "_file"; }
@@ -225,6 +236,7 @@ public class BinderConfig
         options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
 
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
+        options.addOption(LOG_CALC_ALLELES, true, "Log verbose calcs for alleles separated by ';'");
 
         options.addOption(RUN_VALIDATION, false, "Run validation routines");
         options.addOption(OUTPUT_DIR, true, "Output directory");

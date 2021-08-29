@@ -22,9 +22,12 @@ public final class BindCommon
 
     public static final String DATA_TYPE_POS_WEIGHTS = "PosWeights";
     public static final String DATA_TYPE_BIND_COUNTS = "BindCounts";
+    public static final String DATA_TYPE_NOISE = "NoiseCounts";
+    public static final String DATA_TYPE_LENGTH_WEIGHTED = "PeptideLengthWeighted";
+    public static final String DATA_TYPE_ALLELE_WEIGHTED = "AlleleMotifWeighted";
 
     public static final List<String> COUNT_DATA_TYPES = Lists.newArrayList(
-            DATA_TYPE_BIND_COUNTS, "NoiseCounts", "PeptideLengthWeighted", "AlleleMotifWeighted");
+            DATA_TYPE_BIND_COUNTS, DATA_TYPE_NOISE, DATA_TYPE_LENGTH_WEIGHTED, DATA_TYPE_ALLELE_WEIGHTED);
 
     public static final String DELIM = ",";
     public static final String RANDOM_SOURCE = "Random";
