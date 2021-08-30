@@ -2,33 +2,17 @@ package com.hartwig.hmftools.neo.bind;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
-import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_MAX_LENGTH;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
 import static com.hartwig.hmftools.neo.bind.RandomPeptideDistribution.getScoreRank;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 
@@ -207,6 +191,7 @@ public class RandomDistributionTask implements Callable
             final String allele, final int peptideLength, final List<Double> peptideScores, final List<double[]> discreteScoreData)
     {
         // write the distribution as 0.0001 up to 0.01, 0.001 up to 0.01, then 0.01 up to 100%
+        // store the lowest/worst score at each point
         int totalScores = peptideScores.size();
         int discreteIndex = 0;
         double currentSize = discreteScoreData.get(discreteIndex)[SCORE_SIZE];
@@ -228,10 +213,8 @@ public class RandomDistributionTask implements Callable
 
             if(currentScoreCount >= requiredScores)
             {
-                double avgScore = scoreTotal / currentScoreCount;
-
                 scoresDistributions.add(new ScoreDistributionData(
-                        allele, peptideLength, currentSizeTotal, avgScore, currentScoreCount, cumulativeScores));
+                        allele, peptideLength, currentSizeTotal, score, currentScoreCount, cumulativeScores));
 
                 scoreTotal = 0;
                 currentScoreCount = 0;

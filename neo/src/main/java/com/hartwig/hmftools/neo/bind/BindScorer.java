@@ -80,7 +80,7 @@ public class BindScorer
 
         runScoring();
 
-        NE_LOGGER.info("Bind scoring complete");
+        NE_LOGGER.info("scoring complete");
     }
 
     public static final double INVALID_CALC = -1;

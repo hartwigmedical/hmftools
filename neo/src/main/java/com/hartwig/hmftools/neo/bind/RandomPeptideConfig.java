@@ -39,9 +39,6 @@ public class RandomPeptideConfig
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
     private static final String WRITE_RAND_SCORE_ALLELES = "write_rand_scores";
 
-    // private static final String RANDOM_PEPTIDE_DIST_FILE = "rand_dist_file";
-    // private static final String RANDOM_LIKELIHOOD_DIST_FILE = "likelihood_rand_dist_file";
-
     public RandomPeptideConfig(final CommandLine cmd)
     {
         OutputDir = parseOutputDir(cmd);

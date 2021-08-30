@@ -177,7 +177,7 @@ public class BindTrainer
             mFlankScores.createMatrix(mFlankCounts.getBindCounts());
         }
 
-        if(mConfig.WriteBindCounts && mConfig.ApplyFlanks)
+        if(mConfig.ApplyFlanks && (mConfig.WriteBindCounts || mConfig.WritePosWeightMatrix))
         {
             mFlankCounts.logStats();
             mFlankCounts.writeData(mConfig.formOutputFilename(FILE_ID_FLANK_POS_WEIGHT), mFlankScores);
