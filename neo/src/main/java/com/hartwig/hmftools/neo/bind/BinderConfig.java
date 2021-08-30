@@ -89,6 +89,7 @@ public class BinderConfig
     public static final String REQUIRED_OUTPUT_ALLELES = "required_output_alleles";
     private static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
     public static final String OUTPUT_ID = "output_id";
+    public static final String THREADS = "threads";
 
     public BinderConfig(final CommandLine cmd)
     {

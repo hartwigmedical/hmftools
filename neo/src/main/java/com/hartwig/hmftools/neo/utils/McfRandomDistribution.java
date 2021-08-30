@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
 import static com.hartwig.hmftools.neo.bind.BindData.cleanAllele;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.RandomDistributionTask.generateDistributionBuckets;
 import static com.hartwig.hmftools.neo.bind.RandomPeptideDistribution.initialiseWriter;
 
 import java.io.BufferedReader;
@@ -34,6 +35,7 @@ import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BinderConfig;
+import com.hartwig.hmftools.neo.bind.RandomDistributionTask;
 import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 import com.hartwig.hmftools.neo.bind.RandomPeptideDistribution;
 import com.hartwig.hmftools.neo.bind.ScoreDistributionData;
@@ -260,12 +262,14 @@ public class McfRandomDistribution
             }
         }
 
+        final List<double[]> discreteScoreData = generateDistributionBuckets();
+
         for(Map.Entry<Integer,List<Double>> entry : pepLenScoresMap.entrySet())
         {
             NE_LOGGER.debug("allele({}) peptideLength({}) writing distribution", allele, entry.getKey());
 
-            List<ScoreDistributionData> scoreDistribution = mRandomDistribution.generateDistribution(
-                    allele, entry.getKey(), entry.getValue());
+            List<ScoreDistributionData> scoreDistribution = RandomDistributionTask.generateDistribution(
+                    allele, entry.getKey(), entry.getValue(), discreteScoreData);
 
             RandomPeptideDistribution.writeDistribution(mDistributionWriter, scoreDistribution);
         }

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.REQUIRED_OUTPUT_ALLELES;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.SCORE_FILE_DIR;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.SCORE_FILE_ID;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.THREADS;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.getScoringFilename;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.loadRequiredOutputAlleles;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.scoreFileConfig;
@@ -32,6 +33,7 @@ public class RandomPeptideConfig
     public final boolean WriteRandomDistribution;
     public final List<String> RequiredOutputAlleles; // limit the alleles with a random distribution written just to save on time and file-size
     public final List<String> WriteRandomScoreAlleles;
+    public final int Threads;
 
     private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
@@ -62,6 +64,8 @@ public class RandomPeptideConfig
         {
             WriteRandomScoreAlleles.addAll(Arrays.stream(cmd.getOptionValue(WRITE_RAND_SCORE_ALLELES).split(ITEM_DELIM)).collect(Collectors.toList()));
         }
+
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
 
     public static void addCmdLineArgs(Options options)
@@ -75,5 +79,6 @@ public class RandomPeptideConfig
         options.addOption(REQUIRED_OUTPUT_ALLELES, true, "Restricted set of alleles to write to file");
         options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
         options.addOption(WRITE_RAND_SCORE_ALLELES, true, "List of alleles to write random score data");
+        options.addOption(THREADS, true, "Thread count");
     }
 }
