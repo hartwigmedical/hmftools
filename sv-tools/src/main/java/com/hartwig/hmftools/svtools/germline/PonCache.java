@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -213,7 +211,7 @@ public class PonCache
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             int itemCount = 0;
-            String line = fileReader.readLine();
+            String line = null;
             String currentChr = "";
             List<PonSvRegion> svRegions = null;
             ChrBaseRegion lastRegion = null;
@@ -257,7 +255,7 @@ public class PonCache
                 lastRegion = regionStart;
             }
 
-            GM_LOGGER.info("loaded {} germline SV PON records from file", itemCount, filename);
+            GM_LOGGER.info("loaded {} germline SV PON records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
@@ -276,7 +274,7 @@ public class PonCache
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             int itemCount = 0;
-            String line = fileReader.readLine();
+            String line = null;
             String currentChr = "";
             List<PonSglRegion> sglRegions = null;
             BaseRegion lastRegion = null;
