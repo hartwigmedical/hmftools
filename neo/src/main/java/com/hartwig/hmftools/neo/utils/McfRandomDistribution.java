@@ -112,14 +112,6 @@ public class McfRandomDistribution
 
         try
         {
-            String alleleFilename = BinderConfig.formFilename("mcf_validation_summary", mConfig.OutputDir, mConfig.OutputId);
-
-            NE_LOGGER.info("writing score results to {}", alleleFilename);
-
-            BufferedWriter alleleWriter = createBufferedWriter(alleleFilename, false);
-            alleleWriter.write("Allele,PeptideLength,DataCount,AUC");
-            alleleWriter.newLine();
-
             String peptideFilename = BinderConfig.formFilename("mcf_validation_peptide_scores", mConfig.OutputDir, mConfig.OutputId);
 
             BufferedWriter peptideWriter = createBufferedWriter(peptideFilename, false);
@@ -137,8 +129,6 @@ public class McfRandomDistribution
                     int peptideLength = pepLenEntry.getKey();
                     List<BindData> bindDataList = pepLenEntry.getValue();
 
-                    List<AucData> aucData = Lists.newArrayList();
-
                     for(BindData bindData : bindDataList)
                     {
                         double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.predictedAffinity();
@@ -148,21 +138,10 @@ public class McfRandomDistribution
                                 allele, bindData.Peptide, scoreRank, bindData.predictedAffinity(),
                                 bindData.affinityPercentile(), bindData.presentationScore(), bindData.presentationPercentile()));
                         peptideWriter.newLine();
-
-                        aucData.add(new AucData(true, scoreRank, true));
                     }
-
-                    double aucPerc = AucCalc.calcPercentilesAuc(aucData, Level.TRACE);
-
-                    NE_LOGGER.info(String.format("allele(%s) peptideLength(%d) items(%d) AUC(%.4f)",
-                            allele, peptideLength, bindDataList.size(), aucPerc));
-
-                    alleleWriter.write(String.format("%s,%d,%d,%.4f", allele, peptideLength, bindDataList.size(), aucPerc));
-                    alleleWriter.newLine();
                 }
             }
 
-            alleleWriter.close();
             peptideWriter.close();
         }
         catch(IOException e)

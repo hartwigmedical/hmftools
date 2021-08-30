@@ -198,7 +198,6 @@ public class RandomDistributionTask implements Callable
         double currentBracket = discreteScoreData.get(discreteIndex)[SCORE_BRACKET];
         int requiredScores = (int) round(totalScores * currentSize);
 
-        double scoreTotal = 0;
         int currentScoreCount = 0;
         double currentSizeTotal = 0;
         int cumulativeScores = 0;
@@ -207,7 +206,6 @@ public class RandomDistributionTask implements Callable
 
         for(Double score : peptideScores)
         {
-            scoreTotal += score;
             ++currentScoreCount;
             ++cumulativeScores;
 
@@ -216,7 +214,6 @@ public class RandomDistributionTask implements Callable
                 scoresDistributions.add(new ScoreDistributionData(
                         allele, peptideLength, currentSizeTotal, score, currentScoreCount, cumulativeScores));
 
-                scoreTotal = 0;
                 currentScoreCount = 0;
                 currentSizeTotal += currentSize;
 
