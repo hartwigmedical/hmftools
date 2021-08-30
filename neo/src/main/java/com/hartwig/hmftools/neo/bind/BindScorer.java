@@ -166,7 +166,7 @@ public class BindScorer
     {
         double score = matrix.calcScore(peptide);
 
-        if(flankScores != null)
+        if(flankScores.hasData())
         {
             double flankScore = flankScores.calcScore(upFlank, downFlank);
             score += flankScore;
@@ -182,7 +182,7 @@ public class BindScorer
         double score = matrix.calcScore(bindData.Peptide);
 
         double flankScore = 0;
-        if(flankScores != null && bindData.hasFlanks())
+        if(flankScores.hasData() && bindData.hasFlanks())
         {
             flankScore = flankScores.calcScore(bindData.UpFlank, bindData.DownFlank);
             score += flankScore;

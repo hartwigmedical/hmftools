@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
@@ -94,7 +95,7 @@ public class BinderConfig
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
 
-        ScoreFileDir = cmd.getOptionValue(SCORE_FILE_DIR);
+        ScoreFileDir = cmd.hasOption(SCORE_FILE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR)) : null;
         ScoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
 
         // load reference files either by specific name or using the scoring data dir and file id

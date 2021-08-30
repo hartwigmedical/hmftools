@@ -58,8 +58,10 @@ public class CalcConstants
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(ALLELE_MOTIF_WEIGHT_MAX, true, "Allele motif weight");
-        options.addOption(PEP_LEN_WEIGHT_FACTOR, true, "Length weight");
+        options.addOption(PEP_LEN_WEIGHT_FACTOR, true, "Length weight factor");
+        options.addOption(PEP_LEN_WEIGHT_MAX, true, "Length weight max");
+        options.addOption(ALLELE_MOTIF_WEIGHT_FACTOR, true, "Allele motif weight factor");
+        options.addOption(ALLELE_MOTIF_WEIGHT_MAX, true, "Allele motif weight max");
         options.addOption(NOISE_PROB, true, "Noise target probability");
         options.addOption(NOISE_WEIGHT, true, "Noise weight");
     }

@@ -182,7 +182,7 @@ public class BindScoreMatrix
         }
         catch(IOException e)
         {
-            NE_LOGGER.error(" failed to load pos-weights data file: {}" ,e.toString());
+            NE_LOGGER.error("failed to load pos-weights data file: {}" ,e.toString());
         }
 
         return matrixList;

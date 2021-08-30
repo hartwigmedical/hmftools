@@ -45,11 +45,15 @@ public class FlankScores
     }
 
     public final double[][] getPosWeights() { return mPosWeights; }
+
     public boolean hasData() { return mHasData; }
 
     public double calcScore(final String upFlank, final String downFlank)
     {
         if(!mHasData)
+            return 0;
+
+        if(upFlank.isEmpty() && downFlank.isEmpty())
             return 0;
 
         double score = 0;
@@ -158,13 +162,19 @@ public class FlankScores
 
                 // Peptide Weight = log(max(posWeight(aa,pos), 0.005 * posWeightTotal)/AaFreq,2)
                 // Peptide Weight new = log(max(posWeight(aa,pos)/posWeightTotal, 0.005)/AaFreq,2) - now a % weight
-                double adjustedCount = bindCounts[aa][pos];
+                double bindPerc = bindCounts[aa][pos] / posTotalCount;
 
                 // handle very low observation counts
-                adjustedCount = max(adjustedCount / posTotalCount, MIN_OBSERVED_AA_POS_FREQ);
+                if(aminoAcid != START_AMINO_ACID_ID && aminoAcid != STOP_AMINO_ACID)
+                {
+                    bindPerc = max(bindPerc, MIN_OBSERVED_AA_POS_FREQ);
+                }
 
-                double posWeight = log(2, adjustedCount / aaFrequency);
-                mPosWeights[aa][pos] = posWeight;
+                if(bindPerc > 0)
+                {
+                    double posWeight = log(2, bindPerc / aaFrequency);
+                    mPosWeights[aa][pos] = posWeight;
+                }
             }
         }
 
@@ -233,7 +243,7 @@ public class FlankScores
         }
         catch(IOException e)
         {
-            NE_LOGGER.error(" failed to load flanking pos-weights data file: {}" ,e.toString());
+            NE_LOGGER.error("failed to load flanking pos-weights data file: {}" ,e.toString());
             return false;
         }
 

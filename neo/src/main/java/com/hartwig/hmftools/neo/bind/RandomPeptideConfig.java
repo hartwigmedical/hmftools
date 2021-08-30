@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_RAND_DIST;
@@ -12,10 +13,13 @@ import static com.hartwig.hmftools.neo.bind.BinderConfig.loadRequiredOutputAllel
 import static com.hartwig.hmftools.neo.bind.BinderConfig.scoreFileConfig;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.compress.utils.Lists;
 
 public class RandomPeptideConfig
 {
@@ -27,9 +31,11 @@ public class RandomPeptideConfig
 
     public final boolean WriteRandomDistribution;
     public final List<String> RequiredOutputAlleles; // limit the alleles with a random distribution written just to save on time and file-size
+    public final List<String> WriteRandomScoreAlleles;
 
     private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
+    private static final String WRITE_RAND_SCORE_ALLELES = "write_rand_scores";
 
     // private static final String RANDOM_PEPTIDE_DIST_FILE = "rand_dist_file";
     // private static final String RANDOM_LIKELIHOOD_DIST_FILE = "likelihood_rand_dist_file";
@@ -49,6 +55,13 @@ public class RandomPeptideConfig
         WriteRandomDistribution = cmd.hasOption(WRITE_RAND_DIST);
 
         RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
+
+        WriteRandomScoreAlleles = Lists.newArrayList();
+
+        if(cmd.hasOption(WRITE_RAND_SCORE_ALLELES))
+        {
+            WriteRandomScoreAlleles.addAll(Arrays.stream(cmd.getOptionValue(WRITE_RAND_SCORE_ALLELES).split(ITEM_DELIM)).collect(Collectors.toList()));
+        }
     }
 
     public static void addCmdLineArgs(Options options)
@@ -61,5 +74,6 @@ public class RandomPeptideConfig
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         options.addOption(REQUIRED_OUTPUT_ALLELES, true, "Restricted set of alleles to write to file");
         options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
+        options.addOption(WRITE_RAND_SCORE_ALLELES, true, "List of alleles to write random score data");
     }
 }

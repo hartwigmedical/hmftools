@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AMINO_ACID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
@@ -16,7 +15,6 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.PAN_PEPTIDE_MAX_LENGTH
 import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
-import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
 
 import java.io.BufferedWriter;
 import java.io.File;
