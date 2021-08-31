@@ -26,7 +26,7 @@ public interface PatientReport {
             userName = "Sandra van den Broek";
             combinedUserName = userName + trainedEmployee;
         } else if (systemUser.equals("root")) {
-            combinedUserName = " automatically";
+            combinedUserName = "automatically";
         } else {
             userName = systemUser;
             combinedUserName = userName + trainedEmployee;
