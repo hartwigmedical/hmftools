@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svtools.pon;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrEnd;
@@ -19,49 +20,37 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
-
 public class PonBuilder
 {
-    private StructuralVariantFactory mSvFactory;
-
     private final PonConfig mConfig;
     private final Map<String,String> mSampleVcfFiles;
     private final PonStore mPonStore;
-
-    private int mProcessedVariants;
 
     public static final Logger PON_LOGGER = LogManager.getLogger(PonBuilder.class);
 
     public PonBuilder(final CommandLine cmd)
     {
         mConfig = new PonConfig(cmd);
-        mSvFactory = null;
 
         mSampleVcfFiles = Maps.newHashMap();
         mPonStore = new PonStore();
-
-        mProcessedVariants = 0;
     }
 
     public void run()
@@ -78,9 +67,35 @@ public class PonBuilder
 
         PON_LOGGER.info("found {} sample VCFs", mSampleVcfFiles.size());
 
-        for(Map.Entry<String,String> entry : mSampleVcfFiles.entrySet())
+        List<PonSampleTask> ponTasks = Lists.newArrayList();
+
+        if(mConfig.Threads > 1)
         {
-            processVcf(entry.getKey(), entry.getValue());
+            int threads = min(mConfig.Threads, mConfig.SampleIds.size());
+
+            for(int i = 0; i < threads; ++i)
+            {
+                ponTasks.add(new PonSampleTask(i, mPonStore));
+            }
+
+            int taskIndex = 0;
+            for (final String sampleId : mConfig.SampleIds)
+            {
+                ponTasks.get(taskIndex).getSampleVcfFiles().put(sampleId, mSampleVcfFiles.get(sampleId));
+                ++taskIndex;
+
+                if(taskIndex >= threads)
+                    taskIndex = 0;
+            }
+
+            final List<Callable> callableList = ponTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, callableList.size());
+        }
+        else
+        {
+            PonSampleTask ponTask = new PonSampleTask(0, mPonStore);
+            ponTask.getSampleVcfFiles().putAll(mSampleVcfFiles);
+            ponTask.processSamples();
         }
 
         PON_LOGGER.info("writing PON files");
@@ -92,6 +107,12 @@ public class PonBuilder
 
     private void findVcfFiles()
     {
+        if(!mConfig.SampleVcfFiles.isEmpty())
+        {
+            mSampleVcfFiles.putAll(mConfig.SampleVcfFiles);
+            return;
+        }
+
         try
         {
             final Stream<Path> stream = Files.walk(Paths.get(mConfig.RootDirectory), 3, FileVisitOption.FOLLOW_LINKS);
@@ -115,87 +136,6 @@ public class PonBuilder
         {
             PON_LOGGER.error("failed find directories for batchDir({}) run: {}", mConfig.RootDirectory, e.toString());
         }
-    }
-
-    private void clearSampleData()
-    {
-        mProcessedVariants = 0;
-        mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
-    }
-
-    private void processVcf(final String sampleId, final String vcfFile)
-    {
-        clearSampleData();
-
-        try
-        {
-            PON_LOGGER.info("processing sampleId({}) vcfFie({})", sampleId, vcfFile);
-
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                    vcfFile, new VCFCodec(), false);
-
-            reader.iterator().forEach(x -> processVariant(x));
-
-        }
-        catch(IOException e)
-        {
-            PON_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
-        }
-
-        PON_LOGGER.info("sample({}) read {} variants", sampleId, mProcessedVariants);
-
-        // log current PON stats
-        PON_LOGGER.info("PON stats: SVs(loc={} variants={}) SGLs(loc={} variants={)",
-                mPonStore.svLocationCount(), mPonStore.svPonCount(),
-                mPonStore.sglLocationCount(), mPonStore.sglPonCount());
-    }
-
-    private void processVariant(final VariantContext variant)
-    {
-        PON_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
-
-        ++mProcessedVariants;
-
-        if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
-        {
-            // PON_LOGGER.debug("sample({}) processed {} variants, VCF-unmatched({})",
-            //        mConfig.SampleId, mProcessedVariants, mSvFactory.unmatched().size());
-        }
-
-        int currentSvCount = mSvFactory.results().size();
-        mSvFactory.addVariantContext(variant);
-
-        // wait for both breakends to be added
-        if(currentSvCount == mSvFactory.results().size())
-            return;
-
-        final StructuralVariant sv = popLastSv(); // get and clear from storage
-
-        if(sv == null)
-            return;
-
-        if(sv.type() == SGL)
-        {
-            mPonStore.addLocation(sv.chromosome(true), sv.orientation(true), sv.position(true).intValue());
-        }
-        else
-        {
-            mPonStore.addLocation(
-                    sv.chromosome(true), sv.chromosome(false),
-                    sv.orientation(true), sv.orientation(false),
-                    sv.position(true).intValue(), sv.position(false).intValue());
-        }
-    }
-
-    private final StructuralVariant popLastSv()
-    {
-        if(mSvFactory.results().isEmpty())
-            return null;
-
-        StructuralVariant sv = mSvFactory.results().get(0);
-        mSvFactory.results().remove(0);
-
-        return sv;
     }
 
     private void writePonFiles()
@@ -271,8 +211,6 @@ public class PonBuilder
 
         PonBuilder germlineVcfReader = new PonBuilder(cmd);
         germlineVcfReader.run();
-
-        PON_LOGGER.info("VCF processing complete");
     }
 
     @NotNull
