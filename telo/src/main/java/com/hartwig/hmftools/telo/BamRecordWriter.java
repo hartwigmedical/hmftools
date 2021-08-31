@@ -98,7 +98,7 @@ public class BamRecordWriter implements Runnable
         {
             Writer writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile, false)));
             writer.write("ReadId,Chromosome,PosStart,PosEnd,MateChr,MatePosStart,HasTeloContent");
-            writer.write(",Cigar,InsertSize,FirstInPair,Unmapped,MateUnmapped,Flags,SuppData,CompleteFrag,ReadBases");
+            writer.write(",Cigar,InsertSize,FirstInPair,Unmapped,MateUnmapped,Flags,SuppData,CompleteFrag,ReadBases,BaseQualities");
             writer.write('\n');
             return writer;
         }
@@ -180,10 +180,10 @@ public class BamRecordWriter implements Runnable
             {
                 boolean completeGroup = readGroup.isComplete();
 
-                for(SAMRecord samRecord : readGroup.Reads)
+                for(SAMRecord record : readGroup.Reads)
                 {
-                    ReadRecord readRecord = ReadRecord.from(samRecord);
-                    readRecord.setTeloContent(TeloUtils.hasTelomericContent(samRecord.getReadString()));
+                    ReadRecord readRecord = ReadRecord.from(record);
+                    readRecord.setTeloContent(TeloUtils.hasTelomericContent(record.getReadString()));
 
                     mCsvWriter.write(String.format("%s,%s,%d,%d,%s,%d,%s",
                             readRecord.Id, readRecord.Chromosome, readRecord.PosStart, readRecord.PosEnd,
@@ -196,8 +196,8 @@ public class BamRecordWriter implements Runnable
                             readRecord.Cigar.toString(), readRecord.fragmentInsertSize(), readRecord.isFirstOfPair(),
                             readRecord.isUnmapped(), readRecord.isMateUnmapped(), readRecord.flags()));
 
-                    mCsvWriter.write(String.format(",%s,%s,%s",
-                            suppAlignmentData, completeGroup, readRecord.ReadBases));
+                    mCsvWriter.write(String.format(",%s,%s,%s,%s",
+                            suppAlignmentData, completeGroup, readRecord.ReadBases, readRecord.BaseQualityString));
 
                     mCsvWriter.write('\n');
                 }

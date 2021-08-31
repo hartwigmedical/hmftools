@@ -12,6 +12,7 @@ public class ReadRecord
     public final int PosEnd;
 
     public final String ReadBases;
+    public final String BaseQualityString;
     public final int Length; // of bases
     public final Cigar Cigar;
 
@@ -35,7 +36,7 @@ public class ReadRecord
 
         ReadRecord read = new ReadRecord(
                 readId, record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
+                record.getReadString(), record.getBaseQualityString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
                 record.getMateReferenceName(), record.getMateAlignmentStart());
 
         read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
@@ -44,8 +45,8 @@ public class ReadRecord
     }
 
     public ReadRecord(
-            final String id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar,
-            int insertSize, int flags, final String mateChromosome, int matePosStart)
+            final String id, final String chromosome, int posStart, int posEnd, final String readBases, final String baseQualityString,
+            final Cigar cigar, int insertSize, int flags, final String mateChromosome, int matePosStart)
     {
         Id = id;
         Chromosome = chromosome;
@@ -54,6 +55,7 @@ public class ReadRecord
         ReadBases = readBases;
         Length = ReadBases.length();
         Cigar = cigar;
+        BaseQualityString = baseQualityString;
 
         mFlags = flags;
         mMateChromosome = mateChromosome;
