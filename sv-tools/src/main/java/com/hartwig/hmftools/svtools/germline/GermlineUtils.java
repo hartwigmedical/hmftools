@@ -47,7 +47,6 @@ public class GermlineUtils
             GM_LOGGER.error("failed find directories for batchDir({}) run: {}", batchRunRootDir, e.toString());
         }
 
-
         return vcfFiles;
     }
 
