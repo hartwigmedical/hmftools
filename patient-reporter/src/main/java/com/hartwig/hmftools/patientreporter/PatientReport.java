@@ -32,7 +32,7 @@ public interface PatientReport {
             combinedUserName = userName + trainedEmployee;
         }
 
-        if (!combinedUserName.endsWith(trainedEmployee)) {
+        if (combinedUserName.endsWith(trainedEmployee)) {
             combinedUserName = "by " + combinedUserName;
         }
 
