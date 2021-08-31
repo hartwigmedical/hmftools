@@ -52,7 +52,6 @@ public class PonSampleTask implements Callable
         {
             processVcf(entry.getKey(), entry.getValue());
         }
-
     }
 
     private void processVcf(final String sampleId, final String vcfFile)

@@ -9,7 +9,6 @@ public class LocationCounter
     public final int Position;
 
     private short mCount;
-
     private final List<LocationCounter> mNextLocations;
 
     public LocationCounter(int position, boolean initLinks)
@@ -77,7 +76,6 @@ public class LocationCounter
                 upperIndex = currentIndex;
             }
 
-            // lower = 12, upper = 14, next = 13
             if(lowerIndex >= upperIndex - 1)
             {
                 // check whether to insert below or above the current position
@@ -99,9 +97,7 @@ public class LocationCounter
                 return newLocation;
             }
 
-            int nextIndex = (lowerIndex + upperIndex) / 2;
-
-            currentIndex = nextIndex;
+            currentIndex = (lowerIndex + upperIndex) / 2;
         }
     }
 
