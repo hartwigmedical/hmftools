@@ -3,8 +3,6 @@ package com.hartwig.hmftools.neo.utils;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -17,6 +15,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELES;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PATIENT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
+import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.REQUIRED_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
 
@@ -31,8 +30,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
-import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.FileWriterUtils;
 import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 
@@ -46,9 +43,8 @@ import org.jetbrains.annotations.NotNull;
 public class GartnerDataPrep
 {
     private final String mOutputDir;
+    private final String mOutputId;
     private final List<Integer> mRequiredPeptideLengths;
-
-    private final Map<String,List<TranscriptAminoAcids>> mGeneAminoAcidMap;
 
     private final Map<String,List<String>> mPatientAlleles;
     private final List<MutationData> mMutations;
@@ -62,30 +58,13 @@ public class GartnerDataPrep
         mPatientAlleles = Maps.newHashMap();
         mMutations = Lists.newArrayList();
 
-        String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
-        mGeneAminoAcidMap = Maps.newHashMap();
-
-        Map<String,TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, transAminoAcidMap, Lists.newArrayList());
-
-        for(TranscriptAminoAcids transAminoAcids : transAminoAcidMap.values())
-        {
-            List<TranscriptAminoAcids> genesList = mGeneAminoAcidMap.get(transAminoAcids.GeneName);
-            if(genesList == null)
-            {
-                genesList = Lists.newArrayList();
-                mGeneAminoAcidMap.put(transAminoAcids.GeneName, genesList);
-            }
-
-            genesList.add(transAminoAcids);
-        }
-
         loadPatientAlleles(cmd.getOptionValue(PATIENT_ALLELES_FILE));
         loadMutations(cmd.getOptionValue(MUTATIONS_FILE));
 
         mRequiredPeptideLengths = DEFAULT_PEPTIDE_LENGTHS;
 
         mOutputDir = FileWriterUtils.parseOutputDir(cmd);
+        mOutputId = cmd.getOptionValue(OUTPUT_ID);
     }
 
     public void run()
@@ -105,6 +84,8 @@ public class GartnerDataPrep
         }
 
         closeBufferedWriter(writer);
+
+        NE_LOGGER.info("Gartner data prep complete");
     }
 
     private boolean generatePeptides(final MutationData mutation)
@@ -176,49 +157,15 @@ public class GartnerDataPrep
         return true;
     }
 
-    private String[] getFlanks(final String geneName, final String peptide)
-    {
-        String[] flanks = new String[] { "", ""};
-
-        List<TranscriptAminoAcids> genesList = mGeneAminoAcidMap.get(geneName);
-        if(genesList == null)
-            return flanks;
-
-        for(TranscriptAminoAcids transAminoAcids : genesList)
-        {
-            int aaIndex = transAminoAcids.AminoAcids.indexOf(peptide);
-            if(aaIndex < 0)
-                continue;
-
-            int upFlankBases = min(aaIndex, FLANK_BASE_COUNT);
-
-            if(upFlankBases > 0)
-            {
-                flanks[0] = transAminoAcids.AminoAcids.substring(aaIndex - upFlankBases, aaIndex);
-            }
-
-            int downFlankStartPos = aaIndex + peptide.length();
-            int downFlankBases = min(transAminoAcids.AminoAcids.length() - downFlankStartPos - 1, FLANK_BASE_COUNT);
-
-            if(downFlankBases > 0)
-            {
-                flanks[1] = transAminoAcids.AminoAcids.substring(downFlankStartPos, downFlankStartPos + downFlankBases);
-            }
-
-            break;
-        }
-
-        return flanks;
-    }
-
     private BufferedWriter initWriter()
     {
         try
         {
-            String filename = mOutputDir + "gart_allele_peptide_data";
+            String filename = mOutputDir + "gart_allele_peptide_data.csv";
+            // if(mOutputId != null)
 
             BufferedWriter writer = createBufferedWriter(filename, false);
-            writer.write("PatientId,Allele,Peptide,UpFlank,DownFlank,OtherInfo");
+            writer.write("Source,Allele,Peptide,UpFlank,DownFlank,PatientId,NeId");
             writer.newLine();
 
             return writer;
@@ -246,9 +193,11 @@ public class GartnerDataPrep
             {
                 for(PeptideData peptideData : mutation.Peptides)
                 {
-                    writer.write(String.format("%s,%s,%s,%s,%s,%s_%s",
-                            mutation.PatientId, allele, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank,
-                            mutation.GeneName, mutation.VariantKey));
+                    String source = String.format("%s_%d", mutation.PatientId, mutation.NeId);
+
+                    writer.write(String.format("%s,%s,%s,%s,%s,%s,%d",
+                            source, allele, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank,
+                            mutation.PatientId, mutation.NeId));
 
                     writer.newLine();
                 }
@@ -341,6 +290,7 @@ public class GartnerDataPrep
     private class MutationData
     {
         // VariantKey,PatientId,GeneName,MutationType,AaChange,WtEpitope,MutEpitope
+        public final int NeId;
         public final String VariantKey;
         public final String PatientId;
         public final String GeneName;
@@ -355,6 +305,7 @@ public class GartnerDataPrep
         {
             String[] values = line.split(DELIM, -1);
 
+            NeId = Integer.parseInt(values[fieldsIndexMap.get("NeId")]);
             VariantKey = values[fieldsIndexMap.get("VariantKey")];
             PatientId = values[fieldsIndexMap.get("PatientId")];
             GeneName = values[fieldsIndexMap.get("GeneName")];
@@ -376,7 +327,7 @@ public class GartnerDataPrep
         options.addOption(PATIENT_ALLELES_FILE, true, "MCF predictions file");
         options.addOption(MUTATIONS_FILE, true, "Binding validation file");
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "Peptide lengths");
-        addEnsemblDir(options);
+        options.addOption(OUTPUT_ID, true, "Output file identifier");
         addLoggingOptions(options);
         addOutputDir(options);
 
