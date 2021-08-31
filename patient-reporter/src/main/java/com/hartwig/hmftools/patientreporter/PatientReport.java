@@ -33,7 +33,7 @@ public interface PatientReport {
         }
 
         if (combinedUserName.endsWith(trainedEmployee)) {
-            combinedUserName = " by " + combinedUserName;
+            combinedUserName = "by " + combinedUserName;
         }
 
         return combinedUserName + " and checked by a trained Clinical Molecular Biologist in Pathology (KMBP)";
