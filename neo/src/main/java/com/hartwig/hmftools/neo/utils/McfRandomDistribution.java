@@ -31,8 +31,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.VectorUtils;
-import com.hartwig.hmftools.common.stats.AucCalc;
-import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BinderConfig;
 import com.hartwig.hmftools.neo.bind.RandomDistributionTask;
@@ -45,7 +43,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 // rather than use/trust McfFlurry's affinity and presentation score percentiles, rebuild a distribution for each of them using their
