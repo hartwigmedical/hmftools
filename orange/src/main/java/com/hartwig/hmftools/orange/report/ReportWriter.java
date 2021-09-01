@@ -7,7 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.OrangeReport;
 import com.hartwig.hmftools.orange.report.chapters.ClinicalEvidenceChapter;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;

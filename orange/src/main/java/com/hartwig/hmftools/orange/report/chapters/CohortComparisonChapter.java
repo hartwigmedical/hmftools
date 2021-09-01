@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.itextpdf.kernel.geom.PageSize;

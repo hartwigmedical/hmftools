@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.cuppa;
+package com.hartwig.hmftools.common.cuppa;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

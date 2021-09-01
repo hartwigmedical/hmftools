@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange;
 import java.io.IOException;
 
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportWriter;
 
 import org.apache.commons.cli.DefaultParser;

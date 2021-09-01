@@ -3,11 +3,11 @@ package com.hartwig.hmftools.orange.report;
 import java.io.File;
 import java.io.IOException;
 
+import com.hartwig.hmftools.orange.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.OrangeReport;
 import com.hartwig.hmftools.orange.OrangeTestFactory;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

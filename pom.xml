@@ -37,6 +37,7 @@
         <module>vicc-importer</module>
         <module>serve</module>
         <module>protect</module>
+        <module>orange-api</module>
         <module>orange</module>
         <module>patient-reporter</module>
     </modules>
@@ -196,6 +197,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>orange-api</artifactId>
+                <version>${orange.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

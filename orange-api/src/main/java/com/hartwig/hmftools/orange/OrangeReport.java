@@ -1,18 +1,17 @@
-package com.hartwig.hmftools.orange.algo;
+package com.hartwig.hmftools.orange;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
-import com.hartwig.hmftools.orange.algo.data.SampleData;
-import com.hartwig.hmftools.orange.cuppa.CuppaData;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -32,10 +31,10 @@ public abstract class OrangeReport {
     public abstract String platinumVersion();
 
     @NotNull
-    public abstract SampleData refSample();
+    public abstract OrangeSample refSample();
 
     @NotNull
-    public abstract SampleData tumorSample();
+    public abstract OrangeSample tumorSample();
 
     @NotNull
     public abstract Map<String, Double> germlineMVLHPerGene();
