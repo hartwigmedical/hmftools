@@ -36,13 +36,7 @@ import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
-import com.hartwig.hmftools.orange.ImmutableOrangePlots;
-import com.hartwig.hmftools.orange.ImmutableOrangeReport;
-import com.hartwig.hmftools.orange.ImmutableOrangeSample;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.OrangePlots;
-import com.hartwig.hmftools.orange.OrangeReport;
-import com.hartwig.hmftools.orange.OrangeSample;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

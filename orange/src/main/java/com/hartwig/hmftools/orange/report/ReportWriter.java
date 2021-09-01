@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.orange.report;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
-import com.hartwig.hmftools.orange.OrangeApi;
-import com.hartwig.hmftools.orange.OrangeReport;
+import com.google.gson.GsonBuilder;
+import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.chapters.ClinicalEvidenceChapter;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
@@ -61,7 +63,11 @@ public class ReportWriter {
         if (writeToDisk) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing API report to {} ", outputFilePath);
-            OrangeApi.write(report, outputFilePath);
+            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
+
+            writer.write(json);
+            writer.close();
         } else {
             LOGGER.info("Generating in-memory API report");
         }

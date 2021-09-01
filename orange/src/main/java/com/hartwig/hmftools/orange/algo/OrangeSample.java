@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange;
+package com.hartwig.hmftools.orange.algo;
 
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
