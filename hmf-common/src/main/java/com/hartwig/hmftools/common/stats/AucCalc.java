@@ -21,7 +21,6 @@ public final class AucCalc
 
         double positiveRankSum = dataList.stream().filter(x -> x.IsPositive).mapToDouble(x -> x.Value).sum();
         long posCount = dataList.stream().filter(x -> x.IsPositive).count();
-        // return 1 - positiveRankSum / dataList.size();
         return 1 - positiveRankSum / posCount;
     }
 

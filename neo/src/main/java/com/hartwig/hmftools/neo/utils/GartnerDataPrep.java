@@ -79,7 +79,12 @@ public class GartnerDataPrep
 
         for(MutationData mutation : mMutations)
         {
-            generatePeptides(mutation);
+            if(!generatePeptides(mutation))
+            {
+                NE_LOGGER.warn("mutation({}) generated no peptides", mutation);
+                continue;
+            }
+
             writeMutation(writer, mutation);
         }
 
@@ -115,27 +120,35 @@ public class GartnerDataPrep
 
         boolean sameAaCount = mutationAAs.length() == wildtypeAAs.length();
 
+        int wildtypeMatches = 0;
+        int skippedEnd = 0;
+
         for(int i = 0; i < mRequiredPeptideLengths.size(); ++i)
         {
             int peptideLength = mRequiredPeptideLengths.get(i);
 
-            int startIndex = diffIndex - peptideLength + 1;
+            int startIndex = max(diffIndex - peptideLength + 1, 0);
 
-            if(startIndex < 0)
-                continue;
-
-            int endDiffIndex = sameAaCount ? diffIndex : mutationAAs.length() - 1;
+            int endDiffIndex = sameAaCount ? diffIndex : mutationAAs.length();
 
             for(; startIndex <= endDiffIndex; ++startIndex)
             {
                 int endIndex = startIndex + peptideLength;
-                if(endIndex >= mutationAAs.length())
+                if(endIndex >= mutationAAs.length() + 1)
+                {
+                    if(!sameAaCount)
+                        ++skippedEnd;
+
                     break;
+                }
 
                 String peptide = mutationAAs.substring(startIndex, endIndex);
 
                 if(wildtypeAAs.contains(peptide)) // double-check doesn't revert to wildtype bases,
+                {
+                    ++wildtypeMatches;
                     continue;
+                }
 
                 String upFlank = "";
                 String downFlank = "";
@@ -148,13 +161,17 @@ public class GartnerDataPrep
                 if(downFlankIndex > endIndex)
                     downFlank = mutationAAs.substring(endIndex, downFlankIndex);
 
-                // String[] flanks = getFlanks(mutation.GeneName, peptide);
-
                 mutation.Peptides.add(new PeptideData(peptide, upFlank, downFlank));
             }
         }
 
-        return true;
+        if(mutation.Peptides.isEmpty() || wildtypeMatches > 0 || skippedEnd > 0)
+        {
+            NE_LOGGER.debug("mutation({}) generated {} peptides, wildMatches({}), skippedEnd={}",
+                    mutation, mutation.Peptides.size(), wildtypeMatches, skippedEnd);
+        }
+
+        return !mutation.Peptides.isEmpty();
     }
 
     private BufferedWriter initWriter()
@@ -285,6 +302,8 @@ public class GartnerDataPrep
             UpFlank = upFlank;
             DownFlank = downFlank;
         }
+
+        public String toString() { return String.format("%s flanks(%s - %s)", Peptide, UpFlank, DownFlank); }
     }
 
     private class MutationData
@@ -317,7 +336,8 @@ public class GartnerDataPrep
             Peptides = Lists.newArrayList();
         }
 
-        public String toString() { return String.format("patient(%s) var(%s) gene(%s)", PatientId, VariantKey, GeneName); }
+        public String toString() { return String.format("id(%d) patient(%s) gene(%s) var(%s) type(%s)",
+                NeId, PatientId, VariantKey, GeneName, MutationType); }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

@@ -50,7 +50,7 @@ public final class BindConstants
     public static final int DEFAULT_PEP_LEN_WEIGHT_MAX = 200;
 
     public static final double DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR = 0.25;
-    public static final double DEFAULT_ALLELE_MOTIF_WEIGHT_MAX = 100;
+    public static final double DEFAULT_ALLELE_MOTIF_WEIGHT_MAX = 200;
 
     public static final int MIN_LIKELIHOOD_ALLELE_BIND_COUNT = 200;
 
@@ -58,8 +58,4 @@ public final class BindConstants
 
     public static final double DEFAULT_NOISE_PROB = 0.05;
     public static final double DEFAULT_NOISE_WEIGHT = 0.5;
-
-    // public static final double DEFAULT_ENTROPY_ADJUST = 0;
-    public static final double ENTROPY_ADJUST = 4;
-    public static final double ENTROPY_FACTOR = log(2, 20);
 }

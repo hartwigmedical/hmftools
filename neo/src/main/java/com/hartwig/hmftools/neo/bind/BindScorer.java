@@ -116,10 +116,6 @@ public class BindScorer
     {
         NE_LOGGER.info("running scoring");
 
-        BufferedWriter alleleWriter = mConfig.WriteSummaryData ? initAlleleSummaryWriter() : null;
-
-        // rank both the training and random peptide data using the newly created data and the random peptide distributions
-
         for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
             final String allele = alleleEntry.getKey();
@@ -151,13 +147,9 @@ public class BindScorer
                     alleleTprCalc.addRank(bindData.likelihoodRank());
                 }
             }
-
-            if(mConfig.WriteSummaryData)
-                writeAlleleSummary(alleleWriter, allele, alleleTprCalc);
         }
 
-        closeBufferedWriter(alleleWriter);
-
+        writeAlleleSummary();
         writePeptideScores();
     }
 
@@ -203,11 +195,12 @@ public class BindScorer
         if(mConfig.WritePeptideType == PeptideWriteType.NONE)
             return;
 
-        NE_LOGGER.info("writing peptide scores");
+        String outputFile = mConfig.formOutputFilename("peptide_scores");
+        NE_LOGGER.info("writing peptide scores to {}", outputFile);
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("peptide_scores"), false);
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("Allele,Peptide,Source,Score,Rank,Likelihood,LikelihoodRank");
 
             if(mConfig.ApplyFlanks)
@@ -273,96 +266,59 @@ public class BindScorer
         }
     }
 
-    private BufferedWriter initAlleleSummaryWriter()
+    private void writeAlleleSummary()
     {
+        if(!mConfig.WriteSummaryData)
+            return;
+
         try
         {
             BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("allele_summary"), false);
-            writer.write("Allele,BindCount,TPR");
+            writer.write("Allele,PeptideLength,BindCount,TPR,AUC");
             writer.newLine();
-            return writer;
+
+            for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
+            {
+                final String allele = alleleEntry.getKey();
+
+                final Map<Integer,List<BindData>> pepLenBindDataMap = alleleEntry.getValue();
+
+                List<AucData> alleleAucData = Lists.newArrayList();
+                TprCalc alleleTprCalc = new TprCalc();
+
+                for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
+                {
+                    int peptideLength = pepLenEntry.getKey();
+                    final List<BindData> bindDataList = pepLenEntry.getValue();
+
+                    TprCalc pepLenTprCalc = new TprCalc();
+
+                    for(BindData bindData : bindDataList)
+                    {
+                        pepLenTprCalc.addRank(bindData.likelihoodRank());
+                        alleleTprCalc.addRank(bindData.likelihoodRank());
+
+                        alleleAucData.add(new AucData(true, bindData.likelihoodRank(), true));
+                    }
+
+                    writer.write(String.format("%s,%d,%d,%.4f,0",
+                            allele, peptideLength, pepLenTprCalc.entryCount(), pepLenTprCalc.calc()));
+                    writer.newLine();
+                }
+
+                double aucPerc = AucCalc.calcPercentilesAuc(alleleAucData, Level.TRACE);
+
+                writer.write(String.format("%s,ALL,%d,%.4f,%.4f",
+                        allele, alleleTprCalc.entryCount(), alleleTprCalc.calc(), aucPerc));
+                writer.newLine();
+
+            }
+
+            writer.close();
         }
         catch(IOException e)
         {
             NE_LOGGER.error("failed to init allele summary writer: {}", e.toString());
-            return null;
-        }
-    }
-
-    private void writeAlleleSummary(final BufferedWriter writer, final String allele, final TprCalc alleleTprCalc)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
-            writer.write(String.format("%s,%d,%.4f",
-                    allele, alleleTprCalc.entryCount(), alleleTprCalc.calc()));
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write allele summary data: {}", e.toString());
-        }
-    }
-
-    private void writeAlleleSummary(final BufferedWriter writer, final String allele)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
-            final Map<Integer,List<BindData>> pepLenBindDataMap = mAllelePeptideData.get(allele);
-
-            // internal model assesses AUC per peptide length
-            // external models across an entire allele
-
-            List<AucData> alleleAucMcfData = Lists.newArrayList();
-            int trainingCountMcf = 0;
-
-            for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
-            {
-                List<AucData> alleleAucData = Lists.newArrayList();
-                List<AucData> alleleAucRankData = Lists.newArrayList();
-
-                int trainingCount = 0;
-
-                for(BindData bindData : pepLenEntry.getValue())
-                {
-                    if(bindData.isTraining())
-                        ++trainingCount;
-
-                    alleleAucData.add(new AucData(true, bindData.score(), false));
-                    alleleAucRankData.add(new AucData(true, bindData.rankPercentile(), true));
-
-                    if(bindData.hasPredictionData())
-                        alleleAucMcfData.add(new AucData(true, bindData.affinityPercentile(), true));
-                }
-
-                double aucPerc = AucCalc.calcPercentilesAuc(alleleAucRankData, Level.TRACE);
-
-                NE_LOGGER.debug(String.format("allele(%s) peptideLength(%d) peptides(%d) AUC(%.4f)",
-                        allele, pepLenEntry.getKey(), trainingCount, aucPerc));
-
-                writer.write(String.format("%s,%d,%s,%d,%.4f",
-                        allele, pepLenEntry.getKey(), "MODEL", trainingCount, aucPerc));
-                writer.newLine();
-
-                trainingCountMcf += trainingCount;
-            }
-
-            if(!alleleAucMcfData.isEmpty())
-            {
-                double aucMcf = AucCalc.calcPercentilesAuc(alleleAucMcfData, Level.TRACE);
-
-                NE_LOGGER.debug(String.format("allele(%s) McFlurry peptides(%d) AUC(%.4f)",
-                        allele, trainingCountMcf, aucMcf));
-            }
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to write allele summary data: {}", e.toString());
         }
     }
 
