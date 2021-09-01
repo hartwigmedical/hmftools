@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.orange.report;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
-import com.google.gson.GsonBuilder;
+import com.hartwig.hmftools.orange.OrangeApi;
 import com.hartwig.hmftools.orange.OrangeReport;
 import com.hartwig.hmftools.orange.report.chapters.ClinicalEvidenceChapter;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
@@ -46,7 +44,7 @@ public class ReportWriter {
 
     public void write(@NotNull OrangeReport report) throws IOException {
         writePdf(report);
-        writeJson(report);
+        writeApi(report);
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
@@ -59,18 +57,13 @@ public class ReportWriter {
         writePdfChapters(report.sampleId(), platinumVersion, chapters);
     }
 
-    private void writeJson(@NotNull OrangeReport report) throws IOException {
-        String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
-
+    private void writeApi(@NotNull OrangeReport report) throws IOException {
         if (writeToDisk) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
-
-            LOGGER.info("Writing JSON report to {} ", outputFilePath);
-            writer.write(json);
-            writer.close();
+            LOGGER.info("Writing API report to {} ", outputFilePath);
+            OrangeApi.write(report, outputFilePath);
         } else {
-            LOGGER.info("Generating in-memory JSON report");
+            LOGGER.info("Generating in-memory API report");
         }
     }
 
