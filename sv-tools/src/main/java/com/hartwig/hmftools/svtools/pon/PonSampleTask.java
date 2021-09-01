@@ -76,9 +76,7 @@ public class PonSampleTask implements Callable
         PON_LOGGER.info("{}: sample({}) read {} variants", mTaskId, sampleId, mProcessedVariants);
 
         // log current PON stats
-        PON_LOGGER.info("{}: PON stats: SVs(loc={} variants={}) SGLs(loc={} variants={})",
-                mTaskId, mPonStore.svLocationCount(), mPonStore.svPonCount(),
-                mPonStore.sglLocationCount(), mPonStore.sglPonCount());
+        PON_LOGGER.info("{}: {}}", mTaskId, mPonStore.statsString());
     }
 
     private void clearSampleData()

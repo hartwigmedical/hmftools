@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.pon;
 
+import static com.hartwig.hmftools.svtools.pon.PonBuilder.PON_LOGGER;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.formLocationId;
 
 import java.util.Map;
@@ -56,6 +57,12 @@ public class PonStore
         locations = new PonLocations(locationId);
         mSglLocations.put(locationId, locations);
         return locations;
+    }
+
+    public synchronized String statsString()
+    {
+        return String.format("PON stats: SVs(loc=%d variants=%d) SGLs(loc=%d variants=%d)",
+                svLocationCount(), svPonCount(), sglLocationCount(), sglPonCount());
     }
 
     public int svLocationCount() { return mSvLocations.size(); }

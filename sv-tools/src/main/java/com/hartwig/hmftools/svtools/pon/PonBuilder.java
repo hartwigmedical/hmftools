@@ -65,7 +65,7 @@ public class PonBuilder
             System.exit(1);
         }
 
-        PON_LOGGER.info("found {} sample VCFs", mSampleVcfFiles.size());
+        PON_LOGGER.info("processing {} samples", mSampleVcfFiles.size());
 
         List<PonSampleTask> ponTasks = Lists.newArrayList();
 
@@ -113,29 +113,26 @@ public class PonBuilder
             return;
         }
 
-        try
+        for(String sampleId : mConfig.SampleIds)
         {
-            final Stream<Path> stream = Files.walk(Paths.get(mConfig.RootDirectory), 3, FileVisitOption.FOLLOW_LINKS);
-
-            List<String> candidateVcfFiles = stream.filter(x -> !x.toFile().isDirectory())
-                    .map(x -> x.toFile().toString())
-                    .filter(x -> mConfig.VcfFileIds.stream().anyMatch(y -> x.endsWith(y)))
-                    .collect(Collectors.toList());
-
-            for(String sampleId : mConfig.SampleIds)
+            for(String vcfPathPattern : mConfig.VcfFilePatterns)
             {
-                String sampleVcfFile = candidateVcfFiles.stream().filter(x -> x.contains(sampleId)).findFirst().orElse(null);
+                String sampleVcfFile = vcfPathPattern.replaceAll("\\*", sampleId);
 
-                if(sampleVcfFile != null)
+                if(Files.exists(Paths.get(sampleVcfFile)))
+                {
                     mSampleVcfFiles.put(sampleId, sampleVcfFile);
+                    break;
+                }
             }
 
-            PON_LOGGER.info("found {} VCF files", mSampleVcfFiles.size());
+            if(!mSampleVcfFiles.containsKey(sampleId))
+            {
+                PON_LOGGER.warn("sample({}) no VCF file found", sampleId);
+            }
         }
-        catch (Exception e)
-        {
-            PON_LOGGER.error("failed find directories for batchDir({}) run: {}", mConfig.RootDirectory, e.toString());
-        }
+
+        PON_LOGGER.info("found {} VCF files out of {} samples", mSampleVcfFiles.size(), mConfig.SampleIds.size());
     }
 
     private void writePonFiles()

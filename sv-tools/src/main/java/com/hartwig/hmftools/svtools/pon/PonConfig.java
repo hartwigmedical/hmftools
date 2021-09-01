@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svtools.pon;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.svtools.pon.PonBuilder.PON_LOGGER;
@@ -24,9 +23,8 @@ import org.apache.commons.compress.utils.Lists;
 public class PonConfig
 {
     public final List<String> SampleIds;
-    public final String RootDirectory;
     public final String OutputDir;
-    public final List<String> VcfFileIds;
+    public final List<String> VcfFilePatterns;
     public final int MinPonWriteCount;
     public final int Threads;
 
@@ -34,8 +32,7 @@ public class PonConfig
 
     private static final String SAMPLES_FILE = "samples_file";
     private static final String SAMPLE_VCFS_FILE = "sample_vcfs_file";
-    private static final String ROOT_DIR = "root_dir";
-    private static final String VCF_FILE_IDS = "vcf_file_ids";
+    private static final String VCF_FILE_PATTERNS = "vcf_file_patterns";
     private static final String MIN_PON_WRITE_COUNT = "min_pon_write_count";
     private static final String THREADS = "threads";
 
@@ -50,16 +47,14 @@ public class PonConfig
 
         if(cmd.hasOption(SAMPLE_VCFS_FILE))
         {
-            RootDirectory = null;
-            VcfFileIds = Lists.newArrayList();
+            VcfFilePatterns = Lists.newArrayList();
             populateSampleVcfFilepaths(cmd.getOptionValue(SAMPLE_VCFS_FILE));
             SampleVcfFiles.keySet().forEach(x -> SampleIds.add(x));
         }
         else
         {
             SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLES_FILE)));
-            RootDirectory = cmd.getOptionValue(ROOT_DIR);
-            VcfFileIds = Arrays.stream(cmd.getOptionValue(VCF_FILE_IDS).split(";")).collect(Collectors.toList());
+            VcfFilePatterns = Arrays.stream(cmd.getOptionValue(VCF_FILE_PATTERNS).split(";")).collect(Collectors.toList());
         }
     }
 
@@ -97,8 +92,7 @@ public class PonConfig
     {
         options.addOption(SAMPLES_FILE, true, "SampleIds file");
         options.addOption(SAMPLE_VCFS_FILE, true, "CSV file with 'SampleId,VcfFile' locations");
-        options.addOption(ROOT_DIR, true, "Root directory for sample files");
-        options.addOption(VCF_FILE_IDS, true, "VCF file IDs, eg 'gridss.vcf' separated by ';'");
+        options.addOption(VCF_FILE_PATTERNS, true, "VCF file IDs, eg 'gridss.vcf' separated by ';'");
         options.addOption(MIN_PON_WRITE_COUNT, true, "Min observations of SV or SGL to include in PON");
         options.addOption(THREADS, true, "Thread count (default: 0, none)");
         ConfigUtils.addLoggingOptions(options);
