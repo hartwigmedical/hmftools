@@ -70,8 +70,7 @@ public class BindScorer
             return;
         }
 
-        if(!loadBindData(
-                mConfig.ValidationDataFile, true, Lists.newArrayList(), Lists.newArrayList(), mAllelePeptideData))
+        if(!loadBindData(mConfig.ValidationDataFile, Lists.newArrayList(), mAllelePeptideData))
         {
             NE_LOGGER.error("invalid validation data");
             return;
@@ -204,7 +203,7 @@ public class BindScorer
 
     private void writePeptideScores()
     {
-        if(mConfig.WritePeptideType == PeptideWriteType.NONE)
+        if(!mConfig.WritePeptideScores)
             return;
 
         String outputFile = mConfig.formOutputFilename("peptide_scores");
@@ -218,6 +217,7 @@ public class BindScorer
             if(mConfig.ApplyFlanks)
                 writer.write(",FlankScore,UpFlank,DownFlank");
 
+            /*
             boolean hasPredictionData = false;
             boolean hasMeasuredAffinity = false;
 
@@ -232,6 +232,7 @@ public class BindScorer
                 hasPredictionData = true;
                 writer.write(",PredictedAffinity,AffinityPerc,PresScore,PresPerc");
             }
+            */
 
             writer.newLine();
 
@@ -253,6 +254,7 @@ public class BindScorer
                             writer.write(String.format(",%.4f,%s,%s", bindData.flankScore(), bindData.UpFlank, bindData.DownFlank));
                         }
 
+                        /*
                         if(hasMeasuredAffinity)
                         {
                             writer.write(String.format(",%.2f", bindData.measuredAffinity()));
@@ -264,6 +266,7 @@ public class BindScorer
                                     bindData.predictedAffinity(), bindData.affinityPercentile(),
                                     bindData.presentationScore(), bindData.presentationPercentile()));
                         }
+                        */
 
                         writer.newLine();
                     }

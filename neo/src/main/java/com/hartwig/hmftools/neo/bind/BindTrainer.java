@@ -340,8 +340,7 @@ public class BindTrainer
 
     private boolean loadTrainingData()
     {
-        if(!loadBindData(
-                mConfig.TrainingDataFile, true, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAllelePeptideData))
+        if(!loadBindData(mConfig.TrainingDataFile, mConfig.RequiredPeptideLengths, mAllelePeptideData))
         {
             return false;
         }

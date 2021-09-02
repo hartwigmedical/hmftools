@@ -35,4 +35,13 @@ public final class BindCommon
     public static final String DELIM = ",";
     public static final String ITEM_DELIM = ";";
     public static final String RANDOM_SOURCE = "Random";
+
+    public static final String AMINO_ACID_21ST = "X";
+
+
+    public static String cleanAllele(final String allele)
+    {
+        return allele.replaceAll("HLA-", "").replaceAll(":", "").replaceAll("\\*", "");
+    }
+
 }

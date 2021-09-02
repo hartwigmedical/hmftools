@@ -46,7 +46,7 @@ public class BinderConfig
     public final boolean WriteFrequencyData;
     public final boolean WritePosWeightMatrix;
     public final boolean WriteBindCounts;
-    public final PeptideWriteType WritePeptideType;
+    public final boolean WritePeptideScores;
     public final boolean WriteSummaryData;
     public final boolean WriteLikelihood;
     public final boolean WritePanLengthDistribution;
@@ -78,7 +78,7 @@ public class BinderConfig
     private static final String WRITE_PW_MATRIX = "write_pw_matrix";
     private static final String WRITE_BIND_COUNTS = "write_bind_counts";
     private static final String WRITE_FREQ_DATA = "write_freq_data";
-    private static final String WRITE_PEPTIDE_TYPE = "write_peptide_type";
+    private static final String WRITE_PEPTIDE_SCORES = "write_peptide_scores";
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
     private static final String WRITE_PAIRS_DATA = "write_pairs";
     private static final String WRITE_LIKELIHOOD = "write_likelihood";
@@ -149,7 +149,7 @@ public class BinderConfig
         WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
         WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
         WritePanLengthDistribution = cmd.hasOption(WRITE_PAN_LENGTH_DIST);
-        WritePeptideType = PeptideWriteType.valueOf(cmd.getOptionValue(WRITE_PEPTIDE_TYPE, PeptideWriteType.NONE.toString()));
+        WritePeptideScores = cmd.hasOption(WRITE_PEPTIDE_SCORES);
 
         LogCalcAlleles = Lists.newArrayList();
 
@@ -235,7 +235,7 @@ public class BinderConfig
         options.addOption(WRITE_SUMMARY_DATA, false, "Write allele summary data including AUC");
         options.addOption(WRITE_LIKELIHOOD, false, "Write relative likelihood data");
         options.addOption(WRITE_PAN_LENGTH_DIST, false, "Write pan-peptide length distribution data");
-        options.addOption(WRITE_PEPTIDE_TYPE, true, "Write peptide scores and ranks - filtered by TRAINING, LIKELY_INCORRECT, else ALL");
+        options.addOption(WRITE_PEPTIDE_SCORES, false, "Write peptide scores and ranks");
 
         options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
         options.addOption(LOG_CALC_ALLELES, true, "Log verbose calcs for alleles separated by ';'");

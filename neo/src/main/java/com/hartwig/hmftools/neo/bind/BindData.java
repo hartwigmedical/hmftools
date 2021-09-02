@@ -1,17 +1,14 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_AFFINITY;
+import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_SOURCE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
-import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.cleanAllele;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 
 import java.io.BufferedReader;
@@ -34,14 +31,7 @@ public class BindData
     public final String Source;
 
     // optional fields
-    private boolean mHasMeasuredAffinity;
-    private double mMeasuredAffinity;
-
-    private boolean mHasPredictionData;
-    private double mPredictedAffinity; // eg from MCF or another tool, only used for comparative purposes
-    private double mAffinityPercentile;
-    private double mPresentationScore;
-    private double mPresentationPercentile;
+    private final List<String> mOtherData;
 
     private double mScore;
     private double mFlankScore;
@@ -62,14 +52,7 @@ public class BindData
         UpFlank = upFlank;
         DownFlank = downFlank;
 
-        mHasMeasuredAffinity = false;
-        mMeasuredAffinity = -1;
-
-        mHasPredictionData = false;
-        mPredictedAffinity = -1;
-        mPresentationScore = -1;
-        mPresentationPercentile = -1;
-        mAffinityPercentile = -1;
+        mOtherData = Lists.newArrayList();
 
         mScore = INVALID_SCORE;
         mFlankScore = INVALID_SCORE;
@@ -79,35 +62,10 @@ public class BindData
     }
 
     public int peptideLength() { return Peptide.length(); }
-    public boolean isRandom() { return Source.equals(RANDOM_SOURCE); }
-    public boolean isTraining() { return !isRandom(); }
 
     public boolean hasFlanks() { return !UpFlank.isEmpty() || !DownFlank.isEmpty(); }
 
-    public void setMeasuredAffinity(double affinity)
-    {
-        mHasMeasuredAffinity = true;
-        mMeasuredAffinity = affinity;
-    }
-
-    public double measuredAffinity() { return mMeasuredAffinity; }
-    public boolean hasMeasuredAffinity() { return mHasMeasuredAffinity; }
-
-    public void setPredictionData(
-            double predictedAffinity, double affinityPercentile, double presentationScore, double presentationPercentile)
-    {
-        mHasPredictionData = true;
-        mPredictedAffinity = predictedAffinity;
-        mAffinityPercentile = affinityPercentile;
-        mPresentationScore = presentationScore;
-        mPresentationPercentile = presentationPercentile;
-    }
-
-    public boolean hasPredictionData() { return mHasPredictionData; }
-    public double predictedAffinity() { return mPredictedAffinity; }
-    public double affinityPercentile() { return mAffinityPercentile; }
-    public double presentationScore() { return mPresentationScore; }
-    public double presentationPercentile() { return mPresentationPercentile; }
+    public final List<String> getOtherData() { return mOtherData; }
 
     public void setScoreData(double score, double flankScore, double rankPerc, double likelihood, double likelihoodRank)
     {
@@ -126,27 +84,23 @@ public class BindData
 
     public String toString()
     {
-        return String.format("allele(%s) pep(%s) affinity(%.1f pred=%.1f) source(%s)",
-                Allele, Peptide, mMeasuredAffinity, mPredictedAffinity, Source);
-    }
-
-    public static String cleanAllele(final String allele)
-    {
-        return allele.replaceAll("HLA-", "").replaceAll(":", "").replaceAll("\\*", "");
+        return String.format("allele(%s) peptide(%s) source(%s)", Allele, Peptide, Source);
     }
 
     public static boolean loadBindData(
-            final String filename, boolean expectExists, final List<String> restrictedAlleles, final List<Integer> restrictedLengths,
-            final Map<String,Map<Integer,List<BindData>>> allelePeptideMap)
+            final String filename, final List<Integer> restrictedLengths, final Map<String,Map<Integer,List<BindData>>> allelePeptideMap)
+    {
+        return loadBindData(filename, restrictedLengths, allelePeptideMap, Maps.newHashMap());
+    }
+
+    public static boolean loadBindData(
+            final String filename, final List<Integer> restrictedLengths, final Map<String,Map<Integer,List<BindData>>> allelePeptideMap,
+            final Map<String,Integer> otherColumns)
     {
         if(filename == null || !Files.exists(Paths.get(filename)))
         {
-            if(expectExists)
-            {
-                NE_LOGGER.error("binding data file({}) not found", filename);
-            }
-
-            return !expectExists;
+            NE_LOGGER.error("binding data file({}) not found", filename);
+            return false;
         }
 
         try
@@ -154,75 +108,69 @@ public class BindData
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
             String header = fileReader.readLine();
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+            final String[] columns = header.split(DELIMITER,-1);
 
-            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
-            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
+            int alleleIndex = -1;
+            int peptideIndex = -1;
 
             // all other fields are optional
-            Integer upFlankIndex = fieldsIndexMap.get(FLD_UP_FLANK);
-            Integer downFlankIndex = fieldsIndexMap.get(FLD_DOWN_FLANK);
-            Integer sourceIndex = fieldsIndexMap.get(FLD_SOURCE);
-            Integer affinityIndex = fieldsIndexMap.get(FLD_AFFINITY);
-            Integer predictedIndex = fieldsIndexMap.get(FLD_PRED_AFFINITY);
-            Integer affinityPercIndex = fieldsIndexMap.get("AffinityPercentile");
-            Integer presentationScoreIndex = fieldsIndexMap.get(FLD_PRES_SCORE);
-            Integer presentationPercIndex = fieldsIndexMap.get("PresentationPercentile");
+            Integer upFlankIndex = null;
+            Integer downFlankIndex = null;
+            Integer sourceIndex = null;
 
-            int alleleCount = 0;
+            for(int i = 0; i < columns.length; ++i)
+            {
+                String column = columns[i];
+
+                if(column.equals(FLD_ALLELE))
+                    alleleIndex = i;
+                else if(column.equals(FLD_PEPTIDE))
+                    peptideIndex = i;
+                else if(column.equals(FLD_UP_FLANK))
+                    upFlankIndex = i;
+                else if(column.equals(FLD_DOWN_FLANK))
+                    downFlankIndex = i;
+                else if(column.equals(FLD_SOURCE))
+                    sourceIndex = i;
+                else
+                    otherColumns.put(column, i);
+            }
+
             int itemCount = 0;
 
             String line = "";
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                final String[] values = line.split(DELIMITER, -1);
 
-                String allele = cleanAllele(items[alleleIndex]);
-
-                if(!restrictedAlleles.isEmpty() && !restrictedAlleles.contains(allele))
-                {
-                    if(restrictedAlleles.size() == alleleCount)
-                        break;
-
-                    continue;
-                }
-
-                String peptide = items[peptideIndex];
+                String allele = cleanAllele(values[alleleIndex]);
+                String peptide = values[peptideIndex];
 
                 if(!restrictedLengths.isEmpty() && !restrictedLengths.contains(peptide.length()))
                     continue;
 
-                if(peptide.contains("X"))
+                if(peptide.contains(AMINO_ACID_21ST)) // or stop codon
                     continue;
 
                 ++itemCount;
 
-                String source = sourceIndex != null ? items[sourceIndex] : RANDOM_SOURCE;
-                String upFlank = upFlankIndex != null ? items[upFlankIndex] : "";
-                String downFlank = downFlankIndex != null ? items[downFlankIndex] : "";
+                String source = sourceIndex != null ? values[sourceIndex] : "";
+                String upFlank = upFlankIndex != null ? values[upFlankIndex] : "";
+                String downFlank = downFlankIndex != null ? values[downFlankIndex] : "";
 
                 BindData bindData = new BindData(allele, peptide, source, upFlank, downFlank);
 
-                if(affinityIndex != null)
+                for(int i = 0; i < values.length; ++i)
                 {
-                    bindData.setMeasuredAffinity(Double.parseDouble(items[affinityIndex]));
-                }
-
-                if(predictedIndex != null || affinityPercIndex != null || presentationScoreIndex != null)
-                {
-                    double predictedAffinity = predictedIndex != null ? Double.parseDouble(items[predictedIndex]) : -1;
-                    double affinityPerc = affinityPercIndex != null ? Double.parseDouble(items[affinityPercIndex]) : -1;
-                    double presentationScore = presentationScoreIndex != null ? Double.parseDouble(items[presentationScoreIndex]) : -1;
-                    double presentationPerc = presentationPercIndex != null ? Double.parseDouble(items[presentationPercIndex]) : -1;
-                    bindData.setPredictionData(predictedAffinity, affinityPerc, presentationScore, presentationPerc);
+                    if(otherColumns.containsValue(i))
+                        bindData.getOtherData().add(values[i]);
                 }
 
                 Map<Integer,List<BindData>> pepLenBindDataMap = allelePeptideMap.get(allele);
 
                 if(pepLenBindDataMap == null)
                 {
-                    ++alleleCount;
                     pepLenBindDataMap = Maps.newHashMap();
                     allelePeptideMap.put(allele, pepLenBindDataMap);
                 }

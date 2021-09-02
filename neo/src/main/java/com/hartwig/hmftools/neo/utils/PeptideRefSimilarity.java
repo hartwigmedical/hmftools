@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.THREADS;
@@ -53,7 +54,6 @@ public class PeptideRefSimilarity
     private final int mThreads;
 
     private static final String PEPTIDES_FILE = "peptides_file";
-    private static final String AMINO_ACID_21ST = "X";
 
     public PeptideRefSimilarity(final CommandLine cmd)
     {

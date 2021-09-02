@@ -83,7 +83,7 @@ public class BindCountData
 
             ++mBindCounts[aaIndex][pos];
 
-            if(calcPairs && bindData.isTraining())
+            if(calcPairs)
             {
                 if(pos < bindData.Peptide.length() - 1)
                 {

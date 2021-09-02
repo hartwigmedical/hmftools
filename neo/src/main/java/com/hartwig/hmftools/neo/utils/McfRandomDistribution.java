@@ -1,30 +1,20 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.RANDOM_SOURCE;
-import static com.hartwig.hmftools.neo.bind.BindData.cleanAllele;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.RandomDistributionTask.generateDistributionBuckets;
 import static com.hartwig.hmftools.neo.bind.RandomPeptideDistribution.initialiseWriter;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -101,7 +91,9 @@ public class McfRandomDistribution
     {
         final Map<String,Map<Integer,List<BindData>>> allelePeptideData = Maps.newHashMap();
 
-        if(!loadBindData(filename, true, Lists.newArrayList(), Lists.newArrayList(), allelePeptideData))
+        final Map<String,Integer> otherColumns = Maps.newLinkedHashMap();
+
+        if(!loadBindData(filename, Lists.newArrayList(), allelePeptideData, otherColumns))
             return;
 
         if(!mRandomDistribution.loadData())
@@ -115,6 +107,11 @@ public class McfRandomDistribution
             peptideWriter.write("Allele,Peptide,RankPerc,PredictedAffinity,AffinityPerc,PresentationScore,PresentationPerc");
             peptideWriter.newLine();
 
+            int predAffinityIndex = otherColumns.get(FLD_PRED_AFFINITY);
+            int affinityPercIndex = otherColumns.get("AffinityPercentile");
+            int presScoreIndex = otherColumns.get(FLD_PRES_SCORE);
+            int presPercIndex = otherColumns.get("PresentationPercentile");
+
             for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : allelePeptideData.entrySet())
             {
                 final String allele = alleleEntry.getKey();
@@ -123,17 +120,20 @@ public class McfRandomDistribution
 
                 for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
                 {
-                    int peptideLength = pepLenEntry.getKey();
                     List<BindData> bindDataList = pepLenEntry.getValue();
 
                     for(BindData bindData : bindDataList)
                     {
-                        double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.predictedAffinity();
+                        double presentationScore = Double.parseDouble(bindData.getOtherData().get(presScoreIndex));
+                        double presentationPercentile = Double.parseDouble(bindData.getOtherData().get(presPercIndex));
+                        double predictedAffinity = Double.parseDouble(bindData.getOtherData().get(predAffinityIndex));
+                        double affinityPerc = Double.parseDouble(bindData.getOtherData().get(affinityPercIndex));
+                        double scoreValue = mUsePresentation ? presentationScore : predictedAffinity;
                         double scoreRank = mRandomDistribution.getScoreRank(allele, bindData.peptideLength(), scoreValue);
 
                         peptideWriter.write(String.format("%s,%s,%.6f,%.2f,%.6f,%.6f,%.6f",
-                                allele, bindData.Peptide, scoreRank, bindData.predictedAffinity(),
-                                bindData.affinityPercentile(), bindData.presentationScore(), bindData.presentationPercentile()));
+                                allele, bindData.Peptide, scoreRank, predictedAffinity,
+                                affinityPerc, presentationScore, presentationPercentile));
                         peptideWriter.newLine();
                     }
                 }
@@ -151,67 +151,33 @@ public class McfRandomDistribution
     private void processFile(final String filename)
     {
         // read the predictions for each allele in turn and create a distribution from it's affinity scores
-        if(filename == null || !Files.exists(Paths.get(filename)))
+
+        // Allele,Peptide,PredictedAffinity,PresentationScore
+        final Map<String,Map<Integer,List<BindData>>> allelePeptideData = Maps.newHashMap();
+
+        final Map<String,Integer> otherColumns = Maps.newLinkedHashMap();
+
+        if(!loadBindData(filename, Lists.newArrayList(), allelePeptideData, otherColumns))
             return;
 
-        try
+        for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : allelePeptideData.entrySet())
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-            String header = fileReader.readLine();
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
-
-            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
-            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-            int affinityIndex = fieldsIndexMap.get(FLD_PRED_AFFINITY);
-            Integer presentationIndex = fieldsIndexMap.get(FLD_PRES_SCORE);
-
-            String currentAllele = "";
-            List<BindData> bindDataList = null;
-
-            String line = "";
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                String allele = cleanAllele(items[alleleIndex]);
-                String peptide = items[peptideIndex];
-                double predictedAffinity = Double.parseDouble(items[affinityIndex]);
-                double presScore = presentationIndex != null ? Double.parseDouble(items[presentationIndex]) : -1;
-
-                BindData bindData = new BindData(allele, peptide, RANDOM_SOURCE);
-                bindData.setPredictionData(predictedAffinity, -1, presScore, -1);
-
-                if(!currentAllele.equals(allele))
-                {
-                    if(bindDataList != null)
-                        generateDistribution(currentAllele, bindDataList);
-
-                    currentAllele = allele;
-                    bindDataList = Lists.newArrayList();
-                }
-
-                bindDataList.add(bindData);
-            }
-
-            generateDistribution(currentAllele, bindDataList);
-
-        }
-        catch(IOException e)
-        {
-            NE_LOGGER.error("failed to read MCF random predictions data file: {}", e.toString());
-            return;
+            List<BindData> alleleBindList = Lists.newArrayList();
+            alleleEntry.getValue().values().forEach(x -> alleleBindList.addAll(x));
+            generateDistribution(alleleEntry.getKey(), alleleBindList, otherColumns);
         }
 
         return;
     }
 
-    private void generateDistribution(final String allele, final List<BindData> bindDataList)
+    private void generateDistribution(final String allele, final List<BindData> bindDataList, final Map<String,Integer> otherColumns)
     {
         NE_LOGGER.info("allele({}) building distribution with {} random peptide predictions", allele, bindDataList.size());
 
         Map<Integer,List<Double>> pepLenScoresMap = Maps.newHashMap();
+
+        int predAffinityIndex = otherColumns.get(FLD_PRED_AFFINITY);
+        int presScoreIndex = otherColumns.get(FLD_PRES_SCORE);
 
         int count = 0;
 
@@ -226,7 +192,10 @@ public class McfRandomDistribution
             }
 
             // affinity goes from low to high as binding gets worse, presentation is the opposite
-            double scoreValue = mUsePresentation ? bindData.presentationScore() : bindData.predictedAffinity();
+            double presentationScore = Double.parseDouble(bindData.getOtherData().get(presScoreIndex));
+            double predictedAffinity = Double.parseDouble(bindData.getOtherData().get(predAffinityIndex));
+
+            double scoreValue = mUsePresentation ? presentationScore : predictedAffinity;
             boolean isAscending = mUsePresentation ? false : true;
             VectorUtils.optimisedAdd(peptideScores, scoreValue, isAscending);
 

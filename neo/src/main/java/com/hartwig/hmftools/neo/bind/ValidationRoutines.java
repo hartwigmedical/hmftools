@@ -279,17 +279,11 @@ public class ValidationRoutines
 
     private boolean loadData()
     {
-        if(!loadBindData(
-                mConfig.TrainingDataFile, true, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAlleleTrainingData))
-        {
+        if(!loadBindData(mConfig.TrainingDataFile, mConfig.RequiredPeptideLengths, mAlleleTrainingData))
             return false;
-        }
 
-        if(!loadBindData(
-                mConfig.ValidationDataFile, true, Lists.newArrayList(), mConfig.RequiredPeptideLengths, mAlleleValidationData))
-        {
+        if(!loadBindData(mConfig.ValidationDataFile, mConfig.RequiredPeptideLengths, mAlleleValidationData))
             return false;
-        }
 
         return true;
     }
