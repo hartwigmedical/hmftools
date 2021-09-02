@@ -12,6 +12,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.cuppa.CuppaData;
+import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa.CuppaEntry;
+import com.hartwig.hmftools.common.cuppa.CuppaFactory;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
@@ -33,12 +37,6 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.algo.data.ImmutableSampleData;
-import com.hartwig.hmftools.orange.algo.data.SampleData;
-import com.hartwig.hmftools.orange.cuppa.CuppaData;
-import com.hartwig.hmftools.orange.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.orange.cuppa.CuppaEntry;
-import com.hartwig.hmftools.orange.cuppa.CuppaFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -123,7 +121,7 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static SampleData loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
+    private static OrangeSample loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
         if (loadTumorSample){
             LOGGER.info("Loading tumor sample data");
         } else {
@@ -138,7 +136,7 @@ public class OrangeAlgo {
         Flagstat flagstat = FlagstatFile.read(flagstatFile);
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
-        return ImmutableSampleData.builder().metrics(metrics).flagstat(flagstat).build();
+        return ImmutableOrangeSample.builder().metrics(metrics).flagstat(flagstat).build();
     }
 
     @NotNull

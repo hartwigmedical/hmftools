@@ -46,7 +46,7 @@ public class ReportWriter {
 
     public void write(@NotNull OrangeReport report) throws IOException {
         writePdf(report);
-        writeJson(report);
+        writeApi(report);
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
@@ -59,18 +59,17 @@ public class ReportWriter {
         writePdfChapters(report.sampleId(), platinumVersion, chapters);
     }
 
-    private void writeJson(@NotNull OrangeReport report) throws IOException {
-        String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
-
+    private void writeApi(@NotNull OrangeReport report) throws IOException {
         if (writeToDisk) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
+            LOGGER.info("Writing API report to {} ", outputFilePath);
+            String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
 
-            LOGGER.info("Writing JSON report to {} ", outputFilePath);
             writer.write(json);
             writer.close();
         } else {
-            LOGGER.info("Generating in-memory JSON report");
+            LOGGER.info("Generating in-memory API report");
         }
     }
 
