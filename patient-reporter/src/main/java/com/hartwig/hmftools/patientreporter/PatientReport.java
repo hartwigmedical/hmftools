@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.util.Optional;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public interface PatientReport {
@@ -12,13 +13,31 @@ public interface PatientReport {
     @NotNull
     default String user() {
         String systemUser = System.getProperty("user.name");
+        String userName = Strings.EMPTY;
+        String trainedEmployee = " (trained IT employee)";
+        String combinedUserName = Strings.EMPTY;
         if (systemUser.equals("lieke") || systemUser.equals("liekeschoenmaker")) {
-            return "Lieke Schoenmaker";
+            userName = "Lieke Schoenmaker";
+            combinedUserName = userName + trainedEmployee;
         } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn")) {
-            return "Korneel Duyvesteyn";
+            userName = "Korneel Duyvesteyn";
+            combinedUserName = userName + trainedEmployee;
+        } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek")) {
+            userName = "Sandra van den Broek";
+            combinedUserName = userName + trainedEmployee;
+        } else if (systemUser.equals("root")) {
+            combinedUserName = "automatically";
         } else {
-            return systemUser;
+            userName = systemUser;
+            combinedUserName = userName + trainedEmployee;
         }
+
+        if (combinedUserName.endsWith(trainedEmployee)) {
+            combinedUserName = "by " + combinedUserName;
+        }
+
+        return combinedUserName + " and checked by a trained Clinical Molecular Biologist in Pathology (KMBP)";
+
     }
 
     @NotNull

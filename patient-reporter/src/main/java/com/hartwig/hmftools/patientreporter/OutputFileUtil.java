@@ -29,6 +29,9 @@ public final class OutputFileUtil {
 
     @NotNull
     public static String generateOutputFileNameForJson(@NotNull PatientReport report) {
-        return report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode() + ".json";
+        String filePrefix = report.sampleReport().tumorSampleId() + "_" + report.sampleReport().tumorSampleBarcode();
+        String failPrefix = report instanceof QCFailReport ? "_failed" : Strings.EMPTY;
+        String fileSuffix = report.isCorrectedReport() ? "_corrected.json" : ".json";
+        return filePrefix +failPrefix + fileSuffix;
     }
 }

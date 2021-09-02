@@ -72,10 +72,16 @@ public class GenomicAnalyzer {
 
         ChordAnalysis chordAnalysis = ChordDataLoader.load(config.chordPredictionTxt());
 
-        List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
-        List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
-        List<ProtectEvidence> trialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
-        List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLabel(reportableEvidenceItems);
+//        List<ProtectEvidence> reportableEvidenceItems = extractReportableEvidenceItems(config.protectEvidenceTsv());
+//        List<ProtectEvidence> nonTrialsOnLabel = ReportableEvidenceItemFactory.extractNonTrialsOnLabel(reportableEvidenceItems);
+//        List<ProtectEvidence> trialsOnLabel = ClinicalTrialFactory.extractOnLabelTrials(reportableEvidenceItems);
+//        List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLabel(reportableEvidenceItems);
+
+        //TODO; Switch to real data when switch to CKB knowledgebase
+        List<ProtectEvidence> reportableEvidenceItems = Lists.newArrayList();
+        List<ProtectEvidence> nonTrialsOnLabel = Lists.newArrayList();
+        List<ProtectEvidence> trialsOnLabel = Lists.newArrayList();
+        List<ProtectEvidence> nonTrialsOffLabel = Lists.newArrayList();
 
         return ImmutableGenomicAnalysis.builder()
                 .impliedPurity(purpleData.purity())

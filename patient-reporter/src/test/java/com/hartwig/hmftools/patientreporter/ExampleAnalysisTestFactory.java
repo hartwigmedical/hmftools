@@ -1020,7 +1020,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<PeachGenotype> createTestPeachGenotypes() {
         return Lists.newArrayList(ImmutablePeachGenotype.builder()
-                .gene("DYPD")
+                .gene("DPYD")
                 .haplotype("*1_HOM")
                 .function("Normal Function")
                 .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")

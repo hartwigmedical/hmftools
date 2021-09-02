@@ -82,10 +82,8 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 DataUtil.formatNullableString(sampleReport.refSampleBarcode())));
         div.add(createContentParagraph("The results stated in this report are based on the tested tumor and blood sample."));
         div.add(createContentParagraph("This experiment is performed according to lab procedures: ", sampleReport.labProcedures()));
-        String whoVerified = "This report is generated and verified by: " + patientReport.user();
-        if (!patientReport.clinicalSummary().isEmpty()) {
-            whoVerified += " and Paul Roepman";
-        }
+        String whoVerified = "This report was generated " + patientReport.user();
+
         div.add(createContentParagraph(whoVerified));
         div.add(createContentParagraph("This report is addressed to: ", sampleReport.addressee()));
 
@@ -121,8 +119,9 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("UDI-DI: ", ReportResources.UDI_DI + "."));
         div.add(createContentParagraph("The OncoAct user manual can be found at ", ReportResources.MANUAL + "."));
         div.add(createContentParagraph("This report is based on pipeline version ", pipelineVersion + "."));
-        div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
-                + "clinical evidence/study matching. No check is performed to verify the received information."));
+        //TODO: added when evidences is report in report
+//        div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
+//                + "clinical evidence/study matching. No check is performed to verify the received information."));
         div.add(createContentParagraph("The conclusion of this report is based solely on the results of the DNA sequencing of the tumor "
                 + "and the received tumor type. Final interpretation of the clinical consequence of this report should therefore "
                 + "always be performed by the treating physician."));

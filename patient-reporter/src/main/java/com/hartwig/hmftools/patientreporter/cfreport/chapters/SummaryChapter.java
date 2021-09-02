@@ -95,7 +95,7 @@ public class SummaryChapter implements ReportChapter {
                 + "  \nis based on information received from the originating hospital.").addStyle(ReportResources.subTextStyle()));
 
         renderClinicalConclusionText(reportDocument);
-        renderTreatmentIndications(reportDocument);
+      //  renderTreatmentIndications(reportDocument);   //TODO; Switch on when switch to CKB knowledgebase
         renderTumorCharacteristics(reportDocument);
         renderGenomicAlterations(reportDocument);
         renderPeach(reportDocument);

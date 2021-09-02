@@ -268,7 +268,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph reportIsVerifiedByAndAddressedTo() {
-        return createContentParagraph("This report is generated and verified by: " + failReport.user() + " and is addressed to ",
+        return createContentParagraph("This report was generated " + failReport.user() + " and is addressed to ",
                 failReport.sampleReport().addressee() + ".");
     }
 
