@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
@@ -65,7 +64,7 @@ public class BindScorer
     {
         NE_LOGGER.info("running BindScorer");
 
-        if(!loadData())
+        if(!loadScoringData())
         {
             NE_LOGGER.error("invalid reference data");
             return;
@@ -165,6 +164,19 @@ public class BindScorer
         }
 
         return score;
+    }
+
+    public void calcScoreData(final BindData bindData)
+    {
+        if(!mAlleleBindMatrices.containsKey(bindData.Allele))
+            return;
+
+        BindScoreMatrix matrix = mAlleleBindMatrices.get(bindData.Allele).get(bindData.peptideLength());
+
+        if(matrix == null)
+            return;
+
+        calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood);
     }
 
     public static void calcScoreData(
@@ -322,10 +334,8 @@ public class BindScorer
         }
     }
 
-    public boolean loadData()
+    public boolean loadScoringData()
     {
-        NE_LOGGER.info("loading matrix data from {}", mConfig.PosWeightsFile);
-
         List<BindScoreMatrix> matrixList = BindScoreMatrix.loadFromCsv(mConfig.PosWeightsFile);
 
         for(BindScoreMatrix matrix : matrixList)
@@ -340,8 +350,6 @@ public class BindScorer
 
             pepLenMap.put(matrix.PeptideLength, matrix);
         }
-
-        NE_LOGGER.info("loading random distribution data from {}", mConfig.RandomPeptides.RandomPeptideDistributionFile);
 
         if(!mRandomDistribution.loadData())
             return false;

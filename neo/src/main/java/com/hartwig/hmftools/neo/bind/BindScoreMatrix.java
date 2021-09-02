@@ -22,8 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class BindScoreMatrix
 {
@@ -146,6 +148,8 @@ public class BindScoreMatrix
             int aaIndex = fieldsIndexMap.get(FLD_AMINO_ACID);
             int peptideStartIndex = max(aaIndex, dataTypeIndex) + 1;
 
+            Set<String> alleles = Sets.newHashSet();
+
             for(String line : lines)
             {
                 String[] items = line.split(DELIM, -1);
@@ -158,6 +162,8 @@ public class BindScoreMatrix
                     continue;
 
                 String allele = items[alleleIndex];
+                alleles.add(allele);
+
                 int peptideLength = Integer.parseInt(items[peptideLenIndex]);
 
                 if(currentMatrix == null || !currentMatrix.Allele.equals(allele) || currentMatrix.PeptideLength != peptideLength)
@@ -179,6 +185,8 @@ public class BindScoreMatrix
                         break;
                 }
             }
+
+            NE_LOGGER.info("loading matrix data for {} alleles from {}", alleles.size(), filename);
         }
         catch(IOException e)
         {

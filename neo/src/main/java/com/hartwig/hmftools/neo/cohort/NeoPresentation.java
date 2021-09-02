@@ -45,7 +45,7 @@ public class NeoPresentation
         if(mConfig.SampleIds.isEmpty())
             return;
 
-        if(!mPeptideScorer.loadData())
+        if(!mPeptideScorer.loadScoringData())
         {
             NE_LOGGER.error("failed to load scoring data");
             System.exit(1);

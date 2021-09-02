@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
@@ -23,6 +21,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -31,8 +30,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.neo.bind.BindScorer;
+import com.hartwig.hmftools.neo.bind.BinderConfig;
 import com.hartwig.hmftools.neo.bind.BlosumMapping;
-import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -109,22 +109,22 @@ public class PeptideRefSimilarity
             String filename = mOutputDir + "peptide_ref_gen_sim_" + mOutputId + ".csv";
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Peptide,TopSimilarity,TopPeptide,GeneId,GeneName,TransName"); // PepTotal,TopTotal,DiffTotal,
+            writer.write("Peptide,TopSimilarity,TopPeptide,PosDiffs,GeneName,TransName");
             writer.newLine();
 
-            for(PeptideSearchTask searchTask : searchTasks)
+            Map<String,PeptideSimiliarity> allResults = Maps.newHashMap();
+
+            searchTasks.forEach(x -> allResults.putAll(x.getResults()));
+
+            for(String peptide : mPeptides)
             {
-                for(Map.Entry<String,PeptideSimiliarity> entry : searchTask.getResults().entrySet())
-                {
-                    final PeptideSimiliarity pepSim = entry.getValue();
+                final PeptideSimiliarity pepSim = allResults.get(peptide);
 
-                    writer.write(String.format("%s,%.1f,%s,%s,%s,%s",
-                            entry.getKey(), pepSim.Similiarity, pepSim.Peptide,
-                            // pepSim.SimValues[0], pepSim.SimValues[1], pepSim.SimValues[2],
-                            pepSim.TransData.GeneId, pepSim.TransData.GeneName, pepSim.TransData.TransName));
+                writer.write(String.format("%s,%.1f,%s,%s,%s,%s",
+                        peptide, pepSim.Similiarity, pepSim.Peptide, pepSim.positionDiffs(peptide),
+                        pepSim.TransData.GeneName, pepSim.TransData.TransName));
 
-                    writer.newLine();
-                }
+                writer.newLine();
             }
 
             writer.close();
@@ -189,7 +189,6 @@ public class PeptideRefSimilarity
         {
             String topPeptide = "";
             double topSimiliarity = 0;
-            int[] topSimValues = new int[3];
             TranscriptAminoAcids topTrans = null;
 
             int peptideLength = peptide.length();
@@ -200,8 +199,8 @@ public class PeptideRefSimilarity
 
                 if(aminoAcids.contains(peptide))
                 {
-                    mResults.put(peptide, new PeptideSimiliarity(peptide, 0, null, transAminoAcids));
-                    break;
+                    mResults.put(peptide, new PeptideSimiliarity(peptide, 0, transAminoAcids));
+                    return;
                 }
 
                 int aaLength = aminoAcids.length();
@@ -213,11 +212,8 @@ public class PeptideRefSimilarity
                     if(aaPeptide.contains(AMINO_ACID_21ST))
                         continue;
 
-
-                    // int similarity = mBlosumMapping.calcSequenceBlosumDifference(aaPeptide, peptide);
-                    // int[] simValues = new int[] {0, 0, 0};
-
                     double similarity = 0;
+                    boolean skip = false;
 
                     for(int i = 0; i < peptide.length(); ++i)
                     {
@@ -231,26 +227,25 @@ public class PeptideRefSimilarity
                         similarity += (bs1 + bs2) * 0.5 - map;
 
                         if(topTrans != null && similarity >= topSimiliarity) // skip if cannot be better
+                        {
+                            skip = true;
                             break;
-
-                        /*
-                        simValues[0] += mBlosumMapping.selfMapping(aa1) - diff;
-                        simValues[1] += mBlosumMapping.selfMapping(aa2) - diff;
-                        simValues[2] += abs(diff);
-                        */
+                        }
                     }
+
+                    if(skip)
+                        continue;
 
                     if(topTrans == null || similarity < topSimiliarity)
                     {
                         topPeptide = aaPeptide;
                         topSimiliarity = similarity;
                         topTrans = transAminoAcids;
-                        // topSimValues = simValues;
                     }
                 }
             }
 
-            mResults.put(peptide, new PeptideSimiliarity(topPeptide, topSimiliarity, topSimValues, topTrans));
+            mResults.put(peptide, new PeptideSimiliarity(topPeptide, topSimiliarity, topTrans));
         }
     }
 
@@ -258,15 +253,28 @@ public class PeptideRefSimilarity
     {
         public final String Peptide;
         public final double Similiarity;
-        public final int[] SimValues;
         public final TranscriptAminoAcids TransData;
 
-        public PeptideSimiliarity(final String peptide, double similiarity, final int[] simValues, final TranscriptAminoAcids transData)
+        public PeptideSimiliarity(final String peptide, double similiarity, final TranscriptAminoAcids transData)
         {
             Peptide = peptide;
             Similiarity = similiarity;
-            SimValues = simValues;
             TransData = transData;
+        }
+
+        public String positionDiffs(final String origPeptide)
+        {
+            if(Similiarity == 0)
+                return "";
+
+            StringJoiner sj = new StringJoiner(";");
+            for(int i = 0; i < Peptide.length(); ++i)
+            {
+                if(Peptide.charAt(i) != origPeptide.charAt(i))
+                    sj.add(String.valueOf(i));
+            }
+
+            return sj.toString();
         }
     }
 

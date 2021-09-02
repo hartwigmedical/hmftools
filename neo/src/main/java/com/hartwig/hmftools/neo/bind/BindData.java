@@ -140,7 +140,14 @@ public class BindData
             final Map<String,Map<Integer,List<BindData>>> allelePeptideMap)
     {
         if(filename == null || !Files.exists(Paths.get(filename)))
+        {
+            if(expectExists)
+            {
+                NE_LOGGER.error("binding data file({}) not found", filename);
+            }
+
             return !expectExists;
+        }
 
         try
         {
