@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_AMINO_ACID;
@@ -88,6 +89,31 @@ public class BlosumMapping
         }
 
         return pow(2, total);
+    }
+
+    public int calcSequenceBlosumDifference(final String seq1, final String seq2)
+    {
+        if(seq1.length() != seq2.length())
+            return 0;
+
+        if(seq1.equals(seq2))
+            return 0;
+
+        int total = 0;
+
+        for(int i = 0; i < seq1.length(); ++i)
+        {
+            char aa1 = seq1.charAt(i);
+            char aa2 = seq2.charAt(i);
+
+            if(aa1 == aa2)
+                continue;
+
+            int mapping = map(aa1, aa2);
+            total += abs(mapping);
+        }
+
+        return total;
     }
 
     private void load()

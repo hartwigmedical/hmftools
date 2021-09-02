@@ -4,7 +4,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -57,45 +59,16 @@ public class RefGenomePeptideLocator
 
     public RefGenomePeptideLocator(final CommandLine cmd)
     {
-        String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
+        mPeptides = loadDelimitedIdFile(cmd.getOptionValue(PEPTIDE_FILE), FLD_PEPTIDE, CSV_DELIM);
 
-        mPeptides = Lists.newArrayList();
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList());
+        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList());
 
         mFlankLength = Integer.parseInt(cmd.getOptionValue(FLANK_LENGTH));
         mThreads = Integer.parseInt(cmd.getOptionValue(THREADS));
         mFindRepeats = cmd.hasOption(FIND_REPEATS);
 
-        loadPeptides(cmd.getOptionValue(PEPTIDE_FILE));
-
         mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
-    }
-
-    private void loadPeptides(final String filename)
-    {
-        if(filename == null)
-            return;
-
-        try
-        {
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
-            String header = lines.get(0);
-            lines.remove(0);
-
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
-            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-
-            for(String line : lines)
-            {
-                String[] values = line.split(DELIM);
-                mPeptides.add(values[peptideIndex]);
-            }
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.warn("failed to load alleles file: {}", e.toString());
-        }
     }
 
     public void run()
