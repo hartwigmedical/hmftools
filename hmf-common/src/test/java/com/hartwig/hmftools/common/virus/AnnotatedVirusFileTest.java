@@ -17,7 +17,7 @@ public class AnnotatedVirusFileTest {
     @Test
     public void canReadSampleVirusAnnotatedTsv() throws IOException {
         List<AnnotatedVirus> annotatedVirusList = AnnotatedVirusFile.read(SAMPLE_VIRUS_ANNOTATED_TSV);
-        assertEquals(2, annotatedVirusList.size());
+        assertEquals(1, annotatedVirusList.size());
     }
 
     @Test

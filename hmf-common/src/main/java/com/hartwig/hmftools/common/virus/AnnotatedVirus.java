@@ -22,5 +22,11 @@ public abstract class AnnotatedVirus {
     @Nullable
     public abstract VirusInterpretation interpretation();
 
+    public abstract double coverage();
+
+    public abstract double meanDepth();
+
+    public abstract double expectedMeanDepth();
+
     public abstract boolean reported();
 }

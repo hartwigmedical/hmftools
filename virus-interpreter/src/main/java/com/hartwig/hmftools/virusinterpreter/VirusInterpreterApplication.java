@@ -57,7 +57,8 @@ public class VirusInterpreterApplication {
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
 
-        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
+        List<AnnotatedVirus> annotatedViruses =
+                algo.analyze(virusBreakends, config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
         LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 
         String annotatedVirusTsv = AnnotatedVirusFile.generateFileName(config.outputDir(), config.sampleId());

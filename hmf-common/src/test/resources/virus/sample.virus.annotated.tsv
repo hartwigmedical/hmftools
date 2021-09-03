@@ -1,3 +1,2 @@
-taxid	name	qcStatus	integrations	interpretation	reported
-1	Virus1	NO_ABNORMALITIES	2	HPV	TRUE
-2	Virus2	NO_ABNORMALITIES	0		FALSE
+taxid	name	qcStatus	integrations	interpretation	coverage	meanDepth	expectedMeanDepth	reported
+1	Virus1	NO_ABNORMALITIES	2	HPV	2	2	2	TRUE
