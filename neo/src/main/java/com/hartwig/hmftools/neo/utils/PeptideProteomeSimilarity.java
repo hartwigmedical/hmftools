@@ -60,7 +60,7 @@ public class PeptideRefSimilarity
         mPeptides = loadDelimitedIdFile(cmd.getOptionValue(PEPTIDES_FILE), FLD_PEPTIDE, CSV_DELIM);
 
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList());
+        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList(), false);
 
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);

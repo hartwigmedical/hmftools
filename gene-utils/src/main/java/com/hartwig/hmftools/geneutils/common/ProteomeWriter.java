@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
@@ -46,13 +47,18 @@ public class ProteomeWriter
 {
     private final EnsemblDataCache mEnsemblDataCache;
     private final RefGenomeInterface mRefGenome;
+    private final boolean mCanonicalOnly;
+
+    private static final String CANONICAL_ONLY = "canonical_only";
 
     private BufferedWriter mWriter;
 
     public ProteomeWriter(final CommandLine cmd)
     {
+        mCanonicalOnly = cmd.hasOption(CANONICAL_ONLY);
+
         mEnsemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
-        mEnsemblDataCache.setRequiredData(true, false, false, true);
+        mEnsemblDataCache.setRequiredData(true, false, false, mCanonicalOnly);
 
         mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
 
@@ -63,99 +69,30 @@ public class ProteomeWriter
     {
         mEnsemblDataCache.load(false);
 
-        GU_LOGGER.info("writing proetome to file");
+        GU_LOGGER.info("writing proteome to file");
 
         int geneCount = 0;
 
         for(Map.Entry<String,List<GeneData>> entry : mEnsemblDataCache.getChrGeneDataMap().entrySet())
         {
-            String chromosome = entry.getKey();
-
             for(GeneData geneData : entry.getValue())
             {
-                TranscriptData transData = mEnsemblDataCache.getTranscriptData(geneData.GeneId, "");
+                List<TranscriptData> transDataList = mEnsemblDataCache.getTranscripts(geneData.GeneId);
 
-                if(transData == null || transData.CodingStart == null)
+                if(transDataList == null)
                     continue;
 
-                boolean inCoding = false;
-                String aminoAcids = "";
-
-                if(geneData.forwardStrand())
+                for(TranscriptData transData : transDataList)
                 {
-                    StringBuilder codingBases = new StringBuilder();
+                    if(mCanonicalOnly && !transData.IsCanonical)
+                        continue;
 
-                    for(int i = 0; i < transData.exons().size(); ++i)
-                    {
-                        ExonData exon = transData.exons().get(i);
+                    processTranscript(geneData, transData);
 
-                        if(exon.End < transData.CodingStart)
-                            continue;
-
-                        if(exon.Start > transData.CodingEnd)
-                            break;
-
-                        int exonCodingStart = max(transData.CodingStart, exon.Start);
-                        int exonCodingEnd = min(transData.CodingEnd, exon.End);
-
-                        if(!inCoding)
-                        {
-                            inCoding = true;
-
-                            if(exon.Start == transData.CodingStart)
-                            {
-                                int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
-
-                                if(startPhase == PHASE_2)
-                                    exonCodingStart += 2;
-                                else if(startPhase == PHASE_0)
-                                    exonCodingStart += 1;
-                            }
-                        }
-
-                        codingBases.append(mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd));
-                    }
-
-                    aminoAcids = Codons.aminoAcidFromBases(codingBases.toString());
-                }
-                else
-                {
-                    String codingBases = "";
-                    for(int i = transData.exons().size() - 1; i >= 0; --i)
-                    {
-                        ExonData exon = transData.exons().get(i);
-
-                        if(exon.Start > transData.CodingEnd)
-                            continue;
-
-                        if(exon.End < transData.CodingStart)
-                            break;
-
-                        int exonCodingStart = max(transData.CodingStart, exon.Start);
-                        int exonCodingEnd = min(transData.CodingEnd, exon.End);
-
-                        if(!inCoding)
-                        {
-                            inCoding = true;
-
-                            if(exon.End == transData.CodingEnd)
-                            {
-                                int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
-
-                                if(startPhase == PHASE_2)
-                                    exonCodingStart -= 2;
-                                else if(startPhase == PHASE_0)
-                                    exonCodingStart -= 1;
-                            }
-                        }
-
-                        codingBases = mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd) + codingBases;
-                    }
-
-                    aminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(codingBases));
+                    if(mCanonicalOnly)
+                        break;
                 }
 
-                writeData(geneData.GeneId, geneData.GeneName, transData.TransName, aminoAcids);
                 ++geneCount;
             }
         }
@@ -165,6 +102,91 @@ public class ProteomeWriter
         GU_LOGGER.info("wrote {} gene amino-acids sequences", geneCount);
 
         GU_LOGGER.info("proteome write complete");
+    }
+
+    private void processTranscript(final GeneData geneData, final TranscriptData transData)
+    {
+        if(transData.CodingStart == null)
+            return;
+
+        boolean inCoding = false;
+        String aminoAcids = "";
+
+        if(transData.Strand == POS_STRAND)
+        {
+            StringBuilder codingBases = new StringBuilder();
+
+            for(int i = 0; i < transData.exons().size(); ++i)
+            {
+                ExonData exon = transData.exons().get(i);
+
+                if(exon.End < transData.CodingStart)
+                    continue;
+
+                if(exon.Start > transData.CodingEnd)
+                    break;
+
+                int exonCodingStart = max(transData.CodingStart, exon.Start);
+                int exonCodingEnd = min(transData.CodingEnd, exon.End);
+
+                if(!inCoding)
+                {
+                    inCoding = true;
+
+                    if(exon.Start == transData.CodingStart)
+                    {
+                        int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+
+                        if(startPhase == PHASE_2)
+                            exonCodingStart += 2;
+                        else if(startPhase == PHASE_0)
+                            exonCodingStart += 1;
+                    }
+                }
+
+                codingBases.append(mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd));
+            }
+
+            aminoAcids = Codons.aminoAcidFromBases(codingBases.toString());
+        }
+        else
+        {
+            String codingBases = "";
+            for(int i = transData.exons().size() - 1; i >= 0; --i)
+            {
+                ExonData exon = transData.exons().get(i);
+
+                if(exon.Start > transData.CodingEnd)
+                    continue;
+
+                if(exon.End < transData.CodingStart)
+                    break;
+
+                int exonCodingStart = max(transData.CodingStart, exon.Start);
+                int exonCodingEnd = min(transData.CodingEnd, exon.End);
+
+                if(!inCoding)
+                {
+                    inCoding = true;
+
+                    if(exon.End == transData.CodingEnd)
+                    {
+                        int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+
+                        if(startPhase == PHASE_2)
+                            exonCodingStart -= 2;
+                        else if(startPhase == PHASE_0)
+                            exonCodingStart -= 1;
+                    }
+                }
+
+                codingBases = mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd) + codingBases;
+            }
+
+            aminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(codingBases));
+        }
+
+        writeData(geneData.GeneId, geneData.GeneName, transData.TransName, transData.IsCanonical, aminoAcids);
     }
 
     private static BufferedWriter initialiseWriter(final String outputDir)
@@ -185,11 +207,11 @@ public class ProteomeWriter
         }
     }
 
-    private void writeData(final String geneId, final String geneName, final String transName, final String aminoAcids)
+    private void writeData(final String geneId, final String geneName, final String transName, boolean isCanonical, final String aminoAcids)
     {
         try
         {
-            mWriter.write(String.format("%s,%s,%s,%s", geneId, geneName, transName, aminoAcids));
+            mWriter.write(String.format("%s,%s,%s,%s,%s", geneId, geneName, transName, isCanonical, aminoAcids));
             mWriter.newLine();
         }
         catch(IOException e)
@@ -204,6 +226,7 @@ public class ProteomeWriter
         addEnsemblDir(options);
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(CANONICAL_ONLY, false, "Only write canonical proteome");
 
         final CommandLine cmd = createCommandLine(args, options);
 

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
@@ -391,7 +392,8 @@ public final class EnsemblDataLoader
     }
 
     public static boolean loadTranscriptAminoAcidData(
-            final String dataPath, Map<String, TranscriptAminoAcids> transAminoAcidMap, final List<String> restrictedGeneIds)
+            final String dataPath, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
+            final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
         String filename = dataPath;
 
@@ -418,15 +420,16 @@ public final class EnsemblDataLoader
             int geneIdIndex = fieldsIndexMap.get("GeneId");
             int geneNameIndex = fieldsIndexMap.get("GeneName");
             int transIndex = fieldsIndexMap.get("TransName");
+            Integer isCanonicalIndex = fieldsIndexMap.get("Canonical");
             int aaIndex = fieldsIndexMap.get("AminoAcids");
 
             line = fileReader.readLine(); // skip header
 
             while (line != null)
             {
-                String[] items = line.split(ENSEMBL_DELIM);
+                String[] values = line.split(ENSEMBL_DELIM);
 
-                String geneId = items[geneIdIndex];
+                String geneId = values[geneIdIndex];
 
                 if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId))
                 {
@@ -434,9 +437,14 @@ public final class EnsemblDataLoader
                     continue;
                 }
 
-                String transName = items[transIndex];
+                String transName = values[transIndex];
+                boolean isCanonical = isCanonicalIndex != null ? Boolean.parseBoolean(values[isCanonicalIndex]) : true;
 
-                transAminoAcidMap.put(transName, new TranscriptAminoAcids(geneId, items[geneNameIndex], transName, items[aaIndex]));
+                if(canonicalOnly && !isCanonical)
+                    continue;
+
+                transAminoAcidMap.put(transName, new TranscriptAminoAcids(
+                        geneId, values[geneNameIndex], transName, isCanonical, values[aaIndex]));
 
                 line = fileReader.readLine();
             }
@@ -452,4 +460,25 @@ public final class EnsemblDataLoader
         return true;
     }
 
+    public static Map<String,List<TranscriptAminoAcids>> convertAminoAcidsToGeneMap(final Map<String,TranscriptAminoAcids> transAminoAcidMap)
+    {
+        Map<String,List<TranscriptAminoAcids>> geneTransMap = Maps.newHashMap();
+
+        for(Map.Entry<String,TranscriptAminoAcids> entry : transAminoAcidMap.entrySet())
+        {
+            TranscriptAminoAcids transAA = entry.getValue();
+
+            List<TranscriptAminoAcids> geneList = geneTransMap.get(transAA.GeneId);
+
+            if(geneList == null)
+            {
+                geneList = Lists.newArrayList();
+                geneTransMap.put(transAA.GeneId, geneList);
+            }
+
+            geneList.add(transAA);
+        }
+
+        return geneTransMap;
+    }
 }

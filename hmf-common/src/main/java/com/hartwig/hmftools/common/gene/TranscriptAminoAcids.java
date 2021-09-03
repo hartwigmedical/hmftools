@@ -9,17 +9,20 @@ public class TranscriptAminoAcids
     public final String GeneId;
     public final String GeneName;
     public final String TransName;
+    public final boolean Canonical;
     public final String AminoAcids;
 
-    public TranscriptAminoAcids(final String geneId, final String geneName, final String transName, final String aminoAcids)
+    public TranscriptAminoAcids(
+            final String geneId, final String geneName, final String transName, boolean canonical, final String aminoAcids)
     {
         GeneId = geneId;
         GeneName = geneName;
         TransName = transName;
+        Canonical = canonical;
         AminoAcids = aminoAcids;
     }
 
-    public static String csvHeader() { return "GeneId,GeneName,TransName,AminoAcids"; }
+    public static String csvHeader() { return "GeneId,GeneName,TransName,Canonical,AminoAcids"; }
 
     public String toCsv()
     {
@@ -27,6 +30,7 @@ public class TranscriptAminoAcids
         sj.add(GeneId);
         sj.add(GeneName);
         sj.add(TransName);
+        sj.add(String.valueOf(Canonical));
         sj.add(AminoAcids);
         return sj.toString();
     }
