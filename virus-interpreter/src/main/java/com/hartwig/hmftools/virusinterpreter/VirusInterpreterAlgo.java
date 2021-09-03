@@ -86,7 +86,12 @@ public class VirusInterpreterAlgo {
         }
 
         if (virusBreakend.integrations() == 0) {
+            //TODO: Add logica for non-integrated virus
             return false;
+        }
+        if (virusBreakend.integrations() >= 1) {
+            //TODO: Add logica for integrated virus
+            return true;
         }
 
         return !virusBlacklistModel.isBlacklisted(virusBreakend);
