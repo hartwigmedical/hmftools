@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -34,14 +36,18 @@ public class BindScorer
     private final RandomPeptideDistribution mRandomDistribution;
     private final BindingLikelihood mBindingLikelihood;
 
+    private final Map<String,Integer> mBindDataOtherColumns;
+
     public BindScorer(final BinderConfig config)
     {
         mConfig = config;
 
         mAllelePeptideData = Maps.newHashMap();
-        mAlleleBindMatrices = Maps.newHashMap();
-        mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
+        mBindDataOtherColumns = Maps.newLinkedHashMap();
 
+        mAlleleBindMatrices = Maps.newHashMap();
+
+        mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
         mBindingLikelihood = new BindingLikelihood();
         mFlankScores = new FlankScores();
     }
@@ -54,6 +60,8 @@ public class BindScorer
         mConfig = config;
 
         mAllelePeptideData = allelePeptideData;
+        mBindDataOtherColumns = Maps.newLinkedHashMap();
+
         mAlleleBindMatrices = alleleBindMatrices;
         mRandomDistribution = randomDistribution;
         mBindingLikelihood = null;
@@ -70,7 +78,7 @@ public class BindScorer
             return;
         }
 
-        if(!loadBindData(mConfig.ValidationDataFile, Lists.newArrayList(), mAllelePeptideData))
+        if(!loadBindData(mConfig.ValidationDataFile, Lists.newArrayList(), mAllelePeptideData, mBindDataOtherColumns))
         {
             NE_LOGGER.error("invalid validation data");
             return;
@@ -214,30 +222,21 @@ public class BindScorer
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("Allele,Peptide,Source,Score,Rank,Likelihood,LikelihoodRank");
 
-            // TODO: write flanks if explicitly provided
+            boolean writeFlanks = mFlankScores.hasData() && mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream()
+                    .filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasFlanks()));
 
-            if(mConfig.ApplyFlanks)
+            if(writeFlanks)
                 writer.write(",FlankScore,UpFlank,DownFlank");
 
-            // TODO: write out other input columns
+            boolean hasOtherData = !mBindDataOtherColumns.isEmpty();
 
-
-            /*
-            boolean hasPredictionData = false;
-            boolean hasMeasuredAffinity = false;
-
-            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasMeasuredAffinity())))
+            if(hasOtherData)
             {
-                hasMeasuredAffinity = true;
-                writer.write(",MeasuredAffinity");
+                for(String column : mBindDataOtherColumns.keySet())
+                {
+                    writer.write(String.format(",%s", column));
+                }
             }
-
-            if(mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream().filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasPredictionData())))
-            {
-                hasPredictionData = true;
-                writer.write(",PredictedAffinity,AffinityPerc,PresScore,PresPerc");
-            }
-            */
 
             writer.newLine();
 
@@ -254,24 +253,18 @@ public class BindScorer
                                 allele, bindData.Peptide, bindData.Source, bindData.score(),
                                 bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank()));
 
-                        if(mConfig.ApplyFlanks)
+                        if(writeFlanks)
                         {
                             writer.write(String.format(",%.4f,%s,%s", bindData.flankScore(), bindData.UpFlank, bindData.DownFlank));
                         }
 
-                        /*
-                        if(hasMeasuredAffinity)
+                        if(hasOtherData)
                         {
-                            writer.write(String.format(",%.2f", bindData.measuredAffinity()));
+                            for(Integer columnIndex : mBindDataOtherColumns.values())
+                            {
+                                writer.write(String.format(",%s", bindData.getOtherData().get(columnIndex)));
+                            }
                         }
-
-                        if(hasPredictionData)
-                        {
-                            writer.write(String.format(",%.2f,%.6f,%.4f,%.6f",
-                                    bindData.predictedAffinity(), bindData.affinityPercentile(),
-                                    bindData.presentationScore(), bindData.presentationPercentile()));
-                        }
-                        */
 
                         writer.newLine();
                     }
@@ -365,8 +358,11 @@ public class BindScorer
         if(mConfig.BindLikelihoodFile != null && !mBindingLikelihood.loadLikelihoods(mConfig.BindLikelihoodFile))
             return false;
 
-        if(mConfig.FlankPosWeightsFile != null && mConfig.ApplyFlanks && !mFlankScores.loadPosWeights(mConfig.FlankPosWeightsFile))
-            return false;
+        if(mConfig.FlankPosWeightsFile != null && Files.exists(Paths.get(mConfig.FlankPosWeightsFile)))
+        {
+            if(!mFlankScores.loadPosWeights(mConfig.FlankPosWeightsFile))
+                return false;
+        }
 
         return true;
     }

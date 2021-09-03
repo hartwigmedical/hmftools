@@ -118,6 +118,9 @@ public class BindData
             Integer downFlankIndex = null;
             Integer sourceIndex = null;
 
+            int otherDataCount = 0;
+            List<Integer> otherColumnIndices = Lists.newArrayList();
+
             for(int i = 0; i < columns.length; ++i)
             {
                 String column = columns[i];
@@ -133,7 +136,10 @@ public class BindData
                 else if(column.equals(FLD_SOURCE))
                     sourceIndex = i;
                 else
-                    otherColumns.put(column, i);
+                {
+                    otherColumnIndices.add(i);
+                    otherColumns.put(column, otherDataCount++);
+                }
             }
 
             int itemCount = 0;
@@ -163,7 +169,7 @@ public class BindData
 
                 for(int i = 0; i < values.length; ++i)
                 {
-                    if(otherColumns.containsValue(i))
+                    if(otherColumnIndices.contains(i))
                         bindData.getOtherData().add(values[i]);
                 }
 
