@@ -71,6 +71,21 @@ final class TherapyDetailsChapterFunctions {
 
     @NotNull
     static Paragraph createChapterFootnoteOffLabel() {
+
+//        add("The above clinical evidence is gathered from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases "
+//                + "without further checks or interpretation. \n"
+//                + "Please always consult the underlying literature for determining its value and for further interpretation.\n"
+//                + "Note: only treatment associated evidence with a high level of evidence ( ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+//                .add(" validated association; ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+//                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+//                .add(" case study, limited clinical evidence; ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+//                .add(" pre-clinical) are not reported.")
+
+
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("The Clinical Knowledgebase (CKB) is used to "
@@ -90,6 +105,18 @@ final class TherapyDetailsChapterFunctions {
 
     @NotNull
     static Paragraph createChapterFootnoteOnLabel() {
+        //        add("The above clinical evidence is gathered from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases "
+        //                + "without further checks or interpretation. \n"
+        //                + "Please always consult the underlying literature for determining its value and for further interpretation.\n"
+        //                + "Note: only treatment associated evidence with a high level of evidence ( ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+        //                .add(" validated association; ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+        //                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+        //                .add(" case study, limited clinical evidence; ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+        //                .add(" pre-clinical) are not reported.")
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("The Clinical Knowledgebase (CKB) is used to "

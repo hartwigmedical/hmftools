@@ -27,14 +27,10 @@ public class ExplanationChapter implements ReportChapter {
         table.setWidth(contentWidth());
 
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on the report in general")));
-        // TODO: add when evidence is reported in report
-        // table.addCell(TableUtil.createLayoutCell());
-        // table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on the reported clinical evidence")));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on the reported clinical evidence")));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported somatic variants")));
-        // TODO: remove when evidence is reported in report
-        table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell());
 
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] { "The analysis is based on reference genome version GRCh37.",
@@ -44,23 +40,22 @@ public class ExplanationChapter implements ReportChapter {
                                 + "purity (below 20%) likelihood of failing to detect potential variants increases.",
                         "The (implied) tumor purity is the percentage of tumor cells in the tumor material based on analysis of "
                                 + "whole genome data." })));
-        // TODO: add when evidence is reported in report
- //       table.addCell(TableUtil.createLayoutCell());
-//        table.addCell(TableUtil.createLayoutCell()
-//                .add(createContentDiv(new String[] { "The CGI and CIViC knowledge base are used to annotate variants of all types with "
-//                        + "clinical evidence, with a hyperlink to the specific evidence items when available. The evidence is gathered "
-//                        + "from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases without further checks or interpretation. "
-//                        + "This also means that if a certain evidence item or drug-biomarker is missing from the knowledge bases it will "
-//                        + "also not be included in this report.\n"
-//                        + "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used to "
-//                        + "harmonize and curate the knowledge bases.\n"
-//                        + "Clinical trials are matched against the iClusion database (https://iclusion.org) including a link to "
-//                        + "the specific trial.\n"
-//                        + "\n"
-//                        + "Hartwig Medical Foundation is not responsible for the content of the knowledge bases used to generate this "
-//                        + "report. Furthermore, Hartwig Medical Foundation is not liable and cannot be held accountable for any "
-//                        + "incorrectness, incompleteness or error of any other kind in the knowledge bases, or the VICC software "
-//                        + "used to harmonize and curate the knowledge bases." })));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell()
+                .add(createContentDiv(new String[] { "The CGI and CIViC knowledge base are used to annotate variants of all types with "
+                        + "clinical evidence, with a hyperlink to the specific evidence items when available. The evidence is gathered "
+                        + "from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases without further checks or interpretation. "
+                        + "This also means that if a certain evidence item or drug-biomarker is missing from the knowledge bases it will "
+                        + "also not be included in this report.\n"
+                        + "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used to "
+                        + "harmonize and curate the knowledge bases.\n"
+                        + "Clinical trials are matched against the iClusion database (https://iclusion.org) including a link to "
+                        + "the specific trial.\n"
+                        + "\n"
+                        + "Hartwig Medical Foundation is not responsible for the content of the knowledge bases used to generate this "
+                        + "report. Furthermore, Hartwig Medical Foundation is not liable and cannot be held accountable for any "
+                        + "incorrectness, incompleteness or error of any other kind in the knowledge bases, or the VICC software "
+                        + "used to harmonize and curate the knowledge bases." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
@@ -73,9 +68,6 @@ public class ExplanationChapter implements ReportChapter {
                         "The 'Driver' field is based on the driver probability calculated based on the HMF database. A "
                                 + "variant in a gene with High driver likelihood is likely to be positively selected for "
                                 + "during the oncogenic process." })));
-        // TODO: add when evidence is reported in report
-        table.addCell(TableUtil.createLayoutCell());
-        table.addCell(TableUtil.createLayoutCell());
 
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
@@ -118,10 +110,6 @@ public class ExplanationChapter implements ReportChapter {
 
         // Is needed to set details on new page
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
-        //TODO: remove when evidence is reported in report
-        table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
-        table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
-
 
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported viral insertions")));
         table.addCell(TableUtil.createLayoutCell());
