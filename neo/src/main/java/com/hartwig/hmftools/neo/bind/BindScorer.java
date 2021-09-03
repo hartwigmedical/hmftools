@@ -102,12 +102,12 @@ public class BindScorer
         return mRandomDistribution.getScoreRank(allele, peptide.length(), score);
     }
 
-    public double calcLikelihood(final String allele, final String peptide, double ranks)
+    public double calcLikelihood(final String allele, final String peptide, double rank)
     {
         if(mBindingLikelihood == null || !mBindingLikelihood.hasData())
             return INVALID_CALC;
 
-        return mBindingLikelihood.getBindingLikelihood(allele, peptide, ranks);
+        return mBindingLikelihood.getBindingLikelihood(allele, peptide, rank);
     }
 
     public void runScoring()

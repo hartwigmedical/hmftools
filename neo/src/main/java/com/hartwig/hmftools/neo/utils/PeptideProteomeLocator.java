@@ -11,17 +11,13 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -40,7 +36,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class RefGenomePeptideLocator
+public class PeptideProteomeLocator
 {
     private final int mFlankLength;
     private final int mThreads;
@@ -57,7 +53,7 @@ public class RefGenomePeptideLocator
     private static final String THREADS = "threads";
     private static final String FIND_REPEATS = "find_repeats";
 
-    public RefGenomePeptideLocator(final CommandLine cmd)
+    public PeptideProteomeLocator(final CommandLine cmd)
     {
         mPeptides = loadDelimitedIdFile(cmd.getOptionValue(PEPTIDE_FILE), FLD_PEPTIDE, CSV_DELIM);
 
@@ -137,7 +133,7 @@ public class RefGenomePeptideLocator
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("Peptide,GeneName,TransId,AminoAcidPos,UpFlank,DownFlank,MatchCount");
+            writer.write("Peptide,GeneName,TransName,AminoAcidPos,UpFlank,DownFlank,MatchCount");
             writer.newLine();
             return writer;
         }
@@ -292,8 +288,8 @@ public class RefGenomePeptideLocator
 
         setLogLevel(cmd);
 
-        RefGenomePeptideLocator refGenomePeptideLocator = new RefGenomePeptideLocator(cmd);
-        refGenomePeptideLocator.run();
+        PeptideProteomeLocator peptideProteomeLocator = new PeptideProteomeLocator(cmd);
+        peptideProteomeLocator.run();
     }
 
     @NotNull
