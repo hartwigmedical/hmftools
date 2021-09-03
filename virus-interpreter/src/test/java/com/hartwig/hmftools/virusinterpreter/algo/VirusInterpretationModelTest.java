@@ -18,7 +18,7 @@ public class VirusInterpretationModelTest {
     public void canInterpretVirus() {
         Map<Integer, VirusInterpretation> speciesToInterpretationMap = Maps.newHashMap();
         speciesToInterpretationMap.put(1, VirusInterpretation.EBV);
-        VirusInterpretationModel virusInterpretationModel = new VirusInterpretationModel(speciesToInterpretationMap);
+        VirusWhitelistModel virusInterpretationModel = new VirusWhitelistModel(speciesToInterpretationMap);
 
         assertEquals(VirusInterpretation.EBV, virusInterpretationModel.interpretVirusSpecies(1));
         assertNotEquals(VirusInterpretation.HPV, virusInterpretationModel.interpretVirusSpecies(1));

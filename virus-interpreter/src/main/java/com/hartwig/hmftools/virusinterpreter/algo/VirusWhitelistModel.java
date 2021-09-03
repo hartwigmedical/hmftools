@@ -10,14 +10,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VirusInterpretationModel {
+public class VirusWhitelistModel {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusInterpretationModel.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusWhitelistModel.class);
 
     @NotNull
     private final Map<Integer, VirusInterpretation> speciesToInterpretationMap;
 
-    public VirusInterpretationModel(@NotNull final Map<Integer, VirusInterpretation> speciesToInterpretationMap) {
+    public VirusWhitelistModel(@NotNull final Map<Integer, VirusInterpretation> speciesToInterpretationMap) {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 

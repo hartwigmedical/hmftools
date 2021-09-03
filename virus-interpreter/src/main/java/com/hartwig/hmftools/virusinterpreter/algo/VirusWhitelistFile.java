@@ -13,22 +13,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class VirusInterpretationFile {
+public final class VirusWhitelistFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusInterpretationFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusWhitelistFile.class);
 
     private static final String SEPARATOR = "\t";
 
-    private VirusInterpretationFile() {
+    private VirusWhitelistFile() {
     }
 
     @NotNull
-    public static VirusInterpretationModel buildFromTsv(@NotNull String virusInterpretationTsv) throws IOException {
-        List<String> linesVirusInterpretation = Files.readAllLines(new File(virusInterpretationTsv).toPath());
+    public static VirusWhitelistModel buildFromTsv(@NotNull String virusInterpretationTsv) throws IOException {
+        List<String> linesVirusWhiteList = Files.readAllLines(new File(virusInterpretationTsv).toPath());
 
         Map<Integer, VirusInterpretation> speciesToInterpretationMap = Maps.newHashMap();
 
-        for (String line : linesVirusInterpretation.subList(1, linesVirusInterpretation.size())) {
+        for (String line : linesVirusWhiteList.subList(1, linesVirusWhiteList.size())) {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 2) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
@@ -39,6 +39,6 @@ public final class VirusInterpretationFile {
             }
         }
 
-        return new VirusInterpretationModel(speciesToInterpretationMap);
+        return new VirusWhitelistModel(speciesToInterpretationMap);
     }
 }

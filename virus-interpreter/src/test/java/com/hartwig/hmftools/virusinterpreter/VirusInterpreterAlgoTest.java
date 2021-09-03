@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,11 +42,11 @@ public class VirusInterpreterAlgoTest {
         Map<Integer, VirusInterpretation> virusInterpretationMap = Maps.newHashMap();
         virusInterpretationMap.put(1, VirusInterpretation.HPV);
         virusInterpretationMap.put(2, VirusInterpretation.EBV);
-        VirusInterpretationModel virusInterpretationModel = new VirusInterpretationModel(virusInterpretationMap);
+        VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusInterpretationMap);
 
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
         assertEquals(4, annotatedViruses.size());
         assertEquals(1, annotatedViruses.stream().filter(x -> x.reported()).count());

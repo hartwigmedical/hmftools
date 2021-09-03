@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,14 +24,14 @@ public class VirusInterpreterAlgo {
     @NotNull
     private final TaxonomyDb taxonomyDb;
     @NotNull
-    private final VirusInterpretationModel virusInterpretationModel;
+    private final VirusWhitelistModel virusInterpretationModel;
     @NotNull
     private final VirusBlacklistModel virusBlacklistModel;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusInterpretationModel virusInterpretationModel,
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusWhitelistModel virusWhitelistModel,
             @NotNull final VirusBlacklistModel virusBlacklistModel) {
         this.taxonomyDb = taxonomyDb;
-        this.virusInterpretationModel = virusInterpretationModel;
+        this.virusInterpretationModel = virusWhitelistModel;
         this.virusBlacklistModel = virusBlacklistModel;
     }
 
