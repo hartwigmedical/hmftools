@@ -45,6 +45,9 @@ public final class VirusTestFactory {
                 .name(Strings.EMPTY)
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(0)
+                .coverage(2)
+                .meanDepth(2)
+                .expectedMeanDepth(2)
                 .reported(false);
     }
 }

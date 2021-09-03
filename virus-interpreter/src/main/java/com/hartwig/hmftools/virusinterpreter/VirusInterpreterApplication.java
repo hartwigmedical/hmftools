@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendFile;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistFile;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationFile;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistFile;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDbFile;
 
@@ -46,7 +46,7 @@ public class VirusInterpreterApplication {
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.taxonomyDbTsv());
 
         LOGGER.info("Building virus interpretation model from {}", config.virusInterpretationTsv());
-        VirusInterpretationModel virusInterpretationModel = VirusInterpretationFile.buildFromTsv(config.virusInterpretationTsv());
+        VirusWhitelistModel virusWhitelistModel = VirusWhitelistFile.buildFromTsv(config.virusInterpretationTsv());
 
         LOGGER.info("Building virus blacklist model from {}", config.virusBlacklistTsv());
         VirusBlacklistModel virusBlacklistModel = VirusBlacklistFile.buildFromTsv(config.virusBlacklistTsv());
@@ -55,9 +55,10 @@ public class VirusInterpreterApplication {
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
         LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusInterpretationModel, virusBlacklistModel);
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
 
-        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
+        List<AnnotatedVirus> annotatedViruses =
+                algo.analyze(virusBreakends, config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
         LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 
         String annotatedVirusTsv = AnnotatedVirusFile.generateFileName(config.outputDir(), config.sampleId());

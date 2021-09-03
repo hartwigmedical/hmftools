@@ -16,9 +16,21 @@ public class VirusInterpretationModelTest {
 
     @Test
     public void canInterpretVirus() {
-        Map<Integer, VirusInterpretation> speciesToInterpretationMap = Maps.newHashMap();
-        speciesToInterpretationMap.put(1, VirusInterpretation.EBV);
-        VirusInterpretationModel virusInterpretationModel = new VirusInterpretationModel(speciesToInterpretationMap);
+        Map<Integer, VirusWhitelist> speciesToInterpretationMap = Maps.newHashMap();
+
+        VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
+                .taxidSpecies(1)
+                .reportOnSummary(true)
+                .virusInterpretation(VirusInterpretation.EBV)
+                .nameSpecies("Human gammaherpesvirus 4")
+                .integratedMinimalCoverage(null)
+                .nonintegratedMinimalCoverage(null)
+                .integratedMeanDepth(null)
+                .nonintegratedMeanDepth(null)
+                .build();
+
+        speciesToInterpretationMap.put(1, virusWhitelist);
+        VirusWhitelistModel virusInterpretationModel = new VirusWhitelistModel(speciesToInterpretationMap);
 
         assertEquals(VirusInterpretation.EBV, virusInterpretationModel.interpretVirusSpecies(1));
         assertNotEquals(VirusInterpretation.HPV, virusInterpretationModel.interpretVirusSpecies(1));

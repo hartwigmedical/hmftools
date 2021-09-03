@@ -60,6 +60,9 @@ public final class AnnotatedVirusFile {
                 .add("qcStatus")
                 .add("integrations")
                 .add("interpretation")
+                .add("coverage")
+                .add("meanDepth")
+                .add("expectedMeanDepth")
                 .add("reported")
                 .toString();
     }
@@ -71,6 +74,9 @@ public final class AnnotatedVirusFile {
                 .add(annotatedVirus.qcStatus().toString())
                 .add(String.valueOf(annotatedVirus.integrations()))
                 .add(annotatedVirus.interpretation() != null ? annotatedVirus.interpretation().toString() : Strings.EMPTY)
+                .add(String.valueOf(annotatedVirus.coverage()))
+                .add(String.valueOf(annotatedVirus.meanDepth()))
+                .add(String.valueOf(annotatedVirus.expectedMeanDepth()))
                 .add(String.valueOf(annotatedVirus.reported()))
                 .toString();
     }
@@ -84,7 +90,10 @@ public final class AnnotatedVirusFile {
                 .qcStatus(VirusBreakendQCStatus.valueOf(values[2]))
                 .integrations(Integer.parseInt(values[3]))
                 .interpretation(!values[4].isEmpty() ? VirusInterpretation.valueOf(values[4]) : null)
-                .reported(Boolean.parseBoolean(values[5]))
+                .coverage(Double.parseDouble(values[5]))
+                .meanDepth(Double.parseDouble(values[6]))
+                .expectedMeanDepth(Double.parseDouble(values[7]))
+                .reported(Boolean.parseBoolean(values[8]))
                 .build();
     }
 }

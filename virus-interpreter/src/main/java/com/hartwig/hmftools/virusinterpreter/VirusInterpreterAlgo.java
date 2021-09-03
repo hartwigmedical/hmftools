@@ -1,15 +1,20 @@
 package com.hartwig.hmftools.virusinterpreter;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusInterpretationModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,25 +24,32 @@ public class VirusInterpreterAlgo {
     @NotNull
     private final TaxonomyDb taxonomyDb;
     @NotNull
-    private final VirusInterpretationModel virusInterpretationModel;
+    private final VirusWhitelistModel virusInterpretationModel;
     @NotNull
     private final VirusBlacklistModel virusBlacklistModel;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb,
-            @NotNull final VirusInterpretationModel virusInterpretationModel, @NotNull final VirusBlacklistModel virusBlacklistModel) {
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusWhitelistModel virusWhitelistModel,
+            @NotNull final VirusBlacklistModel virusBlacklistModel) {
         this.taxonomyDb = taxonomyDb;
-        this.virusInterpretationModel = virusInterpretationModel;
+        this.virusInterpretationModel = virusWhitelistModel;
         this.virusBlacklistModel = virusBlacklistModel;
     }
 
     @NotNull
-    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) {
+    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends, @NotNull String purplePurityTsv,
+            @NotNull String purpleQcFile, @NotNull String tumorSampleWGSMetricsFile) throws IOException {
+
+        double expectedClonalMeanDepth = calculateExpectedClonalMeanDepth(purplePurityTsv, purpleQcFile, tumorSampleWGSMetricsFile);
+
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
             VirusInterpretation interpretation = null;
             if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
                 interpretation = virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
             }
+
+            double coverageVirus = virusBreakend.coverage();
+            double meanDepthVirus = virusBreakend.meanDepth();
 
             int taxid = virusBreakend.referenceTaxid();
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
@@ -46,20 +58,40 @@ public class VirusInterpreterAlgo {
                     .qcStatus(virusBreakend.qcStatus())
                     .integrations(virusBreakend.integrations())
                     .interpretation(interpretation)
-                    .reported(report(virusBreakend))
+                    .coverage(coverageVirus)
+                    .meanDepth(meanDepthVirus)
+                    .expectedMeanDepth(expectedClonalMeanDepth)
+                    .reported(report(virusBreakend, expectedClonalMeanDepth, coverageVirus, meanDepthVirus))
                     .build());
         }
 
         return annotatedViruses;
     }
 
-    private boolean report(@NotNull VirusBreakend virusBreakend) {
+    private double calculateExpectedClonalMeanDepth(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
+            @NotNull String tumorSampleWGSMetricsFile) throws IOException {
+        PurityContext purityContext = PurityContextFile.readWithQC(purpleQcFile, purplePurityTsv);
+        double ploidy = purityContext.bestFit().ploidy();
+        double purity = purityContext.bestFit().purity();
+
+        WGSMetrics metrics = WGSMetricsFile.read(tumorSampleWGSMetricsFile);
+        double tumorMeanCoverage = metrics.meanCoverage();
+        return tumorMeanCoverage * purity / ploidy;
+    }
+
+    private boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalMeanDepth, double coverageVirus,
+            double meanDepthVirus) {
         if (virusBreakend.qcStatus() == VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
             return false;
         }
 
         if (virusBreakend.integrations() == 0) {
+            //TODO: Add logica for non-integrated virus
             return false;
+        }
+        if (virusBreakend.integrations() >= 1) {
+            //TODO: Add logica for integrated virus
+            return true;
         }
 
         return !virusBlacklistModel.isBlacklisted(virusBreakend);

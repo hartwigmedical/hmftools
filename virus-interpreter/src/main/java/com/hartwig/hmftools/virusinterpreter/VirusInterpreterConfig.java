@@ -23,6 +23,11 @@ public interface VirusInterpreterConfig {
     String VIRUS_INTERPRETATION_TSV = "virus_interpretation_tsv";
     String VIRUS_BLACKLIST_TSV = "virus_blacklist_tsv";
 
+    String PURPLE_PURITY_TSV = "purple_purity_tsv";
+    String PURPLE_QC_FILE = "purple_qc_file";
+
+    String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
+
     String OUTPUT_DIRECTORY = "output_dir";
 
     String LOG_DEBUG = "log_debug";
@@ -36,6 +41,11 @@ public interface VirusInterpreterConfig {
         options.addOption(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name.");
         options.addOption(VIRUS_INTERPRETATION_TSV, true, "Path towards a TSV containing interpretation rules for viruses.");
         options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing blacklisting for specific viruses.");
+
+        options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
+        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
+
+        options.addOption(TUMOR_SAMPLE_WGS_METRICS_FILE, true, "Path towards the tumor sample WGS metrics file.");
 
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the virus interpretation output will be written to.");
 
@@ -60,6 +70,15 @@ public interface VirusInterpreterConfig {
     String virusBlacklistTsv();
 
     @NotNull
+    String purplePurityTsv();
+
+    @NotNull
+    String purpleQcFile();
+
+    @NotNull
+    String tumorSampleWGSMetricsFile();
+
+    @NotNull
     String outputDir();
 
     @NotNull
@@ -73,6 +92,9 @@ public interface VirusInterpreterConfig {
                 .taxonomyDbTsv(nonOptionalFile(cmd, TAXONOMY_DB_TSV))
                 .virusInterpretationTsv(nonOptionalFile(cmd, VIRUS_INTERPRETATION_TSV))
                 .virusBlacklistTsv(nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV))
+                .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
+                .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
+                .tumorSampleWGSMetricsFile(nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
                 .outputDir(nonOptionalDir(cmd, OUTPUT_DIRECTORY))
                 .build();
     }
