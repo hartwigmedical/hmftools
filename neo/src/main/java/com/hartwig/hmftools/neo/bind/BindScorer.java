@@ -214,8 +214,13 @@ public class BindScorer
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("Allele,Peptide,Source,Score,Rank,Likelihood,LikelihoodRank");
 
+            // TODO: write flanks if explicitly provided
+
             if(mConfig.ApplyFlanks)
                 writer.write(",FlankScore,UpFlank,DownFlank");
+
+            // TODO: write out other input columns
+
 
             /*
             boolean hasPredictionData = false;

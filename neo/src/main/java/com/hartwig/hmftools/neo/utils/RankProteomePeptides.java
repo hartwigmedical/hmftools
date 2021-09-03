@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
@@ -23,11 +24,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -44,7 +47,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class RankProteomePeptides
 {
-    private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+    private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;
 
     private final List<String> mAlleles;
     private final BindScorer mScorer;
@@ -56,17 +59,20 @@ public class RankProteomePeptides
     private static final String THREADS = "threads";
     private static final String RANK_CUTOFF = "rank_cutoff";
 
+    private static final List<Integer> PEPTIDE_LENGTHS = Lists.newArrayList(8, 9, 10, 11);
+
     public RankProteomePeptides(final CommandLine cmd)
     {
         mAlleles = loadDelimitedIdFile(cmd.getOptionValue(ALLELE_FILE), FLD_ALLELE, CSV_DELIM);
 
-        mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList());
+        Map<String,TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
+        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+        mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
 
         mRankCuttoff = Double.parseDouble(cmd.getOptionValue(RANK_CUTOFF, "0.01"));
         mScorer = new BindScorer(new BinderConfig(cmd));
 
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS));
+        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
         mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
     }
@@ -128,7 +134,7 @@ public class RankProteomePeptides
     {
         try
         {
-            String outputFile = outputDir + outputId + "allele_ranked_ref_peptides.csv";
+            String outputFile = outputDir + outputId + "_allele_ranked_ref_peptides.csv";
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
@@ -162,11 +168,10 @@ public class RankProteomePeptides
         }
     }
 
-
     private class PeptideRankTask implements Callable
     {
         private final int mTaskId;
-        private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+        private final Map<String,List<TranscriptAminoAcids>> mTransAminoAcidMap;
 
         private final BindScorer mScorer;
         private final double mRankCuttoff;
@@ -175,7 +180,7 @@ public class RankProteomePeptides
         private final List<String> mAlleles;
 
         public PeptideRankTask(
-                int taskId, final Map<String, TranscriptAminoAcids> transAminoAcidMap,
+                int taskId, final Map<String,List<TranscriptAminoAcids>> transAminoAcidMap,
                 final BindScorer scorer, final double rankCuttoff, final BufferedWriter writer)
         {
             mTaskId = taskId;
@@ -212,45 +217,55 @@ public class RankProteomePeptides
         {
             List<PeptideData> results = Lists.newArrayList();
 
-            for(TranscriptAminoAcids transAminoAcids : mTransAminoAcidMap.values())
+            for(int peptideLength : PEPTIDE_LENGTHS)
             {
-                final String aminoAcids = transAminoAcids.AminoAcids;
-                int aaLength = aminoAcids.length();
-
-                for(int peptideLength : DEFAULT_PEPTIDE_LENGTHS)
+                for(List<TranscriptAminoAcids> transAaList : mTransAminoAcidMap.values())
                 {
-                    for(int startIndex = 0; startIndex < aaLength - peptideLength; ++startIndex)
+                    Set<String> uniquePeptides = Sets.newHashSet();
+
+                    for(TranscriptAminoAcids transAminoAcids : transAaList)
                     {
-                        int endIndex = startIndex + peptideLength;
-                        String aaPeptide = aminoAcids.substring(startIndex, endIndex);
+                        final String aminoAcids = transAminoAcids.AminoAcids;
+                        int aaLength = aminoAcids.length();
 
-                        if(aaPeptide.contains(AMINO_ACID_21ST))
-                            continue;
-
-                        String upFlank = "";
-                        String downFlank = "";
-
-                        int upFlankBases = min(startIndex, FLANK_BASE_COUNT);
-
-                        if(upFlankBases > 0)
+                        for(int startIndex = 0; startIndex < aaLength - peptideLength; ++startIndex)
                         {
-                            upFlank = transAminoAcids.AminoAcids.substring(startIndex - upFlankBases, startIndex);
-                        }
+                            int endIndex = startIndex + peptideLength;
+                            String aaPeptide = aminoAcids.substring(startIndex, endIndex);
 
-                        int downFlankBases = min(transAminoAcids.AminoAcids.length() - endIndex - 1, FLANK_BASE_COUNT);
+                            if(uniquePeptides.contains(aaPeptide))
+                                continue;
 
-                        if(downFlankBases > 0)
-                        {
-                            downFlank = transAminoAcids.AminoAcids.substring(endIndex, endIndex + downFlankBases);
-                        }
+                            uniquePeptides.add(aaPeptide);
 
-                        BindData bindData = new BindData(allele, aaPeptide, "", upFlank, downFlank);
+                            if(aaPeptide.contains(AMINO_ACID_21ST))
+                                continue;
 
-                        mScorer.calcScoreData(bindData);
+                            String upFlank = "";
+                            String downFlank = "";
 
-                        if(bindData.likelihoodRank() < mRankCuttoff)
-                        {
-                            results.add(new PeptideData(aaPeptide, bindData.likelihoodRank(), transAminoAcids));
+                            int upFlankBases = min(startIndex, FLANK_BASE_COUNT);
+
+                            if(upFlankBases > 0)
+                            {
+                                upFlank = transAminoAcids.AminoAcids.substring(startIndex - upFlankBases, startIndex);
+                            }
+
+                            int downFlankBases = min(transAminoAcids.AminoAcids.length() - endIndex - 1, FLANK_BASE_COUNT);
+
+                            if(downFlankBases > 0)
+                            {
+                                downFlank = transAminoAcids.AminoAcids.substring(endIndex, endIndex + downFlankBases);
+                            }
+
+                            BindData bindData = new BindData(allele, aaPeptide, "", upFlank, downFlank);
+
+                            mScorer.calcScoreData(bindData);
+
+                            if(bindData.likelihoodRank() < mRankCuttoff)
+                            {
+                                results.add(new PeptideData(aaPeptide, bindData.likelihoodRank(), transAminoAcids));
+                            }
                         }
                     }
                 }

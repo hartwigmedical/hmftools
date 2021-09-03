@@ -58,7 +58,7 @@ public class PeptideProteomeLocator
         mPeptides = loadDelimitedIdFile(cmd.getOptionValue(PEPTIDE_FILE), FLD_PEPTIDE, CSV_DELIM);
 
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList());
+        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList(), false);
 
         mFlankLength = Integer.parseInt(cmd.getOptionValue(FLANK_LENGTH));
         mThreads = Integer.parseInt(cmd.getOptionValue(THREADS));

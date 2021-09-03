@@ -88,7 +88,7 @@ public class GenerateRandomPeptides
         mEnsemblDataCache.load(false);
 
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList());
+        EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
 
         mUniquePeptides = Sets.newHashSet();
         mPeptideExclusions = Lists.newArrayList();

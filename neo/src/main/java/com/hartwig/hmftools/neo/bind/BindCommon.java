@@ -15,6 +15,7 @@ public final class BindCommon
     public static final String FLD_DOWN_FLANK = "DownFlank";
     public static final String FLD_AMINO_ACID = "AminoAcid";
     public static final String FLD_PEPTIDE_LEN = "PeptideLength";
+    public static final String FLD_LIKE_RANK = "LikelihoodRank";
     public static final String FLD_DATA_TYPE = "DataType";
 
     // external data source fields

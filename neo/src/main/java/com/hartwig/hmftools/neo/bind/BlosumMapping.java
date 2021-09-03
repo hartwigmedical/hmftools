@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 
 public class BlosumMapping
 {
@@ -56,7 +55,7 @@ public class BlosumMapping
         return mMappings[aa1Index][aa2Index];
     }
 
-    public double calcSequenceBlosumScore(final String sequence)
+    public double calcSequenceScore(final String sequence)
     {
         int total = 0;
 
@@ -70,13 +69,13 @@ public class BlosumMapping
         return pow(2, total);
     }
 
-    public double calcSequenceBlosumScore(final String seq1, final String seq2)
+    public double calcSequenceScore(final String seq1, final String seq2)
     {
         if(seq1.length() != seq2.length())
             return 0;
 
         if(seq1.equals(seq2))
-            return calcSequenceBlosumScore(seq1);
+            return calcSequenceScore(seq1);
 
         double total = 0;
 
@@ -91,29 +90,29 @@ public class BlosumMapping
         return pow(2, total);
     }
 
-    public int calcSequenceBlosumDifference(final String seq1, final String seq2)
+    public double calcSequenceSimilarity(final String seq1, final String seq2)
     {
         if(seq1.length() != seq2.length())
-            return 0;
+            return -1;
 
         if(seq1.equals(seq2))
             return 0;
 
-        int total = 0;
+        double similarity = 0;
 
         for(int i = 0; i < seq1.length(); ++i)
         {
             char aa1 = seq1.charAt(i);
             char aa2 = seq2.charAt(i);
 
-            if(aa1 == aa2)
-                continue;
+            int bs1 = selfMapping(aa1);
+            int bs2 = selfMapping(aa2);
+            int map = map(aa1, aa2);
 
-            int mapping = map(aa1, aa2);
-            total += abs(mapping);
+            similarity += (bs1 + bs2) * 0.5 - map;
         }
 
-        return total;
+        return similarity;
     }
 
     private void load()

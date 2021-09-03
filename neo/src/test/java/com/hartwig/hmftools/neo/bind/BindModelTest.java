@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_W
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_ALLELE_MOTIF_WEIGHT_MAX;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_FACTOR;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEP_LEN_WEIGHT_MAX;
-import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.aminoAcidIndex;
 import static com.hartwig.hmftools.neo.bind.NoiseModel.calcExpected;
 import static com.hartwig.hmftools.neo.bind.PosWeightModel.INVALID_POS;
@@ -27,9 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.neo.utils.AminoAcidFrequency;
 
@@ -98,15 +95,15 @@ public class BindModelTest
     {
         BlosumMapping blosum = new BlosumMapping();
 
-        assertEquals(16.0, blosum.calcSequenceBlosumScore("A"));
-        assertEquals(4096.0, blosum.calcSequenceBlosumScore("AAA"));
-        assertEquals(128.0, blosum.calcSequenceBlosumScore("Y"));
+        assertEquals(16.0, blosum.calcSequenceScore("A"));
+        assertEquals(4096.0, blosum.calcSequenceScore("AAA"));
+        assertEquals(128.0, blosum.calcSequenceScore("Y"));
 
-        assertEquals(4.0, blosum.calcSequenceBlosumScore("D", "E"));
-        assertEquals(4.0, blosum.calcSequenceBlosumScore("E", "D"));
+        assertEquals(4.0, blosum.calcSequenceScore("D", "E"));
+        assertEquals(4.0, blosum.calcSequenceScore("E", "D"));
 
-        assertEquals(0.125, blosum.calcSequenceBlosumScore("W", "A"), 0.001);
-        assertEquals(0.125, blosum.calcSequenceBlosumScore("A", "W"), 0.001);
+        assertEquals(0.125, blosum.calcSequenceScore("W", "A"), 0.001);
+        assertEquals(0.125, blosum.calcSequenceScore("A", "W"), 0.001);
     }
 
     @Test

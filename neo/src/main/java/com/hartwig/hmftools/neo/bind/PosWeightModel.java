@@ -260,7 +260,7 @@ public class PosWeightModel
             if(positionMotif == null)
                 continue;
 
-            double selfScore = mBlosumMapping.calcSequenceBlosumScore(positionMotif);
+            double selfScore = mBlosumMapping.calcSequenceScore(positionMotif);
 
             // cache motif similarities per position once since used repeatedly below
             final double[] motifSimilarities = new double[allBindCounts.size()];
@@ -280,7 +280,7 @@ public class PosWeightModel
 
                 if(!otherPositionMotif.equals(positionMotif))
                 {
-                    double crossAlleleScore = mBlosumMapping.calcSequenceBlosumScore(positionMotif, otherPositionMotif);
+                    double crossAlleleScore = mBlosumMapping.calcSequenceScore(positionMotif, otherPositionMotif);
                     motifSimilarity = crossAlleleScore / selfScore;
                 }
 

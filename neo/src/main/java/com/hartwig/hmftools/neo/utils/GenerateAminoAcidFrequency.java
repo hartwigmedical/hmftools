@@ -53,7 +53,7 @@ public class GenerateAminoAcidFrequency
         {
             mTransAminoAcidMap = Maps.newHashMap();
             String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
-            EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList());
+            EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
         }
         else
         {
