@@ -15,9 +15,9 @@ public class VirusWhitelistModel {
     private static final Logger LOGGER = LogManager.getLogger(VirusWhitelistModel.class);
 
     @NotNull
-    private final Map<Integer, VirusInterpretation> speciesToInterpretationMap;
+    private final Map<Integer, VirusWhitelist> speciesToInterpretationMap;
 
-    public VirusWhitelistModel(@NotNull final Map<Integer, VirusInterpretation> speciesToInterpretationMap) {
+    public VirusWhitelistModel(@NotNull final Map<Integer, VirusWhitelist> speciesToInterpretationMap) {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
@@ -25,11 +25,48 @@ public class VirusWhitelistModel {
     public VirusInterpretation interpretVirusSpecies(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
+        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? speciesToInterpretationMap.get(speciesTaxid) : null;
+        return speciesHasInterpretation ? virusWhitelist.virusInterpretation() : null;
+    }
+
+    @Nullable
+    public Boolean displayVirusOnreport(int speciesTaxid) {
+        boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
+
+        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        if (!speciesHasInterpretation) {
+            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+        }
+
+        return speciesHasInterpretation ? virusWhitelist.reportOnSummary() : null;
+    }
+
+    @Nullable
+    public Integer integratedMinimalCoverage(int speciesTaxid) {
+        boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
+
+        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        if (!speciesHasInterpretation) {
+            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+        }
+
+        return speciesHasInterpretation ? virusWhitelist.integratedMinimalCoverage() : null;
+    }
+
+    @Nullable
+    public Integer nonintegratedMinimalCoverage(int speciesTaxid) {
+        boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
+
+        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        if (!speciesHasInterpretation) {
+            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+        }
+
+        return speciesHasInterpretation ? virusWhitelist.nonintegratedMinimalCoverage() : null;
     }
 
     public boolean hasInterpretation(int speciesTaxid) {

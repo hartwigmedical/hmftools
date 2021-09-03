@@ -24,7 +24,7 @@ public class VirusWhitelistFileTest {
         assertTrue(virusWhitelistModel.hasInterpretation(1));
         assertFalse(virusWhitelistModel.hasInterpretation(2));
 
-        assertEquals(VirusInterpretation.HPV, virusWhitelistModel.interpretVirusSpecies(1));
+        assertEquals(VirusInterpretation.MCV, virusWhitelistModel.interpretVirusSpecies(1));
         assertNotEquals(VirusInterpretation.HPV, virusWhitelistModel.interpretVirusSpecies(2));
     }
 }

@@ -16,7 +16,9 @@ import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
+import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusWhitelist;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelist;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
@@ -34,14 +36,36 @@ public class VirusInterpreterAlgoTest {
     public void canAnalyzeVirusBreakends() throws IOException {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
+        VirusWhitelist virusWhitelist1 = ImmutableVirusWhitelist.builder()
+                .taxidSpecies(1)
+                .reportOnSummary(true)
+                .virusInterpretation(VirusInterpretation.EBV)
+                .nameSpecies("Human gammaherpesvirus 4")
+                .integratedMinimalCoverage(null)
+                .nonintegratedMinimalCoverage(null)
+                .integratedMeanDepth("")
+                .nonintegratedMeanDepth("")
+                .build();
+
+        VirusWhitelist virusWhitelist2 = ImmutableVirusWhitelist.builder()
+                .taxidSpecies(2)
+                .reportOnSummary(true)
+                .virusInterpretation(VirusInterpretation.EBV)
+                .nameSpecies("Human gammaherpesvirus 4")
+                .integratedMinimalCoverage(null)
+                .nonintegratedMinimalCoverage(null)
+                .integratedMeanDepth("")
+                .nonintegratedMeanDepth("")
+                .build();
+
         String name = "Human papillomavirus type 16";
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
-        Map<Integer, VirusInterpretation> virusInterpretationMap = Maps.newHashMap();
-        virusInterpretationMap.put(1, VirusInterpretation.HPV);
-        virusInterpretationMap.put(2, VirusInterpretation.EBV);
+        Map<Integer, VirusWhitelist> virusInterpretationMap = Maps.newHashMap();
+        virusInterpretationMap.put(1, virusWhitelist1);
+        virusInterpretationMap.put(2, virusWhitelist2);
         VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusInterpretationMap);
 
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
@@ -61,7 +85,7 @@ public class VirusInterpreterAlgoTest {
         assertNotNull(reportedVirus);
         assertEquals(name, reportedVirus.name());
         assertEquals(2, reportedVirus.integrations());
-        assertEquals(VirusInterpretation.HPV, reportedVirus.interpretation());
+        assertEquals(VirusInterpretation.EBV, reportedVirus.interpretation());
     }
 
     @NotNull
