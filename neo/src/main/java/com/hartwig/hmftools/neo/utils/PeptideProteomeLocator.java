@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

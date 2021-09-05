@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class BindScorer
 {
-    private final BinderConfig mConfig;
+    private final ScoreConfig mConfig;
 
     private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
@@ -38,7 +38,7 @@ public class BindScorer
 
     private final Map<String,Integer> mBindDataOtherColumns;
 
-    public BindScorer(final BinderConfig config)
+    public BindScorer(final ScoreConfig config)
     {
         mConfig = config;
 
@@ -53,7 +53,7 @@ public class BindScorer
     }
 
     public BindScorer(
-            final BinderConfig config, final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
+            final ScoreConfig config, final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
             final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices, final RandomPeptideDistribution randomDistribution,
             final FlankScores flankScores)
     {
@@ -371,15 +371,13 @@ public class BindScorer
     {
         final Options options = new Options();
 
-        BinderConfig.addCmdLineArgs(options);
+        TrainConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
         setLogLevel(cmd);
 
-        BinderConfig config = new BinderConfig(cmd);
-
-        BindScorer bindScorer = new BindScorer(config);
+        BindScorer bindScorer = new BindScorer(new ScoreConfig(cmd));
         bindScorer.run();
     }
 

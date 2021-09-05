@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.RandomDistributionTask.generateDistributionBuckets;
 import static com.hartwig.hmftools.neo.bind.RandomPeptideDistribution.initialiseWriter;
 
@@ -22,7 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.neo.bind.BindData;
-import com.hartwig.hmftools.neo.bind.BinderConfig;
+import com.hartwig.hmftools.neo.bind.TrainConfig;
 import com.hartwig.hmftools.neo.bind.RandomDistributionTask;
 import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 import com.hartwig.hmftools.neo.bind.RandomPeptideDistribution;
@@ -71,7 +71,7 @@ public class McfRandomDistribution
             NE_LOGGER.info("loading MCF random peptide predictions from file({}) using {}",
                     mMcfPredictionsFile, mUsePresentation ? "presentation" : "affinity");
 
-            String distributionFilename = BinderConfig.formFilename("mcf_random_peptide_dist", mConfig.OutputDir, mConfig.OutputId);
+            String distributionFilename = TrainConfig.formFilename("mcf_random_peptide_dist", mConfig.OutputDir, mConfig.OutputId);
             mDistributionWriter = initialiseWriter(distributionFilename);
 
             processFile(mMcfPredictionsFile);
@@ -101,7 +101,7 @@ public class McfRandomDistribution
 
         try
         {
-            String peptideFilename = BinderConfig.formFilename("mcf_validation_peptide_scores", mConfig.OutputDir, mConfig.OutputId);
+            String peptideFilename = TrainConfig.formFilename("mcf_validation_peptide_scores", mConfig.OutputDir, mConfig.OutputId);
 
             BufferedWriter peptideWriter = createBufferedWriter(peptideFilename, false);
             peptideWriter.write("Allele,Peptide,RankPerc,PredictedAffinity,AffinityPerc,PresentationScore,PresentationPerc");

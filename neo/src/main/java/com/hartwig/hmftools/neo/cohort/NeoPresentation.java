@@ -13,7 +13,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.neo.bind.BindScorer;
-import com.hartwig.hmftools.neo.bind.BinderConfig;
+import com.hartwig.hmftools.neo.bind.ScoreConfig;
+import com.hartwig.hmftools.neo.bind.TrainConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,8 +34,7 @@ public class NeoPresentation
     {
         mConfig = new NeoCohortConfig(cmd);
 
-        BinderConfig binderConfig = new BinderConfig(cmd);
-        mPeptideScorer = new BindScorer(binderConfig);
+        mPeptideScorer = new BindScorer(new ScoreConfig(cmd));
         mTranscriptExpression = new RnaExpressionMatrix(cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE), EXPRESSION_SCOPE_TRANS);
 
         mWriters = new CohortWriters(mConfig);

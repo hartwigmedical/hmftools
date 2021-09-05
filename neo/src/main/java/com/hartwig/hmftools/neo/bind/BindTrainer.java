@@ -2,15 +2,14 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.MatrixUtils.clear;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_FLANK_POS_WEIGHT;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_POS_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 import static com.hartwig.hmftools.neo.bind.BindCountData.initFrequencyWriter;
 
@@ -34,7 +33,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class BindTrainer
 {
-    private final BinderConfig mConfig;
+    private final TrainConfig mConfig;
+    private final ScoreConfig mScoreConfig;
 
     private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
 
@@ -42,6 +42,7 @@ public class BindTrainer
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
     private final FlankCounts mFlankCounts;
     private final FlankScores mFlankScores;
+    private final RecognitionCounts mRecognitionCounts;
 
     private final Set<Integer> mDistinctPeptideLengths;
 
@@ -50,7 +51,8 @@ public class BindTrainer
 
     public BindTrainer(final CommandLine cmd)
     {
-        mConfig = new BinderConfig(cmd);
+        mConfig = new TrainConfig(cmd);
+        mScoreConfig = new ScoreConfig(cmd);
         mAllelePeptideData = Maps.newHashMap();
         mDistinctPeptideLengths = Sets.newHashSet();
 
@@ -63,6 +65,7 @@ public class BindTrainer
         mAlleleBindMatrices = Maps.newHashMap();
         mFlankCounts = new FlankCounts();
         mFlankScores = new FlankScores();
+        mRecognitionCounts = new RecognitionCounts();
     }
 
     public void run()
@@ -100,7 +103,7 @@ public class BindTrainer
 
             if(mConfig.WriteLikelihood)
             {
-                BindScorer scorer = new BindScorer(mConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores);
+                BindScorer scorer = new BindScorer(mScoreConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores);
                 scorer.runScoring();
 
                 BindingLikelihood bindingLikelihood = new BindingLikelihood();
@@ -266,7 +269,7 @@ public class BindTrainer
         logCalcAlleles();
 
         BufferedWriter matrixWriter = mConfig.WritePosWeightMatrix || mConfig.WriteBindCounts ?
-                initMatrixWriter(mConfig.formOutputFilename(FILE_ID_POS_WEIGHT), getMaxPeptideLength(), mConfig.WriteBindCounts) : null;
+                initMatrixWriter(mConfig.formOutputFilename(FILE_ID_POS_WEIGHT), getMaxPeptideLength()) : null;
 
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
@@ -300,7 +303,7 @@ public class BindTrainer
         if(mConfig.LogCalcAlleles.isEmpty())
             return;
 
-        BufferedWriter writer = initMatrixWriter(mConfig.formOutputFilename("allele_motif_calc"), getMaxPeptideLength(), mConfig.WriteBindCounts);
+        BufferedWriter writer = initMatrixWriter(mConfig.formOutputFilename("allele_motif_calc"), getMaxPeptideLength());
 
         for(String allele : mConfig.LogCalcAlleles)
         {
@@ -362,7 +365,7 @@ public class BindTrainer
     {
         final Options options = new Options();
 
-        BinderConfig.addCmdLineArgs(options);
+        TrainConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.neo.NeoCommon.IM_FILE_ID;
+import static com.hartwig.hmftools.neo.NeoCommon.NEO_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
@@ -104,7 +104,7 @@ public class NeoEpitopeCohort
         try
         {
             String neoEpitopeFile = NeoEpitopeFile.generateFilename(mNeoDataDir, sampleId);
-            String rnaNeoEpitopeFile = neoEpitopeFile.replace(IM_FILE_ID, ISF_FILE_ID);
+            String rnaNeoEpitopeFile = neoEpitopeFile.replace(NEO_FILE_ID, ISF_FILE_ID);
 
             boolean hasRnaData = Files.exists(Paths.get(rnaNeoEpitopeFile));
 

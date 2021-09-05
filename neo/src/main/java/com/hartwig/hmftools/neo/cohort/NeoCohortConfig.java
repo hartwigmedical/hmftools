@@ -3,14 +3,14 @@ package com.hartwig.hmftools.neo.cohort;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
-import com.hartwig.hmftools.neo.bind.BinderConfig;
+import com.hartwig.hmftools.neo.bind.TrainConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -87,7 +87,7 @@ public class NeoCohortConfig
         options.addOption(ISF_DATA_DIR, true, "Directory for Isofox neoepitope coverage files");
         options.addOption(SAMPLE_TRANS_EXP_FILE, true, "Cohort gene expression matrix");
 
-        BinderConfig.addCmdLineArgs(options);
+        TrainConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
         options.addOption(MCF_SUM_FACTOR, true, "Affinity sum factor");
         options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");

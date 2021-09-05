@@ -2,16 +2,16 @@ package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.REQUIRED_OUTPUT_ALLELES;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.SCORE_FILE_DIR;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.SCORE_FILE_ID;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.THREADS;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.getScoringFilename;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.loadRequiredOutputAlleles;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.scoreFileConfig;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_ID;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.getScoringFilename;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.scoreFileConfig;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RAND_DIST;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.REQUIRED_OUTPUT_ALLELES;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.THREADS;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.loadRequiredOutputAlleles;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
 import java.util.Arrays;

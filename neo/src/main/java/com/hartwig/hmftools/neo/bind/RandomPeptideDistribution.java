@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.FILE_ID_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.formFilename;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RAND_DIST;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.formFilename;
 
 import java.io.BufferedWriter;
 import java.io.File;

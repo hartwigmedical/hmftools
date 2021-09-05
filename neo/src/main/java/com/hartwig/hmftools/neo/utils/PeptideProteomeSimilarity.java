@@ -19,8 +19,9 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.cleanAllele;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.THREADS;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.THREADS;
+import static com.hartwig.hmftools.neo.utils.RankProteomePeptides.RANKED_PROTEOME_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.utils.RankedProteomePeptides.PROTEOME_RANKS_FILE;
 
 import java.io.BufferedWriter;
@@ -30,7 +31,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -42,7 +42,8 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
-import com.hartwig.hmftools.neo.bind.BinderConfig;
+import com.hartwig.hmftools.neo.bind.ScoreConfig;
+import com.hartwig.hmftools.neo.bind.TrainConfig;
 import com.hartwig.hmftools.neo.bind.BlosumMapping;
 
 import org.apache.commons.cli.CommandLine;
@@ -77,7 +78,7 @@ public class PeptideProteomeSimilarity
 
         mRankedProteomePeptides = new RankedProteomePeptides(cmd.getOptionValue(PROTEOME_RANKS_FILE));
 
-        mScorer = new BindScorer(new BinderConfig(cmd));
+        mScorer = new BindScorer(new ScoreConfig(cmd));
 
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -240,6 +241,10 @@ public class PeptideProteomeSimilarity
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];
+
+                if(!RANKED_PROTEOME_PEPTIDE_LENGTHS.contains(peptide.length()))
+                    continue;
+
                 String wtPeptide = values[wildtypeIndex];
 
                 mPeptideSimilarities.add(new PeptideSimilarity(peptide, allele, wtPeptide));
@@ -301,7 +306,10 @@ public class PeptideProteomeSimilarity
                 }
                 catch(Exception e)
                 {
-                    NE_LOGGER.error("{}: error processing peptide({}): {}", mTaskId, peptideSim, e.toString());
+                    NE_LOGGER.error("{}: error processing peptide({}): {}",
+                            mTaskId, peptideSim, e.toString());
+
+                    e.printStackTrace();
                 }
 
                 if(i > 0 && (i % 10) == 0)
@@ -323,6 +331,12 @@ public class PeptideProteomeSimilarity
             double topRank = 0;
 
             Map<String,Double> allelePeptideRanks = mRankedProteomePeptides.getPeptideRanks(peptideSim.Allele, peptideLength);
+
+            if(allelePeptideRanks == null)
+            {
+                NE_LOGGER.warn("peptide({}) missing ranking data", peptideSim);
+                return;
+            }
 
             for(Map.Entry<String,Double> entry : allelePeptideRanks.entrySet())
             {
@@ -455,7 +469,7 @@ public class PeptideProteomeSimilarity
         options.addOption(OUTPUT_ID, true, "Output file id");
         options.addOption(THREADS, true, "Threads (default none)");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        BinderConfig.addCmdLineArgs(options);
+        TrainConfig.addCmdLineArgs(options);
         addLoggingOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);

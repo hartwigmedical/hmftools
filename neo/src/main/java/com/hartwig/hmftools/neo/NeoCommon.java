@@ -1,14 +1,10 @@
 package com.hartwig.hmftools.neo;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.neo.epitope.SampleData;
@@ -20,7 +16,9 @@ public class NeoCommon
 {
     public static final int DOWNSTREAM_PRE_GENE_DISTANCE = 100000; // in concordance with Linx
 
-    public static final String IM_FILE_ID = ".imu.";
+    public static final String NEO_FILE_ID = ".neo.";
+
+    public static final String OUTPUT_ID = "output_id";
 
     public static final Logger NE_LOGGER = LogManager.getLogger(NeoCommon.class);
 

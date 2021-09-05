@@ -3,7 +3,6 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
@@ -26,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ValidationRoutines
 {
-    private final BinderConfig mConfig;
+    private final TrainConfig mConfig;
 
     private final Map<String,Map<Integer,List<BindData>>> mAlleleTrainingData;
     private final Map<String,Map<Integer,List<BindData>>> mAlleleValidationData;
@@ -42,7 +41,7 @@ public class ValidationRoutines
 
     public ValidationRoutines(final CommandLine cmd)
     {
-        mConfig = new BinderConfig(cmd);
+        mConfig = new TrainConfig(cmd);
         mAlleleTrainingData = Maps.newHashMap();
         mAlleleValidationData = Maps.newHashMap();
         mAlleleBindCounts = Maps.newHashMap();
@@ -292,7 +291,7 @@ public class ValidationRoutines
     {
         final Options options = new Options();
 
-        BinderConfig.addCmdLineArgs(options);
+        TrainConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

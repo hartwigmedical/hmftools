@@ -72,7 +72,7 @@ public class BindScoreMatrix
         return score;
     }
 
-    public static BufferedWriter initMatrixWriter(final String filename, int peptideLength, boolean writeCounts)
+    public static BufferedWriter initMatrixWriter(final String filename, int peptideLength)
     {
         try
         {

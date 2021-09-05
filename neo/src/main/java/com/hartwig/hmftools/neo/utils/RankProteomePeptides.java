@@ -16,8 +16,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
-import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
-import static com.hartwig.hmftools.neo.bind.BinderConfig.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
 
 import java.io.BufferedWriter;
@@ -36,7 +35,8 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
-import com.hartwig.hmftools.neo.bind.BinderConfig;
+import com.hartwig.hmftools.neo.bind.ScoreConfig;
+import com.hartwig.hmftools.neo.bind.TrainConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -59,7 +59,7 @@ public class RankProteomePeptides
     private static final String THREADS = "threads";
     private static final String RANK_CUTOFF = "rank_cutoff";
 
-    private static final List<Integer> PEPTIDE_LENGTHS = Lists.newArrayList(8, 9, 10, 11);
+    protected static final List<Integer> RANKED_PROTEOME_PEPTIDE_LENGTHS = Lists.newArrayList(8, 9, 10, 11);
 
     public RankProteomePeptides(final CommandLine cmd)
     {
@@ -70,7 +70,7 @@ public class RankProteomePeptides
         mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
 
         mRankCuttoff = Double.parseDouble(cmd.getOptionValue(RANK_CUTOFF, "0.01"));
-        mScorer = new BindScorer(new BinderConfig(cmd));
+        mScorer = new BindScorer(new ScoreConfig(cmd));
 
         mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
@@ -217,7 +217,7 @@ public class RankProteomePeptides
         {
             List<PeptideData> results = Lists.newArrayList();
 
-            for(int peptideLength : PEPTIDE_LENGTHS)
+            for(int peptideLength : RANKED_PROTEOME_PEPTIDE_LENGTHS)
             {
                 for(List<TranscriptAminoAcids> transAaList : mTransAminoAcidMap.values())
                 {
@@ -298,7 +298,7 @@ public class RankProteomePeptides
         options.addOption(RANK_CUTOFF, true, "Number of amino acid flanks to retrieve");
         options.addOption(THREADS, true, "Threads (default none)");
         options.addOption(OUTPUT_ID, true, "Output file identifier");
-        BinderConfig.addCmdLineArgs(options);
+        TrainConfig.addCmdLineArgs(options);
         addEnsemblDir(options);
         addLoggingOptions(options);
         addOutputDir(options);
