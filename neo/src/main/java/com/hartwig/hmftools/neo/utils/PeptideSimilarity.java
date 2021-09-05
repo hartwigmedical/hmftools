@@ -24,6 +24,7 @@ public class PeptideSimilarity
         Peptide = peptide;
         Allele = allele;
         WildtypePeptide = wtPeptide;
+
         mTopTransData = null;
         mTopSimiliarity = -1;
         mTopPeptide = "";
@@ -52,6 +53,8 @@ public class PeptideSimilarity
     public double nearestBinderLikelihoodRank() { return mNearestBinderLikelihoodRank; }
 
     public String positionDiffs(final String otherPeptide) { return positionDiffs(Peptide, otherPeptide); }
+
+    public String toString() { return String.format("allele(%s) peptide(%s)", Allele, Peptide); }
 
     public static String positionDiffs(final String origPeptide, final String otherPeptide)
     {

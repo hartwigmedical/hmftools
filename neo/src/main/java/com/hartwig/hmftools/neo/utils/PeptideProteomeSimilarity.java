@@ -151,10 +151,10 @@ public class PeptideProteomeSimilarity
             String filename = mOutputDir + "peptide_prot_sim_" + mOutputId + ".csv";
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Allele,Peptide,PeptideLikelihoodRank,");
-            writer.write("TopPeptide,TopLikelihoodRank,TopDtoS,TopPosDiffs,GeneName,TransName");
-            writer.write("NearestBinderPeptide,NearestBinderLikelihoodRank,NearestBinderDtoS,NearestBinderPosDiffs");
-            writer.write("WildtypePeptide,WildtypeLikelihoodRank,WildtypeDtoS,WildtypePosDiffs");
+            writer.write("Allele,Peptide,PeptideLikelihoodRank");
+            writer.write(",TopPeptide,TopLikelihoodRank,TopDtoS,TopPosDiffs,GeneName,TransName");
+            writer.write(",NearestBinderPeptide,NearestBinderLikelihoodRank,NearestBinderDtoS,NearestBinderPosDiffs");
+            writer.write(",WildtypePeptide,WildtypeLikelihoodRank,WildtypeDtoS,WildtypePosDiffs");
             writer.newLine();
 
             final BlosumMapping blosumMapping = new BlosumMapping();
@@ -169,18 +169,19 @@ public class PeptideProteomeSimilarity
             {
                 double peptideRank = calcPeptideLikelihoodRank(peptideSim.Allele, peptideSim.Peptide);
 
+                writer.write(String.format("%s,%s,%.6f",
+                        peptideSim.Allele, peptideSim.Peptide, peptideRank));
+
                 double topSimRank = calcPeptideLikelihoodRank(peptideSim.Allele, peptideSim.topPeptide());
                 String topSimPosDiff = peptideSim.positionDiffs(peptideSim.topPeptide());
 
                 writer.write(String.format(",%s,%.6f,%.1f,%s,%s,%s",
                         peptideSim.topPeptide(), topSimRank, peptideSim.topSimiliarity(), topSimPosDiff,
-                        peptideSim.topTransData().GeneName, peptideSim.topTransData().TransName));
+                        peptideSim.topTransData() != null ? peptideSim.topTransData().GeneName : "NONE",
+                        peptideSim.topTransData() != null ? peptideSim.topTransData().TransName : "NONE"));
 
                 double nearestSim = blosumMapping.calcSequenceSimilarity(peptideSim.Peptide, peptideSim.nearestBinder());
                 String nearestPosDiff = peptideSim.positionDiffs(peptideSim.nearestBinder());
-
-                writer.write(String.format("%s,%s,%.6f",
-                        peptideSim.Allele, peptideSim.Peptide, peptideRank));
 
                 writer.write(String.format(",%s,%.6f,%.1f,%s",
                         peptideSim.nearestBinder(), peptideSim.nearestBinderLikelihoodRank(), nearestSim, nearestPosDiff));
@@ -287,12 +288,21 @@ public class PeptideProteomeSimilarity
 
         private void run()
         {
+            NE_LOGGER.info("{}: searching for {} peptides", mTaskId, mPeptideSimilarities.size());
+
             for(int i = 0; i < mPeptideSimilarities.size(); ++i)
             {
                 PeptideSimilarity peptideSim = mPeptideSimilarities.get(i);
 
-                findTopSimilarity(peptideSim);
-                findNearestBinder(peptideSim);
+                try
+                {
+                    findTopSimilarity(peptideSim);
+                    findNearestBinder(peptideSim);
+                }
+                catch(Exception e)
+                {
+                    NE_LOGGER.error("{}: error processing peptide({}): {}", mTaskId, peptideSim, e.toString());
+                }
 
                 if(i > 0 && (i % 10) == 0)
                 {
