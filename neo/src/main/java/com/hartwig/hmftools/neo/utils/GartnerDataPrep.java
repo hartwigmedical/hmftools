@@ -10,12 +10,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELES;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PATIENT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.REQUIRED_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
 

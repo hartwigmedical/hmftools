@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 public class ValidationRoutines
 {
     private final TrainConfig mConfig;
+    private final String mValidationDataFile;
 
     private final Map<String,Map<Integer,List<BindData>>> mAlleleTrainingData;
     private final Map<String,Map<Integer,List<BindData>>> mAlleleValidationData;
@@ -39,9 +40,13 @@ public class ValidationRoutines
 
     private final BufferedWriter mPeptideWriter;
 
+    private static final String VALIDATION_DATA_FILE = "validation_data_file";
+
     public ValidationRoutines(final CommandLine cmd)
     {
         mConfig = new TrainConfig(cmd);
+        mValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
+
         mAlleleTrainingData = Maps.newHashMap();
         mAlleleValidationData = Maps.newHashMap();
         mAlleleBindCounts = Maps.newHashMap();
@@ -281,7 +286,7 @@ public class ValidationRoutines
         if(!loadBindData(mConfig.TrainingDataFile, mConfig.RequiredPeptideLengths, mAlleleTrainingData))
             return false;
 
-        if(!loadBindData(mConfig.ValidationDataFile, mConfig.RequiredPeptideLengths, mAlleleValidationData))
+        if(!loadBindData(mValidationDataFile, mConfig.RequiredPeptideLengths, mAlleleValidationData))
             return false;
 
         return true;
@@ -292,6 +297,7 @@ public class ValidationRoutines
         final Options options = new Options();
 
         TrainConfig.addCmdLineArgs(options);
+        options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
 
         final CommandLine cmd = createCommandLine(args, options);
 

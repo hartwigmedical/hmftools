@@ -72,9 +72,9 @@ public class RecognitionData
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];
-                boolean immunogenic = Boolean.parseBoolean(values[immunoIndex]);
+                boolean immunogenic = values[immunoIndex].equals("1") || Boolean.parseBoolean(values[immunoIndex]);
 
-                recognitionData.add(new RecognitionData(peptide, allele, immunogenic));
+                recognitionData.add(new RecognitionData(allele, peptide, immunogenic));
             }
 
             NE_LOGGER.info("loaded {} peptides with immunogenic status from file({})", lines.size(), filename);

@@ -26,8 +26,6 @@ public class ScoreConfig
     public final String BindLikelihoodFile;
     public final String FlankPosWeightsFile;
 
-    // public final boolean ApplyFlanks;
-
     public final RandomPeptideConfig RandomPeptides;
 
     public final boolean WritePeptideScores;
@@ -44,8 +42,6 @@ public class ScoreConfig
     private static final String WRITE_PEPTIDE_SCORES = "write_peptide_scores";
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
 
-    public static final String THREADS = "threads";
-
     public ScoreConfig(final CommandLine cmd)
     {
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
@@ -60,8 +56,6 @@ public class ScoreConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
-
-        // ApplyFlanks = cmd.hasOption(APPLY_FLANKS);
 
         RandomPeptides = new RandomPeptideConfig(cmd);
 

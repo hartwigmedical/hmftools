@@ -14,13 +14,13 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.cleanAllele;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.THREADS;
 import static com.hartwig.hmftools.neo.utils.RankProteomePeptides.RANKED_PROTEOME_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.utils.RankedProteomePeptides.PROTEOME_RANKS_FILE;
 

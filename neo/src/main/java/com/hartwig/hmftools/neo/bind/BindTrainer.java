@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.initMatrixWriter;
 import static com.hartwig.hmftools.neo.bind.BindScoreMatrix.writeMatrixData;
+import static com.hartwig.hmftools.neo.bind.RecognitionData.loadRecognitionData;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
@@ -42,7 +43,6 @@ public class BindTrainer
     private final Map<String,Map<Integer,BindScoreMatrix>> mAlleleBindMatrices;
     private final FlankCounts mFlankCounts;
     private final FlankScores mFlankScores;
-    private final RecognitionCounts mRecognitionCounts;
 
     private final Set<Integer> mDistinctPeptideLengths;
 
@@ -65,7 +65,6 @@ public class BindTrainer
         mAlleleBindMatrices = Maps.newHashMap();
         mFlankCounts = new FlankCounts();
         mFlankScores = new FlankScores();
-        mRecognitionCounts = new RecognitionCounts();
     }
 
     public void run()
@@ -117,7 +116,13 @@ public class BindTrainer
             }
         }
 
-        NE_LOGGER.info("NeoBinder complete");
+        if(mConfig.RecognitionDataFile != null)
+        {
+            RecognitionCounts recognitionCounts = new RecognitionCounts();
+            processRecognitionData();
+        }
+
+        NE_LOGGER.info("Peptide binding training complete");
     }
 
     private void buildBindCountsData()
@@ -357,6 +362,24 @@ public class BindTrainer
                 mDistinctPeptideLengths.size(), getMaxPeptideLength());
 
         return true;
+    }
+
+    private void processRecognitionData()
+    {
+        RecognitionCounts recognitionCounts = new RecognitionCounts();
+        final List<RecognitionData> recognitionData = Lists.newArrayList();
+
+        if(!loadRecognitionData(mConfig.RecognitionDataFile, recognitionData))
+            return;
+
+        NE_LOGGER.info("processing {} recognition peptides", recognitionData.size());
+
+        recognitionData.forEach(x -> recognitionCounts.process(x));
+
+        String outputFile = mConfig.formOutputFilename("recog_counts");
+
+        NE_LOGGER.info("writing {} recognition counts to {}", recognitionData.size(), outputFile);
+        recognitionCounts.writeCounts(outputFile , getMaxPeptideLength());
     }
 
     private int getMaxPeptideLength() { return mDistinctPeptideLengths.stream().mapToInt(x -> x.intValue()).max().orElse(0); }

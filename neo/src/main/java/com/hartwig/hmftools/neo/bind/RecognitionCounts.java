@@ -17,7 +17,6 @@ public class RecognitionCounts
 {
     private final Map<String,Map<Integer,Map<Boolean,ImmuneCounts>>> mAlleleCounts; // counts data by peptide length>
 
-
     public RecognitionCounts()
     {
         mAlleleCounts = Maps.newHashMap();
@@ -25,7 +24,7 @@ public class RecognitionCounts
 
     public void process(final RecognitionData recogData)
     {
-        Map<Integer,Map<Boolean,ImmuneCounts>> pepLenCounts = mAlleleCounts.get(recogData.peptideLength());
+        Map<Integer,Map<Boolean,ImmuneCounts>> pepLenCounts = mAlleleCounts.get(recogData.Allele);
 
         if(pepLenCounts == null)
         {
@@ -88,7 +87,7 @@ public class RecognitionCounts
                         {
                             char aminoAcid = AMINO_ACIDS.get(aa);
 
-                            writer.write(String.format("%s,%d,%c", allele, immuneCounts.PeptideLength, aminoAcid));
+                            writer.write(String.format("%s,%d,%s,%c", allele, immuneCounts.PeptideLength, immuneCounts.Immunogenic, aminoAcid));
 
                             for(int pos = 0; pos < maxPeptideLength; ++pos)
                             {

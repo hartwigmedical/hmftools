@@ -14,9 +14,10 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
 
 import java.io.BufferedWriter;
@@ -56,7 +57,6 @@ public class RankProteomePeptides
     private final BufferedWriter mWriter;
 
     private static final String ALLELE_FILE = "allele_file";
-    private static final String THREADS = "threads";
     private static final String RANK_CUTOFF = "rank_cutoff";
 
     protected static final List<Integer> RANKED_PROTEOME_PEPTIDE_LENGTHS = Lists.newArrayList(8, 9, 10, 11);

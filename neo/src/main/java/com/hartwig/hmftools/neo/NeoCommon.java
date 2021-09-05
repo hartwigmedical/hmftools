@@ -19,6 +19,7 @@ public class NeoCommon
     public static final String NEO_FILE_ID = ".neo.";
 
     public static final String OUTPUT_ID = "output_id";
+    public static final String THREADS = "threads";
 
     public static final Logger NE_LOGGER = LogManager.getLogger(NeoCommon.class);
 

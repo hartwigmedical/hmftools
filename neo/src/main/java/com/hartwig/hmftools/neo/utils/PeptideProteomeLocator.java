@@ -13,8 +13,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -50,7 +51,6 @@ public class PeptideProteomeLocator
 
     private static final String FLANK_LENGTH = "flank_length";
     private static final String PEPTIDE_FILE = "peptide_file";
-    private static final String THREADS = "threads";
     private static final String FIND_REPEATS = "find_repeats";
 
     public PeptideProteomeLocator(final CommandLine cmd)

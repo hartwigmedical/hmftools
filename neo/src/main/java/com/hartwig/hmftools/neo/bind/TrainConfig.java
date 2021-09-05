@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -25,11 +26,9 @@ import org.apache.commons.cli.Options;
 
 public class TrainConfig
 {
-    // allele + peptide to score & rank using training data
-    public final String ValidationDataFile;
-
     // the following reference scoring files can be read using the reference files id instead of specified individually
     public final String TrainingDataFile;
+    public final String RecognitionDataFile;
 
     public final CalcConstants Constants;
     public final boolean CalcPairs;
@@ -56,7 +55,7 @@ public class TrainConfig
     public final List<Integer> RequiredPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
-    private static final String VALIDATION_DATA_FILE = "validation_data_file";
+    private static final String RECOGNITION_DATA_FILE = "recognition_data_file";
 
     public static final String FILE_ID_POS_WEIGHT = "pos_weight";
     public static final String FILE_ID_LIKELIHOOD = "likelihood";
@@ -77,23 +76,11 @@ public class TrainConfig
 
     public static final String REQUIRED_OUTPUT_ALLELES = "required_output_alleles";
     public static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
-    public static final String OUTPUT_ID = "output_id";
-    public static final String THREADS = "threads";
 
     public TrainConfig(final CommandLine cmd)
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
-        ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
-
-        /*
-        ScoreFileDir = cmd.hasOption(SCORE_FILE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR)) : null;
-        ScoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
-
-        // load reference files either by specific name or using the scoring data dir and file id
-        PosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_POS_WEIGHT);
-        FlankPosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_FLANK_POS_WEIGHT);
-        BindLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_LIKELIHOOD);
-        */
+        RecognitionDataFile = cmd.getOptionValue(RECOGNITION_DATA_FILE);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -186,6 +173,7 @@ public class TrainConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
+        options.addOption(RECOGNITION_DATA_FILE, true, "Immunogenic recognition data file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
 
         RandomPeptideConfig.addCmdLineArgs(options);

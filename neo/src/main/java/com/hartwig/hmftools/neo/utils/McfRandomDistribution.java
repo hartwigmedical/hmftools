@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.RandomDistributionTask.generateDistributionBuckets;
 import static com.hartwig.hmftools.neo.bind.RandomPeptideDistribution.initialiseWriter;
 

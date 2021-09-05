@@ -2,8 +2,9 @@ package com.hartwig.hmftools.neo.cohort;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.OUTPUT_ID;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +38,6 @@ public class NeoCohortConfig
     public static final String PREDICTION_DATA_DIR = "mcf_prediction_dir";
     public static final String ISF_DATA_DIR = "isofox_neo_dir";
     public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
-    public static final String THREADS = "threads";
 
     private static final String MCF_SUM_FACTOR = "mcf_sum_factor";
     private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
@@ -97,5 +97,4 @@ public class NeoCohortConfig
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file ID");
     }
-
 }

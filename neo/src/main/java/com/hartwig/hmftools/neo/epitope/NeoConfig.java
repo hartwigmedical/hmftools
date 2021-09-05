@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleDataFile;
 
 import java.io.File;
@@ -61,7 +62,6 @@ public class NeoConfig
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
     public static final String WRITE_TRANS_DATA = "write_trans_data";
     public static final String WRITE_COHORT_FILES = "write_cohort_files";
-    public static final String THREADS = "threads";
 
     public static final String NEO_EPITOPE_FILE_ID = ".imu.neo_epitopes.csv";
     public static final String HLA_PEPTIDE_FILE_ID = ".imu.hla_peptides.csv";
