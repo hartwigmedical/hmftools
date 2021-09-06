@@ -107,7 +107,7 @@ public class RecognitionCounts
                 }
             }
 
-
+            writer.close();
         }
         catch (IOException e)
         {

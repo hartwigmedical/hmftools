@@ -371,7 +371,7 @@ public class BindScorer
     {
         final Options options = new Options();
 
-        TrainConfig.addCmdLineArgs(options);
+        ScoreConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 

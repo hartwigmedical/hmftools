@@ -298,7 +298,7 @@ public class RankProteomePeptides
         options.addOption(RANK_CUTOFF, true, "Number of amino acid flanks to retrieve");
         options.addOption(THREADS, true, "Threads (default none)");
         options.addOption(OUTPUT_ID, true, "Output file identifier");
-        TrainConfig.addCmdLineArgs(options);
+        ScoreConfig.addCmdLineArgs(options);
         addEnsemblDir(options);
         addLoggingOptions(options);
         addOutputDir(options);

@@ -469,7 +469,7 @@ public class PeptideProteomeSimilarity
         options.addOption(OUTPUT_ID, true, "Output file id");
         options.addOption(THREADS, true, "Threads (default none)");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        TrainConfig.addCmdLineArgs(options);
+        ScoreConfig.addCmdLineArgs(options);
         addLoggingOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);
