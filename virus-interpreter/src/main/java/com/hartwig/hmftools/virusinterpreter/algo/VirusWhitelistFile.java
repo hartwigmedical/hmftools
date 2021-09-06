@@ -31,15 +31,14 @@ public final class VirusWhitelistFile {
 
         for (String line : linesVirusWhiteList.subList(1, linesVirusWhiteList.size())) {
             String[] parts = line.split(SEPARATOR);
-            if (parts.length == 6) {
+            if (parts.length == 5) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
                 VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
                         .taxidSpecies(speciesTaxid)
                         .reportOnSummary(Boolean.parseBoolean(parts[1].trim()))
                         .virusInterpretation(VirusInterpretation.valueOf(parts[2].trim()))
-                        .nameSpecies(parts[3].trim())
-                        .integratedMinimalCoverage(parts[4].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[4].trim()))
-                        .nonintegratedMinimalCoverage(parts[5].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[5].trim()))
+                        .integratedMinimalCoverage(parts[3].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[3].trim()))
+                        .nonintegratedMinimalCoverage(parts[4].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[4].trim()))
                         .build();
                 speciesVirusWhitelistMap.put(speciesTaxid, virusWhitelist);
             } else {

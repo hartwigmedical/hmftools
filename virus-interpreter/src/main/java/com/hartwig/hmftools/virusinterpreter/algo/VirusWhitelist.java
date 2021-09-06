@@ -18,9 +18,6 @@ public abstract class VirusWhitelist {
     @NotNull
     public abstract VirusInterpretation virusInterpretation();
 
-    @NotNull
-    public abstract String nameSpecies();
-
     @Nullable
     public abstract Integer integratedMinimalCoverage();
 

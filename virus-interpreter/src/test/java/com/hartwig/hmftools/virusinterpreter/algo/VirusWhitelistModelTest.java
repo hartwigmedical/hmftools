@@ -22,7 +22,6 @@ public class VirusWhitelistModelTest {
                 .taxidSpecies(1)
                 .reportOnSummary(true)
                 .virusInterpretation(VirusInterpretation.EBV)
-                .nameSpecies("Human gammaherpesvirus 4")
                 .integratedMinimalCoverage(null)
                 .nonintegratedMinimalCoverage(null)
                 .build();
