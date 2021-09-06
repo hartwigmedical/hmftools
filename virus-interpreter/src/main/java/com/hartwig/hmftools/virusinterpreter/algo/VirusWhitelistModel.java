@@ -27,7 +27,7 @@ public class VirusWhitelistModel {
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation ? virusWhitelist.virusInterpretation() : Strings.EMPTY;
@@ -38,7 +38,7 @@ public class VirusWhitelistModel {
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation && virusWhitelist.reportOnSummary();
@@ -50,7 +50,7 @@ public class VirusWhitelistModel {
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation ? virusWhitelist.integratedMinimalCoverage() : null;
@@ -62,7 +62,7 @@ public class VirusWhitelistModel {
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation ? virusWhitelist.nonintegratedMinimalCoverage() : null;
