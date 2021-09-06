@@ -30,7 +30,6 @@ public final class VirusTestFactory {
                 .endPos(0)
                 .numReads(0)
                 .covBases(0)
-                .coverage(0)
                 .meanDepth(0)
                 .meanBaseQ(0)
                 .meanMapQ(0)

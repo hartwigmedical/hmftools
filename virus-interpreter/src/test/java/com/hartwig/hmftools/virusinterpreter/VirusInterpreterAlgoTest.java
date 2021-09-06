@@ -42,9 +42,7 @@ public class VirusInterpreterAlgoTest {
                 .virusInterpretation(VirusInterpretation.EBV)
                 .nameSpecies("Human gammaherpesvirus 4")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(null)
-                .integratedMeanDepth("")
-                .nonintegratedMeanDepth("")
+                .nonintegratedMinimalCoverage(90)
                 .build();
 
         VirusWhitelist virusWhitelist2 = ImmutableVirusWhitelist.builder()
@@ -54,8 +52,6 @@ public class VirusInterpreterAlgoTest {
                 .nameSpecies("Human gammaherpesvirus 4")
                 .integratedMinimalCoverage(null)
                 .nonintegratedMinimalCoverage(null)
-                .integratedMeanDepth("")
-                .nonintegratedMeanDepth("")
                 .build();
 
         String name = "Human papillomavirus type 16";
@@ -72,57 +68,76 @@ public class VirusInterpreterAlgoTest {
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
-        assertEquals(4, annotatedViruses.size());
-        assertEquals(1, annotatedViruses.stream().filter(x -> x.reported()).count());
+        assertEquals(5, annotatedViruses.size());
+        assertEquals(2, annotatedViruses.stream().filter(x -> x.reported()).count());
 
-        AnnotatedVirus reportedVirus = null;
+        List<AnnotatedVirus> reportedVirus = Lists.newArrayList();
         for (AnnotatedVirus virus : annotatedViruses) {
             if (virus.reported()) {
-                reportedVirus = virus;
+                reportedVirus.add(virus);
             }
         }
 
-        assertNotNull(reportedVirus);
-        assertEquals(name, reportedVirus.name());
-        assertEquals(2, reportedVirus.integrations());
-        assertEquals(VirusInterpretation.EBV, reportedVirus.interpretation());
+        AnnotatedVirus reportedVirus1 = reportedVirus.get(0);
+        assertEquals(name, reportedVirus1.name());
+        assertEquals(2, reportedVirus1.integrations());
+        assertEquals(VirusInterpretation.EBV, reportedVirus1.interpretation());
+
+        AnnotatedVirus reportedVirus2 = reportedVirus.get(1);
+        assertEquals(name, reportedVirus2.name());
+        assertEquals(0, reportedVirus2.integrations());
+        assertEquals(VirusInterpretation.EBV, reportedVirus2.interpretation());
+
     }
 
     @NotNull
     private static List<VirusBreakend> createTestVirusBreakends() {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
-        // This one should be added.
+        // This one should be added --reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
                 .integrations(2)
+                .coverage(0)
                 .build());
 
-        // This one has a blacklisted genus taxid
+        // This one has a blacklisted genus taxid -- not reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(1)
                 .taxidSpecies(1)
                 .integrations(2)
+                .coverage(0)
                 .build());
 
-        // This one has a failed QC
+        // This one has a failed QC -- not reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
                 .qcStatus(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE)
                 .integrations(2)
+                .coverage(0)
                 .build());
 
-        // This one has no integrations
+        // This one has no integrations -- reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
                 .integrations(0)
+                .coverage(91)
+                .build());
+
+        // This one has no integrations -- reported
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(1)
+                .integrations(0)
+                .coverage(90)
                 .build());
 
         return virusBreakends;

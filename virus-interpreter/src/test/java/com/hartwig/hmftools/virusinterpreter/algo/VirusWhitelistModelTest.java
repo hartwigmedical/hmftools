@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.junit.Test;
 
-public class VirusInterpretationModelTest {
+public class VirusWhitelistModelTest {
 
     @Test
     public void canInterpretVirus() {
@@ -25,8 +25,6 @@ public class VirusInterpretationModelTest {
                 .nameSpecies("Human gammaherpesvirus 4")
                 .integratedMinimalCoverage(null)
                 .nonintegratedMinimalCoverage(null)
-                .integratedMeanDepth(null)
-                .nonintegratedMeanDepth(null)
                 .build();
 
         speciesToInterpretationMap.put(1, virusWhitelist);

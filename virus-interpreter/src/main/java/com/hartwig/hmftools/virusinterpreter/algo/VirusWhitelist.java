@@ -27,11 +27,4 @@ public abstract class VirusWhitelist {
     @Nullable
     public abstract Integer nonintegratedMinimalCoverage();
 
-    @Nullable
-    public abstract String integratedMeanDepth();
-
-    @Nullable
-    public abstract String nonintegratedMeanDepth();
-
-
 }

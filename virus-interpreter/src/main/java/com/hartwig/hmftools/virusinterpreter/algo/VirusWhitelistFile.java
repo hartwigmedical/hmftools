@@ -31,7 +31,7 @@ public final class VirusWhitelistFile {
 
         for (String line : linesVirusWhiteList.subList(1, linesVirusWhiteList.size())) {
             String[] parts = line.split(SEPARATOR);
-            if (parts.length == 8) {
+            if (parts.length == 6) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
                 VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
                         .taxidSpecies(speciesTaxid)
@@ -40,8 +40,6 @@ public final class VirusWhitelistFile {
                         .nameSpecies(parts[3].trim())
                         .integratedMinimalCoverage(parts[4].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[4].trim()))
                         .nonintegratedMinimalCoverage(parts[5].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[5].trim()))
-                        .integratedMeanDepth(parts[6].trim().equals(Strings.EMPTY) ? null : parts[6].trim())
-                        .nonintegratedMeanDepth(parts[7].trim().equals(Strings.EMPTY) ? null : parts[7].trim())
                         .build();
                 speciesVirusWhitelistMap.put(speciesTaxid, virusWhitelist);
             } else {

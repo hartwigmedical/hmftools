@@ -24,14 +24,14 @@ public class VirusInterpreterAlgo {
     @NotNull
     private final TaxonomyDb taxonomyDb;
     @NotNull
-    private final VirusWhitelistModel virusInterpretationModel;
+    private final VirusWhitelistModel virusWhitelistModel;
     @NotNull
     private final VirusBlacklistModel virusBlacklistModel;
 
     public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusWhitelistModel virusWhitelistModel,
             @NotNull final VirusBlacklistModel virusBlacklistModel) {
         this.taxonomyDb = taxonomyDb;
-        this.virusInterpretationModel = virusWhitelistModel;
+        this.virusWhitelistModel = virusWhitelistModel;
         this.virusBlacklistModel = virusBlacklistModel;
     }
 
@@ -44,8 +44,8 @@ public class VirusInterpreterAlgo {
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
             VirusInterpretation interpretation = null;
-            if (virusInterpretationModel.hasInterpretation(virusBreakend.taxidSpecies())) {
-                interpretation = virusInterpretationModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
+            if (virusWhitelistModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+                interpretation = virusWhitelistModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
             }
 
             double coverageVirus = virusBreakend.coverage();
@@ -81,17 +81,29 @@ public class VirusInterpreterAlgo {
 
     private boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalMeanDepth, double coverageVirus,
             double meanDepthVirus) {
-        if (virusBreakend.qcStatus() == VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
-            return false;
-        }
 
-        if (virusBreakend.integrations() == 0) {
-            //TODO: Add logica for non-integrated virus
-            return false;
-        }
-        if (virusBreakend.integrations() >= 1) {
-            //TODO: Add logica for integrated virus
-            return true;
+        if (virusWhitelistModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+            if (virusBreakend.qcStatus() == VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
+                return false;
+            }
+            if (virusBreakend.integrations() == 0) {
+                Integer minimalCoverage = virusWhitelistModel.nonintegratedMinimalCoverage(virusBreakend.taxidSpecies());
+                if (minimalCoverage != null) {
+                    if (coverageVirus <= minimalCoverage && meanDepthVirus <= expectedClonalMeanDepth) {
+                        return false;
+                    }
+                }
+            }
+
+            if (virusBreakend.integrations() >= 1) {
+                Integer minimalCoverage = virusWhitelistModel.integratedMinimalCoverage(virusBreakend.taxidSpecies());
+                if (minimalCoverage != null) {
+                    if (coverageVirus <= minimalCoverage && meanDepthVirus <= expectedClonalMeanDepth) {
+                        return false;
+                    }
+                }
+            }
+
         }
 
         return !virusBlacklistModel.isBlacklisted(virusBreakend);
