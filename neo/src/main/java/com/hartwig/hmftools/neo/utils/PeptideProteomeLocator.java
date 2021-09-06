@@ -16,16 +16,20 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -133,7 +137,7 @@ public class PeptideProteomeLocator
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("Peptide,GeneName,TransName,AminoAcidPos,UpFlank,DownFlank,MatchCount");
+            writer.write("Peptide,Genes,Transcripts,AminoAcidPos,UpFlank,DownFlank,MatchCount");
             writer.newLine();
             return writer;
         }
@@ -145,15 +149,15 @@ public class PeptideProteomeLocator
     }
 
     protected synchronized static void writeData(
-            final BufferedWriter writer, final TranscriptAminoAcids transAminoAcids, final String peptide,
+            final BufferedWriter writer, final String geneNames, final String transNames, final String peptide,
             int aaPosition, final String upFlank, final String downFlank, int repeatCount)
     {
         try
         {
-            if(transAminoAcids != null)
+            if(geneNames != null)
             {
                 writer.write(String.format("%s,%s,%s,%d,%s,%s,%d",
-                        peptide, transAminoAcids.GeneName, transAminoAcids.TransName, aaPosition, upFlank, downFlank, repeatCount));
+                        peptide, geneNames, transNames, aaPosition, upFlank, downFlank, repeatCount));
             }
             else
             {
@@ -224,7 +228,9 @@ public class PeptideProteomeLocator
             int matchedAaIndex = -1;
             String upFlank = "";
             String downFlank = "";
-            TranscriptAminoAcids matchedTrans = null;
+
+            Set<String> geneNames = Sets.newHashSet();
+            List<String> transNames = Lists.newArrayList();
 
             for(TranscriptAminoAcids transAminoAcids : mTransAminoAcidMap.values())
             {
@@ -234,10 +240,9 @@ public class PeptideProteomeLocator
 
                 ++matches;
 
-                if(matchedTrans == null)
+                if(geneNames.isEmpty())
                 {
                     ++mFound;
-                    matchedTrans = transAminoAcids;
                     matchedAaIndex = aaIndex;
 
                     if(mFlankLength > 0)
@@ -259,16 +264,30 @@ public class PeptideProteomeLocator
                     }
                 }
 
+                if(geneNames.size() < 10)
+                    geneNames.add(transAminoAcids.GeneName);
+
+                if(geneNames.size() == 1 || transNames.size() < 20)
+                    transNames.add(transAminoAcids.TransName);
+
                 if(!mFindRepeats)
                     break;
 
                 // NE_LOGGER.info("found {} random peptides from {} coding transcripts", totalPeptideCount, transCodingCount);
             }
 
-            if(matchedTrans != null)
-                writeData(mWriter, matchedTrans, peptide, matchedAaIndex, upFlank, downFlank, matches);
+            if(!geneNames.isEmpty())
+            {
+                StringJoiner sjGene = new StringJoiner(ITEM_DELIM);
+                StringJoiner sjTrans = new StringJoiner(ITEM_DELIM);
+                geneNames.forEach(x -> sjGene.add(x));
+                transNames.forEach(x -> sjTrans.add(x));
+                writeData(mWriter, sjGene.toString(), sjTrans.toString(), peptide, matchedAaIndex, upFlank, downFlank, matches);
+            }
             else
-                writeData(mWriter, null, peptide, -1, "", "", 0);
+            {
+                writeData(mWriter, null, null, peptide, -1, "", "", 0);
+            }
         }
     }
 

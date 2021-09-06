@@ -96,7 +96,8 @@ public class ScoreConfig
         options.addOption(scoreFileConfig(FILE_ID_POS_WEIGHT), true, "Binding position weights file");
         options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD), true, "Binding likelihood file");
 
-        // options.addOption(APPLY_FLANKS, false, "Use flanks for scoring if present");
+        options.addOption(WRITE_SUMMARY_DATA, false, "Write summary results per allele");
+        options.addOption(WRITE_PEPTIDE_SCORES, false, "Write score and rank data per peptide");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");
         options.addOption(LOG_DEBUG, false, "Log verbose");

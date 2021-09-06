@@ -317,5 +317,4 @@ public class RankProteomePeptides
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }
