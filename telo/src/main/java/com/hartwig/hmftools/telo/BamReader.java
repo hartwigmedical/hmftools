@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 
 public class BamReader implements Runnable
@@ -138,9 +139,12 @@ public class BamReader implements Runnable
 
     private void processReadRecord(@NotNull final SAMRecord record)
     {
-        // we discard any supplementary / secondary alignments
-        if(record.isSecondaryOrSupplementary())
+        // we filter out secondary alignment, cannot seem to find them in our
+        // cram file so for now not relevant
+        if (record.isSecondaryAlignment())
+        {
             return;
+        }
 
         boolean hasTeloContent = hasTelomericContent(record);
 

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.telo;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
@@ -9,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -79,7 +80,7 @@ public class TeloConfig
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
         options.addOption(SPECIFIC_CHR, true, "Optional: list of chromosomes separated by ;");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        ConfigUtils.addLoggingOptions(options);
 
         return options;
     }
