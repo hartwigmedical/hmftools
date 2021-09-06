@@ -42,11 +42,13 @@ public final class VirusTestFactory {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)
+                .interpretation(Strings.EMPTY)
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(0)
                 .coverage(2)
                 .meanDepth(2)
                 .expectedMeanDepth(2)
-                .reported(false);
+                .reported(false)
+                .reportedSummary(true);
     }
 }

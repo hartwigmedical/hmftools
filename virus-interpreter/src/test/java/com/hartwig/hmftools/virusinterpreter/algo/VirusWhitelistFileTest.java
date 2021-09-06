@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.junit.Test;
 
@@ -24,7 +23,7 @@ public class VirusWhitelistFileTest {
         assertTrue(virusWhitelistModel.hasInterpretation(1));
         assertFalse(virusWhitelistModel.hasInterpretation(2));
 
-        assertEquals(VirusInterpretation.MCV, virusWhitelistModel.interpretVirusSpecies(1));
-        assertNotEquals(VirusInterpretation.HPV, virusWhitelistModel.interpretVirusSpecies(2));
+        assertEquals("MCV", virusWhitelistModel.interpretVirusSpecies(1));
+        assertNotEquals("HPV", virusWhitelistModel.interpretVirusSpecies(2));
     }
 }

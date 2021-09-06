@@ -51,7 +51,6 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -1037,8 +1036,9 @@ public final class ExampleAnalysisTestFactory {
         return Lists.newArrayList(VirusTestFactory.testAnnotatedVirusBuilder()
                 .name("Human papillomavirus type 16")
                 .integrations(2)
-                .interpretation(VirusInterpretation.HPV)
+                .interpretation("HPV")
                 .reported(true)
+                .reportedSummary(true)
                 .build());
     }
 }

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +35,7 @@ public final class VirusWhitelistFile {
                 VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
                         .taxidSpecies(speciesTaxid)
                         .reportOnSummary(Boolean.parseBoolean(parts[1].trim()))
-                        .virusInterpretation(VirusInterpretation.valueOf(parts[2].trim()))
+                        .virusInterpretation(parts[2].trim())
                         .integratedMinimalCoverage(parts[3].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[3].trim()))
                         .nonintegratedMinimalCoverage(parts[4].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[4].trim()))
                         .build();

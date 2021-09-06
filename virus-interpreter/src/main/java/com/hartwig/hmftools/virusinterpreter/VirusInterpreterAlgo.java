@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
@@ -43,10 +42,7 @@ public class VirusInterpreterAlgo {
 
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
-            VirusInterpretation interpretation = null;
-            if (virusWhitelistModel.hasInterpretation(virusBreakend.taxidSpecies())) {
-                interpretation = virusWhitelistModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
-            }
+            String interpretation = virusWhitelistModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
 
             double coverageVirus = virusBreakend.coverage();
             double meanDepthVirus = virusBreakend.meanDepth();
@@ -62,6 +58,7 @@ public class VirusInterpreterAlgo {
                     .meanDepth(meanDepthVirus)
                     .expectedMeanDepth(expectedClonalMeanDepth)
                     .reported(report(virusBreakend, expectedClonalMeanDepth, coverageVirus, meanDepthVirus))
+                    .reportedSummary(virusWhitelistModel.displayVirusOnreport(taxid))
                     .build());
         }
 

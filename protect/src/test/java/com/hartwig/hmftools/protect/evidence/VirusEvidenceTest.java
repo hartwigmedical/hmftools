@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -64,14 +63,14 @@ public class VirusEvidenceTest {
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportable = Lists.newArrayList();
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.HPV).reported(true).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.MCV).reported(true).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(null).reported(true).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).reportedSummary(true).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("MCV").reported(true).reportedSummary(true).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(true).reportedSummary(true).build());
 
         List<AnnotatedVirus> unreported = Lists.newArrayList();
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.EBV).reported(false).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(VirusInterpretation.EBV).reported(false).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation(null).reported(false).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).reportedSummary(false).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).reportedSummary(false).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(false).reportedSummary(false).build());
 
         return ImmutableVirusInterpreterData.builder().unreportedViruses(unreported).reportableViruses(reportable).build();
     }

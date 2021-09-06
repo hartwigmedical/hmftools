@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
@@ -30,8 +29,8 @@ public class VirusEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull VirusInterpreterData virusInterpreterData) {
-        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusInterpretation.HPV);
-        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusInterpretation.EBV);
+        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, "HPV");
+        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, "EBV");
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
@@ -64,16 +63,16 @@ public class VirusEvidence {
 
     @NotNull
     private static List<AnnotatedVirus> virusesWithInterpretation(@NotNull VirusInterpreterData virusInterpreterData,
-            @NotNull VirusInterpretation interpretationToInclude) {
+            @NotNull String interpretationToInclude) {
         List<AnnotatedVirus> virusesWithInterpretation = Lists.newArrayList();
         for (AnnotatedVirus virus : virusInterpreterData.reportableViruses()) {
-            if (virus.interpretation() != null && virus.interpretation() == interpretationToInclude) {
+            if (virus.interpretation().equals(interpretationToInclude)) {
                 virusesWithInterpretation.add(virus);
             }
         }
 
         for (AnnotatedVirus virus : virusInterpreterData.unreportedViruses()) {
-            if (virus.interpretation() != null && virus.interpretation() == interpretationToInclude) {
+            if (virus.interpretation().equals(interpretationToInclude)) {
                 virusesWithInterpretation.add(virus);
             }
         }

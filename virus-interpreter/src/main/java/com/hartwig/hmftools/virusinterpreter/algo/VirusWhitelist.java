@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.virusinterpreter.algo;
 
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +14,7 @@ public abstract class VirusWhitelist {
     public abstract boolean reportOnSummary();
 
     @NotNull
-    public abstract VirusInterpretation virusInterpretation();
+    public abstract String virusInterpretation();
 
     @Nullable
     public abstract Integer integratedMinimalCoverage();

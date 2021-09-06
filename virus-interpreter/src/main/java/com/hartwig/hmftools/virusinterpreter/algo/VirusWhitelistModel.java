@@ -3,10 +3,10 @@ package com.hartwig.hmftools.virusinterpreter.algo;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,8 +21,8 @@ public class VirusWhitelistModel {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
-    @Nullable
-    public VirusInterpretation interpretVirusSpecies(int speciesTaxid) {
+    @NotNull
+    public String interpretVirusSpecies(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
@@ -30,11 +30,10 @@ public class VirusWhitelistModel {
             LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusWhitelist.virusInterpretation() : null;
+        return speciesHasInterpretation ? virusWhitelist.virusInterpretation() : Strings.EMPTY;
     }
 
-    @Nullable
-    public Boolean displayVirusOnreport(int speciesTaxid) {
+    public boolean displayVirusOnreport(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
@@ -42,7 +41,7 @@ public class VirusWhitelistModel {
             LOGGER.error("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusWhitelist.reportOnSummary() : null;
+        return speciesHasInterpretation && virusWhitelist.reportOnSummary();
     }
 
     @Nullable
@@ -74,7 +73,7 @@ public class VirusWhitelistModel {
     }
 
     @VisibleForTesting
-    int count() {
+    public int count() {
         return speciesToInterpretationMap.keySet().size();
     }
 }
