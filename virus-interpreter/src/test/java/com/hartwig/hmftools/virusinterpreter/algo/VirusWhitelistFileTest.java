@@ -3,6 +3,7 @@ package com.hartwig.hmftools.virusinterpreter.algo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -24,6 +25,10 @@ public class VirusWhitelistFileTest {
         assertFalse(virusWhitelistModel.hasInterpretation(2));
 
         assertEquals("MCV", virusWhitelistModel.interpretVirusSpecies(1));
+        assertTrue(virusWhitelistModel.displayVirusOnSummaryReport(1));
+        assertEquals(Integer.valueOf(90), virusWhitelistModel.nonintegratedMinimalCoverage(1));
+        assertNull(virusWhitelistModel.integratedMinimalCoverage(1));
+
         assertNotEquals("HPV", virusWhitelistModel.interpretVirusSpecies(2));
     }
 }

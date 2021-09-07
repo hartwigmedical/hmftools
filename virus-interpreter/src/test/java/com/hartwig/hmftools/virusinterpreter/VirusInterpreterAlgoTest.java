@@ -125,7 +125,7 @@ public class VirusInterpreterAlgoTest {
                 .coverage(91)
                 .build());
 
-        // This one has no integrations -- reported
+        // This one has no integrations -- not reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)

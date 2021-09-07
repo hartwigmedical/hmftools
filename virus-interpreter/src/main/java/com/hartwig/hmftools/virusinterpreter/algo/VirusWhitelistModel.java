@@ -33,7 +33,7 @@ public class VirusWhitelistModel {
         return speciesHasInterpretation ? virusWhitelist.virusInterpretation() : Strings.EMPTY;
     }
 
-    public boolean displayVirusOnreport(int speciesTaxid) {
+    public boolean displayVirusOnSummaryReport(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
