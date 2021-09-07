@@ -106,7 +106,7 @@ public class BindTrainer
                 scorer.runScoring();
 
                 BindingLikelihood bindingLikelihood = new BindingLikelihood();
-                final String relativeLikelihoodFile = mConfig.formOutputFilename(FILE_ID_LIKELIHOOD);
+                final String relativeLikelihoodFile = mConfig.formTrainingFilename(FILE_ID_LIKELIHOOD);
                 bindingLikelihood.buildAllelePeptideLikelihoods(mAllelePeptideData, relativeLikelihoodFile);
 
                 if(mConfig.WritePanLengthDistribution)
@@ -124,10 +124,10 @@ public class BindTrainer
     private void buildBindCountsData()
     {
         BufferedWriter freqWriter = mConfig.WriteFrequencyData ?
-                initFrequencyWriter(mConfig.formOutputFilename("pos_frequency")) : null;
+                initFrequencyWriter(mConfig.formTrainingFilename("pos_frequency")) : null;
 
         BufferedWriter pairWriter = mConfig.CalcPairs ?
-                ComboCorrelations.initPairDataWriter(mConfig.formOutputFilename("pair_score_prob")) : null;
+                ComboCorrelations.initPairDataWriter(mConfig.formTrainingFilename("pair_score_prob")) : null;
 
         for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAllelePeptideData.entrySet())
         {
@@ -184,7 +184,7 @@ public class BindTrainer
         if(mConfig.ApplyFlanks && (mConfig.WriteBindCounts || mConfig.WritePosWeightMatrix))
         {
             mFlankCounts.logStats();
-            mFlankCounts.writeData(mConfig.formOutputFilename(FILE_ID_FLANK_POS_WEIGHT), mFlankScores);
+            mFlankCounts.writeData(mConfig.formTrainingFilename(FILE_ID_FLANK_POS_WEIGHT), mFlankScores);
         }
 
         closeBufferedWriter(freqWriter);
@@ -270,7 +270,7 @@ public class BindTrainer
         logCalcAlleles();
 
         BufferedWriter matrixWriter = mConfig.WritePosWeightMatrix || mConfig.WriteBindCounts ?
-                initMatrixWriter(mConfig.formOutputFilename(FILE_ID_POS_WEIGHT), getMaxPeptideLength()) : null;
+                initMatrixWriter(mConfig.formTrainingFilename(FILE_ID_POS_WEIGHT), getMaxPeptideLength()) : null;
 
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
@@ -304,7 +304,7 @@ public class BindTrainer
         if(mConfig.LogCalcAlleles.isEmpty())
             return;
 
-        BufferedWriter writer = initMatrixWriter(mConfig.formOutputFilename("allele_motif_calc"), getMaxPeptideLength());
+        BufferedWriter writer = initMatrixWriter(mConfig.formTrainingFilename("allele_motif_calc"), getMaxPeptideLength());
 
         for(String allele : mConfig.LogCalcAlleles)
         {
@@ -375,7 +375,7 @@ public class BindTrainer
 
         recognitionData.forEach(x -> recognitionCounts.process(x));
 
-        String outputFile = mConfig.formOutputFilename("recog_counts");
+        String outputFile = BindCommon.formFilename(mConfig.OutputDir, "recognition_counts", mConfig.OutputId);
 
         NE_LOGGER.info("writing {} recognition counts to {}", recognitionData.size(), outputFile);
         recognitionCounts.writeCounts(outputFile , getMaxPeptideLength());

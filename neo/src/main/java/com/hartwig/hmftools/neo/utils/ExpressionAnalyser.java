@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -36,6 +34,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
 import org.apache.commons.cli.CommandLine;
@@ -54,6 +53,9 @@ public class ExpressionAnalyser
 
     private final Set<String> mValidationAlleles;
 
+    private final String mOutputDir;
+    private final String mOutputId;
+
     private final BufferedWriter mWriter;
 
     private static final String PROTEOME_PEPTIDES_FILE = "proteome_binders_file";
@@ -71,8 +73,10 @@ public class ExpressionAnalyser
 
         mPeptideSearchDataMap = loadPeptideSearchData(cmd.getOptionValue(PEPTIDE_SEARCH_FILE));
 
-        String outputDir = parseOutputDir(cmd);
-        String outputFile = outputDir + "peptide_expression.csv";
+        mOutputDir = parseOutputDir(cmd);
+        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+
+        String outputFile = BindCommon.formFilename(mOutputDir, "peptide_expression", mOutputId);
         mWriter = initialiseWriter(outputFile);
     }
 
@@ -127,7 +131,10 @@ public class ExpressionAnalyser
 
         closeBufferedWriter(mWriter);
 
-        distribution.formTpmDeciles();
+        NE_LOGGER.info("generating and writing expression distributions");
+
+        distribution.formDistributions();
+        distribution.writeDistributions(mOutputDir, mOutputId);
 
         NE_LOGGER.info("peptide expression analysis complete");
     }

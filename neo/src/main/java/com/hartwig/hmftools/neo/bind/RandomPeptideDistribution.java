@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RAND_DIST;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.formFilename;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.formTrainingFilename;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -334,7 +334,7 @@ public class RandomPeptideDistribution
         NE_LOGGER.info("writing random peptide scoring distribution for {} alleles",
                 !mConfig.RequiredOutputAlleles.isEmpty() ? mConfig.RequiredOutputAlleles.size() : "all");
 
-        final String distFilename = formFilename(FILE_ID_RAND_DIST, mConfig.OutputDir, mConfig.OutputId);
+        final String distFilename = formTrainingFilename(mConfig.OutputDir, FILE_ID_RAND_DIST, mConfig.OutputId);
 
         try
         {
@@ -363,7 +363,7 @@ public class RandomPeptideDistribution
         NE_LOGGER.info("writing random peptide likelihood distribution for {} alleles",
                 !mConfig.RequiredOutputAlleles.isEmpty() ? mConfig.RequiredOutputAlleles.size() : "all");
 
-        final String filename = formFilename(FILE_ID_LIKELIHOOD_RAND_DIST, mConfig.OutputDir, mConfig.OutputId);
+        final String filename = formTrainingFilename(mConfig.OutputDir, FILE_ID_LIKELIHOOD_RAND_DIST, mConfig.OutputId);
 
         try
         {

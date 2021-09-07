@@ -1,7 +1,15 @@
 package com.hartwig.hmftools.neo.utils;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_DECILE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_TPM_LEVEL;
+import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_EXPRESSION_DIST;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_VALIDATION;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -47,8 +55,20 @@ public class ExpressionDistribution
         addToRankedList(pepExpData);
     }
 
-    public void formTpmDeciles()
+    public void formDistributions()
     {
+        // cull unused TPM levels
+        while(mTpmBuckets.size() > 1)
+        {
+            int lastIndex = mTpmBuckets.size() - 1;
+
+            if(mTpmBuckets.get(lastIndex).TotalCount > 0)
+                break;
+
+            mTpmBuckets.remove(lastIndex);
+        }
+
+        // form deciles
         int peptidesPerDecile = mAllExpData.size() / 11;
 
         int nextCountTotal = peptidesPerDecile;
@@ -62,11 +82,9 @@ public class ExpressionDistribution
 
             if(i >= nextCountTotal || i == mAllExpData.size() - 1)
             {
-                currentBucket.Bucket = pepExpData.tpm();
-
                 if(mDecileBuckets.size() < 11)
                 {
-                    currentBucket = new TpmBucket(0);
+                    currentBucket = new TpmBucket(mDecileBuckets.size() * 0.1);
                     mDecileBuckets.add(currentBucket);
                     nextCountTotal += peptidesPerDecile;
                 }
@@ -196,6 +214,41 @@ public class ExpressionDistribution
                 TpmBucket lastBucket = mTpmBuckets.get(mTpmBuckets.size() - 1);
                 lastBucket.add(pepExpData);
             }
+        }
+    }
+
+    public void writeDistributions(final String outputDir, final String outputId)
+    {
+        final String filename = formFilename(outputDir, FILE_ID_EXPRESSION_DIST, outputId);
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("Type,Bucket,BindingRate,TotalCount");
+            writer.newLine();
+
+            for(TpmBucket bucket : mTpmBuckets)
+            {
+                writer.write(String.format("%s,%4.3e,%.6f,%d",
+                        EXP_TYPE_TPM_LEVEL, bucket.Bucket, bucket.calcRate(), bucket.TotalCount));
+
+                writer.newLine();
+            }
+
+            for(TpmBucket bucket : mDecileBuckets)
+            {
+                writer.write(String.format("%s,%.1f,%.6f,%d",
+                        EXP_TYPE_DECILE, bucket.Bucket, bucket.calcRate(), bucket.TotalCount));
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write random peptide likelihood file: {}", e.toString());
         }
     }
 

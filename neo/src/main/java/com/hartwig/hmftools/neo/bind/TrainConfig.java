@@ -62,6 +62,7 @@ public class TrainConfig
     public static final String FILE_ID_RAND_DIST = "rand_dist";
     public static final String FILE_ID_LIKELIHOOD_RAND_DIST = "likelihood_rand_dist";
     public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
+    public static final String FILE_ID_EXPRESSION_DIST = "expression_dist";
 
     private static final String APPLY_FLANKS = "apply_flanks";
 
@@ -135,17 +136,14 @@ public class TrainConfig
         }
     }
 
-    public String formOutputFilename(final String fileType)
+    public String formTrainingFilename(final String fileType)
     {
-        return formFilename(fileType, OutputDir, OutputId);
+        return formTrainingFilename(OutputDir, fileType, OutputId);
     }
 
-    public static String formFilename(final String fileType, final String dir, final String fileId)
+    public static String formTrainingFilename(final String dir, final String fileType, final String fileId)
     {
-        if(fileId == null || fileId.isEmpty())
-            return String.format("%sbind_%s.csv", dir, fileType);
-        else
-            return String.format("%sbind_%s_%s.csv", dir, fileId, fileType);
+        return BindCommon.formFilename(dir, String.format("train_%s", fileType), fileId);
     }
 
     public static List<String> loadRequiredOutputAlleles(final String filename)

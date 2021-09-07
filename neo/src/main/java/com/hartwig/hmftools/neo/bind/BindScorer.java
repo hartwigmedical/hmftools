@@ -217,7 +217,7 @@ public class BindScorer
         if(!mConfig.WritePeptideScores)
             return;
 
-        String outputFile = mConfig.formOutputFilename("peptide_scores");
+        String outputFile = BindCommon.formFilename(mConfig.OutputDir, "peptide_scores", mConfig.OutputId);
         NE_LOGGER.info("writing peptide scores to {}", outputFile);
 
         try
@@ -299,7 +299,8 @@ public class BindScorer
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("allele_summary"), false);
+            String outputFile = BindCommon.formFilename(mConfig.OutputDir, "allele_summary", mConfig.OutputId);
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("Allele,PeptideLength,BindCount,TPR,AUC");
             writer.newLine();
 

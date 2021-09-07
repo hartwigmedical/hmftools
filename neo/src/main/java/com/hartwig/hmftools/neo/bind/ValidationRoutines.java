@@ -254,7 +254,8 @@ public class ValidationRoutines
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.formOutputFilename("validation_scores"), false);
+            String outputFile = BindCommon.formFilename(mConfig.OutputDir, "validation_scores", mConfig.OutputId);
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("ExcludedAllele,Allele,Peptide,Score,Rank");
             writer.newLine();
 

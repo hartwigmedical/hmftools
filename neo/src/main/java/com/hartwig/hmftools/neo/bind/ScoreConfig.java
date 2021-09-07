@@ -5,11 +5,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
+import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.RECOGNITION_DATA_FILE;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.formFilename;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.formTrainingFilename;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -81,12 +82,7 @@ public class ScoreConfig
         if(configValue != null)
             return scoreFileDir + configValue;
         else
-            return formFilename(fileType, scoreFileDir, scoreFileId);
-    }
-
-    public String formOutputFilename(final String fileType)
-    {
-        return formFilename(fileType, OutputDir, OutputId);
+            return formTrainingFilename(scoreFileDir, fileType, scoreFileId);
     }
 
     public static void addCmdLineArgs(Options options)

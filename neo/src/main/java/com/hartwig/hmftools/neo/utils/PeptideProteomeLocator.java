@@ -33,6 +33,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.neo.bind.BindCommon;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -128,13 +129,7 @@ public class PeptideProteomeLocator
     {
         try
         {
-            String outputFile = outputDir + "peptide_search";
-
-            if(outputId != null)
-                outputFile += "_" + outputId;
-
-            outputFile += ".csv";
-
+            String outputFile = BindCommon.formFilename(outputDir, "peptide_search", outputId);
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("Peptide,Genes,Transcripts,AminoAcidPos,UpFlank,DownFlank,MatchCount");
