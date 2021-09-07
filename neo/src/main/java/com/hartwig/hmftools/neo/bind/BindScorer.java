@@ -35,6 +35,7 @@ public class BindScorer
 
     private final RandomPeptideDistribution mRandomDistribution;
     private final BindingLikelihood mBindingLikelihood;
+    private final RecognitionSimilarity mRecognitionSimilarity;
 
     private final Map<String,Integer> mBindDataOtherColumns;
 
@@ -50,6 +51,7 @@ public class BindScorer
         mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
         mBindingLikelihood = new BindingLikelihood();
         mFlankScores = new FlankScores();
+        mRecognitionSimilarity = new RecognitionSimilarity();
     }
 
     public BindScorer(
@@ -66,6 +68,7 @@ public class BindScorer
         mRandomDistribution = randomDistribution;
         mBindingLikelihood = null;
         mFlankScores = flankScores;
+        mRecognitionSimilarity = null;
     }
 
     public void run()
@@ -228,6 +231,11 @@ public class BindScorer
             if(writeFlanks)
                 writer.write(",FlankScore,UpFlank,DownFlank");
 
+            boolean calcRecognitionSim = mRecognitionSimilarity != null && mRecognitionSimilarity.hasData();
+
+            if(calcRecognitionSim)
+                writer.write(",RecogSim");
+
             boolean hasOtherData = !mBindDataOtherColumns.isEmpty();
 
             if(hasOtherData)
@@ -256,6 +264,11 @@ public class BindScorer
                         if(writeFlanks)
                         {
                             writer.write(String.format(",%.4f,%s,%s", bindData.flankScore(), bindData.UpFlank, bindData.DownFlank));
+                        }
+
+                        if(calcRecognitionSim)
+                        {
+                            writer.write(String.format(",%.1f", mRecognitionSimilarity.calcSimilarity(bindData.Allele, bindData.Peptide)));
                         }
 
                         if(hasOtherData)
@@ -363,6 +376,9 @@ public class BindScorer
             if(!mFlankScores.loadPosWeights(mConfig.FlankPosWeightsFile))
                 return false;
         }
+
+        if(mConfig.RecognitionDataFile != null && !mRecognitionSimilarity.loadData(mConfig.RecognitionDataFile))
+            return false;
 
         return true;
     }

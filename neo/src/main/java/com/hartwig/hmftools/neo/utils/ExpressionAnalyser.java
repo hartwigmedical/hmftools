@@ -30,16 +30,15 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
-import com.hartwig.hmftools.neo.cohort.AlleleCoverage;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class ExpressionAnalyser
@@ -313,7 +312,6 @@ public class ExpressionAnalyser
         options.addOption(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
         options.addOption(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
         options.addOption(OUTPUT_ID, true, "Output file identifier");
-        // ScoreConfig.addCmdLineArgs(options);
         addLoggingOptions(options);
         addOutputDir(options);
 

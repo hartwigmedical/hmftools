@@ -55,7 +55,7 @@ public class TrainConfig
     public final List<Integer> RequiredPeptideLengths;
 
     private static final String TRAINING_DATA_FILE = "training_data_file";
-    private static final String RECOGNITION_DATA_FILE = "recognition_data_file";
+    public static final String RECOGNITION_DATA_FILE = "recognition_data_file";
 
     public static final String FILE_ID_POS_WEIGHT = "pos_weight";
     public static final String FILE_ID_LIKELIHOOD = "likelihood";

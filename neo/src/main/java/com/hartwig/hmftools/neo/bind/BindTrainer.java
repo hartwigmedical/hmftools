@@ -116,11 +116,7 @@ public class BindTrainer
             }
         }
 
-        if(mConfig.RecognitionDataFile != null)
-        {
-            RecognitionCounts recognitionCounts = new RecognitionCounts();
-            processRecognitionData();
-        }
+        processRecognitionData();
 
         NE_LOGGER.info("Peptide binding training complete");
     }
@@ -366,6 +362,9 @@ public class BindTrainer
 
     private void processRecognitionData()
     {
+        if(mConfig.RecognitionDataFile == null)
+            return;
+
         RecognitionCounts recognitionCounts = new RecognitionCounts();
         final List<RecognitionData> recognitionData = Lists.newArrayList();
 

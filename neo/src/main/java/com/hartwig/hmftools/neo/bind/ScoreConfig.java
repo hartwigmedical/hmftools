@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.RECOGNITION_DATA_FILE;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.formFilename;
 
 import org.apache.commons.cli.CommandLine;
@@ -17,6 +18,7 @@ public class ScoreConfig
 {
     // allele + peptide to score & rank using training data
     public final String ValidationDataFile;
+    public final String RecognitionDataFile;
 
     public final String ScoreFileDir;
     public final String ScoreFileId;
@@ -45,6 +47,7 @@ public class ScoreConfig
     public ScoreConfig(final CommandLine cmd)
     {
         ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
+        RecognitionDataFile = cmd.getOptionValue(RECOGNITION_DATA_FILE);
 
         ScoreFileDir = cmd.hasOption(SCORE_FILE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR)) : null;
         ScoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
@@ -90,6 +93,7 @@ public class ScoreConfig
     {
         RandomPeptideConfig.addCmdLineArgs(options);
         options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
+        options.addOption(RECOGNITION_DATA_FILE, true, "Immunogenic recognition data file");
 
         options.addOption(SCORE_FILE_ID, true, "Reference file id for scoring instead of specifying individual files");
         options.addOption(SCORE_FILE_DIR, true, "Reference file directory");

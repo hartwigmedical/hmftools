@@ -327,7 +327,7 @@ public class PeptideProteomeSimilarity
             int peptideLength = peptide.length();
 
             String topPeptide = "";
-            double topSimiliarity = 0;
+            double topSimilarity = 0;
             double topRank = 0;
 
             Map<String,Double> allelePeptideRanks = mRankedProteomePeptides.getPeptideRanks(peptideSim.Allele, peptideLength);
@@ -362,7 +362,7 @@ public class PeptideProteomeSimilarity
 
                     similarity += (bs1 + bs2) * 0.5 - map;
 
-                    if(!topPeptide.isEmpty() && similarity >= topSimiliarity) // early exit if cannot be better
+                    if(!topPeptide.isEmpty() && similarity >= topSimilarity) // early exit if cannot be better
                     {
                         skip = true;
                         break;
@@ -372,10 +372,10 @@ public class PeptideProteomeSimilarity
                 if(skip)
                     continue;
 
-                if(topPeptide.isEmpty() || similarity < topSimiliarity)
+                if(topPeptide.isEmpty() || similarity < topSimilarity)
                 {
                     topPeptide = otherPeptide;
-                    topSimiliarity = similarity;
+                    topSimilarity = similarity;
                     topRank = entry.getValue();
                 }
             }

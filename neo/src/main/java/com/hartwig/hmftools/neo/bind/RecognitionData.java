@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_IMMUNOGENIC;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_SOURCE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.cleanAllele;
+import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,39 +17,31 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-
 public class RecognitionData
 {
     public final String Allele;
     public final String Peptide;
+    public final String Source;
     public final boolean Immunogenic;
 
-    // optional fields
-    private final List<String> mOtherData;
-
-    public RecognitionData(final String allele, final String peptide, final boolean immunogenic)
+    public RecognitionData(final String allele, final String peptide, final String source, boolean immunogenic)
     {
         Allele = allele;
         Peptide = peptide;
         Immunogenic = immunogenic;
-
-        mOtherData = Lists.newArrayList();
+        Source = source;
     }
 
     public int peptideLength() { return Peptide.length(); }
 
-    public final List<String> getOtherData() { return mOtherData; }
-
     public String toString()
     {
-        return String.format("allele(%s) peptide(%s) immunogenic(%s)", Allele, Peptide, Immunogenic);
+        return String.format("allele(%s) peptide(%s) source(%s) immunogenic(%s)",
+                Allele, Peptide, Source, Immunogenic);
     }
 
     public static boolean loadRecognitionData(final String filename, final List<RecognitionData> recognitionData)
     {
-        // final Map<String,Integer> otherColumns
-
         if(filename == null || !Files.exists(Paths.get(filename)))
         {
             NE_LOGGER.error("recognition data file({}) not found", filename);
@@ -64,7 +58,8 @@ public class RecognitionData
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-            int immunoIndex = fieldsIndexMap.get(FLD_IMMUNOGENIC);
+            Integer immunoIndex = fieldsIndexMap.get(FLD_IMMUNOGENIC);
+            Integer sourceIndex = fieldsIndexMap.get(FLD_SOURCE);
 
             for(String line :lines)
             {
@@ -72,9 +67,16 @@ public class RecognitionData
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];
-                boolean immunogenic = values[immunoIndex].equals("1") || Boolean.parseBoolean(values[immunoIndex]);
 
-                recognitionData.add(new RecognitionData(allele, peptide, immunogenic));
+                if(!DEFAULT_PEPTIDE_LENGTHS.contains(peptide.length()))
+                    continue;
+
+                boolean immunogenic = immunoIndex != null ?
+                        (values[immunoIndex].equals("1") || Boolean.parseBoolean(values[immunoIndex])) : true;
+
+                String source = sourceIndex != null ? values[sourceIndex] : "";
+
+                recognitionData.add(new RecognitionData(allele, peptide, source, immunogenic));
             }
 
             NE_LOGGER.info("loaded {} peptides with immunogenic status from file({})", lines.size(), filename);
