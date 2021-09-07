@@ -15,13 +15,13 @@ public class VirusBlacklistModelTest {
     public void canMatchIdToVirus() {
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet(2));
 
-        VirusBreakend filteredGenus = VirusTestFactory.testVirusBreakendBuilder().taxidGenus(1).build();
+        VirusBreakend filteredGenus = VirusTestFactory.testVirusBreakendBuilder().taxidGenus(1).coverage(0).build();
         assertTrue(virusBlacklistModel.isBlacklisted(filteredGenus));
 
-        VirusBreakend filteredSpecies = VirusTestFactory.testVirusBreakendBuilder().taxidSpecies(2).build();
+        VirusBreakend filteredSpecies = VirusTestFactory.testVirusBreakendBuilder().taxidSpecies(2).coverage(0).build();
         assertTrue(virusBlacklistModel.isBlacklisted(filteredSpecies));
 
-        VirusBreakend pass = VirusTestFactory.testVirusBreakendBuilder().taxidSpecies(1).taxidGenus(2).build();
+        VirusBreakend pass = VirusTestFactory.testVirusBreakendBuilder().taxidSpecies(1).taxidGenus(2).coverage(0).build();
         assertFalse(virusBlacklistModel.isBlacklisted(pass));
     }
 }

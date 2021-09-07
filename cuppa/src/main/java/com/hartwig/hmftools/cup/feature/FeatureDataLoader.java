@@ -53,10 +53,10 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -298,8 +298,8 @@ public class FeatureDataLoader
         {
             final String sampleId = record.getValue(VIRUSANNOTATION.SAMPLEID);
 
-            VirusInterpretation interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION) != null ?
-                    VirusInterpretation.valueOf(record.getValue(VIRUSANNOTATION.INTERPRETATION)) : null;
+            String interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION) != null ?
+                    record.getValue(VIRUSANNOTATION.INTERPRETATION) : Strings.EMPTY;
 
             AnnotatedVirus annotatedVirus = ImmutableAnnotatedVirus.builder()
                         .taxid(record.getValue(VIRUSANNOTATION.TAXID))

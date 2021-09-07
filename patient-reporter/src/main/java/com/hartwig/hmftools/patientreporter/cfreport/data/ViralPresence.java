@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.VirusInterpretation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,27 +15,24 @@ public final class ViralPresence {
 
     @NotNull
     public static Set<String> virusInterpretationSummary(@NotNull List<AnnotatedVirus> reportableViruses) {
-        Set<VirusInterpretation> positiveInterpretations = Sets.newHashSet();
-        for (AnnotatedVirus virus : reportableViruses) {
-            if (virus.interpretation() != null) {
-                positiveInterpretations.add(virus.interpretation());
-            }
-        }
-
-        Set<VirusInterpretation> negativeInterpretations = Sets.newHashSet();
-        for (VirusInterpretation possibleViruses : VirusInterpretation.values()) {
-            if (!positiveInterpretations.contains(possibleViruses)) {
-                negativeInterpretations.add(possibleViruses);
-            }
-        }
-
+        Set<String> positiveInterpretations = Sets.newHashSet();
+        Set<String> negativeInterpretations = Sets.newHashSet();
         Set<String> virusInterpretationSummary = Sets.newHashSet();
-        for (VirusInterpretation positiveVirus : positiveInterpretations) {
-            virusInterpretationSummary.add(positiveVirus.toString() + " positive");
+
+        for (AnnotatedVirus virus : reportableViruses) {
+            if (virus.reportedSummary()) {
+                positiveInterpretations.add(virus.interpretation());
+            } else if (!virus.reportedSummary()) {
+                negativeInterpretations.add(virus.interpretation());
+            }
         }
 
-        for (VirusInterpretation negativeVirus : negativeInterpretations) {
-            virusInterpretationSummary.add(negativeVirus.toString() + " negative");
+        for (String positiveVirus : positiveInterpretations) {
+            virusInterpretationSummary.add(positiveVirus + " positive");
+        }
+
+        for (String negativeVirus : negativeInterpretations) {
+            virusInterpretationSummary.add(negativeVirus + " negative");
         }
 
         return virusInterpretationSummary;

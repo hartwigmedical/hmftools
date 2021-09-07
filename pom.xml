@@ -82,7 +82,7 @@
         <orange.version>1.2</orange.version>
         <patient-reporter.version>7.24</patient-reporter.version>
         <telo.version>1.0</telo.version>
-        <virus-interpreter.version>1.0</virus-interpreter.version>
+        <virus-interpreter.version>1.1</virus-interpreter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>

@@ -19,8 +19,8 @@ public abstract class AnnotatedVirus {
 
     public abstract int integrations();
 
-    @Nullable
-    public abstract VirusInterpretation interpretation();
+    @NotNull
+    public abstract String interpretation();
 
     public abstract double coverage();
 
@@ -29,4 +29,6 @@ public abstract class AnnotatedVirus {
     public abstract double expectedMeanDepth();
 
     public abstract boolean reported();
+
+    public abstract boolean reportedSummary();
 }

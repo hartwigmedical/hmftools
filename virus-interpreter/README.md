@@ -39,5 +39,7 @@ reported | A boolean indicated this viral presence will be reported
 
 
  ## Version History and Download Links
+ - [1.1] (coming)
+   - New reporting strategy of virusses
  - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.0)
    - Initial release. 
