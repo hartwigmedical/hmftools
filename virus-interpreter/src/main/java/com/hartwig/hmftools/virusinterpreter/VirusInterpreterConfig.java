@@ -20,7 +20,7 @@ public interface VirusInterpreterConfig {
     String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
 
     String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
-    String VIRUS_INTERPRETATION_TSV = "virus_interpretation_tsv";
+    String VIRUS_WHITELIST_TSV = "virus_whitelist_tsv";
     String VIRUS_BLACKLIST_TSV = "virus_blacklist_tsv";
 
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
@@ -39,7 +39,7 @@ public interface VirusInterpreterConfig {
         options.addOption(SAMPLE_ID, true, "The sample ID for which virus interpreter will run.");
         options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV.");
         options.addOption(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name.");
-        options.addOption(VIRUS_INTERPRETATION_TSV, true, "Path towards a TSV containing interpretation rules for viruses.");
+        options.addOption(VIRUS_WHITELIST_TSV, true, "Path towards a TSV containing whitelisting of viruses.");
         options.addOption(VIRUS_BLACKLIST_TSV, true, "Path towards a TSV containing blacklisting for specific viruses.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
@@ -64,7 +64,7 @@ public interface VirusInterpreterConfig {
     String taxonomyDbTsv();
 
     @NotNull
-    String virusInterpretationTsv();
+    String virusWhitelistTsv();
 
     @NotNull
     String virusBlacklistTsv();
@@ -90,7 +90,7 @@ public interface VirusInterpreterConfig {
         return ImmutableVirusInterpreterConfig.builder().sampleId(nonOptionalValue(cmd, SAMPLE_ID))
                 .virusBreakendTsv(nonOptionalFile(cmd, VIRUS_BREAKEND_TSV))
                 .taxonomyDbTsv(nonOptionalFile(cmd, TAXONOMY_DB_TSV))
-                .virusInterpretationTsv(nonOptionalFile(cmd, VIRUS_INTERPRETATION_TSV))
+                .virusWhitelistTsv(nonOptionalFile(cmd, VIRUS_WHITELIST_TSV))
                 .virusBlacklistTsv(nonOptionalFile(cmd, VIRUS_BLACKLIST_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
