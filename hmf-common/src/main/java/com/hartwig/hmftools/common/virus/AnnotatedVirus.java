@@ -22,11 +22,11 @@ public abstract class AnnotatedVirus {
     @NotNull
     public abstract String interpretation();
 
+    public abstract double percentageCovered();
+
     public abstract double coverage();
 
-    public abstract double meanDepth();
-
-    public abstract double expectedMeanDepth();
+    public abstract double expectedClonalCoverage();
 
     public abstract boolean reported();
 

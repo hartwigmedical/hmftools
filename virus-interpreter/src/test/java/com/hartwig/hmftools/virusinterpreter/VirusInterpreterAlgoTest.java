@@ -2,6 +2,7 @@ package com.hartwig.hmftools.virusinterpreter;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +26,11 @@ import org.junit.Test;
 
 public class VirusInterpreterAlgoTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("genomic").getPath();
-    private static final String TUMOR_SAMPLE_WGS_METRICS = RUN_DIRECTORY + "/tumor_sample.wgsmetrics";
-    private static final String PURPLE_PURITY_TSV = RUN_DIRECTORY + "/sample.purple.purity.tsv";
-    private static final String PURPLE_QC_FILE = RUN_DIRECTORY + "/sample.purple.qc";
+    private static final String GENOMIC_DIR = Resources.getResource("genomic").getPath();
+
+    private static final String PURPLE_QC_FILE = GENOMIC_DIR + File.separator + "sample.purple.qc";
+    private static final String PURPLE_PURITY_TSV = GENOMIC_DIR + File.separator + "sample.purple.purity.tsv";
+    private static final String TUMOR_SAMPLE_WGS_METRICS = GENOMIC_DIR + File.separator + "sample.wgsmetrics";
 
     @Test
     public void canAnalyzeVirusBreakends() throws IOException {
@@ -38,14 +40,14 @@ public class VirusInterpreterAlgoTest {
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(90)
+                .nonIntegratedMinimalCoverage(90)
                 .build();
 
         VirusWhitelist virusWhitelist2 = ImmutableVirusWhitelist.builder()
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(null)
+                .nonIntegratedMinimalCoverage(null)
                 .build();
 
         String name = "Human papillomavirus type 16";
@@ -53,11 +55,11 @@ public class VirusInterpreterAlgoTest {
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
-        Map<Integer, VirusWhitelist> virusInterpretationMap = Maps.newHashMap();
-        virusInterpretationMap.put(1, virusWhitelist1);
-        virusInterpretationMap.put(2, virusWhitelist2);
-        VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusInterpretationMap);
+        Map<Integer, VirusWhitelist> virusWhitelistMap = Maps.newHashMap();
+        virusWhitelistMap.put(1, virusWhitelist1);
+        virusWhitelistMap.put(2, virusWhitelist2);
 
+        VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusWhitelistMap);
         VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
@@ -81,7 +83,6 @@ public class VirusInterpreterAlgoTest {
         assertEquals(name, reportedVirus2.name());
         assertEquals(0, reportedVirus2.integrations());
         assertEquals("EBV", reportedVirus2.interpretation());
-
     }
 
     @NotNull

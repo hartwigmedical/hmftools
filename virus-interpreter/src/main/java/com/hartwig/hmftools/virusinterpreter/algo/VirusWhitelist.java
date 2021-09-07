@@ -18,6 +18,6 @@ public abstract class VirusWhitelist {
     public abstract Integer integratedMinimalCoverage();
 
     @Nullable
-    public abstract Integer nonintegratedMinimalCoverage();
+    public abstract Integer nonIntegratedMinimalCoverage();
 
 }

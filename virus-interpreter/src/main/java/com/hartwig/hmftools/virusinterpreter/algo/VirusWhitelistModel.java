@@ -57,7 +57,7 @@ public class VirusWhitelistModel {
     }
 
     @Nullable
-    public Integer nonintegratedMinimalCoverage(int speciesTaxid) {
+    public Integer nonIntegratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
         VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
@@ -65,7 +65,7 @@ public class VirusWhitelistModel {
             LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusWhitelist.nonintegratedMinimalCoverage() : null;
+        return speciesHasInterpretation ? virusWhitelist.nonIntegratedMinimalCoverage() : null;
     }
 
     public boolean hasInterpretation(int speciesTaxid) {

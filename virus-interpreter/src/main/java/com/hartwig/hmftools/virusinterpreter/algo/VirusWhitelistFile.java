@@ -10,7 +10,6 @@ import com.google.common.collect.Maps;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class VirusWhitelistFile {
@@ -23,24 +22,24 @@ public final class VirusWhitelistFile {
     }
 
     @NotNull
-    public static VirusWhitelistModel buildFromTsv(@NotNull String virusInterpretationTsv) throws IOException {
-        List<String> linesVirusWhiteList = Files.readAllLines(new File(virusInterpretationTsv).toPath());
+    public static VirusWhitelistModel buildFromTsv(@NotNull String virusWhitelistTsv) throws IOException {
+        List<String> linesVirusWhitelist = Files.readAllLines(new File(virusWhitelistTsv).toPath());
 
         Map<Integer, VirusWhitelist> speciesVirusWhitelistMap = Maps.newHashMap();
 
-        for (String line : linesVirusWhiteList.subList(1, linesVirusWhiteList.size())) {
+        for (String line : linesVirusWhitelist.subList(1, linesVirusWhitelist.size())) {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 5) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
                 VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
                         .reportOnSummary(Boolean.parseBoolean(parts[1].trim()))
                         .virusInterpretation(parts[2].trim())
-                        .integratedMinimalCoverage(parts[3].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[3].trim()))
-                        .nonintegratedMinimalCoverage(parts[4].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[4].trim()))
+                        .integratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
+                        .nonIntegratedMinimalCoverage(parts[4].trim().isEmpty() ? null : Integer.parseInt(parts[4].trim()))
                         .build();
                 speciesVirusWhitelistMap.put(speciesTaxid, virusWhitelist);
             } else {
-                LOGGER.warn("Suspicious line detected in virus interpretation tsv: {}", line);
+                LOGGER.warn("Suspicious line detected in virus whitelist tsv: {}", line);
             }
         }
 

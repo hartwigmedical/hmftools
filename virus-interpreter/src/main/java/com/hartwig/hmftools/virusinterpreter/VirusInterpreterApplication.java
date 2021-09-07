@@ -45,7 +45,7 @@ public class VirusInterpreterApplication {
         LOGGER.info("Loading taxonomy db from {}", config.taxonomyDbTsv());
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.taxonomyDbTsv());
 
-        LOGGER.info("Building virus interpretation model from {}", config.virusWhitelistTsv());
+        LOGGER.info("Building virus whitelist model from {}", config.virusWhitelistTsv());
         VirusWhitelistModel virusWhitelistModel = VirusWhitelistFile.buildFromTsv(config.virusWhitelistTsv());
 
         LOGGER.info("Building virus blacklist model from {}", config.virusBlacklistTsv());

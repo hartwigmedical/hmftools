@@ -21,7 +21,7 @@ public class VirusWhitelistModelTest {
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(null)
+                .nonIntegratedMinimalCoverage(null)
                 .build();
 
         speciesToInterpretationMap.put(1, virusWhitelist);

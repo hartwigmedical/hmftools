@@ -26,7 +26,7 @@ public class VirusWhitelistFileTest {
 
         assertEquals("MCV", virusWhitelistModel.interpretVirusSpecies(1));
         assertTrue(virusWhitelistModel.displayVirusOnSummaryReport(1));
-        assertEquals(Integer.valueOf(90), virusWhitelistModel.nonintegratedMinimalCoverage(1));
+        assertEquals(Integer.valueOf(90), virusWhitelistModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusWhitelistModel.integratedMinimalCoverage(1));
 
         assertNotEquals("HPV", virusWhitelistModel.interpretVirusSpecies(2));
