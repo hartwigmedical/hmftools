@@ -97,10 +97,7 @@ public class ExpressionAnalyser
 
             for(String transName : peptideData.Transcripts)
             {
-                Double tpm = mTranscriptExpression.getExpression(transName);
-
-                if(tpm != null)
-                    peptideData.TpmTotal += tpm;
+                peptideData.addTpm(mTranscriptExpression.getExpression(transName));
             }
 
             writePeptideData(peptideData);
@@ -113,10 +110,7 @@ public class ExpressionAnalyser
 
             for(String transName : peptideData.Transcripts)
             {
-                Double tpm = mTranscriptExpression.getExpression(transName);
-
-                if(tpm != null)
-                    peptideData.TpmTotal += tpm;
+                peptideData.addTpm(mTranscriptExpression.getExpression(transName));
             }
 
             writePeptideData(peptideData);
@@ -150,7 +144,7 @@ public class ExpressionAnalyser
         {
             mWriter.write(String.format("%s,%s,%s,%.6f,%.6f,%s",
                     peptideData.Allele, peptideData.Peptide, peptideData.Source,
-                    peptideData.LikelihoodRank, peptideData.TpmTotal, peptideData.transcripts()));
+                    peptideData.LikelihoodRank, peptideData.mTpmTotal, peptideData.transcripts()));
 
             mWriter.newLine();
         }
@@ -182,7 +176,7 @@ public class ExpressionAnalyser
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
             int rankIndex = fieldsIndexMap.get(FLD_LIKE_RANK);
-            Integer transIndex = fieldsIndexMap.get("TransName");
+            Integer transIndex = fieldsIndexMap.get("TransNames");
 
             String line = "";
 
@@ -197,7 +191,9 @@ public class ExpressionAnalyser
                 List<String> transNames = Lists.newArrayList();
 
                 if(transIndex != null)
-                    transNames.add(values[transIndex]);
+                {
+                    Arrays.stream(values[transIndex].split(ITEM_DELIM, -1)).forEach(x -> transNames.add(x));
+                }
 
                 peptideData.add(new PeptideData(allele, peptide, source, likelihoodRank, transNames));
             }
@@ -267,7 +263,8 @@ public class ExpressionAnalyser
         public final double LikelihoodRank;
         public final List<String> Transcripts;
 
-        public double TpmTotal;
+        private double mTpmTotal;
+        private boolean mHasTpm;
 
         public PeptideData(
                 final String allele, final String peptide, final String source, final double likelihoodRank, final List<String> transcripts)
@@ -277,7 +274,17 @@ public class ExpressionAnalyser
             Source = source;
             LikelihoodRank = likelihoodRank;
             Transcripts = transcripts;
-            TpmTotal = -1;
+            mTpmTotal = 0;
+            mHasTpm = false;
+        }
+
+        public void addTpm(final Double tpm)
+        {
+            if(tpm == null)
+                return;
+
+            mHasTpm = true;
+            mTpmTotal += tpm;
         }
 
         public String toString() { return String.format("allele(%s) peptide(%s) source(%s)", Allele, Peptide, Source); }

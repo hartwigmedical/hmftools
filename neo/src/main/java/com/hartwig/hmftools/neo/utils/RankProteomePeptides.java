@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_BASE_COUNT;
 
 import java.io.BufferedWriter;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -91,7 +93,7 @@ public class RankProteomePeptides
             System.exit(1);
         }
 
-        NE_LOGGER.info("searching for {} peptides", mAlleles.size());
+        NE_LOGGER.info("searching for {} alleles", mAlleles.size());
 
         List<PeptideRankTask> searchTasks = Lists.newArrayList();
 
@@ -138,7 +140,7 @@ public class RankProteomePeptides
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("Allele,Peptide,LikelihoodRank,GeneName,TransName");
+            writer.write("Allele,Peptide,LikelihoodRank,Genes,TransNames");
             writer.newLine();
             return writer;
         }
@@ -155,9 +157,9 @@ public class RankProteomePeptides
         {
             for(PeptideData peptideData : peptideDataList)
             {
+
                 writer.write(String.format("%s,%s,%.6f,%s,%s",
-                        allele, peptideData.Peptide, peptideData.LikelihoodRank,
-                        peptideData.TransData.GeneName, peptideData.TransData.TransName));
+                        allele, peptideData.Peptide, peptideData.LikelihoodRank, peptideData.geneNames(), peptideData.transNames()));
 
                 writer.newLine();
             }
@@ -215,14 +217,12 @@ public class RankProteomePeptides
 
         private void findPeptides(final String allele)
         {
-            List<PeptideData> results = Lists.newArrayList();
+            Map<String,PeptideData> results = Maps.newHashMap();
 
             for(int peptideLength : RANKED_PROTEOME_PEPTIDE_LENGTHS)
             {
                 for(List<TranscriptAminoAcids> transAaList : mTransAminoAcidMap.values())
                 {
-                    Set<String> uniquePeptides = Sets.newHashSet();
-
                     for(TranscriptAminoAcids transAminoAcids : transAaList)
                     {
                         final String aminoAcids = transAminoAcids.AminoAcids;
@@ -233,10 +233,14 @@ public class RankProteomePeptides
                             int endIndex = startIndex + peptideLength;
                             String aaPeptide = aminoAcids.substring(startIndex, endIndex);
 
-                            if(uniquePeptides.contains(aaPeptide))
-                                continue;
+                            PeptideData peptideData = results.get(aaPeptide);
 
-                            uniquePeptides.add(aaPeptide);
+                            if(peptideData != null)
+                            {
+                                peptideData.GeneNames.add(transAminoAcids.GeneName);
+                                peptideData.TransNames.add(transAminoAcids.TransName);
+                                continue;
+                            }
 
                             if(aaPeptide.contains(AMINO_ACID_21ST))
                                 continue;
@@ -247,16 +251,12 @@ public class RankProteomePeptides
                             int upFlankBases = min(startIndex, FLANK_BASE_COUNT);
 
                             if(upFlankBases > 0)
-                            {
                                 upFlank = transAminoAcids.AminoAcids.substring(startIndex - upFlankBases, startIndex);
-                            }
 
                             int downFlankBases = min(transAminoAcids.AminoAcids.length() - endIndex - 1, FLANK_BASE_COUNT);
 
                             if(downFlankBases > 0)
-                            {
                                 downFlank = transAminoAcids.AminoAcids.substring(endIndex, endIndex + downFlankBases);
-                            }
 
                             BindData bindData = new BindData(allele, aaPeptide, "", upFlank, downFlank);
 
@@ -264,7 +264,10 @@ public class RankProteomePeptides
 
                             if(bindData.likelihoodRank() < mRankCuttoff)
                             {
-                                results.add(new PeptideData(aaPeptide, bindData.likelihoodRank(), transAminoAcids));
+                                peptideData = new PeptideData(aaPeptide, bindData.likelihoodRank(), transAminoAcids);
+                                peptideData.GeneNames.add(transAminoAcids.GeneName);
+                                peptideData.TransNames.add(transAminoAcids.TransName);
+                                results.put(aaPeptide, peptideData);
                             }
                         }
                     }
@@ -273,7 +276,7 @@ public class RankProteomePeptides
 
             NE_LOGGER.debug("{}: allele({}) search found {} ranked peptides", mTaskId, allele, results.size());
 
-            writePeptides(mWriter, allele, results);
+            writePeptides(mWriter, allele, results.values().stream().collect(Collectors.toList()));
         }
     }
 
@@ -281,13 +284,36 @@ public class RankProteomePeptides
     {
         public final String Peptide;
         public final double LikelihoodRank;
-        public final TranscriptAminoAcids TransData;
+
+        public final Set<String> GeneNames;
+        public final Set<String> TransNames;
 
         public PeptideData(final String peptide, double rank, final TranscriptAminoAcids transData)
         {
             Peptide = peptide;
             LikelihoodRank = rank;
-            TransData = transData;
+            GeneNames = Sets.newHashSet();
+            TransNames = Sets.newHashSet();
+        }
+
+        public String geneNames()
+        {
+            if(GeneNames.isEmpty())
+                return "";
+
+            StringJoiner sj = new StringJoiner(ITEM_DELIM);
+            GeneNames.forEach(x -> sj.add(x));
+            return sj.toString();
+        }
+
+        public String transNames()
+        {
+            if(TransNames.isEmpty())
+                return "";
+
+            StringJoiner sj = new StringJoiner(ITEM_DELIM);
+            TransNames.forEach(x -> sj.add(x));
+            return sj.toString();
         }
     }
 
