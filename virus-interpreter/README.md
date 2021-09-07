@@ -33,20 +33,20 @@ The whitelist is configurable and used in the Hartwig pipeline to filter which v
 
 ### Output data
 
-Virus interpreter produces a tsv file where every line (record) is an entry from the VIRUSBreakend summary file. 
+Virus Interpreter produces a tsv file where every line (record) is an entry from the VIRUSBreakend summary file. 
 The following fields are stored per viral presence:
 
 Field | Description 
 ---|---
-taxid | The taxid of the virus that is reported from VIRUSBreakend
+taxid | The reference taxid of the virus that is called with VIRUSBreakend
 name | The name of the virus, matching with the taxid
 qcStatus | The QC status as reported by VIRUSBreakend
-integrations | The number of integrations of this virus into the sample genome as reported by VIRUSBreakend
+integrations | The number of detected integrations of this virus into the sample genome as reported by VIRUSBreakend
 interpretation | The output of the interpretation step of Virus Interpreter
-percentageCovered | The percentage of the viral reference DNA that has been covered in the tumor sample as reported by VIRUSBreakend
-coverage | The mean coverage of the virus as reported by VIRUSBreakend 
-expectedMeanCoverage | The expected coverage assuming the virus is integrated once in the tumor DNA. 
-reported | A boolean indicated this viral presence is considered a driver
+percentageCovered | The percentage of the viral reference sequence that has been covered in the tumor sample as reported by VIRUSBreakend
+meanCoverage | The mean coverage of the virus as reported by VIRUSBreakend 
+expectedClonalMeanCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA 
+reported | A boolean indicating whether the detected viral presence is considered a driver
 
  ## Version History and Download Links
  - [1.1] (coming)
