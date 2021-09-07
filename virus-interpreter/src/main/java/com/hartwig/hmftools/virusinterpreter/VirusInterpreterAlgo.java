@@ -58,7 +58,7 @@ public class VirusInterpreterAlgo {
                     .meanDepth(meanDepthVirus)
                     .expectedMeanDepth(expectedClonalMeanDepth)
                     .reported(report(virusBreakend, expectedClonalMeanDepth, coverageVirus, meanDepthVirus))
-                    .reportedSummary(virusWhitelistModel.displayVirusOnreport(taxid))
+                    .reportedSummary(virusWhitelistModel.displayVirusOnSummaryReport(taxid))
                     .build());
         }
 

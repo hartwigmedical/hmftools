@@ -33,7 +33,6 @@ public final class VirusWhitelistFile {
             if (parts.length == 5) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
                 VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
-                        .taxidSpecies(speciesTaxid)
                         .reportOnSummary(Boolean.parseBoolean(parts[1].trim()))
                         .virusInterpretation(parts[2].trim())
                         .integratedMinimalCoverage(parts[3].trim().equals(Strings.EMPTY) ? null : Integer.parseInt(parts[3].trim()))
