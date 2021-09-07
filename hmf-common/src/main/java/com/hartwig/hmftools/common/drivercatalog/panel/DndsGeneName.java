@@ -4,41 +4,49 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
-class DndsGeneName {
+class DndsGeneName
+{
+    private final GeneNameMapping mGeneNameMapping;
+    private final Predicate<DriverGene> mAlignmentMapPredicate;
+    private final Function<DriverGene, String> mDndsGeneFunction;
+    private final Set<String> mDndsGenes;
 
-    private final GeneNameMapping geneNameMapping;
-    private final Predicate<DriverGene> alignmentMapPredicate;
-    private final Function<DriverGene, String> dndsGeneFunction;
-    private final Set<String> dndsGenes;
+    public DndsGeneName(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final Set<String> dndsGenes)
+    {
+        mDndsGenes = dndsGenes;
+        mGeneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
 
-    public DndsGeneName(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final Set<String> dndsGenes) {
-        this.dndsGenes = dndsGenes;
-        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
-        if (refGenomeVersion == RefGenomeVersion.V37) {
-            alignmentMapPredicate = driverGene -> geneNameMapping.isValidV37Gene(driverGene.gene());
-            dndsGeneFunction = DriverGene::gene;
-        } else {
-            alignmentMapPredicate = driverGene -> geneNameMapping.isValidV38Gene(driverGene.gene());
-            dndsGeneFunction = driverGene -> geneNameMapping.v37Gene(driverGene.gene());
+        if(refGenomeVersion == RefGenomeVersion.V37)
+        {
+            mAlignmentMapPredicate = driverGene -> mGeneNameMapping.isValidV37Gene(driverGene.gene());
+            mDndsGeneFunction = DriverGene::gene;
+        }
+        else
+        {
+            mAlignmentMapPredicate = driverGene -> mGeneNameMapping.isValidV38Gene(driverGene.gene());
+            mDndsGeneFunction = driverGene -> mGeneNameMapping.v37Gene(driverGene.gene());
         }
     }
 
-    public boolean isValid(@NotNull DriverGene driverGene) {
-        if (!alignmentMapPredicate.test(driverGene)) {
+    public boolean isValid(@NotNull DriverGene driverGene)
+    {
+        if(!mAlignmentMapPredicate.test(driverGene))
+        {
             return false;
         }
 
         String dndsGeneName = dndsGeneName(driverGene);
-        return dndsGenes.contains(dndsGeneName);
+        return mDndsGenes.contains(dndsGeneName);
     }
 
     @NotNull
-    public String dndsGeneName(@NotNull DriverGene driverGene) {
-        return dndsGeneFunction.apply(driverGene);
+    public String dndsGeneName(@NotNull DriverGene driverGene)
+    {
+        return mDndsGeneFunction.apply(driverGene);
     }
 }

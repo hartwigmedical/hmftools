@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.svtools.cohort;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -9,10 +12,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -29,8 +32,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -66,22 +70,9 @@ public class SineBreakendFinder
 
     public SineBreakendFinder(final CommandLine cmd)
     {
-        mSampleIds = Lists.newArrayList();
-
-        if(cmd.hasOption(SAMPLE_ID_FILE))
-        {
-            try
-            {
-                mSampleIds.addAll(Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath()).stream()
-                        .filter(x -> !x.equals("SampleId")).collect(Collectors.toList()));
-
-                LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
-            }
-            catch (Exception e)
-            {
-                LOGGER.error("failed to load ref genome: {}", e.toString());
-            }
-        }
+        String sampleIdsFile = cmd.getOptionValue(SAMPLE_ID_FILE);
+        mSampleIds = ConfigUtils.loadSampleIdsFile(sampleIdsFile);
+        LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
 
         mRmTypes = Lists.newArrayList();
 
@@ -214,7 +205,7 @@ public class SineBreakendFinder
                 byte strand = items[strandIndex].equals("+") ? POS_ORIENT : NEG_ORIENT;
 
                 RepeatMaskerData rmData = new RepeatMaskerData(
-                        rmId, new BaseRegion(chromosome, positions), strand, items[classIndex], matchingRepeat);
+                        rmId, new ChrBaseRegion(chromosome, positions), strand, items[classIndex], matchingRepeat);
 
                 final String subRepeat = rmData.subRepeat(REPEAT_SUB_LENGTH);
 
@@ -338,15 +329,14 @@ public class SineBreakendFinder
         options.addOption(SAMPLE_ID_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(RM_TYPES, true, "External LINE data sample counts");
         options.addOption(REPEAT_MASKER_FILE, true, "Polymorphic LINE data file");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputDir(options);
 
         DatabaseAccess.addDatabaseCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         SineBreakendFinder cohortLineElements = new SineBreakendFinder(cmd);
         cohortLineElements.run();

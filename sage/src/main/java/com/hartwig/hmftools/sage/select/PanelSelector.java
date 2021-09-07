@@ -4,46 +4,49 @@ import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 @NotThreadSafe
-public class PanelSelector<R extends GenomeRegion> {
+public class PanelSelector
+{
+    private final List<ChrBaseRegion> mRegions;
+    private int mIndex;
 
-    private final List<R> regions;
-    private int index = 0;
-
-    public PanelSelector(final List<R> regions) {
-        this.regions = regions;
+    public PanelSelector(final List<ChrBaseRegion> regions)
+    {
+        mRegions = regions;
+        mIndex = 0;
     }
 
-    public boolean inPanel(long start, long end) {
-        if (regions.isEmpty()) {
+    public boolean inPanel(long start, long end) { return inPanel((int)start, (int)end); }
+
+    public boolean inPanel(int start, int end)
+    {
+        if(mRegions.isEmpty())
             return false;
-        }
 
-        R current = current();
-        while (index > 0 && current.start() > end) {
-            index--;
+        ChrBaseRegion current = current();
+        while(mIndex > 0 && current.start() > end)
+        {
+            mIndex--;
             current = current();
         }
 
-        while (index < regions.size() - 1 && current.end() < start) {
-            index++;
+        while(mIndex < mRegions.size() - 1 && current.end() < start)
+        {
+            mIndex++;
             current = current();
         }
 
-        if (start <= current.end() && end >= current.start()) {
+        if(start <= current.end() && end >= current.start())
             return true;
-        }
 
         return false;
     }
 
-    @NotNull
-    private R current() {
-        return regions.get(index);
+    private ChrBaseRegion current()
+    {
+        return mRegions.get(mIndex);
     }
 
 }

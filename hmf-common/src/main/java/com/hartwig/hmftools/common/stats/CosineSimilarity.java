@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.stats;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 
 public final class CosineSimilarity
 {

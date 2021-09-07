@@ -48,10 +48,10 @@ public class SomaticCodingCount
     }
 
     public static void addVariant(
-            final List<SomaticCodingCount> codingCounts, final VariantContextDecorator variant, final List<HlaAllele> variantAlleles)
+            final List<SomaticCodingCount> codingCounts, final SomaticVariant variant, final List<HlaAllele> variantAlleles)
     {
-        boolean isIndel = variant.alt().length() != variant.ref().length();
-        CodingEffect codingEffect = variant.canonicalCodingEffect();
+        boolean isIndel = variant.Alt.length() != variant.Ref.length();
+        CodingEffect codingEffect = variant.CanonicalCodingEffect;
         addVariant(codingCounts, isIndel, codingEffect, variantAlleles);
     }
 

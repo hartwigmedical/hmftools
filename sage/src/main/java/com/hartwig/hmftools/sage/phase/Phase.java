@@ -11,54 +11,55 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Phase implements Consumer<SageVariant> {
+public class Phase implements Consumer<SageVariant>
+{
+    public static final int PHASE_BUFFER = 150;
 
-    static final int PHASE_BUFFER = 150;
+    private final DedupRealign mDedupRealign;
+    private final DedupMnv mDedupMnv;
+    private final LocalPhaseSet mLocalPhaseSet;
+    private final LocalRealignSet mLocalRealignSet;
+    private final DedupIndel mDedupIndel;
+    private final MixedSomaticGermlineIdentifier mMixedSomaticGermlineIdentifier;
+    private final MixedSomaticGermlineDedup mMixedSomaticGermlineDedup;
+    private final PhasedInframeIndel mPhasedInframeIndel;
+    private final RightAlignMicrohomology mRrightAlignMicrohomology;
 
-    private final DedupRealign dedupRealign;
-    private final DedupMnv dedupMnv;
-    private final LocalPhaseSet localPhaseSet;
-    private final LocalRealignSet localRealignSet;
-    private final DedupIndel dedupIndel;
-    private final MixedSomaticGermlineIdentifier mixedSomaticGermlineIdentifier;
-    private final MixedSomaticGermlineDedup mixedSomaticGermlineDedup;
-    private final PhasedInframeIndel phasedInframeIndel;
-    private final RightAlignMicrohomology rightAlignMicrohomology;
-
-    public Phase(@NotNull final SageConfig config, @NotNull final String chromosome, @NotNull final Consumer<SageVariant> consumer) {
-        final List<HmfTranscriptRegion> transcripts =
-                config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
-
-        dedupRealign = new DedupRealign(consumer);
-        dedupIndel = new DedupIndel(dedupRealign);
-        dedupMnv = new DedupMnv(dedupIndel);
-        mixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(dedupMnv, transcripts);
-        mixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mixedSomaticGermlineDedup);
-        phasedInframeIndel = new PhasedInframeIndel(mixedSomaticGermlineIdentifier, transcripts);
-        rightAlignMicrohomology = new RightAlignMicrohomology(phasedInframeIndel, transcripts);
-        localRealignSet = new LocalRealignSet(rightAlignMicrohomology);
-        localPhaseSet = new LocalPhaseSet(localRealignSet);
+    public Phase(final List<HmfTranscriptRegion> transcripts, final Consumer<SageVariant> consumer)
+    {
+        mDedupRealign = new DedupRealign(consumer);
+        mDedupIndel = new DedupIndel(mDedupRealign);
+        mDedupMnv = new DedupMnv(mDedupIndel);
+        mMixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(mDedupMnv, transcripts);
+        mMixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mMixedSomaticGermlineDedup);
+        mPhasedInframeIndel = new PhasedInframeIndel(mMixedSomaticGermlineIdentifier, transcripts);
+        mRrightAlignMicrohomology = new RightAlignMicrohomology(mPhasedInframeIndel, transcripts);
+        mLocalRealignSet = new LocalRealignSet(mRrightAlignMicrohomology);
+        mLocalPhaseSet = new LocalPhaseSet(mLocalRealignSet);
     }
 
     @NotNull
-    public Set<Integer> passingPhaseSets() {
-        return localPhaseSet.passingPhaseSets();
+    public Set<Integer> passingPhaseSets()
+    {
+        return mLocalPhaseSet.passingPhaseSets();
     }
 
     @Override
-    public void accept(final SageVariant sageVariant) {
-        localPhaseSet.accept(sageVariant);
+    public void accept(final SageVariant sageVariant)
+    {
+        mLocalPhaseSet.accept(sageVariant);
     }
 
-    public void flush() {
-        localPhaseSet.flush();
-        localRealignSet.flush();
-        rightAlignMicrohomology.flush();
-        phasedInframeIndel.flush();
-        mixedSomaticGermlineIdentifier.flush();
-        mixedSomaticGermlineDedup.flush();
-        dedupMnv.flush();
-        dedupIndel.flush();
-        dedupRealign.flush();
+    public void flush()
+    {
+        mLocalPhaseSet.flush();
+        mLocalRealignSet.flush();
+        mRrightAlignMicrohomology.flush();
+        mPhasedInframeIndel.flush();
+        mMixedSomaticGermlineIdentifier.flush();
+        mMixedSomaticGermlineDedup.flush();
+        mDedupMnv.flush();
+        mDedupIndel.flush();
+        mDedupRealign.flush();
     }
 }

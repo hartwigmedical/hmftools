@@ -10,39 +10,41 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReadContextCounterFactory {
+public class ReadContextCounterFactory
+{
+    private static final Set<VariantTier> HIGH_COVERAGE = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
-    private static final Set<SageVariantTier> HIGH_COVERAGE = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
+    private final SageConfig mConfig;
+    private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;
 
-    private final SageConfig config;
-    private final Map<String, QualityRecalibrationMap> qualityRecalibrationMap;
-
-    public ReadContextCounterFactory(final SageConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
-        this.config = config;
-        this.qualityRecalibrationMap = qualityRecalibrationMap;
+    public ReadContextCounterFactory(final SageConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    {
+        mConfig = config;
+        mQualityRecalibrationMap = qualityRecalibrationMap;
     }
 
-    public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates) {
+    public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates)
+    {
         return candidates.stream()
                 .map(x -> new ReadContextCounter(sample,
                         x.variant(),
                         x.readContext(),
-                        qualityRecalibrationMap.get(sample),
+                        mQualityRecalibrationMap.get(sample),
                         x.tier(),
                         maxCoverage(x),
                         x.minNumberOfEvents(),
-                        config.maxSkippedReferenceRegions(),
-                        x.maxReadDepth() < config.maxRealignmentDepth()))
+                        mConfig.maxSkippedReferenceRegions(),
+                        x.maxReadDepth() < mConfig.MaxRealignmentDepth))
                 .collect(Collectors.toList());
     }
 
-    private int maxCoverage(@NotNull final Candidate candidate) {
+    private int maxCoverage(@NotNull final Candidate candidate)
+    {
         return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome())
-                ? config.maxReadDepthPanel()
-                : config.maxReadDepth();
+                ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }
 }

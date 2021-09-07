@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import java.io.File;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -12,145 +13,142 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomePipeline implements AutoCloseable {
+public class ChromosomePipeline implements AutoCloseable
+{
+    private final String mChromosome;
+    private final SageConfig mConfig;
+    private final List<RegionFuture<List<SageVariant>>> mRegions = Lists.newArrayList();
+    private final IndexedFastaSequenceFile mRefGenome;
+    private final SomaticPipeline mSomaticPipeline;
+    private final Consumer<SageVariant> mConsumer;
+    private final ChromosomePartition mPartition;
+    private final Phase mPhase;
 
-    private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
-    private static final EnumSet<SageVariantTier> PANEL_ONLY_TIERS = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
+    private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
-    private final String chromosome;
-    private final SageConfig config;
-    private final List<RegionFuture<List<SageVariant>>> regions = Lists.newArrayList();
-    private final IndexedFastaSequenceFile refGenome;
-    private final SageVariantPipeline sageVariantPipeline;
-    private final Consumer<VariantContext> consumer;
-    private final ChromosomePartition partition;
-    private final Phase phase;
+    public ChromosomePipeline(
+            final String chromosome, final SageConfig config, final Executor executor,
+            final ReferenceData refData, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
+            final Coverage coverage, final Consumer<SageVariant> consumer)
+    {
+        mChromosome = chromosome;
+        mConfig = config;
+        mRefGenome = refData.RefGenome;
+        mConsumer = consumer;
 
-    public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
-            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            @NotNull final Coverage coverage, final Consumer<VariantContext> consumer) throws IOException {
-        this.chromosome = chromosome;
-        this.config = config;
-        this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        this.consumer = consumer;
-        this.sageVariantPipeline = new SomaticPipeline(config,
-                executor,
-                refGenome,
-                hotspots,
-                panelRegions,
-                highConfidenceRegions,
-                qualityRecalibrationMap,
-                coverage);
-        this.partition = new ChromosomePartition(config, refGenome);
-        this.phase = new Phase(config, chromosome, this::write);
+        final Chromosome chr = HumanChromosome.contains(chromosome)
+                ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
+
+        mSomaticPipeline = new SomaticPipeline(
+                config, executor, mRefGenome,
+                refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr),
+                refData.HighConfidence.get(chr), qualityRecalibrationMap, coverage);
+
+        mPartition = new ChromosomePartition(config, mRefGenome);
+
+        final List<HmfTranscriptRegion> transcripts =
+                refData.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
+
+        mPhase = new Phase(transcripts, this::write);
     }
 
-    @NotNull
-    public String chromosome() {
-        return chromosome;
+    public String chromosome()
+    {
+        return mChromosome;
     }
 
-    public void process() throws ExecutionException, InterruptedException {
-        for (GenomeRegion region : partition.partition(chromosome)) {
-            final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
+    public void process() throws ExecutionException, InterruptedException
+    {
+        for(ChrBaseRegion region : mPartition.partition(mChromosome))
+        {
+            final CompletableFuture<List<SageVariant>> future = mSomaticPipeline.findVariants(region);
             final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
-            regions.add(regionFuture);
+            mRegions.add(regionFuture);
         }
 
         submit().get();
     }
 
-    public void process(int minPosition, int maxPosition) throws ExecutionException, InterruptedException {
-        for (GenomeRegion region : partition.partition(chromosome, minPosition, maxPosition)) {
-            final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
-            final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
-            regions.add(regionFuture);
-        }
-
-        submit().get();
-    }
-
-    @NotNull
-    private CompletableFuture<ChromosomePipeline> submit() {
-        // Even if regions were executed out of order, they must be phased in order
-        regions.sort(Comparator.comparing(RegionFuture::region));
+    private CompletableFuture<ChromosomePipeline> submit()
+    {
+        // even if regions were executed out of order, they must be phased in order
+        mRegions.sort(Comparator.comparing(RegionFuture::region));
 
         // Phasing must be done in order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = regions.iterator();
-        while (regionsIterator.hasNext()) {
+        final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = mRegions.iterator();
+        while(regionsIterator.hasNext())
+        {
             CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
-            done = done.thenCombine(region, (aVoid, sageVariants) -> {
-
-                sageVariants.forEach(phase);
+            done = done.thenCombine(region, (aVoid, sageVariants) ->
+            {
+                sageVariants.forEach(mPhase);
                 return null;
             });
 
             regionsIterator.remove();
         }
 
-        return done.thenApply(aVoid -> {
-            phase.flush();
-            LOGGER.info("Processing chromosome {} complete", chromosome);
+        return done.thenApply(aVoid ->
+        {
+            mPhase.flush();
+            SG_LOGGER.info("processing chromosome {} complete", mChromosome);
             return ChromosomePipeline.this;
         });
     }
 
-    private void write(@NotNull final SageVariant entry) {
-        if (include(entry, this.phase.passingPhaseSets())) {
-            consumer.accept(SageVariantContextFactory.create(entry));
+    private void write(final SageVariant entry)
+    {
+        if(include(entry, mPhase.passingPhaseSets()))
+        {
+            mConsumer.accept(entry);
         }
     }
 
-    private boolean include(@NotNull final SageVariant entry, @NotNull final Set<Integer> passingPhaseSets) {
-        if (config.panelOnly() && !PANEL_ONLY_TIERS.contains(entry.tier())) {
+    private boolean include(final SageVariant entry, final Set<Integer> passingPhaseSets)
+    {
+        if(mConfig.PanelOnly && !PANEL_ONLY_TIERS.contains(entry.tier()))
             return false;
-        }
 
-        if (entry.isPassing()) {
+        if(entry.isPassing())
             return true;
-        }
 
-        if (config.filter().hardFilter()) {
+        if(mConfig.Filter.HardFilter)
             return false;
-        }
 
-        if (entry.tier() == SageVariantTier.HOTSPOT) {
+        if(entry.tier() == VariantTier.HOTSPOT)
             return true;
-        }
 
-        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records.
-        if (entry.mixedGermlineImpact() > 0) {
+        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records
+        if(entry.mixedGermlineImpact() > 0)
             return true;
-        }
 
-        if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())
-                && !passingPhaseSets.contains(entry.localPhaseSet())) {
+        if(!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())
+                && !passingPhaseSets.contains(entry.localPhaseSet()))
+        {
             final ReadContextCounter normal = entry.normalAltContexts().get(0);
-            if (normal.altSupport() > config.filter().filteredMaxNormalAltSupport()) {
+            if(normal.altSupport() > mConfig.Filter.FilteredMaxNormalAltSupport)
+            {
                 return false;
             }
         }
@@ -159,26 +157,30 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
-        refGenome.close();
+    public void close() throws IOException
+    {
+        mRefGenome.close();
     }
 
-    private static class RegionFuture<T> {
+    private static class RegionFuture<T>
+    {
+        private final CompletableFuture<T> mFuture;
+        private final ChrBaseRegion mRegion;
 
-        private final CompletableFuture<T> future;
-        private final GenomeRegion region;
-
-        public RegionFuture(final GenomeRegion region, final CompletableFuture<T> future) {
-            this.region = region;
-            this.future = future;
+        public RegionFuture(final ChrBaseRegion region, final CompletableFuture<T> future)
+        {
+            mRegion = region;
+            mFuture = future;
         }
 
-        public CompletableFuture<T> future() {
-            return future;
+        public CompletableFuture<T> future()
+        {
+            return mFuture;
         }
 
-        public GenomeRegion region() {
-            return region;
+        public ChrBaseRegion region()
+        {
+            return mRegion;
         }
     }
 }

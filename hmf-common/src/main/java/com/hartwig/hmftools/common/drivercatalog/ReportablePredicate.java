@@ -11,14 +11,15 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportablePredicate implements Predicate<SomaticVariant> {
-
-    static final int MAX_ONCO_REPEAT_COUNT = 7;
+public class ReportablePredicate implements Predicate<SomaticVariant>
+{
+    public static final int MAX_ONCO_REPEAT_COUNT = 7;
 
     private final int maxRepeatCount;
     private final Map<String, DriverGene> driverGeneMap;
 
-    public ReportablePredicate(@NotNull final DriverCategory type, @NotNull final DriverGenePanel driverGenePanel) {
+    public ReportablePredicate(@NotNull final DriverCategory type, @NotNull final DriverGenePanel driverGenePanel)
+    {
         this.driverGeneMap = driverGenePanel.driverGenes()
                 .stream()
                 .filter(x -> x.likelihoodType().equals(type) && x.reportSomatic())
@@ -27,22 +28,27 @@ public class ReportablePredicate implements Predicate<SomaticVariant> {
     }
 
     @Override
-    public boolean test(final SomaticVariant variant) {
+    public boolean test(final SomaticVariant variant)
+    {
         final DriverGene driverGene = driverGeneMap.get(variant.gene());
-        if (driverGene == null) {
+        if(driverGene == null)
+        {
             return false;
         }
 
-        if (variant.type().equals(VariantType.INDEL) && maxRepeatCount > 0 && variant.repeatCount() > maxRepeatCount) {
+        if(variant.type().equals(VariantType.INDEL) && maxRepeatCount > 0 && variant.repeatCount() > maxRepeatCount)
+        {
             return false;
         }
 
-        if (variant.isHotspot() && driverGene.reportSomaticHotspot()) {
+        if(variant.isHotspot() && driverGene.reportSomaticHotspot())
+        {
             return true;
         }
 
         DriverImpact impact = DriverImpact.select(variant);
-        switch (impact) {
+        switch(impact)
+        {
             case NONSENSE:
             case FRAMESHIFT:
                 return driverGene.reportNonsenseAndFrameshift();

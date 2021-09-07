@@ -40,10 +40,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -74,7 +74,7 @@ public class FusionReadData
     private final int[] mReadDepth;
 
     // the following data is stored by stream, not start/end
-    private final EnsemblGeneData[] mFusionGenes; // up and downstream genes if identified
+    private final GeneData[] mFusionGenes; // up and downstream genes if identified
     private final int[] mStreamIndices; // mapping of up & down stream to position data which is in SV terms
     private final int[] mMaxSplitLengths;
     private final int[] mJunctionHomology;
@@ -101,7 +101,7 @@ public class FusionReadData
         mRelatedSplicedFusions = Sets.newHashSet();
         mRelatedProximateFusions = Sets.newHashSet();
 
-        mFusionGenes = new EnsemblGeneData[] { null, null};
+        mFusionGenes = new GeneData[] { null, null};
         mStreamIndices = new int[] { SE_START, SE_END };
 
         mReadDepth = new int[] {0, 0};
@@ -337,7 +337,7 @@ public class FusionReadData
         return fragmentsRatio >= 1/CLOSE_MATCH_FRAG_RATIO || fragmentsRatio <= CLOSE_MATCH_FRAG_RATIO;
     }
 
-    public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
+    public void setStreamData(final List<GeneData> upstreamGenes, final List<GeneData> downstreamGenes, boolean startIsUpstream)
     {
         if(!upstreamGenes.isEmpty())
         {
@@ -654,7 +654,7 @@ public class FusionReadData
 
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            final EnsemblGeneData geneData = mFusionGenes[fs];
+            final GeneData geneData = mFusionGenes[fs];
 
             csvData.add(geneData != null ? geneData.GeneId : "");
             csvData.add(geneData != null ? geneData.GeneName : "");

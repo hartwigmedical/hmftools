@@ -1,17 +1,10 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.Category.FUSION;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;

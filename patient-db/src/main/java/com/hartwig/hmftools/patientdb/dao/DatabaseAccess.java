@@ -11,12 +11,11 @@ import com.hartwig.hmftools.common.amber.AmberMapping;
 import com.hartwig.hmftools.common.amber.AmberPatient;
 import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.hla.HlaType;
@@ -33,17 +32,20 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.LinxCluster;
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxLink;
+import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.commons.cli.CommandLine;
@@ -92,8 +94,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final FlagstatDAO flagstatDAO;
     @NotNull
-    private final RNADAO rnaDAO;
-    @NotNull
     private final SnpCheckDAO snpCheckDAO;
     @NotNull
     private final SomaticVariantDAO somaticVariantDAO;
@@ -126,6 +126,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
+    private final VirusInterpreterDAO virusInterpreterDAO;
+    @NotNull
     private final HlaTypeDAO hlaTypeDAO;
     @NotNull
     private final ProtectDAO protectDAO;
@@ -145,7 +147,6 @@ public class DatabaseAccess implements AutoCloseable {
         this.canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
         this.metricDAO = new MetricDAO(context);
         this.flagstatDAO = new FlagstatDAO(context);
-        this.rnaDAO = new RNADAO(context);
         this.snpCheckDAO = new SnpCheckDAO(context);
         this.somaticVariantDAO = new SomaticVariantDAO(context);
         this.germlineVariantDAO = new GermlineVariantDAO(context);
@@ -162,6 +163,7 @@ public class DatabaseAccess implements AutoCloseable {
         this.cuppaDAO = new CuppaDAO(context);
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
+        this.virusInterpreterDAO = new VirusInterpreterDAO(context);
         this.hlaTypeDAO = new HlaTypeDAO(context);
         this.protectDAO = new ProtectDAO(context);
     }
@@ -415,10 +417,6 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
-    public void writeSvViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertion> inserts) {
-        structuralVariantClusterDAO.writeViralInserts(sample, inserts);
-    }
-
     public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations) {
         signatureDAO.write(sample, sigAllocations);
     }
@@ -452,12 +450,16 @@ public class DatabaseAccess implements AutoCloseable {
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull String cuppaResult) {
-        cuppaDAO.writeCuppa(sample, cuppaResult);
+    public void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
+        cuppaDAO.writeCuppa(sample, molecularTissueOrginData);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends) {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
+    }
+
+    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+        virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
     }
 
     public void writeProtectEvidence(@NotNull String sample, @NotNull List<ProtectEvidence> evidence) {
@@ -466,10 +468,6 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         chordDAO.writeChord(sample, chordAnalysis);
-    }
-
-    public void writeRNA(@NotNull Set<String> samples) {
-        rnaDAO.write(samples);
     }
 
     public void writeSnpCheck(@NotNull String sample, boolean isPass) {
@@ -580,6 +578,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting virus breakend data for sample: {}", sample);
         virusBreakendDAO.deleteVirusBreakendForSample(sample);
+
+        LOGGER.info("Deleting virus annotation data for sample: {}", sample);
+        virusInterpreterDAO.deleteVirusAnnotationForSample(sample);
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);

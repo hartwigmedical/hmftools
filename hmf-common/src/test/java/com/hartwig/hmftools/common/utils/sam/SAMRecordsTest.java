@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.utils.sam;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -11,28 +13,28 @@ public class SAMRecordsTest {
 
     @Test
     public void testInsertedBasesAfterPosition() {
-        assertEquals(0, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
-        assertEquals(1, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "3M1I3M", "GATTACA"), 100));
-        assertEquals(2, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "3M2I3M", "GATTTACA"), 100));
-        assertEquals(3, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "3M3I", "GATTTT"), 100));
+        assertEquals(0, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
+        assertEquals(1, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "3M1I3M", "GATTACA"), 100));
+        assertEquals(2, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "3M2I3M", "GATTTACA"), 100));
+        assertEquals(3, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "3M3I", "GATTTT"), 100));
 
-        assertEquals(0, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
-        assertEquals(0, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "3M1D2M", "GATCA"), 100));
-        assertEquals(0, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "3M2D1M", "GATA"), 100));
-        assertEquals(0, SAMRecords.basesInsertedAfterPosition(buildSamRecord(98, "3M3D", "GAT"), 100));
+        assertEquals(0, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
+        assertEquals(0, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "3M1D2M", "GATCA"), 100));
+        assertEquals(0, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "3M2D1M", "GATA"), 100));
+        assertEquals(0, SamRecordUtils.basesInsertedAfterPosition(buildSamRecord(98, "3M3D", "GAT"), 100));
     }
 
     @Test
     public void testDeletedBasesAfterPosition() {
-        assertEquals(0, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
-        assertEquals(0, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "3M1I3M", "GATTACA"), 100));
-        assertEquals(0, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "3M2I3M", "GATTTACA"), 100));
-        assertEquals(0, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "3M3I", "GATTTT"), 100));
+        assertEquals(0, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
+        assertEquals(0, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "3M1I3M", "GATTACA"), 100));
+        assertEquals(0, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "3M2I3M", "GATTTACA"), 100));
+        assertEquals(0, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "3M3I", "GATTTT"), 100));
 
-        assertEquals(0, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
-        assertEquals(1, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "3M1D2M", "GATCA"), 100));
-        assertEquals(2, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "3M2D1M", "GATA"), 100));
-        assertEquals(3, SAMRecords.basesDeletedAfterPosition(buildSamRecord(98, "3M3D", "GAT"), 100));
+        assertEquals(0, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "6M", "GATACA"), 100));
+        assertEquals(1, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "3M1D2M", "GATCA"), 100));
+        assertEquals(2, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "3M2D1M", "GATA"), 100));
+        assertEquals(3, SamRecordUtils.basesDeletedAfterPosition(buildSamRecord(98, "3M3D", "GAT"), 100));
     }
 
     @NotNull

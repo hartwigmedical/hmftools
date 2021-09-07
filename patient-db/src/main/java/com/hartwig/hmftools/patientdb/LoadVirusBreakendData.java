@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFile;
+import com.hartwig.hmftools.common.virus.VirusBreakend;
+import com.hartwig.hmftools.common.virus.VirusBreakendFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;

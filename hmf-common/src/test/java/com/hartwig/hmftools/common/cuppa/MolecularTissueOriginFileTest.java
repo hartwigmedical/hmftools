@@ -14,8 +14,18 @@ public class MolecularTissueOriginFileTest {
 
     @Test
     public void canReadMolecularTissueOriginTxt() throws IOException {
-        String molecularTissueOrigin = MolecularTissueOriginFile.read(MOLECULAR_TISSUE_ORIGIN_TXT);
+        MolecularTissueOrginData molecularTissueOrigin = MolecularTissueOriginFile.read(MOLECULAR_TISSUE_ORIGIN_TXT);
 
-        assertEquals("results inconclusive", molecularTissueOrigin);
+        assertEquals("results inconclusive", molecularTissueOrigin.conclusion());
+    }
+
+    @Test
+    public void canDetermineMolecularTissueOriginDta() {
+        MolecularTissueOrginData molecularTissueOrigin = MolecularTissueOriginFile.extractPredictionDataOrigin("Lower GI tract (likelihood=80.4%)");
+
+        assertEquals("Lower GI tract (likelihood=80.4%)", molecularTissueOrigin.conclusion());
+        assertEquals("Lower GI tract", molecularTissueOrigin.predictedOrigin());
+        assertEquals("likelihood=80.4%", molecularTissueOrigin.predictionLikelihood());
+
     }
 }

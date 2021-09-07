@@ -14,29 +14,34 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class EvidenceStage {
+public class EvidenceStage
+{
+    private final ReadContextEvidence mReadContextEvidence;
 
-    private final ReadContextEvidence readContextEvidence;
-
-    public EvidenceStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
-        this.readContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
+    public EvidenceStage(
+            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    {
+        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
     }
 
-    @NotNull
-    public CompletableFuture<ReadContextCounters> evidence(@NotNull final List<String> samples, @NotNull final List<String> sampleBams, @NotNull final CompletableFuture<List<Candidate>> candidates) {
+    public CompletableFuture<ReadContextCounters> findEvidence(
+            final List<String> samples, final List<String> sampleBams, final CompletableFuture<List<Candidate>> candidates)
+    {
         // Scan tumors for evidence
-        return candidates.thenCompose(initialCandidates -> {
+        return candidates.thenCompose(initialCandidates ->
+        {
             final String primarySample = samples.isEmpty() ? "PRIMARY" : samples.get(0);
 
             final ReadContextCounters result = new ReadContextCounters(primarySample, initialCandidates);
 
             CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-            for (int i = 0; i < samples.size(); i++) {
+            for(int i = 0; i < samples.size(); i++)
+            {
                 final String sample = samples.get(i);
                 final String sampleBam = sampleBams.get(i);
 
-                done = done.thenApply(x -> readContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
+                done = done.thenApply(x -> mReadContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
             }
 
             return done.thenApply(x -> result);

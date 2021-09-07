@@ -2,22 +2,14 @@ package com.hartwig.hmftools.sage.realign;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RealignedContext {
+public class RealignedContext
+{
+    public final RealignedType Type;
+    public final int RepeatCount;
 
-    private final RealignedType type;
-    private final int repeatCount;
-
-    public RealignedContext(@NotNull final RealignedType type, final int repeatCount) {
-        this.type = type;
-        this.repeatCount = repeatCount;
-    }
-
-    @NotNull
-    public RealignedType type() {
-        return type;
-    }
-
-    public int repeatCount() {
-        return repeatCount;
+    public RealignedContext(@NotNull final RealignedType type, final int repeatCount)
+    {
+        Type = type;
+        RepeatCount = repeatCount;
     }
 }

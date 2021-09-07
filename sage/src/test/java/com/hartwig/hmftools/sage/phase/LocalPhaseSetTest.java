@@ -12,10 +12,12 @@ import com.hartwig.hmftools.sage.candidate.CandidateSerializationTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class LocalPhaseSetTest {
+public class LocalPhaseSetTest
+{
 
     @Test
-    public void testExample() {
+    public void testExample()
+    {
         Candidate candidate1 = CandidateSerializationTest.decode(
                 "10\t56022476\t.\tA\tAC\t698\tPASS\tLPS=13618;LRS=325;RC=TCACGGGGGC;RC_IDX=2;RC_LF=GTATGGGTTC;RC_NM=3;RC_RF=ATGGGAGCTG;TIER=LOW_CONFIDENCE;TNC=CAT\tGT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:42,0:0.00:42:1620,0:43,0:0,0,0,0,42,42:0:0,0,0:0,0,0,0,1008,1008:43\t0/1:0,0:0.00:0:0,0:0,0:0,0,0,0,0,0:0:0,0,0:0,0,0,0,0,0:0\t0/1:65,32:0.327:98:3703,188:97,5:23,7,2,0,65,98:0:0,0,0:611,87,5,0,1518,2221:102");
         Candidate candidate2 = CandidateSerializationTest.decode(
@@ -28,13 +30,15 @@ public class LocalPhaseSetTest {
         assertPhased(false, candidate2, candidate3);
     }
 
-    private static void assertPhased(boolean expectedPhased, Candidate candidate1, Candidate candidate2) {
+    private static void assertPhased(boolean expectedPhased, Candidate candidate1, Candidate candidate2)
+    {
         int offset = LocalPhaseSet.adjustedOffset(candidate1.variant(), candidate2.variant());
         assertEquals(expectedPhased, candidate1.readContext().phased(offset, candidate2.readContext()));
     }
 
     @Test
-    public void testRightInLeftDel() {
+    public void testRightInLeftDel()
+    {
         VariantHotspot left = create(100, "ATT", "T");
         assertTrue(LocalPhaseSet.rightInLeftDel(left, create(101, "T", "C")));
         assertTrue(LocalPhaseSet.rightInLeftDel(left, create(102, "T", "C")));
@@ -42,28 +46,32 @@ public class LocalPhaseSetTest {
     }
 
     @Test
-    public void testOffsetSNVs() {
+    public void testOffsetSNVs()
+    {
         VariantHotspot left = create(100, "A", "T");
         VariantHotspot right = create(102, "C", "T");
         assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
     }
 
     @Test
-    public void testDelToTheRight() {
+    public void testDelToTheRight()
+    {
         VariantHotspot left = create(100, "A", "T");
         VariantHotspot right = create(102, "CAT", "T");
         assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
     }
 
     @Test
-    public void testInsToTheRight() {
+    public void testInsToTheRight()
+    {
         VariantHotspot left = create(100, "A", "T");
         VariantHotspot right = create(102, "C", "TAT");
         assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
     }
 
     @Test
-    public void testDelToTheLeft() {
+    public void testDelToTheLeft()
+    {
         VariantHotspot left = create(100, "AA", "A");
         VariantHotspot right = create(102, "G", "T");
         assertEquals(-1, LocalPhaseSet.adjustedOffset(left, right));
@@ -82,7 +90,8 @@ public class LocalPhaseSetTest {
     }
 
     @Test
-    public void testInsToTheLeft() {
+    public void testInsToTheLeft()
+    {
         VariantHotspot left = create(100, "A", "AA");
         VariantHotspot right = create(101, "G", "T");
         assertEquals(-2, LocalPhaseSet.adjustedOffset(left, right));
@@ -101,7 +110,8 @@ public class LocalPhaseSetTest {
     }
 
     @Test
-    public void testTwoInsertsAtSameLocation() {
+    public void testTwoInsertsAtSameLocation()
+    {
         VariantHotspot left = create(100, "A", "AAA");
         VariantHotspot right = create(100, "A", "AA");
         assertEquals(0, LocalPhaseSet.adjustedOffset(left, right));
@@ -109,7 +119,8 @@ public class LocalPhaseSetTest {
     }
 
     @Test
-    public void testTwoDeletesAtSameLocation() {
+    public void testTwoDeletesAtSameLocation()
+    {
         VariantHotspot left = create(100, "AAA", "A");
         VariantHotspot right = create(100, "AA", "A");
         assertEquals(0, LocalPhaseSet.adjustedOffset(left, right));
@@ -117,7 +128,8 @@ public class LocalPhaseSetTest {
     }
 
     @NotNull
-    static VariantHotspot create(long position, String ref, String alt) {
+    static VariantHotspot create(long position, String ref, String alt)
+    {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").ref(ref).alt(alt).position(position).build();
     }
 }

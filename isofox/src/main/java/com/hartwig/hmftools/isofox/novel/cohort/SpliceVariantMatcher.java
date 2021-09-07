@@ -45,16 +45,16 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
@@ -71,7 +71,7 @@ public class SpliceVariantMatcher
     private BufferedWriter mWriter;
     private final Map<String,Integer> mFieldsMap;
 
-    private final Map<String,EnsemblGeneData> mGeneDataMap;
+    private final Map<String, GeneData> mGeneDataMap;
     private final AltSjFilter mAltSjFilter;
 
     private final SpliceVariantCache mDataCache;
@@ -121,7 +121,7 @@ public class SpliceVariantMatcher
 
         for(String geneId : mConfig.RestrictedGeneIds)
         {
-            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
+            final GeneData geneData = mGeneTransCache.getGeneDataById(geneId);
 
             if(geneData != null)
             {
@@ -310,7 +310,7 @@ public class SpliceVariantMatcher
     private void evaluateSpliceVariant(
             final String sampleId, final SpliceVariant variant, final Map<String,List<AltSpliceJunctionFile>> altSpliceJunctions)
     {
-        final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(variant.GeneName);
+        final GeneData geneData = mGeneTransCache.getGeneDataByName(variant.GeneName);
 
         if(geneData == null)
         {
@@ -347,7 +347,7 @@ public class SpliceVariantMatcher
 
     private void findRelatedAltSpliceJunctions(
             final String sampleId, final List<AltSpliceJunctionFile> altSpliceJunctions,
-            final SpliceVariant variant, final EnsemblGeneData geneData, final List<AltSpliceJunctionFile> matchedAltSJs)
+            final SpliceVariant variant, final GeneData geneData, final List<AltSpliceJunctionFile> matchedAltSJs)
     {
         final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
@@ -488,7 +488,7 @@ public class SpliceVariantMatcher
 
     private List<AltSpliceJunctionFile> findCrypticAltSpliceJunctions(
             final String sampleId, final List<AltSpliceJunctionFile> altSpliceJunctions, final SpliceVariant variant,
-            final EnsemblGeneData geneData)
+            final GeneData geneData)
     {
         final List<AltSpliceJunctionFile> closeAltSJs = Lists.newArrayList();
 
@@ -570,7 +570,7 @@ public class SpliceVariantMatcher
     }
 
     private void writeMatchData(
-            final String sampleId, final SpliceVariant variant, final EnsemblGeneData geneData, final AltSpliceJunctionFile altSJ,
+            final String sampleId, final SpliceVariant variant, final GeneData geneData, final AltSpliceJunctionFile altSJ,
             final SpliceVariantMatchType matchType, final AcceptorDonorType accDonType,
             int exonBaseDistance, Integer exonPosition, final String transDataStr)
     {

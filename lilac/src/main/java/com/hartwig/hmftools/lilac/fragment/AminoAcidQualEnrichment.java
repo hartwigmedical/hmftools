@@ -1,36 +1,43 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class AminoAcidQualEnrichment
 {
-    private final int mMinEvidence;
+    private final double mMinEvidence;
 
-    public AminoAcidQualEnrichment(int minEvidence)
+    public AminoAcidQualEnrichment(double minEvidence)
     {
         mMinEvidence = minEvidence;
     }
 
     // Only permit high quality amino acids, ie, amino acids that have at least [minEvidence]
-    public final List<AminoAcidFragment> enrich(final List<NucleotideFragment> fragments)
+    public List<Fragment> enrich(final List<Fragment> fragments)
     {
-        final List<AminoAcidFragment> qualityFilteredAminoAcidFragments
-                = fragments.stream().map(x -> x.toAminoAcidFragment()).collect(Collectors.toList());
+        List<Fragment> qualityFilteredAminoAcidFragments = fragments.stream()
+                .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+
+        qualityFilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
 
         SequenceCount highQualityAminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, qualityFilteredAminoAcidFragments);
 
-        final List<AminoAcidFragment> unfilteredAminoAcidFragments = fragments.stream()
-                .filter(x -> x.isNotEmpty())
-                .map(x -> x.toAminoAcidFragment())
-                .collect(Collectors.toList());
+        List<Fragment> unfilteredAminoAcidFragments = fragments.stream()
+                .filter(x -> x.hasNucleotides())
+                .map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
 
-        return unfilteredAminoAcidFragments.stream().map(x -> enrich(x, highQualityAminoAcidCounts)).collect(Collectors.toList());
+        unfilteredAminoAcidFragments.forEach(x -> x.buildAminoAcids());
+
+        unfilteredAminoAcidFragments.forEach(x -> enrich(x, highQualityAminoAcidCounts));
+
+        return unfilteredAminoAcidFragments;
     }
 
-    private final AminoAcidFragment enrich(final AminoAcidFragment fragment, final SequenceCount count)
+    private void enrich(final Fragment fragment, final SequenceCount count)
     {
         List<Integer> initialIntersect = fragment.getAminoAcidLoci();
 
@@ -38,10 +45,10 @@ public class AminoAcidQualEnrichment
                 .filter(x -> filter(fragment, count, x))
                 .collect(Collectors.toList());
 
-        return fragment.intersectAminoAcidLoci(filteredIntersect);
+        fragment.filterOnLoci(filteredIntersect);
     }
 
-    private static boolean filter(final AminoAcidFragment fragment, final SequenceCount count, int loci)
+    private static boolean filter(final Fragment fragment, final SequenceCount count, int loci)
     {
         List<String> allowed = count.getMinCountSequences(loci);
         String actual = fragment.aminoAcid(loci);

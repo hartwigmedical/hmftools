@@ -19,6 +19,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -190,7 +191,7 @@ public class ExpressionMatrix
 
             if(manualLookupCount > 0)
             {
-                ISF_LOGGER.info("required {} manual gene look-ups", manualLookupCount);
+                ISF_LOGGER.debug("required {} manual gene look-ups", manualLookupCount);
             }
         }
         catch(IOException e)
@@ -223,22 +224,40 @@ public class ExpressionMatrix
 
             final double[][] matrixData = mExpressionMatrix.getData();
 
-            for(int i = 0; i < mExpressionMatrix.Rows; ++i)
+            for(int row = 0; row < mExpressionMatrix.Rows; ++row)
             {
-                writer.write(String.format("%s,%s", mGeneIds.get(i), mGeneNames.get(i)));
+                if(mConfig.Expression.ApplyTpmWriteLimit)
+                {
+                    // skip a row if all sample entries are below the specified threshold
+                    boolean allLow = true;
+
+                    for(int col = 0; col < mExpressionMatrix.Cols; ++col)
+                    {
+                        if(matrixData[row][col] >= mConfig.Expression.TpmThreshold)
+                        {
+                            allLow = false;
+                            break;
+                        }
+                    }
+
+                    if(allLow)
+                        continue;
+                }
+
+                writer.write(String.format("%s,%s", mGeneIds.get(row), mGeneNames.get(row)));
 
                 if(mType == TRANSCRIPT_EXPRESSION_MATRIX)
-                    writer.write(String.format(",%s", mTranscriptNames.get(i)));
+                    writer.write(String.format(",%s", mTranscriptNames.get(row)));
 
                 for(int j = 0; j < mExpressionMatrix.Cols; ++j)
                 {
                     // write decimal is most efficient form
-                    if(matrixData[i][j] == 0)
+                    if(matrixData[row][j] == 0)
                         writer.write(",0");
-                    else if(matrixData[i][j] > 999 || matrixData[i][j] < 0.001)
-                        writer.write(String.format(",%6.3e", matrixData[i][j]));
+                    else if(matrixData[row][j] > 999 || matrixData[row][j] < 0.001)
+                        writer.write(String.format(",%6.3e", matrixData[row][j]));
                     else
-                        writer.write(String.format(",%.4g", matrixData[i][j]));
+                        writer.write(String.format(",%.4g", matrixData[row][j]));
                 }
 
                 writer.newLine();

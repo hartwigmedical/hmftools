@@ -149,8 +149,13 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableHotspot createTestActionableHotspotForSource(@NotNull Knowledgebase source) {
+        return ImmutableActionableHotspot.builder().from(createTestActionableHotspot()).source(source).build();
+    }
+
+    @NotNull
+    public static ActionableHotspot createTestActionableHotspot() {
         return ImmutableActionableHotspot.builder()
-                .from(createTestBaseEvent(source))
+                .from(createTestBaseEvent())
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .ref(Strings.EMPTY)
@@ -160,8 +165,13 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableRange createTestActionableRangeForSource(@NotNull Knowledgebase source) {
+        return ImmutableActionableRange.builder().from(createTestActionableRange()).source(source).build();
+    }
+
+    @NotNull
+    public static ActionableRange createTestActionableRange() {
         return ImmutableActionableRange.builder()
-                .from(createTestBaseEvent(source))
+                .from(createTestBaseEvent())
                 .gene(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .start(0)
@@ -196,8 +206,13 @@ public final class ServeTestFactory {
 
     @NotNull
     public static ActionableCharacteristic createTestActionableCharacteristicForSource(@NotNull Knowledgebase source) {
+        return ImmutableActionableCharacteristic.builder().from(createTestActionableCharacteristic()).source(source).build();
+    }
+
+    @NotNull
+    public static ActionableCharacteristic createTestActionableCharacteristic() {
         return ImmutableActionableCharacteristic.builder()
-                .from(createTestBaseEvent(source))
+                .from(createTestBaseEvent())
                 .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
                 .build();
     }

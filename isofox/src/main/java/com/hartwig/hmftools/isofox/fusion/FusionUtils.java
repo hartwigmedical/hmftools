@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;

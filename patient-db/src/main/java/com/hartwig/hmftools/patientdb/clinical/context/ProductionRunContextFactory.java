@@ -2,9 +2,6 @@ package com.hartwig.hmftools.patientdb.clinical.context;
 
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
-import com.hartwig.hmftools.common.runcontext.RunContext;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class ProductionRunContextFactory {

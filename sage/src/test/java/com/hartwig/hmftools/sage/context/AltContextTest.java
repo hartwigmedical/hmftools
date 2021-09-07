@@ -16,13 +16,15 @@ import com.hartwig.hmftools.sage.read.ReadContextTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class AltContextTest {
+public class AltContextTest
+{
 
     private static final String CHROM = "1";
     private static final int POS = 1000;
 
     @Test
-    public void testIncompleteReadContext() {
+    public void testIncompleteReadContext()
+    {
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
@@ -41,7 +43,8 @@ public class AltContextTest {
     }
 
     @Test
-    public void testFullMatch() {
+    public void testFullMatch()
+    {
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
@@ -60,7 +63,8 @@ public class AltContextTest {
     }
 
     @Test
-    public void testCoreMatchAfterFullMatch() {
+    public void testCoreMatchAfterFullMatch()
+    {
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
@@ -88,7 +92,8 @@ public class AltContextTest {
     }
 
     @Test
-    public void testPartialMatchAfterFullMatch() {
+    public void testPartialMatchAfterFullMatch()
+    {
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
@@ -116,7 +121,8 @@ public class AltContextTest {
     }
 
     @Test
-    public void testBalancedCore() {
+    public void testBalancedCore()
+    {
         String core = "CAT";
 
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
@@ -142,18 +148,21 @@ public class AltContextTest {
         AltContext.ReadContextCandidate finalCandidate = victim.interimReadContexts().get(0);
 
         assertEquals("TAAACATCCCG", new String(finalCandidate.readContext().readBases()));
-        assertEquals(2,  finalCandidate.minNumberOfEvents());
-        assertEquals(4,  finalCandidate.fullMatch());
+        assertEquals(2, finalCandidate.minNumberOfEvents());
+        assertEquals(4, finalCandidate.fullMatch());
     }
 
     @NotNull
-    public static ReadContext simpleReadContext(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank) {
+    public static ReadContext simpleReadContext(@NotNull final String leftFlank, @NotNull final String core,
+            @NotNull final String rightFlank)
+    {
         assert (core.length() == 3);
         return ReadContextTest.create(POS, 1, leftFlank, core, rightFlank, 1);
     }
 
     @NotNull
-    public static ReadContext simpleSnv(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank) {
+    public static ReadContext simpleSnv(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank)
+    {
         assert (core.length() == 5);
         return ReadContextTest.simpleSnv(POS, leftFlank, core, rightFlank);
     }

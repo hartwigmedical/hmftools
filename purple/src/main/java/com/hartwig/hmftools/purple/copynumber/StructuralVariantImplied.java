@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 

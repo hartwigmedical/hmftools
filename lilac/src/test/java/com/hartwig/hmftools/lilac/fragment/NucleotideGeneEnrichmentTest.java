@@ -1,7 +1,13 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
-import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.expandIndices;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -18,21 +24,17 @@ public class NucleotideGeneEnrichmentTest
     @Test
     public void testGeneEnrichment()
     {
-        final List<Integer> A_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 364, 365);
-        final List<Integer> B_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 337, 348, 362);
-        final List<Integer> C_EXON_BOUNDARIES = Lists.newArrayList(24, 114, 206, 298, 338, 349, 365, 366);
-
         NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
 
         List<Integer> indices = Lists.newArrayList();
         indices.add(337);
         indices.add(348);
-        assertGene(enricher, Sets.newHashSet("HLA-A", "HLA-B"), "HLA-A", indices);
+        assertGene(enricher, Sets.newHashSet(HLA_A, HLA_B), HLA_A, indices);
 
-        assertGene(enricher, Sets.newHashSet("HLA-A", "HLA-B"), "HLA-B", indices);
-        assertGene(enricher, Sets.newHashSet("HLA-C"), "HLA-C", indices);
+        assertGene(enricher, Sets.newHashSet(HLA_A, HLA_B), HLA_B, indices);
+        assertGene(enricher, Sets.newHashSet(HLA_C), HLA_C, indices);
 
-        indices.add(362);
+        indices.add(365);
         assertGene(enricher, Sets.newHashSet("HLA-A"), "HLA-A", indices);
         assertGene(enricher, Sets.newHashSet("HLA-B"), "HLA-B", indices);
     }
@@ -41,16 +43,16 @@ public class NucleotideGeneEnrichmentTest
             NucleotideGeneEnrichment enricher,
             Set<String> expectedGenes, String alignedGene, List<Integer> aminoAcideIndices)
     {
-        NucleotideFragment victim = create(alignedGene, expandIndices(aminoAcideIndices));
-        NucleotideFragment result = enricher.enrich(victim);
+        Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
+        Fragment result = enricher.enrich(fragment);
         assertTrue(namesMatch(result.getGenes(), expectedGenes));
     }
 
-    private NucleotideFragment create(String gene, List<Integer> indices)
+    private Fragment create(final String gene, final List<Integer> indices)
     {
         List<Integer> qualities = Lists.newArrayList();
         qualities.add(0);
-        return new NucleotideFragment("id", "", Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
+        return new Fragment("id", "", gene, Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
     }
 
 }

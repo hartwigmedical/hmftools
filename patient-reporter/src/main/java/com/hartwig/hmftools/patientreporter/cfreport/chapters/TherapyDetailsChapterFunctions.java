@@ -70,21 +70,72 @@ final class TherapyDetailsChapterFunctions {
     }
 
     @NotNull
-    static Paragraph createChapterFootnote() {
+    static Paragraph createChapterFootnoteOffLabel() {
+
+//        add("The above clinical evidence is gathered from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases "
+//                + "without further checks or interpretation. \n"
+//                + "Please always consult the underlying literature for determining its value and for further interpretation.\n"
+//                + "Note: only treatment associated evidence with a high level of evidence ( ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+//                .add(" validated association; ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+//                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+//                .add(" case study, limited clinical evidence; ")
+//                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+//                .add(" pre-clinical) are not reported.")
+
+
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("The above clinical evidence is gathered from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases "
-                        + "without further checks or interpretation. \n"
-                        + "Please always consult the underlying literature for determining its value and for further interpretation.\n"
-                        + "Note: only treatment associated evidence with a high level of evidence ( ")
+                .add("The Clinical Knowledgebase (CKB) is used to "
+                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
+                        + "evidence levels \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
-                .add(" validated association; ")
+                .add(" FDA approved therapy and/or guidelines; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
-                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+                .add(" late clinical trials; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" case study, limited clinical evidence; ")
+                .add(" early clinical trials) can be reported.")
+                .add(" Potential evidence items with evidence level \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
-                .add(" pre-clinical) are not reported.")
+                .add(" case reports and preclinical evidence) are not reported.")
+                .addStyle(ReportResources.subTextStyle());
+    }
+
+    @NotNull
+    static Paragraph createChapterFootnoteOnLabel() {
+        //        add("The above clinical evidence is gathered from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases "
+        //                + "without further checks or interpretation. \n"
+        //                + "Please always consult the underlying literature for determining its value and for further interpretation.\n"
+        //                + "Note: only treatment associated evidence with a high level of evidence ( ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+        //                .add(" validated association; ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+        //                .add(" strong clinical evidence) are reported here. Potential evidence items with a lower level of evidence ( ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+        //                .add(" case study, limited clinical evidence; ")
+        //                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+        //                .add(" pre-clinical) are not reported.")
+        return new Paragraph().setKeepTogether(true)
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add("The Clinical Knowledgebase (CKB) is used to "
+                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
+                        + "evidence levels \n( ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+                .add(" FDA approved therapy and/or guidelines; ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+                .add(" late clinical trials; ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+                .add(" early clinical trials) can be reported.")
+                .add(" Potential evidence items with evidence level \n( ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+                .add(" case reports and preclinical evidence) are not reported.")
+                .add("\n")
+                .add("\n")
+                .add("The iClusion knowledgebase is used to annotate DNA aberrations for potential clinical study eligibility. Of note, "
+                        + "clinical study eligibility depends on multiple patient and tumor characteristics of which only the DNA "
+                        + "aberrations are considered in this report.")
                 .addStyle(ReportResources.subTextStyle());
     }
 }

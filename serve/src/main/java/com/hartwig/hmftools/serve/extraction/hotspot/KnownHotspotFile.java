@@ -57,12 +57,7 @@ public final class KnownHotspotFile {
                     .make();
 
             LOGGER.debug(" Writing variant '{}'", variant);
-            // TODO: We get a NPE when writing some variants to 38. Remove when cause has been found.
-            try {
-                writer.add(variant);
-            } catch (Exception exception) {
-                LOGGER.warn("Could not write variant {} due to exception {}", variant, exception.getMessage());
-            }
+            writer.add(variant);
         }
 
         writer.close();

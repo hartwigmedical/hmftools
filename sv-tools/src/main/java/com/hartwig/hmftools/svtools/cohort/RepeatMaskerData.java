@@ -2,17 +2,17 @@ package com.hartwig.hmftools.svtools.cohort;
 
 import static java.lang.Math.abs;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class RepeatMaskerData
 {
     public final int RmId;
-    public final BaseRegion Region;
+    public final ChrBaseRegion Region;
     public final byte Strand;
     public final String ClassFamily;
     public final String Repeat;
 
-    public RepeatMaskerData(final int rmId, final BaseRegion region, final byte strand)
+    public RepeatMaskerData(final int rmId, final ChrBaseRegion region, final byte strand)
     {
         RmId = rmId;
         Region = region;
@@ -21,7 +21,7 @@ public class RepeatMaskerData
         Repeat = "";
     }
 
-    public RepeatMaskerData(final int rmId, final BaseRegion region, final byte strand, final String classFamily, final String repeat)
+    public RepeatMaskerData(final int rmId, final ChrBaseRegion region, final byte strand, final String classFamily, final String repeat)
     {
         RmId = rmId;
         Region = region;

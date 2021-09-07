@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.svtools.cohort;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -233,13 +236,12 @@ public class LineInsertSiteCompare
 
         options.addOption(LINX_DATA_FILE, true, "Path to the Linx cohort SVs file");
         options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputDir(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
-        if(cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(cmd);
 
         LineInsertSiteCompare lineInsertSiteCompare = new LineInsertSiteCompare(cmd);
         lineInsertSiteCompare.run();

@@ -8,13 +8,13 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
-import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,7 @@ public class AnnotatedHotspotVCFPrinter {
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);
         AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(annotatedInputVcf, new VCFCodec(), false);
         for (VariantContext variant : reader.iterator()) {
-            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationParser.fromContext(variant);
             Optional<SnpEffAnnotation> canonical = factory.canonicalSnpEffAnnotation(annotations);
 
             String canonicalProtein = canonical.map(SnpEffAnnotation::hgvsProtein).orElse(Strings.EMPTY);
@@ -59,7 +59,7 @@ public class AnnotatedHotspotVCFPrinter {
                     .add(canonical.map(SnpEffAnnotation::transcript).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::consequenceString).orElse(Strings.EMPTY))
                     .add(canonical.map(SnpEffAnnotation::hgvsCoding).orElse(Strings.EMPTY))
-                    .add(AminoAcidFunctions.forceSingleLetterProteinAnnotation(canonicalProtein));
+                    .add(AminoAcids.forceSingleLetterProteinAnnotation(canonicalProtein));
 
             Object input = variant.getAttribute(VCFWriterFactory.INPUT_FIELD);
             if (input != null) {

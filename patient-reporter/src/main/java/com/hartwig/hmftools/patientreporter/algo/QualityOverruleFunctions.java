@@ -5,10 +5,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
-import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,10 +25,10 @@ public final class QualityOverruleFunctions {
         List<ReportableVariantWithNotify> overruledVariantsWithNotify =
                 overruleVariants(genomicAnalysis.reportableVariants(), overruledVariantMaps, genomicAnalysis.hasReliablePurity());
 
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
-        for (Map.Entry<ChromosomeArmKey, Double> entry : genomicAnalysis.cnPerChromosome().entrySet()) {
+        List<CnPerChromosomeArmData> cnPerChromosomeData = Lists.newArrayList();
+        for (CnPerChromosomeArmData cnPerChromosome : genomicAnalysis.cnPerChromosome()) {
             if (genomicAnalysis.hasReliablePurity()) {
-                cnPerChromosome.put(entry.getKey(), entry.getValue());
+                cnPerChromosomeData.add(cnPerChromosome);
             }
         }
 
@@ -43,7 +43,7 @@ public final class QualityOverruleFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(newNotifyPerVariant)
-                .cnPerChromosome(cnPerChromosome)
+                .cnPerChromosome(cnPerChromosomeData)
                 .peachGenotypes(qcForm.equals(QsFormNumber.FOR_080.display()) ? genomicAnalysis.peachGenotypes() : Lists.newArrayList())
                 .build();
     }
@@ -86,6 +86,7 @@ public final class QualityOverruleFunctions {
                 .from(variant)
                 .totalCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? variant.alleleCopyNumber() : Double.NaN)
+                .minorAlleleCopyNumber(hasReliablePurity ? variant.minorAlleleCopyNumber() : Double.NaN)
                 .biallelic(hasReliablePurity && roundedCopyNumber >= 1 ? variant.biallelic() : null)
                 .build();
     }

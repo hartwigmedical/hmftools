@@ -8,17 +8,20 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextFactoryTest {
+public class ReadContextFactoryTest
+{
 
     private ReadContextFactory victim;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         victim = new ReadContextFactory(25);
     }
 
     @Test
-    public void testSimpleSnvHas5BaseCore() {
+    public void testSimpleSnvHas5BaseCore()
+    {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GATCACCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -29,7 +32,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testSimpleInsert() {
+    public void testSimpleInsert()
+    {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GAGGCTCATCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -40,7 +44,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testInsertInRepeat() {
+    public void testInsertInRepeat()
+    {
         String refSequence = "TGAAAAAAAATCT";
         String readSequence = "TGAAAAAAAAATCT";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -51,7 +56,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testInsertAtHomology() {
+    public void testInsertAtHomology()
+    {
         String refSequence = "GATCATCTG";
         String readSequence = "GATCATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -62,7 +68,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testInsertAtHomologyRepeat() {
+    public void testInsertAtHomologyRepeat()
+    {
         String refSequence = "GATCATCATCTG";
         String readSequence = "GATCATCATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -73,7 +80,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testInsertAtHomologyWithAdditionalBases() {
+    public void testInsertAtHomologyWithAdditionalBases()
+    {
         String refSequence = "ATGCGATCTTCC";
         String readSequence = "ATGCGATCAATCTTCC";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -84,7 +92,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testDeleteAtHomology() {
+    public void testDeleteAtHomology()
+    {
         String refSequence = "GATCGGATCGCTT";
         String readSequence = "GATCGCTT";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -95,7 +104,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testDeleteAtHomologyRepeat() {
+    public void testDeleteAtHomologyRepeat()
+    {
         String refSequence = "GATCACCATCTG";
         String readSequence = "GATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -106,7 +116,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testDeleteAtRepeatInRef() {
+    public void testDeleteAtRepeatInRef()
+    {
         String refSequence = "GATCATCATCTG";
         String readSequence = "GATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -117,7 +128,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testDeleteOneBase() {
+    public void testDeleteOneBase()
+    {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GTCATCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -128,7 +140,8 @@ public class ReadContextFactoryTest {
     }
 
     @Test
-    public void testDeleteTwoBase() {
+    public void testDeleteTwoBase()
+    {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GCATCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
@@ -139,9 +152,11 @@ public class ReadContextFactoryTest {
     }
 
     @NotNull
-    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString) {
+    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString)
+    {
         final StringBuilder qualityString = new StringBuilder();
-        for (int i = 0; i < readString.length(); i++) {
+        for(int i = 0; i < readString.length(); i++)
+        {
             qualityString.append("A");
         }
 
@@ -149,7 +164,8 @@ public class ReadContextFactoryTest {
     }
 
     @NotNull
-    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString, @NotNull final String qualities) {
+    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString, @NotNull final String qualities)
+    {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(1000);
         record.setCigarString(cigar);

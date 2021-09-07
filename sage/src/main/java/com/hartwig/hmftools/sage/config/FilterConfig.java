@@ -1,132 +1,116 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface FilterConfig {
+public class FilterConfig
+{
+    public final boolean HardFilter;
+    public final boolean SoftFilter;
+    public final boolean MnvFilter;
+    public final int HardMinTumorQual;
+    public final int HardMinTumorRawAltSupport;
+    public final int HardMinTumorRawBaseQuality;
+    public final int FilteredMaxNormalAltSupport;
 
-    String SOFT_FILTER = "soft_filter_enabled";
-    String HARD_FILTER = "hard_filter_enabled";
-    String MNV_FILTER = "mnv_filter_enabled";
+    public final SoftFilterConfig SoftHotspotFilter;
+    public final SoftFilterConfig SoftPanelFilter;
+    public final SoftFilterConfig SoftHighConfidenceFilter;
+    public final SoftFilterConfig SoftLowConfidenceFilter;
 
-    String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
-    String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
-    String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
-    String FILTERED_MAX_NORMAL_ALT_SUPPORT = "filtered_max_normal_alt_support";
-
-    boolean DEFAULT_SOFT_FILTER_ENABLED = true;
-    boolean DEFAULT_HARD_FILTER_ENABLED = false;
-    boolean DEFAULT_MNV_FILTER_ENABLED = true;
-
-    int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
-    int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
-    int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
-    int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
-
-    SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
-            .minTumorQual(0)
-            .minTumorVaf(0)
-            .minGermlineReadContextCoverage(0)
-            .minGermlineReadContextCoverageAllosome(0)
-            .maxGermlineVaf(1d)
-            .maxGermlineRelativeQual(1d)
-            .build();
-
-    SoftFilterConfig DEFAULT_HOTSPOT_FILTER = ImmutableSoftFilterConfig.builder()
-            .from(NO_FILTER)
-            .minTumorQual(70)
-            .minTumorVaf(0.005)
-            .maxGermlineVaf(0.1)
-            .maxGermlineRelativeQual(0.5)
-            .build();
-
-    SoftFilterConfig DEFAULT_PANEL_FILTER = ImmutableSoftFilterConfig.builder()
-            .from(NO_FILTER)
-            .minTumorQual(100)
-            .minTumorVaf(0.015)
-            .maxGermlineVaf(0.04)
-            .maxGermlineRelativeQual(0.04)
-            .build();
-
-    SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
-            .from(NO_FILTER)
-            .minTumorQual(160)
-            .minTumorVaf(0.025)
-            .minGermlineReadContextCoverage(10)
-            .minGermlineReadContextCoverageAllosome(6)
-            .maxGermlineVaf(0.04)
-            .maxGermlineRelativeQual(0.04)
-            .build();
-
-    SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
-            .from(NO_FILTER)
-            .minTumorQual(240)
-            .minTumorVaf(0.025)
-            .minGermlineReadContextCoverage(10)
-            .minGermlineReadContextCoverageAllosome(6)
-            .maxGermlineVaf(0.04)
-            .maxGermlineRelativeQual(0.04)
-            .build();
-
-    boolean hardFilter();
-
-    boolean softFilter();
-
-    boolean mnvFilter();
-
-    int hardMinTumorQual();
-
-    int hardMinTumorRawAltSupport();
-
-    int hardMinTumorRawBaseQuality();
-
-    int filteredMaxNormalAltSupport();
-
-    default double hotspotMinTumorVafToSkipQualCheck() {
+    public double hotspotMinTumorVafToSkipQualCheck()
+    {
         return 0.08;
     }
 
-    default int hotspotMinTumorAltSupportToSkipQualCheck() {
-        return 8;
+    public int hotspotMinTumorAltSupportToSkipQualCheck() { return 8; }
+
+    private static final String SOFT_FILTER = "soft_filter_enabled";
+    private static final String HARD_FILTER = "hard_filter_enabled";
+    private static final String MNV_FILTER = "mnv_filter_enabled";
+
+    private static final String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
+    private static final String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
+    private static final String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
+    private static final String FILTERED_MAX_NORMAL_ALT_SUPPORT = "filtered_max_normal_alt_support";
+
+    private static final boolean DEFAULT_SOFT_FILTER_ENABLED = true;
+    private static final boolean DEFAULT_HARD_FILTER_ENABLED = false;
+    private static final boolean DEFAULT_MNV_FILTER_ENABLED = true;
+
+    private static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
+    private static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
+    private static final int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
+    private static final int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
+
+    public FilterConfig(final CommandLine cmd)
+    {
+        SoftFilter = getConfigValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED);
+        HardFilter = getConfigValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED);
+        MnvFilter = getConfigValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED);
+        FilteredMaxNormalAltSupport = getConfigValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT);
+        HardMinTumorQual = getConfigValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL);
+        HardMinTumorRawAltSupport = getConfigValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT);
+        HardMinTumorRawBaseQuality = getConfigValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY);
+        SoftHotspotFilter = new SoftFilterConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER);
+        SoftPanelFilter = new SoftFilterConfig(cmd, "panel", DEFAULT_PANEL_FILTER);
+        SoftHighConfidenceFilter = new SoftFilterConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
+        SoftLowConfidenceFilter = new SoftFilterConfig(cmd, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER);
     }
 
-    @NotNull
-    SoftFilterConfig softHotspotFilter();
+    public FilterConfig()
+    {
+        HardFilter = false;
+        SoftFilter = true;
+        MnvFilter = true;
+        HardMinTumorQual = DEFAULT_HARD_MIN_TUMOR_QUAL;
+        HardMinTumorRawAltSupport = DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
+        HardMinTumorRawBaseQuality = DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
+        SoftHotspotFilter = DEFAULT_HOTSPOT_FILTER;
+        SoftPanelFilter = DEFAULT_PANEL_FILTER;
+        SoftHighConfidenceFilter = DEFAULT_HIGH_CONFIDENCE_FILTER;
+        SoftLowConfidenceFilter = DEFAULT_LOW_CONFIDENCE_FILTER;
+        FilteredMaxNormalAltSupport = DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
+    }
 
-    @NotNull
-    SoftFilterConfig softPanelFilter();
+    private static final SoftFilterConfig NO_FILTER = new SoftFilterConfig(
+            0, 0, 0, 0,
+            1d, 1d);
 
-    @NotNull
-    SoftFilterConfig softHighConfidenceFilter();
+    private static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
+            0, 0, 0.1, 0.5);
 
-    @NotNull
-    SoftFilterConfig softLowConfidenceFilter();
+    private static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.015,
+            0, 0, 0.04, 0.04);
 
-    @NotNull
-    static Options createOptions() {
+    private static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
+            10, 6, 0.04, 0.04);
+
+    private static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
+            10, 6, 0.04, 0.04);
+
+    public static Options createOptions()
+    {
         final Options options = new Options();
 
         options.addOption(SOFT_FILTER, false, "Enable soft filters [" + DEFAULT_SOFT_FILTER_ENABLED + "]");
         options.addOption(HARD_FILTER, false, "All filters are hard [" + DEFAULT_HARD_FILTER_ENABLED + "]");
         options.addOption(MNV_FILTER, false, "Enable max_germline_alt_support mnv filter [" + DEFAULT_MNV_FILTER_ENABLED + "]");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
-        options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
-        options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true, "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
+        options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true,
+                "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+        options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
+                "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
@@ -136,57 +120,46 @@ public interface FilterConfig {
         return options;
     }
 
-    @NotNull
-    static FilterConfig createConfig(@NotNull final CommandLine cmd) {
-        return ImmutableFilterConfig.builder()
-                .softFilter(getConfigValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED))
-                .hardFilter(getConfigValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED))
-                .mnvFilter(getConfigValue(cmd, MNV_FILTER, DEFAULT_MNV_FILTER_ENABLED))
-                .filteredMaxNormalAltSupport(getConfigValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT))
-                .hardMinTumorQual(getConfigValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
-                .hardMinTumorRawAltSupport(getConfigValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
-                .hardMinTumorRawBaseQuality(getConfigValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
-                .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
-                .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
-                .softHighConfidenceFilter(SoftFilterConfig.createConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER))
-                .softLowConfidenceFilter(SoftFilterConfig.createConfig(cmd, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER))
-                .build();
-    }
 
-    @NotNull
-    default SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
-        switch (tier) {
+    public SoftFilterConfig softConfig(@NotNull final VariantTier tier)
+    {
+        switch(tier)
+        {
             case HOTSPOT:
-                return softHotspotFilter();
+                return SoftHotspotFilter;
             case PANEL:
-                return softPanelFilter();
+                return SoftPanelFilter;
             case HIGH_CONFIDENCE:
-                return softHighConfidenceFilter();
+                return SoftHighConfidenceFilter;
             default:
-                return softLowConfidenceFilter();
+                return SoftLowConfidenceFilter;
         }
     }
 
-    @NotNull
-    default Predicate<AltContext> altContextFilter(@NotNull final HotspotSelector hotspotSelector) {
-        return altContext -> {
-            if (hotspotSelector.isHotspot(altContext)) {
+    public Predicate<AltContext> altContextFilter(final HotspotSelector hotspotSelector)
+    {
+        return altContext ->
+        {
+            if(hotspotSelector.isHotspot(altContext))
+            {
                 return true;
             }
-            return altContext.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
-                    && altContext.rawAltSupport() >= hardMinTumorRawAltSupport();
+            return altContext.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
+                    && altContext.rawAltSupport() >= HardMinTumorRawAltSupport;
         };
     }
 
-    @NotNull
-    default Predicate<ReadContextCounter> readContextFilter() {
-        return readContextCounter -> {
-            if (readContextCounter.tier().equals(SageVariantTier.HOTSPOT)) {
+    public Predicate<ReadContextCounter> readContextFilter()
+    {
+        return readContextCounter ->
+        {
+            if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
+            {
                 return true;
             }
-            return readContextCounter.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
-                    && readContextCounter.rawAltSupport() >= hardMinTumorRawAltSupport()
-                    && readContextCounter.tumorQuality() >= hardMinTumorQual();
+            return readContextCounter.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
+                    && readContextCounter.rawAltSupport() >= HardMinTumorRawAltSupport
+                    && readContextCounter.tumorQuality() >= HardMinTumorQual;
         };
     }
 }

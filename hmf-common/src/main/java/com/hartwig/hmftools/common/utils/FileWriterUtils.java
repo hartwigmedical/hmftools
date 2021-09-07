@@ -12,11 +12,17 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
 public final class FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
+
+    public static void addOutputDir(final Options options)
+    {
+        options.addOption(OUTPUT_DIR, true, "Output directory");
+    }
 
     public static String parseOutputDir(@NotNull final CommandLine cmd)
     {
@@ -84,7 +90,7 @@ public final class FileWriterUtils
     public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
     {
         final String[] items = fieldsHeader.split(delimiter,-1);
-        final Map<String,Integer> fieldsIndexMap = Maps.newHashMap();
+        final Map<String,Integer> fieldsIndexMap = Maps.newLinkedHashMap();
 
         for(int i = 0; i < items.length; ++i)
         {

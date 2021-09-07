@@ -111,7 +111,6 @@ public class ExplanationChapter implements ReportChapter {
         // Is needed to set details on new page
         table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
-
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported viral insertions")));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported pharmacogenetics")));

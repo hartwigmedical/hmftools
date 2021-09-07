@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +62,8 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile) throws IOException {
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile)
+            throws IOException {
         return fromVCFFileWithoutCheck(tumor, reference, null, vcfFile);
     }
 
@@ -75,15 +76,15 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile) throws IOException {
+    public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference,
+            @Nullable final String rna, @NotNull final String vcfFile) throws IOException {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, rna, vcfFile, false, result::add);
         return result;
     }
 
     public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile,  boolean useCheckReference, Consumer<SomaticVariant> consumer) throws IOException {
+            @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException {
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
             if (!sampleInFile(tumor, header)) {
@@ -123,7 +124,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
         final Genotype genotype = context.getGenotype(sample);
 
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        GenotypeStatus genotypeStatus  = decorator.genotypeStatus(reference);
+        final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : null;
 
         if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
@@ -139,7 +140,10 @@ public class SomaticVariantFactory implements VariantContextFilter {
                     .map(AllelicDepth::fromGenotype);
 
             if (tumorDepth.totalReadCount() > 0) {
-                return Optional.of(createVariantBuilder(tumorDepth, context).genotypeStatus(genotypeStatus))
+                ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
+                builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
+
+                return Optional.of(builder)
                         .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
                         .map(ImmutableSomaticVariantImpl.Builder::build);
@@ -152,7 +156,7 @@ public class SomaticVariantFactory implements VariantContextFilter {
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context) {
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        final SnpEffSummary snpEffSummary = decorator.snpEffSummary();
+        final VariantImpact variantImpact = decorator.variantImpact();
 
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(decorator.qual())
@@ -178,16 +182,16 @@ public class SomaticVariantFactory implements VariantContextFilter {
                 // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .reported(decorator.reported())
                 .biallelic(decorator.biallelic())
-                .worstEffect(snpEffSummary.worstEffect())
-                .worstCodingEffect(snpEffSummary.worstCodingEffect())
-                .worstEffectTranscript(snpEffSummary.worstTranscript())
-                .canonicalEffect(snpEffSummary.canonicalEffect())
-                .canonicalTranscript(snpEffSummary.canonicalTranscript())
-                .canonicalCodingEffect(snpEffSummary.canonicalCodingEffect())
-                .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
-                .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
-                .gene(snpEffSummary.gene())
-                .genesAffected(snpEffSummary.genesAffected())
+                .worstEffect(variantImpact.WorstEffect)
+                .worstCodingEffect(variantImpact.WorstCodingEffect)
+                .worstEffectTranscript(variantImpact.WorstTranscript)
+                .canonicalEffect(variantImpact.CanonicalEffect)
+                .canonicalTranscript(variantImpact.CanonicalTranscript)
+                .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)
+                .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCodingImpact)
+                .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProteinImpact)
+                .gene(variantImpact.gene())
+                .genesAffected(variantImpact.GenesAffected)
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))

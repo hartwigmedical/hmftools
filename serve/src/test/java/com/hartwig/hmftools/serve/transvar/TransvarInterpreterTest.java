@@ -25,6 +25,30 @@ import org.junit.Test;
 public class TransvarInterpreterTest {
 
     @Test
+    public void canLookupTrinucleotides()
+    {
+        // Serine (S)
+        assertEquals(6, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("TCT", Strand.FORWARD).size());
+        assertEquals(6, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("AGA", Strand.REVERSE).size());
+
+        // Valine (V)
+        assertEquals(4, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("GTC", Strand.FORWARD).size());
+        assertEquals(4, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("GAC", Strand.REVERSE).size());
+
+        // Tyrosine (Y)
+        assertEquals(2, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("TAC", Strand.FORWARD).size());
+        assertEquals(2, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("GTA", Strand.REVERSE).size());
+
+        // Does not exist -> no trinucleotides found!
+        assertEquals(0, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("???", Strand.FORWARD).size());
+        assertEquals(0, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("???", Strand.REVERSE).size());
+
+        // No trinucleotide -> return none.
+        assertEquals(0, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("TCTC", Strand.FORWARD).size());
+        assertEquals(0, TransvarInterpreter.allTrinucleotidesForSameAminoAcid("GAGA", Strand.REVERSE).size());
+    }
+
+    @Test
     public void canConvertSnvToHotspots() {
         TransvarRecord record = baseRecord().gdnaPosition(10)
                 .annotation(ImmutableTransvarSnvMnv.builder()
@@ -85,6 +109,39 @@ public class TransvarInterpreterTest {
         assertHotspot(baseHotspot().position(9).ref("CCA").alt("GGC").build(), hotspots.get(1));
         assertHotspot(baseHotspot().position(10).ref("CA").alt("GC").build(), hotspots.get(2));
         assertHotspot(baseHotspot().position(9).ref("CCA").alt("AGC").build(), hotspots.get(3));
+    }
+
+    @Test
+    public void canInterpretSnvSpanningMultipleExons() {
+        TransvarRecord record = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("A")
+                        .gdnaAlt("C")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots = testInterpreter37().convertRecordToHotspots(record, Strand.REVERSE);
+
+        assertEquals(1, hotspots.size());
+
+        assertHotspot(baseHotspot().position(10).ref("A").alt("C").build(), hotspots.get(0));
+
+        TransvarRecord record2 = baseRecord().variantSpanMultipleExons(true)
+                .gdnaPosition(10)
+                .annotation(ImmutableTransvarSnvMnv.builder()
+                        .gdnaRef("TTA")
+                        .gdnaAlt("GTA")
+                        .referenceCodon("TTA")
+                        .addCandidateCodons("GTA")
+                        .build())
+                .build();
+
+        List<VariantHotspot> hotspots2 = testInterpreter37().convertRecordToHotspots(record2, Strand.FORWARD);
+
+        assertEquals(0, hotspots2.size());
     }
 
     @Test

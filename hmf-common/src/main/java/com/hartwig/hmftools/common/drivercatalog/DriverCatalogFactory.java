@@ -13,35 +13,42 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
-final class DriverCatalogFactory {
-
-    private DriverCatalogFactory() {
+final class DriverCatalogFactory
+{
+    private DriverCatalogFactory()
+    {
     }
 
     @NotNull
-    static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants) {
+    static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants)
+    {
         return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()));
     }
 
     @NotNull
-    static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final List<T> variants) {
+    static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final List<T> variants)
+    {
         return variantTypeCount(t -> true, variants);
     }
 
     @NotNull
     static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final Predicate<T> predicate,
-            @NotNull final List<T> variants) {
+            @NotNull final List<T> variants)
+    {
         return variants.stream().filter(predicate).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
     }
 
-    static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood) {
+    static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood)
+    {
         return probabilityDriverVariantSameImpact(0, sampleSNVCount, likelihood);
     }
 
     private static double probabilityDriverVariantSameImpact(int count, long sampleSNVCount,
-            @NotNull final DndsDriverImpactLikelihood likelihood) {
+            @NotNull final DndsDriverImpactLikelihood likelihood)
+    {
         double lambda = sampleSNVCount * likelihood.passengersPerMutation();
-        if (Doubles.isZero(lambda)) {
+        if(Doubles.isZero(lambda))
+        {
             return 0.0;
         }
 
@@ -52,14 +59,17 @@ final class DriverCatalogFactory {
     }
 
     static double probabilityDriverVariant(long firstVariantTypeCount, long secondVariantTypeCount,
-            @NotNull final DndsDriverImpactLikelihood firstLikelihood, @NotNull final DndsDriverImpactLikelihood secondLikelihood) {
-        if (firstLikelihood.equals(secondLikelihood)) {
+            @NotNull final DndsDriverImpactLikelihood firstLikelihood, @NotNull final DndsDriverImpactLikelihood secondLikelihood)
+    {
+        if(firstLikelihood.equals(secondLikelihood))
+        {
             return probabilityDriverVariantSameImpact(1, firstVariantTypeCount, firstLikelihood);
         }
 
         double lambda1 = firstVariantTypeCount * firstLikelihood.passengersPerMutation();
         double lambda2 = secondVariantTypeCount * secondLikelihood.passengersPerMutation();
-        if (Doubles.isZero(lambda1) || Doubles.isZero(lambda2)) {
+        if(Doubles.isZero(lambda1) || Doubles.isZero(lambda2))
+        {
             return Math.max(probabilityDriverVariant(firstVariantTypeCount, firstLikelihood),
                     probabilityDriverVariant(secondVariantTypeCount, secondLikelihood));
         }

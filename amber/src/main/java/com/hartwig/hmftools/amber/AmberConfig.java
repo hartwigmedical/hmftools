@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_MIN_PARTITION;
 import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_TUMOR_ONLY_MIN_SUPPORT;
 import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_TUMOR_ONLY_MIN_VAF;
 import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_TYPICAL_READ_DEPTH;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -67,7 +69,6 @@ public class AmberConfig
     public static final String THREADS = "threads";
     public static final String REFERENCE = "reference";
     public static final String TUMOR_BAM = "tumor_bam";
-    public static final String REF_GENOME = "ref_genome";
     public static final String OUTPUT_DIR = "output_dir";
     public static final String REFERENCE_BAM = "reference_bam";
     public static final String MIN_BASE_QUALITY = "min_base_quality";
@@ -183,7 +184,7 @@ public class AmberConfig
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(BAF_LOCI, true, "Path to BAF loci vcf file");
-        options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(MIN_BASE_QUALITY, true, "Minimum quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
         options.addOption(MIN_MAPPING_QUALITY,
                 true,
@@ -200,17 +201,5 @@ public class AmberConfig
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
 
         return options;
-    }
-
-    @NotNull
-    static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
-    {
-        final String value = cmd.getOptionValue(parameter);
-        if(value == null)
-        {
-            missing.add(parameter);
-            return "";
-        }
-        return value;
     }
 }

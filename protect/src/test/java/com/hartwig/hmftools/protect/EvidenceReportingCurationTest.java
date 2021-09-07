@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
+import static com.hartwig.hmftools.common.protect.ProtectTestFactory.testEvidenceBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -21,8 +21,8 @@ public class EvidenceReportingCurationTest {
         String event1 = "any event";
         String event2 = "TP53 loss";
 
-        ProtectEvidence evidence1 = createTestBuilder().genomicEvent(event1).reported(true).build();
-        ProtectEvidence evidence2 = createTestBuilder().genomicEvent(event2).reported(true).build();
+        ProtectEvidence evidence1 = testEvidenceBuilder().genomicEvent(event1).reported(true).build();
+        ProtectEvidence evidence2 = testEvidenceBuilder().genomicEvent(event2).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
@@ -37,8 +37,8 @@ public class EvidenceReportingCurationTest {
         String treatment1 = "Chemotherapy";
         String treatment2 = "Immunotherapy";
 
-        ProtectEvidence evidence1 = createTestBuilder().treatment(treatment1).reported(true).build();
-        ProtectEvidence evidence2 = createTestBuilder().treatment(treatment2).reported(true).build();
+        ProtectEvidence evidence1 = testEvidenceBuilder().treatment(treatment1).reported(true).build();
+        ProtectEvidence evidence2 = testEvidenceBuilder().treatment(treatment2).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());

@@ -8,21 +8,24 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DndsDriverGeneLikelihoodFile {
-
+public final class DndsDriverGeneLikelihoodFile
+{
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
-    private DndsDriverGeneLikelihoodFile() {
+    private DndsDriverGeneLikelihoodFile()
+    {
     }
 
     @NotNull
-    public static List<DndsDriverGeneLikelihood> fromInputStream(@NotNull final InputStream genomeInputStream) {
+    public static List<DndsDriverGeneLikelihood> fromInputStream(@NotNull final InputStream genomeInputStream)
+    {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static List<DndsDriverGeneLikelihood> fromLines(@NotNull final List<String> lines) {
+    private static List<DndsDriverGeneLikelihood> fromLines(@NotNull final List<String> lines)
+    {
         return lines.stream()
                 .filter(line -> !line.startsWith(HEADER_PREFIX))
                 .map(DndsDriverGeneLikelihoodFile::fromString)
@@ -30,7 +33,8 @@ public final class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    private static DndsDriverImpactLikelihood fromString(int offset, @NotNull final String[] values) {
+    private static DndsDriverImpactLikelihood fromString(int offset, @NotNull final String[] values)
+    {
         int current = offset;
         return ImmutableDndsDriverImpactLikelihood.builder()
                 .driversPerSample(Double.parseDouble(values[current++]))
@@ -39,7 +43,8 @@ public final class DndsDriverGeneLikelihoodFile {
     }
 
     @NotNull
-    private static ModifiableDndsDriverGeneLikelihood fromString(@NotNull final String line) {
+    private static ModifiableDndsDriverGeneLikelihood fromString(@NotNull final String line)
+    {
         String[] values = line.split(DELIMITER);
         DndsDriverImpactLikelihood missense = fromString(1, values);
 

@@ -10,22 +10,30 @@ import org.junit.Test;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 
-public class NumberEventsTest {
+public class NumberEventsTest
+{
 
     @Test
-    public void testRawNumberEvents() {
+    public void testRawNumberEvents()
+    {
         int refStart = 4000;
         SAMRecord record = buildSamRecord(refStart + 4, "7M", "GATTACA");
-        assertEquals(0, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1", refStart - 1, "AAAAGATTACAGGGGG".getBytes()))));
-        assertEquals(1, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1", refStart - 1, "AAAAGATTAAAGGGG".getBytes()))));
-        assertEquals(1, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1", refStart - 1, "AAAAGATTACCGGGG".getBytes()))));
-        assertEquals(2, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1", refStart - 1, "AAAAGATTAGGGGGG".getBytes()))));
+        assertEquals(0, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+                refStart - 1, "AAAAGATTACAGGGGG".getBytes()))));
+        assertEquals(1, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+                refStart - 1, "AAAAGATTAAAGGGG".getBytes()))));
+        assertEquals(1, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+                refStart - 1, "AAAAGATTACCGGGG".getBytes()))));
+        assertEquals(2, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+                refStart - 1, "AAAAGATTAGGGGGG".getBytes()))));
     }
 
     @NotNull
-    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
+    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString)
+    {
         final StringBuilder qualityString = new StringBuilder();
-        for (int i = 0; i < readString.length(); i++) {
+        for(int i = 0; i < readString.length(); i++)
+        {
             qualityString.append("A");
         }
 
@@ -34,7 +42,8 @@ public class NumberEventsTest {
 
     @NotNull
     public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            @NotNull final String qualities) {
+            @NotNull final String qualities)
+    {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigar);

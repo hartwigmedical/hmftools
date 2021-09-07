@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.isofox.common.TaskExecutor;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -107,7 +107,7 @@ public class FusionCohort
         ISF_LOGGER.info("loading ({}) sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
 
         final List<Callable> callableList = fusionTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeChromosomeTask(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(mConfig.Fusions.GenerateCohort)
         {

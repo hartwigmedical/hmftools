@@ -14,30 +14,35 @@ import com.hartwig.hmftools.sage.read.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AltContext implements VariantHotspot {
+public class AltContext implements VariantHotspot
+{
+    public final String Ref;
+    public final String Alt;
+    public final RefContext RefContext;
+    
+    private final List<ReadContextCandidate> mInterimReadContexts = Lists.newArrayList();
 
-    private final String ref;
-    private final String alt;
-    private final RefContext refContext;
-    private final List<ReadContextCandidate> interimReadContexts = Lists.newArrayList();
+    private int mRawSupportAlt;
+    private int mRawBaseQualityAlt;
+    private ReadContextCandidate mCandidate;
 
-    private int rawSupportAlt;
-    private int rawBaseQualityAlt;
-    private ReadContextCandidate candidate;
-
-    public AltContext(final RefContext refContext, final String ref, final String alt) {
-        this.refContext = refContext;
-        this.ref = ref;
-        this.alt = alt;
+    public AltContext(final RefContext refContext, final String ref, final String alt)
+    {
+        RefContext = refContext;
+        Ref = ref;
+        Alt = alt;
     }
 
-    public void incrementAltRead(int baseQuality) {
-        this.rawSupportAlt++;
-        this.rawBaseQualityAlt += baseQuality;
+    public void incrementAltRead(int baseQuality)
+    {
+        mRawSupportAlt++;
+        mRawBaseQualityAlt += baseQuality;
     }
 
-    public void addReadContext(int numberOfEvents, @NotNull final ReadContext newReadContext) {
-        if (candidate != null) {
+    public void addReadContext(int numberOfEvents, @NotNull final ReadContext newReadContext)
+    {
+        if(mCandidate != null)
+        {
             throw new IllegalStateException();
         }
 
@@ -45,9 +50,11 @@ public class AltContext implements VariantHotspot {
         int coreMatch = 0;
         ReadContextCandidate fullMatchCandidate = null;
 
-        for (ReadContextCandidate candidate : interimReadContexts) {
+        for(ReadContextCandidate candidate : mInterimReadContexts)
+        {
             final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
-            switch (match) {
+            switch(match)
+            {
                 case FULL:
                     candidate.incrementFull(1, numberOfEvents);
                     fullMatchCandidate = candidate;
@@ -63,174 +70,206 @@ public class AltContext implements VariantHotspot {
             }
         }
 
-
-        if (fullMatchCandidate == null) {
+        if(fullMatchCandidate == null)
+        {
             final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
             candidate.incrementCore(coreMatch);
             candidate.incrementPartial(partialMatch);
-            interimReadContexts.add(candidate);
-        } else if (newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength()) {
-            interimReadContexts.remove(fullMatchCandidate);
+            mInterimReadContexts.add(candidate);
+        }
+        else if(newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength())
+        {
+            mInterimReadContexts.remove(fullMatchCandidate);
             final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
-            candidate.incrementCore(fullMatchCandidate.coreMatch);
-            candidate.incrementPartial(fullMatchCandidate.partialMatch);
-            candidate.incrementFull(fullMatchCandidate.fullMatch, fullMatchCandidate.minNumberOfEvents);
-            interimReadContexts.add(candidate);
+            candidate.incrementCore(fullMatchCandidate.mCoreMatch);
+            candidate.incrementPartial(fullMatchCandidate.mPartialMatch);
+            candidate.incrementFull(fullMatchCandidate.mFullMatch, fullMatchCandidate.mMinNumberOfEvents);
+            mInterimReadContexts.add(candidate);
         }
 
     }
 
-    public int readContextSupport() {
-        return candidate.count();
+    public int readContextSupport()
+    {
+        return mCandidate.count();
     }
 
-    public int minNumberOfEvents() {
-        return candidate.minNumberOfEvents();
+    public int minNumberOfEvents()
+    {
+        return mCandidate.minNumberOfEvents();
     }
 
     @VisibleForTesting
-    List<ReadContextCandidate> interimReadContexts() {
-        return interimReadContexts;
+    List<ReadContextCandidate> interimReadContexts()
+    {
+        return mInterimReadContexts;
     }
 
-    public boolean finaliseAndValidate() {
-        interimReadContexts.removeIf(x -> x.readContext().incompleteFlanks());
-        Collections.sort(interimReadContexts);
-        if (!interimReadContexts.isEmpty()) {
-            candidate = interimReadContexts.get(0);
+    public boolean finaliseAndValidate()
+    {
+        mInterimReadContexts.removeIf(x -> x.readContext().incompleteFlanks());
+        Collections.sort(mInterimReadContexts);
+        if(!mInterimReadContexts.isEmpty())
+        {
+            mCandidate = mInterimReadContexts.get(0);
         }
-        interimReadContexts.clear();
-        return candidate != null;
+        mInterimReadContexts.clear();
+        return mCandidate != null;
     }
 
-    public ReadContext readContext() {
-        return candidate.readContext();
-    }
-
-    @NotNull
-    @Override
-    public String ref() {
-        return ref;
+    public ReadContext readContext()
+    {
+        return mCandidate.readContext();
     }
 
     @NotNull
     @Override
-    public String alt() {
-        return alt;
+    public String ref()
+    {
+        return Ref;
     }
 
     @NotNull
     @Override
-    public String chromosome() {
-        return refContext.chromosome();
-    }
-
-    @Override
-    public long position() {
-        return refContext.position();
-    }
-
-    public int rawAltSupport() {
-        return rawSupportAlt;
-    }
-
-    public int rawDepth() {
-        return refContext.rawDepth();
-    }
-
-    public int rawAltBaseQuality() {
-        return rawBaseQualityAlt;
+    public String alt()
+    {
+        return Alt;
     }
 
     @NotNull
-    public String sample() {
-        return refContext.sample();
+    @Override
+    public String chromosome()
+    {
+        return RefContext.chromosome();
     }
 
     @Override
-    public boolean equals(@Nullable Object another) {
-        if (this == another) {
+    public long position()
+    {
+        return RefContext.position();
+    }
+
+    public int rawAltSupport()
+    {
+        return mRawSupportAlt;
+    }
+
+    public int rawDepth()
+    {
+        return RefContext.rawDepth();
+    }
+
+    public int rawAltBaseQuality()
+    {
+        return mRawBaseQualityAlt;
+    }
+
+    @NotNull
+    public String sample()
+    {
+        return RefContext.sample();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object another)
+    {
+        if(this == another)
+        {
             return true;
         }
         return another instanceof VariantHotspot && equalTo((VariantHotspot) another);
     }
 
-    private boolean equalTo(VariantHotspot another) {
+    private boolean equalTo(VariantHotspot another)
+    {
         return ref().equals(another.ref()) && alt().equals(another.alt()) && chromosome().equals(another.chromosome())
                 && position() == another.position();
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         int h = 5381;
-        h += (h << 5) + ref.hashCode();
-        h += (h << 5) + alt.hashCode();
+        h += (h << 5) + Ref.hashCode();
+        h += (h << 5) + Alt.hashCode();
         h += (h << 5) + chromosome().hashCode();
         h += (h << 5) + Longs.hashCode(position());
         return h;
     }
 
-    static class ReadContextCandidate implements Comparable<ReadContextCandidate> {
+    static class ReadContextCandidate implements Comparable<ReadContextCandidate>
+    {
+        private final ReadContext mReadContext;
+        private int mFullMatch;
+        private int mPartialMatch;
+        private int mCoreMatch;
+        private int mMinNumberOfEvents;
 
-        private final ReadContext readContext;
-        private int fullMatch;
-        private int partialMatch;
-        private int coreMatch;
-        private int minNumberOfEvents;
-
-        ReadContextCandidate(int numberOfEvents, @NotNull final ReadContext readContext) {
-            this.readContext = readContext.minimiseFootprint();
-            this.minNumberOfEvents = numberOfEvents;
+        ReadContextCandidate(int numberOfEvents, @NotNull final ReadContext readContext)
+        {
+            mReadContext = readContext.minimiseFootprint();
+            mMinNumberOfEvents = numberOfEvents;
         }
 
-        public void incrementFull(int count, int numberOfEvents) {
-            fullMatch += count;
-            minNumberOfEvents = Math.min(minNumberOfEvents, numberOfEvents);
+        public void incrementFull(int count, int numberOfEvents)
+        {
+            mFullMatch += count;
+            mMinNumberOfEvents = Math.min(mMinNumberOfEvents, numberOfEvents);
         }
 
-        public void incrementPartial(int count) {
-            partialMatch += count;
+        public void incrementPartial(int count)
+        {
+            mPartialMatch += count;
         }
 
-        public void incrementCore(int count) {
-            coreMatch += count;
+        public void incrementCore(int count)
+        {
+            mCoreMatch += count;
         }
 
-        public int count() {
-            return fullMatch + partialMatch;
+        public int count()
+        {
+            return mFullMatch + mPartialMatch;
         }
 
-        public int minNumberOfEvents() {
-            return minNumberOfEvents;
+        public int minNumberOfEvents()
+        {
+            return mMinNumberOfEvents;
         }
 
-        public int maxFlankLength() {
-            return readContext.maxFlankLength();
+        public int maxFlankLength()
+        {
+            return mReadContext.maxFlankLength();
         }
 
         @NotNull
-        public ReadContext readContext() {
-            return readContext;
+        public ReadContext readContext()
+        {
+            return mReadContext;
         }
 
-        public int fullMatch() {
-            return fullMatch;
+        public int fullMatch()
+        {
+            return mFullMatch;
         }
 
         @Override
-        public int compareTo(@NotNull final ReadContextCandidate o) {
+        public int compareTo(@NotNull final ReadContextCandidate o)
+        {
 
-            int fullCompare = -Integer.compare(fullMatch, o.fullMatch);
-            if (fullCompare != 0) {
+            int fullCompare = -Integer.compare(mFullMatch, o.mFullMatch);
+            if(fullCompare != 0)
+            {
                 return fullCompare;
             }
 
-            int partialCompare = -Integer.compare(partialMatch, o.partialMatch);
-            if (partialCompare != 0) {
+            int partialCompare = -Integer.compare(mPartialMatch, o.mPartialMatch);
+            if(partialCompare != 0)
+            {
                 return partialCompare;
             }
 
-            return -Integer.compare(coreMatch, o.coreMatch);
+            return -Integer.compare(mCoreMatch, o.mCoreMatch);
         }
     }
 }

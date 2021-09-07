@@ -5,9 +5,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
 
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class HlaAllele implements Comparable<HlaAllele>
 {
@@ -21,6 +23,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     private final HlaAllele mFourDigit;
     private final HlaAllele mGroup;
     private final int mHashCode;;
+    private boolean mHasWildcards;
 
     public HlaAllele(
             final String gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
@@ -36,6 +39,7 @@ public class HlaAllele implements Comparable<HlaAllele>
         mGroup = group;
 
         mHashCode = toString().hashCode();
+        mHasWildcards = false;
 
         int proteinNumber = 0;
 
@@ -85,6 +89,9 @@ public class HlaAllele implements Comparable<HlaAllele>
     }
 
     public final HlaAllele asFourDigit() { return mFourDigit != null ? mFourDigit : this; }
+
+    public boolean hasWildcards() { return mHasWildcards; }
+    public void setHasWildcard(boolean toggle) { mHasWildcards = toggle; }
 
     public boolean equals(final Object other)
     {
@@ -164,9 +171,22 @@ public class HlaAllele implements Comparable<HlaAllele>
 
     public static String toString(final List<HlaAllele> alleles)
     {
+        return toString(alleles, 0);
+    }
+
+    public static String toString(final List<HlaAllele> alleles, int maxToInclude)
+    {
         StringJoiner sj = new StringJoiner(", ");
-        alleles.forEach(x -> sj.add(x.toString()));
+
+        int max = maxToInclude > 0 ? min(alleles.size(), maxToInclude) : alleles.size();
+
+        for(int i = 0; i < max; ++i)
+        {
+            sj.add(alleles.get(i).toString());
+        }
+
         return sj.toString();
+
     }
 
     public static List<HlaAllele> dedup(final List<HlaAllele> alleles)
@@ -181,6 +201,24 @@ public class HlaAllele implements Comparable<HlaAllele>
         }
 
         return newList;
+    }
+
+    public static Set<HlaAllele> findDuplicates(final List<HlaAllele> alleles)
+    {
+        Set<HlaAllele> duplicates = Sets.newHashSet();
+
+        for(int i = 0; i < alleles.size() - 1; ++i)
+        {
+            for(int j = i + 1; j < alleles.size(); ++j)
+            {
+                if(alleles.get(i).matches(alleles.get(j)))
+                {
+                    duplicates.add(alleles.get(j));
+                }
+            }
+        }
+
+        return duplicates;
     }
 
 }

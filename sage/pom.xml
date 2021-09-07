@@ -11,12 +11,16 @@
     <artifactId>sage</artifactId>
     <packaging>jar</packaging>
     <version>${sage.version}</version>
-    <name>HMF Tools - Somatic Alterations in Genome</name>
+    <name>HMF Tools - SAGE</name>
 
     <dependencies>
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>patient-db</artifactId>
         </dependency>
         <dependency>
             <groupId>org.immutables</groupId>

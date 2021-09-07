@@ -6,6 +6,7 @@ import com.hartwig.hmftools.gripss.VariantType
 import htsjdk.variant.variantcontext.VariantContext
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.util.Strings
+import java.lang.Math.abs
 import java.util.*
 import kotlin.math.max
 
@@ -56,6 +57,24 @@ fun VariantContext.inexactHomologyLength(): Int {
 
     val (iHom1, iHom2) = this.getAttributeAsIntList("IHOMPOS", 0)
     return max(0, iHom2 - iHom1)
+}
+
+fun VariantContext.inexactHomologyStart(): Int {
+    if (!this.hasAttribute("IHOMPOS")) {
+        return 0
+    }
+
+    val (iHom1, iHom2) = this.getAttributeAsIntList("IHOMPOS", 0)
+    return abs(iHom1)
+}
+
+fun VariantContext.inexactHomologyEnd(): Int {
+    if (!this.hasAttribute("IHOMPOS")) {
+        return 0
+    }
+
+    val (iHom1, iHom2) = this.getAttributeAsIntList("IHOMPOS", 0)
+    return abs(iHom2)
 }
 
 fun VariantContext.assemblies(): List<String> {

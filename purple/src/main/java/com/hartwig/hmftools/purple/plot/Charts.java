@@ -13,13 +13,10 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-
-import org.jetbrains.annotations.NotNull;
-
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class Charts
 {
@@ -49,9 +46,9 @@ public class Charts
 
     public void write(
             final String referenceId, final String sampleId, boolean plotSomatics,
-            @NotNull final Gender gender, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<VariantContext> somaticVariants, @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<FittedRegion> regions, @NotNull final List<AmberBAF> bafs)
+            final Gender gender, final List<PurpleCopyNumber> copyNumbers,
+            final List<VariantContextDecorator> somaticVariants, final List<StructuralVariant> structuralVariants,
+            final List<FittedRegion> regions, final List<AmberBAF> bafs)
             throws InterruptedException, ExecutionException, IOException
     {
         final ChartConfig chartConfig = mConfig.Charting;

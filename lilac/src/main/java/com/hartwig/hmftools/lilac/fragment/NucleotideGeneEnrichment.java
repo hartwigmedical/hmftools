@@ -59,12 +59,12 @@ public class NucleotideGeneEnrichment
         return mBcMinBoundary;
     }
 
-    public List<NucleotideFragment> enrich(final List<NucleotideFragment> fragments)
+    public List<Fragment> enrich(final List<Fragment> fragments)
     {
         return fragments.stream().map(x -> enrich(x)).collect(Collectors.toList());
     }
 
-    public final NucleotideFragment enrich(final NucleotideFragment fragment)
+    public final Fragment enrich(final Fragment fragment)
     {
         if(fragment.containsIndel())
             return fragment;
@@ -84,7 +84,7 @@ public class NucleotideGeneEnrichment
     }
 
     private final boolean matchToGene(
-            final NucleotideFragment fragment, final String gene,
+            final Fragment fragment, final String gene,
             final Pair<String,Integer> otherGene1, final Pair<String,Integer> otherGene2)
     {
         if(fragment.containsGene(gene))

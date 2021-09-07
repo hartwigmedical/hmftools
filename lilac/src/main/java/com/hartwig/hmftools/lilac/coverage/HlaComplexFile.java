@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
+import static com.hartwig.hmftools.lilac.LilacConstants.ITEM_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -19,24 +20,25 @@ public class HlaComplexFile
     public static String header()
     {
         StringJoiner sb = new StringJoiner(DELIM);
-        sb.add("score");
-        sb.add("homozygousCount");
-        sb.add("cohortFrequency");
-        sb.add("recoveryCount");
-        sb.add("totalCoverage");
-        sb.add("uniqueCoverage");
-        sb.add("sharedCoverage");
-        sb.add("wildCoverage");
-        sb.add("allele1");
-        sb.add("allele2");
-        sb.add("allele3");
-        sb.add("allele4");
-        sb.add("allele5");
-        sb.add("allele6");
+        sb.add("Score");
+        sb.add("HomozygousCount");
+        sb.add("CohortFrequency");
+        sb.add("RecoveryCount");
+        sb.add("WildcardCount");
+        sb.add("TotalCoverage");
+        sb.add("UniqueCoverage");
+        sb.add("SharedCoverage");
+        sb.add("WildCoverage");
+        sb.add("A1");
+        sb.add("A2");
+        sb.add("B1");
+        sb.add("B2");
+        sb.add("C1");
+        sb.add("C2");
         return sb.toString();
     }
 
-    public static void writeToFile(final List<HlaComplexCoverage> coverages, final String fileName)
+    public static void writeToFile(final String fileName, final List<ComplexCoverage> coverages)
     {
         try
         {
@@ -45,7 +47,7 @@ public class HlaComplexFile
             writer.write(header());
             writer.newLine();
 
-            for(HlaComplexCoverage coverage : coverages)
+            for(ComplexCoverage coverage : coverages)
             {
                 writer.write(asString(coverage));
                 writer.newLine();
@@ -60,14 +62,15 @@ public class HlaComplexFile
         }
     }
 
-    public static String asString(final HlaComplexCoverage coverage)
+    public static String asString(final ComplexCoverage coverage)
     {
-        StringJoiner sj = new StringJoiner("\t");
+        StringJoiner sj = new StringJoiner(DELIM);
 
         sj.add(String.format("%.2f", coverage.getScore()));
         sj.add(String.valueOf(coverage.homozygousCount()));
         sj.add(String.format("%.2f", coverage.cohortFrequencyTotal()));
         sj.add(String.valueOf(coverage.recoveredCount()));
+        sj.add(String.valueOf(coverage.wildcardCount()));
         sj.add(String.valueOf(coverage.TotalCoverage));
         sj.add(String.valueOf(coverage.UniqueCoverage));
         sj.add(String.valueOf(coverage.SharedCoverage));
@@ -76,6 +79,60 @@ public class HlaComplexFile
 
         return sj.toString();
     }
+
+    public static void writeFragmentAssignment(
+            final String fileName, final List<ComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
+    {
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            StringJoiner sb = new StringJoiner(DELIM);
+            sb.add("Complex");
+            sb.add("FragmentId");
+            sb.add("FragmentCoords");
+            sb.add("Type");
+            sb.add("FullAlleles");
+            sb.add("WildAlleles");
+            writer.write(sb.toString());
+            writer.newLine();
+
+            for(ComplexCoverage complexCoverage : coverages)
+            {
+                StringJoiner complexAlleles = new StringJoiner(ITEM_DELIM);
+                complexCoverage.getAlleles().forEach(x -> complexAlleles.add(x.toString()));
+                String complexStr = complexAlleles.toString();
+
+                List<FragmentAlleles> complexFrags = FragmentAlleles.filter(fragAlleles, complexCoverage.getAlleles());
+
+                for(FragmentAlleles fragAllele : complexFrags)
+                {
+                    StringJoiner fullAlleles = new StringJoiner(ITEM_DELIM);
+                    fragAllele.getFull().forEach(x -> fullAlleles.add(x.toString()));
+
+                    StringJoiner wildAlleles = new StringJoiner(ITEM_DELIM);
+                    fragAllele.getWild().forEach(x -> wildAlleles.add(x.toString()));
+
+                    String type = (fragAllele.getFull().size() == 1 && fragAllele.getWild().isEmpty()) ? "UNIQUE_FULL" :
+                            (fragAllele.getFull().isEmpty() && fragAllele.getWild().size() == 1) ? "UNIQUE_WILD" : "SHARED";
+
+                    writer.write(String.format("%s,%s,%s,%s,%s,%s",
+                            complexStr, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo(),
+                            type, fullAlleles.toString(), wildAlleles.toString()));
+
+                    writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return;
+        }
+    }
+
 
     public static List<HlaAllele> parseCandidateCoverageData(final List<String> alleleDataList)
     {

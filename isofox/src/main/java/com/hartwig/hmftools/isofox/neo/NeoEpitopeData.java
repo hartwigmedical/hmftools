@@ -5,12 +5,15 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_ID;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
+import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
+import static com.hartwig.hmftools.common.bam.BamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.cigarFromStr;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
+import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -147,26 +151,10 @@ public class NeoEpitopeData
         }
     }
 
-    public static String header()
+    public RnaNeoEpitope asRnaFile()
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
-        sj.add(NeoEpitopeFile.header());
-        sj.add("FragmentsNovel");
-        sj.add("BaseDepthUp");
-        sj.add("BaseDepthDown");
-
-        return sj.toString();
-    }
-
-    public String toString()
-    {
-        StringJoiner sj = new StringJoiner(DELIMITER);
-
-        sj.add(NeoEpitopeFile.toString(Source));
-        sj.add(String.format("%d", mFragmentSupport.NovelFragments[EXACT_MATCH]));
-        sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_UP]));
-        sj.add(String.format("%d", mFragmentSupport.RefBaseDepth[FS_DOWN]));
-
-        return sj.toString();
+        return new RnaNeoEpitope(
+                Source.Id, Source.VariantType, Source.VariantInfo, mFragmentSupport.NovelFragments[EXACT_MATCH],
+                mFragmentSupport.RefBaseDepth[FS_UP], mFragmentSupport.RefBaseDepth[FS_DOWN]);
     }
 }

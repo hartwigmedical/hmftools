@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.amber.ModifiableTumorBAF;
-import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class TumorBAFFactoryTest
     @Test
     public void useQualityOfBaseAfterDel()
     {
-        int minQuality = SAMRecords.getBaseQuality('J');
+        int minQuality = SamRecordUtils.getBaseQuality('J');
 
         final SAMRecord lowQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FI");
         final SAMRecord highQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FJ");

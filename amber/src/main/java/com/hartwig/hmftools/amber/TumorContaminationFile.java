@@ -14,15 +14,10 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TumorContaminationFile
 {
-
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "chr";
 
     private static final String AMBER_EXTENSION = ".amber.contamination.tsv";
-
-    private TumorContaminationFile()
-    {
-    }
 
     public static String generateContaminationFilename(@NotNull final String basePath, @NotNull final String sample)
     {

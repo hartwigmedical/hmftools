@@ -5,64 +5,75 @@ import com.hartwig.hmftools.sage.read.ReadContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class AltRead {
-
+public class AltRead
+{
     @Nullable
-    private ReadContext readContext;
-    private final RefContext refContext;
-    private final String ref;
-    private final String alt;
-    private final int baseQuality;
-    private final int numberOfEvents;
-    private final boolean sufficientMapQuality;
+    public final RefContext RefContext;
+    public final String Ref;
+    public final String Alt;
+    public final int BaseQuality;
+    public final int NumberOfEvents;
+    public final boolean SufficientMapQuality;
+    
+    private ReadContext mReadContext;
 
-    AltRead(final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents, final boolean sufficientMapQuality,
-            @Nullable final ReadContext readContext) {
-        this.refContext = refContext;
-        this.ref = ref;
-        this.alt = alt;
-        this.baseQuality = baseQuality;
-        this.readContext = readContext;
-        this.numberOfEvents = numberOfEvents;
-        this.sufficientMapQuality = sufficientMapQuality;
+    public AltRead(
+            final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
+            final boolean sufficientMapQuality, final ReadContext readContext)
+    {
+        RefContext = refContext;
+        Ref = ref;
+        Alt = alt;
+        BaseQuality = baseQuality;
+        mReadContext = readContext;
+        NumberOfEvents = numberOfEvents;
+        SufficientMapQuality = sufficientMapQuality;
     }
 
-    public boolean containsReadContext() {
-        return readContext != null;
+    public boolean containsReadContext()
+    {
+        return mReadContext != null;
     }
 
-    public long position() {
-        return refContext.position();
+    public long position()
+    {
+        return RefContext.position();
     }
 
-    public boolean isIndel() {
-        return ref.length() != alt.length();
+    public boolean isIndel()
+    {
+        return Ref.length() != Alt.length();
     }
 
-    public int length() {
-        return Math.abs(ref.length() - alt.length());
+    public int length()
+    {
+        return Math.abs(Ref.length() - Alt.length());
     }
 
-    public int rightCoreIndex() {
-        return readContext.readBasesRightCentreIndex();
+    public int rightCoreIndex()
+    {
+        return mReadContext.readBasesRightCentreIndex();
     }
 
-    public int leftCoreIndex() {
-        return readContext.readBasesLeftCentreIndex();
+    public int leftCoreIndex()
+    {
+        return mReadContext.readBasesLeftCentreIndex();
     }
 
-    public void extend(@NotNull final AltRead other) {
-        assert (readContext != null);
-        assert (other.readContext != null);
+    public void extend(@NotNull final AltRead other)
+    {
+        assert (mReadContext != null);
+        assert (other.mReadContext != null);
 
-        int leftIndex = Math.min(readContext.readBasesLeftCentreIndex(), other.readContext.readBasesLeftCentreIndex());
-        int rightIndex = Math.max(readContext.readBasesRightCentreIndex(), other.readContext.readBasesRightCentreIndex());
+        int leftIndex = Math.min(mReadContext.readBasesLeftCentreIndex(), other.mReadContext.readBasesLeftCentreIndex());
+        int rightIndex = Math.max(mReadContext.readBasesRightCentreIndex(), other.mReadContext.readBasesRightCentreIndex());
 
-        readContext = readContext.extend(leftIndex, rightIndex);
+        mReadContext = mReadContext.extend(leftIndex, rightIndex);
     }
 
-    public void updateRefContext() {
-        refContext.altRead(ref, alt, baseQuality, sufficientMapQuality, numberOfEvents, readContext);
+    public void updateRefContext()
+    {
+        RefContext.altRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
     }
 
 }

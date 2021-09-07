@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
@@ -13,49 +15,54 @@ import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class CandidateStage {
+public class CandidateStage
+{
+    private final SageConfig mConfig;
+    private final List<VariantHotspot> mHotspots;
+    private final List<ChrBaseRegion> mPanelRegions;
+    private final CandidateEvidence mCandidateEvidence;
+    private final List<ChrBaseRegion> mHighConfidenceRegions;
 
-    private static final Logger LOGGER = LogManager.getLogger(CandidateStage.class);
+    public CandidateStage(final SageConfig config, final ReferenceSequenceFile refGenome,
+            final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panelRegions,
+            final List<ChrBaseRegion> highConfidenceRegions, final Coverage coverage)
+    {
+        mConfig = config;
 
-    private final SageConfig config;
-    private final List<VariantHotspot> hotspots;
-    private final List<GenomeRegion> panelRegions;
-    private final CandidateEvidence candidateEvidence;
-    private final List<GenomeRegion> highConfidenceRegions;
-
-    public CandidateStage(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions, final Coverage coverage) {
-        this.config = config;
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
-        this.hotspots = hotspots;
-        this.panelRegions = panelRegions;
-        this.highConfidenceRegions = highConfidenceRegions;
-        this.candidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome, coverage);
+
+        mHotspots = hotspots;
+        mPanelRegions = panelRegions;
+        mHighConfidenceRegions = highConfidenceRegions;
+        mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome, coverage);
     }
 
     @NotNull
-    public CompletableFuture<List<Candidate>> candidates(@NotNull final GenomeRegion region,
-            final CompletableFuture<RefSequence> refSequenceFuture) {
-        return refSequenceFuture.thenCompose(refSequence -> {
-            if (region.start() == 1) {
-                LOGGER.info("Processing chromosome {}", region.chromosome());
+    public CompletableFuture<List<Candidate>> findCandidates(final ChrBaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
+    {
+        return refSequenceFuture.thenCompose(refSequence ->
+        {
+            if(region.start() == 1)
+            {
+                SG_LOGGER.info("processing chromosome {}", region.Chromosome);
             }
-            LOGGER.debug("Processing candidates in {}:{}", region.chromosome(), region.start());
 
-            final Candidates initialCandidates = new Candidates(hotspots, panelRegions, highConfidenceRegions);
+            SG_LOGGER.trace("processing candidates in {}:{}", region.Chromosome, region.start());
+
+            final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
 
             CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-            for (int i = 0; i < config.tumor().size(); i++) {
-                final String sample = config.tumor().get(i);
-                final String sampleBam = config.tumorBam().get(i);
-                done = done.thenApply(aVoid -> candidateEvidence.get(sample, sampleBam, refSequence, region))
+
+            for(int i = 0; i < mConfig.TumorIds.size(); i++)
+            {
+                final String sample = mConfig.TumorIds.get(i);
+                final String sampleBam = mConfig.TumorBams.get(i);
+
+                done = done.thenApply(aVoid -> mCandidateEvidence.readBam(sample, sampleBam, refSequence, region))
                         .thenAccept(initialCandidates::add);
             }
             return done.thenApply(y -> initialCandidates.candidates());

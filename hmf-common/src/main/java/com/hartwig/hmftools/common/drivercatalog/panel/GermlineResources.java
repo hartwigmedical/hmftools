@@ -10,38 +10,45 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-final class GermlineResources {
-
-    private GermlineResources() {
+final class GermlineResources
+{
+    private GermlineResources()
+    {
     }
 
     @NotNull
-    static List<VariantContext> whitelist37() throws IOException {
+    static List<VariantContext> whitelist37() throws IOException
+    {
         return resource(resourceURL("/drivercatalog/GermlineHotspots.whitelist.37.vcf"));
     }
 
     @NotNull
-    static List<VariantContext> whitelist38() throws IOException {
+    static List<VariantContext> whitelist38() throws IOException
+    {
         return resource(resourceURL("/drivercatalog/GermlineHotspots.whitelist.38.vcf"));
     }
 
     @NotNull
-    static List<VariantContext> blacklist37() throws IOException {
+    static List<VariantContext> blacklist37() throws IOException
+    {
         return resource(resourceURL("/drivercatalog/GermlineHotspots.blacklist.37.vcf"));
     }
 
     @NotNull
-    static List<VariantContext> blacklist38() throws IOException {
+    static List<VariantContext> blacklist38() throws IOException
+    {
         return resource(resourceURL("/drivercatalog/GermlineHotspots.blacklist.38.vcf"));
     }
 
     @NotNull
-    private static List<VariantContext> resource(@NotNull final String file) throws IOException {
+    private static List<VariantContext> resource(@NotNull final String file) throws IOException
+    {
         return getFeatureReader(file, new VCFCodec(), false).iterator().toList();
     }
 
     @NotNull
-    private static String resourceURL(@NotNull String location) {
+    private static String resourceURL(@NotNull String location)
+    {
         return DriverGenePanelConversion.class.getResource(location).toString();
     }
 }

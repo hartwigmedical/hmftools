@@ -13,16 +13,17 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class PonVCF implements AutoCloseable {
+public class PonVCF implements AutoCloseable
+{
+    private final VariantContextWriter mWriter;
 
     public static final String PON_COUNT = "PON_COUNT";
     public static final String PON_TOTAL = "PON_TOTAL";
     public static final String PON_MAX = "PON_MAX";
 
-    private final VariantContextWriter writer;
-
-    PonVCF(final String output, int sampleSize) {
-        writer = new VariantContextWriterBuilder().setOutputFile(output)
+    PonVCF(final String output, int sampleSize)
+    {
+        mWriter = new VariantContextWriterBuilder().setOutputFile(output)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .modifyOption(Options.DO_NOT_WRITE_GENOTYPES, true)
@@ -33,16 +34,18 @@ public class PonVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine(PON_TOTAL, 1, VCFHeaderLineType.Integer, "total depth"));
         header.addMetaDataLine(new VCFInfoHeaderLine(PON_MAX, 1, VCFHeaderLineType.Integer, "max depth"));
         header.addMetaDataLine(new VCFHeaderLine("PonInputSampleCount", String.valueOf(sampleSize)));
-        writer.writeHeader(header);
+        mWriter.writeHeader(header);
     }
 
-    public void write(@NotNull final List<VariantContext> contexts) {
-        contexts.forEach(writer::add);
+    public void write(@NotNull final List<VariantContext> contexts)
+    {
+        contexts.forEach(mWriter::add);
     }
 
     @Override
-    public void close() {
-        writer.close();
+    public void close()
+    {
+        mWriter.close();
     }
 
 }

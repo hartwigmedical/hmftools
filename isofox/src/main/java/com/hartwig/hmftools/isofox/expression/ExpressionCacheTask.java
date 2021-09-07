@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -24,7 +24,7 @@ public class ExpressionCacheTask implements Callable
     private final ExpectedRatesGenerator mExpRatesGenerator;
 
     private String mChromosome;
-    private final List<EnsemblGeneData> mGeneDataList;
+    private final List<GeneData> mGeneDataList;
 
     private int mCurrentGeneIndex;
     private int mCollectionId;
@@ -46,7 +46,7 @@ public class ExpressionCacheTask implements Callable
         mPerfCounter = new PerformanceCounter("ExpressionCacheGeneration");
     }
 
-    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    public void initialise(final String chromosome, final List<GeneData> geneDataList)
     {
         mChromosome = chromosome;
         mGeneDataList.clear();
@@ -71,7 +71,7 @@ public class ExpressionCacheTask implements Callable
         }
 
         mCurrentGeneIndex = 0;
-        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
+        final List<GeneData> overlappingGenes = Lists.newArrayList();
         int nextLogCount = 100;
 
         while(mCurrentGeneIndex < mGeneDataList.size())

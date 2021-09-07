@@ -3,10 +3,10 @@ package com.hartwig.hmftools.serve.extraction.codon.tools;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
-import com.hartwig.hmftools.serve.util.AminoAcidFunctions;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +24,8 @@ import htsjdk.variant.vcf.VCFCodec;
 public class AnnotatedCodonVCFChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
-    private static final boolean LOG_DEBUG = true;
+
+    private static final boolean LOG_DEBUG = false;
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE Codon VCF checker");
@@ -50,7 +51,7 @@ public class AnnotatedCodonVCFChecker {
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             int inputCodon = Integer.parseInt(inputParts[2]);
 
-            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationParser.fromContext(variant);
             if (isMatch(inputGene, inputTranscript, inputCodon, annotations)) {
                 matchCount++;
             } else {
@@ -112,7 +113,7 @@ public class AnnotatedCodonVCFChecker {
     }
 
     private static int extractCodon(@NotNull String hgvsProteinAnnotation) {
-        String singleLetterAA = AminoAcidFunctions.forceSingleLetterProteinAnnotation(hgvsProteinAnnotation);
+        String singleLetterAA = AminoAcids.forceSingleLetterProteinAnnotation(hgvsProteinAnnotation);
         // The single letter AA should always start with "p.{A}"
         return Integer.parseInt(singleLetterAA.substring(3, singleLetterAA.length() - 1));
     }

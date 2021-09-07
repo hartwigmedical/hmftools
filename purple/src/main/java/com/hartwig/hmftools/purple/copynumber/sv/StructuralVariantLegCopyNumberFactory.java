@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 

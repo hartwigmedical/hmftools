@@ -3,15 +3,11 @@ package com.hartwig.hmftools.lilac.coverage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.progress.FutureProgressTracker;
-import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -20,30 +16,31 @@ import java.util.concurrent.ThreadFactory;
 public class ComplexCoverageCalculator
 {
     private final int mThreadCount;
+    private final double mTopScoreThreshold;
 
-    public ComplexCoverageCalculator(int threadCount)
+    public ComplexCoverageCalculator(int threadCount, double topScoreThreshold)
     {
         mThreadCount = threadCount;
+        mTopScoreThreshold = topScoreThreshold;
     }
 
-    public List<HlaComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
+    public List<ComplexCoverage> calculateComplexCoverages(final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes)
     {
         List<HlaAllele> alleles = Lists.newArrayList();
-        complexes.stream().forEach(x -> x.getAlleles().stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
+        complexes.stream().forEach(x -> x.Alleles.stream().filter(y -> !alleles.contains(y)).forEach(y -> alleles.add(y)));
         FragmentAlleleMatrix fragAlleleMatrix = new FragmentAlleleMatrix(fragmentAlleles, alleles);
 
-        if(mThreadCount > 1 || complexes.size() < 10000) // no point in allocating to threads
+        if(mThreadCount > 1 && complexes.size() >= 10000) // no point in allocating to threads if complex count is small
         {
-            return calcMultiThreadResults(fragmentAlleles, complexes, fragAlleleMatrix);
+            return calcMultiThreadResults(complexes, fragAlleleMatrix);
         }
 
-        CoverageCalcTask calcTask  = new CoverageCalcTask(fragmentAlleles, complexes, fragAlleleMatrix);
+        CoverageCalcTask calcTask  = new CoverageCalcTask(0, complexes, fragAlleleMatrix, mTopScoreThreshold);
         calcTask.call();
         return calcTask.getCoverageResults();
     }
 
-    private List<HlaComplexCoverage> calcMultiThreadResults(
-            final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
+    private List<ComplexCoverage> calcMultiThreadResults(final List<HlaComplex> complexes, final FragmentAlleleMatrix fragAlleleMatrix)
     {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Lilac-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mThreadCount, namedThreadFactory);
@@ -68,9 +65,10 @@ public class ComplexCoverageCalculator
                 listIndex = 0;
         }
 
+        int threadIndex = 0;
         for(List<HlaComplex> complexList : complexLists)
         {
-            CoverageCalcTask coverageTask = new CoverageCalcTask(fragmentAlleles, complexList, fragAlleleMatrix);
+            CoverageCalcTask coverageTask = new CoverageCalcTask(threadIndex++, complexList, fragAlleleMatrix, mTopScoreThreshold);
             coverageCalcTasks.add(coverageTask);
 
             FutureTask futureTask = new FutureTask(coverageTask);
@@ -90,7 +88,7 @@ public class ComplexCoverageCalculator
 
             coverageCalcTasks.forEach(x -> x.logPerfResults());
 
-            List<HlaComplexCoverage> results = Lists.newArrayList();
+            List<ComplexCoverage> results = Lists.newArrayList();
             coverageCalcTasks.forEach(x -> results.addAll(x.getCoverageResults()));
             return results;
 

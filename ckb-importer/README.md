@@ -19,3 +19,5 @@
  db_url | Required: The URL of the database in which to ingest the data.
  db_user | Required: The DB user which has access to the the URL specified
  db_pass | Required: The password needed for the DB user to authenticate on the URL.
+ 
+ Resources for v1.0 can be found on https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.0

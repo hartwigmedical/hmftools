@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.vcf.SageVCF;
+import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,29 +18,33 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class PonBuilder {
-
+public class PonBuilder
+{
     private static final int MIN_OUTPUT_COUNT = 2;
     private static final int MIN_INPUT_ALLELIC_DEPTH = 3;
 
-    private final Map<VariantHotspot, Counter> map = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<VariantHotspot, Counter> mMap = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public void add(@NotNull final VariantContext context) {
+    public void add(@NotNull final VariantContext context)
+    {
         final VariantHotspot hotspot = hotspot(context);
-        final Counter counter = map.computeIfAbsent(hotspot, Counter::new);
+        final Counter counter = mMap.computeIfAbsent(hotspot, Counter::new);
         final Genotype genotype = context.getGenotype(0);
-        if (!hotspot.ref().contains("N") && genotype.hasExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH)) {
-            String rawDepth = (String) genotype.getExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH);
+        if(!hotspot.ref().contains("N") && genotype.hasExtendedAttribute(VariantVCF.RAW_ALLELIC_DEPTH))
+        {
+            String rawDepth = (String) genotype.getExtendedAttribute(VariantVCF.RAW_ALLELIC_DEPTH);
             int allelicDepth = Integer.parseInt(rawDepth.split(",")[1]);
-            if (allelicDepth >= MIN_INPUT_ALLELIC_DEPTH) {
+            if(allelicDepth >= MIN_INPUT_ALLELIC_DEPTH)
+            {
                 counter.increment(allelicDepth);
             }
         }
     }
 
     @NotNull
-    public List<VariantContext> build() {
-        return map.values()
+    public List<VariantContext> build()
+    {
+        return mMap.values()
                 .stream()
                 .filter(x -> x.counter() >= MIN_OUTPUT_COUNT)
                 .sorted(Comparator.comparing(o -> o.hotspot))
@@ -49,7 +53,8 @@ public class PonBuilder {
     }
 
     @NotNull
-    private static VariantHotspot hotspot(@NotNull final VariantContext context) {
+    private static VariantHotspot hotspot(@NotNull final VariantContext context)
+    {
         return ImmutableVariantHotspotImpl.builder()
                 .chromosome(context.getContig())
                 .position(context.getStart())
@@ -59,7 +64,8 @@ public class PonBuilder {
     }
 
     @NotNull
-    private static VariantContext context(@NotNull final Counter counter) {
+    private static VariantContext context(@NotNull final Counter counter)
+    {
         final Allele ref = Allele.create(counter.hotspot.ref(), true);
         final Allele alt = Allele.create(counter.hotspot.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
@@ -74,21 +80,25 @@ public class PonBuilder {
                 .make();
     }
 
-    static class Counter {
+    static class Counter
+    {
         private final VariantHotspot hotspot;
         private final AtomicInteger counter = new AtomicInteger();
         private final AtomicInteger total = new AtomicInteger();
         private final AtomicInteger max = new AtomicInteger();
 
-        Counter(final VariantHotspot hotspot) {
+        Counter(final VariantHotspot hotspot)
+        {
             this.hotspot = hotspot;
         }
 
-        public int counter() {
+        public int counter()
+        {
             return counter.intValue();
         }
 
-        void increment(int depth) {
+        void increment(int depth)
+        {
             counter.incrementAndGet();
             total.addAndGet(depth);
             max.set(Integer.max(max.get(), depth));

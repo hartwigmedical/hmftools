@@ -3,10 +3,12 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragment.calcAminoAcidIndices;
-import static com.hartwig.hmftools.lilac.fragment.NucleotideFragment.merge;
+import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
@@ -38,28 +40,30 @@ public class FragmentsTest
     public void testFragmentMerge()
     {
         String readId = "01";
-        NucleotideFragment frag1 = new NucleotideFragment(
-                readId, "", Sets.newHashSet(GENE_A),
+        Fragment frag1 = new Fragment(
+                readId, "", GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
-        NucleotideFragment frag2 = new NucleotideFragment(
-                readId, "", Sets.newHashSet(GENE_B),
+        Fragment frag2 = new Fragment(
+                readId, "", GENE_B, Sets.newHashSet(GENE_B),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
-        NucleotideFragment mergedFrag = merge(frag1, frag2);
+        Fragment mergedFrag = mergeFragments(frag1, frag2);
+        assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.getGenes().size());
         assertEquals(1, mergedFrag.getNucleotideLoci().size());
         assertEquals(new Integer(1), mergedFrag.getNucleotideLoci().get(0));
         assertEquals(1, mergedFrag.getNucleotideQuality().size());
         assertEquals(1, mergedFrag.getNucleotides().size());
 
-        frag2 = new NucleotideFragment(
-                readId, "", Sets.newHashSet(GENE_A),
+        frag2 = new Fragment(
+                readId, "", GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList(30, 30, 30, 30),
                 Lists.newArrayList("A", "A", "A", "A"));
 
-        mergedFrag = merge(frag1, frag2);
+        mergedFrag = mergeFragments(frag1, frag2);
+        assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.getGenes().size());
         assertEquals(4, mergedFrag.getNucleotideLoci().size());
         assertEquals(new Integer(0), mergedFrag.getNucleotideLoci().get(0));
@@ -67,13 +71,14 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.getNucleotideQuality().size());
         assertEquals(4, mergedFrag.getNucleotides().size());
 
-        frag2 = new NucleotideFragment(
-                readId, "", Sets.newHashSet(GENE_C),
+        frag2 = new Fragment(
+                readId, "", GENE_C, Sets.newHashSet(GENE_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList(30, 30, 30),
                 Lists.newArrayList("A", "A", "A"));
 
-        mergedFrag = merge(frag1, frag2);
+        mergedFrag = mergeFragments(frag1, frag2);
+        assertTrue(frag1.validate());
         assertEquals(3, mergedFrag.getGenes().size());
         assertEquals(6, mergedFrag.getNucleotideLoci().size());
         assertEquals(new Integer(0), mergedFrag.getNucleotideLoci().get(0));

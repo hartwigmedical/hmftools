@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;

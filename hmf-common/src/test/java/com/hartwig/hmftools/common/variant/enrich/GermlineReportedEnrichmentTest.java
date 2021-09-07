@@ -252,6 +252,7 @@ public class GermlineReportedEnrichmentTest {
                 .reportAmplification(false)
                 .reportSomaticHotspot(false)
                 .reportSplice(false)
+                .reportGermlineDisruption(false)
                 .build();
     }
 }

@@ -64,5 +64,4 @@ final class CurationFactory {
 
     private CurationFactory() {
     }
-
 }

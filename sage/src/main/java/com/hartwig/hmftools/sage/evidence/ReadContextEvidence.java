@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
@@ -25,51 +24,57 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class ReadContextEvidence {
+public class ReadContextEvidence
+{
+    private final int mTypicalReadLength;
+    private final SageConfig mSageConfig;
+    private final ReferenceSequenceFile mRefGenome;
+    private final ReadContextCounterFactory mFactory;
 
-    private final int typicalReadLength;
-    private final SageConfig sageConfig;
-    private final ReferenceSequenceFile refGenome;
-    private final ReadContextCounterFactory factory;
-
-    public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final ReferenceSequenceFile refGenome,
-            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
-        this.sageConfig = config;
-        this.refGenome = refGenome;
-        this.factory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
-        this.typicalReadLength = config.typicalReadLength();
+    public ReadContextEvidence(
+            final SageConfig config, final ReferenceSequenceFile refGenome,
+            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
+    {
+        mSageConfig = config;
+        mRefGenome = refGenome;
+        mFactory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
+        mTypicalReadLength = config.typicalReadLength();
     }
 
     @NotNull
-    public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample,
-            @NotNull final String bam) {
-        final List<ReadContextCounter> counters = factory.create(sample, candidates);
-        if (candidates.isEmpty()) {
+    public List<ReadContextCounter> get(final List<Candidate> candidates, final String sample, final String bam)
+    {
+        final List<ReadContextCounter> counters = mFactory.create(sample, candidates);
+
+        if(candidates.isEmpty())
             return counters;
-        }
 
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
 
-        final GenomeRegion bounds = GenomeRegions.create(firstCandidate.chromosome(),
-                Math.max(firstCandidate.position() - typicalReadLength, 1),
-                lastCandidate.position() + typicalReadLength);
+        final ChrBaseRegion bounds = new ChrBaseRegion(firstCandidate.chromosome(),
+                Math.max((int)firstCandidate.position() - mTypicalReadLength, 1),
+                (int)lastCandidate.position() + mTypicalReadLength);
+
         final SamSlicer slicer = new SamSlicer(0, bounds);
 
         final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
 
-        final RefSequence refSequence = new RefSequence(bounds, refGenome);
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(sageConfig.validationStringency())
-                .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(bam))) {
-            slicer.slice(tumorReader, samRecord -> {
+        final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
 
+        try(final SamReader tumorReader = SamReaderFactory.makeDefault()
+                .validationStringency(mSageConfig.Stringency)
+                .referenceSource(new ReferenceSource(mRefGenome))
+                .open(new File(bam)))
+        {
+            slicer.slice(tumorReader, samRecord ->
+            {
                 int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
-                consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig, numberOfEvents));
+                consumerSelector.select(samRecord, x -> x.accept(samRecord, mSageConfig, numberOfEvents));
 
             });
-        } catch (IOException e) {
+        } catch(IOException e)
+        {
             throw new CompletionException(e);
         }
 

@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.drup;
 
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfForm;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfForm;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfItemGroup;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfStudyEvent;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

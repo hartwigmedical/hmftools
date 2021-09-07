@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
+import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeByIndex;
+
 import java.util.List;
 import java.util.Map;
 
@@ -94,7 +96,7 @@ public class CodonExtractor {
     @Nullable
     private static List<CodonAnnotation> determineCodonAnnotations(@NotNull String gene, @NotNull HmfTranscriptRegion canonicalTranscript,
             int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter) {
-        List<GenomeRegion> regions = canonicalTranscript.codonByIndex(codonIndex);
+        List<GenomeRegion> regions = codonRangeByIndex(canonicalTranscript, codonIndex, codonIndex);
 
         if (regions != null) {
             List<CodonAnnotation> codonAnnotations = Lists.newArrayList();

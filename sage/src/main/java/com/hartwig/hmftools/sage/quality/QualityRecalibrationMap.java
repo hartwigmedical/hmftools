@@ -2,24 +2,23 @@ package com.hartwig.hmftools.sage.quality;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
+public class QualityRecalibrationMap
+{
+    // recalibration results per sampleId
+    private final Map<BaseQualityKey,QualityRecalibrationRecord> mMap;
 
-public class QualityRecalibrationMap {
-
-    @NotNull
-    private final Map<QualityRecalibrationKey, QualityRecalibrationRecord> map;
-
-    public QualityRecalibrationMap(@NotNull final List<QualityRecalibrationRecord> records) {
-        this.map = records.stream().collect(Collectors.toMap(QualityRecalibrationRecord::key, x -> x));
+    public QualityRecalibrationMap(final List<QualityRecalibrationRecord> records)
+    {
+        mMap = records.stream().collect(Collectors.toMap(x -> x.Key, x -> x));
     }
 
-    public double quality(byte ref, byte alt, byte[] trinucleotideContext, byte qual) {
-        final QualityRecalibrationKey key =
-                ImmutableQualityRecalibrationKey.builder().ref(ref).alt(alt).qual(qual).trinucleotideContext(trinucleotideContext).build();
+    public double quality(byte ref, byte alt, byte[] trinucleotideContext, byte qual)
+    {
+        final BaseQualityKey key = new BaseQualityKey(ref, alt, trinucleotideContext, qual);
 
-        return Optional.ofNullable(map.get(key)).map(QualityRecalibrationRecord::recalibratedQual).orElse(qual * 1d);
+        QualityRecalibrationRecord record = mMap.get(key);
+        return record != null ? record.RecalibratedQuality : 1.0;
     }
 }

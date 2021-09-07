@@ -9,38 +9,52 @@ import java.util.Comparator;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
-class TsgImpactComparator implements Comparator<SomaticVariant> {
-
+class TsgImpactComparator implements Comparator<SomaticVariant>
+{
     @Override
-    public int compare(final SomaticVariant o1, final SomaticVariant o2) {
+    public int compare(final SomaticVariant o1, final SomaticVariant o2)
+    {
         int firstWins = -1;
         int secondWins = 1;
 
-        if (o1.type() == o2.type() && o1.canonicalCodingEffect() == o2.canonicalCodingEffect()) {
+        if(o1.type() == o2.type() && o1.canonicalCodingEffect() == o2.canonicalCodingEffect())
+        {
             return 0;
         }
 
-        if (isFrameshift(o1)) {
+        if(isFrameshift(o1))
+        {
             return firstWins;
-        } else if (isFrameshift(o2)) {
+        }
+        else if(isFrameshift(o2))
+        {
             return secondWins;
         }
 
-        if (isNonsense(o1)) {
+        if(isNonsense(o1))
+        {
             return firstWins;
-        } else if (isNonsense(o2)) {
+        }
+        else if(isNonsense(o2))
+        {
             return secondWins;
         }
 
-        if (isSplice(o1)) {
+        if(isSplice(o1))
+        {
             return firstWins;
-        } else if (isSplice(o2)) {
+        }
+        else if(isSplice(o2))
+        {
             return secondWins;
         }
 
-        if (isMissense(o1)) {
+        if(isMissense(o1))
+        {
             return firstWins;
-        } else if (isMissense(o2)) {
+        }
+        else if(isMissense(o2))
+        {
             return secondWins;
         }
 

@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRUSANNOTATION;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,15 +43,20 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.structural.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.variant.structural.linx.FusionPhasedType;
-import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
+import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -103,7 +108,20 @@ public class FeatureDataLoader
         try
         {
             String viralInsertFilename = LinxViralInsertion.generateFilename(sampleDataDir, sampleId);
-            final List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
+            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(sampleDataDir, sampleId);
+
+            final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
+
+            if(Files.exists(Paths.get(viralAnnotationFilename)))
+            {
+                virusAnnotations.addAll(AnnotatedVirusFile.read(viralAnnotationFilename));
+            }
+
+            if(Files.exists(Paths.get(viralInsertFilename)))
+            {
+                final List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
+                virusAnnotations.addAll(mapViralInsertsToAnnotations(viralInserts));
+            }
 
             final String fusionsFilename = LinxFusion.generateFilename(sampleDataDir, sampleId);
 
@@ -132,7 +150,7 @@ public class FeatureDataLoader
             boolean checkIndels = checkIndels(sampleId, sampleDataDir, null);
             final List<String> indelGenes = loadSpecificMutations(sampleId, sampleVcfFile, checkIndels);
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, indelGenes);
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, virusAnnotations, indelGenes);
         }
         catch(IOException e)
         {
@@ -180,7 +198,7 @@ public class FeatureDataLoader
 
         final Map<String,List<LinxFusion>> sampleFusionMap = getAllFusions(dbAccess, specificSampleId);
 
-        final Map<String,List<LinxViralInsertion>> sampleVirusMap = getAllViruses(dbAccess, specificSampleId);
+        final Map<String,List<AnnotatedVirus>> sampleVirusMap = getAllViruses(dbAccess, specificSampleId);
 
         final Map<String,List<String>> sampleIndelMap = getSpecificMutations(dbAccess, specificSampleId, true);
 
@@ -191,7 +209,7 @@ public class FeatureDataLoader
         {
             final List<DriverCatalog> drivers = sampleDriverMap.get(sampleId);
             final List<LinxFusion> fusions = sampleFusionMap.get(sampleId);
-            final List<LinxViralInsertion> viralInserts = sampleVirusMap.get(sampleId);
+            final List<AnnotatedVirus> virusAnnotations = sampleVirusMap.get(sampleId);
 
             final List<String> mutationGenes = sampleIndelMap.get(sampleId);
 
@@ -205,7 +223,7 @@ public class FeatureDataLoader
                 mutationGenes.addAll(nonIndelMutations);
             }
 
-            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, viralInserts, mutationGenes);
+            mapFeatureData(sampleId, sampleFeaturesMap, drivers, fusions, virusAnnotations, mutationGenes);
 
             ++i;
             if(i >= nextLog)
@@ -267,28 +285,39 @@ public class FeatureDataLoader
         return sampleFusionMap;
     }
 
-    private static final Map<String,List<LinxViralInsertion>> getAllViruses(final DatabaseAccess dbAccess, final String specificSampleId)
+    private static final Map<String,List<AnnotatedVirus>> getAllViruses(final DatabaseAccess dbAccess, final String specificSampleId)
     {
-        final Map<String,List<LinxViralInsertion>> sampleVirusMap = Maps.newHashMap();
+        final Map<String,List<AnnotatedVirus>> sampleVirusMap = Maps.newHashMap();
 
         Result<Record> result = dbAccess.context().select()
-                .from(VIRALINSERTION)
-                .where(specificSampleId != null ? VIRALINSERTION.SAMPLEID.eq(specificSampleId) : VIRALINSERTION.SAMPLEID.isNotNull())
+                .from(VIRUSANNOTATION)
+                .where(specificSampleId != null ? VIRUSANNOTATION.SAMPLEID.eq(specificSampleId) : VIRUSANNOTATION.SAMPLEID.isNotNull())
                 .fetch();
 
         for (Record record : result)
         {
-            final String sampleId = record.getValue(VIRALINSERTION.SAMPLEID);
+            final String sampleId = record.getValue(VIRUSANNOTATION.SAMPLEID);
 
-            LinxViralInsertion viralInsertion = new LinxViralInsertion(
-                    sampleId, record.getValue(VIRALINSERTION.SVID),
-                    record.getValue(VIRALINSERTION.VIRUSID), record.getValue(VIRALINSERTION.VIRUSNAME));
+            String interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION) != null ?
+                    record.getValue(VIRUSANNOTATION.INTERPRETATION) : Strings.EMPTY;
 
-            final List<LinxViralInsertion> viralInsertions = sampleVirusMap.get(sampleId);
-            if(viralInsertions == null)
-                sampleVirusMap.put(sampleId, Lists.newArrayList(viralInsertion));
-            else
-                viralInsertions.add(viralInsertion);
+            AnnotatedVirus annotatedVirus = ImmutableAnnotatedVirus.builder()
+                        .taxid(record.getValue(VIRUSANNOTATION.TAXID))
+                        .name(record.getValue(VIRUSANNOTATION.VIRUSNAME))
+                        .qcStatus(VirusBreakendQCStatus.valueOf(record.getValue(VIRUSANNOTATION.QCSTATUS)))
+                        .interpretation(interpretation)
+                        .reported(record.getValue(VIRUSANNOTATION.REPORTED) == 1)
+                        .integrations(record.getValue(VIRUSANNOTATION.INTEGRATIONS))
+                        .build();
+
+            List<AnnotatedVirus> annotatedVirusList = sampleVirusMap.get(sampleId);
+            if(annotatedVirusList == null)
+            {
+                annotatedVirusList = Lists.newArrayList();
+                sampleVirusMap.put(sampleId, annotatedVirusList);
+            }
+
+            annotatedVirusList.add(annotatedVirus);
         }
 
         return sampleVirusMap;
@@ -442,7 +471,7 @@ public class FeatureDataLoader
 
     private static void mapFeatureData(
             final String sampleId, final Map<String,List<SampleFeatureData>> sampleDrivers, final List<DriverCatalog> drivers,
-            final List<LinxFusion> fusions, final List<LinxViralInsertion> viralInserts, final List<String> indelGenes)
+            final List<LinxFusion> fusions, final List<AnnotatedVirus> virusAnnotations, final List<String> indelGenes)
     {
         final List<SampleFeatureData> featuresList = Lists.newArrayList();
 
@@ -493,14 +522,15 @@ public class FeatureDataLoader
             }
         }
 
-        if(viralInserts != null)
+        if(virusAnnotations != null)
         {
             final List<SampleFeatureData> viralInsertDataList = Lists.newArrayList();
 
-            viralInserts.stream()
-                    .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.VirusName).toString(), FeatureType.VIRUS, 1))
+            // convert to virus group name and ensure no duplicates per sample
+            virusAnnotations.stream()
+                    .map(x -> new SampleFeatureData(sampleId, fromVirusName(x.name()).toString(), FeatureType.VIRUS, 1))
                     .filter(x -> !x.Name.equals(OTHER.toString()))
-                    .filter(x -> viralInsertDataList.stream().noneMatch(y -> y.Name.equals(x.Name))) // check for duplicates
+                    .filter(x -> viralInsertDataList.stream().noneMatch(y -> y.Name.equals(x.Name)))
                     .forEach(x -> viralInsertDataList.add(x));
 
             featuresList.addAll(viralInsertDataList);
@@ -633,4 +663,22 @@ public class FeatureDataLoader
         return true;
     }
 
+    private static List<AnnotatedVirus> mapViralInsertsToAnnotations(final List<LinxViralInsertion> viralInserts)
+    {
+        final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
+
+        for(LinxViralInsertion viralInsertion : viralInserts)
+        {
+            virusAnnotations.add(ImmutableAnnotatedVirus.builder()
+                    .taxid(0)
+                    .name(viralInsertion.VirusName)
+                    .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+                    .interpretation(null)
+                    .reported(true)
+                    .integrations(0)
+                    .build());
+        }
+
+        return virusAnnotations;
+    }
 }

@@ -20,6 +20,15 @@ import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
+import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivic;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicCoordinates;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicDisease;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicEvidenceItem;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicLifecycleActions;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicProvisionalValue;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicPublicationDate;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -50,13 +59,66 @@ public final class ViccTestFactory {
     }
 
     @NotNull
+    public static ViccEntry testEntryWithCivicEvidenceDirection(@Nullable String direction) {
+        Civic civic = ImmutableCivic.builder()
+                .entrezId(Strings.EMPTY)
+                .entrezName(Strings.EMPTY)
+                .name(Strings.EMPTY)
+                .type(Strings.EMPTY)
+                .coordinates(ImmutableCivicCoordinates.builder().build())
+                .evidenceItem(ImmutableCivicEvidenceItem.builder()
+                        .name(Strings.EMPTY)
+                        .type(Strings.EMPTY)
+                        .status(Strings.EMPTY)
+                        .rating(Strings.EMPTY)
+                        .evidenceType(Strings.EMPTY)
+                        .evidenceLevel(Strings.EMPTY)
+                        .evidenceDirection(direction)
+                        .disease(ImmutableCivicDisease.builder()
+                                .name(Strings.EMPTY)
+                                .displayName(Strings.EMPTY)
+                                .url(Strings.EMPTY)
+                                .id(Strings.EMPTY)
+                                .build())
+                        .source(ImmutableCivicSource.builder()
+                                .status(Strings.EMPTY)
+                                .citation(Strings.EMPTY)
+                                .sourceUrl(Strings.EMPTY)
+                                .pubmedId(Strings.EMPTY)
+                                .isReview(Strings.EMPTY)
+                                .publicationDate(ImmutableCivicPublicationDate.builder().build())
+                                .id(Strings.EMPTY)
+                                .build())
+                        .openChangeCount(Strings.EMPTY)
+                        .description(Strings.EMPTY)
+                        .id(Strings.EMPTY)
+                        .build())
+                .civicActionabilityScore(Strings.EMPTY)
+                .alleleRegistryId(Strings.EMPTY)
+                .provisionalValue(ImmutableCivicProvisionalValue.builder().build())
+                .lifecycleActions(ImmutableCivicLifecycleActions.builder().build())
+                .id(Strings.EMPTY)
+                .geneId(Strings.EMPTY)
+                .description(Strings.EMPTY)
+                .build();
+
+        return testViccEntry(ViccSource.CIVIC, null, Lists.newArrayList(), testAssociation(), civic);
+    }
+
+    @NotNull
     public static ViccEntry testViccEntry(@NotNull ViccSource source, @Nullable String transcriptId, @NotNull List<Feature> features,
             @NotNull Association association) {
+        return testViccEntry(source, transcriptId, features, association, new TestKbSpecificObject());
+    }
+
+    @NotNull
+    public static ViccEntry testViccEntry(@NotNull ViccSource source, @Nullable String transcriptId, @NotNull List<Feature> features,
+            @NotNull Association association, @NotNull KbSpecificObject kbSpecificObject) {
         return ImmutableViccEntry.builder()
                 .source(source)
                 .association(association)
                 .transcriptId(transcriptId)
-                .kbSpecificObject(new TestKbSpecificObject())
+                .kbSpecificObject(kbSpecificObject)
                 .features(features)
                 .build();
     }

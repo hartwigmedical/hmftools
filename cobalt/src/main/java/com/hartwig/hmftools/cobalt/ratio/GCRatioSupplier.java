@@ -14,14 +14,15 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-class GCRatioSupplier
+public class GCRatioSupplier
 {
-    private final GCMedianReadCount tumorGCMedianReadCount;
-    private final GCMedianReadCount referenceGCMedianReadCount;
-    private final ListMultimap<Chromosome, ReadRatio> tumorRatios;
-    private final ListMultimap<Chromosome, ReadRatio> referenceRatios;
+    private final GCMedianReadCount mTumorGCMedianReadCount;
+    private final GCMedianReadCount mReferenceGCMedianReadCount;
+    private final ListMultimap<Chromosome, ReadRatio> mTumorRatios;
+    private final ListMultimap<Chromosome, ReadRatio> mReferenceRatios;
 
-    GCRatioSupplier(@NotNull final Multimap<Chromosome, GCProfile> gcProfiles, @NotNull final Multimap<Chromosome, CobaltCount> counts)
+    public GCRatioSupplier(
+            final Multimap<Chromosome, GCProfile> gcProfiles, final Multimap<Chromosome, CobaltCount> counts)
     {
         final GenomeRegionSelector<GCProfile> gcProfileSelector = GenomeRegionSelectorFactory.createImproved(gcProfiles);
 
@@ -42,34 +43,30 @@ class GCRatioSupplier
             }
         }
 
-        referenceGCMedianReadCount = referenceRatiosBuilder.gcMedianReadCount();
-        referenceRatios = referenceRatiosBuilder.build(referenceGCMedianReadCount);
+        mReferenceGCMedianReadCount = referenceRatiosBuilder.gcMedianReadCount();
+        mReferenceRatios = referenceRatiosBuilder.build(mReferenceGCMedianReadCount);
 
-        tumorGCMedianReadCount = tumorRatiosBuilder.gcMedianReadCount();
-        tumorRatios = tumorRatiosBuilder.build(tumorGCMedianReadCount);
+        mTumorGCMedianReadCount = tumorRatiosBuilder.gcMedianReadCount();
+        mTumorRatios = tumorRatiosBuilder.build(mTumorGCMedianReadCount);
     }
 
-    @NotNull
     ListMultimap<Chromosome, ReadRatio> referenceRatios()
     {
-        return referenceRatios;
+        return mReferenceRatios;
     }
 
-    @NotNull
     GCMedianReadCount referenceGCMedianReadCount()
     {
-        return referenceGCMedianReadCount;
+        return mReferenceGCMedianReadCount;
     }
 
-    @NotNull
     ListMultimap<Chromosome, ReadRatio> tumorRatios()
     {
-        return tumorRatios;
+        return mTumorRatios;
     }
 
-    @NotNull
     GCMedianReadCount tumorGCMedianReadCount()
     {
-        return tumorGCMedianReadCount;
+        return mTumorGCMedianReadCount;
     }
 }

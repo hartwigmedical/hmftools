@@ -27,6 +27,8 @@ public class ChartConfig
         CircosBinary = cmd.hasOption(CIRCOS) ? Optional.of(cmd.getOptionValue(CIRCOS)) : Optional.empty();
     }
 
+    public boolean disabled() { return !Enabled && !CircosBinary.isPresent(); }
+
     public static void addOptions(@NotNull Options options)
     {
         options.addOption(CIRCOS, true, "Location of circos binary");

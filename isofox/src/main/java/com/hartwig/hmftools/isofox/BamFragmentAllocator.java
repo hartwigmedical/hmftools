@@ -50,12 +50,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.isofox.common.BamSlicer;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.DuplicateReadTracker;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -114,7 +114,7 @@ public class BamFragmentAllocator
     private int mEnrichedGeneFragments;
     private final DuplicateReadTracker mDuplicateTracker;
     private final List<String[]> mKnownPairGeneIds;
-    private BaseRegion mExcludedRegion;
+    private ChrBaseRegion mExcludedRegion;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -192,7 +192,7 @@ public class BamFragmentAllocator
 
     private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
-    public void produceBamCounts(final GeneCollection geneCollection, final BaseRegion geneRegion)
+    public void produceBamCounts(final GeneCollection geneCollection, final ChrBaseRegion geneRegion)
     {
         clearCache();
 
@@ -223,8 +223,8 @@ public class BamFragmentAllocator
         {
             // special handling to avoid any specified enriched region (in this case LINC00486's poly-G sequence)
             mExcludedRegion = mConfig.ExcludedRegion;
-            final BaseRegion preRegion = new BaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
-            final BaseRegion postRegion = new BaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
+            final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
+            final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
             mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
             mBamSlicer.slice(mSamReader, Lists.newArrayList(postRegion), this::processSamRecord);
         }
@@ -1025,8 +1025,8 @@ public class BamFragmentAllocator
     {
         for(final KnownFusionData knownPair : mConfig.Fusions.KnownFusions.getDataByType(KNOWN_PAIR))
         {
-            final EnsemblGeneData upGene = geneTransCache.getGeneDataByName(knownPair.FiveGene);
-            final EnsemblGeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
+            final GeneData upGene = geneTransCache.getGeneDataByName(knownPair.FiveGene);
+            final GeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
             if(upGene != null && downGene != null)
                 mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
         }

@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
-public class LilacVCF implements AutoCloseable
+public class LilacVCF
 {
     private final VCFFileReader mHeader;
     private final VariantContextWriter mWriter;
@@ -51,9 +51,8 @@ public class LilacVCF implements AutoCloseable
         mWriter.add(newContext);
     }
 
-    @Override
     public void close()
     {
-        this.mWriter.close();
+        mWriter.close();
     }
 }

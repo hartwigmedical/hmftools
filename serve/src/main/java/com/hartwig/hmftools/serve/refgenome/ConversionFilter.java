@@ -120,13 +120,11 @@ class ConversionFilter {
 
     @NotNull
     private Set<ActionableHotspot> filterActionableHotspots(@NotNull Set<ActionableHotspot> actionableHotspots) {
-        // TODO How to filter genes from actionable hotspots?
         return actionableHotspots;
     }
 
     @NotNull
     private Set<ActionableRange> filterActionableRanges(@NotNull Set<ActionableRange> actionableRanges) {
-        // TODO How to filter genes from actionable ranges?
         return actionableRanges;
     }
 

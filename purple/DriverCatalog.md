@@ -2,7 +2,7 @@
 
 If a gene panel is configured, PURPLE will compile a catalog of drivers including point mutations and copy number events.  To include point mutations in the driver catalog, the somatic VCF must be annotated with SnpEff.
 
-Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/sv-linx) enriches the PURPLE driver catalog with the addition of both homozygous disruption drivers and fusions
+Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx) enriches the PURPLE driver catalog with the addition of both homozygous disruption drivers and fusions
 
 ## Gene Panel Configuration
 

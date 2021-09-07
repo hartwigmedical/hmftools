@@ -6,14 +6,12 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -208,25 +206,4 @@ public class CommonUtils
 
         return currentAlloc;
     }
-
-    public static List<String> loadSampleListFile(final String filename)
-    {
-        try
-        {
-            final List<String> sampleIds = Files.readAllLines(new File(filename).toPath());
-
-            if (sampleIds.get(0).equals("SampleId"))
-                sampleIds.remove(0);
-
-            SIG_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
-
-            return sampleIds;
-        }
-        catch (IOException exception)
-        {
-            SIG_LOGGER.error("failed to read sample list input CSV file({}): {}", filename, exception.toString());
-            return Lists.newArrayList();
-        }
-    }
-
 }

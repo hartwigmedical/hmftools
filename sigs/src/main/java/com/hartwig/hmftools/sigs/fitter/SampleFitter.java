@@ -2,14 +2,12 @@ package com.hartwig.hmftools.sigs.fitter;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
-import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_EXCESS;
-import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_UNALLOCATED;
+import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -22,7 +20,6 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleListFile;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleMatrixCounts;
 import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder.POSITION_BUCKET_SIZE;
@@ -37,6 +34,7 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sigs.common.CommonUtils;
@@ -67,7 +65,6 @@ public class SampleFitter
     private Matrix mSignatures;
 
     private final int mPositionBucketSize;
-    private final int mMaxSampleCount;
     private final boolean mFitToTotal;
     private final boolean mWritePosFreqCoords;
 
@@ -77,8 +74,11 @@ public class SampleFitter
     private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
 
-    private static double MIN_ALLOCATION = 1;
-    private static double MIN_ALLOCATION_PERC = 0.005;
+    private final double mMinFit;
+    private final double mMinFitPerc;
+
+    private static final double DEFAULT_MIN_ALLOCATION = 0.01;
+    private static final double DEFAULT_MIN_ALLOCATION_PERC = 0.0005;
     private static final int ALLOC_ROUND = 3;
     private static final int PERC_ROUND = 5;
 
@@ -110,10 +110,9 @@ public class SampleFitter
         mWritePosFreqCoords = cmd.hasOption(WRITE_POS_COORDS);
 
         mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
-        mMaxSampleCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT)));
 
-        MIN_ALLOCATION = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC, "0.01"));
-        MIN_ALLOCATION_PERC = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC_PERC, "0.0005"));
+        mMinFit = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC, String.valueOf(DEFAULT_MIN_ALLOCATION)));;
+        mMinFitPerc = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC_PERC, String.valueOf(DEFAULT_MIN_ALLOCATION_PERC)));;
 
         mSnvLoader = new SigSnvLoader(null);
 
@@ -173,7 +172,7 @@ public class SampleFitter
                 if(mSampleIdsConfig.contains(".csv"))
                 {
                     // load from file
-                    mSampleIdList.addAll(loadSampleListFile(mSampleIdsConfig));
+                    mSampleIdList.addAll(ConfigUtils.loadSampleIdsFile(mSampleIdsConfig));
                 }
                 else
                 {
@@ -270,7 +269,7 @@ public class SampleFitter
             allocTotal += sigAlloc;
 
             // avoid storing tiny or zero sig allocations
-            if(sigAlloc < MIN_ALLOCATION || allocPerc < MIN_ALLOCATION_PERC)
+            if(sigAlloc < mMinFit || allocPerc < mMinFitPerc)
                 continue;
 
             final String sigName = mSignatureNames.get(s);
@@ -292,15 +291,9 @@ public class SampleFitter
                 residuals.Percent, sizeToStr(residuals.Total), sizeToStr(residuals.Excess)));
 
         sigAllocations.add(ImmutableSignatureAllocation.builder()
-                .signature(SIG_UNALLOCATED)
+                .signature(SIG_MISALLOCATED)
                 .allocation(round(residualsUnalloc,ALLOC_ROUND))
                 .percent(round(residualsUnalloc/sampleTotal, PERC_ROUND))
-                .build());
-
-        sigAllocations.add(ImmutableSignatureAllocation.builder()
-                .signature(SIG_EXCESS)
-                .allocation(round(residuals.Excess,ALLOC_ROUND))
-                .percent(round(residuals.Excess/sampleTotal, PERC_ROUND))
                 .build());
 
         writeSigAllocations(sampleId, sigAllocations);

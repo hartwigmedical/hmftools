@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,13 +31,18 @@ public class SomaticSigs
         if(signaturesFile != null && !signaturesFile.isEmpty() && Files.exists(Paths.get(signaturesFile)))
         {
             mSignatures = loadMatrixDataFile(signaturesFile, mSignatureNames);
-            mLeastSquaresFitter = new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols);
         }
         else
         {
-            mSignatures = null;
-            mLeastSquaresFitter = null;
+            String sigDefinitionsFile = "/ref/cosmic_signatures.csv";
+
+            final List<String> sigDefinitionLines = new BufferedReader(new InputStreamReader(
+                    SomaticSigs.class.getResourceAsStream(sigDefinitionsFile))).lines().collect(Collectors.toList());
+
+            mSignatures = loadMatrixDataFile(sigDefinitionLines, mSignatureNames, Lists.newArrayList());
         }
+
+        mLeastSquaresFitter = mSignatures != null ? new LeastSquaresFit(mSignatures.Rows, mSignatures.Cols) : null;
     }
 
     public boolean hasValidData() { return mSignatures != null && !mSignatureNames.isEmpty(); }

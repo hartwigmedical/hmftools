@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.purple.copynumber.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +34,8 @@ public class PurpleCopyNumberFactory
     private final PurityAdjuster mPurityAdjuster;
     private final CobaltChromosomes mCobaltChromosomes;
 
-    public PurpleCopyNumberFactory(int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
+    public PurpleCopyNumberFactory(
+            int minTumorRatioCount, int minTumorRatioCountAtCentromere, int averageReadDepth, double ploidy,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final CobaltChromosomes cobaltChromosomes)
     {
         mPurityAdjuster = purityAdjuster;
@@ -82,8 +83,8 @@ public class PurpleCopyNumberFactory
 
             final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(somatics);
 
-            this.mSomaticCopyNumbers.addAll(toCopyNumber(somatics));
-            this.mGermlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, x.germlineEndSupport())).collect(toList()));
+            mSomaticCopyNumbers.addAll(toCopyNumber(somatics));
+            mGermlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, x.germlineEndSupport())).collect(toList()));
         }
     }
 
@@ -112,7 +113,7 @@ public class PurpleCopyNumberFactory
     }
 
     @NotNull
-    private static List<PurpleCopyNumber> toCopyNumber(@NotNull final List<CombinedRegion> regions)
+    private static List<PurpleCopyNumber> toCopyNumber(final List<CombinedRegion> regions)
     {
         final List<PurpleCopyNumber> result = Lists.newArrayList();
         for(int i = 0; i < regions.size() - 1; i++)
@@ -131,7 +132,7 @@ public class PurpleCopyNumberFactory
     }
 
     @NotNull
-    private static PurpleCopyNumber toCopyNumber(@NotNull final CombinedRegion region, @NotNull final SegmentSupport trailingSupport)
+    private static PurpleCopyNumber toCopyNumber(final CombinedRegion region, final SegmentSupport trailingSupport)
     {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(region.chromosome())
@@ -152,7 +153,7 @@ public class PurpleCopyNumberFactory
     }
 
     @NotNull
-    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(@NotNull final Chromosome chromosome)
+    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(final Chromosome chromosome)
     {
         return t -> HumanChromosome.fromString(t.chromosome()).equals(chromosome);
     }

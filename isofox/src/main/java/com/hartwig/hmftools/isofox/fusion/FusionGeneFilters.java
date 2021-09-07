@@ -7,14 +7,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class FusionGeneFilters
 {
     private final IsofoxConfig mConfig;
-    private final List<BaseRegion> mRestrictedGeneRegions;
-    private final List<BaseRegion> mExcludedGeneRegions;
+    private final List<ChrBaseRegion> mRestrictedGeneRegions;
+    private final List<ChrBaseRegion> mExcludedGeneRegions;
 
     public FusionGeneFilters(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
@@ -53,19 +53,19 @@ public class FusionGeneFilters
         mConfig.EnrichedGeneIds.stream()
                 .map(x -> geneTransCache.getGeneDataById(x))
                 .filter(x -> x != null)
-                .forEach(x -> mExcludedGeneRegions.add(new BaseRegion(
+                .forEach(x -> mExcludedGeneRegions.add(new ChrBaseRegion(
                         x.Chromosome, x.GeneStart - ENRICHED_GENE_BUFFER, x.GeneEnd + ENRICHED_GENE_BUFFER)));
 
         mConfig.ExcludedGeneIds.stream()
                 .map(x -> geneTransCache.getGeneDataById(x))
                 .filter(x -> x != null)
-                .forEach(x -> mExcludedGeneRegions.add(new BaseRegion(
+                .forEach(x -> mExcludedGeneRegions.add(new ChrBaseRegion(
                         x.Chromosome, x.GeneStart, x.GeneEnd)));
 
         mConfig.RestrictedGeneIds.stream()
                 .map(x -> geneTransCache.getGeneDataById(x))
                 .filter(x -> x != null)
-                .forEach(x -> mRestrictedGeneRegions.add(new BaseRegion(
+                .forEach(x -> mRestrictedGeneRegions.add(new ChrBaseRegion(
                         x.Chromosome, x.GeneStart - 1000, x.GeneEnd + 1000)));
     }
 }

@@ -165,7 +165,7 @@ The optional [base quality recalibration](#optional-base-quality-recalibration-a
 Minimum set of arguments:
 
 ```
-java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication \
+java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.apps.SageAppendApplication \
     -reference COLO829v003RNA -reference_bam /path/to/COLO829v003RNA.bam \
     -ref_genome /path/to/refGenome.fasta \
     -input_vcf /path/to/COLO829v003.sage.vcf.gz
@@ -592,6 +592,7 @@ ERBB2	0	0	0	...	0	0	0	0	0	18	257	590	1311	1111	611
 TP53	0	0	0	...	0	0	0	0	0	0	0	90	423	343	376
 ```
 
+A 'missed variant likelihood' is calculated using poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene.
 
 # Variant Pipeline
 A number of post processing steps are applied to the SAGE output.

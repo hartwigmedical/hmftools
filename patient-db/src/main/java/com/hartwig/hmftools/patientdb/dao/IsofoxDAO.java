@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENEEXPRESSION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.NOVELSPLICEJUNCTION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.RNAFUSION;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep10;
-import org.jooq.InsertValuesStep14;
 import org.jooq.InsertValuesStep15;
 import org.jooq.InsertValuesStep20;
 
@@ -46,9 +46,10 @@ public class IsofoxDAO
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        InsertValuesStep14 inserter = context.insertInto(RNASTATISTICS,
+        InsertValuesStep15 inserter = context.insertInto(RNASTATISTICS,
                 RNASTATISTICS.MODIFIED,
                 RNASTATISTICS.SAMPLEID,
+                RNASTATISTICS.QCSTATUS,
                 RNASTATISTICS.READLENGTH,
                 RNASTATISTICS.TOTALFRAGMENTS,
                 RNASTATISTICS.DUPLICATES,
@@ -65,6 +66,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
+                statistics.qcStatus(),
                 statistics.readLength(),
                 statistics.totalFragments(),
                 statistics.duplicateFragments(),
@@ -111,7 +113,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                geneExpression.geneName(),
+                checkStringLength(geneExpression.geneName(), GENEEXPRESSION.GENE),
                 geneExpression.tpm(),
                 geneExpression.splicedFragments(),
                 geneExpression.unsplicedFragments(),
@@ -157,7 +159,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                novelJunction.geneName(),
+                checkStringLength(novelJunction.geneName(), NOVELSPLICEJUNCTION.GENE),
                 novelJunction.chromosome(),
                 novelJunction.junctionStart(),
                 novelJunction.junctionEnd(),
@@ -213,7 +215,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                rnaFusion.name(),
+                checkStringLength(rnaFusion.name(), RNAFUSION.NAME),
                 rnaFusion.chromosomeUp(),
                 rnaFusion.chromosomeDown(),
                 rnaFusion.positionUp(),

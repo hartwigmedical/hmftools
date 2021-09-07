@@ -14,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DriverGenePanel {
-
+public abstract class DriverGenePanel
+{
     @NotNull
     public abstract List<DriverGene> driverGenes();
 
@@ -26,17 +26,20 @@ public abstract class DriverGenePanel {
     public abstract Map<String, DndsDriverGeneLikelihood> oncoLikelihood();
 
     @NotNull
-    public Set<DriverGene> amplificationTargets() {
+    public Set<DriverGene> amplificationTargets()
+    {
         return targets(DriverGene::reportAmplification);
     }
 
     @NotNull
-    public Set<DriverGene> deletionTargets() {
+    public Set<DriverGene> deletionTargets()
+    {
         return targets(DriverGene::reportDeletion);
     }
 
     @NotNull
-    private Set<DriverGene> targets(@NotNull Predicate<DriverGene> filter) {
+    private Set<DriverGene> targets(@NotNull Predicate<DriverGene> filter)
+    {
         return driverGenes().stream().filter(filter).collect(Collectors.toSet());
     }
 }

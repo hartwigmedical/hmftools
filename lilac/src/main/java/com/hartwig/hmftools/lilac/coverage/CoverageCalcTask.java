@@ -1,86 +1,91 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class CoverageCalcTask implements Callable
 {
-    private final List<FragmentAlleles> mFragmentAlleles;
+    private final int mId;
     private final List<HlaComplex> mComplexes;
-    private List<HlaComplexCoverage> mCoverageResults;
+    private List<ComplexCoverage> mCoverageResults;
 
     private final FragmentAlleleMatrix mFragAlleleMatrix;
+    private final double mTopScorePercDiff;
+    private int mMaxFragments;
+    private int mLowScoreCount;
 
-    private final PerformanceCounter mPerfCounterFilter;
-    private final PerformanceCounter mPerfCounterCoverage;
+    private static final int CULL_COMPLEX_COUNT = 500000;
+    private static final int LOG_COMPLEX_COUNT = 250000;
+    private static final int MIN_FRAG_DIFF = 40;
 
-    public CoverageCalcTask(
-            final List<FragmentAlleles> fragmentAlleles, final List<HlaComplex> complexes,
-            FragmentAlleleMatrix fragAlleleMatrix)
+    public CoverageCalcTask(final int id, final List<HlaComplex> complexes, FragmentAlleleMatrix fragAlleleMatrix, double topScoreThreshold)
     {
-        mFragmentAlleles = fragmentAlleles;
+        mId = id;
         mComplexes = complexes;
         mCoverageResults = Lists.newArrayList();
 
         mFragAlleleMatrix = fragAlleleMatrix;
-
-        mPerfCounterFilter = new PerformanceCounter("ComplexFilter");
-        mPerfCounterCoverage = new PerformanceCounter("ComplexCoverage");
+        mTopScorePercDiff = min(topScoreThreshold * 5, 0.99);
+        mMaxFragments = 0;
+        mLowScoreCount = 0;
     }
 
-    public CoverageCalcTask(final List<FragmentAlleles> fragmentAlleles, final HlaComplex complex)
-    {
-        this(fragmentAlleles, Lists.newArrayList(complex), null);
-    }
-
-    public HlaComplexCoverage getCoverage() { return mCoverageResults.get(0); }
-    public List<HlaComplexCoverage> getCoverageResults() { return mCoverageResults; }
+    public ComplexCoverage getCoverage() { return mCoverageResults.get(0); }
+    public List<ComplexCoverage> getCoverageResults() { return mCoverageResults; }
 
     @Override
     public Long call()
     {
-        mComplexes.forEach(x -> mCoverageResults.add(calcCoverage(x)));
+        boolean checkCull = mComplexes.size() >= CULL_COMPLEX_COUNT;
+
+        for(int i = 0; i < mComplexes.size(); ++i)
+        {
+            if(checkCull && i > 0 && (i % LOG_COMPLEX_COUNT) == 0)
+            {
+                LL_LOGGER.debug(String.format("thread %d: complexes(%d) processed, discard(%d, %.0f%%)",
+                        mId, i, mLowScoreCount, 100.0 * mLowScoreCount / i));
+            }
+
+            ComplexCoverage result = calcCoverage(mComplexes.get(i));
+
+            if(checkCull && canCull(result))
+                continue;
+
+            mCoverageResults.add(result);
+        }
+
         return (long)0;
     }
 
-    private HlaComplexCoverage calcCoverage(final HlaComplex complex)
+    private boolean canCull(final ComplexCoverage result)
     {
-        List<HlaAlleleCoverage> alleleCoverage = mFragAlleleMatrix.create(complex);
-
-        boolean compareWithOld = false;
-
-        if(compareWithOld)
+        if(result.TotalCoverage > mMaxFragments)
         {
-            // mPerfCounterCoverage.start();
-            // mPerfCounterCoverage.stop();
-
-            // gather all fragments which cover this set of alleles
-            List<FragmentAlleles> filteredFragments = FragmentAlleles.filter(mFragmentAlleles, complex.getAlleles());
-            List<HlaAlleleCoverage> origCoverage = HlaAlleleCoverage.proteinCoverage(filteredFragments);
-
-            for(int i = 0; i < origCoverage.size(); ++i)
-            {
-                HlaAlleleCoverage origCov = origCoverage.get(i);
-                HlaAlleleCoverage newCov = alleleCoverage.stream().filter(x -> x.Allele.equals(origCov.Allele)).findFirst().orElse(null);
-
-                if(origCov.UniqueCoverage != newCov.UniqueCoverage
-                || !doublesEqual(origCov.TotalCoverage, newCov.TotalCoverage))
-                {
-                    LL_LOGGER.warn("differing cov");
-                }
-            }
-
-            return HlaComplexCoverage.create(origCoverage);
+            mMaxFragments = result.TotalCoverage;
+            return false;
         }
 
-        return HlaComplexCoverage.create(alleleCoverage);
+        if(mMaxFragments - result.TotalCoverage < MIN_FRAG_DIFF)
+            return false;
+
+        if(result.TotalCoverage > mMaxFragments * (1 - mTopScorePercDiff))
+            return false;
+
+        ++mLowScoreCount;
+        return true;
+    }
+
+    private ComplexCoverage calcCoverage(final HlaComplex complex)
+    {
+        List<AlleleCoverage> alleleCoverage = mFragAlleleMatrix.create(complex);
+        return ComplexCoverage.create(alleleCoverage);
     }
 
     public void logPerfResults()

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.variant;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContext;
@@ -11,170 +10,200 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SageVariant implements GenomePosition {
+public class SageVariant
+{
+    private final Candidate mCandidate;
+    private final Set<String> mFilters;
+    private final List<ReadContextCounter> mNormalAltContexts;
+    private final List<ReadContextCounter> mTumorAltContexts;
 
-    private final Candidate candidate;
-    private final Set<String> filters;
-    private final List<ReadContextCounter> normalAltContexts;
-    private final List<ReadContextCounter> tumorAltContexts;
+    private int mLocalPhaseSet;
+    private int mLocalRealignSet;
+    private int mMixedImpact;
+    private int mPhasedInframeIndel;
+    private boolean mRealigned;
 
-    private int localPhaseSet;
-    private int localRealignSet;
-    private int mixedImpact;
-    private int phasedInframeIndel;
-    private boolean realigned;
-
-    public SageVariant(@NotNull final Candidate candidate,  @NotNull final Set<String> filters,
-            final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
-        assert (!tumorAltContexts.isEmpty());
-        this.candidate = candidate;
-        this.normalAltContexts = normal;
-        this.tumorAltContexts = tumorAltContexts;
-        this.filters = filters;
+    public SageVariant(
+            final Candidate candidate, final Set<String> filters,
+            final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts)
+    {
+        mCandidate = candidate;
+        mNormalAltContexts = normal;
+        mTumorAltContexts = tumorAltContexts;
+        mFilters = filters;
     }
 
-    public Candidate candidate() {
-        return candidate;
+    public Candidate candidate()
+    {
+        return mCandidate;
     }
 
-    @NotNull
-    public String ref() {
+    public String ref()
+    {
         return variant().ref();
     }
 
-    @NotNull
-    public String alt() {
+    public String alt()
+    {
         return variant().alt();
     }
 
-    public boolean isRealigned() {
-        return realigned;
+    public boolean isRealigned()
+    {
+        return mRealigned;
     }
 
-    public void realigned(final boolean realigned) {
-        this.realigned = realigned;
+    public void realigned(final boolean realigned)
+    {
+        mRealigned = realigned;
     }
 
-    public long end() {
+    public long end()
+    {
         return position() + ref().length() - 1;
     }
 
-    public boolean isIndel() {
+    public boolean isIndel()
+    {
         return variant().ref().length() != variant().alt().length();
     }
 
-    public int phasedInframeIndel() {
-        return phasedInframeIndel;
+    public int phasedInframeIndel()
+    {
+        return mPhasedInframeIndel;
     }
 
-    public void phasedInframeIndel(final int phasedInframeIndel) {
-        this.phasedInframeIndel = phasedInframeIndel;
+    public void phasedInframeIndel(final int phasedInframeIndel)
+    {
+        mPhasedInframeIndel = phasedInframeIndel;
     }
 
-    public boolean isMnv() {
+    public boolean isMnv()
+    {
         return variant().ref().length() >= 1 && variant().ref().length() == variant().alt().length();
     }
 
-    public boolean isSnv() {
+    public boolean isSnv()
+    {
         return variant().ref().length() == 1 && variant().alt().length() == 1;
     }
 
-    public boolean isInsert() {
+    public boolean isInsert()
+    {
         return variant().ref().length() < variant().alt().length();
     }
 
-    public boolean isDelete() {
+    public boolean isDelete()
+    {
         return variant().ref().length() > variant().alt().length();
     }
 
-    public int localPhaseSet() {
-        return localPhaseSet;
+    public int localPhaseSet()
+    {
+        return mLocalPhaseSet;
     }
 
-    public void localPhaseSet(int localPhaseSet) {
-        this.localPhaseSet = localPhaseSet;
+    public void localPhaseSet(int localPhaseSet)
+    {
+        mLocalPhaseSet = localPhaseSet;
     }
 
-    public int localRealignSet() {
-        return localRealignSet;
+    public int localRealignSet()
+    {
+        return mLocalRealignSet;
     }
 
-    public void localRealignSet(int localRealignSet) {
-        this.localRealignSet = localRealignSet;
+    public void localRealignSet(int localRealignSet)
+    {
+        mLocalRealignSet = localRealignSet;
     }
 
-    public int mixedGermlineImpact() {
-        return mixedImpact;
+    public int mixedGermlineImpact()
+    {
+        return mMixedImpact;
     }
 
-    public void mixedGermlineImpact(final int mixedImpact) {
-        this.mixedImpact = mixedImpact;
+    public void mixedGermlineImpact(final int mixedImpact)
+    {
+        mMixedImpact = mixedImpact;
     }
 
-    public boolean isPassing() {
-        return filters.isEmpty();
+    public boolean isPassing()
+    {
+        return mFilters.isEmpty();
     }
 
-    public boolean isTumorEmpty() {
-        return tumorAltContexts.isEmpty();
+    public boolean isTumorEmpty()
+    {
+        return mTumorAltContexts.isEmpty();
     }
 
-    public boolean isNormalEmpty() {
-        return normalAltContexts.isEmpty();
-    }
-
-    @NotNull
-    public VariantHotspot variant() {
-        return candidate.variant();
-    }
-
-    @NotNull
-    public SageVariantTier tier() {
-        return candidate.tier();
-    }
-
-    @NotNull
-    public Set<String> filters() {
-        return filters;
+    public boolean isNormalEmpty()
+    {
+        return mNormalAltContexts.isEmpty();
     }
 
     @NotNull
-    public ReadContext readContext() {
-        return tumorAltContexts.get(0).readContext();
+    public VariantHotspot variant()
+    {
+        return mCandidate.variant();
     }
 
     @NotNull
-    public String microhomology() {
+    public VariantTier tier()
+    {
+        return mCandidate.tier();
+    }
+
+    @NotNull
+    public Set<String> filters()
+    {
+        return mFilters;
+    }
+
+    @NotNull
+    public ReadContext readContext()
+    {
+        return mTumorAltContexts.get(0).ReadContext;
+    }
+
+    @NotNull
+    public String microhomology()
+    {
         return readContext().microhomology();
     }
 
     @NotNull
-    public List<ReadContextCounter> normalAltContexts() {
-        return normalAltContexts;
+    public List<ReadContextCounter> normalAltContexts()
+    {
+        return mNormalAltContexts;
     }
 
     @NotNull
-    public List<ReadContextCounter> tumorAltContexts() {
-        return tumorAltContexts;
+    public List<ReadContextCounter> tumorAltContexts()
+    {
+        return mTumorAltContexts;
     }
 
     @NotNull
-    @Override
-    public String chromosome() {
+    public String chromosome()
+    {
         return variant().chromosome();
     }
 
-    @Override
-    public long position() {
+    public long position()
+    {
         return variant().position();
     }
 
-    public int totalQuality() {
-        return tumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
+    public int totalQuality()
+    {
+        return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
 
-    public int maxQuality() {
-        return tumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).max().orElse(0);
+    public int maxQuality()
+    {
+        return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).max().orElse(0);
     }
 
 }

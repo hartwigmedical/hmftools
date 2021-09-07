@@ -7,67 +7,119 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.jetbrains.annotations.NotNull;
 
-public class GeneCoverage implements Consumer<GenomeRegion> {
-    
-    private static final int MAX_BUCKET = 37;
+public class GeneCoverage implements Consumer<ChrBaseRegion>
+{
+    private final String mChromosome;
+    private final String mGene;
+    private final List<ExonCoverage> mExonCoverage;
+    private final long mMinPosition;
+    private final long mMaxPosition;
 
-    private final String chromosome;
-    private final String gene;
-    private final List<ExonCoverage> exonCoverage;
-    private final long minPosition;
-    private final long maxPosition;
+    public static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
+    public static final int MAX_DEPTH_BUCKET = 10000;
 
-    public GeneCoverage(final List<NamedBed> exons) {
-        assert (!exons.isEmpty());
-        this.chromosome = exons.get(0).chromosome();
-        this.gene = exons.get(0).name();
-        this.exonCoverage = exons.stream().map(ExonCoverage::new).collect(Collectors.toList());
+        /* frequency distribution of depth in units of:
+        - 1 up to 30
+        - 5 up to 100
+        - 50 up to 500  (8 regions)
+        - 100 up to 2000 (15 regions)
+        - 1000 up to 10000 (8 regions)
+        - 10000+ (1 region)
+    */
+
+    public static void populateCoverageBuckets()
+    {
+        if(!DEPTH_BUCKETS.isEmpty())
+            return;
+
+        int depthBucket = 0;
+        int increment = 1;
+        for(; depthBucket < 30; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 10;
+        for(; depthBucket < 100; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 50;
+        for(; depthBucket < 500; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 100;
+        for(; depthBucket < 2000; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+
+        increment = 1000;
+        for(; depthBucket <= 10000; depthBucket += increment)
+        {
+            DEPTH_BUCKETS.add(depthBucket);
+        }
+    }
+
+    public GeneCoverage(final List<NamedBed> exons)
+    {
+        mChromosome = exons.get(0).chromosome();
+        mGene = exons.get(0).name();
+        mExonCoverage = exons.stream().map(ExonCoverage::new).collect(Collectors.toList());
 
         long tmpMin = exons.get(0).start();
         long tmpMax = exons.get(0).end();
 
-        for (NamedBed exon : exons) {
+        for(NamedBed exon : exons)
+        {
             tmpMin = Math.min(tmpMin, exon.start());
             tmpMax = Math.max(tmpMax, exon.end());
         }
 
-        minPosition = tmpMin;
-        maxPosition = tmpMax;
+        mMinPosition = tmpMin;
+        mMaxPosition = tmpMax;
     }
 
     @Override
-    public void accept(final GenomeRegion alignment) {
-        if (alignment.chromosome().equals(chromosome)) {
-            if (alignment.start() <= maxPosition && alignment.end() >= minPosition) {
-                exonCoverage.forEach(x -> x.accept(alignment));
+    public void accept(final ChrBaseRegion alignment)
+    {
+        if(alignment.chromosome().equals(mChromosome))
+        {
+            if(alignment.start() <= mMaxPosition && alignment.end() >= mMinPosition)
+            {
+                mExonCoverage.forEach(x -> x.accept(alignment));
             }
         }
     }
 
-    public String chromosome() {
-        return chromosome;
+    public String chromosome()
+    {
+        return mChromosome;
     }
 
-    @NotNull
-    public GeneDepth geneDepth() {
-        int[] depthCounts = baseCoverageSummary(exonCoverage);
+    public GeneDepth geneDepth()
+    {
+        int[] depthCounts = baseCoverageSummary(mExonCoverage);
 
-        return ImmutableGeneDepth.builder()
-                .gene(gene)
-                .depthCounts(depthCounts)
-                .missedVariantLikelihood(missedVariantLikelihood(depthCounts))
-                .build();
+        return new GeneDepth(mGene, missedVariantLikelihood(depthCounts), depthCounts);
     }
 
-    static int[] baseCoverageSummary(@NotNull Collection<ExonCoverage> exons) {
-        int[] geneDepth = new int[MAX_BUCKET + 1];
-        for (ExonCoverage exon : exons) {
-            for (int baseDepth : exon.coverage()) {
+    private static int[] baseCoverageSummary(final Collection<ExonCoverage> exons)
+    {
+        int[] geneDepth = new int[DEPTH_BUCKETS.size()];
+
+        for(ExonCoverage exon : exons)
+        {
+            for(int baseDepth : exon.coverage())
+            {
                 geneDepth[bucket(baseDepth)]++;
             }
         }
@@ -75,20 +127,56 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
         return geneDepth;
     }
 
-    static double missedVariantLikelihood(int[] baseCoverage) {
+    public static int depth(int bucket)
+    {
+        if(bucket >= DEPTH_BUCKETS.size())
+            return MAX_DEPTH_BUCKET;
+
+        if(bucket == DEPTH_BUCKETS.size() - 1)
+            return DEPTH_BUCKETS.get(DEPTH_BUCKETS.size() - 1);
+
+        int depth = DEPTH_BUCKETS.get(bucket);
+        int depthNext = DEPTH_BUCKETS.get(bucket + 1);
+
+        if(depthNext == depth + 1)
+            return depth;
+
+        return (depth + depthNext) / 2;
+    }
+
+    public static int bucket(int depth)
+    {
+        for(int i = 0; i < DEPTH_BUCKETS.size(); ++i)
+        {
+            int depthBucket = DEPTH_BUCKETS.get(i);
+
+            if(depth <= depthBucket)
+                return depth < depthBucket ? i - 1 : i;
+        }
+
+        return DEPTH_BUCKETS.size() - 1;
+    }
+
+    public static double missedVariantLikelihood(int[] baseCoverage)
+    {
         int totalCoverage = Arrays.stream(baseCoverage).sum();
         double totalLikelihood = 0;
 
-        for (int i = 0; i < baseCoverage.length; i++) {
+        for(int i = 0; i < baseCoverage.length; i++)
+        {
             int depth = depth(i);
             int coverage = baseCoverage[i];
 
-            if (coverage > 0) {
+            if(coverage > 0)
+            {
                 final double proportion = 1d * coverage / totalCoverage;
                 final double likelihoodOfMissing;
-                if (depth == 0) {
+                if(depth == 0)
+                {
                     likelihoodOfMissing = 1;
-                } else {
+                }
+                else
+                {
                     final PoissonDistribution distribution = new PoissonDistribution(depth / 2d);
                     likelihoodOfMissing = distribution.cumulativeProbability(2);
                 }
@@ -98,32 +186,5 @@ public class GeneCoverage implements Consumer<GenomeRegion> {
         }
 
         return totalLikelihood;
-    }
-
-    static int depth(int bucket) {
-        if (bucket < 30) {
-            return bucket;
-        }
-
-        if (bucket <= 36) {
-            return (bucket - 30) * 10 + 35;
-        }
-
-        return 100;
-    }
-
-    static int bucket(int depth) {
-        if (depth <= 30) {
-            return depth;
-        }
-
-        for (int i = 0; i < 7; i++) {
-            int maxDepth = 40 + 10 * i;
-            if (depth < maxDepth) {
-                return 30 + i;
-            }
-        }
-
-        return MAX_BUCKET;
     }
 }

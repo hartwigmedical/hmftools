@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
@@ -22,9 +24,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -58,7 +60,7 @@ public class BamFragmentReader implements Callable
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final ExpectedCountsCache mExpectedCountsCache;
 
-    private final List<EnsemblGeneData> mGeneDataList;
+    private final List<GeneData> mGeneDataList;
     private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
@@ -90,7 +92,7 @@ public class BamFragmentReader implements Callable
     private final PerformanceCounter[] mPerfCounters;
 
     public BamFragmentReader(
-            final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
+            final IsofoxConfig config, final String chromosome, final List<GeneData> geneDataList,
             final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FusionTaskManager fusionManager,
             final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)
     {
@@ -186,7 +188,7 @@ public class BamFragmentReader implements Callable
         }
 
         mCurrentGeneIndex = 0;
-        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
+        final List<GeneData> overlappingGenes = Lists.newArrayList();
         int nextLogCount = 100;
         int lastGeneCollectionEndPosition = 1;
 
@@ -210,12 +212,14 @@ public class BamFragmentReader implements Callable
 
                 if(mCurrentGeneIndex < mGeneDataList.size())
                 {
-                    final EnsemblGeneData nextGeneData = mGeneDataList.get(mCurrentGeneIndex);
+                    final GeneData nextGeneData = mGeneDataList.get(mCurrentGeneIndex);
                     geneCollection.setNonGenicPosition(SE_END, nextGeneData.GeneStart - 1);
                 }
                 else
                 {
-                    geneCollection.setNonGenicPosition(SE_END, (int)getChromosomeLength(mChromosome) - 1000);
+                    int endOfChromosome = (int)getChromosomeLength(mChromosome, mConfig.RefGenVersion);
+                    int endNonGenicPosition = max(geneCollection.getNonGenicPositions()[SE_START] + 1, endOfChromosome - 1000);
+                    geneCollection.setNonGenicPosition(SE_END, endNonGenicPosition);
                     geneCollection.setEndOfChromosome();
                 }
             }
@@ -299,13 +303,13 @@ public class BamFragmentReader implements Callable
     }
 
     public static int findNextOverlappingGenes(
-            final List<EnsemblGeneData> geneDataList, int currentIndex, final List<EnsemblGeneData> overlappingGenes)
+            final List<GeneData> geneDataList, int currentIndex, final List<GeneData> overlappingGenes)
     {
         overlappingGenes.clear();
 
         while(currentIndex < geneDataList.size())
         {
-            EnsemblGeneData geneData = geneDataList.get(currentIndex);
+            GeneData geneData = geneDataList.get(currentIndex);
 
             if(overlappingGenes.isEmpty()
             || overlappingGenes.stream().anyMatch(x -> positionsOverlap(geneData.GeneStart, geneData.GeneEnd, x.GeneStart, x.GeneEnd)))
@@ -355,7 +359,7 @@ public class BamFragmentReader implements Callable
             return;
         }
 
-        final BaseRegion geneRegion = new BaseRegion(geneCollection.chromosome(), geneRegionPositions);
+        final ChrBaseRegion geneRegion = new ChrBaseRegion(geneCollection.chromosome(), geneRegionPositions);
 
         mPerfCounters[PERF_READS].start();
         mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);
@@ -571,7 +575,7 @@ public class BamFragmentReader implements Callable
 
             for(final TranscriptResult transResult : geneCollectionResult.TranscriptResults)
             {
-                final EnsemblGeneData geneData = geneCollectionResult.GeneResults.stream()
+                final GeneData geneData = geneCollectionResult.GeneResults.stream()
                         .filter(x -> x.GeneData.GeneId.equals(transResult.Trans.GeneId))
                         .map(x -> x.GeneData)
                         .findFirst().orElse(null);

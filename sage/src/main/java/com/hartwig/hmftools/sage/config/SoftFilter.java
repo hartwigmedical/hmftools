@@ -6,8 +6,8 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum SoftFilter {
-
+public enum SoftFilter
+{
     MIN_TUMOR_QUAL("min_tumor_qual", true, false),
     MIN_TUMOR_VAF("min_tumor_vaf", true, false),
     MIN_GERMLINE_DEPTH("min_germline_depth", false, true),
@@ -19,34 +19,43 @@ public enum SoftFilter {
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
     private static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
 
-    static {
-        for (SoftFilter softFilter : SoftFilter.values()) {
-            if (softFilter.germline) {
+    static
+    {
+        for(SoftFilter softFilter : SoftFilter.values())
+        {
+            if(softFilter.mGermline)
+            {
                 GERMLINE_FILTERS.add(softFilter.toString());
             }
-            if (softFilter.tumor) {
+            if(softFilter.mTumor)
+            {
                 TUMOR_FILTERS.add(softFilter.toString());
             }
         }
     }
 
-    private final String filter;
-    private final boolean tumor;
-    private final boolean germline;
+    private final String mFilter;
+    private final boolean mTumor;
+    private final boolean mGermline;
 
-    SoftFilter(@NotNull final String filter, boolean tumor, boolean germline) {
-        this.filter = filter;
-        this.tumor = tumor;
-        this.germline = germline;
+    SoftFilter(@NotNull final String filter, boolean tumor, boolean germline)
+    {
+        mFilter = filter;
+        mTumor = tumor;
+        mGermline = germline;
     }
 
-    public static boolean isGermlineAndNotTumorFiltered(@NotNull final Set<String> softFilters) {
-        for (final String softFilter : softFilters) {
-            if (TUMOR_FILTERS.contains(softFilter)) {
+    public static boolean isGermlineAndNotTumorFiltered(@NotNull final Set<String> softFilters)
+    {
+        for(final String softFilter : softFilters)
+        {
+            if(TUMOR_FILTERS.contains(softFilter))
+            {
                 return false;
             }
 
-            if (!GERMLINE_FILTERS.contains(softFilter)) {
+            if(!GERMLINE_FILTERS.contains(softFilter))
+            {
                 return false;
             }
         }
@@ -55,8 +64,9 @@ public enum SoftFilter {
     }
 
     @Override
-    public String toString() {
-        return filter;
+    public String toString()
+    {
+        return mFilter;
     }
 }
 

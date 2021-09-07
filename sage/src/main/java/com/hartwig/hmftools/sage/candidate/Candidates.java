@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -14,39 +14,45 @@ import com.hartwig.hmftools.sage.select.TierSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Candidates {
+public class Candidates
+{
+    private final List<VariantHotspot> mHotspots;
+    private final List<ChrBaseRegion> mPanel;
+    private final List<ChrBaseRegion> mHighConfidence;
+    private final Map<VariantHotspot, Candidate> mCandidateMap = Maps.newHashMap();
+    private List<Candidate> mCandidateList;
 
-    private final List<VariantHotspot> hotspots;
-    private final List<GenomeRegion> panel;
-    private final List<GenomeRegion> highConfidence;
-    private final Map<VariantHotspot, Candidate> candidateMap = Maps.newHashMap();
-    private List<Candidate> candidateList;
-
-    public Candidates(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence) {
-        this.hotspots = hotspots;
-        this.panel = panel;
-        this.highConfidence = highConfidence;
+    public Candidates(final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel, final List<ChrBaseRegion> highConfidence)
+    {
+        mHotspots = hotspots;
+        mPanel = panel;
+        mHighConfidence = highConfidence;
     }
 
-    public void add(@NotNull final Collection<AltContext> altContexts) {
-        if (candidateList != null) {
+    public void add(@NotNull final Collection<AltContext> altContexts)
+    {
+        if(mCandidateList != null)
+        {
             throw new IllegalStateException("Cannot add more alt contexts");
         }
 
-        final TierSelector tierSelector = new TierSelector(hotspots, panel, highConfidence);
-        for (final AltContext altContext : altContexts) {
-            candidateMap.computeIfAbsent(altContext, x -> new Candidate(tierSelector.tier(altContext), altContext)).update(altContext);
+        final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
+        for(final AltContext altContext : altContexts)
+        {
+            mCandidateMap.computeIfAbsent(altContext, x -> new Candidate(tierSelector.tier(altContext), altContext)).update(altContext);
         }
     }
 
     @NotNull
-    public List<Candidate> candidates() {
-        if (candidateList == null) {
+    public List<Candidate> candidates()
+    {
+        if(mCandidateList == null)
+        {
             final VariantHotspotComparator variantHotspotComparator = new VariantHotspotComparator();
-            candidateList = Lists.newArrayList(candidateMap.values());
-            candidateList.sort((o1, o2) -> variantHotspotComparator.compare(o1.variant(), o2.variant()));
+            mCandidateList = Lists.newArrayList(mCandidateMap.values());
+            mCandidateList.sort((o1, o2) -> variantHotspotComparator.compare(o1.variant(), o2.variant()));
         }
 
-        return candidateList;
+        return mCandidateList;
     }
 }

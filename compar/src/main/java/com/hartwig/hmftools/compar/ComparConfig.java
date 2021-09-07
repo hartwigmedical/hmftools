@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
@@ -8,15 +9,13 @@ import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -47,7 +46,6 @@ public class ComparConfig
 
     public static final String SAMPLE = "sample";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
-    public static final String LOG_DEBUG = "log_debug";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
@@ -106,18 +104,10 @@ public class ComparConfig
     {
         if(cmd.hasOption(SAMPLE_ID_FILE))
         {
-            try
-            {
-                final List<String> sampleIds = Files.readAllLines(new File(cmd.getOptionValue(SAMPLE_ID_FILE)).toPath());
+            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
 
-                if(sampleIds.get(0).equals("SampleId"))
-                    sampleIds.remove(0);
-
-                SampleIds.addAll(sampleIds);
-            }
-            catch (IOException e)
+            if(SampleIds.isEmpty())
             {
-                CMP_LOGGER.error("failed to read sampleId file: {}", e.toString());
                 mIsValid = false;
             }
         }

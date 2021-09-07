@@ -57,13 +57,12 @@ public class LoadPurpleData {
         List<PurpleCopyNumber> germlineCopyNumbers =
                 PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purpleDir, sample));
 
-        List<DriverCatalog> somaticDriverCatalog =
-                DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
+        List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
 
         final String germlineDriverFile = DriverCatalogFile.generateGermlineFilename(purpleDir, sample);
 
-        List<DriverCatalog> germlineDriverCatalog = Files.exists(Paths.get(germlineDriverFile)) ?
-                DriverCatalogFile.read(germlineDriverFile) : Lists.newArrayList();
+        List<DriverCatalog> germlineDriverCatalog =
+                Files.exists(Paths.get(germlineDriverFile)) ? DriverCatalogFile.read(germlineDriverFile) : Lists.newArrayList();
 
         LOGGER.info("Persisting purple data to db for {}", sample);
         persistToDatabase(dbAccess,

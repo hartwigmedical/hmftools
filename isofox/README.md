@@ -73,36 +73,12 @@ Reference files are available for HG19 and HG38 [HMFTools-Resources](https://res
 - KnownFusions: HMF known fusion data
 
 ### Transcript Expression
-The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%.
+The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%. 
 
-Each release of Isofox will be accompanied by a set of pre-computed cache files (see HMF Resource link above). Alternatively to generate this file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
+Each release of Isofox will be accompanied by a set of pre-computed cache files (see HMF Resource link above). 
 
-```
-java -jar isofox.jar 
-    -functions EXPECTED_TRANS_COUNTS
-    -output_dir /path_to_output_data/ 
-    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
-    -read_length 151 
-    -long_frag_limit 550 
-    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
-    -threads 10 
-```
+Likewise if GC bias adjustments are to be applied (config: apply_gc_bias_adjust), a pre-computed file of GC ratios per transcript is available for download.
 
-The output file is approximately 100MB.
-
-Generate Expected GC Ratio Counts
-
-Likewise if GC bias adjustments are to be applied (config: apply_gc_bias_adjust), a pre-computed file of GC ratios per transcript can be generated once and loaded for subsequent sample runs.
-
-```
-java -jar isofox.jar 
-    -functions EXPECTED_GC_COUNTS
-    -output_dir /path_to_output_data/ 
-    -ref_genome /path_to_ref_files/ref-genome.fasta 
-    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
-    -read_length 151 
-    -threads 10 
-```
 
 The output file is approximately 120MB.
 
@@ -185,13 +161,46 @@ java -jar isofox.jar
     -threads 10 
 ```
 
+### Generating Transcript Expression and GC Ratio Cached Files
+To generate the cached transcript expression file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
+
+```
+java -jar isofox.jar 
+    -functions EXPECTED_TRANS_COUNTS
+    -output_dir /path_to_output_data/ 
+    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -read_length 151 
+    -long_frag_limit 550 
+    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
+    -threads 10 
+```
+
+The output file is approximately 100MB.
+
+To generate the expected GCrRatio counts file, use the EXPECTED_GC_COUNTS function with the call:
+
+```
+java -jar isofox.jar 
+    -functions EXPECTED_GC_COUNTS
+    -output_dir /path_to_output_data/ 
+    -ref_genome /path_to_ref_files/ref-genome.fasta 
+    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -read_length 151 
+    -threads 10 
+```
+
+The output file is approximately 120MB.
+
 ### Generating cached Ensembl data files
 To annotate SVs with gene information and to support fusion detection, ISOFOX uses gene, transcript, exon and protein domain information from the Ensembl database. 
 To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time ISOFOX runs.
 
-These files can be downloaded from the Hartwig resources page, or generated using the Hartwig LINX application (see https://github.com/hartwigmedical/hmftools/blob/master/sv-linx/README.md for instructions).
+These files can be downloaded from the Hartwig resources page, or generated using the Hartwig LINX application (see https://github.com/hartwigmedical/hmftools/blob/master/linx/README.md for instructions).
 
 Note that the ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
+
+
+
  
 ## Algorithm
 

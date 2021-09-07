@@ -4,12 +4,15 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MIN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.GENE_PAIR_DELIM;
@@ -49,7 +52,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -328,8 +331,8 @@ public class FusionLikelihood
                     final String geneIdLower = genePair[0];
                     final String geneIdUpper = genePair[1];
 
-                    EnsemblGeneData geneUp = null;
-                    EnsemblGeneData geneDown = null;
+                    GeneData geneUp = null;
+                    GeneData geneDown = null;
 
                     Map<Integer,Long> bucketLengthCounts = entry.getValue();
 
@@ -349,8 +352,8 @@ public class FusionLikelihood
 
                         if(geneUp == null && geneDown == null)
                         {
-                            EnsemblGeneData geneLower = mGeneTransCache.getGeneDataById(geneIdLower);
-                            EnsemblGeneData geneUpper = mGeneTransCache.getGeneDataById(geneIdUpper);
+                            GeneData geneLower = mGeneTransCache.getGeneDataById(geneIdLower);
+                            GeneData geneUpper = mGeneTransCache.getGeneDataById(geneIdUpper);
                             boolean isForwardStrand = (geneLower.Strand == 1);
 
                             geneUp = (isDel == isForwardStrand) ? geneLower : geneUpper;
@@ -634,21 +637,18 @@ public class FusionLikelihood
     {
         final Options options = new Options();
         addCmdLineArgs(options);
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log in verbose mode");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl gene transcript data cache directory");
+        addOutputDir(options);
+        addLoggingOptions(options);
+        addEnsemblDir(options);
 
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
 
-        if(cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(cmd);
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.V37);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
 
         fusionLikelihood.initialise(cmd, ensemblDataCache);
 

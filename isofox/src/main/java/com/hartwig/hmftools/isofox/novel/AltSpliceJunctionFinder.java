@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.isofox.IsofoxConfig;

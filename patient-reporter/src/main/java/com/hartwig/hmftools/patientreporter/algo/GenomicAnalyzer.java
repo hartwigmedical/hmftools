@@ -10,30 +10,26 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordDataLoader;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.linx.LinxData;
+import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceFile;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakend;
-import com.hartwig.hmftools.common.virusbreakend.VirusBreakendFile;
+import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.PurpleDataLoader;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
+import com.hartwig.hmftools.common.variant.ReportableVariantSource;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.actionability.ClinicalTrialFactory;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakendFactory;
-import com.hartwig.hmftools.patientreporter.virusbreakend.TaxonomyDb;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusBlacklistModel;
-import com.hartwig.hmftools.patientreporter.virusbreakend.VirusInterpretationModel;
-import com.hartwig.hmftools.protect.chord.ChordDataLoader;
-import com.hartwig.hmftools.protect.linx.LinxData;
-import com.hartwig.hmftools.protect.linx.LinxDataLoader;
-import com.hartwig.hmftools.protect.purple.PurpleData;
-import com.hartwig.hmftools.protect.purple.PurpleDataLoader;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantFactory;
-import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,24 +42,14 @@ public class GenomicAnalyzer {
 
     @NotNull
     private final GermlineReportingModel germlineReportingModel;
-    @NotNull
-    private final TaxonomyDb taxonomyDb;
-    @NotNull
-    private final VirusInterpretationModel virusInterpretationModel;
-    @NotNull
-    private final VirusBlacklistModel virusBlackListModel;
 
-    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel, @NotNull final TaxonomyDb taxonomyDb,
-            @NotNull final VirusInterpretationModel virusInterpretationModel, @NotNull final VirusBlacklistModel virusBlackListModel) {
+    public GenomicAnalyzer(@NotNull final GermlineReportingModel germlineReportingModel) {
         this.germlineReportingModel = germlineReportingModel;
-        this.taxonomyDb = taxonomyDb;
-        this.virusInterpretationModel = virusInterpretationModel;
-        this.virusBlackListModel = virusBlackListModel;
     }
 
     @NotNull
     public GenomicAnalysis run(@NotNull String tumorSampleRunId, @Nullable String referenceSampleRunId, @NotNull PatientReporterConfig config,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel) throws IOException {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleRunId, referenceSampleRunId,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
@@ -71,16 +57,15 @@ public class GenomicAnalyzer {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleSomaticCopyNumberTsv());
+                null,
+                config.purpleSomaticCopyNumberTsv(), refGenomeVersion);
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
-
-        List<ReportableVirusBreakend> reportableVirusBreakend = analyseVirusBreakends(config.virusBreakendTsv());
-
+        VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
         List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
-                ReportableVariantFactory.mergeVariantLists(purpleData.germlineVariants(), purpleData.somaticVariants());
+                ReportableVariantFactory.mergeVariantLists(purpleData.reportableGermlineVariants(), purpleData.reportableSomaticVariants());
 
         Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant =
                 determineNotify(reportableVariants, germlineReportingModel, germlineReportingLevel);
@@ -109,12 +94,12 @@ public class GenomicAnalyzer {
                 .tumorMutationalBurden(purpleData.tumorMutationalBurdenPerMb())
                 .chordHrdValue(chordAnalysis.hrdValue())
                 .chordHrdStatus(chordAnalysis.hrStatus())
-                .gainsAndLosses(purpleData.copyNumberAlterations())
+                .gainsAndLosses(purpleData.reportableGainsLosses())
                 .cnPerChromosome(purpleData.cnPerChromosome())
-                .geneFusions(linxData.fusions())
+                .geneFusions(linxData.reportableFusions())
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
-                .virusBreakends(reportableVirusBreakend)
+                .reportableViruses(virusInterpreterData.reportableViruses())
                 .peachGenotypes(peachGenotypes)
                 .build();
     }
@@ -155,21 +140,6 @@ public class GenomicAnalyzer {
         }
 
         return false;
-    }
-
-    @NotNull
-    private List<ReportableVirusBreakend> analyseVirusBreakends(@NotNull String virusBreakendTsv) throws IOException {
-        LOGGER.info("Loading virus breakend data {}", new File(virusBreakendTsv).getParent());
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
-
-        ReportableVirusBreakendFactory reportableVirusBreakendFactory =
-                new ReportableVirusBreakendFactory(taxonomyDb, virusInterpretationModel, virusBlackListModel);
-        List<ReportableVirusBreakend> reportableVirusBreakend = reportableVirusBreakendFactory.analyze(virusBreakends);
-
-        LOGGER.info(" Loaded {} reportable virus breakends from {}",
-                reportableVirusBreakend.size(),
-                virusBreakendTsv);
-        return reportableVirusBreakend;
     }
 
     @NotNull

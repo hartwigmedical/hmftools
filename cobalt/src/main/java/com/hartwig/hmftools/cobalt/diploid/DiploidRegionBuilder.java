@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DiploidRegionBuilder implements Consumer<DiploidCount>
 {
-    private final List<GenomeRegion> result = Lists.newArrayList();
+    private final List<GenomeRegion> mResult;
 
     private final double mCutoff;
     private final int mMaleSamples;
@@ -28,6 +28,8 @@ public class DiploidRegionBuilder implements Consumer<DiploidCount>
 
     public DiploidRegionBuilder(final double cutoff, final int femaleSamples, final int maleSamples)
     {
+        mResult = Lists.newArrayList();
+
         mCutoff = cutoff;
         mMaleSamples = maleSamples;
         mFemaleSamples = femaleSamples;
@@ -57,7 +59,7 @@ public class DiploidRegionBuilder implements Consumer<DiploidCount>
     {
         if(mIsDiploid)
         {
-            result.add(GenomeRegions.create(mChromosome, mStart, mEnd));
+            mResult.add(GenomeRegions.create(mChromosome, mStart, mEnd));
             mTotalDiploidBases += mEnd - mStart + 1;
         }
         mIsDiploid = false;
@@ -68,10 +70,9 @@ public class DiploidRegionBuilder implements Consumer<DiploidCount>
         return mTotalDiploidBases;
     }
 
-    @NotNull
     public List<GenomeRegion> build()
     {
         finaliseCurrent();
-        return result;
+        return mResult;
     }
 }

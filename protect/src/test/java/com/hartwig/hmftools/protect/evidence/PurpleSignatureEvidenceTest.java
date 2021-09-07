@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.protect.evidence;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvent;
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestEvidenceFactory;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -10,10 +7,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleData;
+import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.protect.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.protect.purple.PurpleData;
+import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
@@ -26,18 +24,22 @@ public class PurpleSignatureEvidenceTest {
     @Test
     public void canDeterminePurpleSignatureEvidence() {
         ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
-                .from(createTestEvent())
+                .from(ServeTestFactory.createTestActionableCharacteristic())
                 .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
-        ActionableCharacteristic signature2 =
-                ImmutableActionableCharacteristic.builder().from(createTestEvent()).name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD).build();
+        ActionableCharacteristic signature2 = ImmutableActionableCharacteristic.builder()
+                .from(ServeTestFactory.createTestActionableCharacteristic())
+                .name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .build();
 
-        ActionableCharacteristic signature3 =
-                ImmutableActionableCharacteristic.builder().from(createTestEvent()).name(TumorCharacteristic.MICROSATELLITE_UNSTABLE).build();
+        ActionableCharacteristic signature3 = ImmutableActionableCharacteristic.builder()
+                .from(ServeTestFactory.createTestActionableCharacteristic())
+                .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
+                .build();
 
-        PurpleSignatureEvidence purpleSignatureEvidence =
-                new PurpleSignatureEvidence(createTestEvidenceFactory(), Lists.newArrayList(signature1, signature2, signature3));
+        PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),
+                Lists.newArrayList(signature1, signature2, signature3));
 
         PurpleData all = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.HIGH);
         List<ProtectEvidence> evidence = purpleSignatureEvidence.evidence(all);
@@ -57,16 +59,6 @@ public class PurpleSignatureEvidenceTest {
 
     @NotNull
     private static PurpleData createPurpleData(@NotNull MicrosatelliteStatus msStatus, @NotNull TumorMutationalStatus tmlStatus) {
-        return ImmutablePurpleData.builder()
-                .purity(0D)
-                .hasReliablePurity(true)
-                .hasReliableQuality(true)
-                .ploidy(0D)
-                .microsatelliteIndelsPerMb(0D)
-                .microsatelliteStatus(msStatus)
-                .tumorMutationalBurdenPerMb(0D)
-                .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(tmlStatus)
-                .build();
+        return PurpleTestFactory.testPurpleDataBuilder().microsatelliteStatus(msStatus).tumorMutationalLoadStatus(tmlStatus).build();
     }
 }

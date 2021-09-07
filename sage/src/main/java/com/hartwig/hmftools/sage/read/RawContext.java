@@ -2,7 +2,8 @@ package com.hartwig.hmftools.sage.read;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RawContext {
+public class RawContext
+{
 
     private final int readIndex;
     private final boolean readIndexInSoftClip;
@@ -16,27 +17,32 @@ public class RawContext {
     private final int refQuality;
 
     @NotNull
-    static RawContext inSoftClip(final int readIndex) {
+    static RawContext inSoftClip(final int readIndex)
+    {
         return new RawContext(readIndex, false, false, true, false, false, false, false, 0, 0);
     }
 
     @NotNull
-    static RawContext inDelete(final int readIndex) {
+    static RawContext inDelete(final int readIndex)
+    {
         return new RawContext(readIndex, true, false, false, false, false, false, false, 0, 0);
     }
 
     @NotNull
-    static RawContext inSkipped(final int readIndex) {
+    static RawContext inSkipped(final int readIndex)
+    {
         return new RawContext(readIndex, false, true, false, false, false, false, false, 0, 0);
     }
 
     @NotNull
-    static RawContext indel(final int readIndex, final boolean altSupport, final int quality) {
+    static RawContext indel(final int readIndex, final boolean altSupport, final int quality)
+    {
         return new RawContext(readIndex, false, false, false, true, altSupport, false, true, altSupport ? quality : 0, 0);
     }
 
     @NotNull
-    static RawContext alignment(final int readIndex, final boolean altSupport, final boolean refSupport, final int quality) {
+    static RawContext alignment(final int readIndex, final boolean altSupport, final boolean refSupport, final int quality)
+    {
         return new RawContext(readIndex,
                 false,
                 false,
@@ -51,7 +57,8 @@ public class RawContext {
 
     public RawContext(final int readIndex, final boolean readIndexInDelete, final boolean readIndexInSkipped,
             final boolean readIndexInSoftClip, final boolean indelAtPosition, final boolean altSupport, final boolean refSupport,
-            final boolean depthSupport, final int altQuality, final int refQuality) {
+            final boolean depthSupport, final int altQuality, final int refQuality)
+    {
         this.readIndex = readIndex;
         this.readIndexInDelete = readIndexInDelete;
         this.readIndexInSkipped = readIndexInSkipped;
@@ -64,43 +71,53 @@ public class RawContext {
         this.indelAtPosition = indelAtPosition;
     }
 
-    public int readIndex() {
+    public int readIndex()
+    {
         return readIndex;
     }
 
-    public boolean isIndelAtPosition() {
+    public boolean isIndelAtPosition()
+    {
         return indelAtPosition;
     }
 
-    public boolean isReadIndexInDelete() {
+    public boolean isReadIndexInDelete()
+    {
         return readIndexInDelete;
     }
 
-    public boolean isReadIndexInSoftClip() {
+    public boolean isReadIndexInSoftClip()
+    {
         return readIndexInSoftClip;
     }
 
-    public boolean isReadIndexInSkipped() {
+    public boolean isReadIndexInSkipped()
+    {
         return readIndexInSkipped;
     }
 
-    public boolean isAltSupport() {
+    public boolean isAltSupport()
+    {
         return altSupport;
     }
 
-    public boolean isRefSupport() {
+    public boolean isRefSupport()
+    {
         return refSupport;
     }
 
-    public boolean isDepthSupport() {
+    public boolean isDepthSupport()
+    {
         return depthSupport;
     }
 
-    public int altQuality() {
+    public int altQuality()
+    {
         return altQuality;
     }
 
-    public int refQuality() {
+    public int refQuality()
+    {
         return refQuality;
     }
 }

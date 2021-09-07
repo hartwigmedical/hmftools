@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_EVENTS;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_INDEX;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_RIGHT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_INDEX;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_LEFT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_MICRO_HOMOLOGY;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -29,10 +29,11 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public final class CandidateSerialization {
-
+public final class CandidateSerialization
+{
     @NotNull
-    public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context) {
+    public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context)
+    {
         return ImmutableVariantHotspotImpl.builder()
                 .chromosome(context.getContig())
                 .position(context.getStart())
@@ -42,13 +43,15 @@ public final class CandidateSerialization {
     }
 
     @NotNull
-    public static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final RefSequence refGenome) {
+    public static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final RefSequence refGenome)
+    {
         final IndexedBases readBases = readBases(context);
         return toCandidate(context, readBases, refGenome.alignment());
     }
 
     @NotNull
-    public static IndexedBases readBases(@NotNull final VariantContext context) {
+    public static IndexedBases readBases(@NotNull final VariantContext context)
+    {
         final int position = context.getStart();
 
         final String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);
@@ -74,10 +77,11 @@ public final class CandidateSerialization {
 
     @NotNull
     static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final IndexedBases readBases,
-            @NotNull final IndexedBases refBases) {
+            @NotNull final IndexedBases refBases)
+    {
         final VariantHotspot variant = toVariantHotspot(context);
 
-        final SageVariantTier tier = SageVariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
+        final VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
         final int repeatCount = context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
         final String repeat = context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);
@@ -85,7 +89,8 @@ public final class CandidateSerialization {
         final ReadContext readContext = new ReadContext(refBases, readBases, repeatCount, repeat, mh);
 
         int maxDepth = 0;
-        for (Genotype genotype : context.getGenotypes().immutable()) {
+        for(Genotype genotype : context.getGenotypes().immutable())
+        {
             maxDepth = Math.max(maxDepth, genotype.getDP());
             maxDepth = Math.max(maxDepth, genotype.getAttributeAsInt(RAW_DEPTH, 0));
         }
@@ -94,7 +99,8 @@ public final class CandidateSerialization {
     }
 
     @NotNull
-    public static VariantContextBuilder toContext(@NotNull final Candidate candidate) {
+    public static VariantContextBuilder toContext(@NotNull final Candidate candidate)
+    {
         final List<Allele> alleles = createAlleles(candidate.variant());
         final ReadContext readContext = candidate.readContext();
 
@@ -110,20 +116,23 @@ public final class CandidateSerialization {
                 .computeEndFromAlleles(alleles, (int) candidate.position())
                 .alleles(alleles);
 
-        if (!readContext.microhomology().isEmpty()) {
+        if(!readContext.microhomology().isEmpty())
+        {
             builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, readContext.microhomology());
         }
 
-        if (readContext.repeatCount() > 0) {
-            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.repeatCount())
-                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.repeat());
+        if(readContext.RepeatCount > 0)
+        {
+            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.RepeatCount)
+                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.Repeat);
         }
 
         return builder;
     }
 
     @NotNull
-    private static List<Allele> createAlleles(@NotNull final VariantHotspot variant) {
+    private static List<Allele> createAlleles(@NotNull final VariantHotspot variant)
+    {
         final Allele ref = Allele.create(variant.ref(), true);
         final Allele alt = Allele.create(variant.alt(), false);
         return Lists.newArrayList(ref, alt);

@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public class MatchedSineElement
 {

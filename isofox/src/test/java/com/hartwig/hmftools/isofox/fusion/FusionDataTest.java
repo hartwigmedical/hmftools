@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
@@ -40,10 +40,7 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class FusionDataTest

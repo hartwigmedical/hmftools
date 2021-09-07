@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.SequenceCount;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 
@@ -19,20 +19,20 @@ import java.util.Set;
 
 public class PhasedEvidenceFactory
 {
-    private final int mMinEvidence;
+    private final double mMinEvidence;
     private final boolean mDebugPhasing;
     private final LilacConfig mConfig;
 
-    public PhasedEvidenceFactory(final LilacConfig config)
+    public PhasedEvidenceFactory(final LilacConfig config, double minEvidence)
     {
         mConfig = config;
-        mMinEvidence = mConfig.MinEvidence;
+        mMinEvidence = minEvidence;
         mDebugPhasing = mConfig.DebugPhasing;
     }
 
-    public List<PhasedEvidence> evidence(final HlaContext context, final List<AminoAcidFragment> fragments)
+    public List<PhasedEvidence> evidence(final HlaContext context, final List<Fragment> fragments)
     {
-        LL_LOGGER.info("phasing {} records:", context.geneName());
+        LL_LOGGER.debug("phasing {} records:", context.geneName());
 
         List<PhasedEvidence> result = evidence(context.ExpectedAlleles, fragments);
 
@@ -47,9 +47,9 @@ public class PhasedEvidenceFactory
         return result;
     }
 
-    public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<AminoAcidFragment> aminoAcidAminoAcidFragments)
+    public List<PhasedEvidence> evidence(final ExpectedAlleles expectedAlleles, final List<Fragment> fragments)
     {
-        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, aminoAcidAminoAcidFragments);
+        SequenceCount aminoAcidCounts = SequenceCount.aminoAcids(mMinEvidence, fragments);
 
         List<Integer> heterozygousIndices = aminoAcidCounts.heterozygousLoci();
 
@@ -58,8 +58,7 @@ public class PhasedEvidenceFactory
             LL_LOGGER.debug("  heterozygous Indices: {}", heterozygousIndices);
         }
 
-        ExtendEvidence heterozygousEvidence =
-                new ExtendEvidence(mConfig, heterozygousIndices, aminoAcidAminoAcidFragments, expectedAlleles);
+        ExtendEvidence heterozygousEvidence = new ExtendEvidence(mConfig, heterozygousIndices, fragments, expectedAlleles);
 
         List<PhasedEvidence> finalisedEvidence = Lists.newArrayList();
         List<PhasedEvidence> unprocessedEvidence = Lists.newArrayList();
@@ -113,8 +112,8 @@ public class PhasedEvidenceFactory
     {
         public int compare(final PhasedEvidence first, final PhasedEvidence second)
         {
-            int firstAA = first.getAminoAcidIndexList().get(0);
-            int secondAA = second.getAminoAcidIndexList().get(0);
+            int firstAA = first.getAminoAcidLoci().get(0);
+            int secondAA = second.getAminoAcidLoci().get(0);
             if(firstAA != secondAA)
             {
                 return firstAA > secondAA ? 1 : -1;

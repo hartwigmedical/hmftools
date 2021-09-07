@@ -22,7 +22,7 @@ public final class CompassionateUseProgramFile {
     }
 
     @NotNull
-    private static List<CompassionateUseProgram> fromLines (@NotNull List<String> lines) {
+    private static List<CompassionateUseProgram> fromLines(@NotNull List<String> lines) {
         List<CompassionateUseProgram> compassionateUsePrograms = Lists.newArrayList();
         // Skip header line
         for (String line : lines.subList(1, lines.size())) {
@@ -34,7 +34,7 @@ public final class CompassionateUseProgramFile {
     @NotNull
     private static CompassionateUseProgram fromLine(@NotNull String line) {
         String[] values = line.split(DELIMITER);
-        ImmutableCompassionateUseProgram.Builder builder = ImmutableCompassionateUseProgram.builder()
+        return ImmutableCompassionateUseProgram.builder()
                 .trialAcronymSite(values[0])
                 .variants(values[1])
                 .source(values[2])
@@ -43,7 +43,7 @@ public final class CompassionateUseProgramFile {
                 .cancerType(values[5])
                 .level(values[6])
                 .direction(values[7])
-                .link(values[8]);
-        return builder.build();
+                .link(values[8])
+                .build();
     }
 }

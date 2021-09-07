@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.sigs.loaders;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_IDS;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.loadSampleListFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +51,7 @@ public class DataLoaderConfig
             final String sampleIdsStr = cmd.getOptionValue(SAMPLE_IDS);
             if(sampleIdsStr.contains(".csv"))
             {
-                SampleIds.addAll(loadSampleListFile(sampleIdsStr));
+                SampleIds.addAll(loadSampleIdsFile(sampleIdsStr));
             }
             else
             {

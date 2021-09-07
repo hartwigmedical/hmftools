@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.ClinicalConstants;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ImmutableValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.jetbrains.annotations.NotNull;
 

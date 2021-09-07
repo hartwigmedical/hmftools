@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ckb.classification;
 
 import static org.junit.Assert.assertFalse;
 
-import com.hartwig.hmftools.common.genome.refgenome.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
 
 import org.junit.Test;
 

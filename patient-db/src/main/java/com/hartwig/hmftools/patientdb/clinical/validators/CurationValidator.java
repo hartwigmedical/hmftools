@@ -3,11 +3,11 @@ package com.hartwig.hmftools.patientdb.clinical.validators;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.curators.CleanableCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.jetbrains.annotations.NotNull;
 

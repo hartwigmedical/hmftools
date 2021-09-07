@@ -3,7 +3,9 @@ package com.hartwig.hmftools.common.utils;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.MatrixUtils.sumMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,35 +58,12 @@ public class Matrix
 
     public void setData(final double[][] otherData)
     {
-        copyMatrix(otherData, mData);
-    }
-
-    public static void copyMatrix(final double[][] source, final double[][] dest)
-    {
-        if(source.length != dest.length)
-            return;
-
-        int rows = source.length;
-        int cols = source[0].length;
-
-        for(int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                dest[i][j] = source[i][j];
-            }
-        }
+        copy(otherData, mData);
     }
 
     public void initialise(double value)
     {
-        for(int i = 0; i < Rows; ++i)
-        {
-            for (int j = 0; j < Cols; ++j)
-            {
-                mData[i][j] = value;
-            }
-        }
+        MatrixUtils.initialise(mData, value);
     }
 
     public int getDataCount() { return Rows * Cols; }
@@ -294,16 +273,7 @@ public class Matrix
 
     public double sum()
     {
-        double total = 0;
-        for(int i = 0; i < Rows; i++) {
-
-            for(int j = 0; j < Cols; j++) {
-
-                total += mData[i][j];
-            }
-        }
-
-        return total;
+        return sumMatrix(mData);
     }
 
     public double[] getRow(int r)
@@ -425,8 +395,8 @@ public class Matrix
         return results;
     }
 
-    public static Matrix extractNonZeros(final Matrix matrix) {
-
+    public static Matrix extractNonZeros(final Matrix matrix)
+    {
         // check for columns with all zeros and remove them from the matrix
         int nonZeroColCount = 0;
 
@@ -447,14 +417,15 @@ public class Matrix
         double[][] nData = newMatrix.getData();
 
         int colIndex = 0;
-        for (int i = 0; i < matrix.Cols; ++i) {
-
+        for (int i = 0; i < matrix.Cols; ++i)
+        {
             double colSum = sumVector(matrix.getCol(i));
 
             if (colSum == 0)
                 continue;
 
-            for (int j = 0; j < matrix.Rows; j++) {
+            for (int j = 0; j < matrix.Rows; j++)
+            {
                 nData[j][colIndex] = mData[j][i];
             }
 

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -15,17 +17,17 @@ public final class MolecularTissueOriginFile {
 
     private static final Logger LOGGER = LogManager.getLogger(MolecularTissueOriginFile.class);
 
-    private MolecularTissueOriginFile(){
+    public MolecularTissueOriginFile() {
     }
 
     @NotNull
-    public static String read(@NotNull String molecularTissueOriginTxt) throws IOException {
+    public static MolecularTissueOrginData read(@NotNull String molecularTissueOriginTxt) throws IOException {
         String origin = fromLines(Files.readAllLines(new File(molecularTissueOriginTxt).toPath()));
         if (origin == null) {
             LOGGER.warn("No molecular tissue origin could be read from {}!", molecularTissueOriginTxt);
             origin = Strings.EMPTY;
         }
-        return origin;
+        return extractPredictionDataOrigin(origin);
     }
 
     @Nullable
@@ -35,5 +37,29 @@ public final class MolecularTissueOriginFile {
         } else {
             return null;
         }
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public static MolecularTissueOrginData extractPredictionDataOrigin(@NotNull String cuppaResult) {
+        String origin = Strings.EMPTY;
+        String prediction = null;
+        String[] lengthCuppaResult = cuppaResult.split("\\(");
+
+        if (lengthCuppaResult.length == 2) {
+            origin = cuppaResult.split(" \\(")[0];
+            prediction = cuppaResult.split("\\(")[1];
+            prediction = prediction.substring(0, prediction.length() - 1);
+        } else if (lengthCuppaResult.length == 1) {
+            origin = cuppaResult.split("\\(")[0];
+        } else {
+            LOGGER.warn("Cuppa result is Empty");
+        }
+
+        return ImmutableMolecularTissueOrginData.builder()
+                .conclusion(cuppaResult)
+                .predictedOrigin(origin)
+                .predictionLikelihood(prediction)
+                .build();
     }
 }

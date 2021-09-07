@@ -2,13 +2,15 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -20,60 +22,61 @@ import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class SomaticPipeline implements SageVariantPipeline {
+public class SomaticPipeline
+{
+    private final SageConfig mConfig;
+    private final Executor mExecutor;
+    private final ReferenceSequenceFile mRefGenome;
+    private final CandidateStage mCandidateState;
+    private final EvidenceStage mEvidenceStage;
 
-    private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
-
-    private final SageConfig config;
-    private final Executor executor;
-    private final ReferenceSequenceFile refGenome;
-    private final CandidateStage candidateState;
-    private final EvidenceStage evidenceStage;
-
-    SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
-            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            @NotNull final Coverage coverage) {
-        this.config = config;
-        this.executor = executor;
-        this.refGenome = refGenome;
-        this.candidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
-        this.evidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
+    public SomaticPipeline(
+            final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
+            final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panelRegions,
+            final List<ChrBaseRegion> highConfidenceRegions,
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
+            final Coverage coverage)
+    {
+        mConfig = config;
+        mExecutor = executor;
+        mRefGenome = refGenome;
+        mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
+        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
     }
 
-    @NotNull
-    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
-        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
+    public CompletableFuture<List<SageVariant>> findVariants(final ChrBaseRegion region)
+    {
+        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, mRefGenome), mExecutor);
 
-        final CompletableFuture<List<Candidate>> initialCandidates = candidateState.candidates(region, refSequenceFuture);
+        final CompletableFuture<List<Candidate>> initialCandidates = mCandidateState.findCandidates(region, refSequenceFuture);
+
         final CompletableFuture<ReadContextCounters> tumorEvidence =
-                evidenceStage.evidence(config.tumor(), config.tumorBam(), initialCandidates);
+                mEvidenceStage.findEvidence(mConfig.TumorIds, mConfig.TumorBams, initialCandidates);
 
         final CompletableFuture<List<Candidate>> finalCandidates = filteredCandidates(tumorEvidence);
+
         final CompletableFuture<ReadContextCounters> normalEvidence =
-                evidenceStage.evidence(config.reference(), config.referenceBam(), finalCandidates);
+                mEvidenceStage.findEvidence(mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates);
 
         return combine(region, finalCandidates, tumorEvidence, normalEvidence);
     }
 
-    @NotNull
-    private CompletableFuture<List<SageVariant>> combine(@NotNull final GenomeRegion region,
+    private CompletableFuture<List<SageVariant>> combine(
+            final ChrBaseRegion region,
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
-            final CompletableFuture<ReadContextCounters> doneNormal) {
-        return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) -> {
-            LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
-            final SageVariantFactory variantFactory = new SageVariantFactory(config.filter());
+            final CompletableFuture<ReadContextCounters> doneNormal)
+    {
+        return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
+        {
+            SG_LOGGER.trace("gathering evidence in {}:{}", region.Chromosome, region.start());
+            final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
 
             // Combine normal and tumor together and create variants
             final List<SageVariant> result = Lists.newArrayList();
-            for (Candidate candidate : candidates.join()) {
+            for(Candidate candidate : candidates.join())
+            {
                 final List<ReadContextCounter> normal = normalCandidates.readContextCounters(candidate.variant());
                 final List<ReadContextCounter> tumor = tumorCandidates.readContextCounters(candidate.variant());
                 SageVariant sageVariant = variantFactory.create(candidate, normal, tumor);
@@ -84,8 +87,8 @@ public class SomaticPipeline implements SageVariantPipeline {
         });
     }
 
-    @NotNull
-    private CompletableFuture<List<Candidate>> filteredCandidates(final CompletableFuture<ReadContextCounters> tumorEvidence) {
-        return tumorEvidence.thenApply(x -> x.candidates(config.filter().readContextFilter()));
+    private CompletableFuture<List<Candidate>> filteredCandidates(final CompletableFuture<ReadContextCounters> tumorEvidence)
+    {
+        return tumorEvidence.thenApply(x -> x.candidates(mConfig.Filter.readContextFilter()));
     }
 }

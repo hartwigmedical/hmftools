@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.sigs;
 
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 
 import com.hartwig.hmftools.common.utils.Matrix;
 

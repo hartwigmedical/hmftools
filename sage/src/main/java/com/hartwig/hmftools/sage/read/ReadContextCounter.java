@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -8,376 +10,398 @@ import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
 import com.hartwig.hmftools.sage.samtools.NumberEvents;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounter implements VariantHotspot {
+public class ReadContextCounter implements VariantHotspot
+{
+    public final String Sample;
+    public final VariantHotspot Variant;
+    public final ReadContext ReadContext;
+    public final RawContextFactory RawFactory;
+    public final QualityRecalibrationMap QualityRecalibrationMap;
+    public final VariantTier Tier;
+    public final boolean Realign;
+    public final int MaxCoverage;
+    public final int MinNumberOfEvents;
 
-    private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
+    private final ExpandedBasesFactory mExpandedBasesFactory;
 
-    private final String sample;
-    private final VariantHotspot variant;
-    private final ReadContext readContext;
-    private final RawContextFactory rawFactory;
-    private final QualityRecalibrationMap qualityRecalibrationMap;
-    private final SageVariantTier tier;
-    private final boolean realign;
-    private final int maxCoverage;
-    private final int minNumberOfEvents;
-    private final ExpandedBasesFactory expandedBasesFactory;
+    private int mFull;
+    private int mPartial;
+    private int mCore;
+    private int mAlt;
+    private int mRealigned;
+    private int mReference;
+    private int mCoverage;
 
-    private int full;
-    private int partial;
-    private int core;
-    private int alt;
-    private int realigned;
-    private int reference;
-    private int coverage;
+    private int mLengthened;
+    private int mShortened;
 
-    private int lengthened;
-    private int shortened;
+    private int mFullQuality;
+    private int mPartialQuality;
+    private int mCoreQuality;
+    private int mAltQuality;
+    private int mRealignedQuality;
+    private int mReferenceQuality;
+    private int mTotalQuality;
 
-    private int fullQuality;
-    private int partialQuality;
-    private int coreQuality;
-    private int altQuality;
-    private int realignedQuality;
-    private int referenceQuality;
-    private int totalQuality;
+    private double mJitterPenalty;
 
-    private double jitterPenalty;
+    private int mImproperPair;
 
-    private int improperPair;
-
-    private int rawDepth;
-    private int rawAltSupport;
-    private int rawRefSupport;
-    private int rawAltBaseQuality;
-    private int rawRefBaseQuality;
+    private int mRawDepth;
+    private int mRawAltSupport;
+    private int mRawRefSupport;
+    private int mRawAltBaseQuality;
+    private int mRawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, final int minNumberOfEvents,
-            final int maxSkippedReferenceRegions, boolean realign) {
-        this.sample = sample;
-        this.tier = tier;
-        this.variant = variant;
-        this.readContext = readContext;
-        this.rawFactory = new RawContextFactory(variant);
-        this.realign = realign;
-        this.maxCoverage = maxCoverage;
-        this.qualityRecalibrationMap = recalibrationMap;
-        this.minNumberOfEvents = minNumberOfEvents;
-        this.expandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
-    }
-
-    @NotNull
-    public String sample() {
-        return sample;
-    }
-
-    public VariantHotspot variant() {
-        return variant;
+            final QualityRecalibrationMap recalibrationMap, final VariantTier tier, final int maxCoverage, final int minNumberOfEvents,
+            final int maxSkippedReferenceRegions, boolean realign)
+    {
+        Sample = sample;
+        Tier = tier;
+        Variant = variant;
+        ReadContext = readContext;
+        RawFactory = new RawContextFactory(variant);
+        Realign = realign;
+        MaxCoverage = maxCoverage;
+        QualityRecalibrationMap = recalibrationMap;
+        MinNumberOfEvents = minNumberOfEvents;
+        mExpandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
     }
 
     @NotNull
     @Override
-    public String chromosome() {
-        return variant.chromosome();
-    }
-
-    @NotNull
-    public SageVariantTier tier() {
-        return tier;
+    public String chromosome()
+    {
+        return Variant.chromosome();
     }
 
     @Override
-    public long position() {
-        return variant.position();
+    public long position()
+    {
+        return Variant.position();
     }
 
     @NotNull
     @Override
-    public String ref() {
-        return variant.ref();
+    public String ref()
+    {
+        return Variant.ref();
     }
 
     @NotNull
     @Override
-    public String alt() {
-        return variant.alt();
+    public String alt()
+    {
+        return Variant.alt();
     }
 
-    public int altSupport() {
-        return full + partial + core + alt + realigned;
+    public int altSupport()
+    {
+        return mFull + mPartial + mCore + mAlt + mRealigned;
     }
 
-    public int refSupport() {
-        return reference;
+    public int refSupport()
+    {
+        return mReference;
     }
 
-    public int coverage() {
-        return coverage;
+    public int coverage()
+    {
+        return mCoverage;
     }
 
-    public int depth() {
-        return coverage;
+    public int depth()
+    {
+        return mCoverage;
     }
 
-    public double vaf() {
+    public double vaf()
+    {
         return af(altSupport());
     }
 
-    public double refAllelicFrequency() {
+    public double refAllelicFrequency()
+    {
         return af(refSupport());
     }
 
-    private double af(double support) {
-        return coverage == 0 ? 0d : support / coverage;
+    private double af(double support)
+    {
+        return mCoverage == 0 ? 0d : support / mCoverage;
     }
 
-    public int tumorQuality() {
-        int tumorQuality = fullQuality + partialQuality;
-        return Math.max(0, tumorQuality - (int) jitterPenalty);
+    public int tumorQuality()
+    {
+        int tumorQuality = mFullQuality + mPartialQuality;
+        return Math.max(0, tumorQuality - (int) mJitterPenalty);
     }
 
-    public int[] counts() {
-        return new int[] { full, partial, core, realigned, alt, reference, coverage };
+    public int[] counts()
+    {
+        return new int[] { mFull, mPartial, mCore, mRealigned, mAlt, mReference, mCoverage };
     }
 
-    public int[] jitter() {
-        return new int[] { shortened, lengthened, qualityJitterPenalty() };
+    public int[] jitter()
+    {
+        return new int[] { mShortened, mLengthened, qualityJitterPenalty() };
     }
 
-    public int[] quality() {
-        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, altQuality, referenceQuality, totalQuality };
+    public int[] quality()
+    {
+        return new int[] { mFullQuality, mPartialQuality, mCoreQuality, mRealignedQuality, mAltQuality, mReferenceQuality, mTotalQuality };
     }
 
-    public int improperPair() {
-        return improperPair;
+    public int improperPair()
+    {
+        return mImproperPair;
     }
 
-    public int rawDepth() {
-        return rawDepth;
+    public int rawDepth()
+    {
+        return mRawDepth;
     }
-
-    public int rawAltSupport() {
-        return rawAltSupport;
+    public int rawAltSupport()
+    {
+        return mRawAltSupport;
     }
-
-    public int rawRefSupport() {
-        return rawRefSupport;
+    public int rawRefSupport()
+    {
+        return mRawRefSupport;
     }
-
-    public int rawAltBaseQuality() {
-        return rawAltBaseQuality;
+    public int rawAltBaseQuality()
+    {
+        return mRawAltBaseQuality;
     }
-
-    public int rawRefBaseQuality() {
-        return rawRefBaseQuality;
-    }
-
-    public int minNumberOfEvents() {
-        return minNumberOfEvents;
-    }
-
-    @NotNull
-    public ReadContext readContext() {
-        return readContext;
+    public int rawRefBaseQuality()
+    {
+        return mRawRefBaseQuality;
     }
 
     @Override
-    public String toString() {
-        return readContext.toString();
+    public String toString()
+    {
+        return ReadContext.toString();
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig, final int rawNumberOfEvents) {
-        try {
-            if (coverage >= maxCoverage) {
+    public void accept(final SAMRecord record, final SageConfig sageConfig, final int rawNumberOfEvents)
+    {
+        try
+        {
+            if(mCoverage >= MaxCoverage)
+            {
                 return;
             }
 
-            if (!tier.equals(SageVariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.minMapQuality()) {
+            if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality)
+            {
                 return;
             }
 
-            final RawContext rawContext = rawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
-            if (rawContext.isReadIndexInSkipped()) {
+            final RawContext rawContext = RawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
+            if(rawContext.isReadIndexInSkipped())
+            {
                 return;
             }
 
             final int readIndex = rawContext.readIndex();
             final boolean baseDeleted = rawContext.isReadIndexInDelete();
 
-            rawDepth += rawContext.isDepthSupport() ? 1 : 0;
-            rawAltSupport += rawContext.isAltSupport() ? 1 : 0;
-            rawRefSupport += rawContext.isRefSupport() ? 1 : 0;
-            rawAltBaseQuality += rawContext.altQuality();
-            rawRefBaseQuality += rawContext.refQuality();
+            mRawDepth += rawContext.isDepthSupport() ? 1 : 0;
+            mRawAltSupport += rawContext.isAltSupport() ? 1 : 0;
+            mRawRefSupport += rawContext.isRefSupport() ? 1 : 0;
+            mRawAltBaseQuality += rawContext.altQuality();
+            mRawRefBaseQuality += rawContext.refQuality();
 
-            if (readIndex < 0) {
+            if(readIndex < 0)
+            {
                 return;
             }
 
-            boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
-            if (!covered) {
+            boolean covered = ReadContext.isCentreCovered(readIndex, record.getReadBases());
+            if(!covered)
+            {
                 return;
             }
 
-            final QualityConfig qualityConfig = sageConfig.qualityConfig();
+            final QualityConfig qualityConfig = sageConfig.Quality;
             int numberOfEvents =
-                    Math.max(minNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, variant.ref(), variant.alt()));
+                    Math.max(MinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, Variant.ref(), Variant.alt()));
             double quality = calculateQualityScore(readIndex, record, qualityConfig, numberOfEvents);
 
             // Check if FULL, PARTIAL, OR CORE
-            if (!baseDeleted) {
-                final boolean wildcardMatchInCore = variant.isSNV() && readContext().microhomology().isEmpty();
-                final IndexedBases expandedBases = expandedBasesFactory.expand((int) position(), readIndex, record);
+            if(!baseDeleted)
+            {
+                final boolean wildcardMatchInCore = Variant.isSNV() && ReadContext.microhomology().isEmpty();
+                final IndexedBases expandedBases = mExpandedBasesFactory.expand((int) position(), readIndex, record);
                 final ReadContextMatch match =
-                        readContext.matchAtPosition(wildcardMatchInCore, expandedBases.index(), expandedBases.bases());
+                        ReadContext.matchAtPosition(wildcardMatchInCore, expandedBases.Index, expandedBases.Bases);
 
-                if (!match.equals(ReadContextMatch.NONE)) {
-                    switch (match) {
+                if(!match.equals(ReadContextMatch.NONE))
+                {
+                    switch(match)
+                    {
                         case FULL:
                             incrementQualityFlags(record);
-                            full++;
-                            fullQuality += quality;
+                            mFull++;
+                            mFullQuality += quality;
                             break;
                         case PARTIAL:
                             incrementQualityFlags(record);
-                            partial++;
-                            partialQuality += quality;
+                            mPartial++;
+                            mPartialQuality += quality;
                             break;
                         case CORE:
                             incrementQualityFlags(record);
-                            core++;
-                            coreQuality += quality;
+                            mCore++;
+                            mCoreQuality += quality;
                             break;
                     }
 
-                    coverage++;
-                    totalQuality += quality;
+                    mCoverage++;
+                    mTotalQuality += quality;
                     return;
                 }
             }
 
             // Check if REALIGNED
-            final RealignedContext realignment = realignmentContext(realign, readIndex, record);
-            final RealignedType realignmentType = realignment.type();
-            if (realignmentType.equals(RealignedType.EXACT)) {
-                realigned++;
-                realignedQuality += quality;
-                coverage++;
-                totalQuality += quality;
+            final RealignedContext realignment = realignmentContext(Realign, readIndex, record);
+            final RealignedType realignmentType = realignment.Type;
+            if(realignmentType.equals(RealignedType.EXACT))
+            {
+                mRealigned++;
+                mRealignedQuality += quality;
+                mCoverage++;
+                mTotalQuality += quality;
                 return;
             }
 
-            if (realignmentType.equals(RealignedType.NONE) && rawContext.isReadIndexInSoftClip()) {
+            if(realignmentType.equals(RealignedType.NONE) && rawContext.isReadIndexInSoftClip())
+            {
                 return;
             }
 
-            coverage++;
-            totalQuality += quality;
-            if (rawContext.isRefSupport()) {
-                reference++;
-                referenceQuality += quality;
-            } else if (rawContext.isAltSupport()) {
-                alt++;
-                altQuality++;
+            mCoverage++;
+            mTotalQuality += quality;
+            if(rawContext.isRefSupport())
+            {
+                mReference++;
+                mReferenceQuality += quality;
+            }
+            else if(rawContext.isAltSupport())
+            {
+                mAlt++;
+                mAltQuality++;
             }
 
             // Jitter Penalty
-            switch (realignmentType) {
+            switch(realignmentType)
+            {
                 case LENGTHENED:
-                    jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
-                    lengthened++;
+                    mJitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
+                    mLengthened++;
                     break;
                 case SHORTENED:
-                    jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
-                    shortened++;
+                    mJitterPenalty += qualityConfig.jitterPenalty(realignment.RepeatCount);
+                    mShortened++;
                     break;
             }
 
-        } catch (Exception e) {
-            LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
+        } catch(Exception e)
+        {
+            SG_LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
             throw e;
         }
     }
 
     @NotNull
-    private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record) {
-        if (!realign) {
+    private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record)
+    {
+        if(!realign)
+        {
             return new RealignedContext(RealignedType.NONE, 0);
         }
 
-        int index = readContext.readBasesPositionIndex();
-        int leftIndex = readContext.readBasesLeftCentreIndex();
-        int rightIndex = readContext.readBasesRightCentreIndex();
+        int index = ReadContext.readBasesPositionIndex();
+        int leftIndex = ReadContext.readBasesLeftCentreIndex();
+        int rightIndex = ReadContext.readBasesRightCentreIndex();
 
         int leftOffset = index - leftIndex;
         int rightOffset = rightIndex - index;
 
         int indelLength = indelLength(record);
-        return Realigned.realignedAroundIndex(readContext,
+        return Realigned.realignedAroundIndex(ReadContext,
                 readIndex,
                 record.getReadBases(),
                 Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
     }
 
-    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents) {
+    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents)
+    {
         final double baseQuality = baseQuality(readBaseIndex, record);
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(variant, mapQuality, numberOfEvents, record.getProperPairFlag());
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(Variant, mapQuality, numberOfEvents, record.getProperPairFlag());
         double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
-    private double baseQuality(int readBaseIndex, SAMRecord record) {
-        return variant.ref().length() == variant.alt().length()
-                ? baseQuality(readBaseIndex, record, variant.ref().length())
-                : readContext.avgCentreQuality(readBaseIndex, record);
+    private double baseQuality(int readBaseIndex, SAMRecord record)
+    {
+        return Variant.ref().length() == Variant.alt().length()
+                ? baseQuality(readBaseIndex, record, Variant.ref().length())
+                : ReadContext.avgCentreQuality(readBaseIndex, record);
     }
 
-    private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length) {
+    private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length)
+    {
         int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 
         double quality = Integer.MAX_VALUE;
-        for (int i = 0; i < maxLength; i++) {
+        for(int i = 0; i < maxLength; i++)
+        {
             int refPosition = (int) position() + i;
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
-            byte[] trinucleotideContext = readContext.refTrinucleotideContext(refPosition);
+            byte[] trinucleotideContext = ReadContext.refTrinucleotideContext(refPosition);
             double recalibratedQuality =
-                    qualityRecalibrationMap.quality((byte) ref().charAt(i), (byte) alt().charAt(i), trinucleotideContext, rawQuality);
+                    QualityRecalibrationMap.quality((byte) ref().charAt(i), (byte) alt().charAt(i), trinucleotideContext, rawQuality);
             quality = Math.min(quality, recalibratedQuality);
         }
 
         return quality;
     }
 
-    private int qualityJitterPenalty() {
-        return (int) jitterPenalty;
+    private int qualityJitterPenalty()
+    {
+        return (int) mJitterPenalty;
     }
 
-    private void incrementQualityFlags(@NotNull final SAMRecord record) {
-        if (!record.getProperPairFlag()) {
-            improperPair++;
+    private void incrementQualityFlags(@NotNull final SAMRecord record)
+    {
+        if(!record.getProperPairFlag())
+        {
+            mImproperPair++;
         }
     }
 
-    private int indelLength(@NotNull final SAMRecord record) {
+    private int indelLength(@NotNull final SAMRecord record)
+    {
         int result = 0;
-        for (CigarElement cigarElement : record.getCigar()) {
-            switch (cigarElement.getOperator()) {
+        for(CigarElement cigarElement : record.getCigar())
+        {
+            switch(cigarElement.getOperator())
+            {
                 case I:
                 case D:
                     result += cigarElement.getLength();
@@ -388,10 +412,11 @@ public class ReadContextCounter implements VariantHotspot {
         return result;
     }
 
-    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record) {
-        int index = readContext.readBasesPositionIndex();
-        int leftIndex = readContext.readBasesLeftCentreIndex();
-        int rightIndex = readContext.readBasesRightCentreIndex();
+    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record)
+    {
+        int index = ReadContext.readBasesPositionIndex();
+        int leftIndex = ReadContext.readBasesLeftCentreIndex();
+        int rightIndex = ReadContext.readBasesRightCentreIndex();
 
         int leftOffset = index - leftIndex;
         int rightOffset = rightIndex - index;

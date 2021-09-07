@@ -13,8 +13,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,20 +25,22 @@ import htsjdk.samtools.SamReaderFactory;
 public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
 {
     private final String mChromosome;
-    private final String bamFile;
-    private final TumorBAFFactory bafFactory;
-    private final List<ModifiableTumorBAF> evidence;
-    private final SamReaderFactory samReaderFactory;
-    private final GenomePositionSelector<ModifiableTumorBAF> selector;
-    private final SAMSlicer supplier;
+    private final String mBamFile;
+    private final TumorBAFFactory mBafFactory;
+    private final List<ModifiableTumorBAF> mEvidence;
+    private final SamReaderFactory mSamReaderFactory;
+    private final GenomePositionSelector<ModifiableTumorBAF> mSelector;
+    private final BamSlicer mBamSlicer;
+    private final List<GenomeRegion> mBafRegions;
 
-    public TumorBAFEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+    public TumorBAFEvidence(
+            int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths)
     {
-        this.bafFactory = new TumorBAFFactory(minBaseQuality);
-        this.mChromosome = contig;
-        this.bamFile = bamFile;
-        this.samReaderFactory = samReaderFactory;
+        mBafFactory = new TumorBAFFactory(minBaseQuality);
+        mChromosome = contig;
+        mBamFile = bamFile;
+        mSamReaderFactory = samReaderFactory;
 
         final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
         for(BaseDepth bafRegion : baseDepths)
@@ -46,10 +48,10 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
             builder.addPosition(bafRegion);
         }
 
-        final List<GenomeRegion> bafRegions = builder.build();
-        this.evidence = baseDepths.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
-        this.selector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(evidence));
-        this.supplier = new SAMSlicer(minMappingQuality, bafRegions);
+        mBafRegions = builder.build();
+        mEvidence = baseDepths.stream().map(TumorBAFFactory::create).collect(Collectors.toList());
+        mSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(mEvidence));
+        mBamSlicer = new BamSlicer(minMappingQuality);
     }
 
     @NotNull
@@ -61,23 +63,23 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence>
     @NotNull
     public List<TumorBAF> evidence()
     {
-        return evidence.stream().filter(x -> x.tumorIndelCount() == 0).collect(Collectors.toList());
+        return mEvidence.stream().filter(x -> x.tumorIndelCount() == 0).collect(Collectors.toList());
     }
 
     @Override
     public TumorBAFEvidence call() throws Exception
     {
-        try(SamReader reader = samReaderFactory.open(new File(bamFile)))
+        try(SamReader reader = mSamReaderFactory.open(new File(mBamFile)))
         {
-            supplier.slice(reader, this::record);
+            mBamSlicer.sliceNoDups(reader, mBafRegions, this::processRecord);
         }
 
         return this;
     }
 
-    private void record(@NotNull final SAMRecord record)
+    private void processRecord(@NotNull final SAMRecord record)
     {
-        selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
+        mSelector.select(asRegion(record), bafEvidence -> mBafFactory.addEvidence(bafEvidence, record));
     }
 
     @NotNull

@@ -13,39 +13,47 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DndsMutationalLoadFile {
-
+public final class DndsMutationalLoadFile
+{
     private static final String DELIMITER = "\t";
 
-    private DndsMutationalLoadFile() {
+    private DndsMutationalLoadFile()
+    {
     }
 
     @NotNull
-    public static List<DndsMutationalLoad> read(@NotNull final String filename) throws IOException {
+    public static List<DndsMutationalLoad> read(@NotNull final String filename) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> variants) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> variants) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(true, variants));
     }
 
-    public static void writeHeader(@NotNull final String filename) throws IOException {
+    public static void writeHeader(@NotNull final String filename) throws IOException
+    {
         Files.write(new File(filename).toPath(), Collections.singletonList(header()));
     }
 
-    public static void append(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> load) throws IOException {
+    public static void append(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> load) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(false, load), StandardOpenOption.APPEND);
     }
 
     @NotNull
-    private static List<DndsMutationalLoad> fromLines(@NotNull final List<String> lines) {
+    private static List<DndsMutationalLoad> fromLines(@NotNull final List<String> lines)
+    {
         return lines.stream().filter(x -> !x.startsWith("sample")).map(DndsMutationalLoadFile::fromString).collect(Collectors.toList());
     }
 
     @NotNull
-    private static List<String> toLines(boolean header, @NotNull final List<DndsMutationalLoad> variants) {
+    private static List<String> toLines(boolean header, @NotNull final List<DndsMutationalLoad> variants)
+    {
         final List<String> lines = Lists.newArrayList();
-        if (header) {
+        if(header)
+        {
             lines.add(header());
         }
         variants.stream().map(DndsMutationalLoadFile::toString).forEach(lines::add);
@@ -53,7 +61,8 @@ public final class DndsMutationalLoadFile {
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(DELIMITER).add("sample")
                 .add("snvBiallelic")
                 .add("snvNonBiallelic")
@@ -63,7 +72,8 @@ public final class DndsMutationalLoadFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final DndsMutationalLoad variant) {
+    private static String toString(@NotNull final DndsMutationalLoad variant)
+    {
         return new StringJoiner(DELIMITER).add(variant.sampleId())
                 .add(String.valueOf(variant.snvBiallelic()))
                 .add(String.valueOf(variant.snvNonBiallelic()))
@@ -73,7 +83,8 @@ public final class DndsMutationalLoadFile {
     }
 
     @NotNull
-    private static DndsMutationalLoad fromString(@NotNull final String line) {
+    private static DndsMutationalLoad fromString(@NotNull final String line)
+    {
         String[] values = line.split(DELIMITER);
         return ImmutableDndsMutationalLoad.builder()
                 .sampleId(values[0])

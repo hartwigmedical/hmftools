@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;

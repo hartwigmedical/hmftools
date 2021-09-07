@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class AltSjLocation
 {
     public final String GeneId;
-    public final BaseRegion Location;
+    public final ChrBaseRegion Location;
     public final String Key;
 
-    public AltSjLocation(final BaseRegion location, final String geneId)
+    public AltSjLocation(final ChrBaseRegion location, final String geneId)
     {
         GeneId = geneId;
         Location = location;
@@ -19,7 +19,7 @@ public class AltSjLocation
     public static AltSjLocation fromCsv(final String[] data, int geneIndex, int chrIndex, int posStartIndex, int posEndIndex)
     {
         return new AltSjLocation(
-                new BaseRegion(data[chrIndex], Integer.parseInt(data[posStartIndex]), Integer.parseInt(data[posEndIndex])),
+                new ChrBaseRegion(data[chrIndex], Integer.parseInt(data[posStartIndex]), Integer.parseInt(data[posEndIndex])),
                 data[geneIndex]);
     }
 }

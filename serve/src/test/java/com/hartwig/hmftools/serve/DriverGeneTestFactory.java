@@ -26,7 +26,8 @@ public final class DriverGeneTestFactory {
                 .reportAmplification(false)
                 .reportSomaticHotspot(false)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
-                .reportGermlineHotspot(DriverGeneGermlineReporting.NONE);
+                .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
+                .reportGermlineDisruption(false);
 
         DriverGene driverGeneTsg = driverGeneBuilder.gene(geneTsg).likelihoodType(DriverCategory.TSG).build();
         DriverGene driverGeneOnco = driverGeneBuilder.gene(geneOnco).likelihoodType(DriverCategory.ONCO).build();

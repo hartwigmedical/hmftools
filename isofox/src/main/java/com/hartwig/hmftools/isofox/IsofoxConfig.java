@@ -2,11 +2,21 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG19;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
@@ -34,11 +44,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
@@ -54,9 +64,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class IsofoxConfig
 {
     // config items
-    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SAMPLE = "sample";
-    public static final String DATA_OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_ID = "output_id";
     public static final String FUNCTIONS = "functions";
 
@@ -70,7 +78,6 @@ public class IsofoxConfig
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
 
-    public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String DROP_DUPLICATES = "drop_dups";
@@ -105,14 +112,12 @@ public class IsofoxConfig
     private static final String RUN_VALIDATIONS = "validate";
     private static final String PERF_CHECKS = "perf_checks";
     private static final String THREADS = "threads";
-    public static final String LOG_DEBUG = "log_debug";
-    public static final String LOG_LEVEL = "log_level";
 
     public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final List<String> EnrichedGeneIds; // genes to count by not fully process for any functional purpose
-    public final BaseRegion ExcludedRegion;
+    public final ChrBaseRegion ExcludedRegion;
 
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
@@ -156,7 +161,7 @@ public class IsofoxConfig
 
     // debugging and performance options
     public final List<String> SpecificChromosomes;
-    public final List<BaseRegion> SpecificRegions;
+    public final List<ChrBaseRegion> SpecificRegions;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
@@ -223,7 +228,7 @@ public class IsofoxConfig
         if(cmd.hasOption(GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
 
             if(!RestrictedGeneIds.isEmpty())
             {
@@ -238,7 +243,7 @@ public class IsofoxConfig
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, ExcludedGeneIds);
+            ExcludedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
@@ -308,7 +313,7 @@ public class IsofoxConfig
                 final String[] items = regionStr.split(SUB_ITEM_DELIM);
                 if(items.length == 3)
                 {
-                    BaseRegion region = new BaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+                    ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
 
                     if(!region.isValid())
                     {
@@ -410,7 +415,7 @@ public class IsofoxConfig
 
     public static boolean validConfigPaths(final CommandLine cmd)
     {
-        return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
+        return configPathValid(cmd, OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, ENSEMBL_DATA_DIR)
                 && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
                 && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE)
                 && configPathValid(cmd, NEO_EPITOPE_FILE);
@@ -535,7 +540,9 @@ public class IsofoxConfig
     {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
+        addEnsemblDir(options);
+        addOutputDir(options);
+        addLoggingOptions(options);
 
         options.addOption(FUNCTIONS, true, "Optional: list of functional routines to run (see documentation)");
         options.addOption(CANONICAL_ONLY, false, "Check all transcripts, not just canonical");
@@ -543,11 +550,8 @@ public class IsofoxConfig
         options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
         options.addOption(GENE_READ_LIMIT, true, "Per-gene limit on max reads processed (default=0, not applied)");
-        options.addOption(REF_GENOME, true, "Ref genome file location");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default) or 38");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");
@@ -590,40 +594,4 @@ public class IsofoxConfig
 
         return options;
     }
-
-    private static final int COL_GENE_ID = 0;
-
-    public static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            ISF_LOGGER.warn("invalid gene ID file({})", filename);
-            return;
-        }
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return;
-
-            if (fileContents.get(0).contains("GeneId"))
-            {
-                // check for header row
-                fileContents.remove(0);
-            }
-
-            geneIdList.addAll(fileContents.stream()
-                    .filter(x -> !x.isEmpty())
-                    .filter(x -> !x.contains("GeneId"))
-                    .filter(x -> !x.startsWith("#"))
-                    .map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
-        }
-    }
-
 }

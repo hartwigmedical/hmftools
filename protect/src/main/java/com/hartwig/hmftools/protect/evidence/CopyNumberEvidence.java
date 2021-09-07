@@ -29,21 +29,28 @@ public class CopyNumberEvidence {
     }
 
     @NotNull
-    public List<ProtectEvidence> evidence(@NotNull List<ReportableGainLoss> reportables) {
+    public List<ProtectEvidence> evidence(@NotNull List<ReportableGainLoss> reportableGainsLosses,
+            @NotNull List<ReportableGainLoss> unreportedGainsLosses) {
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (ReportableGainLoss reportable : reportables) {
-            result.addAll(evidence(reportable));
+        for (ReportableGainLoss reportableGainLoss : reportableGainsLosses) {
+            result.addAll(evidence(reportableGainLoss, true));
         }
+
+        for (ReportableGainLoss unreportedGainLoss : unreportedGainsLosses) {
+            result.addAll(evidence(unreportedGainLoss, false));
+        }
+
         return result;
     }
 
     @NotNull
-    private List<ProtectEvidence> evidence(@NotNull ReportableGainLoss reportable) {
+    private List<ProtectEvidence> evidence(@NotNull ReportableGainLoss gainLoss, boolean report) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
-            if (actionable.gene().equals(reportable.gene()) && isTypeMatch(actionable, reportable)) {
-                ProtectEvidence evidence = personalizedEvidenceFactory.somaticallyReportableEvidence(actionable)
-                        .genomicEvent(reportable.genomicEvent())
+            if (actionable.gene().equals(gainLoss.gene()) && isTypeMatch(actionable, gainLoss)) {
+                ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(actionable)
+                        .reported(report)
+                        .genomicEvent(gainLoss.genomicEvent())
                         .build();
                 result.add(evidence);
             }
@@ -62,7 +69,8 @@ public class CopyNumberEvidence {
                 return reportable.interpretation() == CopyNumberInterpretation.FULL_LOSS
                         || reportable.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
             default:
-                return false;
+                throw new IllegalStateException(
+                        "Actionable event found in copy number evidence that should not exist: " + actionable.event());
         }
     }
 }

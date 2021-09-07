@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.protect;
 
-import static com.hartwig.hmftools.protect.ProtectTestFactory.createTestBuilder;
+import static com.hartwig.hmftools.common.protect.ProtectTestFactory.testEvidenceBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,9 +28,9 @@ public class EvidenceConsolidationTest {
 
         String treatment2 = "treatment2";
 
-        ProtectEvidence evidence1 = createTestBuilder().treatment(treatment1).addUrls(url1).addSources(source1).build();
-        ProtectEvidence evidence2 = createTestBuilder().treatment(treatment1).addUrls(url2).addSources(source2).build();
-        ProtectEvidence evidence3 = createTestBuilder().treatment(treatment2).addUrls(url3).addSources(source1).build();
+        ProtectEvidence evidence1 = testEvidenceBuilder().treatment(treatment1).addUrls(url1).addSources(source1).build();
+        ProtectEvidence evidence2 = testEvidenceBuilder().treatment(treatment1).addUrls(url2).addSources(source2).build();
+        ProtectEvidence evidence3 = testEvidenceBuilder().treatment(treatment2).addUrls(url3).addSources(source1).build();
 
         List<ProtectEvidence> consolidated = EvidenceConsolidation.consolidate(Lists.newArrayList(evidence1, evidence2, evidence3));
 

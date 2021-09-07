@@ -8,16 +8,17 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -30,14 +31,11 @@ public class GenomicAnalyzerTest {
     public void canRunOnTestRun() throws IOException {
         AnalysedReportData testReportData = PatientReporterTestFactory.loadTestAnalysedReportData();
 
-        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel(),
-                testReportData.taxonomyDb(),
-                testReportData.virusInterpretationModel(),
-                testReportData.virusBlackListModel());
+        GenomicAnalyzer analyzer = new GenomicAnalyzer(testReportData.germlineReportingModel());
 
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
-        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION));
+        assertNotNull(analyzer.run("sample", "reference", config, LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION, RefGenomeVersion.V37));
     }
 
     @Test
@@ -51,14 +49,12 @@ public class GenomicAnalyzerTest {
                 testReportableVariants("MUTYH", GenotypeStatus.HET, null, "MUTYH", GenotypeStatus.HET, 123);
         ReportableVariant reportableVariantToCompare2 = testReportableVariant("MUTYH", GenotypeStatus.HET, 123);
         assertTrue(GenomicAnalyzer.hasOtherGermlineVariantWithDifferentPhaseSet(reportableVariants2, reportableVariantToCompare2));
-
     }
 
     @NotNull
     public List<ReportableVariant> testReportableVariants(@NotNull String gene1, @NotNull GenotypeStatus genotypeStatus1,
             @Nullable Integer localPhaseSet1, @NotNull String gene2, @NotNull GenotypeStatus genotypeStatus2,
             @Nullable Integer localPhaseSet2) {
-
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)
@@ -76,6 +72,7 @@ public class GenomicAnalyzerTest {
                 .alleleReadCount(0)
                 .totalCopyNumber(0)
                 .alleleCopyNumber(0D)
+                .minorAlleleCopyNumber(0D)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
@@ -100,6 +97,7 @@ public class GenomicAnalyzerTest {
                 .alleleReadCount(0)
                 .totalCopyNumber(0)
                 .alleleCopyNumber(0D)
+                .minorAlleleCopyNumber(0D)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)
@@ -113,7 +111,6 @@ public class GenomicAnalyzerTest {
     @NotNull
     public ReportableVariant testReportableVariant(@NotNull String gene, @NotNull GenotypeStatus genotypeStatus,
             @Nullable Integer localPhaseSet) {
-
         return ImmutableReportableVariant.builder()
                 .type(VariantType.SNP)
                 .source(ReportableVariantSource.GERMLINE)
@@ -131,6 +128,7 @@ public class GenomicAnalyzerTest {
                 .alleleReadCount(0)
                 .totalCopyNumber(0)
                 .alleleCopyNumber(0D)
+                .minorAlleleCopyNumber(0D)
                 .hotspot(Hotspot.HOTSPOT)
                 .clonalLikelihood(1D)
                 .driverLikelihood(0D)

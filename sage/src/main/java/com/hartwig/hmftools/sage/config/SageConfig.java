@@ -1,79 +1,323 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_LEVEL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.containsFlag;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.defaultEnumValue;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_REALIGNMENT_DEPTH;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MNV;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_THREADS;
+import static com.hartwig.hmftools.sage.SageConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.sage.SageConstants.SUB_ITEM_DELIM;
+
+import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.ValidationStringency;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface SageConfig {
+public class SageConfig
+{
+    public final List<String> ReferenceIds;
+    public final List<String> ReferenceBams;
+    public final List<String> TumorIds;
+    public final List<String> TumorBams;
 
-    Logger LOGGER = LogManager.getLogger(SageConfig.class);
+    public final String SampleDataDir;
+    public final String ResourceDir;
 
-    String THREADS = "threads";
-    String REFERENCE = "reference";
-    String REFERENCE_BAM = "reference_bam";
-    String TUMOR = "tumor";
-    String TUMOR_BAM = "tumor_bam";
-    String REF_GENOME = "ref_genome";
-    String OUTPUT_VCF = "out";
-    String INPUT_VCF = "input_vcf";
-    String MIN_MAP_QUALITY = "min_map_quality";
-    String HIGH_CONFIDENCE_BED = "high_confidence_bed";
-    String PANEL_BED = "panel_bed";
-    String PANEL_ONLY = "panel_only";
-    String HOTSPOTS = "hotspots";
-    String MAX_READ_DEPTH = "max_read_depth";
-    String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
-    String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
-    String REF_GENOME_VERSION = "ref_genome_version";
-    String CHR = "chr";
-    String SLICE_SIZE = "slice_size";
-    String MNV = "mnv_enabled";
-    String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
-    String COVERAGE_BED = "coverage_bed";
-    String VALIDATION_STRINGENCY = "validation_stringency";
+    public final boolean AppendMode;
+    public final String PanelBed;
+    public final boolean PanelOnly;
+    public final boolean MnvEnabled;
+    public final String Hotspots;
+    public final FilterConfig Filter;
+    public final QualityConfig Quality;
+    public final QualityRecalibrationConfig QualityRecalibration;
+    public final Set<String> Chromosomes;
+    public final List<ChrBaseRegion> SpecificRegions;
+    public final int RegionSliceSize;
+    public final int MinMapQuality;
+    public final int MaxRealignmentDepth;
+    public final int MaxReadDepth;
+    public final int MaxReadDepthPanel;
+    public final int ReadContextFlankSize;
 
-    int DEFAULT_THREADS = 2;
-    int DEFAULT_MIN_MAP_QUALITY = 10;
-    int DEFAULT_MAX_READ_DEPTH = 1000;
-    int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
-    int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
-    int DEFAULT_SLICE_SIZE = 100_000;
-    int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
-    boolean DEFAULT_MNV = true;
+    public final String RefGenomeFile;
+    public final RefGenomeVersion RefGenVersion;
+    public final String HighConfidenceBed;
+    public final String CoverageBed;
+    public final String InputFile;
+    public final String OutputFile;
+    public final boolean WriteCsv;
 
-    @NotNull
-    static Options createSageOptions() {
+    public final String Version;
+    public final int Threads;
+
+    public final ValidationStringency Stringency;
+
+    public int typicalReadLength()
+    {
+        return 151;
+    }
+    public int maxSkippedReferenceRegions() { return 50; }
+
+    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
+    private static final String RESOURCE_DIR = "resource_dir";
+    
+    private static final String THREADS = "threads";
+    private static final String REFERENCE = "reference";
+    private static final String REFERENCE_BAM = "reference_bam";
+    private static final String TUMOR = "tumor";
+    private static final String TUMOR_BAM = "tumor_bam";
+    private static final String OUTPUT_VCF = "out";
+    private static final String INPUT_VCF = "input_vcf";
+    private static final String WRITE_CSV = "write_csv";
+    private static final String MIN_MAP_QUALITY = "min_map_quality";
+    private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
+    private static final String PANEL_BED = "panel_bed";
+    private static final String PANEL_ONLY = "panel_only";
+    private static final String HOTSPOTS = "hotspots";
+    private static final String MAX_READ_DEPTH = "max_read_depth";
+    private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
+    private static final String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
+    private static final String REF_GENOME_VERSION = "ref_genome_version";
+    private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+    private static final String SPECIFIC_REGIONS = "specific_regions";
+    private static final String SLICE_SIZE = "slice_size";
+    private static final String MNV = "mnv_enabled";
+    private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
+    private static final String COVERAGE_BED = "coverage_bed";
+    private static final String VALIDATION_STRINGENCY = "validation_stringency";
+
+    public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
+    {
+        Version = version;
+        
+        AppendMode = appendMode;
+
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+
+        ReferenceIds = Lists.newArrayList();
+        if(cmd.hasOption(REFERENCE))
+        {
+            ReferenceIds.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
+        }
+
+        TumorIds = Lists.newArrayList();
+        if(cmd.hasOption(TUMOR))
+        {
+            TumorIds.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
+        }
+
+        SampleDataDir = cmd.hasOption(SAMPLE_DATA_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR)) : "";
+        ResourceDir = cmd.hasOption(RESOURCE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR)) : "";
+
+        ReferenceBams = Lists.newArrayList();
+        TumorBams = Lists.newArrayList();
+
+        if(cmd.hasOption(REFERENCE_BAM))
+        {
+            Arrays.stream(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(","))
+                    .forEach(x -> ReferenceBams.add(SampleDataDir + x));
+        }
+
+        if(cmd.hasOption(TUMOR_BAM))
+        {
+            Arrays.stream(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(","))
+                    .forEach(x -> TumorBams.add(SampleDataDir + x));
+        }
+
+        Chromosomes = Sets.newHashSet();
+        SpecificRegions = Lists.newArrayList();
+
+        if(cmd.hasOption(SPECIFIC_REGIONS))
+        {
+            final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+            for(String regionStr : regionStrs)
+            {
+                final String[] items = regionStr.split(SUB_ITEM_DELIM);
+                if(items.length == 3)
+                {
+                    ChrBaseRegion region = new ChrBaseRegion(items[0], Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+
+                    if(!region.isValid())
+                    {
+                        SG_LOGGER.error("invalid specific region: {}", region);
+                        continue;
+                    }
+
+                    SG_LOGGER.info("filtering for specific region: {}", region);
+                    SpecificRegions.add(region);
+                    Chromosomes.add(region.Chromosome);
+                }
+            }
+        }
+        else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        {
+            final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
+            if(!chromosomeList.isEmpty())
+            {
+                Chromosomes.addAll(Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
+            }
+        }
+
+        OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
+        WriteCsv = cmd.hasOption(WRITE_CSV);
+
+        InputFile = SampleDataDir + cmd.getOptionValue(INPUT_VCF, "");
+
+        PanelBed = getReferenceFile(cmd, PANEL_BED);
+        CoverageBed = getReferenceFile(cmd, COVERAGE_BED);
+        HighConfidenceBed = getReferenceFile(cmd, HIGH_CONFIDENCE_BED);
+        Hotspots = getReferenceFile(cmd, HOTSPOTS);
+        RefGenomeFile = getReferenceFile(cmd, REF_GENOME);
+
+        Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, DEFAULT_STRINGENCY.toString()));
+        MnvEnabled = getConfigValue(cmd, MNV, DEFAULT_MNV);
+        RegionSliceSize = getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE);
+        ReadContextFlankSize = getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
+        MaxReadDepth = getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH);
+        MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
+        MaxRealignmentDepth = getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH);
+
+        Filter = new FilterConfig(cmd);
+        Quality = new QualityConfig(cmd);
+        QualityRecalibration = new QualityRecalibrationConfig(cmd);
+
+        PanelOnly = containsFlag(cmd, PANEL_ONLY);
+
+        Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
+    }
+
+    private String getReferenceFile(final CommandLine cmd, final String config)
+    {
+        if(!cmd.hasOption(config))
+            return "";
+
+        if(ResourceDir.isEmpty())
+            return cmd.getOptionValue(config);
+
+        return ResourceDir + cmd.getOptionValue(config);
+    }
+
+    public boolean isValid()
+    {
+        if(ReferenceIds.size() != ReferenceBams.size())
+        {
+            SG_LOGGER.error("Each reference sample must have matching bam");
+            return false;
+        }
+
+        for(String referenceBam : ReferenceBams)
+        {
+            if(!new File(referenceBam).exists())
+            {
+                SG_LOGGER.error("Unable to locate reference bam({})", referenceBam);
+                return false;
+            }
+        }
+
+        if(RefGenomeFile.isEmpty())
+        {
+            SG_LOGGER.error("Reference genome required");
+            return false;
+        }
+
+        if(OutputFile.isEmpty())
+        {
+            SG_LOGGER.error("No output VCF file specified");
+            return false;
+        }
+
+        if(TumorIds.size() != TumorBams.size())
+        {
+            SG_LOGGER.error("Each tumor sample must have matching bam");
+            return false;
+        }
+
+        for(String tumorBam : TumorBams)
+        {
+            if(!new File(tumorBam).exists())
+            {
+                SG_LOGGER.error("Unable to locate tumor bam({})", tumorBam);
+                return false;
+            }
+        }
+
+        final File outputDir = new File(OutputFile).getParentFile();
+        if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
+        {
+            SG_LOGGER.error("unable to write directory({})", outputDir.toString());
+            return false;
+        }
+
+        if(AppendMode)
+        {
+            if(InputFile.isEmpty())
+            {
+                SG_LOGGER.error("no input VCF file specified");
+                return false;
+            }
+
+            if(InputFile.equals(OutputFile))
+            {
+                SG_LOGGER.error("input and output VCFs must be different");
+                return false;
+            }
+
+            if(ReferenceIds.isEmpty())
+            {
+                SG_LOGGER.error("at least one reference must be supplied");
+                return false;
+            }
+        }
+        else
+        {
+
+            if(TumorIds.isEmpty())
+            {
+                SG_LOGGER.error("At least one tumor must be supplied");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static Options createSageOptions()
+    {
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
         options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
-        options.addOption(TUMOR, true, "Name of tumor sample");
-        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
+        options.addOption(TUMOR, true, "Tumor sample, or collection separated by ',\"");
+        options.addOption(TUMOR_BAM, true, "Tumor bam file");
         options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
 
         options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
@@ -82,254 +326,92 @@ public interface SageConfig {
         options.addOption(HOTSPOTS, true, "Hotspots");
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
+        options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(LOG_LEVEL, true, "Log level");
 
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
-    @NotNull
-    static Options createAddReferenceOptions() {
+    public static Options createAddReferenceOptions()
+    {
         final Options options = new Options();
         options.addOption(INPUT_VCF, true, "Path to input vcf");
         commonOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
-    static Options commonOptions() {
+    static Options commonOptions()
+    {
         final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
-        options.addOption(REFERENCE, true, "Name of reference sample");
-        options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
-        options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
-        options.addOption(OUTPUT_VCF, true, "Path to output vcf");
+        options.addOption(REFERENCE, true, "Reference sample, or collection separated by ',");
+        options.addOption(RESOURCE_DIR, true, "Resource files");
+        options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
+        options.addOption(REFERENCE_BAM, true, "Reference bam file");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        options.addOption(OUTPUT_VCF, true, "Output vcf");
+        options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
-        options.addOption(CHR, true, "Run for single chromosome");
+        options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
+        options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
-        BaseQualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
+        QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
         return options;
     }
 
-    @NotNull
-    String version();
-
-    int threads();
-
-    @NotNull
-    List<String> reference();
-
-    @NotNull
-    List<String> referenceBam();
-
-    @NotNull
-    String refGenome();
-
-    @NotNull
-    String highConfidenceBed();
-
-    @NotNull
-    String coverageBed();
-
-    @NotNull
-    List<String> tumor();
-
-    @NotNull
-    List<String> tumorBam();
-
-    @NotNull
-    String inputFile();
-
-    @NotNull
-    String outputFile();
-
-    @NotNull
-    List<HmfTranscriptRegion> transcriptRegions();
-
-    @NotNull
-    ValidationStringency validationStringency();
-
-    @NotNull
-    default String geneCoverageFile(@NotNull final String sample) {
+    public String geneCoverageFile(@NotNull final String sample)
+    {
         String filename = sample + ".sage.gene.coverage.tsv";
-        String parent = new File(outputFile()).getParent();
+        String parent = new File(OutputFile).getParent();
         return parent == null ? filename : parent + File.separator + filename;
     }
 
-    @NotNull
-    default String baseQualityRecalibrationFile(@NotNull final String sample) {
-        String parent = new File(outputFile()).getParent();
+    public String baseQualityRecalibrationFile(@NotNull final String sample)
+    {
+        String parent = new File(OutputFile).getParent();
         return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
     }
 
-    @NotNull
-    String panelBed();
-
-    boolean panelOnly();
-
-    boolean mnvEnabled();
-
-    @NotNull
-    String hotspots();
-
-    @NotNull
-    FilterConfig filter();
-
-    @NotNull
-    QualityConfig qualityConfig();
-
-    @NotNull
-    BaseQualityRecalibrationConfig baseQualityRecalibrationConfig();
-
-    @NotNull
-    Set<String> chromosomes();
-
-    default int typicalReadLength() {
-        return 151;
-    }
-
-    int regionSliceSize();
-
-    int minMapQuality();
-
-    int maxRealignmentDepth();
-
-    int maxReadDepth();
-
-    int maxReadDepthPanel();
-
-    default int maxSkippedReferenceRegions() {
-        return 50;
-    }
-
-    int readContextFlankSize();
-
-    @NotNull
-    static SageConfig createConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
-            throws ParseException, IOException {
-        final int threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
-        final RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
-
-        final List<String> referenceList = Lists.newArrayList();
-        if (cmd.hasOption(REFERENCE)) {
-            referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
-        }
-
-        final List<String> referenceBamList = Lists.newArrayList();
-        if (cmd.hasOption(REFERENCE_BAM)) {
-            referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
-        }
-
-        if (referenceList.size() != referenceBamList.size()) {
-            throw new ParseException("Each reference sample must have matching bam");
-        }
-
-        for (String referenceBam : referenceBamList) {
-            if (!new File(referenceBam).exists()) {
-                throw new ParseException("Unable to locate reference bam " + referenceBam);
-            }
-        }
-
-        if (!cmd.hasOption(REF_GENOME)) {
-            throw new ParseException(REF_GENOME + " is a mandatory argument");
-        }
-
-        if (!cmd.hasOption(OUTPUT_VCF)) {
-            throw new ParseException(OUTPUT_VCF + " is a mandatory argument");
-        }
-
-        final List<String> tumorList = Lists.newArrayList();
-        if (cmd.hasOption(TUMOR)) {
-            tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
-        }
-
-        final List<String> tumorBamList = Lists.newArrayList();
-        if (cmd.hasOption(TUMOR_BAM)) {
-            tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
-        }
-
-        if (tumorList.size() != tumorBamList.size()) {
-            throw new ParseException("Each tumor sample must have matching bam");
-        }
-
-        for (String tumorBam : tumorBamList) {
-            if (!new File(tumorBam).exists()) {
-                throw new ParseException("Unable to locate tumor bam " + tumorBam);
-            }
-        }
-
-        final Set<String> chromosomes = Sets.newHashSet();
-        final String chromosomeList = cmd.getOptionValue(CHR, Strings.EMPTY);
-        if (!chromosomeList.isEmpty()) {
-            chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
-        }
-
-        final List<HmfTranscriptRegion> transcripts;
-        final String outputVcf = cmd.getOptionValue(OUTPUT_VCF);
-        final String inputVcf = cmd.getOptionValue(INPUT_VCF, Strings.EMPTY);
-        if (appendMode) {
-            transcripts = Lists.newArrayList();
-            if (!cmd.hasOption(INPUT_VCF)) {
-                throw new ParseException(INPUT_VCF + " is a mandatory argument");
-            }
-
-            if (outputVcf.equals(inputVcf)) {
-                throw new ParseException("Input and output VCFs must be different");
-            }
-
-            if (referenceList.isEmpty()) {
-                throw new ParseException("At least one reference must be supplied");
-            }
-
-        } else {
-
-            if (tumorList.isEmpty()) {
-                throw new ParseException("At least one tumor must be supplied");
-            }
-
-            transcripts = refGenomeVersion.is37() ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
-        }
-
-        final File outputDir = new File(outputVcf).getParentFile();
-        if (outputDir != null && !outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write directory " + outputDir.toString());
-        }
-
-        final ValidationStringency validationStringency =
-                defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
-
-        return ImmutableSageConfig.builder()
-                .version(version)
-                .transcriptRegions(transcripts)
-                .inputFile(inputVcf)
-                .outputFile(outputVcf)
-                .threads(threads)
-                .chromosomes(chromosomes)
-                .reference(referenceList)
-                .referenceBam(referenceBamList)
-                .tumor(tumorList)
-                .tumorBam(tumorBamList)
-                .mnvEnabled(getConfigValue(cmd, MNV, DEFAULT_MNV))
-                .refGenome(cmd.getOptionValue(REF_GENOME))
-                .regionSliceSize(getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
-                .readContextFlankSize(getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE))
-                .minMapQuality(getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
-                .maxReadDepth(getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
-                .maxReadDepthPanel(getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
-                .maxRealignmentDepth(getConfigValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))
-                .filter(FilterConfig.createConfig(cmd))
-                .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
-                .coverageBed(cmd.getOptionValue(COVERAGE_BED, Strings.EMPTY))
-                .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
-                .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
-                .qualityConfig(QualityConfig.createConfig(cmd, transcripts))
-                .baseQualityRecalibrationConfig(BaseQualityRecalibrationConfig.createConfig(cmd))
-                .panelOnly(containsFlag(cmd, PANEL_ONLY))
-                .validationStringency(validationStringency)
-                .build();
+    public SageConfig()
+    {
+        SampleDataDir = "";
+        ResourceDir = "";
+        ReferenceIds = Lists.newArrayList("referencIds");
+        ReferenceBams = Lists.newArrayList("referenceBams");
+        TumorIds = Lists.newArrayList("tumorIds");
+        TumorBams = Lists.newArrayList("tumorBams");
+        PanelBed = "panel";
+        PanelOnly = false;
+        MnvEnabled = DEFAULT_MNV;
+        Hotspots = "hotspots";
+        Filter = new FilterConfig();
+        Quality = new QualityConfig();
+        QualityRecalibration = new QualityRecalibrationConfig();
+        Chromosomes = Sets.newHashSet();
+        SpecificRegions = Lists.newArrayList();
+        RegionSliceSize = 500_000;
+        MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
+        MaxRealignmentDepth = DEFAULT_MAX_REALIGNMENT_DEPTH;
+        MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
+        MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
+        ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        RefGenomeFile = "refGenome";
+        HighConfidenceBed = "highConf";
+        CoverageBed = "coverage";
+        InputFile = "in.vcf";
+        OutputFile = "out.vcf";
+        WriteCsv = false;
+        Version = "1.0";
+        Threads = DEFAULT_THREADS;
+        RefGenVersion = V37;
+        Stringency = ValidationStringency.DEFAULT_STRINGENCY;
+        AppendMode = false;
     }
 }

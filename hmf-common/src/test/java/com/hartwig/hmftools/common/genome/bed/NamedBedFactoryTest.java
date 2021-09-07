@@ -61,13 +61,12 @@ public class NamedBedFactoryTest {
                 .strand(Strand.REVERSE)
                 .geneID("geneId")
                 .transcriptID("transcriptId")
-                .transcriptVersion(2)
                 .build();
 
     }
 
     private HmfExonRegion exon(int start, int end) {
-        return ImmutableHmfExonRegion.builder().chromosome(CONTIG).start(start).end(end).exonID("exonId").build();
+        return ImmutableHmfExonRegion.builder().chromosome(CONTIG).start(start).end(end).exonRank(1).build();
     }
 
 }

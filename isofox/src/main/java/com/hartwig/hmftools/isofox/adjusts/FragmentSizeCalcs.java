@@ -26,12 +26,12 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +50,7 @@ public class FragmentSizeCalcs implements Callable
     private final EnsemblDataCache mGeneTransCache;
 
     private String mChromosome;
-    private final List<EnsemblGeneData> mGeneDataList;
+    private final List<GeneData> mGeneDataList;
     private int mRequiredFragCount;
 
     private final SamReader mSamReader;
@@ -113,7 +113,7 @@ public class FragmentSizeCalcs implements Callable
     public final int getMaxReadLength() { return mMaxReadLength; }
     public final PerformanceCounter getPerformanceCounter() { return mPerfCounter; }
 
-    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
+    public void initialise(final String chromosome, final List<GeneData> geneDataList, int requiredFragCount)
     {
         mChromosome = chromosome;
         mGeneDataList.clear();
@@ -143,7 +143,7 @@ public class FragmentSizeCalcs implements Callable
 
         List<int[]> excludedRegions = generateExcludedRegions();
 
-        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
+        final List<GeneData> overlappingGenes = Lists.newArrayList();
         int currentGeneIndex = 0;
         int nextLogCount = 100;
 
@@ -162,7 +162,7 @@ public class FragmentSizeCalcs implements Callable
 
             for (int i = 0; i < overlappingGenes.size(); ++i)
             {
-                EnsemblGeneData geneData = overlappingGenes.get(i);
+                GeneData geneData = overlappingGenes.get(i);
 
                 mCurrentGenesRange[SE_START] = i == 0 ? geneData.GeneStart : min(geneData.GeneStart, mCurrentGenesRange[SE_START]);
                 mCurrentGenesRange[SE_END] = i == 0 ? geneData.GeneEnd : max(geneData.GeneEnd, mCurrentGenesRange[SE_END]);
@@ -193,7 +193,7 @@ public class FragmentSizeCalcs implements Callable
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
 
-            final List<BaseRegion> regions = Lists.newArrayList(new BaseRegion(mChromosome, mCurrentGenesRange));
+            final List<ChrBaseRegion> regions = Lists.newArrayList(new ChrBaseRegion(mChromosome, mCurrentGenesRange));
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
                     mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, regions.get(0).toString());
@@ -250,7 +250,7 @@ public class FragmentSizeCalcs implements Callable
         final List<int[]> excludedRegions = Lists.newArrayList();
         for(final String geneId : mConfig.EnrichedGeneIds)
         {
-            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
+            final GeneData geneData = mGeneTransCache.getGeneDataById(geneId);
             if(geneData == null)
                 continue;
 

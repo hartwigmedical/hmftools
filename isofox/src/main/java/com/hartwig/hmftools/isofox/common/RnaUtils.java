@@ -3,20 +3,22 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -238,14 +240,10 @@ public class RnaUtils
             return context.equals(SP_SEQ_NEG_STRAND_DONOR_1) || context.equals(SP_SEQ_NEG_STRAND_DONOR_2);
     }
 
-    public static final RefGenomeCoordinates refGenomeLengths()
+    public static long getChromosomeLength(final String chromosome, final RefGenomeVersion version)
     {
-        return RefGenomeCoordinates.COORDS_37;
-    }
-
-    public static long getChromosomeLength(final String chromosome)
-    {
-        Long chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
+        final RefGenomeCoordinates coords = version == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        Long chrLength = coords.lengths().get(HumanChromosome.fromString(chromosome));
         return chrLength != null ? chrLength : 0;
     }
 

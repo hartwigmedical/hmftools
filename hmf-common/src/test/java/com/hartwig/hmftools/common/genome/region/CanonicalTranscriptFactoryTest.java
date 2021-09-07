@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
 
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenomeFileLoader;
+import com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -13,7 +13,7 @@ public class CanonicalTranscriptFactoryTest {
 
     @Test
     public void testKRAS() {
-        final HmfTranscriptRegion kras = select("KRAS.tsv");
+        final HmfTranscriptRegion kras = select("KRAS");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(kras);
         assertTranscript(transcript, 6, 4, 1119, 189);
         assertEquals(25368375, transcript.codingStart());
@@ -22,14 +22,14 @@ public class CanonicalTranscriptFactoryTest {
 
     @Test
     public void testPTEN() {
-        final HmfTranscriptRegion region = select("PTEN.tsv");
+        final HmfTranscriptRegion region = select("PTEN");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(region);
         assertTranscript(transcript, 9, 9, 9027, 403);
     }
 
     @Test
     public void testWASH7P() {
-        final HmfTranscriptRegion region = select("WASH7P.tsv");
+        final HmfTranscriptRegion region = select("WASH7P");
         final CanonicalTranscript transcript = CanonicalTranscriptFactory.create(region);
         assertTranscript(transcript, 12, 0, 1783, 0);
     }
@@ -42,9 +42,8 @@ public class CanonicalTranscriptFactoryTest {
         assertEquals(3 * codons, victim.codingBases());
     }
 
-    @NotNull
-    private static HmfTranscriptRegion select(@NotNull final String file) {
-        final InputStream inputStream = CanonicalTranscriptFactoryTest.class.getResourceAsStream("/gene/" + file);
-        return HmfGenomeFileLoader.fromInputStream(inputStream).iterator().next();
+    private static HmfTranscriptRegion select(final String gene) {
+        final InputStream inputStream = CanonicalTranscriptFactoryTest.class.getResourceAsStream("/gene/test_gene_panel.tsv");
+        return HmfTranscriptRegionFile.fromInputStream(inputStream).stream().filter(x -> x.gene().equals(gene)).findFirst().orElse(null);
     }
 }

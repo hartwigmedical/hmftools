@@ -15,9 +15,44 @@ public class CommonUtils
     public static final String DATA_DELIM = ",";
     public static final String ITEM_DELIM = ";";
 
-
     public static final double DEFAULT_DIFF = 0.1;
     public static final double DEFAULT_DIFF_PERC = 0.1;
+
+    public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2)
+    {
+        if(!diffValue(value1, value2))
+            return false;
+
+        diffs.add(String.format("%s(%.3f/%.3f)", name, value1, value2));
+        return true;
+    }
+
+    public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2)
+    {
+        if(value1 == value2)
+            return false;
+
+        diffs.add(String.format("%s(%d/%d)", name, value1, value2));
+        return true;
+    }
+
+    public static boolean checkDiff(final List<String> diffs, final String name, boolean value1, boolean value2)
+    {
+        if(value1 == value2)
+            return false;
+
+        diffs.add(String.format("%s(%s/%s)", name, value1, value2));
+        return true;
+    }
+
+    public static boolean checkDiff(final List<String> diffs, final String name, String value1, final String value2)
+    {
+        if(value1.equals(value2))
+            return false;
+
+        diffs.add(String.format("%s(%s/%s)", name, value1, value2));
+        return true;
+    }
 
     public static boolean diffValue(double value1, double value2)
     {
@@ -26,6 +61,7 @@ public class CommonUtils
 
     public static boolean diffValue(double value1, double value2, double maxAbsDiff, double maxRelDiff, boolean requireBothDiff)
     {
+        // return TRUE if the values are DIFFERENT
         if(value1 == 0 && value2 == 0)
             return false;
 

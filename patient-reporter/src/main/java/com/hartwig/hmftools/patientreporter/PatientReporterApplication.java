@@ -38,7 +38,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using CFReportWriterTest
-    //                public static final String VERSION = "7.23";
+    //                public static final String VERSION = "7.24";
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running patient reporter v{}", VERSION);
@@ -51,7 +51,7 @@ public class PatientReporterApplication {
         } catch (ParseException exception) {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp("PatientReporter", options);
-            System.exit(1);
+            throw new IllegalArgumentException("Unexpected error, check inputs");
         }
 
         new PatientReporterApplication(config).run();
@@ -188,9 +188,6 @@ public class PatientReporterApplication {
     private static AnalysedReportData buildAnalysedReportData(@NotNull PatientReporterConfig config) throws IOException {
         return AnalysedReportDataLoader.buildFromFiles(buildBaseReportData(config),
                 config.germlineReportingTsv(),
-                config.sampleSummaryTsv(),
-                config.taxonomyDbTsv(),
-                config.virusInterpretationTsv(),
-                config.virusBlacklistTsv());
+                config.sampleSummaryTsv());
     }
 }

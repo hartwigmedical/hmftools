@@ -33,8 +33,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -513,7 +513,7 @@ public class FusionFinder implements Callable
     private void setGeneData(final FusionReadData fusionData)
     {
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
-        final List<EnsemblGeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
+        final List<GeneData>[] genesByPosition = new List[] { Lists.newArrayList(), Lists.newArrayList() };
         final List<TranscriptData>[] validTransDataList = new List[] { Lists.newArrayList(), Lists.newArrayList() };
 
         FusionFragment initialFragment = fusionData.getInitialFragment();
@@ -548,9 +548,9 @@ public class FusionFinder implements Callable
         {
             boolean matched = false;
 
-            for(EnsemblGeneData gene1 : genesByPosition[SE_START])
+            for(GeneData gene1 : genesByPosition[SE_START])
             {
-                for(EnsemblGeneData gene2 : genesByPosition[SE_END])
+                for(GeneData gene2 : genesByPosition[SE_END])
                 {
                     if(mConfig.Fusions.KnownFusions.hasKnownFusion(gene1.GeneName, gene2.GeneName)
                     || mConfig.Fusions.KnownFusions.hasKnownFusion(gene2.GeneName, gene1.GeneName))
@@ -593,10 +593,10 @@ public class FusionFinder implements Callable
             // for the start being the upstream gene, if the orientation is +1 then require a +ve strand gene,
             // and so the end is the downstream gene and will set the orientation as required
 
-            final List<EnsemblGeneData> upstreamGenes = genesByPosition[upstreamIndex].stream()
+            final List<GeneData> upstreamGenes = genesByPosition[upstreamIndex].stream()
                     .filter(x -> x.Strand == sjOrientations[upstreamIndex]).collect(Collectors.toList());
 
-            final List<EnsemblGeneData> downstreamGenes = genesByPosition[downstreamIndex].stream()
+            final List<GeneData> downstreamGenes = genesByPosition[downstreamIndex].stream()
                     .filter(x -> x.Strand == -sjOrientations[downstreamIndex]).collect(Collectors.toList());
 
             // where multiple (non-known) genes are still considered, take the longest coding one
@@ -629,7 +629,7 @@ public class FusionFinder implements Callable
         initialFragment.setJunctionTypes(mConfig.RefGenome, fusionData.getGeneStrands(), fusionData.junctionSpliceBases());
     }
 
-    private void prioritiseLongestCodingFusionGene(final List<EnsemblGeneData> geneList, final List<TranscriptData> transDataList)
+    private void prioritiseLongestCodingFusionGene(final List<GeneData> geneList, final List<TranscriptData> transDataList)
     {
         if(geneList.isEmpty())
             return;
@@ -637,10 +637,10 @@ public class FusionFinder implements Callable
             return;
 
         // take the longest protein coding
-        EnsemblGeneData longestGene = null;
+        GeneData longestGene = null;
         int longestLength = 0;
 
-        for(EnsemblGeneData geneData : geneList)
+        for(GeneData geneData : geneList)
         {
             int maxCodingBases = transDataList.stream()
                     .filter(x -> x.GeneId.equals(geneData.GeneId))
@@ -659,7 +659,7 @@ public class FusionFinder implements Callable
         geneList.add(longestGene);
     }
 
-    private void prioritiseKnownFusionGene(final List<EnsemblGeneData> geneList)
+    private void prioritiseKnownFusionGene(final List<GeneData> geneList)
     {
         if(geneList.isEmpty())
             return;
@@ -667,7 +667,7 @@ public class FusionFinder implements Callable
             return;
 
         // first look for a known pair gene
-        List<EnsemblGeneData> culledList = geneList.stream()
+        List<GeneData> culledList = geneList.stream()
                 .filter(x -> mConfig.Fusions.KnownFusions.hasKnownPairGene(x.GeneName))
                 .collect(Collectors.toList());
 

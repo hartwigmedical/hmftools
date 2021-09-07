@@ -13,9 +13,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegs;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegsFactory;
 

@@ -60,7 +60,7 @@ public class IclusionExtractorTestApp {
         ExtractionResult result = extractor.extract(trials);
 
         IclusionUtil.printIclusionResult(result);
-        String iclusionMutationTsv = config.outputDir() + File.separator + "IclusionMutations.tsv";
+        String iclusionMutationTsv = config.outputDir() + File.separator + "IclusionEventClassification.tsv";
         IclusionUtil.writeIclusionMutationTypes(iclusionMutationTsv, trials);
 
         new ExtractionResultWriter(config.outputDir(), Knowledgebase.ICLUSION.refGenomeVersion(), refGenomeResource.refSequence()).write(

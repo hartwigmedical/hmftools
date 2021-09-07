@@ -1,18 +1,22 @@
 package com.hartwig.hmftools.isofox.cohort;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.REF_GENOME;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSION_COMPARE;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
@@ -34,6 +38,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
@@ -114,18 +119,18 @@ public class CohortConfig
         if(cmd.hasOption(GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
 
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, ExcludedGeneIds);
+            ExcludedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
+        EnsemblDataCache = cmd.getOptionValue(ENSEMBL_DATA_DIR);
 
         RefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
 
@@ -151,7 +156,7 @@ public class CohortConfig
 
     public static boolean isValid(final CommandLine cmd)
     {
-        if(!cmd.hasOption(DATA_OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE) || !cmd.hasOption(ANALYSIS_TYPES))
+        if(!cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE) || !cmd.hasOption(ANALYSIS_TYPES))
         {
             return false;
         }
@@ -218,13 +223,12 @@ public class CohortConfig
         final Options options = new Options();
         options.addOption(ROOT_DATA_DIRECTORY, true, "Root data directory for input files or sample directories");
         options.addOption(SAMPLE_DATA_FILE, true, "File with list of samples and cancer types to load data for");
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(USE_SAMPLE_DIRS, false, "File with list of samples to load data for");
         options.addOption(FAIL_MISSING, false, "Exit if sample input file isn't found");
         options.addOption(ALL_AVAILABLE_FILES, false, "Load all files in root directory matching expeted Isofox file names");
         options.addOption(ANALYSIS_TYPES, true, "List of data types to load & process");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
-        options.addOption(REF_GENOME, true, "Ref genome file location");
+        addEnsemblDir(options);
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
@@ -242,7 +246,8 @@ public class CohortConfig
 
         addDatabaseCmdLineArgs(options);
 
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addOutputDir(options);
+        addLoggingOptions(options);
         options.addOption(THREADS, true, "Number of threads for task execution, default is 0 (off)");
 
         return options;

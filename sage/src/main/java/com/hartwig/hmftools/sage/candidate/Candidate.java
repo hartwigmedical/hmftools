@@ -5,79 +5,83 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Candidate implements GenomePosition {
+public class Candidate implements GenomePosition
+{
+    private final VariantTier mTier;
+    private final VariantHotspot mVariant;
 
-    private final SageVariantTier tier;
-    private final VariantHotspot variant;
+    private int mMaxDepth;
+    private int mMinNumberOfEvents;
+    private int mReadContextSupport;
+    private ReadContext mReadContext;
 
-    private int maxDepth;
-    private int minNumberOfEvents;
-    private int readContextSupport;
-    private ReadContext readContext;
-
-    public Candidate(final SageVariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth,
-            int minNumberOfEvents) {
-        this.tier = tier;
-        this.variant = variant;
-        this.readContext = readContext;
-        this.maxDepth = maxDepth;
-        this.minNumberOfEvents = minNumberOfEvents;
+    public Candidate(
+            final VariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth, int minNumberOfEvents)
+    {
+        mTier = tier;
+        mVariant = variant;
+        mReadContext = readContext;
+        mMaxDepth = maxDepth;
+        mMinNumberOfEvents = minNumberOfEvents;
     }
 
-    public Candidate(final SageVariantTier tier, final AltContext altContext) {
-        this.tier = tier;
-        this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
-        this.maxDepth = altContext.rawDepth();
-        this.readContext = altContext.readContext();
-        this.readContextSupport = altContext.readContextSupport();
-        this.minNumberOfEvents = altContext.minNumberOfEvents();
+    public Candidate(final VariantTier tier, final AltContext altContext)
+    {
+        mTier = tier;
+        mVariant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
+        mMaxDepth = altContext.rawDepth();
+        mReadContext = altContext.readContext();
+        mReadContextSupport = altContext.readContextSupport();
+        mMinNumberOfEvents = altContext.minNumberOfEvents();
     }
 
-    public void update(final AltContext altContext) {
+    public void update(final AltContext altContext)
+    {
         int altContextSupport = altContext.readContextSupport();
-        if (altContextSupport > readContextSupport) {
-            readContextSupport = altContextSupport;
-            readContext = altContext.readContext();
-            minNumberOfEvents = Math.min(minNumberOfEvents, altContext.minNumberOfEvents());
+        if(altContextSupport > mReadContextSupport)
+        {
+            mReadContextSupport = altContextSupport;
+            mReadContext = altContext.readContext();
+            mMinNumberOfEvents = Math.min(mMinNumberOfEvents, altContext.minNumberOfEvents());
         }
-        maxDepth = Math.max(maxDepth, altContext.rawDepth());
+        mMaxDepth = Math.max(mMaxDepth, altContext.rawDepth());
     }
 
-    @NotNull
-    public SageVariantTier tier() {
-        return tier;
+    public VariantTier tier() { return mTier; }
+
+    public VariantHotspot variant()
+    {
+        return mVariant;
     }
 
-    @NotNull
-    public VariantHotspot variant() {
-        return variant;
+    public int maxReadDepth()
+    {
+        return mMaxDepth;
     }
 
-    public int maxReadDepth() {
-        return maxDepth;
+    public ReadContext readContext()
+    {
+        return mReadContext;
     }
 
-    @NotNull
-    public ReadContext readContext() {
-        return readContext;
-    }
-
-    public int minNumberOfEvents() {
-        return minNumberOfEvents;
-    }
-
-    @NotNull
-    @Override
-    public String chromosome() {
-        return variant.chromosome();
+    public int minNumberOfEvents()
+    {
+        return mMinNumberOfEvents;
     }
 
     @Override
-    public long position() {
-        return variant.position();
+    public String chromosome()
+    {
+        return mVariant.chromosome();
+    }
+
+    @Override
+    public long position()
+    {
+        return mVariant.position();
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.sigs;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 
 import com.hartwig.hmftools.common.utils.Matrix;
 

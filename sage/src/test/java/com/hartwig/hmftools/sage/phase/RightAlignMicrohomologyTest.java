@@ -15,14 +15,16 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.junit.Test;
 
-public class RightAlignMicrohomologyTest {
+public class RightAlignMicrohomologyTest
+{
 
     @Test
-    public void testRightAlignDel() {
+    public void testRightAlignDel()
+    {
         final String microhomology = "AG";
         final VariantHotspot leftAligned = BufferedPostProcessorTest.create(100, "CAGAAACCCATGTATGAAGTACAGTGGA", "C");
         final VariantHotspot rightAligned = RightAlignMicrohomology.rightAlignDel(leftAligned, microhomology);
@@ -33,7 +35,8 @@ public class RightAlignMicrohomologyTest {
     }
 
     @Test
-    public void testRightAlignIns() {
+    public void testRightAlignIns()
+    {
         final String microhomology = "TCCAGGAAGCCT";
         final VariantHotspot leftAligned = BufferedPostProcessorTest.create(100, "C", "CTCCAGGAAGCCT");
         final VariantHotspot rightAligned = RightAlignMicrohomology.rightAlignIns(leftAligned, microhomology);
@@ -44,7 +47,8 @@ public class RightAlignMicrohomologyTest {
     }
 
     @Test
-    public void testKit() {
+    public void testKit()
+    {
         final List<HmfTranscriptRegion> transcriptRegions =
                 HmfGenePanelSupplier.allGeneList37().stream().filter(x -> x.chromosome().equals("4")).collect(Collectors.toList());
 
@@ -59,7 +63,7 @@ public class RightAlignMicrohomologyTest {
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "AG");
-        Candidate candidate = new Candidate(SageVariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.ReadContext, 0, 0);
 
         SageVariant variant =
                 new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
@@ -67,9 +71,9 @@ public class RightAlignMicrohomologyTest {
         assertTrue(victim.realign(variant));
     }
 
-
     @Test
-    public void testEGFRIns() {
+    public void testEGFRIns()
+    {
         final List<HmfTranscriptRegion> transcriptRegions =
                 HmfGenePanelSupplier.allGeneList37().stream().filter(x -> x.chromosome().equals("7")).collect(Collectors.toList());
 
@@ -84,7 +88,7 @@ public class RightAlignMicrohomologyTest {
                 .build();
 
         ReadContextCounter counter = MixedGermlineTest.dummyCounter(leftAligned, "TCCAGGAAGCCT");
-        Candidate candidate = new Candidate(SageVariantTier.PANEL, leftAligned, counter.readContext(), 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, leftAligned, counter.ReadContext, 0, 0);
 
         SageVariant variant =
                 new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));

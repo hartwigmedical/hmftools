@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcPercentilePrevalence;
+import static com.hartwig.hmftools.cup.common.CupConstants.UNDEFINED_PERC_MAX_MULTIPLE;
 import static com.hartwig.hmftools.cup.common.ResultType.LIKELIHOOD;
 import static com.hartwig.hmftools.cup.common.ResultType.PERCENTILE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
+import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -56,6 +57,9 @@ public class SvClassifier implements CuppaClassifier
             return;
 
         mIsValid &= loadRefPercentileData(mConfig.RefSvPercFile, mRefSvTypePercentiles);
+
+        CUP_LOGGER.info("loaded SV ref data from file({})", config.RefSvPercFile);
+
         mIsValid &= loadCohortSvData();
     }
 
@@ -121,7 +125,7 @@ public class SvClassifier implements CuppaClassifier
                 if(!isKnownCancerType(cancerType))
                     continue;
 
-                double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true);
+                double percentile = getPercentile(cancerPercentiles.getValue(), svCount, true, UNDEFINED_PERC_MAX_MULTIPLE);
                 cancerTypeValues.put(cancerType, percentile);
             }
 

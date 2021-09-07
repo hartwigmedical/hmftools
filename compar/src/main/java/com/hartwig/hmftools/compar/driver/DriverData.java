@@ -2,15 +2,15 @@ package com.hartwig.hmftools.compar.driver;
 
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
 import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
@@ -54,11 +54,11 @@ public class DriverData implements ComparableItem
         if(matchLevel == REPORTABLE)
             return diffs;
 
-        if(diffValue(DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood()))
-        {
-            diffs.add(String.format("likelihood(%.3f/%.3f)",
-                    DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood()));
-        }
+        checkDiff(
+                diffs, "likelihoodMethod",
+                DriverCatalog.likelihoodMethod().toString(), otherDriver.DriverCatalog.likelihoodMethod().toString());
+
+        checkDiff(diffs, "likelihood", DriverCatalog.driverLikelihood(), otherDriver.DriverCatalog.driverLikelihood());
 
         // check matches in Linx cluster event types
         boolean hasDiffs = ((DriverData) other).SvDrivers.size() != SvDrivers.size();

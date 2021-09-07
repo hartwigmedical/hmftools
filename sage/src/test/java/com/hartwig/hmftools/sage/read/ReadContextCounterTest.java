@@ -7,9 +7,8 @@ import java.util.Collections;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.config.SageConfigTest;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -17,16 +16,17 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounterTest {
-
+public class ReadContextCounterTest
+{
     private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
-    private static final SageVariantTier TIER = SageVariantTier.PANEL;
-    private static final SageConfig CONFIG = SageConfigTest.testConfig();
+    private static final VariantTier TIER = VariantTier.PANEL;
+    private static final SageConfig CONFIG = new SageConfig();
     private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
 
     @Test
-    public void testInsertInLeftSoftClip() {
+    public void testInsertInLeftSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -40,7 +40,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testDeleteInLeftSoftClip() {
+    public void testDeleteInLeftSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -54,7 +55,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testSnvInLeftSoftClip() {
+    public void testSnvInLeftSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 2, 0, "CAT".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -68,7 +70,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testRefInLeftSoftClipDoesNotContributeToDepth() {
+    public void testRefInLeftSoftClipDoesNotContributeToDepth()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 2, 0, "CAT".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -82,7 +85,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testMnvInLeftSoftClip() {
+    public void testMnvInLeftSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -96,7 +100,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testInsertInRightSoftClip() {
+    public void testInsertInRightSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -110,7 +115,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testDeleteInRightSoftClip() {
+    public void testDeleteInRightSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -124,7 +130,8 @@ public class ReadContextCounterTest {
     }
 
     @Test
-    public void testMnvInRightSoftClip() {
+    public void testMnvInRightSoftClip()
+    {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim =
@@ -139,7 +146,8 @@ public class ReadContextCounterTest {
 
     @NotNull
     public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases,
-            String microhomology) {
+            String microhomology)
+    {
         return new ReadContext(Strings.EMPTY,
                 refPosition,
                 readIndex,
@@ -152,7 +160,8 @@ public class ReadContextCounterTest {
 
     @NotNull
     static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            @NotNull final String qualities) {
+            @NotNull final String qualities)
+    {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigar);

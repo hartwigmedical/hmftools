@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.sigs.loaders;
 
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.common.sigs.PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
@@ -20,17 +17,15 @@ import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.commons.cli.CommandLine;
@@ -79,7 +74,7 @@ public class PositionFreqBuilder
 
         mSamplePosCountsFile = cmd.getOptionValue(POSITION_DATA_FILE);
 
-        loadSampleData(cmd.getOptionValue(SAMPLE_DATA_FILE));
+        mSampleList.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_DATA_FILE)));
 
         mPositionCacheSize = initialisePositionCache(mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 
@@ -104,7 +99,6 @@ public class PositionFreqBuilder
         mSampleList = null;
         mSamplePosCountsFile = null;
     }
-
 
     public static void addCmdLineArgs(Options options)
     {
@@ -257,42 +251,6 @@ public class PositionFreqBuilder
         catch(IOException e)
         {
             SIG_LOGGER.error("failed to write sample pos data output: {}", e.toString());
-        }
-    }
-
-    private void loadSampleData(final String filename)
-    {
-        if(filename == null || filename.isEmpty())
-            return;
-
-        try
-        {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
-
-            if(fileData.isEmpty())
-            {
-                SIG_LOGGER.error("empty sample data file({})", filename);
-                return;
-            }
-
-            final String header = fileData.get(0);
-            fileData.remove(0);
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
-
-            for(final String line : fileData)
-            {
-                final String[] items = line.split(",", -1);
-                String sampleId = items[fieldsIndexMap.get("SampleId")];
-
-                mSampleList.add(sampleId);
-            }
-
-            SIG_LOGGER.info("loaded {} samples", mSampleList.size());
-        }
-        catch (IOException e)
-        {
-            SIG_LOGGER.error("failed to load sample data file({}): {}", filename, e.toString());
         }
     }
 

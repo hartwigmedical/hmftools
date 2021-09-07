@@ -6,11 +6,11 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVectors;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVectors;
+import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT_LOWER;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.SAMPLE_ALLOCATED_PERCENT;

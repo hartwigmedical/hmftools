@@ -10,10 +10,10 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.protect.purple.ImmutableReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantSource;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ public final class ConsentFilterFunctions {
 
     @NotNull
     public static GenomicAnalysis filter(@NotNull GenomicAnalysis genomicAnalysis,
-            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralBreakends, boolean reportPeach) {
+            @NotNull LimsGermlineReportingLevel germlineReportingLevel, boolean reportViralPresence, boolean reportPeach) {
         List<ReportableVariantWithNotify> filteredVariantsWithNotify = filterVariants(genomicAnalysis.reportableVariants(),
                 genomicAnalysis.notifyGermlineStatusPerVariant(),
                 germlineReportingLevel);
@@ -37,8 +37,8 @@ public final class ConsentFilterFunctions {
             notifyPerVariant.put(filtered.variant(), filtered.notifyVariant());
         }
 
-        List<ReportableVirusBreakend> filteredVirusBreakends =
-                reportViralBreakends ? genomicAnalysis.virusBreakends() : Lists.newArrayList();
+        List<AnnotatedVirus> filteredViruses =
+                reportViralPresence ? genomicAnalysis.reportableViruses() : Lists.newArrayList();
 
         List<PeachGenotype> filteredPeachGenotypes = reportPeach ? genomicAnalysis.peachGenotypes() : Lists.newArrayList();
 
@@ -55,7 +55,7 @@ public final class ConsentFilterFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(filteredVariants)
                 .notifyGermlineStatusPerVariant(notifyPerVariant)
-                .virusBreakends(filteredVirusBreakends)
+                .reportableViruses(filteredViruses)
                 .peachGenotypes(filteredPeachGenotypes)
                 .tumorSpecificEvidence(filteredTumorSpecificEvidence)
                 .clinicalTrials(filteredClinicalTrials)

@@ -6,31 +6,34 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadEnsemblGeneData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptProteinData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
-import static com.hartwig.hmftools.common.fusion.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.TranscriptCodingType.CODING;
-import static com.hartwig.hmftools.common.fusion.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.fusion.CodingBaseData;
+import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.cli.Options;
 
 public class EnsemblDataCache
 {
@@ -38,11 +41,11 @@ public class EnsemblDataCache
     private final RefGenomeVersion mRefGenomeVersion;
 
     private final Map<String,List<TranscriptData>> mTranscriptDataMap; // transcripts keyed by geneId
-    private final Map<String,List<EnsemblGeneData>> mChrGeneDataMap; // genes keyed by chromosome
+    private final Map<String,List<GeneData>> mChrGeneDataMap; // genes keyed by chromosome
     private final Map<Integer,List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private final Map<Integer,Integer> mTransSpliceAcceptorPosDataMap;
-    private final Map<String,EnsemblGeneData> mGeneDataMap; // keyed by geneId
-    private final Map<String,EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
+    private final Map<String, GeneData> mGeneDataMap; // keyed by geneId
+    private final Map<String, GeneData> mGeneNameIdMap; // for faster look-up by name
 
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireExons;
@@ -51,15 +54,17 @@ public class EnsemblDataCache
     private boolean mCanonicalTranscriptsOnly;
     private boolean mRequireGeneSynonyms;
 
-    private final Map<EnsemblGeneData,Integer> mDownstreamGeneAnnotations;
-    private final List<EnsemblGeneData> mAlternativeGeneData;
+    private final Map<GeneData,Integer> mDownstreamGeneAnnotations;
+    private final List<GeneData> mAlternativeGeneData;
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
-    private static final Logger LOGGER = LogManager.getLogger(EnsemblDataCache.class);
+    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir"; // eventually deprecated
+    public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
+    public static final String ENSEMBL_DATA_DIR_CFG = "Ensembl data file directory";
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {
-        mDataPath = dataPath.endsWith(File.separator) ? dataPath : dataPath + File.separator;
+        mDataPath = checkAddDirSeparator(dataPath);
         mRefGenomeVersion = refGenomeVersion;
 
         mTranscriptDataMap = Maps.newHashMap();
@@ -77,18 +82,24 @@ public class EnsemblDataCache
         mAlternativeGeneData = Lists.newArrayList();
     }
 
+    public static void addEnsemblDir(final Options options)
+    {
+        options.addOption(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_CFG);
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, ENSEMBL_DATA_DIR_CFG);
+    }
+
     public void setRestrictedGeneIdList(final List<String> geneIds)
     {
         mRestrictedGeneIdList.clear();
         mRestrictedGeneIdList.addAll(geneIds);
     }
 
-    public void addDownstreamGeneAnnotations(final EnsemblGeneData geneData, int distance)
+    public void addDownstreamGeneAnnotations(final GeneData geneData, int distance)
     {
         mDownstreamGeneAnnotations.put(geneData, distance);
     }
 
-    public final List<EnsemblGeneData> getAlternativeGeneData() { return mAlternativeGeneData; }
+    public final List<GeneData> getAlternativeGeneData() { return mAlternativeGeneData; }
 
     public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
     {
@@ -100,12 +111,12 @@ public class EnsemblDataCache
 
     public void setRequireGeneSynonyms() { mRequireGeneSynonyms = true; }
 
-    public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
-    public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
-    public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
+    public final Map<String,List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
+    public final Map<String,List<GeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
+    public Map<Integer,List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
     public Map<Integer,Integer> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
 
-    public final EnsemblGeneData getGeneDataByName(final String geneName)
+    public final GeneData getGeneDataByName(final String geneName)
     {
         if(!mGeneNameIdMap.isEmpty())
             return mGeneNameIdMap.get(geneName);
@@ -113,7 +124,7 @@ public class EnsemblDataCache
         return getGeneData(geneName, true);
     }
 
-    public final EnsemblGeneData getGeneDataById(final String geneId)
+    public final GeneData getGeneDataById(final String geneId)
     {
         if(!mGeneDataMap.isEmpty())
             return mGeneDataMap.get(geneId);
@@ -121,11 +132,11 @@ public class EnsemblDataCache
         return getGeneData(geneId, false);
     }
 
-    private EnsemblGeneData getGeneData(final String gene, boolean byName)
+    private GeneData getGeneData(final String gene, boolean byName)
     {
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : mChrGeneDataMap.entrySet())
         {
-            for(final EnsemblGeneData geneData : entry.getValue())
+            for(final GeneData geneData : entry.getValue())
             {
                 if((byName && geneData.GeneName.equals(gene)) || (!byName && geneData.GeneId.equals(gene)))
                     return geneData;
@@ -135,9 +146,9 @@ public class EnsemblDataCache
         return null;
     }
 
-    public EnsemblGeneData getGeneDataBySynonym(final String geneName, final String chromosome)
+    public GeneData getGeneDataBySynonym(final String geneName, final String chromosome)
     {
-        final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+        final List<GeneData> geneDataList = mChrGeneDataMap.get(chromosome);
         if(geneDataList == null)
             return null;
 
@@ -149,9 +160,9 @@ public class EnsemblDataCache
         if(!mGeneDataMap.isEmpty())
             return;
 
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : mChrGeneDataMap.entrySet())
         {
-            for(final EnsemblGeneData geneData : entry.getValue())
+            for(final GeneData geneData : entry.getValue())
             {
                 mGeneDataMap.put(geneData.GeneId, geneData);
             }
@@ -163,9 +174,9 @@ public class EnsemblDataCache
         if(!mGeneNameIdMap.isEmpty())
             return;
 
-        for(Map.Entry<String, List<EnsemblGeneData>> entry : mChrGeneDataMap.entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : mChrGeneDataMap.entrySet())
         {
-            for(final EnsemblGeneData geneData : entry.getValue())
+            for(final GeneData geneData : entry.getValue())
             {
                 mGeneNameIdMap.put(geneData.GeneName, geneData);
             }
@@ -180,9 +191,9 @@ public class EnsemblDataCache
     public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, int position, int upstreamDistance)
     {
         // find the unique set of geneIds
-        final List<EnsemblGeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
+        final List<GeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
 
-        for (final EnsemblGeneData geneData : matchedGenes)
+        for (final GeneData geneData : matchedGenes)
         {
             if(!uniqueGeneIds.contains(geneData.GeneId))
                 uniqueGeneIds.add(geneData.GeneId);
@@ -194,10 +205,10 @@ public class EnsemblDataCache
     {
         List<BreakendGeneData> geneAnnotations = Lists.newArrayList();
 
-        final List<EnsemblGeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
+        final List<GeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
 
         // now look up relevant transcript and exon information
-        for(final EnsemblGeneData geneData : matchedGenes)
+        for(final GeneData geneData : matchedGenes)
         {
             final List<TranscriptData> transcriptDataList = mTranscriptDataMap.get(geneData.GeneId);
 
@@ -248,12 +259,12 @@ public class EnsemblDataCache
             geneAnnotations.add(currentGene);
         }
 
-        final List<EnsemblGeneData> altMappingGenes = mAlternativeGeneData.stream()
+        final List<GeneData> altMappingGenes = mAlternativeGeneData.stream()
                 .filter(x -> x.Chromosome.equals(chromosome))
                 .filter(x -> positionWithin(position, x.GeneStart, x.GeneEnd))
                 .collect(Collectors.toList());
 
-        for(final EnsemblGeneData altGeneData : altMappingGenes)
+        for(final GeneData altGeneData : altMappingGenes)
         {
             final List<TranscriptData> transcriptDataList = mTranscriptDataMap.get(altGeneData.GeneId);
 
@@ -318,14 +329,14 @@ public class EnsemblDataCache
         return null;
     }
 
-    public final List<EnsemblGeneData> findGenesByRegion(final String chromosome, int posStart, int posEnd)
+    public final List<GeneData> findGenesByRegion(final String chromosome, int posStart, int posEnd)
     {
         // find genes if any of their transcripts are within this position
-        List<EnsemblGeneData> genesList = Lists.newArrayList();
+        List<GeneData> genesList = Lists.newArrayList();
 
-        final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+        final List<GeneData> geneDataList = mChrGeneDataMap.get(chromosome);
 
-        for(final EnsemblGeneData geneData : geneDataList)
+        for(final GeneData geneData : geneDataList)
         {
             if(posStart > geneData.GeneEnd || posEnd < geneData.GeneStart)
                 continue;
@@ -348,16 +359,16 @@ public class EnsemblDataCache
         return genesList;
     }
 
-    private List<EnsemblGeneData> findGeneRegions(final String chromosome, int position, int upstreamDistance)
+    private List<GeneData> findGeneRegions(final String chromosome, int position, int upstreamDistance)
     {
-        final List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
+        final List<GeneData> matchedGenes = Lists.newArrayList();
 
-        final List<EnsemblGeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+        final List<GeneData> geneDataList = mChrGeneDataMap.get(chromosome);
 
         if(geneDataList == null)
             return matchedGenes;
 
-        for(final EnsemblGeneData geneData : geneDataList)
+        for(final GeneData geneData : geneDataList)
         {
             int geneStartRange = geneData.Strand == 1 ? geneData.GeneStart - upstreamDistance : geneData.GeneStart;
             int geneEndRange = geneData.Strand == 1 ? geneData.GeneEnd : geneData.GeneEnd + upstreamDistance;
@@ -368,9 +379,9 @@ public class EnsemblDataCache
             }
         }
 
-        for(Map.Entry<EnsemblGeneData,Integer> entry : mDownstreamGeneAnnotations.entrySet())
+        for(Map.Entry<GeneData,Integer> entry : mDownstreamGeneAnnotations.entrySet())
         {
-            final EnsemblGeneData geneData = entry.getKey();
+            final GeneData geneData = entry.getKey();
 
             if(matchedGenes.contains(geneData) || !geneData.Chromosome.equals(chromosome))
                 continue;

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 

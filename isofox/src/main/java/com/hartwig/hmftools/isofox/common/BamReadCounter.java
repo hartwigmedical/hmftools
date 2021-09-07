@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import static com.hartwig.hmftools.isofox.BamFragmentReader.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -17,8 +18,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +43,7 @@ public class BamReadCounter implements Callable
     private int[] mReadTypeCounts;
     private int mSecondaryReads;
     private String mChromosome;
-    private final List<EnsemblGeneData> mGeneDataList;
+    private final List<GeneData> mGeneDataList;
     private String mCurrentGenes;
     private final int[] mMaqQualFrequencies;
 
@@ -66,7 +67,7 @@ public class BamReadCounter implements Callable
         mMaqQualFrequencies = new int[4];
     }
 
-    public void initialise(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    public void initialise(final String chromosome, final List<GeneData> geneDataList)
     {
         mChromosome = chromosome;
         mGeneDataList.clear();
@@ -88,7 +89,7 @@ public class BamReadCounter implements Callable
         // walk through each chromosome, taking groups of overlapping genes together
         ISF_LOGGER.info("processing reads for chromosome({}) geneCount({})", mChromosome, mGeneDataList.size());
 
-        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
+        final List<GeneData> overlappingGenes = Lists.newArrayList();
         int currentGeneIndex = 0;
         int nextLogCount = 100;
 
@@ -104,7 +105,7 @@ public class BamReadCounter implements Callable
 
             for (int i = 0; i < overlappingGenes.size(); ++i)
             {
-                EnsemblGeneData geneData = overlappingGenes.get(i);
+                GeneData geneData = overlappingGenes.get(i);
 
                 mCurrentGenesRange[SE_START] = i == 0 ? geneData.GeneStart : min(geneData.GeneStart, mCurrentGenesRange[SE_START]);
                 mCurrentGenesRange[SE_END] = i == 0 ? geneData.GeneEnd : max(geneData.GeneEnd, mCurrentGenesRange[SE_END]);
@@ -120,7 +121,7 @@ public class BamReadCounter implements Callable
             mCurrentGenes = overlappingGenes.get(0).GeneId;
             mCurrentGeneReadCount = 0;
 
-            final List<BaseRegion> regions = Lists.newArrayList(new BaseRegion(mChromosome, mCurrentGenesRange));
+            final List<ChrBaseRegion> regions = Lists.newArrayList(new ChrBaseRegion(mChromosome, mCurrentGenesRange));
 
             mBamSlicer.slice(mSamReader, regions, this::processBamRead);
         }

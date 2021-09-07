@@ -11,6 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,19 +28,20 @@ public final class EnsemblDataLoader
     public static final String ENSEMBL_TRANS_EXON_DATA_FILE = "ensembl_trans_exon_data.csv";
     public static final String ENSEMBL_TRANS_SPLICE_DATA_FILE = "ensembl_trans_splice_data.csv";
     public static final String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
+    public static final String ENSEMBL_TRANS_AMINO_ACIDS_FILE = "ensembl_trans_amino_acids.csv";
 
     private static final Logger LOGGER = LogManager.getLogger(EnsemblDataLoader.class);
 
     public static final String ENSEMBL_DELIM = ",";
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version)
+            final Map<String, List<GeneData>> chrGeneDataMap, RefGenomeVersion version)
     {
         return loadEnsemblGeneData(dataPath, restrictedGeneIds, chrGeneDataMap, version, false);
     }
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String, List<EnsemblGeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
+            final Map<String, List<GeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
     {
         String filename = dataPath;
 
@@ -69,7 +76,7 @@ public final class EnsemblDataLoader
 
             line = fileReader.readLine(); // skip header
 
-            List<EnsemblGeneData> geneList = null;
+            List<GeneData> geneList = null;
             String currentChr = "";
             int geneCount = 0;
 
@@ -87,7 +94,7 @@ public final class EnsemblDataLoader
 
                 final String chromosome = version.versionedChromosome(items[chromosomeIndex]);
 
-                EnsemblGeneData geneData = new EnsemblGeneData(
+                GeneData geneData = new GeneData(
                         geneId, items[geneNameIndex], chromosome, Byte.parseByte(items[strandIndex]),
                         Integer.parseInt(items[geneStartIndex]), Integer.parseInt(items[geneEndIndex]), items[karyotypeBandIndex]);
 
@@ -384,4 +391,94 @@ public final class EnsemblDataLoader
         return true;
     }
 
+    public static boolean loadTranscriptAminoAcidData(
+            final String dataPath, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
+            final List<String> restrictedGeneIds, boolean canonicalOnly)
+    {
+        String filename = dataPath;
+
+        filename += ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+
+        if (!Files.exists(Paths.get(filename)))
+            return false;
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+
+            String line = fileReader.readLine();
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
+
+            if (line == null)
+            {
+                LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
+                return false;
+            }
+
+            // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
+            int geneIdIndex = fieldsIndexMap.get("GeneId");
+            int geneNameIndex = fieldsIndexMap.get("GeneName");
+            int transIndex = fieldsIndexMap.get("TransName");
+            Integer isCanonicalIndex = fieldsIndexMap.get("Canonical");
+            int aaIndex = fieldsIndexMap.get("AminoAcids");
+
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                String[] values = line.split(ENSEMBL_DELIM);
+
+                String geneId = values[geneIdIndex];
+
+                if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId))
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
+
+                String transName = values[transIndex];
+                boolean isCanonical = isCanonicalIndex != null ? Boolean.parseBoolean(values[isCanonicalIndex]) : true;
+
+                if(canonicalOnly && !isCanonical)
+                    continue;
+
+                transAminoAcidMap.put(transName, new TranscriptAminoAcids(
+                        geneId, values[geneNameIndex], transName, isCanonical, values[aaIndex]));
+
+                line = fileReader.readLine();
+            }
+
+            LOGGER.debug("loaded {} trans amino-acid records", transAminoAcidMap.size());
+        }
+        catch(IOException e)
+        {
+            LOGGER.warn("failed to load transcript amino-acid data({}): {}", filename, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    public static Map<String,List<TranscriptAminoAcids>> convertAminoAcidsToGeneMap(final Map<String,TranscriptAminoAcids> transAminoAcidMap)
+    {
+        Map<String,List<TranscriptAminoAcids>> geneTransMap = Maps.newHashMap();
+
+        for(Map.Entry<String,TranscriptAminoAcids> entry : transAminoAcidMap.entrySet())
+        {
+            TranscriptAminoAcids transAA = entry.getValue();
+
+            List<TranscriptAminoAcids> geneList = geneTransMap.get(transAA.GeneId);
+
+            if(geneList == null)
+            {
+                geneList = Lists.newArrayList();
+                geneTransMap.put(transAA.GeneId, geneList);
+            }
+
+            geneList.add(transAA);
+        }
+
+        return geneTransMap;
+    }
 }

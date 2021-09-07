@@ -13,9 +13,9 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -194,7 +194,7 @@ public class TranscriptResult
                 .toString();
     }
 
-    public String toCsv(final EnsemblGeneData geneData)
+    public String toCsv(final GeneData geneData)
     {
         return new StringJoiner(DELIMITER)
                 .add(geneData.GeneId)

@@ -20,8 +20,7 @@ public class FragmentAlleleMatrix
     private final boolean[][][] mMatrix;
 
     private static int FULL = 0;
-    private static int PARTIAL = 1;
-    private static int WILD = 2;
+    private static int WILD = 1;
     private static int ITEMS = WILD + 1;
 
     public FragmentAlleleMatrix(final List<FragmentAlleles> fragmentAlleles, final List<HlaAllele> alleles)
@@ -53,7 +52,7 @@ public class FragmentAlleleMatrix
 
             for(int type = FULL; type <= WILD; ++type)
             {
-                List<HlaAllele> alleles = type == FULL ? fragment.getFull() : type == PARTIAL ? fragment.getPartial() : fragment.getWild();
+                List<HlaAllele> alleles = type == FULL ? fragment.getFull() : fragment.getWild();
                 for(HlaAllele allele : alleles)
                 {
                     Integer alleleIndex = mAlleleIndexMap.get(allele);
@@ -67,9 +66,9 @@ public class FragmentAlleleMatrix
         }
     }
 
-    public List<HlaAlleleCoverage> create(final HlaComplex complex)
+    public List<AlleleCoverage> create(final HlaComplex complex)
     {
-        List<HlaAllele> alleles = complex.getAlleles();
+        List<HlaAllele> alleles = complex.Alleles;
         int alleleCount = alleles.size();
 
         int[] alleleIndices = new int[alleleCount];
@@ -87,20 +86,17 @@ public class FragmentAlleleMatrix
         }
 
         boolean[] full = new boolean[alleleCount];
-        boolean[] partial = new boolean[alleleCount];
         boolean[] wild = new boolean[alleleCount];
 
         for(int fragIndex = 0; fragIndex < mFragCount; ++fragIndex)
         {
             int fullCount = 0;
             int fullAlleleIndex = -1;
-            int partialCount = 0;
             int wildCount = 0;
 
             for(int i = 0; i < alleleCount; ++i)
             {
                 full[i] = false;
-                partial[i] = false;
                 wild[i] = false;
 
                 int alleleIndex = alleleIndices[i];
@@ -112,12 +108,6 @@ public class FragmentAlleleMatrix
                     fullAlleleIndex = i;
                 }
 
-                if(mMatrix[fragIndex][alleleIndex][PARTIAL])
-                {
-                    partial[i] = true;
-                    ++partialCount;
-                }
-
                 if(mMatrix[fragIndex][alleleIndex][WILD])
                 {
                     wild[i] = true;
@@ -125,56 +115,31 @@ public class FragmentAlleleMatrix
                 }
             }
 
-            if(fullCount == 1 && partialCount == 0)
+            if(fullCount == 1 && wildCount == 0)
             {
                 ++uniqueCoverage[fullAlleleIndex];
             }
-            else if(fullCount > 0 || partialCount > 0)
+            else if(fullCount > 0 || wildCount > 0)
             {
-                double contribution = 1.0 / (fullCount + partialCount + wildCount);
+                double contribution = 1.0 / (fullCount + wildCount);
 
                 for(int i = 0; i < alleleCount; ++i)
                 {
                     if(full[i])
                         combinedCoverage[i] += contribution;
 
-                    if(partial[i])
-                        combinedCoverage[i] += contribution;
-
                     if(wild[i])
                         wildCoverage[i] += contribution;
                 }
             }
-
-            /*
-            Set<HlaAllele> fullAlleles = fragment.getFull().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
-            Set<HlaAllele> partialAlleles = fragment.getPartial().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
-            Set<HlaAllele> wildAlleles = fragment.getWild().stream().map(x -> asAlleleGroup ? x.asAlleleGroup() : x).collect(Collectors.toSet());
-
-            if(fullAlleles.size() == 1 && partialAlleles.isEmpty())
-            {
-                increment(uniqueCoverageMap, fullAlleles.iterator().next(), 1);
-            }
-            else
-            {
-                double contribution = 1.0 / (fullAlleles.size() + partialAlleles.size() + wildAlleles.size());
-                fullAlleles.forEach(x -> increment(combinedCoverageMap, x, contribution));
-                partialAlleles.forEach(x -> increment(combinedCoverageMap, x, contribution));
-                wildAlleles.forEach(x -> increment(wildCoverageMap, x, contribution));
-            }
-             */
         }
 
-
-        List<HlaAlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(alleleCount);
+        List<AlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(alleleCount);
 
         for(int i = 0; i < alleleCount; ++i)
         {
-            alleleCoverages.add(new HlaAlleleCoverage(alleles.get(i), uniqueCoverage[i], combinedCoverage[i], wildCoverage[i]));
+            alleleCoverages.add(new AlleleCoverage(alleles.get(i), uniqueCoverage[i], combinedCoverage[i], wildCoverage[i]));
         }
-
-        // no known reason to sort
-        // Collections.sort(results, Collections.reverseOrder());
 
         return alleleCoverages;
     }

@@ -1,14 +1,59 @@
-# Data Analyser
+# Sigs
+Fits sample SNV counts to trinucleotide signature definitions.
 
-## Introduction
+## Configuration
 
-Companion tool to R analysis
+To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-## Resources
+### Resource Files
+Sigs requires a signature definition file, for example the COSMIC 30 SNV signatures. 
+These can be downloaded here [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
 
-None|---|---|---|---|
+### Mandatory Arguments
 
-## Dependencies
+Argument | Description 
+---|---
+sample | Sample ID
+signatures_file | SNV signature definitions file
+somatic_vcf_file | SNV VCF file
+output_dir | Output directory for sample SNV fits
 
-## Usage
+### Optional Arguments
 
+Argument | Default | Description 
+---|---|---
+min_alloc| 0.01 | Allocate counts to a signature if exceeds this number of total SNV counts
+min_alloc_perc| 0.0005 | Allocate counts to a signature if exceeds this % of total SNV counts
+db_url,db_user,db_pass | - | My SQL config - for sourcing SNV data instead of from a VCF
+upload_to_db | - | If present will upload signature fit results to the HMF Patients signature table
+ 
+### Position Frequency Arguments
+Sigs can generate genomic position frequencies by rounding positions to a specified position bucket size. 
+
+Argument | Default | Description 
+---|---|---
+position_bucket_size | 0 | 0 means no position frequencies are generated, otherwise bucket size
+max_sample_count | 20000 | Cap any individual position bucket's SNV count to this level 
+
+### Example Usage
+
+VCF sourced:
+```
+java -jar sigs.jar \
+   -sample COLO829T 
+   -signatures_file /reference_file/snv_cosmic_signatures.csv \
+   -somatic_vcf_file /sample_data/COLO829T.purple.somatic.vcf.gz \
+   -output_dir /output_dir/ \
+```
+
+### Example Usage
+
+Database sourced and uploading results
+```
+java -jar sigs.jar \
+   -sample COLO829T 
+   -signatures_file /reference_file/snv_cosmic_signatures.csv \
+   -db_url [db_url] -db_user [username] -db_pass [password] \
+   -upload_to_db \
+   -output_dir /output_dir/ \
+```

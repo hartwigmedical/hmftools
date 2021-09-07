@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.IndexedBasesTest;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.variant.SageVariantTier;
+import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -21,12 +21,14 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class CandidateSerializationTest {
+public class CandidateSerializationTest
+{
 
     private static final VCFCodec CODEC = createTestCodec();
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("normal", "tumor"));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
@@ -34,15 +36,17 @@ public class CandidateSerializationTest {
     }
 
     @NotNull
-    public static Candidate decode(String line) {
+    public static Candidate decode(String line)
+    {
         VariantContext context = CODEC.decode(line);
         IndexedBases cheatRefBases = CandidateSerialization.readBases(context);
         return CandidateSerialization.toCandidate(context, cheatRefBases, cheatRefBases);
     }
 
     @Test
-    public void testSerialization() {
-        final SageVariantTier expectedTier = SageVariantTier.HOTSPOT;
+    public void testSerialization()
+    {
+        final VariantTier expectedTier = VariantTier.HOTSPOT;
         final String expectedRepeat = "AT";
         final int expectedRepeatCount = 2;
         final String expectedMH = "ATGA";
@@ -65,21 +69,23 @@ public class CandidateSerializationTest {
         assertEquals(3, deserialized.readContext().readBasesPositionIndex());
     }
 
-    private static void assertEqual(Candidate expected, Candidate victim) {
+    private static void assertEqual(Candidate expected, Candidate victim)
+    {
         assertEquals(expected.tier(), victim.tier());
         assertEquals(expected.position(), victim.position());
         assertEquals(expected.chromosome(), victim.chromosome());
         assertEquals(expected.maxReadDepth(), victim.maxReadDepth());
         assertEquals(expected.minNumberOfEvents(), victim.minNumberOfEvents());
-        assertEquals(expected.readContext().repeat(), victim.readContext().repeat());
-        assertEquals(expected.readContext().repeatCount(), victim.readContext().repeatCount());
+        assertEquals(expected.readContext().Repeat, victim.readContext().Repeat);
+        assertEquals(expected.readContext().RepeatCount, victim.readContext().RepeatCount);
         assertEquals(expected.readContext().microhomology(), victim.readContext().microhomology());
         assertEquals(expected.readContext().leftFlankString(), victim.readContext().leftFlankString());
         assertEquals(expected.readContext().centerBases(), victim.readContext().centerBases());
         assertEquals(expected.readContext().rightFlankString(), victim.readContext().rightFlankString());
     }
 
-    private static VariantContext toContext(Candidate candidate) {
+    private static VariantContext toContext(Candidate candidate)
+    {
         VariantContextBuilder builder = CandidateSerialization.toContext(candidate);
 
         Genotype genotype = new GenotypeBuilder("SAMPLE").DP(candidate.maxReadDepth()).make();

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
 import static org.jooq.impl.DSL.count;
@@ -33,7 +34,7 @@ import org.jooq.Record1;
 import org.jooq.Record3;
 import org.jooq.Result;
 
-class SomaticVariantDAO {
+public class SomaticVariantDAO {
 
     @NotNull
     private final DSLContext context;
@@ -148,70 +149,77 @@ class SomaticVariantDAO {
                         .fetch();
 
         for (Record record : result) {
-            Integer referenceAlleleReadCount = record.getValue(SOMATICVARIANT.REFERENCEALLELEREADCOUNT);
-            Integer referenceTotalCount = record.getValue(SOMATICVARIANT.REFERENCETOTALREADCOUNT);
-            AllelicDepth referenceAllelicDepth = referenceAlleleReadCount != null && referenceTotalCount != null ? ImmutableAllelicDepthImpl
-                    .builder()
-                    .alleleReadCount(referenceAlleleReadCount)
-                    .totalReadCount(referenceTotalCount)
-                    .build() : null;
-
-            Integer rnaAlleleReadCount = record.getValue(SOMATICVARIANT.RNAALLELEREADCOUNT);
-            Integer rnaTotalCount = record.getValue(SOMATICVARIANT.RNATOTALREADCOUNT);
-            AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ? ImmutableAllelicDepthImpl.builder()
-                    .alleleReadCount(rnaAlleleReadCount)
-                    .totalReadCount(rnaTotalCount)
-                    .build() : null;
-
-            variants.add(ImmutableSomaticVariantImpl.builder()
-                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
-                    .position(record.getValue(SOMATICVARIANT.POSITION))
-                    .filter(record.getValue(SOMATICVARIANT.FILTER))
-                    .type(VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)))
-                    .ref(record.getValue(SOMATICVARIANT.REF))
-                    .alt(record.getValue(SOMATICVARIANT.ALT))
-                    .gene(record.getValue(SOMATICVARIANT.GENE))
-                    .genesAffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
-                    .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
-                    .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
-                            ? CodingEffect.UNDEFINED
-                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
-                    .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
-                    .canonicalTranscript("")
-                    .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
-                    .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
-                            ? CodingEffect.UNDEFINED
-                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
-                    .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
-                    .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
-                    .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
-                    .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
-                    .adjustedCopyNumber(record.getValue(SOMATICVARIANT.COPYNUMBER))
-                    .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
-                    .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
-                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
-                    .reported(byteToBoolean(record.getValue(SOMATICVARIANT.REPORTED)))
-                    .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
-                    .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
-                    .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
-                    .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                    .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
-                    .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
-                    .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
-                    .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
-                    .minorAlleleCopyNumber(record.getValue(SOMATICVARIANT.MINORALLELECOPYNUMBER))
-                    .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
-                    .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
-                    .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
-                    .referenceDepth(referenceAllelicDepth)
-                    .rnaDepth(rnaAllelicDepth)
-                    .qual(record.get(SOMATICVARIANT.QUAL))
-                    .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
-                    .localRealignmentSet(record.get(SOMATICVARIANT.LOCALREALIGNMENTSET))
-                    .phasedInframeIndelIdentifier(record.get(SOMATICVARIANT.PHASEDINFRAMEINDEL))
-                    .build());
+            variants.add(buildFromRecord(record));
         }
+
         return variants;
+    }
+
+    public static SomaticVariant buildFromRecord(final Record record)
+    {
+        Integer referenceAlleleReadCount = record.getValue(SOMATICVARIANT.REFERENCEALLELEREADCOUNT);
+        Integer referenceTotalCount = record.getValue(SOMATICVARIANT.REFERENCETOTALREADCOUNT);
+        AllelicDepth referenceAllelicDepth = referenceAlleleReadCount != null && referenceTotalCount != null ? ImmutableAllelicDepthImpl
+                .builder()
+                .alleleReadCount(referenceAlleleReadCount)
+                .totalReadCount(referenceTotalCount)
+                .build() : null;
+
+        Integer rnaAlleleReadCount = record.getValue(SOMATICVARIANT.RNAALLELEREADCOUNT);
+        Integer rnaTotalCount = record.getValue(SOMATICVARIANT.RNATOTALREADCOUNT);
+        AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ? ImmutableAllelicDepthImpl.builder()
+                .alleleReadCount(rnaAlleleReadCount)
+                .totalReadCount(rnaTotalCount)
+                .build() : null;
+
+        return ImmutableSomaticVariantImpl.builder()
+                .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
+                .position(record.getValue(SOMATICVARIANT.POSITION))
+                .filter(record.getValue(SOMATICVARIANT.FILTER))
+                .type(VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)))
+                .ref(record.getValue(SOMATICVARIANT.REF))
+                .alt(record.getValue(SOMATICVARIANT.ALT))
+                .gene(record.getValue(SOMATICVARIANT.GENE))
+                .genesAffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
+                .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
+                .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
+                        ? CodingEffect.UNDEFINED
+                        : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
+                .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
+                .canonicalTranscript("")
+                .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
+                .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
+                        ? CodingEffect.UNDEFINED
+                        : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
+                .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
+                .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
+                .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
+                .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
+                .adjustedCopyNumber(record.getValue(SOMATICVARIANT.COPYNUMBER))
+                .adjustedVAF(record.getValue(SOMATICVARIANT.ADJUSTEDVAF))
+                .variantCopyNumber(record.getValue(SOMATICVARIANT.VARIANTCOPYNUMBER))
+                .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
+                .reported(byteToBoolean(record.getValue(SOMATICVARIANT.REPORTED)))
+                .trinucleotideContext(record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT))
+                .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
+                .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
+                .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
+                .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
+                .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
+                .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
+                .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
+                .minorAlleleCopyNumber(record.getValue(SOMATICVARIANT.MINORALLELECOPYNUMBER))
+                .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
+                .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
+                .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
+                .referenceDepth(referenceAllelicDepth)
+                .rnaDepth(rnaAllelicDepth)
+                .qual(record.get(SOMATICVARIANT.QUAL))
+                .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
+                .localRealignmentSet(record.get(SOMATICVARIANT.LOCALREALIGNMENTSET))
+                .phasedInframeIndelIdentifier(record.get(SOMATICVARIANT.PHASEDINFRAMEINDEL))
+                .genotypeStatus(UNKNOWN)
+                .build();
     }
 
     private static boolean byteToBoolean(@Nullable Byte b) {

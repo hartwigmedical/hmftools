@@ -23,12 +23,6 @@ public enum RefGenomeVersion
     @NotNull
     public static RefGenomeVersion from(@NotNull final String version)
     {
-        // TODO Remove handling of RG per 1st of july 2021
-        if (version.startsWith("RG"))
-        {
-            LOGGER.warn("Avoid using ref genome versions starting with RG: {}", version);
-        }
-
         if (version.equals(V37.toString()) || version.equals("RG_37") || version.equals("37") || version.equals("HG37"))
         {
             return V37;
@@ -47,12 +41,14 @@ public enum RefGenomeVersion
 
     RefGenomeVersion(@NotNull final String identifier, final boolean is37)
     {
-        this.mIdentifier = identifier;
-        this.mIs37 = is37;
+        mIdentifier = identifier;
+        mIs37 = is37;
     }
 
     public boolean is37() { return mIs37; }
     public boolean is38 () { return !mIs37; }
+
+    public String identifier() { return mIdentifier; }
 
     @NotNull
     public String versionedChromosome(@NotNull String chromosome)

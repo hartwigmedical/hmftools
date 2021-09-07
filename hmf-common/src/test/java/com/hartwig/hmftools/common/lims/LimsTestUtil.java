@@ -30,7 +30,7 @@ public final class LimsTestUtil {
                 .germlineReportingLevel(Strings.EMPTY)
                 .reportGermlineVariants(false)
                 .shallowSeq(false)
-                .reportViralInsertions(false)
+                .reportViralPresence(false)
                 .cohort(Strings.EMPTY)
                 .analysisType(Strings.EMPTY);
     }

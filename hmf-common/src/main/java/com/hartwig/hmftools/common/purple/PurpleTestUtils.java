@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
@@ -14,9 +13,9 @@ import com.hartwig.hmftools.common.purple.region.ImmutableEnrichedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
-import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
+import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

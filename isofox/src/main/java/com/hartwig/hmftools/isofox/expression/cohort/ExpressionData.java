@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConf
 import java.util.Map;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 
 public class ExpressionData
 {
@@ -173,7 +173,7 @@ public class ExpressionData
 
         String geneId = items[0].replaceAll("\\.[0-9]*","");
 
-        final EnsemblGeneData geneData = geneTransCache.getGeneDataById(geneId);
+        final GeneData geneData = geneTransCache.getGeneDataById(geneId);
 
         if(geneData == null)
             return null;

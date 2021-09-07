@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.sage.coverage;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class GeneDepth
+{
+    public final String Gene;
+    public final double MissedVariantLikelihood;
+    public final int[] DepthCounts;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GeneDepth {
+    public GeneDepth(final String gene, final double missedVariantLikelihood, final int[] depthCounts)
+    {
+        Gene = gene;
+        MissedVariantLikelihood = missedVariantLikelihood;
+        DepthCounts = depthCounts;
+    }
 
-    @NotNull
-    String gene();
-
-    double missedVariantLikelihood();
-
-    int[] depthCounts();
+    public String gene() { return Gene; }
 }

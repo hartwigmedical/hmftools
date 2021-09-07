@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.serve.extraction.codon.tools.AnnotatedCodonVCFChecker;
 import com.hartwig.hmftools.serve.extraction.util.VCFWriterFactory;
 
@@ -24,7 +24,8 @@ import htsjdk.variant.vcf.VCFCodec;
 public class AnnotatedExonVCFChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(AnnotatedCodonVCFChecker.class);
-    private static final boolean LOG_DEBUG = true;
+
+    private static final boolean LOG_DEBUG = false;
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE exon VCF checker");
@@ -50,7 +51,7 @@ public class AnnotatedExonVCFChecker {
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             int inputExonId = Integer.parseInt(inputParts[2]);
 
-            List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromContext(variant);
+            List<SnpEffAnnotation> annotations = SnpEffAnnotationParser.fromContext(variant);
             if (isMatch(inputGene, inputTranscript, inputExonId, annotations)) {
                 matchCount++;
             } else {

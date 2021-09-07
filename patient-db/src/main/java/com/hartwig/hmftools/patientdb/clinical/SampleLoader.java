@@ -10,9 +10,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
-import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
-import com.hartwig.hmftools.common.runcontext.RunContext;
+import com.hartwig.hmftools.common.lims.reportingdb.ReportingDatabase;
+import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.readers.LimsSampleReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.RunsFolderReader;
@@ -37,22 +37,23 @@ public class SampleLoader {
 
     @NotNull
     public Map<String, List<SampleData>> loadSamplesPerPatient(@NotNull ClinicalAlgoConfig config) throws IOException {
+        LOGGER.info("Loading samples per patient");
         List<RunContext> runContexts = extractRunContextsFromDirectoryOrJson(config, config.runsDirectory(), config.runsJson());
         Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
         Map<String, String> sampleToSetNameMap = extractSampleToSetNameMap(runContexts);
 
-        LOGGER.info("  Loaded sequence runs for {} patient IDs ({} samples)",
+        LOGGER.info(" Loaded sequence runs for {} patient IDs ({} samples)",
                 sequencedSamplesPerPatient.keySet().size(),
                 toUniqueSampleIds(sequencedSamplesPerPatient).size());
 
-        LOGGER.info(" Loading reporting database from {}", config.reportingDbTsv());
+        LOGGER.info("Loading reporting database from {}", config.reportingDbTsv());
         List<ReportingEntry> reportingEntries = ReportingDatabase.read(config.reportingDbTsv());
-        LOGGER.info("  Loaded {} reporting entries", reportingEntries.size());
+        LOGGER.info(" Loaded {} reporting entries", reportingEntries.size());
 
-        LOGGER.info(" Loading sample data from LIMS in {}", config.limsDirectory());
+        LOGGER.info("Loading sample data from LIMS in {}", config.limsDirectory());
         Map<String, List<SampleData>> sampleDataPerPatient =
                 extractAllSamplesFromLims(lims, reportingEntries, sampleToSetNameMap, sequencedSamplesPerPatient);
-        LOGGER.info("  Loaded samples for {} patient IDs ({} samples)",
+        LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",
                 sampleDataPerPatient.keySet().size(),
                 countValues(sampleDataPerPatient));
 
@@ -65,7 +66,7 @@ public class SampleLoader {
         if (runsDirectory != null && runsJson == null) {
             String pipelineVersionFile = config.pipelineVersionFile();
             if (pipelineVersionFile != null) {
-                LOGGER.info("   Loading sequence runs from {}", runsDirectory);
+                LOGGER.info("Loading sequence runs from {}", runsDirectory);
                 return loadRunContextsFromDirectory(runsDirectory, pipelineVersionFile);
             } else {
                 throw new IllegalArgumentException("Cannot load from a runs directory if no pipeline version file given");
@@ -79,7 +80,7 @@ public class SampleLoader {
     @NotNull
     private static List<RunContext> loadRunContextsFromJson(final String runsJson) {
         List<RunContext> runContexts = RunsJsonReader.extractRunContexts(new File(runsJson));
-        LOGGER.info("  Loaded run contexts from {} ({} sets)", runsJson, runContexts.size());
+        LOGGER.info(" Loaded run contexts from {} ({} sets)", runsJson, runContexts.size());
         return runContexts;
     }
 
@@ -87,8 +88,7 @@ public class SampleLoader {
     private static List<RunContext> loadRunContextsFromDirectory(@NotNull String runsDirectory, @NotNull String pipelineVersionFile)
             throws IOException {
         List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersionFile);
-        LOGGER.info("  Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
-
+        LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
         return runContexts;
     }
 
@@ -97,7 +97,7 @@ public class SampleLoader {
         Map<String, String> sampleToSetNameMap = Maps.newHashMap();
         for (RunContext runContext : runContexts) {
             if (sampleToSetNameMap.containsKey(runContext.tumorSample())) {
-                LOGGER.warn(" Duplicate sample ID found in run contexts: {}", runContext.tumorSample());
+                LOGGER.warn("Duplicate sample ID found in run contexts: {}", runContext.tumorSample());
             }
             sampleToSetNameMap.put(runContext.tumorSample(), runContext.setName());
         }
@@ -155,7 +155,7 @@ public class SampleLoader {
             }
             for (String sampleId : sequencedPatientEntry.getValue()) {
                 if (!sampleIdExistsInSampleDataList(samples, sampleId)) {
-                    LOGGER.info("  Creating sample data for {}. This sample is not found in LIMS even though it has been sequenced!",
+                    LOGGER.info("Creating sample data for {}. This sample is not found in LIMS even though it has been sequenced!",
                             sampleId);
                     SampleData sampleData = sampleReader.readSequencedSampleWithoutBarcode(sampleId);
                     if (sampleData != null) {
@@ -200,7 +200,7 @@ public class SampleLoader {
     private static String extractPatientIdentifier(@NotNull String setName) {
         String[] names = setName.split("_");
         if (names.length < 5) {
-            LOGGER.error(" Run name {} had less than 5 parts after splitting on _", setName);
+            LOGGER.error("Run name {} had less than 5 parts after splitting on _", setName);
             return Strings.EMPTY;
         }
         return names[4];

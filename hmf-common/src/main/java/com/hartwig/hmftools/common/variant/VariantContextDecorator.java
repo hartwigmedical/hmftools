@@ -27,8 +27,8 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +50,7 @@ public class VariantContextDecorator implements GenomePosition {
     private final VariantTier tier;
 
     @Nullable
-    private SnpEffSummary snpEffSummary;
+    private VariantImpact variantImpact;
     @Nullable
     private DriverImpact impact;
     @Nullable
@@ -60,12 +60,22 @@ public class VariantContextDecorator implements GenomePosition {
         this.context = context;
         this.filter = displayFilter(context);
         this.type = VariantType.type(context);
-        this.ref = context.getReference().getBaseString();
-        this.alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
+        this.ref = getRef(context);
+        this.alt = getAlt(context);
         this.tier = VariantTier.fromContext(context);
-        this.snpEffSummary = null;
+        this.variantImpact = null;
         this.impact = null;
         this.clinvarPathogenicSummary = null;
+    }
+
+    public static String getRef(final VariantContext context)
+    {
+        return context.getReference().getBaseString();
+    }
+
+    public static String getAlt(final VariantContext context)
+    {
+        return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
 
     public boolean isPass() {
@@ -118,23 +128,23 @@ public class VariantContextDecorator implements GenomePosition {
     }
 
     @NotNull
-    public SnpEffSummary snpEffSummary() {
-        if (snpEffSummary == null) {
-            this.snpEffSummary = SnpEffSummaryFactory.fromSnpEffEnrichment(context);
+    public VariantImpact variantImpact() {
+        if (variantImpact == null) {
+            this.variantImpact = VariantImpactSerialiser.fromVariantContext(context);
         }
 
-        return snpEffSummary;
+        return variantImpact;
     }
 
     @NotNull
     public String gene() {
-        return snpEffSummary().gene();
+        return variantImpact().gene();
     }
 
     @NotNull
     public DriverImpact impact() {
         if (impact == null) {
-            this.impact = DriverImpact.select(type, snpEffSummary().canonicalCodingEffect());
+            this.impact = DriverImpact.select(type, variantImpact().CanonicalCodingEffect);
         }
 
         return impact;
@@ -142,7 +152,7 @@ public class VariantContextDecorator implements GenomePosition {
 
     @NotNull
     public CodingEffect canonicalCodingEffect() {
-        return snpEffSummary().canonicalCodingEffect();
+        return variantImpact().CanonicalCodingEffect;
     }
 
     public double qual() {
@@ -242,7 +252,7 @@ public class VariantContextDecorator implements GenomePosition {
         }
 
         return clinvarPathogenicSummary().pathogenicity() == Pathogenicity.UNKNOWN
-                && PATHOGENIC_EFFECT.contains(snpEffSummary().canonicalCodingEffect());
+                && PATHOGENIC_EFFECT.contains(variantImpact().CanonicalCodingEffect);
     }
 
     @NotNull

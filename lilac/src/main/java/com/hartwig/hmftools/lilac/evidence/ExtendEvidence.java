@@ -7,8 +7,9 @@ import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.fragment.AminoAcidFragment;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+
 import org.apache.commons.math3.util.Pair;
 
 import java.util.Collections;
@@ -20,15 +21,15 @@ public final class ExtendEvidence
 {
     private final LilacConfig mConfig;
     private final List<Integer> mHeterozygousLoci;
-    private final List<AminoAcidFragment> mAminoAcidFragments;
+    private final List<Fragment> mFragments;
     private final ExpectedAlleles mExpectedAlleles;
 
     public ExtendEvidence(final LilacConfig config, final List<Integer> heterozygousLoci,
-            final List<AminoAcidFragment> aminoAcidFragments, final ExpectedAlleles expectedAlleles)
+            final List<Fragment> aminoAcidFragments, final ExpectedAlleles expectedAlleles)
     {
         mConfig = config;
         mHeterozygousLoci = heterozygousLoci;
-        mAminoAcidFragments = aminoAcidFragments;
+        mFragments = aminoAcidFragments;
         mExpectedAlleles = expectedAlleles;
     }
 
@@ -45,17 +46,17 @@ public final class ExtendEvidence
         {
             List<Integer> indices = Lists.newArrayList(mHeterozygousLoci.get(i), mHeterozygousLoci.get(i + 1));
 
-            final List<AminoAcidFragment> filteredFragments = mAminoAcidFragments.stream()
-                    .filter(x -> x.containsAll(indices)).collect(Collectors.toList());
+            final List<Fragment> filteredFragments = mFragments.stream()
+                    .filter(x -> x.containsAminoAcids(indices)).collect(Collectors.toList());
 
             if(!filteredFragments.isEmpty())
             {
                 int minTotalFragments = minTotalFragments(indices);
 
-                PhasedEvidence left = PhasedEvidence.evidence(mAminoAcidFragments, Lists.newArrayList(indices.get(0)));
-                PhasedEvidence right = PhasedEvidence.evidence(mAminoAcidFragments, Lists.newArrayList(indices.get(1)));
+                PhasedEvidence left = PhasedEvidence.evidence(mFragments, Lists.newArrayList(indices.get(0)));
+                PhasedEvidence right = PhasedEvidence.evidence(mFragments, Lists.newArrayList(indices.get(1)));
 
-                PhasedEvidence combinedEvidence = PhasedEvidence.evidence(mAminoAcidFragments, indices)
+                PhasedEvidence combinedEvidence = PhasedEvidence.evidence(mFragments, indices)
                         .removeSingles(mConfig.MinFragmentsToRemoveSingle);
 
                 if (combinedEvidence.totalEvidence() >= minTotalFragments && CombineEvidence.canCombine(left, combinedEvidence, right))
@@ -85,14 +86,14 @@ public final class ExtendEvidence
     {
         // List<Integer> existingIndices = current.getAminoAcidIndexList();
 
-        int minExisting = listMin(current.getAminoAcidIndexList());
-        int maxExisting = listMax(current.getAminoAcidIndexList());
+        int minExisting = listMin(current.getAminoAcidLoci());
+        int maxExisting = listMax(current.getAminoAcidLoci());
 
         List<PhasedEvidence> othersContainingMax = others.stream()
-                .filter(x -> x != current && x.getAminoAcidIndexList().contains(maxExisting)).collect(Collectors.toList());
+                .filter(x -> x != current && x.getAminoAcidLoci().contains(maxExisting)).collect(Collectors.toList());
 
         List<PhasedEvidence> othersContainingMin = others.stream()
-                .filter(x -> x != current && x.getAminoAcidIndexList().contains(minExisting)).collect(Collectors.toList());
+                .filter(x -> x != current && x.getAminoAcidLoci().contains(minExisting)).collect(Collectors.toList());
 
         if (!othersContainingMin.isEmpty() && !othersContainingMax.isEmpty())
         {
@@ -148,8 +149,8 @@ public final class ExtendEvidence
         rightHead.stream().filter(x -> !leftTail.contains(x)).forEach(x -> mergeIndices.add(x));
         Collections.sort(mergeIndices);
 
-        List<AminoAcidFragment> filteredFragments = mAminoAcidFragments.stream()
-                .filter(x -> x.containsAll(mergeIndices)).collect(Collectors.toList());
+        List<Fragment> filteredFragments = mFragments.stream()
+                .filter(x -> x.containsAminoAcids(mergeIndices)).collect(Collectors.toList());
 
         if (!filteredFragments.isEmpty())
         {

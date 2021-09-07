@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.misc;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.lilac.read.SAMCodingRecord;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -159,24 +158,9 @@ public class SAMCodingRecordTest
 
         }
 
-        return buildSamRecord(alignmentStart, cigar, readStr, qualsStr);
+        return LilacTestUtils.buildSamRecord(alignmentStart, cigar, readStr, qualsStr);
     }
 
-    private SAMRecord buildSamRecord(int alignmentStart, String cigar, String readString, String qualities)
-    {
-        SAMRecord record = new SAMRecord(null);
-        record.setReadName("READNAME");
-        record.setAlignmentStart(alignmentStart);
-        record.setCigarString(cigar);
-        record.setReadString(readString);
-        record.setReadNegativeStrandFlag(false);
-        record.setBaseQualityString(qualities);
-        record.setMappingQuality(20);
-        record.setDuplicateReadFlag(false);
-        record.setReadUnmappedFlag(false);
-        record.setProperPairFlag(true);
-        record.setReadPairedFlag(true);
-        return record;
-    }
+
 
 }

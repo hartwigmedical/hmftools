@@ -16,26 +16,15 @@ import org.junit.Test;
 
 public class DriverCatalogFileTest {
 
-    private static final String DRIVER_CATALOG_TSV_WITH_DNDS =
-            Resources.getResource("drivercatalog/sample.driver.catalog_with_dnds.tsv").getPath();
-    private static final String DRIVER_CATALOG_TSV_WITHOUT_DNDS =
-            Resources.getResource("drivercatalog/sample.driver.catalog_without_dnds.tsv").getPath();
+    private static final String DRIVER_CATALOG_TSV = Resources.getResource("drivercatalog/sample.driver.catalog.tsv").getPath();
     private static final double EPSILON = 1.0e-10;
 
     @Test
-    public void canReadDriverCatalogFileWithDnds() throws IOException {
-        assertDriverCatalog(DriverCatalogFile.read(DRIVER_CATALOG_TSV_WITH_DNDS));
-    }
-
-    @Test
     public void canReadDriverCatalogFileWithoutDnds() throws IOException {
-        assertDriverCatalog(DriverCatalogFile.read(DRIVER_CATALOG_TSV_WITHOUT_DNDS));
-    }
+        List<DriverCatalog> driverCatalogList = DriverCatalogFile.read(DRIVER_CATALOG_TSV);
+        assertEquals(3, driverCatalogList.size());
 
-    private static void assertDriverCatalog(@NotNull List<DriverCatalog> driverCatalogs) {
-        assertEquals(3, driverCatalogs.size());
-
-        DriverCatalog catalog1 = driverCatalogs.get(0);
+        DriverCatalog catalog1 = driverCatalogList.get(0);
         assertEquals("8", catalog1.chromosome());
         assertEquals("p22", catalog1.chromosomeBand());
         assertEquals("SGCZ", catalog1.gene());
@@ -52,7 +41,7 @@ public class DriverCatalogFileTest {
         assertEquals(3.7, catalog1.minCopyNumber(), EPSILON);
         assertEquals(1.3, catalog1.maxCopyNumber(), EPSILON);
 
-        DriverCatalog catalog2 = driverCatalogs.get(1);
+        DriverCatalog catalog2 = driverCatalogList.get(1);
         assertEquals("X", catalog2.chromosome());
         assertEquals("q21.33", catalog2.chromosomeBand());
         assertEquals("DIAPH2", catalog2.gene());
@@ -69,7 +58,7 @@ public class DriverCatalogFileTest {
         assertEquals(2.4, catalog2.minCopyNumber(), EPSILON);
         assertEquals(5.3, catalog2.maxCopyNumber(), EPSILON);
 
-        DriverCatalog catalog3 = driverCatalogs.get(2);
+        DriverCatalog catalog3 = driverCatalogList.get(2);
         assertEquals("9", catalog3.chromosome());
         assertEquals("p23-p24.1", catalog3.chromosomeBand());
         assertEquals("PTPRD", catalog3.gene());

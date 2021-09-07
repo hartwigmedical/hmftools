@@ -6,7 +6,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 
 import java.util.List;
 import java.util.Random;

@@ -324,6 +324,9 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return variantType is Deletion && variantType.length >= minDelLength && variantType.length <= maxDelLength && context.inexactHomologyLength() > maxInexactHomLength
     }
 
+    fun inexactHomologyStart(): Int { return context.inexactHomologyStart(); }
+    fun inexactHomologyEnd(): Int { return context.inexactHomologyEnd(); }
+
     fun breakendAssemblyReadPairsFilter(): Boolean {
         return isSingle && context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()
     }

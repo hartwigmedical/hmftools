@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.hla;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
+import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
 
 import java.util.List;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
@@ -18,6 +19,6 @@ public class HlaContext
         ExpectedAlleles = expectedAlleles;
     }
 
-    public String geneName() { return HLA_PREFIX + Gene; }
+    public String geneName() { return longGeneName(Gene); }
 
 }

@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.junit.Test;
 

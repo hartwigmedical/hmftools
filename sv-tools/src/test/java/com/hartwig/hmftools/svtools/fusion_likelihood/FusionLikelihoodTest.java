@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.createPhaseRegionsFromTranscript;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.calcCombinedPhase;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasNoOverlappingRegions;
@@ -28,10 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.ensemblcache.GeneTestUtils;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.test.GeneTestUtils;
 
 import org.junit.Test;
 
@@ -290,7 +287,7 @@ public class FusionLikelihoodTest
         assertTrue(region1.hasAnyPhaseMatch(region2.getPhaseArray()));
         assertTrue(region2.hasAnyPhaseMatch(region1.getPhaseArray()));
 
-        EnsemblGeneData gene = GeneTestUtils.createEnsemblGeneData(geneId, "GEN2", "1", 1, 10, 100);
+        GeneData gene = GeneTestUtils.createEnsemblGeneData(geneId, "GEN2", "1", 1, 10, 100);
         GeneRangeData geneData = new GeneRangeData(gene);
         geneData.setPhaseRegions(Lists.newArrayList(region));
         assertFalse(geneData.hasCodingTranscripts());
@@ -540,10 +537,10 @@ public class FusionLikelihoodTest
     @Test
     public void testProximateFusionCounts()
     {
-        EnsemblGeneData gene1 = GeneTestUtils.createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
+        GeneData gene1 = GeneTestUtils.createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
         GeneRangeData lowerGene = new GeneRangeData(gene1);
 
-        EnsemblGeneData gene2 = GeneTestUtils.createEnsemblGeneData("ESNG002", "GEN2", "1", 1, 10000, 12000);
+        GeneData gene2 = GeneTestUtils.createEnsemblGeneData("ESNG002", "GEN2", "1", 1, 10000, 12000);
         GeneRangeData upperGene = new GeneRangeData(gene2);
 
         List<Integer> delLengths = Lists.newArrayList((int)50, (int)400);

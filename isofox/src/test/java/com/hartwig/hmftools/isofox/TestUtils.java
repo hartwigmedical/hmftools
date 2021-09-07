@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateExonStarts;
-import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.generateExonStarts;
+import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -20,9 +20,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.MockRefGenome;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -99,7 +99,7 @@ public class TestUtils
 
     public static void addTestGenes(EnsemblDataCache geneTransCache)
     {
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, GENE_START_1, GENE_START_1 + 500));
         geneList.add(createEnsemblGeneData(GENE_ID_2, GENE_NAME_2, CHR_1, POS_STRAND, GENE_START_2, GENE_START_2 + 900));
         geneList.add(createEnsemblGeneData(GENE_ID_3, GENE_NAME_3, CHR_1, NEG_STRAND, GENE_START_3, GENE_START_3 + 500));
@@ -350,11 +350,11 @@ public class TestUtils
 
     public static GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, int posStart, int posEnd)
     {
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, strand, posStart, posEnd, "");
+        GeneData geneData = new GeneData(geneId, geneId, chromosome, strand, posStart, posEnd, "");
         return new GeneReadData(geneData);
     }
 
-    public static GeneCollection createGeneCollection(final EnsemblDataCache geneTransCache, int id, final List<EnsemblGeneData> genes)
+    public static GeneCollection createGeneCollection(final EnsemblDataCache geneTransCache, int id, final List<GeneData> genes)
     {
         List<GeneReadData> geneReadData = Lists.newArrayList();
         genes.forEach(x -> geneReadData.add(new GeneReadData(x)));

@@ -4,14 +4,19 @@ import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
+import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_FILES_DIR;
+import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_IDS_FILE;
+import static com.hartwig.hmftools.lilac.cohort.CohortCommon.loadSampleIds;
+import static com.hartwig.hmftools.lilac.cohort.CohortFrequency.ALLELE_FREQUENCY_FILE;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplexFile.parseCandidateCoverageData;
 
 import java.io.BufferedWriter;
@@ -42,41 +47,25 @@ public class CandidateScores
 
     private BufferedWriter mWriter;
 
-    private static final String SAMPLE_IDS_FILE = "sample_ids_file";
-    private static final String CANDIDATE_FILES_DIR = "candidate_files_dir";
-
     public CandidateScores(final CommandLine cmd)
     {
-        mCohortFrequency = new CohortFrequency(cmd);
+        mCohortFrequency = new CohortFrequency(cmd.getOptionValue(ALLELE_FREQUENCY_FILE));
         mTruthSet = new SampleTruthSet(cmd);
         mOutputDir = parseOutputDir(cmd);
-        mCandidateFilesDir = checkAddDirSeparator(cmd.getOptionValue(CANDIDATE_FILES_DIR));
+        mCandidateFilesDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_FILES_DIR));
 
-        mSampleIds = Lists.newArrayList();
-        final String sampleIdsFile = cmd.getOptionValue(SAMPLE_IDS_FILE);
-
-        try
-        {
-            final List<String> lines = Files.readAllLines(new File(sampleIdsFile).toPath());
-            lines.stream().filter(x -> !x.equals("SampleId")).forEach(x -> mSampleIds.add(x));
-            LL_LOGGER.info("load {} samples", mSampleIds.size());
-        }
-        catch (IOException e)
-        {
-            LL_LOGGER.warn("failed to load sample file({}): {}", sampleIdsFile, e.toString());
-        }
-
+        mSampleIds = loadSampleIds(cmd.getOptionValue(SAMPLE_IDS_FILE));
     }
 
     public void run()
     {
-        if(mCohortFrequency.getAlleleFrequencies().isEmpty() || mTruthSet.getSampleAlleleSet().isEmpty())
+        if(mSampleIds.isEmpty())
         {
-            LL_LOGGER.error("reference data loading failed");
+            LL_LOGGER.error("sample IDs loading failed");
             System.exit(1);
         }
 
-        if(mSampleIds.isEmpty())
+        if(mCohortFrequency.getAlleleFrequencies().isEmpty() || mTruthSet.getSampleAlleleSet().isEmpty())
         {
             LL_LOGGER.error("reference data loading failed");
             System.exit(1);
@@ -223,8 +212,8 @@ public class CandidateScores
 
         Options options = new Options();
         options.addOption(SAMPLE_IDS_FILE, true, "Sample IDs");
-        options.addOption(CANDIDATE_FILES_DIR, true, "Path to candidate-coverage files");
-        options.addOption(OUTPUT_DIR, true, "Path to output");
+        options.addOption(SAMPLE_FILES_DIR, true, "Path to candidate-coverage files");
+        addOutputDir(options);
         SampleTruthSet.addCmdLineOptions(options);
         CohortFrequency.addCmdLineOptions(options);
 

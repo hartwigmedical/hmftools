@@ -4,10 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
+import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.utils.DataUtil;
-import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -24,11 +29,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
-import com.hartwig.hmftools.patientreporter.virusbreakend.ReportableVirusBreakend;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
-import com.hartwig.hmftools.protect.linx.ReportableGeneDisruption;
-import com.hartwig.hmftools.protect.linx.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
@@ -44,7 +44,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     // TODO Remove this toggle-off once we can remove position (blocked by DEV-810)
     private static final boolean DISPLAY_CLONAL_COLUMN = false;
-    private static final float TABLE_SPACER_HEIGHT = 5;
 
     @NotNull
     private final AnalysedPatientReport patientReport;
@@ -82,12 +81,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(genomicAnalysis.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createVirusBreakendsTable(genomicAnalysis.virusBreakends(), sampleReport.reportViralInsertions()));
+        reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes(),
                 hasReliablePurity,
                 patientReport.qsFormNumber(),
                 sampleReport.cohort().reportPeach()));
-
     }
 
     @NotNull
@@ -115,7 +113,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
         contentTable.addCell(TableUtil.createContentCell(Strings.EMPTY));
 
         return TableUtil.createWrappingReportTable(title, contentTable);
-
     }
 
     @NotNull
@@ -213,7 +210,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity,
-            @NotNull Map<ChromosomeArmKey, Double> cnPerChromosome) {
+            @NotNull List<CnPerChromosomeArmData> cnPerChromosome) {
         String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -321,12 +318,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createVirusBreakendsTable(@NotNull List<ReportableVirusBreakend> virusBreakends, boolean reportViralInsertions) {
+    private static Table createVirusTable(@NotNull List<AnnotatedVirus> viruses, boolean reportViralPresence) {
         String title = "Tumor specific viral insertions";
 
-        if (!reportViralInsertions) {
+        if (!reportViralPresence) {
             return TableUtil.createNAReportTable(title);
-        } else if (virusBreakends.isEmpty()) {
+        } else if (viruses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 150, 180 },
@@ -334,9 +331,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("") });
 
-            for (ReportableVirusBreakend virusBreakend : virusBreakends) {
-                contentTable.addCell(TableUtil.createContentCell(virusBreakend.virusName()));
-                contentTable.addCell(TableUtil.createContentCell(Integer.toString(virusBreakend.integrations()))
+            for (AnnotatedVirus virus : viruses) {
+                contentTable.addCell(TableUtil.createContentCell(virus.name()));
+                contentTable.addCell(TableUtil.createContentCell(Integer.toString(virus.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
                 contentTable.addCell(TableUtil.createContentCell(""));
             }

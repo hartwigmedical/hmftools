@@ -53,20 +53,20 @@ public class CanonicalAnnotationTest {
 
     @Test
     public void favourDriverCatalogGenes() {
-        TranscriptAnnotation nonCanonicalDriverGene =
+        SnpEffAnnotation nonCanonicalDriverGene =
                 createSnpEffAnnotation("ATP1A1", "ENST00000295598", VariantConsequence.MISSENSE_VARIANT);
-        TranscriptAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
-        TranscriptAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
+        SnpEffAnnotation noDriverGene = createSnpEffAnnotation("AL136376.1", "ENST00000598661", VariantConsequence.MISSENSE_VARIANT);
+        SnpEffAnnotation canonicalDriverGene = createSnpEffAnnotation("ATP1A1", "ENST00000537345", VariantConsequence.MISSENSE_VARIANT);
 
         CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
         assertEquals(Optional.empty(), victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene)));
 
-        Optional<TranscriptAnnotation> annotationSecond =
+        Optional<SnpEffAnnotation> annotationSecond =
                 victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene, noDriverGene));
         assertTrue(annotationSecond.isPresent());
         assertEquals(noDriverGene, annotationSecond.get());
 
-        Optional<TranscriptAnnotation> annotationThird =
+        Optional<SnpEffAnnotation> annotationThird =
                 victim.pickCanonicalFavourDriverGene(Lists.newArrayList(nonCanonicalDriverGene, noDriverGene, canonicalDriverGene));
         assertTrue(annotationThird.isPresent());
         assertEquals(canonicalDriverGene, annotationThird.get());
@@ -76,23 +76,15 @@ public class CanonicalAnnotationTest {
     private static SnpEffAnnotation createSnpEffAnnotation(@NotNull final String gene, @NotNull final String transcript,
             @NotNull VariantConsequence consequence) {
         return ImmutableSnpEffAnnotation.builder()
-                .allele(Strings.EMPTY)
                 .effects(Strings.EMPTY)
                 .consequences(Lists.newArrayList(consequence))
-                .severity(Strings.EMPTY)
                 .gene(gene)
                 .geneID(gene)
                 .featureType("transcript")
                 .featureID(transcript)
-                .transcriptBioType(Strings.EMPTY)
                 .rank(Strings.EMPTY)
                 .hgvsCoding(Strings.EMPTY)
                 .hgvsProtein(Strings.EMPTY)
-                .cDNAPosAndLength(Strings.EMPTY)
-                .cdsPosAndLength(Strings.EMPTY)
-                .aaPosAndLength(Strings.EMPTY)
-                .distance(Strings.EMPTY)
-                .addition(Strings.EMPTY)
                 .build();
     }
 }

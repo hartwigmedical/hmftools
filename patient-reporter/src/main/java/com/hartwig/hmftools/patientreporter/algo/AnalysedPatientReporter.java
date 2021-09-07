@@ -15,15 +15,15 @@ import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.runcontext.MetaDataResolver;
+import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
-import com.hartwig.hmftools.protect.purple.ReportableVariant;
-import com.hartwig.hmftools.protect.purple.ReportableVariantSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,21 +52,19 @@ public class AnalysedPatientReporter {
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        String pipelineVersion = MetaDataResolver.majorDotMinorVersion(new File(config.pipelineVersionFile()));
+        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile());
         checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
 
-        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel(),
-                reportData.taxonomyDb(),
-                reportData.virusInterpretationModel(),
-                reportData.virusBlackListModel());
+        GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleRunId(),
                 sampleMetadata.refSampleRunId(),
                 config,
-                sampleReport.germlineReportingLevel());
+                sampleReport.germlineReportingLevel(),
+                config.refGenomeVersion());
 
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
-                sampleReport.reportViralInsertions(),
+                sampleReport.reportViralPresence(),
                 sampleReport.cohort().reportPeach());
 
         String qcForm = determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity());
@@ -75,7 +73,7 @@ public class AnalysedPatientReporter {
 
         LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
-                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()))
+                .conclusion(MolecularTissueOriginFile.read(config.molecularTissueOriginTxt()).conclusion())
                 .plotPath(config.molecularTissueOriginPlot())
                 .build();
 
@@ -143,7 +141,7 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Gene fusions to report: {}", analysis.geneFusions().size());
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
-        LOGGER.info(" Virus breakend to report: {}", analysis.virusBreakends().size());
+        LOGGER.info(" Viruses to report: {}", analysis.reportableViruses().size());
         LOGGER.info(" Pharmacogenetics to report: {}", analysis.peachGenotypes().size());
 
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());

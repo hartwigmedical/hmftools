@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -41,8 +42,8 @@ public class LoadCuppa {
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
         LOGGER.info("Reading CUPPA conclusion file {}", cuppaConclusionTxt);
-        String molecularTissueOrigins = MolecularTissueOriginFile.read(cuppaConclusionTxt);
-        LOGGER.info(" Read '{}' as CUPPA conclusion result", molecularTissueOrigins);
+        MolecularTissueOrginData molecularTissueOrigins = MolecularTissueOriginFile.read(cuppaConclusionTxt);
+        LOGGER.info(" Read '{}' as CUPPA conclusion result", molecularTissueOrigins.conclusion());
 
         LOGGER.info("Writing CUPPA into database for {}", sample);
         dbWriter.writeCuppa(sample, molecularTissueOrigins);

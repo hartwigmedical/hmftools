@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
@@ -26,6 +24,8 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedDrug;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableCuratedPrimaryTumor;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.ValidationFinding;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.copynumber.sv;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
+import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
 

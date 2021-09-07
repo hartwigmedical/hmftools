@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.fusion;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +21,7 @@ public class BreakendGeneData
     private final boolean mIsStart;
     private boolean mUpstream;
 
-    private EnsemblGeneData mGeneData;
+    private GeneData mGeneData;
 
     private final List<BreakendTransData> mTranscripts;
 
@@ -57,8 +57,8 @@ public class BreakendGeneData
         mKaryotypeBand = karyotypeBand;
     }
 
-    public void setGeneData(final EnsemblGeneData geneData) { mGeneData = geneData; }
-    public final EnsemblGeneData getGeneData() { return mGeneData; }
+    public void setGeneData(final GeneData geneData) { mGeneData = geneData; }
+    public final GeneData getGeneData() { return mGeneData; }
 
     public void setPositionalData(final String chromosome, int position, byte orientation)
     {

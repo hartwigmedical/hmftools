@@ -1,1 +1,2 @@
 chromosome	position	ref	alt	source	treatment	cancerType	doid	level	direction	urls
+1	100	A	C	HARTWIG_CURATED	drug	all	162	C	RESISTANT

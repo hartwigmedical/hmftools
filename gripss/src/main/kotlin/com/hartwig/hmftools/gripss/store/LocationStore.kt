@@ -58,32 +58,42 @@ open class LocationStore(private val compare: ContigComparator, private val sing
 
         private fun roundedPosition(position: Int) = position / 1_000_000
 
-        private fun Location.overlaps(other: Location): Boolean {
+        private fun Location.overlaps(other: Location, buffer: Int): Boolean {
             // No need to check for contig and orientation as the maps are already keyed by this
-            return other.start <= end && other.end >= start
+            // return other.start <= end && other.end >= start
+            return start <= other.end + buffer && end >= other.start - buffer
         }
     }
 
     fun contains(variant: StructuralVariantContext): Boolean {
         return if (variant.isSingle) {
-            contains(variant.startBreakend)
+            contains(variant.startBreakend, variant.inexactHomologyStart())
         } else {
-            contains(variant.breakpoint!!)
+            contains(variant.breakpoint!!, variant.inexactHomologyStart(), variant.inexactHomologyEnd())
         }
     }
 
     fun contains(start: Breakend): Boolean {
+        return contains(start, 0);
+    }
+
+    fun contains(start: Breakend, inexactHom: Int): Boolean {
         val keys = start.locationKey()
-        return keys.any { singlesMap[it]?.any { x -> x.overlaps(start) } == true }
+        return keys.any { singlesMap[it]?.any { x -> x.overlaps(start, inexactHom) } == true }
     }
 
     fun contains(breakpoint: Breakpoint): Boolean {
+        return contains(breakpoint, 0, 0);
+    }
+
+    fun contains(breakpoint: Breakpoint, inexactHomStart: Int, inexactHomEnd: Int): Boolean {
         if (compare.compare(breakpoint.startBreakend, breakpoint.endBreakend) > 0) {
-            return contains(Breakpoint(breakpoint.endBreakend, breakpoint.startBreakend))
+            return contains(Breakpoint(breakpoint.endBreakend, breakpoint.startBreakend), inexactHomStart, inexactHomEnd)
         }
 
         val keys = breakpoint.locationKey()
-        return keys.any { pairedMap[it]?.any { x -> x.startBreakend.overlaps(breakpoint.startBreakend) && x.endBreakend.overlaps(breakpoint.endBreakend) } == true }
+        return keys.any { pairedMap[it]?.any { x -> x.startBreakend.overlaps(breakpoint.startBreakend, inexactHomStart)
+                && x.endBreakend.overlaps(breakpoint.endBreakend, inexactHomEnd) } == true }
     }
 
     private fun ContigComparator.compare(breakend1: Breakend, breakend2: Breakend): Int {

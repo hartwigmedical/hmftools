@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

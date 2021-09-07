@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.codon.AminoAcidConverter.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;

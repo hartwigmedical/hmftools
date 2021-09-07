@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -284,7 +284,7 @@ public class ExpectedRatesTest
 
         String geneId = "GENE01";
 
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", POS_STRAND, 100, 1000, "");
+        GeneData geneData = new GeneData(geneId, geneId, "1", POS_STRAND, 100, 1000, "");
 
         int transId = 1;
         String transName = "TRANS01";
@@ -355,7 +355,7 @@ public class ExpectedRatesTest
 
         String geneId = "GENE01";
 
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", POS_STRAND, 100, 1000, "");
+        GeneData geneData = new GeneData(geneId, geneId, "1", POS_STRAND, 100, 1000, "");
 
         int transId1 = 1;
         String transName1 = "TRANS01";
@@ -469,7 +469,7 @@ public class ExpectedRatesTest
 
         String geneId = "GENE01";
 
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", POS_STRAND, 100, 400, "");
+        GeneData geneData = new GeneData(geneId, geneId, "1", POS_STRAND, 100, 400, "");
 
         // first the single transcript and single exon
         int transId = 1;
@@ -557,7 +557,7 @@ public class ExpectedRatesTest
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
 
         String geneId1 = "GENE01";
-        EnsemblGeneData geneData1 = new EnsemblGeneData(geneId1, geneId1, "1", (byte) 1, 100, 600, "");
+        GeneData geneData1 = new GeneData(geneId1, geneId1, "1", (byte) 1, 100, 600, "");
 
         int transId1 = 1;
         String transName1 = "TRANS01";
@@ -573,7 +573,7 @@ public class ExpectedRatesTest
         geneReadData1.setTranscripts(Lists.newArrayList(transData1));
 
         String geneId2 = "GENE02";
-        EnsemblGeneData geneData2 = new EnsemblGeneData(geneId2, geneId2, "1", (byte) 1, 150, 1000, "");
+        GeneData geneData2 = new GeneData(geneId2, geneId2, "1", (byte) 1, 150, 1000, "");
 
         int transId2 = 2;
         String transName2 = "TRANS02";

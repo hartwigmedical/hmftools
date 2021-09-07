@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.TUMORMA
 import java.util.List;
 
 import com.hartwig.hmftools.common.doid.DoidNode;
-import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BiopsyTreatmentData;
@@ -28,6 +27,7 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.RanoMeasurementData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.TumorMarkerData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

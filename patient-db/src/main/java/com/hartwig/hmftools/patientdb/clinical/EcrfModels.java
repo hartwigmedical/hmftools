@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical;
 
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.readers.wide.WideEcrfModel;
 
 import org.immutables.value.Value;

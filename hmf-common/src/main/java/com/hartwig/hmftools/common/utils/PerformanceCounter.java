@@ -44,6 +44,18 @@ public class PerformanceCounter
         mCurrentIntervalName = null;
     }
 
+    public void reset()
+    {
+        mIsRunning = false;
+        mStartTime = 0;
+        mPausedTime = 0;
+        mTotalTime = 0;
+        mMaxTime = 0;
+        mTimes.clear();
+        mTimeNames.clear();
+        mCurrentIntervalName = null;
+    }
+
     public void setSortTimes(boolean toggle) { mSortTimes = toggle; }
 
     public final String getName() {

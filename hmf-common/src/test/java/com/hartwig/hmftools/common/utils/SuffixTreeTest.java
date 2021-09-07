@@ -21,7 +21,7 @@ public class SuffixTreeTest {
     public void testRealExample() {
         final String dna = "AATGTAGGTGCTGCTGTGAAGGGATTTAGCAGATATAATTAAGGGTCTCAATTAGTTGACTTTATGCTGCGTTTAT"
                 + "CCTGCTTGGACTGTCCTAATCAGGTGAGCCCTTGAAAGGACTGGGTTCTTCATGAGCATAGAGACTTACAGTGTG";
-        final String aminoAcids = Codons.aminoAcids(dna);
+        final String aminoAcids = Codons.aminoAcidFromBases(dna);
 
         SuffixTree tree = new SuffixTree(aminoAcids);
         for (int i = 0; i < aminoAcids.length() - 10; i++) {

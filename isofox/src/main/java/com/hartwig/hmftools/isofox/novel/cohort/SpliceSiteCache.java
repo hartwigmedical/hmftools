@@ -26,7 +26,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -109,7 +109,7 @@ public class SpliceSiteCache
             {
                 final String chromosome = chrEntry.getKey();
 
-                final List<EnsemblGeneData> geneDataList = mGeneTransCache != null ?
+                final List<GeneData> geneDataList = mGeneTransCache != null ?
                         mGeneTransCache.getChrGeneDataMap().get(chromosome) : null;
 
                 for(Map.Entry<Integer,int[]> posEntry : chrEntry.getValue().entrySet())
@@ -186,12 +186,12 @@ public class SpliceSiteCache
         return spliceSiteMap;
     }
 
-    private static boolean inRequiredGenes(final List<EnsemblGeneData> geneDataList, int position)
+    private static boolean inRequiredGenes(final List<GeneData> geneDataList, int position)
     {
         if(geneDataList == null)
             return false;
 
-        for(final EnsemblGeneData geneData : geneDataList)
+        for(final GeneData geneData : geneDataList)
         {
             if(positionWithin(position, geneData.GeneStart, geneData.GeneEnd))
                 return true;

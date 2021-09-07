@@ -20,6 +20,7 @@ SERVE supports the ingestion of the following knowledgebases:
  - [CGI](https://www.cancergenomeinterpreter.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [CIViC](https://civicdb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [CKB CORE](https://ckb.jax.org) - part of CKB's knowledgebase that is supported through [VICC](http://cancervariants.org)
+ - [CKB FLEX](https://ckbhome.jax.org) - The complete CKB clinical database.
  - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
@@ -29,8 +30,7 @@ SERVE supports the ingestion of the following knowledgebases:
  
 Support for the following knowledgebases is under development:
  - [CBG Compassionate Use](https://www.cbg-meb.nl/onderwerpen/hv-compassionate-use-programma/overzicht-goedgekeurde-cup) - 
-    a database of approved compassionate use programs in the Netherlands
- - [CKB FLEX](https://ckbhome.jax.org) - The complete CKB clinical database. 
+    a database of approved compassionate use programs in the Netherlands 
  
 A number of other Hartwig modules support the ingestion (and analysis) of these knowledgebases:
  - [VICC Importer](../vicc-importer/README.md): A module supporting the ingestion of any knowledgebase ingested into VICC.
@@ -52,7 +52,7 @@ SERVE generates clinical evidence in the following datamodel:
  - A set of URLs with extra information about the evidence (could be a publication, or a general website)
  
 The following genomic events and tumor characteristics can be mapped to clinical evidence:
- - Genome-wide tumor characteristics such as signatures or MSI status
+ - Genome-wide tumor characteristics such as signatures, MSI status or viral presence
  - Multi-gene events such as gene fusions
  - Single gene events such as amplification or general (in)activation of a gene
  - Types of mutations in ranges overlapping with specific genes such as:
@@ -63,11 +63,11 @@ The following genomic events and tumor characteristics can be mapped to clinical
  
 In addition to generating a mapping from various genomic events to clinical evidence, SERVE generates the following outputs describing 
 genomic events implied to be able to driver cancer:
- - Specific known fusion pairs
- - Known amplifications and deletions
- - Known hotspots (specific mutations on specific loci)
- - Known codons (codons for which generic mutations are implied to be pathogenic)
- - Known exons (exons for which specific mutations are implied to be pathogenic)  
+ - Specific known pathogenic fusion pairs
+ - Known pathogenic amplifications and deletions
+ - Known pathogenic exons (exons for which specific mutations are implied to be pathogenic)  
+ - Known pathogenic codons (codons for which generic mutations are implied to be pathogenic)
+ - Known pathogenic hotspots (specific mutations on specific loci)
 
 ## Extraction of genomic events and tumor characteristics from knowledgebases
  
@@ -76,7 +76,7 @@ genomic events implied to be able to driver cancer:
 Evidence that is defined on a gene-level is checked to make sure that the gene exists in Hartwig's definition of the exome. 
 If a gene does not exist in Hartwig's exome definition the evidence is ignored. 
 
-For fusions, genes are permitted that can exist in the context of a fusion pair (eg IG genes). 
+For fusions, genes are permitted that can exist in the context of a fusion pair (eg @IG genes). 
  
 ### Protein resolving for SNVs and (small) INDELs
  
@@ -89,7 +89,7 @@ The first step is to choose what ensembl transcript to use for converting protei
  1. If no transcript is configured, SERVE uses the typical transcript used by Hartwig which is generally the canonical 
  transcript defined by ensembl.
  1. If a protein annotation does not exist on the canonical transcript and has no transcript configured in the knowledgebase, 
- a consistently specific transcript is picked for protein annotation in case multiple transcript imply the same hotspot.
+ a consistently specific transcript is picked for protein annotation in case multiple transcripts imply the same hotspot.
  
 If a protein annotated form does not exist on any transcript for a specific gene, the evidence is ignored 
 (see also [curation](#curation-and-harmonization-of-individual-knowledgebases)). 
@@ -185,14 +185,15 @@ EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV ha
 
 ## Curation and harmonization of individual knowledgebases
 
-Per knowledgebase curation and filtering is applied to harmonize knowledge from different sources and to correct/remove mistakes.
+Per knowledgebase curation and filtering is applied to harmonize knowledge from different sources and to correct/remove mistakes or 
+evidence that is inconsistent with HMF driver model.
 
 ### VICC Curation
 
-VICC contributes to both actionable and known events.
-
 For VICC the following curation and filtering is applied prior to presenting the data to SERVE:
  1. General filtering of mutations that are undetectable when analyzing DNA or RNA. Examples are phosphorylation and methylation.
+ 1. Determining whether the evidence is supportive of the specified direction. Eg if evidence "does not support" sensitivity
+ we do not generate actionable results from this evidence.
  1. Filtering of specific mutations:
     - Mutations that remove the stop codon. These are simply not interpreted yet by the SERVE main algorithm.
     - Synonymous mutations in coding regions are assumed to be benign by SERVE and ignored.
@@ -225,8 +226,23 @@ SERVE only considers trials with one or more molecular inclusion criterium, and 
  - Mutations that are inconsistent with the Hartwig driver catalog are removed
  - Mutations that are undetectable in DNA are removed. One example is "Expression" of a gene.
  
-Finally, similar to VICC, cancer types for which no DOIDs have been specified get a DOID assigned by SERVE. 
- 
+Finally, cancer types for which no DOIDs have been specified get a DOID assigned by SERVE.
+
+### CKB FLEX Curation
+
+For CKB FLEX curation and filtering is predominantly configurable rather than fixed in SERVE. The only fixed curation done in SERVE
+is mapping evidence for tumor characteristics (such as MSI or High TMB) to actual characteristics since CKB FLEX models this as "genes".
+
+The following filters can be configured for CKB FLEX, along with an example of how this is used by Hartwig:
+Filter  | Description
+---|---
+ALLOW_GENE_IN_FUSIONS_EXCLUSIVELY  | CKB FLEX uses a hierarchy of events in such a way that every "fusion" is a child of "mutant". For certain genes (eg @IG) we want to ignore the abstract level and only include the fusion evidence since we only handle @IG on a fusion level in the Hartwig pipeline. 
+FILTER_EVENT_WITH_KEYWORD  | Can be used to remove evidence of a type that is not observable in DNA (eg "hypermethylation")
+FILTER_EXACT_VARIANT_FULLNAME  | Any specific variant can be removed through this filter. This is primarily used to remove variants that have a coding impact on their configured refseq transcript in CKB but are non-coding or don't exist on Hartwig's ensembl transcript.
+FILTER_ALL_EVIDENCE_ON_GENE  | Is primarily used to remove evidence on genes which are simply not modeled correctly in Hartwig's gene model and hence can't be mapped properly
+FILTER_EVIDENCE_FOR_EXONS_ON_GENE  | Some genes may have evidence on specific exons which don't exist on the ensembl transcript used by Hartwig
+FILTER_SECONDARY_GENE_WHEN_FUSION_LEG  | Usage of this filter is similar to the use case for removing all evidence on genes. 
+    
 ## Handling of multiple reference genome versions
  
 External knowledgebases generally define their knowledge for one specific reference genome version (v37 or v38). SERVE merges knowledgebases 
@@ -239,7 +255,7 @@ are used in a ref-dependent manner during knowledge extraction:
  - The reference genome fasta file 
  - The definition of Hartwig driver genes
  - The definition of Hartwig known fusions
- - The Hartwig mapping of gene to (canonical) transcript 
+ - The Hartwig mapping of gene to (canonical) ensembl transcript 
 
 ### Ref-genome dependent output
 
@@ -268,6 +284,8 @@ Genes are lifted between reference genome using Hartwig's internal gene mapping.
  
 Do note that for fusion pairs, additional annotation remains unchanged assuming exonic ranges relevant for known and actionable fusions 
 remain identical between ref genome versions.
+
+In case the genomic region of a gene has been flipped between v37 and v38 we exclude the gene from liftover. 
  
 ## Overview of the SERVE algorithm
 
@@ -277,6 +295,7 @@ A knowledgebase can contribute to known and/or actionable events. Current config
       
 Knowledgebase  | Ref genome version | Contributes to known events? | Contributes to actionable events?
 ---|---|---|---
+CKB FLEX | v38 | Yes | Yes
 DoCM | v37 | Yes | No 
 Hartwig Cohort | v37 | Yes | No
 Hartwig Curated | v37 | Yes | No
@@ -294,21 +313,29 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.6)
+  - Add filter in VICC extraction to ignore evidence that does not support the direction when generating actionability.
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.5)
+  - "Advanced solid tumor" in CKB is mapped to DOID 162 rather than 0050586 to avoid missing it for tumors with unknown tumor type
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.4)
+  - Various additional checks to ref genome lift-over (such as filtering of events on genes for which strand has flipped).
+  - CKB FLEX filtering framework has been added.
+  - Solve bug when generating hotspots from MNVs that cross exon boundaries
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.3)
-  - Support for merging sources that differ in ref genome version (v37 vs v38)
-  - Support for generating output for both ref genome version v37 and v38
-  - Driver catalog warnings are disabled for VICC
+  - Support for merging sources that differ in ref genome version (v37 vs v38).
+  - Support for generating output for both ref genome version v37 and v38.
+  - Driver catalog warnings are disabled for VICC.
   - KnownExons and KnownCodons are sorted more explicitly to make sure files don't change upon identical input.
-  - An index file is generated for KnownHotspots VCF (for both v37 and v38) 
+  - An index file is generated for KnownHotspots VCF (for both v37 and v38). 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.2) 
   - Consistently pick a specific transcript for hotspot annotation in case multiple transcripts imply the same hotspot.
   - Extend splice sites from 5 bases to 10 bases beyond exon boundaries.
-  - Add support for evidence for actionable viral presence (starting with EBV and HPV presence)
-  - Add support for evidence of absence of high TMB and MSI
+  - Add support for evidence for actionable viral presence (starting with EBV and HPV presence).
+  - Add support for evidence of absence of high TMB and MSI.
   - Renamed actionable signatures to actionable characteristics.
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.1) 
-  - Ability to switch every resource on/off independently
-  - More predictable sorting of knowledge to ensure identical output on identical input
-  - Ability to curate VICC evidence levels in case they are suspicious
+  - Ability to switch every resource on/off independently.
+  - More predictable sorting of knowledge to ensure identical output on identical input.
+  - Ability to curate VICC evidence levels in case they are suspicious.
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.0)
-  - Initial release
+  - Initial release.

@@ -10,23 +10,26 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class RealignedTest {
+public class RealignedTest
+{
 
     @Test
-    public void testRealignedTooShort() {
-        String sequence         = "GAGAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTTT";
-        String truncatedAtEnd   = "GAGAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTT";
-        String truncatedAtStart   = "GAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTTT";
+    public void testRealignedTooShort()
+    {
+        String sequence = "GAGAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTTT";
+        String truncatedAtEnd = "GAGAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTT";
+        String truncatedAtStart = "GAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTTT";
         int startIndex = 0;
         int endIndex = sequence.length() - 1;
 
         assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex, sequence.getBytes(), 0));
-        assertRealigned(NONE,  realigned(startIndex, endIndex, sequence.getBytes(), startIndex, truncatedAtEnd.getBytes(), 0));
-        assertRealigned(NONE,  realigned(startIndex, endIndex, sequence.getBytes(), -2, truncatedAtStart.getBytes(), 0));
+        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), startIndex, truncatedAtEnd.getBytes(), 0));
+        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), -2, truncatedAtStart.getBytes(), 0));
     }
 
     @Test
-    public void testRealigned() {
+    public void testRealigned()
+    {
         String sequence = "GAGAGTGTGTGTGTGTGTCTGTGTGTATGTATATATATATATATATATATCACATTTTTATTATTG";
         int startIndex = 3;
         int endIndex = startIndex + 55;
@@ -46,10 +49,11 @@ public class RealignedTest {
     }
 
     @Test
-    public void testPolyA() {
+    public void testPolyA()
+    {
         String shorter = "GATCAAAAAAAAAGATC";
-        String ref     = "GATCAAAAAAAAAAGATC";
-        String longer  = "GATCAAAAAAAAAAAGATC";
+        String ref = "GATCAAAAAAAAAAGATC";
+        String longer = "GATCAAAAAAAAAAAGATC";
 
         int startIndex = 0;
         int endIndex = ref.length() - 1;
@@ -60,10 +64,11 @@ public class RealignedTest {
     }
 
     @Test
-    public void testDiNucleotideRepeat() {
+    public void testDiNucleotideRepeat()
+    {
         String shorter = "GATCATATATATGATC";
-        String     ref = "GATCATATATATATGATC";
-        String  longer = "GATCATATATATATATGATC";
+        String ref = "GATCATATATATATGATC";
+        String longer = "GATCATATATATATATGATC";
 
         int startIndex = 0;
         int endIndex = ref.length() - 1;
@@ -73,12 +78,14 @@ public class RealignedTest {
         assertRealigned(LENGTHENED, 6, realigned(startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), 10));
     }
 
-    private static void assertRealigned(RealignedType expectedType, int expectedCount, RealignedContext context) {
-        assertEquals(expectedCount, context.repeatCount());
-        assertEquals(expectedType, context.type());
+    private static void assertRealigned(RealignedType expectedType, int expectedCount, RealignedContext context)
+    {
+        assertEquals(expectedCount, context.RepeatCount);
+        assertEquals(expectedType, context.Type);
     }
 
-    private static void assertRealigned(RealignedType expectedType, RealignedContext context) {
-        assertEquals(expectedType, context.type());
+    private static void assertRealigned(RealignedType expectedType, RealignedContext context)
+    {
+        assertEquals(expectedType, context.Type);
     }
 }

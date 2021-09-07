@@ -17,7 +17,7 @@ public final class LimsChecker {
     public static boolean checkViralInsertions(@Nullable LimsJsonSampleData sampleData, @Nullable LimsCohortConfig cohort,
             @NotNull String sampleId) {
         if (sampleData != null && cohort != null) {
-            if (sampleData.reportViralInsertions()) {
+            if (sampleData.reportViralPresence()) {
                 if (!cohort.reportViral()) {
                     LOGGER.warn("Consent of viral insertions is true, but must be false for sample '{}'", sampleId);
                 }

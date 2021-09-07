@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep20;
+import org.jooq.InsertValuesStep19;
 
 class CanonicalTranscriptDAO {
 
@@ -28,7 +28,7 @@ class CanonicalTranscriptDAO {
         context.delete(CANONICALTRANSCRIPT).where(CANONICALTRANSCRIPT.ASSEMBLY.eq(assembly)).execute();
 
         for (List<CanonicalTranscript> split : Iterables.partition(transcripts, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep20 inserter = context.insertInto(CANONICALTRANSCRIPT,
+            InsertValuesStep19 inserter = context.insertInto(CANONICALTRANSCRIPT,
                     CANONICALTRANSCRIPT.ASSEMBLY,
                     CANONICALTRANSCRIPT.GENE,
                     CANONICALTRANSCRIPT.GENEID,
@@ -37,7 +37,6 @@ class CanonicalTranscriptDAO {
                     CANONICALTRANSCRIPT.GENESTART,
                     CANONICALTRANSCRIPT.GENEEND,
                     CANONICALTRANSCRIPT.TRANSCRIPTID,
-                    CANONICALTRANSCRIPT.TRANSCRIPTVERSION,
                     CANONICALTRANSCRIPT.TRANSCRIPTSTART,
                     CANONICALTRANSCRIPT.TRANSCRIPTEND,
                     CANONICALTRANSCRIPT.EXONS,
@@ -54,7 +53,7 @@ class CanonicalTranscriptDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull String assembly,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String assembly,
             @NotNull CanonicalTranscript transcript) {
         inserter.values(assembly,
                 transcript.gene(),
@@ -64,7 +63,6 @@ class CanonicalTranscriptDAO {
                 transcript.geneStart(),
                 transcript.geneEnd(),
                 transcript.transcriptID(),
-                transcript.transcriptVersion(),
                 transcript.start(),
                 transcript.end(),
                 transcript.exons(),

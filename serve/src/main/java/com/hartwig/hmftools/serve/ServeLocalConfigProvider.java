@@ -33,6 +33,7 @@ public final class ServeLocalConfigProvider {
                 .skipHotspotResolving(true);
 
         // Datastore is a shared vm with fixed paths.
+        // TODO Update datastore to serve-vm!
         if (hostname.toLowerCase().equals("datastore")) {
             builder.viccJson("/data/common/dbs/serve/static_sources/vicc/all.json");
             builder.ckbDir("/data/common/dbs/ckb/210514_flex_dump");
@@ -52,17 +53,17 @@ public final class ServeLocalConfigProvider {
             builder.refGenome38To37Chain("/data/common/refgenomes/liftover/hg38ToHg19.over.chain");
         } else {
             // Assume we run on local machine with fixed paths
-            builder.viccJson(System.getProperty("user.home") + "/hmf/projects/serve/static_sources/vicc/all.json");
-            builder.ckbDir(System.getProperty("user.home") + "/hmf/projects/serve/ckb");
-            builder.ckbFilterTsv(System.getProperty("user.home") + "/hmf/projects/serve/curation/ckb_filters.tsv");
-            builder.iClusionTrialTsv(System.getProperty("user.home") + "/hmf/projects/serve/iclusion/iclusion_trials_prod.tsv");
+            builder.viccJson(System.getProperty("user.home") + "/hmf/serve/static_sources/vicc/all.json");
+            builder.ckbDir(System.getProperty("user.home") + "/hmf/serve/ckb");
+            builder.ckbFilterTsv(System.getProperty("user.home") + "/hmf/serve/curation/ckb_filters.tsv");
+            builder.iClusionTrialTsv(System.getProperty("user.home") + "/hmf/serve/iclusion/iclusion_trials_prod.tsv");
 
             builder.outputDir(System.getProperty("user.home") + "/hmf/tmp/serve");
-            builder.missingDoidsMappingTsv(System.getProperty("user.home") + "/hmf/projects/serve/curation/missing_doids_mapping.tsv");
-            builder.driverGene37Tsv(System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.37.tsv");
-            builder.driverGene38Tsv(System.getProperty("user.home") + "/hmf/projects/driver_gene_panel/DriverGenePanel.38.tsv");
-            builder.knownFusion37File(System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.37_v3.csv");
-            builder.knownFusion38File(System.getProperty("user.home") + "/hmf/projects/fusions/known_fusion_data.38_v3.csv");
+            builder.missingDoidsMappingTsv(System.getProperty("user.home") + "/hmf/serve/curation/missing_doids_mapping.tsv");
+            builder.driverGene37Tsv(System.getProperty("user.home") + "/hmf/driver_gene_panel/DriverGenePanel.37.tsv");
+            builder.driverGene38Tsv(System.getProperty("user.home") + "/hmf/driver_gene_panel/DriverGenePanel.38.tsv");
+            builder.knownFusion37File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.37_v3.csv");
+            builder.knownFusion38File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.38_v3.csv");
             builder.refGenome37FastaFile(
                     System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(

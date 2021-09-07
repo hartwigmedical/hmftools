@@ -26,7 +26,6 @@ import com.google.common.collect.Maps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class KnownFusionCache
 {
@@ -37,6 +36,8 @@ public class KnownFusionCache
     private final List<KnownFusionData> mKnownPairData;
     private final List<KnownFusionData> mIgRegionData;
     private final List<KnownFusionData> mHighImpactPromiscuousData;
+
+    private boolean mHasValidData;
 
     public static final String KNOWN_FUSIONS_FILE = "known_fusion_file";
     private static final String FILE_DELIMITER = ",";
@@ -50,11 +51,13 @@ public class KnownFusionCache
         mIgRegionData = Lists.newArrayList();
         mKnownPairData = Lists.newArrayList();
         mHighImpactPromiscuousData = Lists.newArrayList();
+        mHasValidData = true;
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
     }
 
+    public boolean hasValidData() { return mHasValidData; }
     public final List<KnownFusionData> getData() { return mData; }
     public final List<KnownFusionData> getDataByType(final KnownFusionType type) { return mDataByType.get(type); }
 
@@ -193,13 +196,16 @@ public class KnownFusionCache
         return mIgRegionData.stream().anyMatch(x -> x.withinIgRegion(chromosome, position));
     }
 
-    public boolean loadFromFile(@NotNull final CommandLine cmd)
+    public boolean loadFromFile(final CommandLine cmd)
     {
-        if(!cmd.hasOption(KNOWN_FUSIONS_FILE))
+        if(cmd == null || !cmd.hasOption(KNOWN_FUSIONS_FILE))
             return true;
 
         if(!loadFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE)))
+        {
+            mHasValidData = false;
             return false;
+        }
 
         StringJoiner refDataStr = new StringJoiner(", ");
 
@@ -243,7 +249,9 @@ public class KnownFusionCache
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
             if(fileContents.isEmpty())
+            {
                 return false;
+            }
 
             final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(fileContents.get(0), FILE_DELIMITER);
             fileContents.remove(0);

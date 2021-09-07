@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
-import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;
@@ -61,36 +62,41 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient) {
+    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Lims lims) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
-        LOGGER.info(" Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
+        LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader =
                 new CpctPatientReader(primaryTumorCurator, CpctUtil.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
         List<Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
-        LOGGER.info("  Finished curation of {} CPCT patients", cpctPatients.size());
+        LOGGER.info(" Finished curation of {} CPCT patients", cpctPatients.size());
 
         EcrfModel drupEcrfModel = ecrfModels.drupModel();
-        LOGGER.info(" Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
+        LOGGER.info("Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
         EcrfPatientReader drupPatientReader = new DrupPatientReader(primaryTumorCurator, biopsySiteCurator);
 
         List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
-        LOGGER.info("  Finished curation of {} DRUP patients", drupPatients.size());
+        LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
-        LOGGER.info(" Interpreting and curating data for WIDE patients");
+        LOGGER.info("Interpreting and curating data for WIDE patients");
         List<Patient> widePatients = readWidePatients(samplesPerPatient);
-        LOGGER.info("  Finished curation of {} WIDE patients", widePatients.size());
+        LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
-        LOGGER.info(" Interpreting and curating data for CORE patients");
-        List<Patient> corePatients = readCorePatients(samplesPerPatient);
-        LOGGER.info("  Finished curation of {} CORE patients", corePatients.size());
+        LOGGER.info("Interpreting and curating data for CORE patients");
+        List<Patient> corePatients = readCoreAndActinPatients(samplesPerPatient, "CORE");
+        LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
+
+        LOGGER.info("Interpreting and curating data for ACTIN patients");
+        List<Patient> actinPatients = readCoreAndActinPatients(samplesPerPatient, "ACTIN");
+        LOGGER.info(" Finished curation of {} ACTIN patients", actinPatients.size());
 
         List<Patient> mergedPatients = Lists.newArrayList();
         mergedPatients.addAll(cpctPatients);
         mergedPatients.addAll(drupPatients);
         mergedPatients.addAll(widePatients);
         mergedPatients.addAll(corePatients);
-        mergedPatients.addAll(readColoPatients());
+        mergedPatients.addAll(actinPatients);
+        mergedPatients.addAll(readColoPatients(lims));
         return mergedPatients;
     }
 
@@ -123,13 +129,13 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    private List<Patient> readCorePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient) {
+    private List<Patient> readCoreAndActinPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String cohort) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
 
         for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
-            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains("CORE")) {
+            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().contains(cohort)) {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
@@ -141,12 +147,15 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    private static List<Patient> readColoPatients() {
+    private List<Patient> readColoPatients(@NotNull Lims lims) {
         List<Patient> patients = Lists.newArrayList();
 
-        ColoPatientReader coloPatientReader = new ColoPatientReader();
-        LOGGER.info(" Creating patient representation for COLO829");
-        patients.add(coloPatientReader.read("COLO829T"));
+        String tumorLocation = lims.primaryTumor("COLO829V003TVAL");
+        String patientId = lims.patientId("COLO829V003TVAL");
+
+        ColoPatientReader coloPatientReader = new ColoPatientReader(primaryTumorCurator);
+        LOGGER.info("Creating patient representation for COLO829");
+        patients.add(coloPatientReader.read(patientId, tumorLocation));
 
         return patients;
     }

@@ -53,7 +53,15 @@ data class GripssConfig(
     }
 
     private fun sampleOrdinal(sample: String, allSamples: List<String>): Int {
+
+        for(i in 0 until allSamples.size)
+        {
+            if(allSamples[i].contains(sample))
+                return i
+        }
+
         val ordinal = allSamples.indexOf(sample)
+
         if (ordinal < 0) {
             throw IllegalArgumentException("Unable to locate sample $sample in supplied VCF")
         }
@@ -102,7 +110,9 @@ data class GripssConfig(
             val isGRCh38 = isGRCh38(refGenome)
             val filterConfig = GripssFilterConfig.createConfig(cmd, isGRCh38)
 
-            return GripssConfig(inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome, reference, tumor, hmfOrdinals, filterConfig)
+            return GripssConfig(
+                    inputVcf, outputVcf, singlePon, pairedPon, pairedHotspot, refGenome,
+                    reference, tumor, hmfOrdinals, filterConfig)
         }
 
         private fun isGRCh38(refGenome: String): Boolean {
@@ -143,6 +153,7 @@ private const val MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = "min_qual_rescue_mo
 private const val MAX_HOM_LENGTH_SHORT_INV_OPTION = "max_hom_length_short_inv"
 private const val MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION = "max_inexact_hom_length_short_del"
 private const val MIN_LENGTH_OPTION = "min_length"
+private const val PON_DISTANCE = "pon_distance"
 
 data class GripssFilterConfig(
         val hardMinTumorQual: Int,
@@ -158,6 +169,7 @@ data class GripssFilterConfig(
         val maxHomLengthShortInversion: Int,
         val maxInexactHomLengthShortDel: Int,
         val minLength: Int,
+        val ponDistance: Int,
         val polyGCRegion: Locatable) {
 
     companion object {
@@ -181,6 +193,7 @@ data class GripssFilterConfig(
             options.addOption(MAX_HOM_LENGTH_SHORT_INV_OPTION, true, "Max homology length short inversion [${defaultConfig.maxHomLengthShortInversion}]")
             options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, true, "Max inexact homology length short del [${defaultConfig.maxInexactHomLengthShortDel}]")
             options.addOption(MIN_LENGTH_OPTION, true, "Min length [${defaultConfig.minLength}]")
+            options.addOption(PON_DISTANCE, true, "PON permitted margin [${defaultConfig.ponDistance}]")
 
             return options
         }
@@ -200,6 +213,7 @@ data class GripssFilterConfig(
             val maxHomLengthShortInversion = getConfigValue(cmd, MAX_HOM_LENGTH_SHORT_INV_OPTION, defaultConfig.maxHomLengthShortInversion)
             val maxInexactHomLengthShortDel = getConfigValue(cmd, MAX_INEXACT_HOM_LENGTH_SHORT_DEL_OPTION, defaultConfig.maxInexactHomLengthShortDel)
             val minLength = getConfigValue(cmd, MIN_LENGTH_OPTION, defaultConfig.minLength)
+            val ponDistance = getConfigValue(cmd, PON_DISTANCE, defaultConfig.ponDistance)
             val linc00486Definition = if (isGRCh38) linc00486Definition38 else linc00486Definition37
 
             return GripssFilterConfig(
@@ -216,6 +230,7 @@ data class GripssFilterConfig(
                     maxHomLengthShortInversion,
                     maxInexactHomLengthShortDel,
                     minLength,
+                    ponDistance,
                     linc00486Definition)
         }
 
@@ -234,6 +249,7 @@ data class GripssFilterConfig(
                     6,
                     5,
                     32,
+                    3,
                     linc00486Definition37)
         }
     }

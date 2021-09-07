@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUCKET_COUNT;
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
-import static com.hartwig.hmftools.common.sigs.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -110,7 +110,7 @@ public class RefSomatics implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || !config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty();
+        return config.DbAccess != null || (!config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty());
     }
 
     public static void addCmdLineArgs(@NotNull Options options)

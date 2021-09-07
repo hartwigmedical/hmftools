@@ -3,9 +3,9 @@ package com.hartwig.hmftools.patientdb.clinical.readers.cpct;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ecrf.EcrfModel;
-import com.hartwig.hmftools.common.ecrf.reader.CodeList;
-import com.hartwig.hmftools.common.ecrf.reader.Item;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.reader.CodeList;
+import com.hartwig.hmftools.patientdb.clinical.ecrf.reader.Item;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

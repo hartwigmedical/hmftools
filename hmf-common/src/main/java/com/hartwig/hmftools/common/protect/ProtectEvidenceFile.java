@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -89,6 +91,7 @@ public final class ProtectEvidenceFile {
     private static ProtectEvidence fromLine(@NotNull String line) {
         String[] values = line.split(FIELD_DELIMITER);
 
+        Set<String> urls = values.length == 9 ? Sets.newHashSet(values[8].split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
         return ImmutableProtectEvidence.builder().genomicEvent(values[0])
                 .germline(Boolean.parseBoolean(values[1]))
                 .reported(Boolean.parseBoolean(values[2]))
@@ -97,7 +100,7 @@ public final class ProtectEvidenceFile {
                 .level(EvidenceLevel.valueOf(values[5]))
                 .direction(EvidenceDirection.valueOf(values[6]))
                 .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[7]))
-                .urls(Lists.newArrayList(values[8].split(SUBFIELD_DELIMITER)))
+                .urls(urls)
                 .build();
     }
 }

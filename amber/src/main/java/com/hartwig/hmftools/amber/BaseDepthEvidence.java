@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,25 +29,28 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence>
     private final String mChromosome;
     private final String mBamFile;
     private final SamReaderFactory mSamReaderFactory;
-    private final List<ModifiableBaseDepth> EvidenceMap;
+    private final List<ModifiableBaseDepth> mEvidenceMap;
     private final GenomePositionSelector<ModifiableBaseDepth> mSelector;
     private final BaseDepthFactory mBafFactory;
-    private final SAMSlicer mSamSlicer;
+    private final BamSlicer mBamSlicer;
+    private final List<GenomeRegion> mBafRegions;
 
-    public BaseDepthEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
+    public BaseDepthEvidence(
+            int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig, final String bamFile,
             final SamReaderFactory samReaderFactory, final List<AmberSite> bafRegions)
     {
         mBafFactory = new BaseDepthFactory(minBaseQuality);
         mChromosome = contig;
         mBamFile = bamFile;
         mSamReaderFactory = samReaderFactory;
+
         final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
         bafRegions.forEach(builder::addPosition);
-        final List<GenomeRegion> bafRegions1 = builder.build();
+        mBafRegions = builder.build();
 
-        EvidenceMap = bafRegions.stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
-        mSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(EvidenceMap));
-        mSamSlicer = new SAMSlicer(minMappingQuality, bafRegions1);
+        mEvidenceMap = bafRegions.stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
+        mSelector = GenomePositionSelectorFactory.create(Multimaps.fromPositions(mEvidenceMap));
+        mBamSlicer = new BamSlicer(minMappingQuality);
     }
 
     @NotNull
@@ -59,7 +62,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence>
     @NotNull
     public List<BaseDepth> evidence()
     {
-        return new ArrayList<>(EvidenceMap);
+        return new ArrayList<>(mEvidenceMap);
     }
 
     @Override
@@ -67,7 +70,7 @@ public class BaseDepthEvidence implements Callable<BaseDepthEvidence>
     {
         try(SamReader reader = mSamReaderFactory.open(new File(mBamFile)))
         {
-            mSamSlicer.slice(reader, this::record);
+            mBamSlicer.sliceNoDups(reader, mBafRegions, this::record);
         }
 
         return this;

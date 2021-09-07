@@ -16,43 +16,47 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-class GCRatioNormalization
+public class GCRatioNormalization
 {
-    private final GCMedianReadCountBuilder medianReadCountBuilder = new GCMedianReadCountBuilder();
-    private final Multimap<Chromosome, ReadCountWithGCContent> entries = ArrayListMultimap.create();
+    private final GCMedianReadCountBuilder mMedianReadCountBuilder;
+    private final Multimap<Chromosome, ReadCountWithGCContent> mEntries;
+
+    public GCRatioNormalization()
+    {
+        mMedianReadCountBuilder = new GCMedianReadCountBuilder();
+        mEntries = ArrayListMultimap.create();
+    }
 
     void addPosition(@NotNull final Chromosome chromosome, @NotNull final GCProfile gcProfile, final int readCount)
     {
         final ReadCountWithGCContent readCountWithGCContent = new ReadCountWithGCContent(readCount, gcProfile);
-        entries.put(chromosome, readCountWithGCContent);
+        mEntries.put(chromosome, readCountWithGCContent);
 
         // TODO: TEST With/without isMappable
         if(chromosome.isAutosome() && readCountWithGCContent.isMappable() && readCount > 0)
         {
-            medianReadCountBuilder.add(gcProfile, readCount);
+            mMedianReadCountBuilder.add(gcProfile, readCount);
         }
     }
 
-    GCMedianReadCount gcMedianReadCount()
+    public GCMedianReadCount gcMedianReadCount()
     {
-        return medianReadCountBuilder.build();
+        return mMedianReadCountBuilder.build();
     }
 
-    @NotNull
-    ListMultimap<Chromosome, ReadRatio> build(@NotNull final GCMedianReadCount gcMedianReadCount)
+    public ListMultimap<Chromosome, ReadRatio> build(@NotNull final GCMedianReadCount gcMedianReadCount)
     {
         final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
-        for(Chromosome chromosome : entries.keySet())
+        for(Chromosome chromosome : mEntries.keySet())
         {
             final List<ReadRatio> normalisedRatio =
-                    entries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
+                    mEntries.get(chromosome).stream().map(x -> create(gcMedianReadCount, x)).collect(Collectors.toList());
             result.replaceValues(chromosome, normalisedRatio);
         }
 
         return result;
     }
 
-    @NotNull
     private static ReadRatio create(@NotNull final GCMedianReadCount medians, @NotNull final ReadCountWithGCContent readCount)
     {
         int gcMedianCount = medians.medianReadCount(readCount.gcProfile());
@@ -74,42 +78,41 @@ class GCRatioNormalization
 
     private static class ReadCountWithGCContent implements GenomePosition
     {
-
-        private final GCProfile gcProfile;
-        private final int readCount;
+        public final GCProfile GcProfile;
+        public final int ReadCount;
 
         private ReadCountWithGCContent(final int readCount, @NotNull final GCProfile gcProfile)
         {
-            this.readCount = readCount;
-            this.gcProfile = gcProfile;
+            ReadCount = readCount;
+            GcProfile = gcProfile;
         }
 
         @NotNull
         @Override
         public String chromosome()
         {
-            return gcProfile.chromosome();
+            return GcProfile.chromosome();
         }
 
         @Override
         public long position()
         {
-            return gcProfile.start();
+            return GcProfile.start();
         }
 
         private int readCount()
         {
-            return readCount;
+            return ReadCount;
         }
 
         GCProfile gcProfile()
         {
-            return gcProfile;
+            return GcProfile;
         }
 
         private boolean isMappable()
         {
-            return gcProfile.isMappable();
+            return GcProfile.isMappable();
         }
     }
 }

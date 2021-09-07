@@ -94,9 +94,6 @@ final class DrugCurationFactory {
         DRUG_MAPPINGS.put(civicB("Buparlisib,Carboplatin,Paclitaxel"), and("Buparlisib", "Carboplatin", "Paclitaxel"));
         DRUG_MAPPINGS.put(civicB("Carboplatin,Paclitaxel"), and("Carboplatin", "Paclitaxel"));
         DRUG_MAPPINGS.put(civicB("Cediranib,Olaparib"), and("Cediranib", "Olaparib"));
-        DRUG_MAPPINGS.put(civicB("Cetuximab,Oxaliplatin,Capecitabine"), and("Cetuximab", "Oxaliplatin", "Capecitabine"));
-        DRUG_MAPPINGS.put(civicB("Cetuximab,Selumetinib"), and("Cetuximab", "Selumetinib"));
-        DRUG_MAPPINGS.put(civicB("Cetuximab,Vemurafenib"), and("Cetuximab", "Vemurafenib"));
         DRUG_MAPPINGS.put(civicB("Cisplatin,Gemcitabine"), and("Cisplatin", "Gemcitabine"));
         DRUG_MAPPINGS.put(civicB("Cisplatin,Vinorelbine"), and("Cisplatin", "Vinorelbine"));
         DRUG_MAPPINGS.put(civicB("Cobimetinib,Vemurafenib"), and("Cobimetinib", "Vemurafenib"));
@@ -108,12 +105,9 @@ final class DrugCurationFactory {
         DRUG_MAPPINGS.put(civicB("Docetaxel,Trametinib"), and("Docetaxel", "Trametinib"));
         DRUG_MAPPINGS.put(civicB("Encorafenib,Cetuximab"), and("Encorafenib", "Cetuximab"));
         DRUG_MAPPINGS.put(civicB("Erlotinib,Gemcitabine"), and("Erlotinib", "Gemcitabine"));
-        DRUG_MAPPINGS.put(civicB("Erlotinib,Selumetinib"), and("Erlotinib", "Selumetinib"));
-        DRUG_MAPPINGS.put(civicB("Fluorouracil,Cetuximab,Platinum"), and("Fluorouracil", "Cetuximab", "Platinum"));
         DRUG_MAPPINGS.put(civicB("Fluorouracil,Oxaliplatin"), and("Fluorouracil", "Oxaliplatin"));
         DRUG_MAPPINGS.put(civicB("Lapatinib,Capecitabine"), and("Lapatinib", "Capecitabine"));
         DRUG_MAPPINGS.put(civicB("Lapatinib,Trastuzumab"), and("Lapatinib", "Trastuzumab"));
-        DRUG_MAPPINGS.put(civicB("Letrozole,Palbociclib"), and("Letrozole", "Palbociclib"));
         DRUG_MAPPINGS.put(civicB("Palbociclib,Letrozole"), and("Palbociclib", "Letrozole"));
         DRUG_MAPPINGS.put(civicB("Pertuzumab,Trastuzumab,Docetaxel"), and("Pertuzumab", "Trastuzumab", "Docetaxel"));
         DRUG_MAPPINGS.put(civicB("Refametinib,Sorafenib"), and("Refametinib", "Sorafenib"));
@@ -125,7 +119,6 @@ final class DrugCurationFactory {
         DRUG_MAPPINGS.put(civicB("Trastuzumab,Lapatinib"), and("Trastuzumab", "Lapatinib"));
         DRUG_MAPPINGS.put(civicB("Vemurafenib,Cetuximab,Irinotecan"), and("Vemurafenib", "Cetuximab", "Irinotecan"));
         DRUG_MAPPINGS.put(civicB("Vemurafenib,Cobimetinib"), and("Vemurafenib", "Cobimetinib"));
-        DRUG_MAPPINGS.put(civicB("Vemurafenib,Panitumumab"), and("Vemurafenib", "Panitumumab"));
     }
 
     private static void populateOrMappings() {
@@ -151,8 +144,6 @@ final class DrugCurationFactory {
         DRUG_MAPPINGS.put(civicB("Nivolumab,Atezolizumab"), or("Nivolumab", "Atezolizumab"));
         DRUG_MAPPINGS.put(civicB("Panitumumab,Cetuximab"), or("Panitumumab", "Cetuximab"));
         DRUG_MAPPINGS.put(civicB("Quizartinib,Sorafenib"), or("Quizartinib", "Sorafenib"));
-        DRUG_MAPPINGS.put(civicB("Ridaforolimus,Temsirolimus"), or("Ridaforolimus", "Temsirolimus"));
-        DRUG_MAPPINGS.put(civicB("Temsirolimus,Ridaforolimus"), or("Temsirolimus", "Ridaforolimus"));
         DRUG_MAPPINGS.put(civicB("Vinorelbine,Docetaxel,Gemcitabine"), or("Vinorelbine", "Docetaxel", "Gemcitabine"));
     }
 

@@ -35,55 +35,66 @@ import org.jetbrains.annotations.Nullable;
  *
  */
 
-public class SuffixTree {
+public class SuffixTree
+{
+    private final Node mRoot;
+    private final String mFullText;
 
     private static final String WORD_TERMINATION = "$";
     private static final int POSITION_UNDEFINED = -1;
-    private final Node root;
-    private final String fullText;
 
-    public SuffixTree(String text) {
+    public SuffixTree(String text)
+    {
         assert (!text.contains(WORD_TERMINATION));
 
-        root = new Node("", POSITION_UNDEFINED, null);
-        for (int i = 0; i < text.length(); i++) {
+        mRoot = new Node("", POSITION_UNDEFINED, null);
+        for(int i = 0; i < text.length(); i++)
+        {
             addSuffix(text.substring(i) + WORD_TERMINATION, i);
         }
-        fullText = text;
+        mFullText = text;
     }
 
-    public boolean contains(String pattern) {
+    public boolean contains(String pattern)
+    {
         return findNode(pattern) != null;
     }
 
-
-    public int endsWith(String pattern) {
-        List<Node> nodes = getAllNodesInTraversePath(pattern, root, true);
-        if (nodes.isEmpty()) {
+    public int endsWith(String pattern)
+    {
+        List<Node> nodes = getAllNodesInTraversePath(pattern, mRoot, true);
+        if(nodes.isEmpty())
+        {
             return 0;
         }
 
         Node lastNode = nodes.get(nodes.size() - 1);
-        if (lastNode == null) {
+        if(lastNode == null)
+        {
             return 0;
         }
 
         int parentLength = nodes.stream().limit(nodes.size() - 1).mapToInt(x -> x.text.length()).sum();
         String lastNodeText = lastNode.text.replace(WORD_TERMINATION, "");
-        if (parentLength + lastNodeText.length() > pattern.length()) {
+        if(parentLength + lastNodeText.length() > pattern.length())
+        {
             return 0;
         }
 
-        if (!lastNode.getChildren().isEmpty()) {
-            if (lastNode.getChildren().stream().noneMatch(x -> x.text.equals(WORD_TERMINATION))) {
+        if(!lastNode.getChildren().isEmpty())
+        {
+            if(lastNode.getChildren().stream().noneMatch(x -> x.text.equals(WORD_TERMINATION)))
+            {
                 return 0;
             }
         }
 
         int remainingLength = Math.min(lastNodeText.length(), pattern.length() - parentLength);
-        for (int lastNodeIndex = 0; lastNodeIndex < remainingLength; lastNodeIndex++) {
+        for(int lastNodeIndex = 0; lastNodeIndex < remainingLength; lastNodeIndex++)
+        {
             int patternIndex = lastNodeIndex + parentLength;
-            if (pattern.charAt(patternIndex) != lastNodeText.charAt(lastNodeIndex)) {
+            if(pattern.charAt(patternIndex) != lastNodeText.charAt(lastNodeIndex))
+            {
                 return 0;
             }
         }
@@ -91,9 +102,11 @@ public class SuffixTree {
         return parentLength + lastNodeText.length();
     }
 
-    public int anyIndexOf(String pattern) {
+    public int anyIndexOf(String pattern)
+    {
         Node lastNode = findNode(pattern);
-        if (lastNode != null) {
+        if(lastNode != null)
+        {
             return getPositions(lastNode).get(0);
         }
 
@@ -101,9 +114,11 @@ public class SuffixTree {
     }
 
     @NotNull
-    public List<Integer> indices(String pattern) {
+    public List<Integer> indices(String pattern)
+    {
         Node lastNode = findNode(pattern);
-        if (lastNode != null) {
+        if(lastNode != null)
+        {
             return getPositions(lastNode).stream().sorted().collect(Collectors.toList());
         }
 
@@ -111,32 +126,41 @@ public class SuffixTree {
     }
 
     @Nullable
-    private Node findNode(String pattern) {
-        List<Node> nodes = getAllNodesInTraversePath(pattern, root, false);
-        if (nodes.size() > 0) {
+    private Node findNode(String pattern)
+    {
+        List<Node> nodes = getAllNodesInTraversePath(pattern, mRoot, false);
+        if(nodes.size() > 0)
+        {
             return nodes.get(nodes.size() - 1);
         }
 
         return null;
     }
 
-    List<Node> findPartialNode(String pattern) {
-        return getAllNodesInTraversePath(pattern, root, true);
+    List<Node> findPartialNode(String pattern)
+    {
+        return getAllNodesInTraversePath(pattern, mRoot, true);
     }
 
     @VisibleForTesting
-    List<String> markPatternInText(String pattern) {
+    List<String> markPatternInText(String pattern)
+    {
         return indices(pattern).stream().map(m -> markPatternInText(m, pattern)).collect(Collectors.toList());
     }
 
-    private void addSuffix(String suffix, int position) {
-        List<Node> nodes = getAllNodesInTraversePath(suffix, root, true);
-        if (nodes.size() == 0) {
-            addChildNode(root, suffix, position);
-        } else {
+    private void addSuffix(String suffix, int position)
+    {
+        List<Node> nodes = getAllNodesInTraversePath(suffix, mRoot, true);
+        if(nodes.size() == 0)
+        {
+            addChildNode(mRoot, suffix, position);
+        }
+        else
+        {
             Node lastNode = nodes.remove(nodes.size() - 1);
             String newText = suffix;
-            if (nodes.size() > 0) {
+            if(nodes.size() > 0)
+            {
                 String existingSuffixUptoLastNode = nodes.stream().map(Node::getText).reduce("", String::concat);
 
                 // Remove prefix from newText already included in parent
@@ -146,33 +170,40 @@ public class SuffixTree {
         }
     }
 
-    private List<Integer> getPositions(Node node) {
+    private List<Integer> getPositions(Node node)
+    {
         List<Integer> positions = new ArrayList<>();
-        if (node.getText().endsWith(WORD_TERMINATION)) {
+        if(node.getText().endsWith(WORD_TERMINATION))
+        {
             positions.add(node.getPosition());
         }
-        for (int i = 0; i < node.getChildren().size(); i++) {
+        for(int i = 0; i < node.getChildren().size(); i++)
+        {
             positions.addAll(getPositions(node.getChildren().get(i)));
         }
         return positions;
     }
 
-    private String markPatternInText(Integer startPosition, String pattern) {
-        String matchingTextLHS = fullText.substring(0, startPosition);
-        String matchingText = fullText.substring(startPosition, startPosition + pattern.length());
-        String matchingTextRHS = fullText.substring(startPosition + pattern.length());
+    private String markPatternInText(Integer startPosition, String pattern)
+    {
+        String matchingTextLHS = mFullText.substring(0, startPosition);
+        String matchingText = mFullText.substring(startPosition, startPosition + pattern.length());
+        String matchingTextRHS = mFullText.substring(startPosition + pattern.length());
         return matchingTextLHS + "[" + matchingText + "]" + matchingTextRHS;
     }
 
-    private void addChildNode(Node parentNode, String text, int position) {
+    private void addChildNode(Node parentNode, String text, int position)
+    {
         parentNode.getChildren().add(new Node(text, position, parentNode));
     }
 
-    private void extendNode(Node node, String newText, int position) {
+    private void extendNode(Node node, String newText, int position)
+    {
         String currentText = node.getText();
         String commonPrefix = getLongestCommonPrefix(currentText, newText);
 
-        if (!commonPrefix.equals(currentText)) {
+        if(!commonPrefix.equals(currentText))
+        {
             String parentText = currentText.substring(0, commonPrefix.length());
             String childText = currentText.substring(commonPrefix.length());
             splitNodeToParentAndChild(node, parentText, childText);
@@ -182,11 +213,14 @@ public class SuffixTree {
         addChildNode(node, remainingText, position);
     }
 
-    private void splitNodeToParentAndChild(Node parentNode, String parentNewText, String childNewText) {
+    private void splitNodeToParentAndChild(Node parentNode, String parentNewText, String childNewText)
+    {
         Node childNode = new Node(childNewText, parentNode.getPosition(), parentNode);
 
-        if (parentNode.getChildren().size() > 0) {
-            while (parentNode.getChildren().size() > 0) {
+        if(parentNode.getChildren().size() > 0)
+        {
+            while(parentNode.getChildren().size() > 0)
+            {
                 childNode.getChildren().add(parentNode.getChildren().remove(0));
             }
         }
@@ -196,31 +230,41 @@ public class SuffixTree {
         parentNode.setPosition(POSITION_UNDEFINED);
     }
 
-    private String getLongestCommonPrefix(String str1, String str2) {
+    private String getLongestCommonPrefix(String str1, String str2)
+    {
         int compareLength = Math.min(str1.length(), str2.length());
-        for (int i = 0; i < compareLength; i++) {
-            if (str1.charAt(i) != str2.charAt(i)) {
+        for(int i = 0; i < compareLength; i++)
+        {
+            if(str1.charAt(i) != str2.charAt(i))
+            {
                 return str1.substring(0, i);
             }
         }
         return str1.substring(0, compareLength);
     }
 
-    private List<Node> getAllNodesInTraversePath(String pattern, Node startNode, boolean isAllowPartialMatch) {
+    private List<Node> getAllNodesInTraversePath(String pattern, Node startNode, boolean isAllowPartialMatch)
+    {
         List<Node> nodes = new ArrayList<>();
-        for (int i = 0; i < startNode.getChildren().size(); i++) {
+        for(int i = 0; i < startNode.getChildren().size(); i++)
+        {
             Node currentNode = startNode.getChildren().get(i);
             String nodeText = currentNode.getText();
-            if (pattern.charAt(0) == nodeText.charAt(0)) {
-                if (isAllowPartialMatch && pattern.length() <= nodeText.length()) {
+            if(pattern.charAt(0) == nodeText.charAt(0))
+            {
+                if(isAllowPartialMatch && pattern.length() <= nodeText.length())
+                {
                     nodes.add(currentNode);
                     return nodes;
                 }
 
                 int compareLength = Math.min(nodeText.length(), pattern.length());
-                for (int j = 1; j < compareLength; j++) {
-                    if (pattern.charAt(j) != nodeText.charAt(j)) {
-                        if (isAllowPartialMatch) {
+                for(int j = 1; j < compareLength; j++)
+                {
+                    if(pattern.charAt(j) != nodeText.charAt(j))
+                    {
+                        if(isAllowPartialMatch)
+                        {
                             nodes.add(currentNode);
                         }
                         return nodes;
@@ -228,11 +272,15 @@ public class SuffixTree {
                 }
 
                 nodes.add(currentNode);
-                if (pattern.length() > compareLength) {
+                if(pattern.length() > compareLength)
+                {
                     List<Node> nodes2 = getAllNodesInTraversePath(pattern.substring(compareLength), currentNode, isAllowPartialMatch);
-                    if (nodes2.size() > 0) {
+                    if(nodes2.size() > 0)
+                    {
                         nodes.addAll(nodes2);
-                    } else if (!isAllowPartialMatch) {
+                    }
+                    else if(!isAllowPartialMatch)
+                    {
                         nodes.add(null);
                     }
                 }
@@ -242,56 +290,67 @@ public class SuffixTree {
         return nodes;
     }
 
-    public String printTree() {
-        return root.printTree("");
+    public String printTree()
+    {
+        return mRoot.printTree("");
     }
 
-    static class Node {
+    static class Node
+    {
         private String text;
         private int position;
         private final Node parent;
         private final List<Node> children;
 
-        public Node(String word, int position, Node parent) {
+        public Node(String word, int position, Node parent)
+        {
             this.text = word;
             this.parent = parent;
             this.position = position;
             this.children = new ArrayList<>();
         }
 
-        public String getText() {
+        public String getText()
+        {
             return text;
         }
 
-        public void setText(String text) {
+        public void setText(String text)
+        {
             this.text = text;
         }
 
-        public int getPosition() {
+        public int getPosition()
+        {
             return position;
         }
 
-        public void setPosition(int position) {
+        public void setPosition(int position)
+        {
             this.position = position;
         }
 
-        public List<Node> getChildren() {
+        public List<Node> getChildren()
+        {
             return children;
         }
 
-        public String printTree(String depthIndicator) {
+        public String printTree(String depthIndicator)
+        {
             StringBuilder str = new StringBuilder();
             String positionStr = position > -1 ? "[" + position + "]" : "";
             str.append(depthIndicator).append(text).append(positionStr).append("\n");
 
-            for (Node child : children) {
+            for(Node child : children)
+            {
                 str.append(child.printTree(depthIndicator + "\t"));
             }
             return str.toString();
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return printTree("");
         }
     }

@@ -27,33 +27,38 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-class GermlineHotspotVCF {
-
-    static final String WHITELIST_FLAG = "WHITELIST";
+class GermlineHotspotVCF
+{
+    private static final String WHITELIST_FLAG = "WHITELIST";
 
     @NotNull
     private final Set<String> germlineGenes;
 
-    public GermlineHotspotVCF(@NotNull final Set<String> genes) {
+    public GermlineHotspotVCF(@NotNull final Set<String> genes)
+    {
         this.germlineGenes = genes;
     }
 
-    public List<GenomeRegion> process(@NotNull final String inputFile, @NotNull final String outputFile) throws IOException {
+    public List<GenomeRegion> process(@NotNull final String inputFile, @NotNull final String outputFile) throws IOException
+    {
         // READ
         final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
         final VCFHeader readerHeader = reader.getFileHeader();
         final String assembly = readerHeader.getMetaDataLine("reference").getValue();
-        if (!assembly.equals("GRCh37") && !assembly.equals("GRCh38")) {
+        if(!assembly.equals("GRCh37") && !assembly.equals("GRCh38"))
+        {
             throw new IllegalArgumentException();
         }
 
         final String contigPrefix = assembly.equals("GRCh38") ? "chr" : Strings.EMPTY;
         final List<VariantContext> variants = Lists.newArrayList();
 
-        for (VariantContext context : reader) {
+        for(VariantContext context : reader)
+        {
             final Set<String> variantGenes = Sets.newHashSet();
             final String geneInfo = context.getAttributeAsString("GENEINFO", "UNKNOWN:0000");
-            for (String singleGeneInfo : geneInfo.split("\\|")) {
+            for(String singleGeneInfo : geneInfo.split("\\|"))
+            {
                 variantGenes.add(singleGeneInfo.split(":")[0]);
             }
 
@@ -61,7 +66,8 @@ class GermlineHotspotVCF {
             variantGenes.retainAll(germlineGenes);
 
             Pathogenicity pathogenicity = PathogenicSummaryFactory.fromContext(context).pathogenicity();
-            if (!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenicity) && context.getAlleles().size() == 2) {
+            if(!variantGenes.isEmpty() && isPathogenicOrLikelyPathogenic(pathogenicity) && context.getAlleles().size() == 2)
+            {
                 final String clinSigConf = PathogenicSummaryFactory.clnSigConf(context);
                 VariantContextBuilder builder = new VariantContextBuilder("clinvar",
                         contigPrefix + context.getContig(),
@@ -70,7 +76,8 @@ class GermlineHotspotVCF {
                         context.getAlleles()).attribute("GENEINFO", geneInfo)
                         .attribute(PathogenicSummaryFactory.CLNSIG, PathogenicSummaryFactory.clnSig(context));
 
-                if (!clinSigConf.isEmpty()) {
+                if(!clinSigConf.isEmpty())
+                {
                     builder.attribute(PathogenicSummaryFactory.CLNSIGCONF, clinSigConf);
                 }
 
@@ -105,7 +112,8 @@ class GermlineHotspotVCF {
         return variants.stream().map(x -> GenomeRegions.create(x.getContig(), x.getStart(), x.getEnd())).collect(Collectors.toList());
     }
 
-    private static boolean isPathogenicOrLikelyPathogenic(@NotNull Pathogenicity pathogenicity) {
+    private static boolean isPathogenicOrLikelyPathogenic(@NotNull Pathogenicity pathogenicity)
+    {
         return pathogenicity.isPathogenic();
     }
 }

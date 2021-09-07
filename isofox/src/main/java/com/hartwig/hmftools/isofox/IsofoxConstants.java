@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class IsofoxConstants
 {
@@ -26,9 +26,9 @@ public class IsofoxConstants
     public static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
 
     // LINC00486
-    public static final BaseRegion EXCLUDED_REGION_1_REF_37 = new BaseRegion("2", 33141260, 33141700);
-    public static final BaseRegion EXCLUDED_REGION_1_REF_19 = new BaseRegion("chr2", 33141260, 33141700);
-    public static final BaseRegion EXCLUDED_REGION_1_REF_38 = new BaseRegion("chr2", 32916190, 32916630);
+    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_37 = new ChrBaseRegion("2", 33141260, 33141700);
+    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_19 = new ChrBaseRegion("chr2", 33141260, 33141700);
+    public static final ChrBaseRegion EXCLUDED_REGION_1_REF_38 = new ChrBaseRegion("chr2", 32916190, 32916630);
 
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {

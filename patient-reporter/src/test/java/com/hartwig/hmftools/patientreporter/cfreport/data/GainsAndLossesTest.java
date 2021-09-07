@@ -2,16 +2,17 @@ package com.hartwig.hmftools.patientreporter.cfreport.data;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Map;
+import java.util.List;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
+import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.DataUtil;
-import com.hartwig.hmftools.protect.cnchromosome.ChromosomeArmKey;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -21,49 +22,67 @@ public class GainsAndLossesTest {
 
     @Test
     public void canDetermineCopyNumberPArm() {
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
         String chromosome = "1";
-        cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString(chromosome), ChromosomeArm.P_ARM), 1.123);
+
+        cnPerChromosome.add(ImmutableCnPerChromosomeArmData.builder()
+                .chromosome(HumanChromosome.fromString(chromosome))
+                .chromosomeArm(ChromosomeArm.P_ARM)
+                .copyNumber(1.123).build());
 
         assertEquals("1", GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss(chromosome, "p.12")));
     }
 
     @Test
     public void canDetermineCopyNumberQArm() {
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
         String chromosome = "4";
-        cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString(chromosome), ChromosomeArm.Q_ARM), 4.51);
+        cnPerChromosome.add(ImmutableCnPerChromosomeArmData.builder()
+                .chromosome(HumanChromosome.fromString(chromosome))
+                .chromosomeArm(ChromosomeArm.Q_ARM)
+                .copyNumber(4.51).build());
 
         assertEquals("5", GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss(chromosome, "q.12")));
     }
 
     @Test
     public void crashOnCopyNumberDifferentChromosomes() {
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
-        cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.P_ARM), 1.123);
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
+        cnPerChromosome.add(ImmutableCnPerChromosomeArmData.builder()
+                .chromosome(HumanChromosome.fromString("1"))
+                .chromosomeArm(ChromosomeArm.P_ARM)
+                .copyNumber(1.123).build());
 
         assertEquals(DataUtil.NA_STRING, GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("2", "p.12")));
     }
 
     @Test
     public void crashOnCopyNumberUnknownArms() {
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
-        cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.UNKNOWN), 2.34);
-
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
+        cnPerChromosome.add(ImmutableCnPerChromosomeArmData.builder()
+                .chromosome(HumanChromosome.fromString("1"))
+                .chromosomeArm(ChromosomeArm.UNKNOWN)
+                .copyNumber(2.34).build());
         assertEquals(DataUtil.NA_STRING, GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12")));
     }
 
     @Test
     public void crashOnCopyNumberDifferentArms() {
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
-        cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM), 2.34);
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
+        cnPerChromosome.add(ImmutableCnPerChromosomeArmData.builder()
+                .chromosome(HumanChromosome.fromString("1"))
+                .chromosomeArm(ChromosomeArm.Q_ARM)
+                .copyNumber(2.34).build());
         assertEquals(DataUtil.NA_STRING, GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", "p.12")));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void crashOnDetermineCopyNumberWeirdArm() {
-        Map<ChromosomeArmKey, Double> cnPerChromosome = Maps.newHashMap();
-        cnPerChromosome.put(new ChromosomeArmKey(HumanChromosome.fromString("1"), ChromosomeArm.Q_ARM), 1.123);
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
+        cnPerChromosome.add(ImmutableCnPerChromosomeArmData.builder()
+                .chromosome(HumanChromosome.fromString("1"))
+                .chromosomeArm(ChromosomeArm.Q_ARM)
+                .copyNumber(1.123).build());
         GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, testGainLoss("1", ".12"));
     }
 

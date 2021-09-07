@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.qc;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMax;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
@@ -10,23 +11,29 @@ import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
 import java.util.Comparator;
 import java.util.List;
 
-import com.hartwig.hmftools.lilac.SequenceCount;
+import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import org.apache.commons.math3.util.Pair;
 
 public class Haplotype
 {
     public final int StartLocus;
     public final int EndLocus;
-    public final int SupportingFragments;
+    public final int PhasedFragmentCount;
     public final String Haplotype;
 
-    public Haplotype(final int startLocus, final int endLocus, final int supportingFragments, final String haplotype)
+    private int mMatchingFragmentCount;
+
+    public Haplotype(final int startLocus, final int endLocus, final int phasingFragments, final String haplotype)
     {
         StartLocus = startLocus;
         EndLocus = endLocus;
-        SupportingFragments = supportingFragments;
+        PhasedFragmentCount = phasingFragments;
         Haplotype = haplotype;
+        mMatchingFragmentCount = 0;
     }
+
+    public int matchingFragmentCount() { return mMatchingFragmentCount; }
+    public void addMatchingFragmentCount() { ++mMatchingFragmentCount; }
 
     public static Haplotype fromString(final String line)
     {
@@ -81,10 +88,19 @@ public class Haplotype
         return Haplotype.charAt(index);
     }
 
+    public String sequence(int locus)
+    {
+        if(!positionWithin(locus, StartLocus, EndLocus))
+            return "";
+
+        int index = locus - StartLocus;
+        return String.valueOf(Haplotype.charAt(index));
+    }
+
     public String toString()
     {
-        return String.format("startLocus=%d, endLocus=%d, supportingFragments=%d, haplotype=%s",
-                StartLocus, EndLocus, SupportingFragments, Haplotype);
+        return String.format("loci(%d - %d) frags(supporting=%d phased=%d) haplotype=%s",
+                StartLocus, EndLocus, mMatchingFragmentCount, PhasedFragmentCount, Haplotype);
     }
 
     public static class HaplotypeFragmentSorter implements Comparator<Haplotype>
@@ -92,7 +108,7 @@ public class Haplotype
         public int compare(final Haplotype first, final Haplotype second)
         {
             // by fragments descending
-            int compare = first.SupportingFragments - second.SupportingFragments;
+            int compare = first.matchingFragmentCount() - second.matchingFragmentCount();
             if(compare != 0)
                 return compare < 0 ? 1 : -1;
 

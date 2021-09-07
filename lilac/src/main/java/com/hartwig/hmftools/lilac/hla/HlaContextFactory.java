@@ -3,9 +3,13 @@ package com.hartwig.hmftools.lilac.hla;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
+import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 
@@ -45,4 +49,24 @@ public class HlaContextFactory
                 ExpectedAlleles.expectedAlleles(NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());
         return new HlaContext(GENE_C, CBoundaries, expectedAlleles);
     }
+
+    public static void populateNucleotideExonBoundaries()
+    {
+        for(String gene : GENE_IDS)
+        {
+            List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
+
+            List<Integer> nucleotideExonBoundaries = Lists.newArrayList();
+
+            for(Integer boundary : aminoAcidExonBoundaries)
+            {
+                nucleotideExonBoundaries.add(boundary * 3);
+                nucleotideExonBoundaries.add(boundary * 3 + 1);
+                nucleotideExonBoundaries.add(boundary * 3 + 2);
+            }
+
+            LilacConstants.NUCLEOTIDE_EXON_BOUNDARIES.put(gene, nucleotideExonBoundaries);
+        }
+    }
+
 }

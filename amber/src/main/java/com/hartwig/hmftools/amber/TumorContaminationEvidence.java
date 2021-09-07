@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionsBuilder;
-import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,48 +25,52 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class TumorContaminationEvidence implements Callable<TumorContaminationEvidence>
 {
-    private final String contig;
-    private final String bamFile;
-    private final SamReaderFactory samReaderFactory;
-    private final Map<BaseDepth, ModifiableBaseDepth> evidenceMap;
-    private final GenomePositionSelector<ModifiableBaseDepth> selector;
-    private final BaseDepthFactory bafFactory;
-    private final SAMSlicer supplier;
+    private final String mContig;
+    private final String mBamFile;
+    private final SamReaderFactory mSamReaderFactory;
+    private final Map<BaseDepth, ModifiableBaseDepth> mEvidenceMap;
+    private final GenomePositionSelector<ModifiableBaseDepth> mSelector;
+    private final BaseDepthFactory mBafFactory;
+    private final BamSlicer mBamSlicer;
+    private final List<GenomeRegion> mBafRegions;
 
     public TumorContaminationEvidence(int typicalReadDepth, int minMappingQuality, int minBaseQuality, final String contig,
             final String bamFile, final SamReaderFactory samReaderFactory, final List<BaseDepth> baseDepths)
     {
-        this.bafFactory = new BaseDepthFactory(minBaseQuality);
-        this.contig = contig;
-        this.bamFile = bamFile;
-        this.samReaderFactory = samReaderFactory;
-        this.evidenceMap = Maps.newHashMap();
+        mBafFactory = new BaseDepthFactory(minBaseQuality);
+        mContig = contig;
+        mBamFile = bamFile;
+        mSamReaderFactory = samReaderFactory;
+        mEvidenceMap = Maps.newHashMap();
 
         final List<ModifiableBaseDepth> tumorRecords = Lists.newArrayList();
         for(BaseDepth baseDepth : baseDepths)
         {
             ModifiableBaseDepth modifiableBaseDepth = BaseDepthFactory.create(baseDepth);
-            evidenceMap.put(baseDepth, modifiableBaseDepth);
+            mEvidenceMap.put(baseDepth, modifiableBaseDepth);
             tumorRecords.add(modifiableBaseDepth);
         }
-        this.selector = GenomePositionSelectorFactory.create(tumorRecords);
+
+        mSelector = GenomePositionSelectorFactory.create(tumorRecords);
 
         final GenomeRegionsBuilder builder = new GenomeRegionsBuilder(typicalReadDepth);
         baseDepths.forEach(builder::addPosition);
-        this.supplier = new SAMSlicer(minMappingQuality, builder.build());
+
+        mBafRegions = builder.build();
+        mBamSlicer = new BamSlicer(minMappingQuality);
     }
 
     @NotNull
     public String contig()
     {
-        return contig;
+        return mContig;
     }
 
     @NotNull
     public List<TumorContamination> evidence()
     {
         final List<TumorContamination> result = Lists.newArrayList();
-        for(final Map.Entry<BaseDepth, ModifiableBaseDepth> entry : evidenceMap.entrySet())
+        for(final Map.Entry<BaseDepth, ModifiableBaseDepth> entry : mEvidenceMap.entrySet())
         {
             final BaseDepth normal = entry.getKey();
             final BaseDepth tumor = entry.getValue();
@@ -82,17 +86,17 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
     @Override
     public TumorContaminationEvidence call() throws Exception
     {
-        try(SamReader reader = samReaderFactory.open(new File(bamFile)))
+        try(SamReader reader = mSamReaderFactory.open(new File(mBamFile)))
         {
-            supplier.slice(reader, this::record);
+            mBamSlicer.sliceNoDups(reader, mBafRegions, this::processRecord);
         }
 
         return this;
     }
 
-    private void record(@NotNull final SAMRecord record)
+    private void processRecord(@NotNull final SAMRecord record)
     {
-        selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
+        mSelector.select(asRegion(record), bafEvidence -> mBafFactory.addEvidence(bafEvidence, record));
     }
 
     @NotNull

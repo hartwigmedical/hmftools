@@ -12,95 +12,108 @@ import com.hartwig.hmftools.sage.read.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RefContext implements GenomePosition {
-
-    private final String sample;
-    private final String chromosome;
-    private final int maxDepth;
-    private final long position;
-    private final Map<String, AltContext> alts;
+public class RefContext implements GenomePosition
+{
+    public final String Sample;
+    public final String Chromosome;
+    public final int MaxDepth;
+    public final long Position;
+    
+    private final Map<String, AltContext> mAlts;
 
     private int rawDepth;
 
-    public RefContext(final String sample, final String chromosome, final long position, final int maxDepth) {
-        this.sample = sample;
-        this.chromosome = chromosome;
-        this.position = position;
-        this.maxDepth = maxDepth;
-        this.alts = new HashMap<>();
+    public RefContext(final String sample, final String chromosome, final long position, final int maxDepth)
+    {
+        Sample = sample;
+        Chromosome = chromosome;
+        Position = position;
+        MaxDepth = maxDepth;
+        mAlts = new HashMap<>();
     }
 
-    @NotNull
-    public Collection<AltContext> alts() {
-        return alts.values();
+    public Collection<AltContext> alts()
+    {
+        return mAlts.values();
     }
 
-    public boolean reachedLimit() {
-        return rawDepth >= maxDepth;
+    public boolean reachedLimit()
+    {
+        return rawDepth >= MaxDepth;
     }
 
-    public void refRead(boolean sufficientMapQuality) {
-        if (sufficientMapQuality) {
-            this.rawDepth++;
-        }
+    public void refRead(boolean sufficientMapQuality)
+    {
+        if(sufficientMapQuality)
+            rawDepth++;
     }
 
-    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality, boolean sufficientMapQuality, int numberOfEvents,
-            @Nullable final ReadContext readContext) {
+    public void altRead(
+            final String ref, final String alt, int baseQuality, boolean sufficientMapQuality,
+            int numberOfEvents, final ReadContext readContext)
+    {
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
-        if (sufficientMapQuality) {
-            this.rawDepth++;
+        if(sufficientMapQuality)
+        {
+            rawDepth++;
         }
 
-        if (readContext != null && !readContext.incompleteCore()) {
+        if(readContext != null && !readContext.incompleteCore())
+        {
             altContext.addReadContext(numberOfEvents, readContext);
         }
     }
 
-    @NotNull
     @Override
-    public String chromosome() {
-        return chromosome;
+    public String chromosome()
+    {
+        return Chromosome;
     }
 
     @Override
-    public long position() {
-        return position;
+    public long position()
+    {
+        return Position;
     }
 
-    public int rawDepth() {
+    public int rawDepth()
+    {
         return rawDepth;
     }
 
-    @NotNull
-    public String sample() {
-        return sample;
+    public String sample()
+    {
+        return Sample;
     }
 
     @Override
-    public boolean equals(@Nullable Object another) {
-        if (this == another) {
+    public boolean equals(@Nullable Object another)
+    {
+        if(this == another)
+        {
             return true;
         }
         return another instanceof RefContext && equalTo((RefContext) another);
     }
 
-    private boolean equalTo(RefContext another) {
+    private boolean equalTo(RefContext another)
+    {
         return chromosome().equals(another.chromosome()) && position() == another.position();
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         int h = 5381;
         h += (h << 5) + chromosome().hashCode();
         h += (h << 5) + Longs.hashCode(position());
         return h;
     }
 
-    @NotNull
-    private AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
+    private AltContext altContext(final String ref, final String alt)
+    {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
+        return mAlts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
     }
 }

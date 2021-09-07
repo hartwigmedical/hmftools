@@ -25,9 +25,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.BamFragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -255,7 +255,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeTranscriptResults(final EnsemblGeneData geneData, final TranscriptResult transResults)
+    public synchronized void writeTranscriptResults(final GeneData geneData, final TranscriptResult transResults)
     {
         if(mConfig.OutputDir.isEmpty())
             return;

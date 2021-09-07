@@ -26,7 +26,7 @@ public class CkbJsonReaderTestApp {
         if (hostname.toLowerCase().equals("datastore")) {
             ckbDir = "/data/common/dbs/ckb/210402_flex_dump";
         } else {
-            ckbDir = System.getProperty("user.home") + "/hmf/projects/serve/ckb";
+            ckbDir = System.getProperty("user.home") + "/hmf/serve/ckb";
         }
 
         CkbJsonReader.read(ckbDir, maxFilesToReadPerType);

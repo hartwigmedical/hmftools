@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.isofox.loader;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -87,6 +87,8 @@ public class DataLoaderConfig
                     .split(ITEM_DELIM, -1))
                     .map(x -> DataLoadType.valueOf(x))
                     .collect(Collectors.toList()));
+
+            ISF_LOGGER.info("loading types: {}", LoadTypes);
         }
 
         if(cmd.hasOption(CANCER_TYPES_FILE))
@@ -99,7 +101,7 @@ public class DataLoaderConfig
             }
             catch(IOException e)
             {
-                ISF_LOGGER.warn("invalid sampleId file: {}", e.toString());
+                ISF_LOGGER.warn("invalid cancer ypes file: {}", e.toString());
             }
         }
 
@@ -124,7 +126,7 @@ public class DataLoaderConfig
         if(cmd.hasOption(GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
-            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
 

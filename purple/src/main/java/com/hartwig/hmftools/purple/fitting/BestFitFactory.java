@@ -25,7 +25,7 @@ import com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory;
 import com.hartwig.hmftools.common.purple.purity.ImmutableBestFit;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 
 import org.apache.commons.compress.utils.Lists;

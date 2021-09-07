@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -21,13 +23,12 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     INSTANCE;
 
     private static final int TRIALS = 10_000;
-    private static final Logger LOGGER = LogManager.getLogger(SomaticDeviation.class);
-    private final LoadingCache<Double, Integer> maxConceivableCache;
-    private boolean errorLogged = false;
+    private final LoadingCache<Double, Integer> mMaxConceivableCache;
+    private boolean mErrorLogged = false;
 
     SomaticDeviation()
     {
-        this.maxConceivableCache =
+        mMaxConceivableCache =
                 CacheBuilder.newBuilder().maximumSize(50000).removalListener(this).build(new CacheLoader<Double, Integer>()
                 {
 
@@ -78,16 +79,16 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     {
         double expectedVAF = purityAdjuster.expectedFrequency(normalCopyNumber, 0, tumorCopyNumber, tumorMajorAllelePloidy);
         double p = 1d * Math.round(expectedVAF * depth.totalReadCount() * 100) / 100 / TRIALS;
-        return maxConceivableCache.getUnchecked(p);
+        return mMaxConceivableCache.getUnchecked(p);
     }
 
     @Override
     public void onRemoval(@NotNull final RemovalNotification<Double, Integer> removalNotification)
     {
-        if(!errorLogged)
+        if(!mErrorLogged)
         {
-            errorLogged = true;
-            LOGGER.warn("Somatic deviation cache limit exceeded. This indicates a potential performance issue but will otherwise not effect any calculations.");
+            mErrorLogged = true;
+            PPL_LOGGER.warn("Somatic deviation cache limit exceeded. This indicates a potential performance issue but will otherwise not effect any calculations.");
         }
     }
 }

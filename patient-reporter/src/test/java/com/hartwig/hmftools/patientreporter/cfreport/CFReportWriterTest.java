@@ -175,6 +175,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_NO_TUMOR_FOR-209")
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .hasReliablePurity(false)
+                .qcForNumber(QsFormNumber.FOR_209)
                 .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
@@ -188,6 +189,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CPCT01_INSUFFICIENT_TUMOR-FOR-209")
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .impliedTumorPurity(0.19)
+                .qcForNumber(QsFormNumber.FOR_209)
                 .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
         AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
@@ -320,7 +322,7 @@ public class CFReportWriterTest {
                         .build())
                 .biopsyLocation(Strings.EMPTY)
                 .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
-                .reportViralInsertions(true)
+                .reportViralPresence(true)
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)
