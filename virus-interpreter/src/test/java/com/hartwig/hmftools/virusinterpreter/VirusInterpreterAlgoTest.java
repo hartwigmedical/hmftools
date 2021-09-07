@@ -35,7 +35,6 @@ public class VirusInterpreterAlgoTest {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
         VirusWhitelist virusWhitelist1 = ImmutableVirusWhitelist.builder()
-                .taxidSpecies(1)
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
@@ -43,7 +42,6 @@ public class VirusInterpreterAlgoTest {
                 .build();
 
         VirusWhitelist virusWhitelist2 = ImmutableVirusWhitelist.builder()
-                .taxidSpecies(2)
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
