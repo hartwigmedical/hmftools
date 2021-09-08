@@ -11,7 +11,6 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class AnnotatedVirusFile {
@@ -33,8 +32,7 @@ public final class AnnotatedVirusFile {
         return fromLines(Files.readAllLines(new File(annotatedVirusTsv).toPath()));
     }
 
-    public static void write(@NotNull final String annotatedVirusTsv, @NotNull List<AnnotatedVirus> annotatedViruses)
-            throws IOException {
+    public static void write(@NotNull String annotatedVirusTsv, @NotNull List<AnnotatedVirus> annotatedViruses) throws IOException {
         Files.write(new File(annotatedVirusTsv).toPath(), toLines(annotatedViruses));
     }
 
@@ -60,9 +58,9 @@ public final class AnnotatedVirusFile {
                 .add("qcStatus")
                 .add("integrations")
                 .add("interpretation")
+                .add("percentageCovered")
                 .add("coverage")
-                .add("meanDepth")
-                .add("expectedMeanDepth")
+                .add("expectedClonalCoverage")
                 .add("reported")
                 .add("reportedSummary")
                 .toString();
@@ -75,9 +73,9 @@ public final class AnnotatedVirusFile {
                 .add(annotatedVirus.qcStatus().toString())
                 .add(String.valueOf(annotatedVirus.integrations()))
                 .add(annotatedVirus.interpretation())
+                .add(String.valueOf(annotatedVirus.percentageCovered()))
                 .add(String.valueOf(annotatedVirus.coverage()))
-                .add(String.valueOf(annotatedVirus.meanDepth()))
-                .add(String.valueOf(annotatedVirus.expectedMeanDepth()))
+                .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))
                 .add(String.valueOf(annotatedVirus.reported()))
                 .add(String.valueOf(annotatedVirus.reportedSummary()))
                 .toString();
@@ -92,9 +90,9 @@ public final class AnnotatedVirusFile {
                 .qcStatus(VirusBreakendQCStatus.valueOf(values[2]))
                 .integrations(Integer.parseInt(values[3]))
                 .interpretation(values[4])
-                .coverage(Double.parseDouble(values[5]))
-                .meanDepth(Double.parseDouble(values[6]))
-                .expectedMeanDepth(Double.parseDouble(values[7]))
+                .percentageCovered(Double.parseDouble(values[5]))
+                .coverage(Double.parseDouble(values[6]))
+                .expectedClonalCoverage(Double.parseDouble(values[7]))
                 .reported(Boolean.parseBoolean(values[8]))
                 .reportedSummary(Boolean.parseBoolean(values[9]))
                 .build();

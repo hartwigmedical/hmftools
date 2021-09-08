@@ -2,22 +2,23 @@ package com.hartwig.hmftools.virusinterpreter;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusWhitelist;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelist;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
+import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReporting;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReporting;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
+import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
+import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalyzer;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,27 +26,28 @@ import org.junit.Test;
 
 public class VirusInterpreterAlgoTest {
 
-    private static final String RUN_DIRECTORY = Resources.getResource("genomic").getPath();
-    private static final String TUMOR_SAMPLE_WGS_METRICS = RUN_DIRECTORY + "/tumor_sample.wgsmetrics";
-    private static final String PURPLE_PURITY_TSV = RUN_DIRECTORY + "/sample.purple.purity.tsv";
-    private static final String PURPLE_QC_FILE = RUN_DIRECTORY + "/sample.purple.qc";
+    private static final String GENOMIC_DIR = Resources.getResource("genomic").getPath();
+
+    private static final String PURPLE_QC_FILE = GENOMIC_DIR + File.separator + "sample.purple.qc";
+    private static final String PURPLE_PURITY_TSV = GENOMIC_DIR + File.separator + "sample.purple.purity.tsv";
+    private static final String TUMOR_SAMPLE_WGS_METRICS = GENOMIC_DIR + File.separator + "sample.wgsmetrics";
 
     @Test
     public void canAnalyzeVirusBreakends() throws IOException {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
-        VirusWhitelist virusWhitelist1 = ImmutableVirusWhitelist.builder()
+        VirusReporting virusReporting1 = ImmutableVirusReporting.builder()
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(90)
+                .nonIntegratedMinimalCoverage(90)
                 .build();
 
-        VirusWhitelist virusWhitelist2 = ImmutableVirusWhitelist.builder()
+        VirusReporting virusReporting2 = ImmutableVirusReporting.builder()
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(null)
+                .nonIntegratedMinimalCoverage(null)
                 .build();
 
         String name = "Human papillomavirus type 16";
@@ -53,17 +55,20 @@ public class VirusInterpreterAlgoTest {
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
-        Map<Integer, VirusWhitelist> virusInterpretationMap = Maps.newHashMap();
-        virusInterpretationMap.put(1, virusWhitelist1);
-        virusInterpretationMap.put(2, virusWhitelist2);
-        VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusInterpretationMap);
+        Map<Integer, VirusReporting> virusReportingMap = Maps.newHashMap();
+        virusReportingMap.put(1, virusReporting1);
+        virusReportingMap.put(2, virusReporting2);
 
-        VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
+        VirusReportingModel virusReportingModel = new VirusReportingModel(virusReportingMap);
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
-        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
+        CoveragesAnalyzer coveragesAnalyzer = new CoveragesAnalyzer();
+        CoveragesAnalysis coveragesAnalysis =
+                coveragesAnalyzer.run(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
+
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
         assertEquals(5, annotatedViruses.size());
-        assertEquals(2, annotatedViruses.stream().filter(x -> x.reported()).count());
+        assertEquals(3, annotatedViruses.stream().filter(x -> x.reported()).count());
 
         List<AnnotatedVirus> reportedVirus = Lists.newArrayList();
         for (AnnotatedVirus virus : annotatedViruses) {
@@ -79,9 +84,8 @@ public class VirusInterpreterAlgoTest {
 
         AnnotatedVirus reportedVirus2 = reportedVirus.get(1);
         assertEquals(name, reportedVirus2.name());
-        assertEquals(0, reportedVirus2.integrations());
+        assertEquals(2, reportedVirus2.integrations());
         assertEquals("EBV", reportedVirus2.interpretation());
-
     }
 
     @NotNull
