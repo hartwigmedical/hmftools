@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.virusinterpreter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,13 +63,13 @@ public class VirusInterpreterAlgoTest {
         VirusReportingModel virusReportingModel = new VirusReportingModel(virusReportingMap);
 
         CoveragesAnalyzer coveragesAnalyzer = new CoveragesAnalyzer();
-        CoveragesAnalysis coveragesAnalysis =
-                coveragesAnalyzer.run(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
+        CoveragesAnalysis coveragesAnalysis = coveragesAnalyzer.run(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
-        assertEquals(5, annotatedViruses.size());
-        assertEquals(3, annotatedViruses.stream().filter(x -> x.reported()).count());
+        assertEquals(7, annotatedViruses.size());
+        assertEquals(4, annotatedViruses.stream().filter(x -> x.reported()).count());
 
         List<AnnotatedVirus> reportedVirus = Lists.newArrayList();
         for (AnnotatedVirus virus : annotatedViruses) {
@@ -84,8 +85,22 @@ public class VirusInterpreterAlgoTest {
 
         AnnotatedVirus reportedVirus2 = reportedVirus.get(1);
         assertEquals(name, reportedVirus2.name());
-        assertEquals(2, reportedVirus2.integrations());
+        assertEquals(0, reportedVirus2.integrations());
         assertEquals("EBV", reportedVirus2.interpretation());
+
+        AnnotatedVirus reportedVirus3 = reportedVirus.get(2);
+        assertEquals(name, reportedVirus3.name());
+        assertEquals(0, reportedVirus3.integrations());
+        assertEquals("EBV", reportedVirus3.interpretation());
+
+        AnnotatedVirus reportedVirus4 = reportedVirus.get(3);
+        assertEquals(name, reportedVirus4.name());
+        assertEquals(0, reportedVirus4.integrations());
+        assertEquals("EBV", reportedVirus4.interpretation());
+
+        assertEquals(Integer.valueOf(90), algo.determineMinimalCoverageVirus(0, 1));
+        assertNull(algo.determineMinimalCoverageVirus(1, 1));
+
     }
 
     @NotNull
@@ -101,15 +116,15 @@ public class VirusInterpreterAlgoTest {
                 .coverage(0)
                 .build());
 
-        // This one has a blacklisted genus taxid -- not reported
+        // This virus not present in reporting model -- not reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(1)
-                .taxidSpecies(1)
+                .taxidSpecies(4)
                 .integrations(2)
                 .coverage(0)
                 .build());
-
+        //
         // This one has a failed QC -- not reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
@@ -119,13 +134,14 @@ public class VirusInterpreterAlgoTest {
                 .integrations(2)
                 .coverage(0)
                 .build());
-
+        //
         // This one has no integrations -- reported
         virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
                 .integrations(0)
+                .meanDepth(35)
                 .coverage(91)
                 .build());
 
@@ -134,6 +150,24 @@ public class VirusInterpreterAlgoTest {
                 .referenceTaxid(1)
                 .taxidGenus(2)
                 .taxidSpecies(1)
+                .integrations(0)
+                .coverage(90)
+                .build());
+
+        // This one has no integrations -- reported
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(2)
+                .integrations(0)
+                .coverage(91)
+                .build());
+
+        // This one has no integrations -- reported
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(2)
                 .integrations(0)
                 .coverage(90)
                 .build());
