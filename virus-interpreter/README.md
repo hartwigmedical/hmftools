@@ -44,7 +44,7 @@ qcStatus | The QC status as reported by VIRUSBreakend
 integrations | The number of detected integrations of this virus into the sample genome as reported by VIRUSBreakend
 interpretation | The output of the interpretation step of Virus Interpreter
 percentageCovered | The percentage of the viral reference sequence that has been covered in the tumor sample as reported by VIRUSBreakend
-meanCoverage | The mean coverage of the virus as reported by VIRUSBreakend 
+meanCoverage | The mean coverage of the virus as reported by VIRUSBreakend  //TODO: improve
 expectedClonalMeanCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA 
 reported | A boolean indicating whether the detected viral presence is considered a driver
 
