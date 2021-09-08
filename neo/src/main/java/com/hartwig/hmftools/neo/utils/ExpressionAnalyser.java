@@ -88,11 +88,11 @@ public class ExpressionAnalyser
             System.exit(1);
         }
 
-        NE_LOGGER.info("finding expression data for {} validation peptides and {} proteome peptides",
-                mBinderPeptides.size(), mProteomePeptides.size());
-
         int totalPeptides = mBinderPeptides.size() + mProteomePeptides.size();
         ExpressionDistribution distribution = new ExpressionDistribution(totalPeptides);
+
+        NE_LOGGER.info("calculating expression for {} binding peptides from {} alleles",
+                mBinderPeptides.size(), mValidationAlleles.size());
 
         for(PeptideExpressionData pepExpData : mBinderPeptides)
         {
@@ -115,8 +115,12 @@ public class ExpressionAnalyser
             writePeptideData(pepExpData);
         }
 
-        for(PeptideExpressionData pepExpData : mProteomePeptides)
+        NE_LOGGER.info("calculating expression for {} proteome peptides", mProteomePeptides.size());
+
+        for(int i = 0; i < mProteomePeptides.size(); ++i)
         {
+            PeptideExpressionData pepExpData = mProteomePeptides.get(i);
+
             if(!mValidationAlleles.contains(pepExpData.Allele))
                 continue;
 
@@ -127,6 +131,11 @@ public class ExpressionAnalyser
 
             distribution.process(pepExpData);
             writePeptideData(pepExpData);
+
+            if(i > 0 && (i % 100000) == 0)
+            {
+                NE_LOGGER.info("processed {} proteome peptides", i);
+            }
         }
 
         closeBufferedWriter(mWriter);
