@@ -8,8 +8,6 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendFile;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistFile;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistFile;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
@@ -48,14 +46,11 @@ public class VirusInterpreterApplication {
         LOGGER.info("Building virus whitelist model from {}", config.virusWhitelistTsv());
         VirusWhitelistModel virusWhitelistModel = VirusWhitelistFile.buildFromTsv(config.virusWhitelistTsv());
 
-        LOGGER.info("Building virus blacklist model from {}", config.virusBlacklistTsv());
-        VirusBlacklistModel virusBlacklistModel = VirusBlacklistFile.buildFromTsv(config.virusBlacklistTsv());
-
         LOGGER.info("Loading virus breakends from {}", new File(config.virusBreakendTsv()).getParent());
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
         LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel);
 
         List<AnnotatedVirus> annotatedViruses =
                 algo.analyze(virusBreakends, config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());

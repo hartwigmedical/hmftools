@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
@@ -24,14 +23,10 @@ public class VirusInterpreterAlgo {
     private final TaxonomyDb taxonomyDb;
     @NotNull
     private final VirusWhitelistModel virusWhitelistModel;
-    @NotNull
-    private final VirusBlacklistModel virusBlacklistModel;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusWhitelistModel virusWhitelistModel,
-            @NotNull final VirusBlacklistModel virusBlacklistModel) {
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusWhitelistModel virusWhitelistModel) {
         this.taxonomyDb = taxonomyDb;
         this.virusWhitelistModel = virusWhitelistModel;
-        this.virusBlacklistModel = virusBlacklistModel;
     }
 
     @NotNull
@@ -100,6 +95,6 @@ public class VirusInterpreterAlgo {
             }
         }
 
-        return !virusBlacklistModel.isBlacklisted(virusBreakend);
+        return true;
     }
 }

@@ -9,14 +9,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusWhitelist;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusBlacklistModel;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelist;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
@@ -60,12 +58,11 @@ public class VirusInterpreterAlgoTest {
         virusWhitelistMap.put(2, virusWhitelist2);
 
         VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusWhitelistMap);
-        VirusBlacklistModel virusBlacklistModel = new VirusBlacklistModel(Sets.newHashSet(1), Sets.newHashSet());
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel, virusBlacklistModel);
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
         assertEquals(5, annotatedViruses.size());
-        assertEquals(2, annotatedViruses.stream().filter(x -> x.reported()).count());
+        assertEquals(3, annotatedViruses.stream().filter(x -> x.reported()).count());
 
         List<AnnotatedVirus> reportedVirus = Lists.newArrayList();
         for (AnnotatedVirus virus : annotatedViruses) {
@@ -81,7 +78,7 @@ public class VirusInterpreterAlgoTest {
 
         AnnotatedVirus reportedVirus2 = reportedVirus.get(1);
         assertEquals(name, reportedVirus2.name());
-        assertEquals(0, reportedVirus2.integrations());
+        assertEquals(2, reportedVirus2.integrations());
         assertEquals("EBV", reportedVirus2.interpretation());
     }
 
