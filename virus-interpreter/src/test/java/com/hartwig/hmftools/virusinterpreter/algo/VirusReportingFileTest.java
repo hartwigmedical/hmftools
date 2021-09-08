@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class VirusReportingFileTest {
 
-    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_whitelist.tsv").getPath();
+    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_reporting.tsv").getPath();
 
     @Test
     public void canReadVirusWhitelistTsv() throws IOException {
