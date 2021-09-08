@@ -27,7 +27,7 @@ public class VirusReportingModel {
 
         VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation ? virusReporting.virusInterpretation() : Strings.EMPTY;
@@ -38,7 +38,7 @@ public class VirusReportingModel {
 
         VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation && virusReporting.reportOnSummary();
@@ -50,7 +50,7 @@ public class VirusReportingModel {
 
         VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation ? virusReporting.integratedMinimalCoverage() : null;
@@ -62,7 +62,7 @@ public class VirusReportingModel {
 
         VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
-            LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
+            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
         return speciesHasInterpretation ? virusReporting.nonIntegratedMinimalCoverage() : null;
