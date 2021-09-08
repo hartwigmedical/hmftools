@@ -14,9 +14,9 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusWhitelist;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelist;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
+import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReporting;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReporting;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,14 +34,14 @@ public class VirusInterpreterAlgoTest {
     public void canAnalyzeVirusBreakends() throws IOException {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
-        VirusWhitelist virusWhitelist1 = ImmutableVirusWhitelist.builder()
+        VirusReporting virusReporting1 = ImmutableVirusReporting.builder()
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
                 .build();
 
-        VirusWhitelist virusWhitelist2 = ImmutableVirusWhitelist.builder()
+        VirusReporting virusReporting2 = ImmutableVirusReporting.builder()
                 .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
@@ -53,11 +53,11 @@ public class VirusInterpreterAlgoTest {
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
-        Map<Integer, VirusWhitelist> virusWhitelistMap = Maps.newHashMap();
-        virusWhitelistMap.put(1, virusWhitelist1);
-        virusWhitelistMap.put(2, virusWhitelist2);
+        Map<Integer, VirusReporting> virusReportingMap = Maps.newHashMap();
+        virusReportingMap.put(1, virusReporting1);
+        virusReportingMap.put(2, virusReporting2);
 
-        VirusWhitelistModel virusWhitelistModel = new VirusWhitelistModel(virusWhitelistMap);
+        VirusReportingModel virusWhitelistModel = new VirusReportingModel(virusReportingMap);
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);

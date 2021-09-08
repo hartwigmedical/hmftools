@@ -10,14 +10,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VirusWhitelistModel {
+public class VirusReportingModel {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusWhitelistModel.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusReportingModel.class);
 
     @NotNull
-    private final Map<Integer, VirusWhitelist> speciesToInterpretationMap;
+    private final Map<Integer, VirusReporting> speciesToInterpretationMap;
 
-    public VirusWhitelistModel(@NotNull final Map<Integer, VirusWhitelist> speciesToInterpretationMap) {
+    public VirusReportingModel(@NotNull final Map<Integer, VirusReporting> speciesToInterpretationMap) {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
@@ -25,47 +25,47 @@ public class VirusWhitelistModel {
     public String interpretVirusSpecies(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusWhitelist.virusInterpretation() : Strings.EMPTY;
+        return speciesHasInterpretation ? virusReporting.virusInterpretation() : Strings.EMPTY;
     }
 
     public boolean displayVirusOnSummaryReport(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation && virusWhitelist.reportOnSummary();
+        return speciesHasInterpretation && virusReporting.reportOnSummary();
     }
 
     @Nullable
     public Integer integratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusWhitelist.integratedMinimalCoverage() : null;
+        return speciesHasInterpretation ? virusReporting.integratedMinimalCoverage() : null;
     }
 
     @Nullable
     public Integer nonIntegratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusWhitelist virusWhitelist = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.warn("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusWhitelist.nonIntegratedMinimalCoverage() : null;
+        return speciesHasInterpretation ? virusReporting.nonIntegratedMinimalCoverage() : null;
     }
 
     public boolean hasInterpretation(int speciesTaxid) {

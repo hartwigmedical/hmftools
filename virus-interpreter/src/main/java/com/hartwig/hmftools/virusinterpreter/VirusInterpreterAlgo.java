@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusWhitelistModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,11 +22,11 @@ public class VirusInterpreterAlgo {
     @NotNull
     private final TaxonomyDb taxonomyDb;
     @NotNull
-    private final VirusWhitelistModel virusWhitelistModel;
+    private final VirusReportingModel virusReportingModel;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusWhitelistModel virusWhitelistModel) {
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingModel virusReportingModel) {
         this.taxonomyDb = taxonomyDb;
-        this.virusWhitelistModel = virusWhitelistModel;
+        this.virusReportingModel = virusReportingModel;
     }
 
     @NotNull
@@ -36,7 +36,7 @@ public class VirusInterpreterAlgo {
 
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
-            String interpretation = virusWhitelistModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
+            String interpretation = virusReportingModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
 
             int taxid = virusBreakend.referenceTaxid();
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
@@ -49,7 +49,7 @@ public class VirusInterpreterAlgo {
                     .coverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(expectedClonalCoverage)
                     .reported(report(virusBreakend, expectedClonalCoverage))
-                    .reportedSummary(virusWhitelistModel.displayVirusOnSummaryReport(taxid))
+                    .reportedSummary(virusReportingModel.displayVirusOnSummaryReport(taxid))
                     .build());
         }
 
@@ -71,13 +71,13 @@ public class VirusInterpreterAlgo {
         double viralPercentageCovered = virusBreakend.coverage();
         double viralCoverage = virusBreakend.meanDepth();
 
-        if (virusWhitelistModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+        if (virusReportingModel.hasInterpretation(virusBreakend.taxidSpecies())) {
             if (virusBreakend.qcStatus() == VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
                 return false;
             }
 
             if (virusBreakend.integrations() == 0) {
-                Integer minimalCoverage = virusWhitelistModel.nonIntegratedMinimalCoverage(virusBreakend.taxidSpecies());
+                Integer minimalCoverage = virusReportingModel.nonIntegratedMinimalCoverage(virusBreakend.taxidSpecies());
                 if (minimalCoverage != null) {
                     if (viralPercentageCovered <= minimalCoverage && viralCoverage <= expectedClonalCoverage) {
                         return false;
@@ -86,7 +86,7 @@ public class VirusInterpreterAlgo {
             }
 
             if (virusBreakend.integrations() >= 1) {
-                Integer minimalCoverage = virusWhitelistModel.integratedMinimalCoverage(virusBreakend.taxidSpecies());
+                Integer minimalCoverage = virusReportingModel.integratedMinimalCoverage(virusBreakend.taxidSpecies());
                 if (minimalCoverage != null) {
                     if (viralPercentageCovered <= minimalCoverage && viralCoverage <= expectedClonalCoverage) {
                         return false;
