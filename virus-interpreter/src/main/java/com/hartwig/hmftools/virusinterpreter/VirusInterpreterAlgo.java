@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
+import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,15 +25,18 @@ public class VirusInterpreterAlgo {
     @NotNull
     private final VirusReportingModel virusReportingModel;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingModel virusReportingModel) {
+    @NotNull
+    private final CoveragesAnalysis coveragesAnalysis;
+
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingModel virusReportingModel,
+            @NotNull CoveragesAnalysis coveragesAnalysis) {
         this.taxonomyDb = taxonomyDb;
         this.virusReportingModel = virusReportingModel;
+        this.coveragesAnalysis = coveragesAnalysis;
     }
 
     @NotNull
-    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends, @NotNull String purplePurityTsv,
-            @NotNull String purpleQcFile, @NotNull String tumorSampleWGSMetricsFile) throws IOException {
-        double expectedClonalCoverage = calculateExpectedClonalCoverage(purplePurityTsv, purpleQcFile, tumorSampleWGSMetricsFile);
+    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) throws IOException {
 
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
@@ -47,24 +51,13 @@ public class VirusInterpreterAlgo {
                     .interpretation(interpretation)
                     .percentageCovered(virusBreakend.coverage())
                     .coverage(virusBreakend.meanDepth())
-                    .expectedClonalCoverage(expectedClonalCoverage)
-                    .reported(report(virusBreakend, expectedClonalCoverage))
+                    .expectedClonalCoverage(coveragesAnalysis.expectedClonalCoverage())
+                    .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage()))
                     .reportedSummary(virusReportingModel.displayVirusOnSummaryReport(taxid))
                     .build());
         }
 
         return annotatedViruses;
-    }
-
-    private static double calculateExpectedClonalCoverage(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
-            @NotNull String tumorSampleWGSMetricsFile) throws IOException {
-        PurityContext purityContext = PurityContextFile.readWithQC(purpleQcFile, purplePurityTsv);
-        double ploidy = purityContext.bestFit().ploidy();
-        double purity = purityContext.bestFit().purity();
-
-        WGSMetrics metrics = WGSMetricsFile.read(tumorSampleWGSMetricsFile);
-        double tumorMeanCoverage = metrics.meanCoverage();
-        return tumorMeanCoverage * purity / ploidy;
     }
 
     private boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalCoverage) {

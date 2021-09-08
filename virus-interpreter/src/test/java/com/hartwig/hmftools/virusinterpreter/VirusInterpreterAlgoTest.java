@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReporting;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReporting;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
+import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
+import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalyzer;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.jetbrains.annotations.NotNull;
@@ -57,10 +59,14 @@ public class VirusInterpreterAlgoTest {
         virusReportingMap.put(1, virusReporting1);
         virusReportingMap.put(2, virusReporting2);
 
-        VirusReportingModel virusWhitelistModel = new VirusReportingModel(virusReportingMap);
+        VirusReportingModel virusReportingModel = new VirusReportingModel(virusReportingMap);
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusWhitelistModel);
-        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
+        CoveragesAnalyzer coveragesAnalyzer = new CoveragesAnalyzer();
+        CoveragesAnalysis coveragesAnalysis =
+                coveragesAnalyzer.run(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
+
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
         assertEquals(5, annotatedViruses.size());
         assertEquals(3, annotatedViruses.stream().filter(x -> x.reported()).count());
 
