@@ -76,6 +76,27 @@ public class TranscriptUtils
         }
     }
 
+    public static int codingBaseLength(final TranscriptData transData)
+    {
+        if(transData.CodingStart == null)
+            return 0;
+
+        int codingBases = 0;
+
+        for(ExonData exon : transData.exons())
+        {
+            if(transData.CodingStart > exon.End)
+                continue;
+
+            if(transData.CodingEnd < exon.Start)
+                break;
+
+            codingBases += min(exon.End, transData.CodingEnd) - max(exon.Start, transData.CodingStart) + 1;
+        }
+
+        return codingBases;
+    }
+
     public static CodingBaseData calcCodingBases(final TranscriptData transData, int position)
     {
         // intronic phase can read from the preceding exon end phase (regardless of whether coding has begun

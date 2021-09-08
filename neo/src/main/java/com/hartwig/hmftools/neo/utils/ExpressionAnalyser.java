@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.utils;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -34,6 +35,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
@@ -50,6 +53,8 @@ public class ExpressionAnalyser
     private final Map<String,PeptideSearchData> mPeptideSearchDataMap;
     private final List<PeptideExpressionData> mProteomePeptides;
     private final List<PeptideExpressionData> mBinderPeptides;
+    private final ExpressionDistribution mExpressionDistribution;
+    private final GenePropensity mGenePropensity;
 
     private final Set<String> mValidationAlleles;
 
@@ -73,6 +78,10 @@ public class ExpressionAnalyser
 
         mPeptideSearchDataMap = loadPeptideSearchData(cmd.getOptionValue(PEPTIDE_SEARCH_FILE));
 
+        mExpressionDistribution = new ExpressionDistribution();
+
+        mGenePropensity = new GenePropensity(mExpressionDistribution, cmd.getOptionValue(ENSEMBL_DATA_DIR));
+
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
 
@@ -87,9 +96,6 @@ public class ExpressionAnalyser
             NE_LOGGER.error("failed to initialise");
             System.exit(1);
         }
-
-        int totalPeptides = mBinderPeptides.size() + mProteomePeptides.size();
-        ExpressionDistribution distribution = new ExpressionDistribution(totalPeptides);
 
         NE_LOGGER.info("calculating expression for {} binding peptides from {} alleles",
                 mBinderPeptides.size(), mValidationAlleles.size());
@@ -108,10 +114,10 @@ public class ExpressionAnalyser
 
             for(String transName : pepExpData.Transcripts)
             {
-                pepExpData.addTpm(mTranscriptExpression.getExpression(transName));
+                pepExpData.addTpm(transName, mTranscriptExpression.getExpression(transName));
             }
 
-            distribution.process(pepExpData);
+            mExpressionDistribution.process(pepExpData);
             writePeptideData(pepExpData);
         }
 
@@ -126,10 +132,10 @@ public class ExpressionAnalyser
 
             for(String transName : pepExpData.Transcripts)
             {
-                pepExpData.addTpm(mTranscriptExpression.getExpression(transName));
+                pepExpData.addTpm(transName, mTranscriptExpression.getExpression(transName));
             }
 
-            distribution.process(pepExpData);
+            mExpressionDistribution.process(pepExpData);
             writePeptideData(pepExpData);
 
             if(i > 0 && (i % 100000) == 0)
@@ -142,8 +148,15 @@ public class ExpressionAnalyser
 
         NE_LOGGER.info("generating and writing expression distributions");
 
-        distribution.formDistributions();
-        distribution.writeDistributions(mOutputDir, mOutputId);
+        mExpressionDistribution.formDistributions();
+        mExpressionDistribution.writeDistributions(mOutputDir, mOutputId);
+
+        NE_LOGGER.info("calculating gene propensity");
+
+        mBinderPeptides.forEach(x -> mGenePropensity.process(x));
+        mProteomePeptides.forEach(x -> mGenePropensity.process(x));
+
+        mGenePropensity.writeResults(mOutputDir, mOutputId);
 
         NE_LOGGER.info("peptide expression analysis complete");
     }

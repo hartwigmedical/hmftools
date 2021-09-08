@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_DECILE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_TPM_LEVEL;
 import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
+import static com.hartwig.hmftools.neo.bind.BindConstants.STRONG_BINDER_LIKELIHOOD;
+import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_EXPRESSION_DIST;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_VALIDATION;
 
@@ -21,6 +23,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.neo.bind.ScoreDistributionData;
 
 public class ExpressionDistribution
 {
@@ -34,9 +37,7 @@ public class ExpressionDistribution
     private static final double MIN_TPM_BUCKET = pow(2, MIN_TPM_EXP);
     private static final double MAX_TPM_BUCKET = pow(2, MAX_TPM_EXP);
 
-    private static final double STRONG_BINDER_LIKELIHOOD = 0.001;
-
-    public ExpressionDistribution(int totalPeptides)
+    public ExpressionDistribution()
     {
         mTpmBuckets = Lists.newArrayListWithCapacity(22);
 
@@ -62,6 +63,43 @@ public class ExpressionDistribution
         // add to ordered list for deciles and to TPM buckets
         addToTpmBucket(pepExpData);
         addToRankedList(pepExpData);
+    }
+
+    public double calcLikelihood(double tpm)
+    {
+        if(tpm < mTpmBuckets.get(0).Bucket)
+            return mTpmBuckets.get(0).calcRate();
+
+        if(tpm > mTpmBuckets.get(mTpmBuckets.size() - 1).Bucket)
+            return mTpmBuckets.get(mTpmBuckets.size() - 1).calcRate();
+
+        for(int i = 0; i < mTpmBuckets.size(); ++i)
+        {
+            TpmBucket bucket = mTpmBuckets.get(i);
+
+            if(Doubles.equal(tpm, bucket.Bucket))
+                return bucket.calcRate();
+
+            TpmBucket nextBucket = i < mTpmBuckets.size() - 1 ? mTpmBuckets.get(i + 1) : null;
+
+            if(nextBucket != null && Doubles.equal(tpm, nextBucket.Bucket))
+                return nextBucket.calcRate();
+
+            if(tpm > bucket.Bucket)
+            {
+                if(nextBucket == null)
+                    break;
+
+                if(tpm < nextBucket.Bucket)
+                {
+                    // interpolate between the distribution to set the rank
+                    double upperPerc = (tpm - bucket.Bucket) / (nextBucket.Bucket - bucket.Bucket);
+                    return upperPerc * nextBucket.calcRate() + (1 - upperPerc) * bucket.calcRate();
+                }
+            }
+        }
+
+        return INVALID_CALC;
     }
 
     public void formDistributions()
@@ -192,7 +230,7 @@ public class ExpressionDistribution
         }
         catch(IOException e)
         {
-            NE_LOGGER.error("failed to write random peptide likelihood file: {}", e.toString());
+            NE_LOGGER.error("failed to write expression distribution file: {}", e.toString());
         }
     }
 

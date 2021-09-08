@@ -54,6 +54,8 @@ public final class BindConstants
 
     public static final int MIN_LIKELIHOOD_ALLELE_BIND_COUNT = 200;
 
+    public static final double STRONG_BINDER_LIKELIHOOD = 0.001;
+
     public static final double INVALID_SCORE = -1;
 
     public static final double DEFAULT_NOISE_PROB = 0.05;
