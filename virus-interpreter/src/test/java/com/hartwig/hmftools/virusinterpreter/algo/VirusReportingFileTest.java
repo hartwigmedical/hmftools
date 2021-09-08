@@ -12,21 +12,20 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class VirusWhitelistFileTest {
+public class VirusReportingFileTest {
 
-    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_whitelist.tsv").getPath();
+    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_reporting.tsv").getPath();
 
     @Test
     public void canReadVirusWhitelistTsv() throws IOException {
-        VirusWhitelistModel virusWhitelistModel = VirusWhitelistFile.buildFromTsv(VIRUS_WHITELIST_TSV);
+        VirusReportingModel virusWhitelistModel = VirusReportingFile.buildFromTsv(VIRUS_WHITELIST_TSV);
         assertEquals(1, virusWhitelistModel.count());
 
         assertTrue(virusWhitelistModel.hasInterpretation(1));
         assertFalse(virusWhitelistModel.hasInterpretation(2));
 
         assertEquals("MCV", virusWhitelistModel.interpretVirusSpecies(1));
-        assertTrue(virusWhitelistModel.displayVirusOnSummaryReport(1));
-        assertEquals(Integer.valueOf(90), virusWhitelistModel.nonintegratedMinimalCoverage(1));
+        assertEquals(Integer.valueOf(90), virusWhitelistModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusWhitelistModel.integratedMinimalCoverage(1));
 
         assertNotEquals("HPV", virusWhitelistModel.interpretVirusSpecies(2));

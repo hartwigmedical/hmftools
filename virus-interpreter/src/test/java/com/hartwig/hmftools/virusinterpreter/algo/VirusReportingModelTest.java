@@ -11,21 +11,20 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class VirusWhitelistModelTest {
+public class VirusReportingModelTest {
 
     @Test
     public void canInterpretVirus() {
-        Map<Integer, VirusWhitelist> speciesToInterpretationMap = Maps.newHashMap();
+        Map<Integer, VirusReporting> speciesToInterpretationMap = Maps.newHashMap();
 
-        VirusWhitelist virusWhitelist = ImmutableVirusWhitelist.builder()
-                .reportOnSummary(true)
+        VirusReporting virusWhitelist = ImmutableVirusReporting.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
-                .nonintegratedMinimalCoverage(null)
+                .nonIntegratedMinimalCoverage(null)
                 .build();
 
         speciesToInterpretationMap.put(1, virusWhitelist);
-        VirusWhitelistModel virusInterpretationModel = new VirusWhitelistModel(speciesToInterpretationMap);
+        VirusReportingModel virusInterpretationModel = new VirusReportingModel(speciesToInterpretationMap);
 
         assertEquals("EBV", virusInterpretationModel.interpretVirusSpecies(1));
         assertNotEquals("HPV", virusInterpretationModel.interpretVirusSpecies(1));
