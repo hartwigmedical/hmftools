@@ -4,13 +4,18 @@ import static java.lang.Math.ceil;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.PASSING_FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +35,6 @@ public class FusionCohort
     private final CohortConfig mConfig;
 
     private final FusionFilters mFilters;
-    private String mFilteredFusionHeader;
     private final BufferedWriter mExternalCompareWriter;
 
     private final FusionCollection mFusionCollection;
@@ -49,13 +53,9 @@ public class FusionCohort
     {
         mConfig = config;
         mFilters = new FusionFilters(mConfig.Fusions, cmd);
-        mFilteredFusionHeader = null;
         mExternalCompareWriter = mConfig.Fusions.ComparisonSource != null ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
         mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;
-
-        if(mConfig.Fusions.WriteCombinedFusions)
-            intialiseCombinedWriter();
     }
 
     public void processFusionFiles()
@@ -87,6 +87,9 @@ public class FusionCohort
         {
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path fusionFile = filenames.get(i);
+
+            if(mConfig.Fusions.WriteCombinedFusions && mWriter == null)
+                intialiseCombinedWriter(fusionFile);
 
             if(sampleFileMap == null)
                 sampleFileMap = Maps.newHashMap();
@@ -126,14 +129,18 @@ public class FusionCohort
         ISF_LOGGER.info("fusion cohort analysis complete");
     }
 
-    private void intialiseCombinedWriter()
+    private void intialiseCombinedWriter(final Path fusionFile)
     {
         final String outputFile = mConfig.formCohortFilename("combined_fusions.csv");
 
         try
         {
+            // take the fusion headers from a sample file
+            BufferedReader fileReader = new BufferedReader(new FileReader(fusionFile.toString()));
+            String fusionFileHeader = fileReader.readLine();
+
             mWriter = createBufferedWriter(outputFile, false);
-            mWriter.write(String.format("SampleId,%s", mFilteredFusionHeader));
+            mWriter.write(String.format("SampleId,%s", fusionFileHeader));
             mWriter.write(",Filter,CohortCount,KnownFusionType");
             mWriter.newLine();
         }
