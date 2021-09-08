@@ -18,7 +18,6 @@ public class VirusReportingModelTest {
         Map<Integer, VirusReporting> speciesToInterpretationMap = Maps.newHashMap();
 
         VirusReporting virusWhitelist = ImmutableVirusReporting.builder()
-                .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)

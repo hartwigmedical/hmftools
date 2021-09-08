@@ -9,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class VirusReporting {
 
-    public abstract boolean reportOnSummary();
-
     @NotNull
     public abstract String virusInterpretation();
 

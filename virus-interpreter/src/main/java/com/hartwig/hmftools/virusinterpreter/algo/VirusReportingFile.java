@@ -29,13 +29,12 @@ public final class VirusReportingFile {
 
         for (String line : linesVirusReporting.subList(1, linesVirusReporting.size())) {
             String[] parts = line.split(SEPARATOR);
-            if (parts.length == 5) {
+            if (parts.length == 4) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
                 VirusReporting virusReporting = ImmutableVirusReporting.builder()
-                        .reportOnSummary(Boolean.parseBoolean(parts[1].trim()))
-                        .virusInterpretation(parts[2].trim())
-                        .integratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
-                        .nonIntegratedMinimalCoverage(parts[4].trim().isEmpty() ? null : Integer.parseInt(parts[4].trim()))
+                        .virusInterpretation(parts[1].trim())
+                        .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
+                        .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
                         .build();
                 speciesVirusReportingMap.put(speciesTaxid, virusReporting);
             } else {

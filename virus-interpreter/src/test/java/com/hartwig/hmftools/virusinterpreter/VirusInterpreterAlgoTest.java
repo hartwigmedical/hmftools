@@ -38,14 +38,12 @@ public class VirusInterpreterAlgoTest {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
         VirusReporting virusReporting1 = ImmutableVirusReporting.builder()
-                .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
                 .build();
 
         VirusReporting virusReporting2 = ImmutableVirusReporting.builder()
-                .reportOnSummary(true)
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)

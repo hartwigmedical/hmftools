@@ -48,7 +48,6 @@ public final class VirusTestFactory {
                 .percentageCovered(2)
                 .coverage(2)
                 .expectedClonalCoverage(2)
-                .reported(false)
-                .reportedSummary(true);
+                .reported(false);
     }
 }

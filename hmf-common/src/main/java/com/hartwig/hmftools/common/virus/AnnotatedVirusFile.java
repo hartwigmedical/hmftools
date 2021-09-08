@@ -62,7 +62,6 @@ public final class AnnotatedVirusFile {
                 .add("coverage")
                 .add("expectedClonalCoverage")
                 .add("reported")
-                .add("reportedSummary")
                 .toString();
     }
 
@@ -77,7 +76,6 @@ public final class AnnotatedVirusFile {
                 .add(String.valueOf(annotatedVirus.coverage()))
                 .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))
                 .add(String.valueOf(annotatedVirus.reported()))
-                .add(String.valueOf(annotatedVirus.reportedSummary()))
                 .toString();
     }
 
@@ -94,7 +92,6 @@ public final class AnnotatedVirusFile {
                 .coverage(Double.parseDouble(values[6]))
                 .expectedClonalCoverage(Double.parseDouble(values[7]))
                 .reported(Boolean.parseBoolean(values[8]))
-                .reportedSummary(Boolean.parseBoolean(values[9]))
                 .build();
     }
 }

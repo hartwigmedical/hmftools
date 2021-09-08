@@ -25,7 +25,6 @@ public class VirusReportingFileTest {
         assertFalse(virusWhitelistModel.hasInterpretation(2));
 
         assertEquals("MCV", virusWhitelistModel.interpretVirusSpecies(1));
-        assertTrue(virusWhitelistModel.displayVirusOnSummaryReport(1));
         assertEquals(Integer.valueOf(90), virusWhitelistModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusWhitelistModel.integratedMinimalCoverage(1));
 

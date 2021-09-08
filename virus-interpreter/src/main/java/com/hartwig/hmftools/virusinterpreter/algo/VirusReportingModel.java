@@ -33,17 +33,6 @@ public class VirusReportingModel {
         return speciesHasInterpretation ? virusReporting.virusInterpretation() : Strings.EMPTY;
     }
 
-    public boolean displayVirusOnSummaryReport(int speciesTaxid) {
-        boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
-
-        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
-        if (!speciesHasInterpretation) {
-            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
-        }
-
-        return speciesHasInterpretation && virusReporting.reportOnSummary();
-    }
-
     @Nullable
     public Integer integratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);

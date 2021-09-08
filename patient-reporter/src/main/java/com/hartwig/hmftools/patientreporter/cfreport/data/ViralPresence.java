@@ -20,9 +20,9 @@ public final class ViralPresence {
         Set<String> virusInterpretationSummary = Sets.newHashSet();
 
         for (AnnotatedVirus virus : reportableViruses) {
-            if (virus.reportedSummary()) {
+            if (true) {
                 positiveInterpretations.add(virus.interpretation());
-            } else if (!virus.reportedSummary()) {
+            } else if (false) {
                 negativeInterpretations.add(virus.interpretation());
             }
         }

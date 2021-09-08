@@ -53,7 +53,6 @@ public class VirusInterpreterAlgo {
                     .coverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(coveragesAnalysis.expectedClonalCoverage())
                     .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage()))
-                    .reportedSummary(virusReportingModel.displayVirusOnSummaryReport(taxid))
                     .build());
         }
 

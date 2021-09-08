@@ -30,5 +30,4 @@ public abstract class AnnotatedVirus {
 
     public abstract boolean reported();
 
-    public abstract boolean reportedSummary();
 }
