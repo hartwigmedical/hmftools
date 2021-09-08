@@ -349,9 +349,9 @@ max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if e
 
 '*** see below for cohort frequency calculation
 
-### 10. Cohort frequency <TO DO>
+### 10. Cohort frequency
 
-We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 1700 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features. 
+We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 2030 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features. 
 
 For each chimeric junction and novel splice junction  we count
 * Number of unique samples with 2 or more supporting fragments at that novel splice junction
