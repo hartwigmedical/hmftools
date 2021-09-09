@@ -11,15 +11,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class GenePropensity
 {
@@ -27,7 +23,7 @@ public class GenePropensity
     private final EnsemblDataCache mEnsemblDataCache;
 
     private final Map<String,TranscriptData> mTransDataMap; // transName to geneId
-    private final Map<String, GeneTpmLikelihood> mGeneLikelihoods; // keyed by gendId
+    private final Map<String, TransTpmLikelihood> mTransLikelihoods; // keyed by transName
 
     public GenePropensity(final ExpressionDistribution expressionDistribution, final String ensemblDir)
     {
@@ -39,7 +35,7 @@ public class GenePropensity
         mEnsemblDataCache.load(false);
 
         mTransDataMap = Maps.newHashMap();
-        mGeneLikelihoods = Maps.newHashMap();
+        mTransLikelihoods = Maps.newHashMap();
 
         for(Map.Entry<String,List<TranscriptData>> entry : mEnsemblDataCache.getTranscriptDataMap().entrySet())
         {
@@ -55,13 +51,12 @@ public class GenePropensity
         if(!pepExpData.hasTpm())
             return;
 
+        double peptideTpm = pepExpData.tpm();
+
         boolean validationPeptide = pepExpData.Source.equals(SOURCE_VALIDATION);
 
         if(validationPeptide && pepExpData.LikelihoodRank > STRONG_BINDER_LIKELIHOOD)
             return;
-
-        // organise transcripts into lists by gene
-        Map<String,List<TranscriptData>> geneTransMap = Maps.newHashMap();
 
         for(String transName : pepExpData.Transcripts)
         {
@@ -70,88 +65,72 @@ public class GenePropensity
             if(transData == null)
                 continue;
 
-            List<TranscriptData> transList = geneTransMap.get(transData.GeneId);
+            Double transTpm = pepExpData.getTranscriptTpms().get(transName);
 
-            if(transList == null)
-            {
-                transList = Lists.newArrayList();
-                geneTransMap.put(transData.GeneId, transList);
-            }
+            if(transTpm == null)
+                continue;
 
-            transList.add(transData);
-        }
-
-        for(Map.Entry<String,List<TranscriptData>> entry : geneTransMap.entrySet())
-        {
-            // sum up TPM for this gene then get expression likelihood
-            String geneId = entry.getKey();
-            List<TranscriptData> transList = entry.getValue();
-
-            double geneTpm = transList.stream().map(x -> pepExpData.getTranscriptTpms().get(x.TransName))
-                    .filter(x -> x != null).mapToDouble(x -> x).sum();
-
-            double expressionLikelihood = mExpressionDistribution.calcLikelihood(geneTpm);
+            double expressionLikelihood = mExpressionDistribution.calcLikelihood(transTpm);
 
             if(expressionLikelihood < 0 || expressionLikelihood > 1)
             {
-                NE_LOGGER.error(String.format("peptide(%s) tpm(%.4f) has invalid expression rate(%.4f)",
-                        pepExpData, geneTpm, expressionLikelihood));
+                NE_LOGGER.error(String.format("peptide(%s) trans(%s) tpm(%.4f) has invalid expression rate(%.4f)",
+                        pepExpData, transName, transTpm, expressionLikelihood));
                 return;
             }
 
-            GeneTpmLikelihood geneTpmLikelihood = mGeneLikelihoods.get(geneId);
+            TransTpmLikelihood transTpmLikelihood = mTransLikelihoods.get(transName);
 
-            if(geneTpmLikelihood == null)
+            if(transTpmLikelihood == null)
             {
-                geneTpmLikelihood = new GeneTpmLikelihood();
+                transTpmLikelihood = new TransTpmLikelihood(transData);
+                transTpmLikelihood.ExonCount = transData.exons().size();
+                transTpmLikelihood.CodingBases = codingBaseLength(transData);
 
-                // find canonical
-                TranscriptData canonicalTrans = transList.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
-
-                if(canonicalTrans == null)
-                    canonicalTrans = mEnsemblDataCache.getTranscriptData(geneId, "");
-
-                if(canonicalTrans != null)
-                {
-                    geneTpmLikelihood.ExonCount = canonicalTrans.exons().size();
-                    geneTpmLikelihood.CodingBases = codingBaseLength(canonicalTrans);
-                }
-
-                mGeneLikelihoods.put(geneId, geneTpmLikelihood);
+                mTransLikelihoods.put(transName, transTpmLikelihood);
             }
+
+            if(peptideTpm <= 0)
+                continue;
+
+            double transTpmFraction = transTpm / peptideTpm;
 
             if(validationPeptide)
             {
-                ++geneTpmLikelihood.ValidationCount;
+                ++transTpmLikelihood.ValidationCount;
+                transTpmLikelihood.ValidationApp += transTpmFraction;
             }
             else
             {
-                ++geneTpmLikelihood.StrongBindersCount;
-                geneTpmLikelihood.StrongBindersTpmLikelihoodTotal += expressionLikelihood;
+                ++transTpmLikelihood.StrongBindersCount;
+                transTpmLikelihood.StrongBindersApp += transTpmFraction;
+                transTpmLikelihood.StrongBindersTpmLikelihoodTotalRaw += expressionLikelihood;
+                transTpmLikelihood.StrongBindersTpmLikelihoodTotalApp += expressionLikelihood * transTpmFraction;
             }
         }
     }
 
     public void writeResults(final String outputDir, final String outputId)
     {
-        final String filename = formFilename(outputDir, "gene_propensity", outputId);
+        final String filename = formFilename(outputDir, "trans_propensity", outputId);
 
         try
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("GeneId,GeneName,ValidationCount,StrongBindersCount,ExonCount,CodingBases,StrongBindersTpmLikelihoodTotal");
+            writer.write("GeneId,GeneName,TransName,ValidationCount,ValidationnApp,StrongBindersCount,StrongBindersApp");
+            writer.write(",SbTpmLikelihoodTotalRaw,SbTpmLikelihoodTotalApp,ExonCount,CodingBases");
             writer.newLine();
 
-            for(Map.Entry<String,GeneTpmLikelihood> entry : mGeneLikelihoods.entrySet())
+            for(TransTpmLikelihood transTpmLikelihood : mTransLikelihoods.values())
             {
-                String geneId = entry.getKey();
-                GeneTpmLikelihood geneTpmLikelihood = entry.getValue();
-
-                writer.write(String.format("%s,%s,%d,%d,%d,%d,%.4f",
-                        geneId, mEnsemblDataCache.getGeneDataById(geneId).GeneName,
-                        geneTpmLikelihood.ValidationCount, geneTpmLikelihood.StrongBindersCount,
-                        geneTpmLikelihood.ExonCount, geneTpmLikelihood.CodingBases, geneTpmLikelihood.StrongBindersTpmLikelihoodTotal));
+                String geneName = mEnsemblDataCache.getGeneDataById(transTpmLikelihood.TransData.GeneId).GeneName;
+                writer.write(String.format("%s,%s,%s,%d,%.2f,%d,%.2f,%.4f,%.4f,%d,%d",
+                        transTpmLikelihood.TransData.GeneId, geneName, transTpmLikelihood.TransData.TransName,
+                        transTpmLikelihood.ValidationCount, transTpmLikelihood.ValidationApp,
+                        transTpmLikelihood.StrongBindersCount, transTpmLikelihood.StrongBindersApp,
+                        transTpmLikelihood.StrongBindersTpmLikelihoodTotalRaw, transTpmLikelihood.StrongBindersTpmLikelihoodTotalApp,
+                        transTpmLikelihood.ExonCount, transTpmLikelihood.CodingBases));
 
                 writer.newLine();
             }
@@ -164,20 +143,28 @@ public class GenePropensity
         }
     }
 
-    private class GeneTpmLikelihood
+    private class TransTpmLikelihood
     {
+        public final TranscriptData TransData;
         public int ValidationCount;
+        public double ValidationApp;
         public int StrongBindersCount;
-        public double StrongBindersTpmLikelihoodTotal;
+        public double StrongBindersApp;
+        public double StrongBindersTpmLikelihoodTotalRaw;
+        public double StrongBindersTpmLikelihoodTotalApp;
 
         public int CodingBases;
         public int ExonCount;
 
-        public GeneTpmLikelihood()
+        public TransTpmLikelihood(final TranscriptData transData)
         {
+            TransData = transData;
             ValidationCount = 0;
+            ValidationApp = 0;
             StrongBindersCount = 0;
-            StrongBindersTpmLikelihoodTotal = 0;
+            StrongBindersApp = 0;
+            StrongBindersTpmLikelihoodTotalRaw = 0;
+            StrongBindersTpmLikelihoodTotalApp = 0;
             CodingBases = 0;
             ExonCount = 0;
         }
