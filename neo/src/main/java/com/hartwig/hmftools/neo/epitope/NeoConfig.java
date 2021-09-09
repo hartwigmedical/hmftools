@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -55,7 +56,6 @@ public class NeoConfig
     public static final String HLA_TYPES_FILE = "hla_types_file";
     public static final String MUTATIONS_FILE = "mutations_file";
 
-    public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String CANCER_TPM_FILE = "cancer_tpm_file";
@@ -176,7 +176,7 @@ public class NeoConfig
         options.addOption(MUTATIONS_FILE, true, "File with a list of point mutations");
         options.addOption(PEPTIDE_LENGTHS, true, "Peptide length min-max, separated by '-', eg 8-12");
         options.addOption(PEPTIDE_FLANKS, true, "Peptide flanking amino acids");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
+        EnsemblDataCache.addEnsemblDir(options);
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(SV_FUSION_DATA_DIR, true, "SV fusion file (single sample or cohort)");

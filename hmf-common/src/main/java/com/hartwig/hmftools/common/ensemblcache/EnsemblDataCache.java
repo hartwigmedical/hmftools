@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
 public class EnsemblDataCache
@@ -61,6 +62,12 @@ public class EnsemblDataCache
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir"; // eventually deprecated
     public static final String ENSEMBL_DATA_DIR = "ensembl_data_dir";
     public static final String ENSEMBL_DATA_DIR_CFG = "Ensembl data file directory";
+
+    public EnsemblDataCache(final CommandLine cmd, final RefGenomeVersion refGenomeVersion)
+    {
+        this(cmd.hasOption(ENSEMBL_DATA_DIR) ?
+                cmd.getOptionValue(ENSEMBL_DATA_DIR) : cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), refGenomeVersion);
+    }
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {

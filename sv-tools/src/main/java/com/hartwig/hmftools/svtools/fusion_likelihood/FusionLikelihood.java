@@ -648,7 +648,7 @@ public class FusionLikelihood
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd, RefGenomeVersion.V37);
 
         fusionLikelihood.initialise(cmd, ensemblDataCache);
 

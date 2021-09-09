@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -81,7 +80,7 @@ public class Isofox
 
         mResultsWriter = new ResultsWriter(mConfig);
 
-        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), config.RefGenVersion);
+        mGeneTransCache = new EnsemblDataCache(cmd, config.RefGenVersion);
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
         {

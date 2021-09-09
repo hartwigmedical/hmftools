@@ -48,8 +48,7 @@ public class WildtypePeptidePredictions
 
     public WildtypePeptidePredictions(final CommandLine cmd)
     {
-        String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
-        mEnsemblDataCache = new EnsemblDataCache(ensemblDataDir, RefGenomeVersion.V37);
+        mEnsemblDataCache = new EnsemblDataCache(cmd, RefGenomeVersion.V37);
         mEnsemblDataCache.setRequiredData(false, false, false, true);
 
         mEnsemblDataCache.load(false);
