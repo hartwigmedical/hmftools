@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,10 +21,17 @@ public final class ViralPresence {
         Set<String> virusInterpretationSummary = Sets.newHashSet();
 
         for (AnnotatedVirus virus : reportableViruses) {
-            if (true) {
+            VirusConstants virusConstants = VirusConstants.virusName(virus.interpretation());
+            if (virusConstants.reportedVirusOnSummary()) {
                 positiveInterpretations.add(virus.interpretation());
-            } else if (false) {
+            } else if (!virusConstants.reportedVirusOnSummary()) {
                 negativeInterpretations.add(virus.interpretation());
+            }
+        }
+
+        for (String virusSummary: VirusConstants.allVirussen()) {
+            if (!positiveInterpretations.contains(virusSummary)) {
+                negativeInterpretations.add(virusSummary);
             }
         }
 
