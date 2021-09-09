@@ -35,18 +35,15 @@ public class RandomPeptideDistribution
 
     private final Map<Integer,List<RandomPeptideData>> mRandomPeptideMap; // by length and with flanking data
 
-    private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoresMap; // allele to peptide length to distribution
-    private final Map<String,List<ScoreDistributionData>> mAlleleLikelihoodsMap; // allele to distribution of likelihoods
-
-    private static final int SCORE_SIZE = 0;
-    private static final int SCORE_BRACKET = 1;
+    private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoreDistributions; // allele to peptide length to distribution
+    private final Map<String,List<ScoreDistributionData>> mAlleleLikelihoodDistributions; // allele to distribution of likelihoods
 
     public RandomPeptideDistribution(final RandomPeptideConfig config)
     {
         mConfig = config;
 
-        mAlleleScoresMap = Maps.newHashMap();
-        mAlleleLikelihoodsMap = Maps.newHashMap();
+        mAlleleScoreDistributions = Maps.newHashMap();
+        mAlleleLikelihoodDistributions = Maps.newHashMap();
         mRandomPeptideMap = Maps.newHashMap();
         mDataLoaded = false;
     }
@@ -59,11 +56,11 @@ public class RandomPeptideDistribution
 
     public boolean hasData() { return mDataLoaded; }
 
-    public Map<String,Map<Integer,List<ScoreDistributionData>>> getAlleleScoresMap() { return mAlleleScoresMap; }
+    public Map<String,Map<Integer,List<ScoreDistributionData>>> getAlleleScoresMap() { return mAlleleScoreDistributions; }
 
     public double getScoreRank(final String allele, final int peptideLength, double score)
     {
-        return getScoreRank(mAlleleScoresMap, allele, peptideLength, score);
+        return getScoreRank(mAlleleScoreDistributions, allele, peptideLength, score);
     }
 
     public static double getScoreRank(
@@ -84,7 +81,7 @@ public class RandomPeptideDistribution
 
     public double getLikelihoodRank(final String allele, double likelihood)
     {
-        List<ScoreDistributionData> likelihoodDist = mAlleleLikelihoodsMap.get(allele);
+        List<ScoreDistributionData> likelihoodDist = mAlleleLikelihoodDistributions.get(allele);
 
         if(likelihoodDist == null || likelihoodDist.size() < 2)
             return INVALID_SCORE;
@@ -216,6 +213,8 @@ public class RandomPeptideDistribution
         if(mRandomPeptideMap.isEmpty())
             return;
 
+        mAlleleScoreDistributions.clear();
+
         List<RandomDistributionTask> alleleTasks = Lists.newArrayList();
 
         for(Map.Entry<String,Map<Integer,BindScoreMatrix>> alleleEntry : alleleBindMatrixMap.entrySet())
@@ -232,7 +231,7 @@ public class RandomPeptideDistribution
             alleleTasks.add(new RandomDistributionTask(allele, peptideLengthMatrixMap, mRandomPeptideMap, flankScores));
         }
 
-        NE_LOGGER.info("building distribution for {} alleles", alleleTasks.size());
+        NE_LOGGER.info("building distribution for {} allele(s)", alleleTasks.size());
 
         if(mConfig.Threads > 1)
         {
@@ -244,7 +243,7 @@ public class RandomPeptideDistribution
             alleleTasks.forEach(x -> x.call());
         }
 
-        alleleTasks.forEach(x -> mAlleleScoresMap.put(x.allele(), x.getPeptideLengthScoresMap()));
+        alleleTasks.forEach(x -> mAlleleScoreDistributions.put(x.allele(), x.getPeptideLengthScoreDistributions()));
 
         if(mConfig.WriteRandomDistribution)
             writeDistribution();
@@ -256,6 +255,8 @@ public class RandomPeptideDistribution
     {
         if(mRandomPeptideMap.isEmpty())
             return;
+
+        mAlleleLikelihoodDistributions.clear();
 
         List<RandomDistributionTask> alleleTasks = Lists.newArrayList();
 
@@ -269,10 +270,10 @@ public class RandomPeptideDistribution
             final Map<Integer, BindScoreMatrix> peptideLengthMatrixMap = alleleEntry.getValue();
 
             alleleTasks.add(new RandomDistributionTask(
-                    allele, peptideLengthMatrixMap, mRandomPeptideMap, flankScores, mAlleleScoresMap, bindingLikelihood));
+                    allele, peptideLengthMatrixMap, mRandomPeptideMap, flankScores, mAlleleScoreDistributions, bindingLikelihood));
         }
 
-        NE_LOGGER.info("building likelihood distribution for {} alleles", alleleTasks.size());
+        NE_LOGGER.info("building likelihood distribution for {} allele(s)", alleleTasks.size());
 
         if(mConfig.Threads > 1)
         {
@@ -284,11 +285,10 @@ public class RandomPeptideDistribution
             alleleTasks.forEach(x -> x.call());
         }
 
-        alleleTasks.forEach(x -> mAlleleScoresMap.put(x.allele(), x.getPeptideLengthScoresMap()));
+        alleleTasks.forEach(x -> mAlleleLikelihoodDistributions.put(x.allele(), x.getLikelihoodDistributions()));
 
-        alleleTasks.forEach(x -> mAlleleLikelihoodsMap.put(x.allele(), x.getLikelihoodDistributions()));
-
-        writeLikelihoodDistribution();
+        if(mConfig.WriteRandomDistribution)
+            writeLikelihoodDistribution();
     }
 
     public static BufferedWriter initialiseWriter(final String filename)
@@ -298,7 +298,6 @@ public class RandomPeptideDistribution
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Allele,PeptideLength,ScoreBucket,Score,BucketCount,CumulativeCount");
-            // writer.write(",CurrentScores,CurrentSize,CurrentBracket,CurrentSizeTotal");
             writer.newLine();
             return writer;
         }
@@ -340,7 +339,7 @@ public class RandomPeptideDistribution
         {
             BufferedWriter writer = initialiseWriter(distFilename);
 
-            for(Map.Entry<String,Map<Integer,List<ScoreDistributionData>>> alleleEntry : mAlleleScoresMap.entrySet())
+            for(Map.Entry<String,Map<Integer,List<ScoreDistributionData>>> alleleEntry : mAlleleScoreDistributions.entrySet())
             {
                 final Map<Integer,List<ScoreDistributionData>> pepLenDistMap = alleleEntry.getValue();
 
@@ -372,7 +371,7 @@ public class RandomPeptideDistribution
             writer.write("Allele,Bucket,Likelihood");
             writer.newLine();
 
-            for(Map.Entry<String,List<ScoreDistributionData>> alleleEntry : mAlleleLikelihoodsMap.entrySet())
+            for(Map.Entry<String,List<ScoreDistributionData>> alleleEntry : mAlleleLikelihoodDistributions.entrySet())
             {
                 for(ScoreDistributionData scoreDist : alleleEntry.getValue())
                 {
@@ -407,12 +406,12 @@ public class RandomPeptideDistribution
             {
                 ScoreDistributionData data = ScoreDistributionData.fromCsv(line, fieldsIndexMap);
 
-                Map<Integer,List<ScoreDistributionData>> peptideLengthMap = mAlleleScoresMap.get(data.Allele);
+                Map<Integer,List<ScoreDistributionData>> peptideLengthMap = mAlleleScoreDistributions.get(data.Allele);
 
                 if(peptideLengthMap == null)
                 {
                     peptideLengthMap = Maps.newHashMap();
-                    mAlleleScoresMap.put(data.Allele, peptideLengthMap);
+                    mAlleleScoreDistributions.put(data.Allele, peptideLengthMap);
                 }
 
                 List<ScoreDistributionData> dataList = peptideLengthMap.get(data.PeptideLength);
@@ -426,7 +425,7 @@ public class RandomPeptideDistribution
                 dataList.add(data);
             }
 
-            NE_LOGGER.info("loaded {} alleles with random peptide score distribution data", mAlleleScoresMap.size());
+            NE_LOGGER.info("loaded {} alleles with random peptide score distribution data", mAlleleScoreDistributions.size());
         }
         catch(IOException e)
         {
@@ -453,18 +452,18 @@ public class RandomPeptideDistribution
             {
                 ScoreDistributionData data = ScoreDistributionData.fromLikelihoodCsv(line, fieldsIndexMap);
 
-                List<ScoreDistributionData> dataList = mAlleleLikelihoodsMap.get(data.Allele);
+                List<ScoreDistributionData> dataList = mAlleleLikelihoodDistributions.get(data.Allele);
 
                 if(dataList == null)
                 {
                     dataList = Lists.newArrayList();
-                    mAlleleLikelihoodsMap.put(data.Allele, dataList);
+                    mAlleleLikelihoodDistributions.put(data.Allele, dataList);
                 }
 
                 dataList.add(data);
             }
 
-            NE_LOGGER.info("loaded {} alleles with random peptide likelihood distribution data", mAlleleScoresMap.size());
+            NE_LOGGER.info("loaded {} alleles with random peptide likelihood distribution data", mAlleleScoreDistributions.size());
         }
         catch(IOException e)
         {

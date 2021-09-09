@@ -32,12 +32,10 @@ public class RandomPeptideConfig
 
     public final boolean WriteRandomDistribution;
     public final List<String> RequiredOutputAlleles; // limit the alleles with a random distribution written just to save on time and file-size
-    public final List<String> WriteRandomScoreAlleles;
     public final int Threads;
 
     private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
-    private static final String WRITE_RAND_SCORE_ALLELES = "write_rand_scores";
 
     public RandomPeptideConfig(final CommandLine cmd)
     {
@@ -55,13 +53,6 @@ public class RandomPeptideConfig
 
         RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
 
-        WriteRandomScoreAlleles = Lists.newArrayList();
-
-        if(cmd.hasOption(WRITE_RAND_SCORE_ALLELES))
-        {
-            WriteRandomScoreAlleles.addAll(Arrays.stream(cmd.getOptionValue(WRITE_RAND_SCORE_ALLELES).split(ITEM_DELIM)).collect(Collectors.toList()));
-        }
-
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
 
@@ -75,7 +66,6 @@ public class RandomPeptideConfig
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         options.addOption(REQUIRED_OUTPUT_ALLELES, true, "Restricted set of alleles to write to file");
         options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
-        options.addOption(WRITE_RAND_SCORE_ALLELES, true, "List of alleles to write random score data");
         options.addOption(THREADS, true, "Thread count");
     }
 }

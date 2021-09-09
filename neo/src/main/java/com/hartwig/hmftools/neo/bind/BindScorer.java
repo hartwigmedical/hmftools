@@ -55,11 +55,11 @@ public class BindScorer
     }
 
     public BindScorer(
-            final ScoreConfig config, final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
+            final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
             final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices, final RandomPeptideDistribution randomDistribution,
             final FlankScores flankScores)
     {
-        mConfig = config;
+        mConfig = null; // not required when used as an internal calculator
 
         mAllelePeptideData = allelePeptideData;
         mBindDataOtherColumns = Maps.newLinkedHashMap();
@@ -88,6 +88,9 @@ public class BindScorer
         }
 
         runScoring();
+
+        writeAlleleSummary();
+        writePeptideScores();
 
         NE_LOGGER.info("scoring complete");
     }
@@ -138,8 +141,6 @@ public class BindScorer
                 continue;
             }
 
-            TprCalc alleleTprCalc = new TprCalc();
-
             for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
             {
                 final List<BindData> bindDataList = pepLenEntry.getValue();
@@ -152,14 +153,9 @@ public class BindScorer
                         continue;
 
                     calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood);
-
-                    alleleTprCalc.addRank(bindData.likelihoodRank());
                 }
             }
         }
-
-        writeAlleleSummary();
-        writePeptideScores();
     }
 
     public static double calcScore(

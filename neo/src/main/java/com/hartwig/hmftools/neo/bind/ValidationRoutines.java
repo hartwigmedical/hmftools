@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,6 +18,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.stats.AucCalc;
+import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.commons.cli.CommandLine;
@@ -21,60 +27,60 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class ValidationRoutines
 {
     private final TrainConfig mConfig;
-    private final String mValidationDataFile;
 
     private final Map<String,Map<Integer,List<BindData>>> mAlleleTrainingData;
-    private final Map<String,Map<Integer,List<BindData>>> mAlleleValidationData;
     private final List<String> mValidationAlleles;
 
     private final Map<String,Map<Integer,BindCountData>> mAlleleBindCounts; // counts data by peptide length>
+
     private final PosWeightModel mPosWeightModel;
     private final HlaSequences mHlaSequences;
     private final RandomPeptideDistribution mRandomDistribution;
-    private final Map<String,Integer> mAlleleTotalCounts;
 
-    private final BufferedWriter mPeptideWriter;
+    private final BufferedWriter mResultsWriter;
 
-    private static final String VALIDATION_DATA_FILE = "validation_data_file";
+    private static final String TEST_ALLELES_FILE = "test_alleles_file";
 
     public ValidationRoutines(final CommandLine cmd)
     {
         mConfig = new TrainConfig(cmd);
-        mValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
+
+        mValidationAlleles = Lists.newArrayList();
+
+        if(cmd.hasOption(TEST_ALLELES_FILE))
+            mValidationAlleles.addAll(loadDelimitedIdFile(cmd.getOptionValue(TEST_ALLELES_FILE), FLD_ALLELE, DELIM));
 
         mAlleleTrainingData = Maps.newHashMap();
-        mAlleleValidationData = Maps.newHashMap();
         mAlleleBindCounts = Maps.newHashMap();
-        mAlleleTotalCounts = Maps.newHashMap();
-        mValidationAlleles = Lists.newArrayList();
 
         mHlaSequences = new HlaSequences();
         mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
-
         mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
-
         mRandomDistribution = new RandomPeptideDistribution(mConfig.RandomPeptides);
 
-        mPeptideWriter = initialisePeptideWriter();
+        mResultsWriter = initialiseResultsWriter();
     }
 
     public void run()
     {
-        if(!loadData())
+        if(!loadBindData(mConfig.TrainingDataFile, mConfig.RequiredPeptideLengths, mAlleleTrainingData))
         {
-            NE_LOGGER.error("failed to load data");
-            return;
+            NE_LOGGER.error("failed to load training data");
+            System.exit(1);
         }
 
-        mAlleleValidationData.keySet().forEach(x -> mValidationAlleles.add(x));
+        if(mValidationAlleles.isEmpty())
+            mAlleleTrainingData.keySet().forEach(x -> mValidationAlleles.add(x));
 
         NE_LOGGER.info("running validation for {} alleles", mValidationAlleles.size());
 
+        // build bind counts and blend across peptide-lengths - this data isn't affected by leaving out each allele
         buildBindCounts();
 
         for(String allele : mValidationAlleles)
@@ -94,9 +100,9 @@ public class ValidationRoutines
     private void buildBindCounts()
     {
         // translate binds to counts and weighted counts - ie the step prior to allele-blending
-        NE_LOGGER.info("building bind counts", mValidationAlleles.size());
+        NE_LOGGER.info("building bind counts for {} alleles", mValidationAlleles.size());
 
-        for(Map.Entry<String, Map<Integer, List<BindData>>> alleleEntry : mAlleleTrainingData.entrySet())
+        for(Map.Entry<String, Map<Integer,List<BindData>>> alleleEntry : mAlleleTrainingData.entrySet())
         {
             final String allele = alleleEntry.getKey();
 
@@ -126,7 +132,7 @@ public class ValidationRoutines
             }
         }
 
-        // fill in an gaps in alleles or peptide lengths if they are required
+        // fill in any gaps in alleles or peptide lengths if they are required
         if(!mValidationAlleles.isEmpty())
         {
             mValidationAlleles.stream()
@@ -149,21 +155,16 @@ public class ValidationRoutines
 
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
-            final String allele = alleleEntry.getKey();
-
             final Map<Integer,BindCountData> pepLenBindCountsMap = alleleEntry.getValue();
 
             final List<BindCountData> pepLenBindCounts = pepLenBindCountsMap.values().stream().collect(Collectors.toList());
 
-            int totalAlelleCount = 0;
-
             for(BindCountData bindCounts : pepLenBindCounts)
             {
-                totalAlelleCount += bindCounts.totalBindCount();
                 mPosWeightModel.buildWeightedCounts(bindCounts, pepLenBindCounts);
             }
 
-            mAlleleTotalCounts.put(allele, totalAlelleCount);
+            mPosWeightModel.buildPositionAdjustedTotals(pepLenBindCounts);
         }
     }
 
@@ -173,9 +174,46 @@ public class ValidationRoutines
 
         buildPositionWeightMatrixData(targetAllele, alleleBindMatrices);
 
-        mRandomDistribution.buildDistribution(alleleBindMatrices, null);
+        FlankScores flankScores = new FlankScores();
 
-        runScoring(targetAllele, alleleBindMatrices);
+        if(mConfig.ApplyFlanks)
+        {
+            FlankCounts flankCounts = new FlankCounts();
+
+            for(Map.Entry<String,Map<Integer,List<BindData>>> alleleEntry : mAlleleTrainingData.entrySet())
+            {
+                String allele = alleleEntry.getKey();
+
+                if(allele.equals(targetAllele))
+                    continue;
+
+                for(List<BindData> pepLenEntry : alleleEntry.getValue().values())
+                {
+                    for(BindData bindData : pepLenEntry)
+                    {
+                        flankCounts.processBindData(bindData);
+                    }
+                }
+            }
+
+            flankScores.createMatrix(flankCounts.getBindCounts());
+        }
+
+        // build distributions
+        mRandomDistribution.buildDistribution(alleleBindMatrices, flankScores);
+
+        final Map<String,Map<Integer,List<BindData>>> allelePeptideData = Maps.newHashMap();
+        allelePeptideData.put(targetAllele, mAlleleTrainingData.get(targetAllele));
+
+        BindScorer scorer = new BindScorer(allelePeptideData, alleleBindMatrices, mRandomDistribution, flankScores);
+        scorer.runScoring();
+
+        BindingLikelihood bindingLikelihood = new BindingLikelihood();
+        bindingLikelihood.buildAllelePeptideLikelihoods(allelePeptideData, null);
+
+        mRandomDistribution.buildLikelihoodDistribution(alleleBindMatrices, flankScores, bindingLikelihood);
+
+        runScoring(targetAllele, alleleBindMatrices, flankScores, bindingLikelihood);
     }
 
     private void buildPositionWeightMatrixData(final String targetAllele, final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices)
@@ -221,9 +259,14 @@ public class ValidationRoutines
         }
     }
 
-    private void runScoring(final String targetAllele, final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices)
+    private void runScoring(
+            final String targetAllele, final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices,
+            final FlankScores flankScores, BindingLikelihood bindingLikelihood)
     {
-        final Map<Integer,List<BindData>> pepLenBindDataMap = mAlleleValidationData.get(targetAllele);
+        NE_LOGGER.info("scoring targeted allele({})", targetAllele);
+
+        // score the target allele having left it's training data out
+        final Map<Integer,List<BindData>> pepLenBindDataMap = mAlleleTrainingData.get(targetAllele);
 
         Map<Integer,BindScoreMatrix> pepLenMatrixMap = alleleBindMatrices.get(targetAllele);
 
@@ -233,24 +276,70 @@ public class ValidationRoutines
             return;
         }
 
+        List<AucData> alleleAucData = Lists.newArrayList();
+        TprCalc alleleTprCalc = new TprCalc();
+
         for(Map.Entry<Integer,List<BindData>> pepLenEntry : pepLenBindDataMap.entrySet())
         {
+            int peptideLength = pepLenEntry.getKey();
             final List<BindData> bindDataList = pepLenEntry.getValue();
+
+            TprCalc pepLenTprCalc = new TprCalc();
+
             for(BindData bindData : bindDataList)
             {
-                BindScoreMatrix matrix = pepLenMatrixMap.get(bindData.peptideLength());
+                BindScoreMatrix matrix = pepLenMatrixMap.get(peptideLength);
 
-                BindScorer.calcScoreData(bindData, matrix, null, mRandomDistribution, null);
-                //double score = matrix.calcScore(bindData.Peptide);
-                //double rankPercentile = mRandomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
-                //bindData.setScoreData(score, rankPercentile, INVALID_SCORE, INVALID_SCORE);
+                BindScorer.calcScoreData(bindData, matrix, flankScores, mRandomDistribution, bindingLikelihood);
 
-                writePeptideResults(targetAllele, bindData);
+                alleleTprCalc.addRank(bindData.likelihoodRank());
+                pepLenTprCalc.addRank(bindData.likelihoodRank());
+
+                alleleAucData.add(new AucData(true, bindData.likelihoodRank(), true));
+                // writeResults(targetAllele, bindData);
             }
+
+            writeResults(targetAllele, String.valueOf(peptideLength), pepLenTprCalc.calc(), 0);
+        }
+
+        double aucPerc = AucCalc.calcPercentilesAuc(alleleAucData, Level.TRACE);
+        writeResults(targetAllele, "ALL", alleleTprCalc.calc(), aucPerc);
+    }
+
+    private BufferedWriter initialiseResultsWriter()
+    {
+        try
+        {
+            String outputFile = BindCommon.formFilename(mConfig.OutputDir, "validation_scores", mConfig.OutputId);
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
+            writer.write("ExcludedAllele,PeptideLength,TPR,AUC");
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to initialise validation results file: {}", e.toString());
+            return null;
         }
     }
 
-    private BufferedWriter initialisePeptideWriter()
+    private void writeResults(final String excludedAllele, final String peptideLength, double tpr, double auc)
+    {
+        try
+        {
+             mResultsWriter.write(String.format("%s,%s,%.4f,%.4f",
+                    excludedAllele, peptideLength, tpr, auc));
+                mResultsWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write validation results file: {}", e.toString());
+        }
+    }
+
+    /*
+    private BufferedWriter initialiseResultsWriter()
     {
         try
         {
@@ -272,33 +361,23 @@ public class ValidationRoutines
     {
         try
         {
-            mPeptideWriter.write(String.format("%s,%s,%s,%.4f,%.6f",
+            mResultsWriter.write(String.format("%s,%s,%s,%.4f,%.6f",
                     excludedAllele, bindData.Allele, bindData.Peptide, bindData.score(), bindData.rankPercentile()));
-            mPeptideWriter.newLine();
+            mResultsWriter.newLine();
         }
         catch(IOException e)
         {
             NE_LOGGER.error("failed to write peptide scores file: {}", e.toString());
         }
     }
-
-    private boolean loadData()
-    {
-        if(!loadBindData(mConfig.TrainingDataFile, mConfig.RequiredPeptideLengths, mAlleleTrainingData))
-            return false;
-
-        if(!loadBindData(mValidationDataFile, mConfig.RequiredPeptideLengths, mAlleleValidationData))
-            return false;
-
-        return true;
-    }
+    */
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
 
         TrainConfig.addCmdLineArgs(options);
-        options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
+        options.addOption(TEST_ALLELES_FILE, true, "List of alleles to leave out, otherwise will do all in training set");
 
         final CommandLine cmd = createCommandLine(args, options);
 

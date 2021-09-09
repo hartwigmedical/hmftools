@@ -35,7 +35,6 @@ import org.jetbrains.annotations.NotNull;
 public class BindTrainer
 {
     private final TrainConfig mConfig;
-    private final ScoreConfig mScoreConfig;
 
     private final Map<String,Map<Integer,List<BindData>>> mAllelePeptideData;
 
@@ -52,7 +51,6 @@ public class BindTrainer
     public BindTrainer(final CommandLine cmd)
     {
         mConfig = new TrainConfig(cmd);
-        mScoreConfig = new ScoreConfig(cmd);
         mAllelePeptideData = Maps.newHashMap();
         mDistinctPeptideLengths = Sets.newHashSet();
 
@@ -102,7 +100,7 @@ public class BindTrainer
 
             if(mConfig.WriteLikelihood)
             {
-                BindScorer scorer = new BindScorer(mScoreConfig, mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores);
+                BindScorer scorer = new BindScorer(mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores);
                 scorer.runScoring();
 
                 BindingLikelihood bindingLikelihood = new BindingLikelihood();
@@ -201,8 +199,6 @@ public class BindTrainer
                     .forEach(x -> mAlleleBindCounts.put(x, Maps.newHashMap()));
         }
 
-        final Map<String,Integer> alleleTotalCounts = Maps.newHashMap();
-
         for(Map.Entry<String,Map<Integer,BindCountData>> alleleEntry : mAlleleBindCounts.entrySet())
         {
             final String allele = alleleEntry.getKey();
@@ -217,8 +213,6 @@ public class BindTrainer
 
             final List<BindCountData> pepLenBindCounts = pepLenBindCountsMap.values().stream().collect(Collectors.toList());
 
-            int totalAlelleCount = 0;
-
             NE_LOGGER.debug("allele({}) building counts data for {} peptide lengths", allele, pepLenBindCounts.size());
 
             if(mPosWeightModel.noiseEnabled())
@@ -232,14 +226,11 @@ public class BindTrainer
             // calculate weighted counts across peptide lengths per position and amino acid
             for(BindCountData bindCounts : pepLenBindCounts)
             {
-                totalAlelleCount += bindCounts.totalBindCount();
                 mPosWeightModel.buildWeightedCounts(bindCounts, pepLenBindCounts);
             }
 
             // calculate position totals across the lengths for use when blending alleles
             mPosWeightModel.buildPositionAdjustedTotals(pepLenBindCounts);
-
-            alleleTotalCounts.put(allele, totalAlelleCount);
         }
 
         // now factor each allele's weighted counts into all the others
