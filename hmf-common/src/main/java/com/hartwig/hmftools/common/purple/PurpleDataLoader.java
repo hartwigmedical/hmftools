@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
-import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -54,11 +53,10 @@ public final class PurpleDataLoader {
             @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
-        PurityQCContext purityQcContext = PurityContextFile.readWithQC(qcFile, purityTsv);
-        PurityContext purityContext = purityQcContext.purityContext();
+        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
         DecimalFormat purityFormat = new DecimalFormat("#'%'");
-        LOGGER.info("  QC status: {}", purityQcContext.qc().toString());
+        LOGGER.info("  QC status: {}", purityContext.qc().toString());
         LOGGER.info("  Tumor purity: {} ({}-{})",
                 purityFormat.format(purityContext.bestFit().purity() * 100),
                 purityFormat.format(purityContext.score().minPurity() * 100),
@@ -84,7 +82,7 @@ public final class PurpleDataLoader {
             LOGGER.info(" Loaded {} gene copy numbers entries from {}", geneCopyNumbers.size(), purpleGeneCopyNumberTsv);
 
             List<ReportableGainLoss> allGainsLosses =
-                    extractAllGainsLosses(purityQcContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
+                    extractAllGainsLosses(purityContext.qc().status(), purityContext.bestFit().ploidy(), geneCopyNumbers);
             LOGGER.debug("  Extracted {} gains and losses from gene copy numbers", allGainsLosses.size());
 
             unreportedGainsLosses = selectUnreportedGainsLosses(allGainsLosses, reportableGainsLosses);
@@ -126,8 +124,8 @@ public final class PurpleDataLoader {
         LOGGER.info(" Loaded {} unreported somatic variants from {}", unreportedSomaticVariants.size(), somaticVariantVcf);
 
         return ImmutablePurpleData.builder()
-                .qc(purityQcContext.qc())
-                .hasReliableQuality(purityQcContext.qc().pass())
+                .qc(purityContext.qc())
+                .hasReliableQuality(purityContext.qc().pass())
                 .fittedPurityMethod(purityContext.method())
                 .wholeGenomeDuplication(purityContext.wholeGenomeDuplication())
                 .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))

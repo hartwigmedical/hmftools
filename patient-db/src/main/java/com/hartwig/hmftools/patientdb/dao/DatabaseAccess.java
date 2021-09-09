@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -250,7 +249,7 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @Nullable
-    public PurityQCContext readPurityContext(@NotNull String sampleId) {
+    public PurityContext readPurityContext(@NotNull String sampleId) {
         return purityDAO.readPurityContext(sampleId);
     }
 

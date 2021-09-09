@@ -24,11 +24,9 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
-import com.hartwig.hmftools.common.purple.purity.ImmutablePurityQCContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
@@ -430,14 +428,10 @@ public class CnSegmentBuilder
                 .tumorMutationalBurdenPerMb(0)
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
-                .build();
-
-        PurityQCContext purityQcContext = ImmutablePurityQCContext.builder()
-                .purityContext(purityContext)
                 .qc(qc)
                 .build();
 
-        cnDataLoader.setPurityContext(purityQcContext);
+        cnDataLoader.setPurityContext(purityContext);
     }
 
 

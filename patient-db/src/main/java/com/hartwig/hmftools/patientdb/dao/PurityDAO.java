@@ -19,10 +19,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
-import com.hartwig.hmftools.common.purple.purity.ImmutablePurityQCContext;
 import com.hartwig.hmftools.common.purple.purity.ImmutableSamplePurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.purple.purity.SamplePurity;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -89,7 +87,7 @@ class PurityDAO {
     }
 
     @Nullable
-    PurityQCContext readPurityContext(@NotNull String sample) {
+    PurityContext readPurityContext(@NotNull String sample) {
         Record result = context.select().from(PURITY).where(PURITY.SAMPLEID.eq(sample)).fetchOne();
         if (result == null) {
             return null;
@@ -131,9 +129,10 @@ class PurityDAO {
                 .amberMeanDepth(0) //TODO: Add to database
                 .build();
 
-        PurityContext purityContext = ImmutablePurityContext.builder()
+        return ImmutablePurityContext.builder()
                 .bestFit(purity)
                 .score(score)
+                .qc(purpleQC)
                 .wholeGenomeDuplication(result.getValue(PURITY.WHOLEGENOMEDUPLICATION) == 1)
                 .microsatelliteStatus(MicrosatelliteStatus.valueOf(result.getValue(PURITY.MSSTATUS)))
                 .microsatelliteIndelsPerMb(result.getValue(PURITY.MSINDELSPERMB))
@@ -147,8 +146,6 @@ class PurityDAO {
                 .method(method)
                 .svTumorMutationalBurden(result.getValue(PURITY.SVTMB))
                 .build();
-
-        return ImmutablePurityQCContext.builder().purityContext(purityContext).qc(purpleQC).build();
     }
 
     @NotNull
@@ -249,12 +246,12 @@ class PurityDAO {
                         DatabaseUtil.decimal(purity.tumorMutationalLoad()),
                         purity.tumorMutationalLoadStatus().toString(),
                         purity.svTumorMutationalBurden(),
-                        checks.deletedGenes(),
-                        checks.copyNumberSegments(),
-                        checks.unsupportedCopyNumberSegments(),
-                        checks.contamination(),
-                        GermlineAberration.toString(checks.germlineAberrations()),
-                        checks.amberGender(),
+                        purity.qc().deletedGenes(),
+                        purity.qc().copyNumberSegments(),
+                        purity.qc().unsupportedCopyNumberSegments(),
+                        purity.qc().contamination(),
+                        GermlineAberration.toString(purity.qc().germlineAberrations()),
+                        purity.qc().amberGender(),
                         timestamp)
                 .execute();
     }

@@ -81,7 +81,7 @@ public class DriverDataCache
     {
         clearCache();
 
-        final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId).purityContext();
+        final PurityContext purityContext = mDbAccess.readPurityContext(mSampleId);
 
         if(purityContext == null)
         {
@@ -124,7 +124,7 @@ public class DriverDataCache
 
         try
         {
-            final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId).purityContext();
+            final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
             setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
             mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)));

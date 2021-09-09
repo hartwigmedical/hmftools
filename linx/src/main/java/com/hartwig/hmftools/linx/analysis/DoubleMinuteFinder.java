@@ -34,7 +34,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.CohortFileInterface;
@@ -460,9 +459,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
 
         final String dmTypesStr = getSvTypesStr(typeCounts);
 
-        final PurityQCContext purityqcContext = mCnDataLoader.getPurityContext();
-        final PurityContext purityContext = purityqcContext.purityContext();
-
+        final PurityContext purityContext = mCnDataLoader.getPurityContext();
         double samplePurity = purityContext != null ? purityContext.bestFit().purity() : 0;
         double samplePloidy = purityContext != null ? purityContext.bestFit().ploidy() : 0;
 

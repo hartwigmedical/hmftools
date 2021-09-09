@@ -8,16 +8,15 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.MatchLevel;
 
 public class PurityData implements ComparableItem {
-    public final PurityQCContext Purity;
+    public final PurityContext Purity;
 
-    public PurityData(final PurityQCContext purityQCContext) {
-        Purity = purityQCContext;
+    public PurityData(final PurityContext purityContext) {
+        Purity = purityContext;
     }
 
     public Category category() {
@@ -38,15 +37,15 @@ public class PurityData implements ComparableItem {
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, "fitMethod", Purity.purityContext().method().toString(), otherPurity.Purity.purityContext().method().toString());
+        checkDiff(diffs, "fitMethod", Purity.method().toString(), otherPurity.Purity.method().toString());
         checkDiff(diffs, "qcPass", Purity.qc().pass(), otherPurity.Purity.qc().pass());
 
         if (matchLevel == REPORTABLE) {
             return diffs;
         }
 
-        checkDiff(diffs, "purity", Purity.purityContext().bestFit().purity(), otherPurity.Purity.purityContext().bestFit().purity());
-        checkDiff(diffs, "ploidy", Purity.purityContext().bestFit().ploidy(), otherPurity.Purity.purityContext().bestFit().ploidy());
+        checkDiff(diffs, "purity", Purity.bestFit().purity(), otherPurity.Purity.bestFit().purity());
+        checkDiff(diffs, "ploidy", Purity.bestFit().ploidy(), otherPurity.Purity.bestFit().ploidy());
 
         return diffs;
     }
@@ -54,7 +53,7 @@ public class PurityData implements ComparableItem {
     public String description() {
         return String.format("%s_%.2f_%.2f",
                 Purity.qc().pass(),
-                Purity.purityContext().bestFit().purity(),
-                Purity.purityContext().bestFit().ploidy());
+                Purity.bestFit().purity(),
+                Purity.bestFit().ploidy());
     }
 }

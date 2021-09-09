@@ -167,13 +167,13 @@ public class FeatureDataLoader
 
         if(dbAccess != null)
         {
-            purityContext = dbAccess.readPurityContext(sampleId).purityContext();
+            purityContext = dbAccess.readPurityContext(sampleId);
         }
         else
         {
             try
             {
-                purityContext = PurityContextFile.read(sampleDataDir, sampleId).purityContext();
+                purityContext = PurityContextFile.read(sampleDataDir, sampleId);
             }
             catch (Exception e)
             {
