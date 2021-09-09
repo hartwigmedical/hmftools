@@ -395,14 +395,18 @@ public class DisruptionTest
         assertTrue(!var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
 
-        // test 4: DEL which would otherwise be disruptive but jumps back to outside the gene
-        // no current logic to detect this, so will remain disruptive
-        /*
+        // test 4: multiple TIs within the same intro within a chain which has its ends outside genic regions
         tester.clearClustersAndSVs();
 
-        var1 = createDel(tester.nextVarId(), chromosome, 1000, 22000);
-        var2 = createBnd(tester.nextVarId(), chromosome, 23000, 1, remoteChr, 100, -1);
-        var3 = createBnd(tester.nextVarId(), chromosome, 2000, -1, remoteChr, 200, 1);
+        var1 = createBnd(tester.nextVarId(), chromosome, 12000, -1, remoteChr, 100, 1);
+        var2 = createInv(tester.nextVarId(), chromosome, 12100, 14100, 1);
+
+        var1.setAssemblyData(true, "asmb_A1_A2");
+        var2.setAssemblyData(true, "asmb_A1_A2");
+
+        var3 = createBnd(tester.nextVarId(), chromosome, 14000, -1, remoteChr, 200, -1);
+        var2.setAssemblyData(false, "asmb_A2_A3");
+        var3.setAssemblyData(true, "asmb_A2_A3");
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
@@ -416,9 +420,9 @@ public class DisruptionTest
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
-        assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        */
+        assertTrue(!var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
     }
-
 }

@@ -153,7 +153,7 @@ public class DeletionDrivers
         }
     }
 
-    public void annotateBiallelicEvent(DriverGeneData dgData)
+    public void annotateBiallelicEvent(final DriverGeneData dgData)
     {
         // look for an LOH covering any part of the coding region
         if(dgData.TransData.CodingStart == null || dgData.TransData.CodingEnd == null)

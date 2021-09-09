@@ -190,7 +190,7 @@ public class DisruptionFinder implements CohortFileInterface
     {
         List<BreakendTransData> transList = Lists.newArrayList();
 
-        for (final BreakendGeneData gene : genes)
+        for(final BreakendGeneData gene : genes)
         {
             transList.addAll(gene.transcripts().stream().filter(x -> x.isDisruptive()).collect(Collectors.toList()));
         }
@@ -358,8 +358,78 @@ public class DisruptionFinder implements CohortFileInterface
         // unmark a fully-intronic linked pair of breakends (INV or BND) if their other breakends are both non-genic
         checkOtherEndsNonGenic(chain);
 
+        // unmark assembled links within a chain if their other ends are non-genic
+        checkChainThroughIntrons(chain);
+
         // unmark breakend(s) if a) disruptive and b) follows a set of links which return to same intron in opposite orientation
         checkTraverseToSameIntron(chain);
+    }
+
+    private void checkChainThroughIntrons(final SvChain chain)
+    {
+        SvBreakend chainStart = chain.getOpenBreakend(true);
+        SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+        if(chainStart == null || chainEnd == null)
+            return;
+
+        // have to ignore DELs since they can delete parts of the gene from outside it
+        if(chainStart.getSV().type() == DEL || chainEnd.getSV().type() == DEL)
+            return;
+
+        List<BreakendGeneData> genesStart = chainStart.getGenesList();
+        List<BreakendGeneData> genesEnd = chainEnd.getGenesList();
+
+        if(!genesStart.isEmpty() || !genesEnd.isEmpty())
+            return;
+
+        for(final LinkedPair pair : chain.getLinkedPairs())
+        {
+            if(!pair.isAssembled())
+                continue;
+
+            SvBreakend breakend1 = pair.firstBreakend();
+            SvBreakend breakend2 = pair.secondBreakend();
+
+            if(breakend1.getSV().type() == DEL || breakend2.getSV().type() == DEL)
+                continue;
+
+            List<BreakendGeneData> genes1 = breakend1.getGenesList();
+            List<BreakendGeneData> genes2 = breakend2.getGenesList();
+
+            if(genes1.isEmpty() || genes2.isEmpty())
+                continue;
+
+            for(BreakendGeneData gene1 : genes1)
+            {
+                BreakendGeneData gene2 = genes2.stream().filter(x -> x.StableId.equals(gene1.StableId)).findFirst().orElse(null);
+
+                if(gene2 == null)
+                    continue;
+
+                for(BreakendTransData trans1 : gene1.transcripts())
+                {
+                    if(trans1.regionType() != INTRONIC)
+                        continue;
+
+                    // are the breakends within the same intro for any of the transcripts
+                    BreakendTransData trans2 = gene2.transcripts().stream()
+                            .filter(x -> x.transId() == trans1.transId())
+                            .filter(x -> x.regionType() == INTRONIC)
+                            .filter(x -> x.ExonDownstream == trans1.ExonDownstream)
+                            .findFirst().orElse(null);
+
+                    if(trans2 == null || (!trans1.isDisruptive() && !trans2.isDisruptive()))
+                        continue;
+
+                    if(markNonDisruptiveTranscript(trans1, trans2, NON_DISRUPT_REASON_SAME_INTRON))
+                    {
+                        LNX_LOGGER.debug("cluster({}) chain({}) pair({}) length({}) fully intronic)",
+                                breakend1.getSV().getCluster().id(), chain.id(), pair, pair.length());
+                    }
+                }
+            }
+        }
     }
 
     private void checkOtherEndsNonGenic(final SvChain chain)
