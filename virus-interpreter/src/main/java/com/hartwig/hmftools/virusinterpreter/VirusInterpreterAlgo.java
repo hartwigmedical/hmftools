@@ -8,39 +8,36 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class VirusInterpreterAlgo {
-    private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterAlgo.class);
 
     @NotNull
     private final TaxonomyDb taxonomyDb;
     @NotNull
-    private final VirusReportingModel virusReportingModel;
+    private final VirusReportingDbModel virusReportingDbModel;
 
     @NotNull
     private final CoveragesAnalysis coveragesAnalysis;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingModel virusReportingModel,
+    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingDbModel virusReportingDbModel,
             @NotNull CoveragesAnalysis coveragesAnalysis) {
         this.taxonomyDb = taxonomyDb;
-        this.virusReportingModel = virusReportingModel;
+        this.virusReportingDbModel = virusReportingDbModel;
         this.coveragesAnalysis = coveragesAnalysis;
     }
 
     @NotNull
-    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) throws IOException {
+    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) {
 
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
-            String interpretation = virusReportingModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
+            String interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
 
             int taxid = virusBreakend.referenceTaxid();
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
@@ -67,7 +64,7 @@ public class VirusInterpreterAlgo {
 
         boolean reported = false;
         boolean virusQCStatus = false;
-        if (virusReportingModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+        if (virusReportingDbModel.hasInterpretation(virusBreakend.taxidSpecies())) {
             if (virusBreakend.qcStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
                 virusQCStatus = true;
             }
@@ -86,9 +83,9 @@ public class VirusInterpreterAlgo {
     @Nullable
     public Integer determineMinimalCoverageVirus(int integrations, int taxidSpecies) {
         if (integrations >= 1) {
-            return virusReportingModel.integratedMinimalCoverage(taxidSpecies);
+            return virusReportingDbModel.integratedMinimalCoverage(taxidSpecies);
         } else {
-            return virusReportingModel.nonIntegratedMinimalCoverage(taxidSpecies);
+            return virusReportingDbModel.nonIntegratedMinimalCoverage(taxidSpecies);
         }
     }
 }

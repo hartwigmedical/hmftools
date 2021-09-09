@@ -12,13 +12,13 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class VirusReportingFileTest {
+public class VirusReportingDbFileTest {
 
-    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_reporting.tsv").getPath();
+    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_reporting_db.tsv").getPath();
 
     @Test
     public void canReadVirusWhitelistTsv() throws IOException {
-        VirusReportingModel virusWhitelistModel = VirusReportingFile.buildFromTsv(VIRUS_WHITELIST_TSV);
+        VirusReportingDbModel virusWhitelistModel = VirusReportingDbFile.buildFromTsv(VIRUS_WHITELIST_TSV);
         assertEquals(1, virusWhitelistModel.count());
 
         assertTrue(virusWhitelistModel.hasInterpretation(1));

@@ -11,20 +11,20 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class VirusReportingModelTest {
+public class VirusReportingDbModelTest {
 
     @Test
     public void canInterpretVirus() {
-        Map<Integer, VirusReporting> speciesToInterpretationMap = Maps.newHashMap();
+        Map<Integer, VirusReportingDb> speciesToInterpretationMap = Maps.newHashMap();
 
-        VirusReporting virusWhitelist = ImmutableVirusReporting.builder()
+        VirusReportingDb virusWhitelist = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
                 .build();
 
         speciesToInterpretationMap.put(1, virusWhitelist);
-        VirusReportingModel virusInterpretationModel = new VirusReportingModel(speciesToInterpretationMap);
+        VirusReportingDbModel virusInterpretationModel = new VirusReportingDbModel(speciesToInterpretationMap);
 
         assertEquals("EBV", virusInterpretationModel.interpretVirusSpecies(1));
         assertNotEquals("HPV", virusInterpretationModel.interpretVirusSpecies(1));

@@ -12,36 +12,36 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class VirusReportingFile {
+public final class VirusReportingDbFile {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusReportingFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusReportingDbFile.class);
 
     private static final String SEPARATOR = "\t";
 
-    private VirusReportingFile() {
+    private VirusReportingDbFile() {
     }
 
     @NotNull
-    public static VirusReportingModel buildFromTsv(@NotNull String virusReportingTsv) throws IOException {
-        List<String> linesVirusReporting = Files.readAllLines(new File(virusReportingTsv).toPath());
+    public static VirusReportingDbModel buildFromTsv(@NotNull String virusReportingDbTsv) throws IOException {
+        List<String> linesVirusReportingDb = Files.readAllLines(new File(virusReportingDbTsv).toPath());
 
-        Map<Integer, VirusReporting> speciesVirusReportingMap = Maps.newHashMap();
+        Map<Integer, VirusReportingDb> speciesVirusReportingDbMap = Maps.newHashMap();
 
-        for (String line : linesVirusReporting.subList(1, linesVirusReporting.size())) {
+        for (String line : linesVirusReportingDb.subList(1, linesVirusReportingDb.size())) {
             String[] parts = line.split(SEPARATOR);
             if (parts.length == 4) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
-                VirusReporting virusReporting = ImmutableVirusReporting.builder()
+                VirusReportingDb virusReportingDb = ImmutableVirusReportingDb.builder()
                         .virusInterpretation(parts[1].trim())
                         .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
                         .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
                         .build();
-                speciesVirusReportingMap.put(speciesTaxid, virusReporting);
+                speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDb);
             } else {
-                LOGGER.warn("Suspicious line detected in virus reporting tsv: {}", line);
+                LOGGER.warn("Suspicious line detected in virus reporting db tsv: {}", line);
             }
         }
 
-        return new VirusReportingModel(speciesVirusReportingMap);
+        return new VirusReportingDbModel(speciesVirusReportingDbMap);
     }
 }

@@ -10,14 +10,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VirusReportingModel {
+public class VirusReportingDbModel {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirusReportingModel.class);
+    private static final Logger LOGGER = LogManager.getLogger(VirusReportingDbModel.class);
 
     @NotNull
-    private final Map<Integer, VirusReporting> speciesToInterpretationMap;
+    private final Map<Integer, VirusReportingDb> speciesToInterpretationMap;
 
-    public VirusReportingModel(@NotNull final Map<Integer, VirusReporting> speciesToInterpretationMap) {
+    public VirusReportingDbModel(@NotNull final Map<Integer, VirusReportingDb> speciesToInterpretationMap) {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
@@ -25,36 +25,36 @@ public class VirusReportingModel {
     public String interpretVirusSpecies(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusReporting.virusInterpretation() : Strings.EMPTY;
+        return speciesHasInterpretation ? virusReportingDb.virusInterpretation() : Strings.EMPTY;
     }
 
     @Nullable
     public Integer integratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusReporting.integratedMinimalCoverage() : null;
+        return speciesHasInterpretation ? virusReportingDb.integratedMinimalCoverage() : null;
     }
 
     @Nullable
     public Integer nonIntegratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
 
-        VirusReporting virusReporting = speciesToInterpretationMap.get(speciesTaxid);
+        VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
         }
 
-        return speciesHasInterpretation ? virusReporting.nonIntegratedMinimalCoverage() : null;
+        return speciesHasInterpretation ? virusReportingDb.nonIntegratedMinimalCoverage() : null;
     }
 
     public boolean hasInterpretation(int speciesTaxid) {

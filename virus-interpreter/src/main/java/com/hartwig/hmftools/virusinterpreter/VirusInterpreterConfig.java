@@ -20,7 +20,7 @@ public interface VirusInterpreterConfig {
     String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
 
     String TAXONOMY_DB_TSV = "taxonomy_db_tsv";
-    String VIRUS_REPORTING_TSV = "virus_reporting_tsv";
+    String VIRUS_REPORTING_DB_TSV = "virus_reporting_db_tsv";
 
     String PURPLE_PURITY_TSV = "purple_purity_tsv";
     String PURPLE_QC_FILE = "purple_qc_file";
@@ -38,7 +38,7 @@ public interface VirusInterpreterConfig {
         options.addOption(SAMPLE_ID, true, "The sample ID for which virus interpreter will run.");
         options.addOption(VIRUS_BREAKEND_TSV, true, "Path towards the virus breakend TSV.");
         options.addOption(TAXONOMY_DB_TSV, true, "Path towards a TSV containing a mapping from taxid to taxonomy name.");
-        options.addOption(VIRUS_REPORTING_TSV, true, "Path towards a TSV containing reported of viruses.");
+        options.addOption(VIRUS_REPORTING_DB_TSV, true, "Path towards a TSV containing reported of viruses.");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
@@ -62,7 +62,7 @@ public interface VirusInterpreterConfig {
     String taxonomyDbTsv();
 
     @NotNull
-    String virusReportedTsv();
+    String virusReportedDbTsv();
 
     @NotNull
     String purplePurityTsv();
@@ -85,7 +85,7 @@ public interface VirusInterpreterConfig {
         return ImmutableVirusInterpreterConfig.builder().sampleId(nonOptionalValue(cmd, SAMPLE_ID))
                 .virusBreakendTsv(nonOptionalFile(cmd, VIRUS_BREAKEND_TSV))
                 .taxonomyDbTsv(nonOptionalFile(cmd, TAXONOMY_DB_TSV))
-                .virusReportedTsv(nonOptionalFile(cmd, VIRUS_REPORTING_TSV))
+                .virusReportedDbTsv(nonOptionalFile(cmd, VIRUS_REPORTING_DB_TSV))
                 .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
                 .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
                 .tumorSampleWGSMetricsFile(nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))

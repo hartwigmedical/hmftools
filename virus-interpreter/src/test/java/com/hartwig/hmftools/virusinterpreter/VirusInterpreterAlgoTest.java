@@ -15,9 +15,9 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReporting;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusReporting;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
+import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDb;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalyzer;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
@@ -37,13 +37,13 @@ public class VirusInterpreterAlgoTest {
     public void canAnalyzeVirusBreakends() throws IOException {
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
-        VirusReporting virusReporting1 = ImmutableVirusReporting.builder()
+        VirusReportingDb virusReporting1 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
                 .build();
 
-        VirusReporting virusReporting2 = ImmutableVirusReporting.builder()
+        VirusReportingDb virusReporting2 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
@@ -54,11 +54,11 @@ public class VirusInterpreterAlgoTest {
         taxonomyMap.put(1, name);
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxonomyMap);
 
-        Map<Integer, VirusReporting> virusReportingMap = Maps.newHashMap();
+        Map<Integer, VirusReportingDb> virusReportingMap = Maps.newHashMap();
         virusReportingMap.put(1, virusReporting1);
         virusReportingMap.put(2, virusReporting2);
 
-        VirusReportingModel virusReportingModel = new VirusReportingModel(virusReportingMap);
+        VirusReportingDbModel virusReportingModel = new VirusReportingDbModel(virusReportingMap);
 
         CoveragesAnalyzer coveragesAnalyzer = new CoveragesAnalyzer();
         CoveragesAnalysis coveragesAnalysis = coveragesAnalyzer.run(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
