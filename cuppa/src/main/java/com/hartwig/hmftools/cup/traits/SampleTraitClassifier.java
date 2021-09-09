@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.cup.common.CategoryType;
 import com.hartwig.hmftools.cup.common.ClassifierType;
@@ -127,8 +128,8 @@ public class SampleTraitClassifier implements CuppaClassifier
 
                 try
                 {
-                    final PurityContext purityContext = PurityContextFile.read(sampleDataDir, sample.Id);
-                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
+                    final PurityQCContext purityQcContext = PurityContextFile.read(sampleDataDir, sample.Id);
+                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityQcContext.purityContext(), 0);
                     mSampleTraitsData.put(traitsData.SampleId, traitsData);
                 }
                 catch(Exception e)

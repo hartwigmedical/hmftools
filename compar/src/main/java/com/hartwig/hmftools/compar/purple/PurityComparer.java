@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.compar.Category.PURITY;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -50,10 +51,10 @@ public class PurityComparer implements ItemComparer
 
     private List<ComparableItem> getSamplePurity(final String sampleId, final DatabaseAccess dbAccess)
     {
-        final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
+        final PurityQCContext purityQcContext = dbAccess.readPurityContext(sampleId);
 
         List<ComparableItem> items = Lists.newArrayList();
-        items.add(new PurityData(purityContext));
+        items.add(new PurityData(purityQcContext));
         return items;
     }
 

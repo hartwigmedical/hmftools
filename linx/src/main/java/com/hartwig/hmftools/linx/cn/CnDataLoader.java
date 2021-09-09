@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -45,7 +46,7 @@ public class CnDataLoader
     private final List<PurpleCopyNumber> mCnRecords;
     private final Map<String,List<SvCNData>> mChrCnDataMap; // map of chromosome to CN data items
     private final Map<Integer,SvCNData[]> mSvIdCnDataMap; // map of SV Ids to corresponding CN data pair
-    private PurityContext mPurityContext;
+    private PurityQCContext mPurityContext;
 
     private final List<LohEvent> mLohEventData;
     private final List<HomLossEvent> mHomLossData;
@@ -80,8 +81,8 @@ public class CnDataLoader
     public final Map<String, TelomereCentromereCnData> getChrTeleCentroData() { return mChrEndsCNMap; }
     public final Map<String,List<SvCNData>> getChrCnDataMap() { return mChrCnDataMap; }
     public final Map<Integer,SvCNData[]> getSvIdCnDataMap() { return mSvIdCnDataMap; }
-    public final PurityContext getPurityContext() { return mPurityContext; }
-    public final void setPurityContext(final PurityContext context) { mPurityContext = context; }
+    public final PurityQCContext getPurityContext() { return mPurityContext; }
+    public final void setPurityContext(final PurityQCContext context) { mPurityContext = context; }
 
     public void loadSampleData(final String sampleId, List<StructuralVariantData> svRecords)
     {
@@ -262,7 +263,7 @@ public class CnDataLoader
 
     private boolean expectSingleChromosome(final String chromosome)
     {
-        return expectSingleChromosome(isMaleSample(mPurityContext), chromosome);
+        return expectSingleChromosome(isMaleSample(mPurityContext.purityContext()), chromosome);
     }
 
     public static boolean expectSingleChromosome(boolean isMale, final String chromosome)

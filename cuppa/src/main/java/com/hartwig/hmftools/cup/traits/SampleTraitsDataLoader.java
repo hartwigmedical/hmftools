@@ -63,7 +63,7 @@ public class SampleTraitsDataLoader
 
         for(final String sampleId : sampleIds)
         {
-            final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
+            final PurityContext purityContext = dbAccess.readPurityContext(sampleId).purityContext();
             if(purityContext == null)
             {
                 CUP_LOGGER.warn("sample({}) missing purity data", sampleId);

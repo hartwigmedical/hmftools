@@ -24,7 +24,7 @@ public class CoveragesAnalyzer {
 
     public static double calculateExpectedClonalCoverage(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
             @NotNull String tumorSampleWGSMetricsFile) throws IOException {
-        PurityContext purityContext = PurityContextFile.readWithQC(purpleQcFile, purplePurityTsv);
+        PurityContext purityContext = PurityContextFile.readWithoutQC(purplePurityTsv);
         double ploidy = purityContext.bestFit().ploidy();
         double purity = purityContext.bestFit().purity();
 

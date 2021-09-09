@@ -25,7 +25,7 @@ public final class PurityContextFile {
     private static final String EXTENSION_OLD = ".purple.purity";
 
     @NotNull
-    public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+    public static PurityQCContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
         return readWithQC(PurpleQCFile.generateFilename(basePath, sample), generateFilenameForReading(basePath, sample));
     }
 
@@ -36,16 +36,23 @@ public final class PurityContextFile {
     }
 
     @NotNull
-    public static PurityContext readWithQC(@NotNull final String qcFilePath, @NotNull String filePath) throws IOException {
+    public static PurityQCContext readWithQC(@NotNull final String qcFilePath, @NotNull String filePath) throws IOException {
         PurpleQC qc = PurpleQCFile.read(qcFilePath);
-        return fromLine(Files.readAllLines(new File(filePath).toPath()).get(1)).qc(qc).build();
+        PurityContext purityContext = fromLine(Files.readAllLines(new File(filePath).toPath()).get(1)).build();
+        return ImmutablePurityQCContext.builder().purityContext(purityContext).qc(qc).build();
+    }
+
+    @NotNull
+    public static PurityContext readWithoutQC(@NotNull String filePath) throws IOException {
+        return fromLine(Files.readAllLines(new File(filePath).toPath()).get(1)).build();
     }
 
     @NotNull
     @VisibleForTesting
-    static PurityContext fromLines(@NotNull List<String> qcLines, @NotNull List<String> fitLines)  {
+    static PurityQCContext fromLines(@NotNull List<String> qcLines, @NotNull List<String> fitLines)  {
         final PurpleQC qc = PurpleQCFile.fromLines(qcLines);
-        return fromLine(fitLines.get(1)).qc(qc).build();
+        PurityContext purityContext = fromLine(fitLines.get(1)).build();
+        return ImmutablePurityQCContext.builder().purityContext(purityContext).qc(qc).build();
     }
 
     @NotNull
@@ -74,10 +81,10 @@ public final class PurityContextFile {
         return builder;
     }
 
-    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)
+    public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityQCContext context)
             throws IOException {
         PurpleQCFile.write(PurpleQCFile.generateFilename(basePath, sample), context.qc());
-        writeBestPurity(basePath, sample, context);
+        writeBestPurity(basePath, sample, context.purityContext());
     }
 
     private static void writeBestPurity(@NotNull final String basePath, @NotNull final String sample, @NotNull final PurityContext context)

@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,7 +49,7 @@ public class LoadPurpleData {
         String purpleDir = cmd.getOptionValue(PURPLE_DIR);
 
         LOGGER.info("Reading data from {}", purpleDir);
-        PurityContext purityContext = PurityContextFile.read(purpleDir, sample);
+        PurityQCContext purityQcContext = PurityContextFile.read(purpleDir, sample);
         List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purpleDir, sample);
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDir, sample));
@@ -70,8 +71,8 @@ public class LoadPurpleData {
                 bestFitPerPurity,
                 copyNumbers,
                 germlineCopyNumbers,
-                purityContext,
-                purityContext.qc(),
+                purityQcContext.purityContext(),
+                purityQcContext.qc(),
                 geneCopyNumbers,
                 somaticDriverCatalog,
                 germlineDriverCatalog);

@@ -178,8 +178,8 @@ public class CopyNumberAnalyser
 
             final Map<String,List<SvCNData>> chrCnDataMap = mCnDataLoader.getChrCnDataMap();
 
-            double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
-            boolean isMale = mCnDataLoader.getPurityContext().gender().toString().startsWith("MALE");
+            double samplePloidy = mCnDataLoader.getPurityContext().purityContext().bestFit().ploidy();
+            boolean isMale = mCnDataLoader.getPurityContext().purityContext().gender().toString().startsWith("MALE");
 
             LNX_LOGGER.debug("sample({}) ploidy({})", sampleId, formatPloidy(samplePloidy));
 
@@ -341,8 +341,8 @@ public class CopyNumberAnalyser
 
             final Map<String,List<SvCNData>> chrCnDataMap = mCnDataLoader.getChrCnDataMap();
 
-            double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
-            boolean isMale = mCnDataLoader.getPurityContext().gender().toString().startsWith("MALE");
+            double samplePloidy = mCnDataLoader.getPurityContext().purityContext().bestFit().ploidy();
+            boolean isMale = mCnDataLoader.getPurityContext().purityContext().gender().toString().startsWith("MALE");
 
             final List<LohEvent> lohEvents = mCnDataLoader.getLohData();
 
@@ -547,7 +547,7 @@ public class CopyNumberAnalyser
             }
 
             final List<LohEvent> lohEvents = mCnDataLoader.getLohData();
-            double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
+            double samplePloidy = mCnDataLoader.getPurityContext().purityContext().bestFit().ploidy();
 
             for(final LohEvent lohData : lohEvents)
             {

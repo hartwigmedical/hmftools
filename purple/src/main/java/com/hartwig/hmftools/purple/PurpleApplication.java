@@ -42,8 +42,10 @@ import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.purity.ImmutablePurityQCContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.region.SegmentFile;
@@ -326,6 +328,10 @@ public class PurpleApplication
                     .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
                     .svTumorMutationalBurden(sampleData.SvCache.passingBnd())
+                    .build();
+
+            final PurityQCContext purityQcContext = ImmutablePurityQCContext.builder()
+                    .purityContext(purityContext)
                     .qc(qcChecks)
                     .build();
 
@@ -350,7 +356,7 @@ public class PurpleApplication
 
             PPL_LOGGER.info("Writing purple data to directory: {}", outputDir);
             mPurpleVersion.write(outputDir);
-            PurityContextFile.write(outputDir, tumorSample, purityContext);
+            PurityContextFile.write(outputDir, tumorSample, purityQcContext);
             FittedPurityRangeFile.write(outputDir, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDir, tumorSample), copyNumbers);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDir, tumorSample), germlineDeletions);

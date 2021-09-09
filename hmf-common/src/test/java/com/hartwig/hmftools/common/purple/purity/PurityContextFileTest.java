@@ -26,8 +26,8 @@ public class PurityContextFileTest {
 
     @Test
     public void testStripDecimalInTumorMutationalLoad() {
-        PurityContext victim = createRandomContext(new Random());
-        String line = PurityContextFile.toString(victim);
+        PurityQCContext victim = createRandomContextQc(new Random());
+        String line = PurityContextFile.toString(victim.purityContext());
         String[] array = line.split("\t");
         array[19] = array[19] + ".9892ADV";
         StringJoiner joiner = new StringJoiner("\t");
@@ -44,14 +44,14 @@ public class PurityContextFileTest {
     @Test
     public void testInputAndOutput() {
         final Random random = new Random();
-        final PurityContext input = createRandomContext(random);
+        final PurityQCContext input = createRandomContextQc(random);
 
-        final List<String> lines = toLines(input);
+        final List<String> lines = toLines(input.purityContext());
         assertEquals(2, lines.size());
         assertTrue(lines.get(0).startsWith("purity"));
 
         final List<String> qcLines = PurpleQCFile.toLines(input.qc());
-        final PurityContext output = PurityContextFile.fromLines(qcLines, lines);
+        final PurityQCContext output = PurityContextFile.fromLines(qcLines, lines);
         assertEquals(input, output);
     }
 
@@ -79,6 +79,13 @@ public class PurityContextFileTest {
                 .tumorMutationalLoad(random.nextInt(100_000_000))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
                 .svTumorMutationalBurden(random.nextInt())
+                .build();
+    }
+
+    @NotNull
+    private static PurityQCContext createRandomContextQc(@NotNull Random random) {
+        return ImmutablePurityQCContext.builder()
+                .purityContext(createRandomContext(random))
                 .qc(PurpleQCFileTest.create(random))
                 .build();
     }

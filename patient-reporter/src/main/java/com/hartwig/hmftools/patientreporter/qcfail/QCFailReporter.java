@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.common.purple.purity.PurityQCContext;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
@@ -47,7 +48,9 @@ public class QCFailReporter {
 
         String wgsPurityString = null;
         if (reason.isDeepWGSDataAvailable()) {
-            PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
+            PurityQCContext purityQcContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
+            PurityContext purityContext = purityQcContext.purityContext();
+
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
