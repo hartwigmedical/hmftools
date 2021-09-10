@@ -205,13 +205,13 @@ public class ValidationRoutines
         final Map<String,Map<Integer,List<BindData>>> allelePeptideData = Maps.newHashMap();
         allelePeptideData.put(targetAllele, mAlleleTrainingData.get(targetAllele));
 
-        BindScorer scorer = new BindScorer(allelePeptideData, alleleBindMatrices, mRandomDistribution, flankScores);
+        BindScorer scorer = new BindScorer(allelePeptideData, alleleBindMatrices, mRandomDistribution, flankScores, null);
         scorer.runScoring();
 
         BindingLikelihood bindingLikelihood = new BindingLikelihood();
         bindingLikelihood.buildAllelePeptideLikelihoods(allelePeptideData, null);
 
-        mRandomDistribution.buildLikelihoodDistribution(alleleBindMatrices, flankScores, bindingLikelihood);
+        mRandomDistribution.buildLikelihoodDistribution(alleleBindMatrices, flankScores, bindingLikelihood, null);
 
         runScoring(targetAllele, alleleBindMatrices, flankScores, bindingLikelihood);
     }
@@ -290,7 +290,7 @@ public class ValidationRoutines
             {
                 BindScoreMatrix matrix = pepLenMatrixMap.get(peptideLength);
 
-                BindScorer.calcScoreData(bindData, matrix, flankScores, mRandomDistribution, bindingLikelihood);
+                BindScorer.calcScoreData(bindData, matrix, flankScores, mRandomDistribution, bindingLikelihood, null);
 
                 alleleTprCalc.addRank(bindData.likelihoodRank());
                 pepLenTprCalc.addRank(bindData.likelihoodRank());

@@ -10,7 +10,9 @@ import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
+import static com.hartwig.hmftools.neo.bind.ExpressionLikelihood.EXP_LIKELIHOOD_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.scoreFileConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +31,7 @@ public class TrainConfig
     // the following reference scoring files can be read using the reference files id instead of specified individually
     public final String TrainingDataFile;
     public final String RecognitionDataFile;
+    public final String ExpressionLikelihoodFile;
 
     public final CalcConstants Constants;
     public final boolean CalcPairs;
@@ -62,7 +65,6 @@ public class TrainConfig
     public static final String FILE_ID_RAND_DIST = "rand_dist";
     public static final String FILE_ID_LIKELIHOOD_RAND_DIST = "likelihood_rand_dist";
     public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
-    public static final String FILE_ID_EXPRESSION_DIST = "expression_dist";
 
     private static final String APPLY_FLANKS = "apply_flanks";
 
@@ -82,6 +84,7 @@ public class TrainConfig
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
         RecognitionDataFile = cmd.getOptionValue(RECOGNITION_DATA_FILE);
+        ExpressionLikelihoodFile = cmd.getOptionValue(EXP_LIKELIHOOD_FILE);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -173,6 +176,7 @@ public class TrainConfig
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
         options.addOption(RECOGNITION_DATA_FILE, true, "Immunogenic recognition data file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
+        options.addOption(EXP_LIKELIHOOD_FILE, true, "Expression likelihood file");
 
         RandomPeptideConfig.addCmdLineArgs(options);
         CalcConstants.addCmdLineArgs(options);

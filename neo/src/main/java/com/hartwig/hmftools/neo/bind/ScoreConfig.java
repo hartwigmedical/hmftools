@@ -5,12 +5,15 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
-import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
+import static com.hartwig.hmftools.neo.bind.ExpressionLikelihood.EXP_LIKELIHOOD_FILE;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_FLANK_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.RECOGNITION_DATA_FILE;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.formTrainingFilename;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -28,6 +31,7 @@ public class ScoreConfig
     public final String PosWeightsFile; // file with computed and cached binding matrix per allele
     public final String BindLikelihoodFile;
     public final String FlankPosWeightsFile;
+    public final String ExpressionLikelihoodFile;
 
     public final RandomPeptideConfig RandomPeptides;
 
@@ -57,6 +61,7 @@ public class ScoreConfig
         PosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_POS_WEIGHT);
         FlankPosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_FLANK_POS_WEIGHT);
         BindLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_LIKELIHOOD);
+        ExpressionLikelihoodFile = cmd.getOptionValue(EXP_LIKELIHOOD_FILE);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -95,6 +100,7 @@ public class ScoreConfig
         options.addOption(SCORE_FILE_DIR, true, "Reference file directory");
         options.addOption(scoreFileConfig(FILE_ID_POS_WEIGHT), true, "Binding position weights file");
         options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD), true, "Binding likelihood file");
+        options.addOption(EXP_LIKELIHOOD_FILE, true, "Expression likelihood file");
 
         options.addOption(WRITE_SUMMARY_DATA, false, "Write summary results per allele");
         options.addOption(WRITE_PEPTIDE_SCORES, false, "Write score and rank data per peptide");

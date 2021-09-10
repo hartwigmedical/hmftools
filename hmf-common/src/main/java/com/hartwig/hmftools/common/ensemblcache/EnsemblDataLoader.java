@@ -395,9 +395,7 @@ public final class EnsemblDataLoader
             final String dataPath, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
-        String filename = dataPath;
-
-        filename += ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+        String filename = dataPath + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 
         if (!Files.exists(Paths.get(filename)))
             return false;
@@ -423,9 +421,7 @@ public final class EnsemblDataLoader
             Integer isCanonicalIndex = fieldsIndexMap.get("Canonical");
             int aaIndex = fieldsIndexMap.get("AminoAcids");
 
-            line = fileReader.readLine(); // skip header
-
-            while (line != null)
+            while ((line = fileReader.readLine()) != null)
             {
                 String[] values = line.split(ENSEMBL_DELIM);
 
@@ -445,8 +441,6 @@ public final class EnsemblDataLoader
 
                 transAminoAcidMap.put(transName, new TranscriptAminoAcids(
                         geneId, values[geneNameIndex], transName, isCanonical, values[aaIndex]));
-
-                line = fileReader.readLine();
             }
 
             LOGGER.debug("loaded {} trans amino-acid records", transAminoAcidMap.size());

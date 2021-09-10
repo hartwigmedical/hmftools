@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_LIKE_RANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
+import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE_CFG;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_PROTEOME;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_VALIDATION;
 
@@ -312,7 +313,7 @@ public class ExpressionAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(IMMUNE_EXPRESSION_FILE, true, "Peptides to search for");
+        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
         options.addOption(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
         options.addOption(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
         options.addOption(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");

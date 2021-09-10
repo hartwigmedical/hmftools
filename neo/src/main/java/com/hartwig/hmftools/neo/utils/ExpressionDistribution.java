@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_TPM_LEVEL;
 import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
 import static com.hartwig.hmftools.neo.bind.BindConstants.STRONG_BINDER_LIKELIHOOD;
 import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_EXPRESSION_DIST;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_VALIDATION;
 
 import static org.apache.commons.math3.util.FastMath.log;
@@ -23,7 +22,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.neo.bind.ScoreDistributionData;
 
 public class ExpressionDistribution
 {
@@ -201,13 +199,13 @@ public class ExpressionDistribution
 
     public void writeDistributions(final String outputDir, final String outputId)
     {
-        final String filename = formFilename(outputDir, FILE_ID_EXPRESSION_DIST, outputId);
+        final String filename = formFilename(outputDir, "expression_dist", outputId);
 
         try
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Type,Bucket,BindingRate,TotalCount");
+            writer.write("DataType,Bucket,BindingRate,TotalCount");
             writer.newLine();
 
             for(TpmBucket bucket : mTpmBuckets)

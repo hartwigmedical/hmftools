@@ -36,6 +36,7 @@ public class BindScorer
     private final RandomPeptideDistribution mRandomDistribution;
     private final BindingLikelihood mBindingLikelihood;
     private final RecognitionSimilarity mRecognitionSimilarity;
+    private final ExpressionLikelihood mExpressionLikelihood;
 
     private final Map<String,Integer> mBindDataOtherColumns;
 
@@ -52,12 +53,13 @@ public class BindScorer
         mBindingLikelihood = new BindingLikelihood();
         mFlankScores = new FlankScores();
         mRecognitionSimilarity = new RecognitionSimilarity();
+        mExpressionLikelihood = new ExpressionLikelihood();
     }
 
     public BindScorer(
             final Map<String,Map<Integer,List<BindData>>> allelePeptideData,
             final Map<String,Map<Integer,BindScoreMatrix>> alleleBindMatrices, final RandomPeptideDistribution randomDistribution,
-            final FlankScores flankScores)
+            final FlankScores flankScores, final ExpressionLikelihood expressionLikelihood)
     {
         mConfig = null; // not required when used as an internal calculator
 
@@ -68,6 +70,7 @@ public class BindScorer
         mRandomDistribution = randomDistribution;
         mBindingLikelihood = null;
         mFlankScores = flankScores;
+        mExpressionLikelihood = expressionLikelihood;
         mRecognitionSimilarity = null;
     }
 
@@ -152,7 +155,7 @@ public class BindScorer
                     if(matrix == null)
                         continue;
 
-                    calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood);
+                    calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood, mExpressionLikelihood);
                 }
             }
         }
@@ -182,12 +185,13 @@ public class BindScorer
         if(matrix == null)
             return;
 
-        calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood);
+        calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood, mExpressionLikelihood);
     }
 
     public static void calcScoreData(
             final BindData bindData, final BindScoreMatrix matrix, final FlankScores flankScores,
-            final RandomPeptideDistribution randomDistribution, final BindingLikelihood bindingLikelihood)
+            final RandomPeptideDistribution randomDistribution, final BindingLikelihood bindingLikelihood,
+            final ExpressionLikelihood expressionLikelihood)
     {
         double score = matrix.calcScore(bindData.Peptide);
 
@@ -203,9 +207,17 @@ public class BindScorer
         double likelihood = bindingLikelihood != null && bindingLikelihood.hasData() ?
                 bindingLikelihood.getBindingLikelihood(bindData.Allele, bindData.Peptide, rankPercentile) : 0;
 
+        double expLikelihood = INVALID_CALC;
+
+        if(expressionLikelihood != null && expressionLikelihood.hasData() && bindData.hasTPM())
+        {
+            expLikelihood = expressionLikelihood.calcLikelihood(bindData.tpm());
+            likelihood *= expLikelihood;
+        }
+
         double likelihoodRank = randomDistribution.getLikelihoodRank(bindData.Allele, likelihood);
 
-        bindData.setScoreData(score, flankScore, rankPercentile, likelihood, likelihoodRank);
+        bindData.setScoreData(score, flankScore, rankPercentile, likelihood, expLikelihood, likelihoodRank);
     }
 
     private void writePeptideScores()
@@ -224,8 +236,14 @@ public class BindScorer
             boolean writeFlanks = mFlankScores.hasData() && mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream()
                     .filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasFlanks()));
 
+            boolean writeExpression = mExpressionLikelihood.hasData() && mAllelePeptideData.values().stream().anyMatch(x -> x.values().stream()
+                    .filter(y -> !y.isEmpty()).anyMatch(y -> y.get(0).hasTPM()));
+
             if(writeFlanks)
                 writer.write(",FlankScore,UpFlank,DownFlank");
+
+            if(writeExpression)
+                writer.write(",TPM,ExpLikelihood");
 
             boolean calcRecognitionSim = mRecognitionSimilarity != null && mRecognitionSimilarity.hasData();
 
@@ -260,6 +278,11 @@ public class BindScorer
                         if(writeFlanks)
                         {
                             writer.write(String.format(",%.4f,%s,%s", bindData.flankScore(), bindData.UpFlank, bindData.DownFlank));
+                        }
+
+                        if(writeExpression)
+                        {
+                            writer.write(String.format(",%.4f,%.4f", bindData.tpm(), bindData.expressionLikelihood()));
                         }
 
                         if(calcRecognitionSim)
@@ -375,6 +398,9 @@ public class BindScorer
         }
 
         if(mConfig.RecognitionDataFile != null && !mRecognitionSimilarity.loadData(mConfig.RecognitionDataFile))
+            return false;
+
+        if(mConfig.ExpressionLikelihoodFile != null && !mExpressionLikelihood.loadTpmRates(mConfig.ExpressionLikelihoodFile))
             return false;
 
         return true;

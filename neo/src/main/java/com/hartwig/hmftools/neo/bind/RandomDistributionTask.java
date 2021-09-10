@@ -32,6 +32,8 @@ public class RandomDistributionTask implements Callable
     private final List<ScoreDistributionData> mLikelihoodDistributions; // distribution of likelihoods
 
     private final BindingLikelihood mBindingLikelihood;
+    private final ExpressionLikelihood mExpressionLikelihood;
+
     private final List<double[]> mDiscreteScoreData;
 
     private static final int SCORE_SIZE = 0;
@@ -46,22 +48,24 @@ public class RandomDistributionTask implements Callable
             final Map<Integer,List<RandomPeptideData>> randomPeptideMap, final FlankScores flankScores)
     {
         this(TASK_TYPE_SCORE_RANK, allele, peptideLengthMatrixMap, randomPeptideMap, flankScores,
-                null, null);
+                null, null, null);
     }
 
     public RandomDistributionTask(
             final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
             final Map<Integer,List<RandomPeptideData>> randomPeptideMap, final FlankScores flankScores,
-            final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions, final BindingLikelihood bindingLikelihood)
+            final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions,
+            final BindingLikelihood bindingLikelihood, final ExpressionLikelihood expressionLikelihood)
     {
         this(TASK_TYPE_LIKELIHOOD_RANK, allele, peptideLengthMatrixMap, randomPeptideMap, flankScores,
-                alleleScoreDistributions, bindingLikelihood);
+                alleleScoreDistributions, bindingLikelihood, expressionLikelihood);
     }
 
     private RandomDistributionTask(
             final int taskType, final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
             final Map<Integer,List<RandomPeptideData>> randomPeptideMap, final FlankScores flankScores,
-            final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions, final BindingLikelihood bindingLikelihood)
+            final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions,
+            final BindingLikelihood bindingLikelihood, final ExpressionLikelihood expressionLikelihood)
     {
         mTaskType = taskType;
         mAllele = allele;
@@ -70,6 +74,7 @@ public class RandomDistributionTask implements Callable
         mFlankScores = flankScores;
         mAlleleScoreDistributions = alleleScoreDistributions;
         mBindingLikelihood = bindingLikelihood;
+        mExpressionLikelihood = expressionLikelihood;
 
         mPeptideLengthDistributions = Maps.newHashMap();
         mLikelihoodDistributions = Lists.newArrayList();
@@ -171,6 +176,12 @@ public class RandomDistributionTask implements Callable
                 double score = BindScorer.calcScore(matrix, mFlankScores, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank);
                 double rank = getScoreRank(mAlleleScoreDistributions, mAllele, matrix.PeptideLength, score);
                 double likelihood = mBindingLikelihood.getBindingLikelihood(mAllele, peptideData.Peptide, rank);
+
+                if(likelihood > 0 && mExpressionLikelihood != null && mExpressionLikelihood.hasData())
+                {
+                    double expLikelihood = mExpressionLikelihood.calcLikelihood(peptideData.Expression);
+                    likelihood *= expLikelihood;
+                }
 
                 VectorUtils.optimisedAdd(likelihoodScores, likelihood, false);
 

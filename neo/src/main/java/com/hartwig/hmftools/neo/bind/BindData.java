@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_SOURCE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_TPM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.cleanAllele;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
@@ -33,10 +34,15 @@ public class BindData
     // optional fields
     private final List<String> mOtherData;
 
+    private Double mTPM;
+
+    // scoring fields
+
     private double mScore;
     private double mFlankScore;
     private double mRankPercentile;
     private double mLikelihood;
+    private double mExpLikelihood;
     private double mLikelihoodRank;
 
     public BindData(final String allele, final String peptide, final String source)
@@ -53,11 +59,13 @@ public class BindData
         DownFlank = downFlank;
 
         mOtherData = Lists.newArrayList();
+        mTPM = 0.0;
 
         mScore = INVALID_SCORE;
         mFlankScore = INVALID_SCORE;
         mRankPercentile = INVALID_SCORE;
         mLikelihood = INVALID_SCORE;
+        mExpLikelihood = INVALID_SCORE;
         mLikelihoodRank = INVALID_SCORE;
     }
 
@@ -67,12 +75,18 @@ public class BindData
 
     public final List<String> getOtherData() { return mOtherData; }
 
-    public void setScoreData(double score, double flankScore, double rankPerc, double likelihood, double likelihoodRank)
+    public void setTPM(double tpm) { mTPM = tpm; }
+    public boolean hasTPM() { return mTPM != null; }
+    public double tpm() { return mTPM != null ? mTPM : 0; }
+
+    public void setScoreData(
+            double score, double flankScore, double rankPerc, double likelihood, double expLikelihood, double likelihoodRank)
     {
         mScore = score;
         mFlankScore = flankScore;
         mRankPercentile = rankPerc;
         mLikelihood = likelihood;
+        mExpLikelihood = expLikelihood;
         mLikelihoodRank = likelihoodRank;
     }
 
@@ -80,6 +94,7 @@ public class BindData
     public double flankScore() { return mFlankScore; }
     public double rankPercentile() { return mRankPercentile; }
     public double likelihood() { return mLikelihood; }
+    public double expressionLikelihood() { return mExpLikelihood; }
     public double likelihoodRank() { return mLikelihoodRank; }
 
     public String toString()
@@ -117,6 +132,7 @@ public class BindData
             Integer upFlankIndex = null;
             Integer downFlankIndex = null;
             Integer sourceIndex = null;
+            Integer tpmIndex = null;
 
             int otherDataCount = 0;
             List<Integer> otherColumnIndices = Lists.newArrayList();
@@ -135,6 +151,8 @@ public class BindData
                     downFlankIndex = i;
                 else if(column.equals(FLD_SOURCE))
                     sourceIndex = i;
+                else if(column.equals(FLD_TPM))
+                    tpmIndex = i;
                 else
                 {
                     otherColumnIndices.add(i);
@@ -166,6 +184,11 @@ public class BindData
                 String downFlank = downFlankIndex != null ? values[downFlankIndex] : "";
 
                 BindData bindData = new BindData(allele, peptide, source, upFlank, downFlank);
+
+                if(tpmIndex != null)
+                {
+                    bindData.setTPM(Double.parseDouble(values[tpmIndex]));
+                }
 
                 for(int i = 0; i < values.length; ++i)
                 {

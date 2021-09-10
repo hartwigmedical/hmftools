@@ -19,6 +19,9 @@ public final class BindCommon
     public static final String FLD_PEPTIDE_LEN = "PeptideLength";
     public static final String FLD_LIKE_RANK = "LikelihoodRank";
     public static final String FLD_IMMUNOGENIC = "Immunogenic";
+    public static final String FLD_TPM_BUCKET = "Bucket";
+    public static final String FLD_TPM_RATE = "BindingRate";
+    public static final String FLD_TPM = "TPM";
 
     public static final String FLD_DATA_TYPE = "DataType";
 

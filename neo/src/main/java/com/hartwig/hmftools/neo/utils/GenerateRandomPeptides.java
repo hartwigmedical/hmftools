@@ -16,8 +16,11 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
+import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE_CFG;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -39,6 +42,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -56,6 +60,7 @@ public class GenerateRandomPeptides
 
     private final EnsemblDataCache mEnsemblDataCache;
     private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+    private final TranscriptExpression mTranscriptExpression;
 
     private final Set<String> mUniquePeptides;
     private final List<String> mPeptideExclusions;
@@ -83,12 +88,14 @@ public class GenerateRandomPeptides
     {
         String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
         mEnsemblDataCache = new EnsemblDataCache(ensemblDataDir, RefGenomeVersion.V37);
-        mEnsemblDataCache.setRequiredData(true, false, false, true);
+        mEnsemblDataCache.setRequiredData(false, false, false, true);
 
         mEnsemblDataCache.load(false);
 
         mTransAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
+
+        mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
 
         mUniquePeptides = Sets.newHashSet();
         mPeptideExclusions = Lists.newArrayList();
@@ -200,6 +207,9 @@ public class GenerateRandomPeptides
                 TranscriptData transData = mEnsemblDataCache.getTranscriptData(geneData.GeneId, "");
 
                 if(transData == null || transData.CodingStart == null)
+                    continue;
+
+                if(mTranscriptExpression != null && mTranscriptExpression.getExpression(transData.TransName) == null)
                     continue;
 
                 ++transCodingCount;
@@ -361,6 +371,7 @@ public class GenerateRandomPeptides
         options.addOption(PEPTIDES_LENGTHS, true, "Peptide lengths, separated by ';'");
         options.addOption(ALLELES_FILE, true, "File with alleles to assign");
         options.addOption(PEPTIDE_EXCLUSIONS_FILE, true, "File with training set peptides to avoid replicating");
+        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
 
         addLoggingOptions(options);
         addOutputDir(options);

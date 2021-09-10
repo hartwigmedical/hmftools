@@ -47,6 +47,7 @@ public class BindTrainer
 
     private final PosWeightModel mPosWeightModel;
     private final HlaSequences mHlaSequences;
+    private final ExpressionLikelihood mExpressionLikelihood;
 
     public BindTrainer(final CommandLine cmd)
     {
@@ -63,6 +64,9 @@ public class BindTrainer
         mAlleleBindMatrices = Maps.newHashMap();
         mFlankCounts = new FlankCounts();
         mFlankScores = new FlankScores();
+
+        mExpressionLikelihood = new ExpressionLikelihood();
+        mExpressionLikelihood.loadTpmRates(mConfig.ExpressionLikelihoodFile);
     }
 
     public void run()
@@ -100,7 +104,8 @@ public class BindTrainer
 
             if(mConfig.WriteLikelihood)
             {
-                BindScorer scorer = new BindScorer(mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores);
+                BindScorer scorer = new BindScorer(
+                        mAllelePeptideData, mAlleleBindMatrices, randomDistribution, mFlankScores, mExpressionLikelihood);
                 scorer.runScoring();
 
                 BindingLikelihood bindingLikelihood = new BindingLikelihood();
@@ -109,7 +114,8 @@ public class BindTrainer
 
                 if(mConfig.WritePanLengthDistribution)
                 {
-                    randomDistribution.buildLikelihoodDistribution(mAlleleBindMatrices, mFlankScores, bindingLikelihood);
+                    randomDistribution.buildLikelihoodDistribution(
+                            mAlleleBindMatrices, mFlankScores, bindingLikelihood, mExpressionLikelihood);
                 }
             }
         }
