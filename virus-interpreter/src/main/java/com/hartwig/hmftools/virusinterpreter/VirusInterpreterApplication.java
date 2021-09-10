@@ -52,9 +52,10 @@ public class VirusInterpreterApplication {
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
         LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
 
-        CoveragesAnalyzer coveragesAnalyzer = new CoveragesAnalyzer();
+        LOGGER.info("Running coverage analysis based on {} and {}", config.purplePurityTsv(), config.tumorSampleWGSMetricsFile());
         CoveragesAnalysis coveragesAnalysis =
-                coveragesAnalyzer.run(config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
+                CoveragesAnalyzer.run(config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
+        LOGGER.info(" Determined the expected clonal coverage to be {}", coveragesAnalysis.expectedClonalCoverage());
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingDbModel, coveragesAnalysis);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);

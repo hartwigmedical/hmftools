@@ -30,8 +30,8 @@ public class VirusEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull VirusInterpreterData virusInterpreterData) {
-        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.virusName("HPV"));
-        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.virusName("EBV"));
+        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("HPV"));
+        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("EBV"));
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {

@@ -14,20 +14,20 @@ import org.junit.Test;
 
 public class VirusReportingDbFileTest {
 
-    private static final String VIRUS_WHITELIST_TSV = Resources.getResource("virus_interpreter/virus_reporting_db.tsv").getPath();
+    private static final String VIRUS_REPORTING_DB_TSV = Resources.getResource("virus_interpreter/virus_reporting_db.tsv").getPath();
 
     @Test
-    public void canReadVirusWhitelistTsv() throws IOException {
-        VirusReportingDbModel virusWhitelistModel = VirusReportingDbFile.buildFromTsv(VIRUS_WHITELIST_TSV);
-        assertEquals(1, virusWhitelistModel.count());
+    public void canReadVirusReportingDbTsv() throws IOException {
+        VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(VIRUS_REPORTING_DB_TSV);
+        assertEquals(1, virusReportingDbModel.count());
 
-        assertTrue(virusWhitelistModel.hasInterpretation(1));
-        assertFalse(virusWhitelistModel.hasInterpretation(2));
+        assertTrue(virusReportingDbModel.hasInterpretation(1));
+        assertFalse(virusReportingDbModel.hasInterpretation(2));
 
-        assertEquals("MCV", virusWhitelistModel.interpretVirusSpecies(1));
-        assertEquals(Integer.valueOf(90), virusWhitelistModel.nonIntegratedMinimalCoverage(1));
-        assertNull(virusWhitelistModel.integratedMinimalCoverage(1));
+        assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(1));
+        assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(1));
+        assertNull(virusReportingDbModel.integratedMinimalCoverage(1));
 
-        assertNotEquals("HPV", virusWhitelistModel.interpretVirusSpecies(2));
+        assertNotEquals("HPV", virusReportingDbModel.interpretVirusSpecies(2));
     }
 }

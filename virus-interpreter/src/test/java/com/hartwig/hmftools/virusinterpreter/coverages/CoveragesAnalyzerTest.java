@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.virusinterpreter.coverages;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 import com.google.common.io.Resources;
 
@@ -25,6 +24,5 @@ public class CoveragesAnalyzerTest {
         double expectedClonalCoverage =
                 CoveragesAnalyzer.calculateExpectedClonalCoverage(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
         assertEquals(34.524514945161286, expectedClonalCoverage, EPSILON);
-        assertNotEquals(23.45, expectedClonalCoverage, EPSILON);
     }
 }

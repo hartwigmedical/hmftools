@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.virusinterpreter;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -21,12 +20,11 @@ public class VirusInterpreterAlgo {
     private final TaxonomyDb taxonomyDb;
     @NotNull
     private final VirusReportingDbModel virusReportingDbModel;
-
     @NotNull
     private final CoveragesAnalysis coveragesAnalysis;
 
     public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingDbModel virusReportingDbModel,
-            @NotNull CoveragesAnalysis coveragesAnalysis) {
+            @NotNull final CoveragesAnalysis coveragesAnalysis) {
         this.taxonomyDb = taxonomyDb;
         this.virusReportingDbModel = virusReportingDbModel;
         this.coveragesAnalysis = coveragesAnalysis;
@@ -34,7 +32,6 @@ public class VirusInterpreterAlgo {
 
     @NotNull
     public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) {
-
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
             String interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
@@ -57,26 +54,22 @@ public class VirusInterpreterAlgo {
     }
 
     private boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalCoverage) {
-        double viralPercentageCovered = virusBreakend.coverage();
-        double viralCoverage = virusBreakend.meanDepth();
-
-        Integer coverage = determineMinimalCoverageVirus(virusBreakend.integrations(), virusBreakend.taxidSpecies());
-
         boolean reported = false;
-        boolean virusQCStatus = false;
         if (virusReportingDbModel.hasInterpretation(virusBreakend.taxidSpecies())) {
-            if (virusBreakend.qcStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE) {
-                virusQCStatus = true;
-            }
+            Integer minimalCoveragePercentage = determineMinimalCoverageVirus(virusBreakend.integrations(), virusBreakend.taxidSpecies());
+            double viralPercentageCovered = virusBreakend.coverage();
+            double viralCoverage = virusBreakend.meanDepth();
 
-            if (coverage != null) {
-                if (viralPercentageCovered > coverage && viralCoverage > expectedClonalCoverage) {
+            if (minimalCoveragePercentage != null) {
+                if (viralPercentageCovered > minimalCoveragePercentage && viralCoverage > expectedClonalCoverage) {
                     reported = true;
                 }
             } else {
                 reported = true;
             }
         }
+
+        boolean virusQCStatus = virusBreakend.qcStatus() != VirusBreakendQCStatus.LOW_VIRAL_COVERAGE;
         return reported && virusQCStatus;
     }
 

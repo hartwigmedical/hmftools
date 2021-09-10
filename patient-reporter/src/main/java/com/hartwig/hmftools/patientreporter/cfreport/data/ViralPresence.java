@@ -21,15 +21,15 @@ public final class ViralPresence {
         Set<String> virusInterpretationSummary = Sets.newHashSet();
 
         for (AnnotatedVirus virus : reportableViruses) {
-            VirusConstants virusConstants = VirusConstants.virusName(virus.interpretation());
-            if (virusConstants.reportedVirusOnSummary()) {
+            VirusConstants virusConstants = VirusConstants.fromVirusName(virus.interpretation());
+            if (virusConstants.reportVirusOnSummary()) {
                 positiveInterpretations.add(virus.interpretation());
-            } else if (!virusConstants.reportedVirusOnSummary()) {
+            } else if (!virusConstants.reportVirusOnSummary()) {
                 negativeInterpretations.add(virus.interpretation());
             }
         }
 
-        for (String virusSummary: VirusConstants.allVirussen()) {
+        for (String virusSummary: VirusConstants.allViruses()) {
             if (!positiveInterpretations.contains(virusSummary)) {
                 negativeInterpretations.add(virusSummary);
             }

@@ -14,21 +14,19 @@ public enum VirusConstants {
 
     @NotNull
     private final String virusName;
+    private final boolean reportVirusOnSummary;
 
-    private final boolean reportedVirusOnSummary;
-
-    VirusConstants(@NotNull final String virusName, final boolean reportedSummary) {
+    VirusConstants(@NotNull final String virusName, final boolean reportVirusOnSummary) {
         this.virusName = virusName;
-        this.reportedVirusOnSummary = reportedSummary;
+        this.reportVirusOnSummary = reportVirusOnSummary;
     }
 
-    public boolean reportedVirusOnSummary() {
-        return reportedVirusOnSummary;
+    public boolean reportVirusOnSummary() {
+        return reportVirusOnSummary;
     }
 
     @NotNull
-    public static VirusConstants virusName(@NotNull String virusName) {
-
+    public static VirusConstants fromVirusName(@NotNull String virusName) {
         switch (virusName) {
             case "MCV":
                 return MCV;
@@ -41,16 +39,16 @@ public enum VirusConstants {
             case "HHV-8":
                 return HHV8;
             default:
-                throw new IllegalStateException("Cannot resolve firus name: " + virusName);
+                throw new IllegalStateException("Cannot resolve virus name: " + virusName);
         }
     }
 
     @NotNull
-    public static List<String> allVirussen() {
+    public static List<String> allViruses() {
         List<String> virusSummary = Lists.newArrayList();
-        for (VirusConstants virussen : VirusConstants.values()) {
-            if (virussen.reportedVirusOnSummary) {
-                virusSummary.add(virussen.virusName);
+        for (VirusConstants virus : VirusConstants.values()) {
+            if (virus.reportVirusOnSummary()) {
+                virusSummary.add(virus.virusName);
             }
         }
 

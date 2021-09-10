@@ -13,39 +13,40 @@ public class VirusConstantsTest {
 
     @Test
     public void canExtractVirusConstants() {
-        VirusConstants VirusConstantsHPV = VirusConstants.virusName("HPV");
+        VirusConstants VirusConstantsHPV = VirusConstants.fromVirusName("HPV");
         assertEquals(VirusConstants.HPV, VirusConstantsHPV);
-        assertTrue(VirusConstants.virusName("HPV").reportedVirusOnSummary());
+        assertTrue(VirusConstantsHPV.reportVirusOnSummary());
 
-        VirusConstants VirusConstantsMCV = VirusConstants.virusName("MCV");
+        VirusConstants VirusConstantsMCV = VirusConstants.fromVirusName("MCV");
         assertEquals(VirusConstants.MCV, VirusConstantsMCV);
-        assertTrue(VirusConstants.virusName("MCV").reportedVirusOnSummary());
+        assertTrue(VirusConstantsMCV.reportVirusOnSummary());
 
-        VirusConstants VirusConstantsEBV = VirusConstants.virusName("EBV");
+        VirusConstants VirusConstantsEBV = VirusConstants.fromVirusName("EBV");
         assertEquals(VirusConstants.EBV, VirusConstantsEBV);
-        assertTrue(VirusConstants.virusName("EBV").reportedVirusOnSummary());
+        assertTrue(VirusConstantsEBV.reportVirusOnSummary());
 
-        VirusConstants VirusConstantsHBV = VirusConstants.virusName("HBV");
+        VirusConstants VirusConstantsHBV = VirusConstants.fromVirusName("HBV");
         assertEquals(VirusConstants.HBV, VirusConstantsHBV);
-        assertFalse(VirusConstants.virusName("HBV").reportedVirusOnSummary());
+        assertFalse(VirusConstantsHBV.reportVirusOnSummary());
 
-        VirusConstants VirusConstantsHHV8 = VirusConstants.virusName("HHV-8");
+        VirusConstants VirusConstantsHHV8 = VirusConstants.fromVirusName("HHV-8");
         assertEquals(VirusConstants.HHV8, VirusConstantsHHV8);
-        assertFalse(VirusConstants.virusName("HHV-8").reportedVirusOnSummary());
+        assertFalse(VirusConstantsHHV8.reportVirusOnSummary());
     }
 
     @Test(expected = IllegalStateException.class)
     public void hasUnknownVirusConstants() {
-        VirusConstants.virusName("ABC");
+        //noinspection ResultOfMethodCallIgnored
+        VirusConstants.fromVirusName("ABC");
     }
 
     @Test
-    public void canExtractAllSummaryReportedVirussen() {
-        List<String> reportableSummaryVirussen = VirusConstants.allVirussen();
-        List<String> expectedVirussen = Lists.newArrayList();
-        expectedVirussen.add("MCV");
-        expectedVirussen.add("EBV");
-        expectedVirussen.add("HPV");
-        assertEquals(reportableSummaryVirussen, expectedVirussen);
+    public void canExtractAllSummaryReportedViruses() {
+        List<String> reportableSummaryViruses = VirusConstants.allViruses();
+        List<String> expectedViruses = Lists.newArrayList();
+        expectedViruses.add("MCV");
+        expectedViruses.add("EBV");
+        expectedViruses.add("HPV");
+        assertEquals(reportableSummaryViruses, expectedViruses);
     }
 }

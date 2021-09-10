@@ -2,7 +2,6 @@ package com.hartwig.hmftools.virusinterpreter.algo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
@@ -27,7 +26,6 @@ public class VirusReportingDbModelTest {
         VirusReportingDbModel virusInterpretationModel = new VirusReportingDbModel(speciesToInterpretationMap);
 
         assertEquals("EBV", virusInterpretationModel.interpretVirusSpecies(1));
-        assertNotEquals("HPV", virusInterpretationModel.interpretVirusSpecies(1));
 
         assertTrue(virusInterpretationModel.hasInterpretation(1));
         assertFalse(virusInterpretationModel.hasInterpretation(3));
