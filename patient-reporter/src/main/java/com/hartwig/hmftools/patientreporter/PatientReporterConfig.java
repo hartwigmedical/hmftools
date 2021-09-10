@@ -155,7 +155,7 @@ public interface PatientReporterConfig {
     @NotNull
     String tumorSampleId();
 
-    @NotNull
+    @Nullable
     String tumorSampleRunId();
 
     @NotNull
@@ -336,7 +336,7 @@ public interface PatientReporterConfig {
                 .refSampleRunId(cmd.hasOption(REF_SAMPLE_RUN_ID) ? nonOptionalValue(cmd, REF_SAMPLE_RUN_ID) : null)
                 .refSampleBarcode(cmd.hasOption(REF_SAMPLE_BARCODE) ? nonOptionalValue(cmd, REF_SAMPLE_BARCODE) : null)
                 .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .tumorSampleRunId(nonOptionalValue(cmd, TUMOR_SAMPLE_RUN_ID))
+                .tumorSampleRunId(cmd.hasOption(TUMOR_SAMPLE_RUN_ID) ? nonOptionalValue(cmd, TUMOR_SAMPLE_RUN_ID) : null)
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))

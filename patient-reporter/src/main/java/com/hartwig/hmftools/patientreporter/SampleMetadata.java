@@ -21,7 +21,7 @@ public abstract class SampleMetadata {
     @NotNull
     public abstract String tumorSampleId();
 
-    @NotNull
+    @Nullable
     public abstract String tumorSampleRunId();
 
     @NotNull

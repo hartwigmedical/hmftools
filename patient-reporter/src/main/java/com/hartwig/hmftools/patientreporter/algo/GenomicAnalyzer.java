@@ -48,7 +48,7 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@NotNull String tumorSampleRunId, @Nullable String referenceSampleRunId, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@Nullable String tumorSampleRunId, @Nullable String referenceSampleRunId, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleRunId, referenceSampleRunId,
                 config.purpleQcFile(),
