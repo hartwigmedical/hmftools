@@ -10,27 +10,27 @@ Virus Interpreter picks the reference taxid that should be displayed in a report
 
 ### Interpretation
 
-Virus Interpreter allows the mapping of the species taxid which are definied into the reporting db ("HPV", "EBV" ,"MCV", "HBV" or "HHV-8"). 
-Within the Hartwig pipeline this configuration is used to map all clinically relevant HPV species to "HPV" 
-which in turn is used to label patients as "HPV positive" or "HPV negative".
+Virus Interpreter allows the mapping of the species taxid as defined in the reporting db ("HPV", "EBV" ,"MCV", "HBV" or "HHV-8"). 
+Within the Hartwig pipeline, this configuration is used to map all clinically relevant HPV species to "HPV", 
+which in turn is used to label the sample as "HPV positive" or "HPV negative".
 
 ### Reporting
 
-Every virus found by VIRUSBreakend is evaluated for reporting. For a virus to be reported, the following conditions need to be met:
+Every virus detected by VIRUSBreakend is evaluated for reporting. For a virus to be reported, the following conditions must be met:
  - The VIRUSBreakend QC status must not be `LOW_VIRAL_COVERAGE`
- - The virus should be present in the reporting db with the conditions for reporting
- - VIRUSBreakend must have found at least 1 integration site into the tumor DNA for "HPV", "MCV", "HBV" or "HHV-8"
-   - For "EBV" next to the at least 1 integration site the following conditions should extend with: 
-     - percentage covered of the virus should be greater than 90%
-     - coverage of virus should be greater than the expected clonal coverage
- - VIRUSBreakend has none integration sites into the tumor DNA for "HPV", "MCV", "HBV", "EBV" or "HHV-8" and the conditions should extend with: 
-   - percentage covered of the virus should be greater than 90% 
-   - coverage of virus should be greater than the expected clonal coverage 
+ - The virus species should be potentially reportable (i.e. present in the reporting db)
+ - Detection of at least 1 integration site into the tumor DNA
+   - For "EBV", the following additional conditions must also be met:
+     - percentage covered of the viral genome is greater than 90%
+     - coverage of the virus is higher than expected clonal mean coverage
+ - If VIRUSBreakend could not detect integration sites into the tumor DNA, the virus is still reportable if the following conditions are met:
+   - percentage covered of the viral genome is greater than 90% 
+   - coverage of the virus is higher than expected clonal mean coverage 
    
 ### Output data
 
 Virus Interpreter produces a tsv file where every line (record) is an entry from the VIRUSBreakend summary file. 
-The following fields are stored per viral presence:
+The following fields are stored for each detected virus:
 
 Field | Description 
 ---|---
@@ -39,8 +39,8 @@ name | The name of the virus, matching with the taxid
 qcStatus | The QC status as reported by VIRUSBreakend
 integrations | The number of detected integrations of this virus into the sample genome as reported by VIRUSBreakend
 interpretation | The output of the interpretation step of Virus Interpreter
-percentageCovered | The percentage of the viral reference sequence that has been covered in the tumor sample as reported by VIRUSBreakend
-coverage | The mean coverage of the virus as reported by VIRUSBreakend  //TODO: improve
+percentageCovered | The percentage of the viral reference sequence that has been covered in the tumor sample as reported by VIRUSBreakend ("coverage" field of VIRUSBreakend)
+meanCoverage | The average coverage of the viral genome as reported by VIRUSBreakend  ("meanDepth" field of VIRUSBreakend)
 expectedClonalMeanCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA 
 reported | A boolean indicating whether the detected viral presence is considered a driver
 
