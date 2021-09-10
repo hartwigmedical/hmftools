@@ -17,6 +17,7 @@ which in turn is used to label the sample as "HPV positive" or "HPV negative".
 ### Reporting
 
 Every virus detected by VIRUSBreakend is evaluated for reporting. For a virus to be reported, the following conditions must be met:
+ - The QC status of sample should not be `FAIL_CONTAMINATION` or `FAIL_NO_TUMOR`
  - The VIRUSBreakend QC status must not be `LOW_VIRAL_COVERAGE`
  - The virus species should be potentially reportable (i.e. present in the reporting db)
  - Detection of at least 1 integration site into the tumor DNA
