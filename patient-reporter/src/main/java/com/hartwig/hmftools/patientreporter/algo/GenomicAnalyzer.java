@@ -50,6 +50,7 @@ public class GenomicAnalyzer {
     @NotNull
     public GenomicAnalysis run(@Nullable String tumorSampleRunId, @Nullable String referenceSampleRunId, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
+        assert tumorSampleRunId != null;
         PurpleData purpleData = PurpleDataLoader.load(tumorSampleRunId, referenceSampleRunId,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
