@@ -27,7 +27,7 @@ public class TranscriptExpression
         mValidData = loadExpressionData(filename);
     }
 
-    public boolean hasValidData() { return mValidData; }
+    public boolean hasData() { return mValidData; }
 
     public Double getExpression(final String transName)
     {

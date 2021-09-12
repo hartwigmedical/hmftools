@@ -36,8 +36,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
@@ -92,7 +90,7 @@ public class ExpressionAnalyser
 
     public void run()
     {
-        if(!mTranscriptExpression.hasValidData() || mPeptideSearchDataMap.isEmpty() || mProteomePeptides.isEmpty() || mBinderPeptides.isEmpty())
+        if(!mTranscriptExpression.hasData() || mPeptideSearchDataMap.isEmpty() || mProteomePeptides.isEmpty() || mBinderPeptides.isEmpty())
         {
             NE_LOGGER.error("failed to initialise");
             System.exit(1);

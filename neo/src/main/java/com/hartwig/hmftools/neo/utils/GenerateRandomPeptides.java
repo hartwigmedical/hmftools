@@ -209,7 +209,7 @@ public class GenerateRandomPeptides
                 if(transData == null || transData.CodingStart == null)
                     continue;
 
-                if(mTranscriptExpression != null && mTranscriptExpression.getExpression(transData.TransName) == null)
+                if(mTranscriptExpression.hasData() && mTranscriptExpression.getExpression(transData.TransName) == null)
                     continue;
 
                 ++transCodingCount;
