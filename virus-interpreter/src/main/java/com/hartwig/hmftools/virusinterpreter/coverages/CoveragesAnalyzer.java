@@ -9,20 +9,20 @@ import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CoveragesAnalyzer {
+public final class CoveragesAnalyzer {
 
-    public CoveragesAnalyzer() {
+    private CoveragesAnalyzer() {
     }
 
     @NotNull
-    public CoveragesAnalysis run(@NotNull String purplePurityTsv, @NotNull String purpleQcFile, @NotNull String tumorSampleWGSMetricsFile)
-            throws IOException {
+    public static CoveragesAnalysis run(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
+            @NotNull String tumorSampleWGSMetricsFile) throws IOException {
         return ImmutableCoveragesAnalysis.builder()
                 .expectedClonalCoverage(calculateExpectedClonalCoverage(purplePurityTsv, purpleQcFile, tumorSampleWGSMetricsFile))
                 .build();
     }
 
-    public static double calculateExpectedClonalCoverage(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
+    static double calculateExpectedClonalCoverage(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
             @NotNull String tumorSampleWGSMetricsFile) throws IOException {
         PurityContext purityContext = PurityContextFile.readWithQC(purpleQcFile, purplePurityTsv);
         double ploidy = purityContext.bestFit().ploidy();

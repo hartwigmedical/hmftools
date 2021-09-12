@@ -4,16 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendFile;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingFile;
-import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingModel;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbFile;
+import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalyzer;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
@@ -25,7 +21,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class VirusInterpreterApplication {
 
@@ -50,18 +45,19 @@ public class VirusInterpreterApplication {
         LOGGER.info("Loading taxonomy db from {}", config.taxonomyDbTsv());
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.taxonomyDbTsv());
 
-        LOGGER.info("Building virus reporting model from {}", config.virusReportedTsv());
-        VirusReportingModel virusReportingModel = VirusReportingFile.buildFromTsv(config.virusReportedTsv());
+        LOGGER.info("Building virus reporting db model from {}", config.virusReportedDbTsv());
+        VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.virusReportedDbTsv());
 
         LOGGER.info("Loading virus breakends from {}", new File(config.virusBreakendTsv()).getParent());
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
         LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
 
-        CoveragesAnalyzer coveragesAnalyzer = new CoveragesAnalyzer();
+        LOGGER.info("Running coverage analysis based on {} and {}", config.purplePurityTsv(), config.tumorSampleWGSMetricsFile());
         CoveragesAnalysis coveragesAnalysis =
-                coveragesAnalyzer.run(config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
+                CoveragesAnalyzer.run(config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
+        LOGGER.info(" Determined the expected clonal coverage to be {}", coveragesAnalysis.expectedClonalCoverage());
 
-        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+        VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingDbModel, coveragesAnalysis);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
         LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 

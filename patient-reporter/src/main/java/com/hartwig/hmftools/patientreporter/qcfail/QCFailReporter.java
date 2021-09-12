@@ -48,6 +48,7 @@ public class QCFailReporter {
         String wgsPurityString = null;
         if (reason.isDeepWGSDataAvailable()) {
             PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
+
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
