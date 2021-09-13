@@ -204,18 +204,22 @@ public class BindScorer
 
         double rankPercentile = randomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
 
-        double likelihood = bindingLikelihood != null && bindingLikelihood.hasData() ?
-                bindingLikelihood.getBindingLikelihood(bindData.Allele, bindData.Peptide, rankPercentile) : 0;
-
+        double likelihood = INVALID_CALC;
         double expLikelihood = INVALID_CALC;
+        double likelihoodRank = INVALID_CALC;
 
-        if(expressionLikelihood != null && expressionLikelihood.hasData() && bindData.hasTPM())
+        if(bindingLikelihood != null && bindingLikelihood.hasData())
         {
-            expLikelihood = expressionLikelihood.calcLikelihood(bindData.tpm());
-            likelihood *= expLikelihood;
-        }
+            likelihood = bindingLikelihood.getBindingLikelihood(bindData.Allele, bindData.Peptide, rankPercentile);
 
-        double likelihoodRank = randomDistribution.getLikelihoodRank(bindData.Allele, likelihood);
+            if(expressionLikelihood != null && expressionLikelihood.hasData() && bindData.hasTPM())
+            {
+                expLikelihood = expressionLikelihood.calcLikelihood(bindData.tpm());
+                likelihood *= expLikelihood;
+            }
+
+            likelihoodRank = randomDistribution.getLikelihoodRank(bindData.Allele, likelihood);
+        }
 
         bindData.setScoreData(score, flankScore, rankPercentile, likelihood, expLikelihood, likelihoodRank);
     }

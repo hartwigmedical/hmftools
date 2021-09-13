@@ -75,7 +75,14 @@ public class BindData
 
     public final List<String> getOtherData() { return mOtherData; }
 
-    public void setTPM(double tpm) { mTPM = tpm; }
+    public void setTPM(double tpm)
+    {
+        if(mTPM < 0)
+            return;
+
+        mTPM = tpm;
+    }
+
     public boolean hasTPM() { return mTPM != null; }
     public double tpm() { return mTPM != null ? mTPM : 0; }
 
