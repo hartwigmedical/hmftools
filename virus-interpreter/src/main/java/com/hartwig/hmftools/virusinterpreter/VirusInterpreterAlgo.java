@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.virusinterpreter;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
@@ -30,8 +33,12 @@ public class VirusInterpreterAlgo {
         this.coveragesAnalysis = coveragesAnalysis;
     }
 
+    public boolean isPurpleQcPass(@NotNull Set<PurpleQCStatus> purpleQCStatus) {
+        return !purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.FAIL_CONTAMINATION);
+    }
+
     @NotNull
-    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends) {
+    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends, @NotNull PurityContext purityContext) {
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for (VirusBreakend virusBreakend : virusBreakends) {
             String interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
@@ -45,8 +52,9 @@ public class VirusInterpreterAlgo {
                     .interpretation(interpretation)
                     .percentageCovered(virusBreakend.coverage())
                     .meanCoverage(virusBreakend.meanDepth())
-                    .expectedClonalCoverage(coveragesAnalysis.expectedClonalCoverage())
-                    .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage()))
+                    .expectedClonalCoverage(isPurpleQcPass(purityContext.qc().status()) ? coveragesAnalysis.expectedClonalCoverage() : null)
+                    .reported(isPurpleQcPass(purityContext.qc().status()) && report(virusBreakend,
+                            coveragesAnalysis.expectedClonalCoverage()))
                     .build());
         }
 

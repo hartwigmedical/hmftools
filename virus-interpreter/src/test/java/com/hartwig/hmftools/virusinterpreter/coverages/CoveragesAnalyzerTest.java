@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 
 import org.junit.Test;
 
@@ -21,8 +23,10 @@ public class CoveragesAnalyzerTest {
 
     @Test
     public void canCalculateExpectedClonalCoverage() throws IOException {
+        PurityContext purityContext = PurityContextFile.readWithQC(PURPLE_QC_FILE, PURPLE_PURITY_TSV);
+
         double expectedClonalCoverage =
-                CoveragesAnalyzer.calculateExpectedClonalCoverage(PURPLE_PURITY_TSV, PURPLE_QC_FILE, TUMOR_SAMPLE_WGS_METRICS);
+                CoveragesAnalyzer.calculateExpectedClonalCoverage(purityContext, TUMOR_SAMPLE_WGS_METRICS);
         assertEquals(34.524514945161286, expectedClonalCoverage, EPSILON);
     }
 }

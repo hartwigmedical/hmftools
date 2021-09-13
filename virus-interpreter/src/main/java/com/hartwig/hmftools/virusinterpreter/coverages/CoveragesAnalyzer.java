@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,16 +14,15 @@ public final class CoveragesAnalyzer {
     }
 
     @NotNull
-    public static CoveragesAnalysis run(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
+    public static CoveragesAnalysis run(@NotNull PurityContext purityContext,
             @NotNull String tumorSampleWGSMetricsFile) throws IOException {
         return ImmutableCoveragesAnalysis.builder()
-                .expectedClonalCoverage(calculateExpectedClonalCoverage(purplePurityTsv, purpleQcFile, tumorSampleWGSMetricsFile))
+                .expectedClonalCoverage(calculateExpectedClonalCoverage(purityContext, tumorSampleWGSMetricsFile))
                 .build();
     }
 
-    static double calculateExpectedClonalCoverage(@NotNull String purplePurityTsv, @NotNull String purpleQcFile,
+    static Double calculateExpectedClonalCoverage(@NotNull PurityContext purityContext,
             @NotNull String tumorSampleWGSMetricsFile) throws IOException {
-        PurityContext purityContext = PurityContextFile.readWithQC(purpleQcFile, purplePurityTsv);
         double ploidy = purityContext.bestFit().ploidy();
         double purity = purityContext.bestFit().purity();
 

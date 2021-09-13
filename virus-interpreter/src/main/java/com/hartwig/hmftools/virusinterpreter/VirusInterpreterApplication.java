@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
@@ -52,13 +54,16 @@ public class VirusInterpreterApplication {
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
         LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
 
+        LOGGER.info("Loading purity context from purity {} and qc {}", config.purplePurityTsv(), config.purpleQcFile());
+        PurityContext purityContext = PurityContextFile.readWithQC(config.purpleQcFile(), config.purplePurityTsv());
+
         LOGGER.info("Running coverage analysis based on {} and {}", config.purplePurityTsv(), config.tumorSampleWGSMetricsFile());
         CoveragesAnalysis coveragesAnalysis =
-                CoveragesAnalyzer.run(config.purplePurityTsv(), config.purpleQcFile(), config.tumorSampleWGSMetricsFile());
+                CoveragesAnalyzer.run(purityContext, config.tumorSampleWGSMetricsFile());
         LOGGER.info(" Determined the expected clonal coverage to be {}", coveragesAnalysis.expectedClonalCoverage());
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingDbModel, coveragesAnalysis);
-        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
+        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, purityContext);
         LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 
         String annotatedVirusTsv = AnnotatedVirusFile.generateFileName(config.outputDir(), config.sampleId());
