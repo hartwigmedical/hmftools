@@ -26,6 +26,7 @@ public abstract class AnnotatedVirus {
 
     public abstract double meanCoverage();
 
+    @Nullable
     public abstract Double expectedClonalCoverage();
 
     public abstract boolean reported();
