@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.THREADS;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
+import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
+import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE_CFG;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.neo.bind.BindCommon;
+import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -48,6 +52,7 @@ public class PeptideProteomeLocator
     private final boolean mFindRepeats;
 
     private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+    private final TranscriptExpression mTranscriptExpression;
 
     private final List<String> mPeptides;
 
@@ -64,8 +69,10 @@ public class PeptideProteomeLocator
         mTransAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList(), false);
 
+        mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
+
         mFlankLength = Integer.parseInt(cmd.getOptionValue(FLANK_LENGTH));
-        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS));
+        mThreads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
         mFindRepeats = cmd.hasOption(FIND_REPEATS);
 
         mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
@@ -93,7 +100,9 @@ public class PeptideProteomeLocator
             {
                 List<String> peptideList = Lists.newArrayList();
                 taskPeptideLists.add(peptideList);
-                searchTasks.add(new PeptideSearchTask(i, mTransAminoAcidMap, peptideList, mFindRepeats, mFlankLength, mWriter));
+
+                searchTasks.add(new PeptideSearchTask(
+                        i, mTransAminoAcidMap, mTranscriptExpression, peptideList, mFindRepeats, mFlankLength, mWriter));
             }
 
             int taskIndex = 0;
@@ -112,7 +121,8 @@ public class PeptideProteomeLocator
         else
         {
             PeptideSearchTask searchTask = new PeptideSearchTask(
-                    0, mTransAminoAcidMap, mPeptides, mFindRepeats, mFlankLength, mWriter);
+                    0, mTransAminoAcidMap, mTranscriptExpression, mPeptides, mFindRepeats, mFlankLength, mWriter);
+
             searchTasks.add(searchTask);
             searchTask.run();
         }
@@ -128,16 +138,10 @@ public class PeptideProteomeLocator
     {
         try
         {
-            String outputFile = outputDir + "peptide_search";
-
-            if(outputId != null)
-                outputFile += "_" + outputId;
-
-            outputFile += ".csv";
-
+            String outputFile = BindCommon.formFilename(outputDir, "peptide_search", outputId);
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("Peptide,Genes,Transcripts,AminoAcidPos,UpFlank,DownFlank,MatchCount");
+            writer.write("Peptide,Genes,Transcripts,AminoAcidPos,UpFlank,DownFlank,MatchCount,TotalTPM");
             writer.newLine();
             return writer;
         }
@@ -150,18 +154,18 @@ public class PeptideProteomeLocator
 
     protected synchronized static void writeData(
             final BufferedWriter writer, final String geneNames, final String transNames, final String peptide,
-            int aaPosition, final String upFlank, final String downFlank, int repeatCount)
+            int aaPosition, final String upFlank, final String downFlank, int repeatCount, double tpmTotal)
     {
         try
         {
             if(geneNames != null)
             {
-                writer.write(String.format("%s,%s,%s,%d,%s,%s,%d",
-                        peptide, geneNames, transNames, aaPosition, upFlank, downFlank, repeatCount));
+                writer.write(String.format("%s,%s,%s,%d,%s,%s,%d,%.4f",
+                        peptide, geneNames, transNames, aaPosition, upFlank, downFlank, repeatCount, tpmTotal));
             }
             else
             {
-                writer.write(String.format("%s,NONE,NONE,-1,-,-,0",peptide));
+                writer.write(String.format("%s,NONE,NONE,-1,-,-,0,0",peptide));
             }
 
             writer.newLine();
@@ -176,6 +180,7 @@ public class PeptideProteomeLocator
     {
         private final int mTaskId;
         private final Map<String,TranscriptAminoAcids> mTransAminoAcidMap;
+        private final TranscriptExpression mTranscriptExpression;
         private final List<String> mPeptides;
         private final int mFlankLength;
         private final BufferedWriter mWriter;
@@ -183,12 +188,13 @@ public class PeptideProteomeLocator
         private int mFound;
 
         public PeptideSearchTask(
-                int taskId, final Map<String, TranscriptAminoAcids> transAminoAcidMap, final List<String> peptides,
-                boolean findRepeats, final int flankLength, final BufferedWriter writer)
+                int taskId, final Map<String,TranscriptAminoAcids> transAminoAcidMap, final TranscriptExpression transcriptExpression,
+                final List<String> peptides, boolean findRepeats, final int flankLength, final BufferedWriter writer)
         {
             mTaskId = taskId;
             mFlankLength = flankLength;
             mTransAminoAcidMap = transAminoAcidMap;
+            mTranscriptExpression = transcriptExpression;
             mPeptides = peptides;
             mFindRepeats = findRepeats;
             mWriter = writer;
@@ -228,6 +234,7 @@ public class PeptideProteomeLocator
             int matchedAaIndex = -1;
             String upFlank = "";
             String downFlank = "";
+            double tpmTotal = 0;
 
             Set<String> geneNames = Sets.newHashSet();
             List<String> transNames = Lists.newArrayList();
@@ -270,6 +277,14 @@ public class PeptideProteomeLocator
                 if(geneNames.size() == 1 || transNames.size() < 20)
                     transNames.add(transAminoAcids.TransName);
 
+                if(mTranscriptExpression != null)
+                {
+                    Double tpm = mTranscriptExpression.getExpression(transAminoAcids.TransName);
+
+                    if(tpm != null)
+                        tpmTotal += tpm;
+                }
+
                 if(!mFindRepeats)
                     break;
 
@@ -282,11 +297,11 @@ public class PeptideProteomeLocator
                 StringJoiner sjTrans = new StringJoiner(ITEM_DELIM);
                 geneNames.forEach(x -> sjGene.add(x));
                 transNames.forEach(x -> sjTrans.add(x));
-                writeData(mWriter, sjGene.toString(), sjTrans.toString(), peptide, matchedAaIndex, upFlank, downFlank, matches);
+                writeData(mWriter, sjGene.toString(), sjTrans.toString(), peptide, matchedAaIndex, upFlank, downFlank, matches, tpmTotal);
             }
             else
             {
-                writeData(mWriter, null, null, peptide, -1, "", "", 0);
+                writeData(mWriter, null, null, peptide, -1, "", "", 0, 0);
             }
         }
     }
@@ -297,6 +312,7 @@ public class PeptideProteomeLocator
         options.addOption(PEPTIDE_FILE, true, "Peptides to search for");
         options.addOption(FLANK_LENGTH, true, "Number of amino acid flanks to retrieve");
         options.addOption(FIND_REPEATS, false, "Look for repeated matches, default false");
+        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
         options.addOption(THREADS, true, "Threads (default none)");
         options.addOption(OUTPUT_ID, true, "Output file identifier");
         addEnsemblDir(options);

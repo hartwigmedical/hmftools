@@ -174,7 +174,7 @@ clusterId | Only generate image for specified comma separated clusters
 chromosome | Only generate images for specified comma separated chromosomes
 include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
 gene | Add canonical transcriptions of supplied comma-separated genes to image. Requires config 'gene_transcripts_dir' to be set as well.
-gene_transcripts_dir | Ensembl data cache directory as use by Linx
+ensembl_data_dir | Ensembl data cache directory as use by Linx
 plot_reportable | Plot any cluster with reported fusion, disruption, or driver
 plot_cluster_genes | Plot all genes in breakends for a cluster, uses Linx file SAMPLE_ID.linx.svs.txv
 threads | Number of threads to use

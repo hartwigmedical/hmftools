@@ -19,6 +19,7 @@ public class TranscriptExpression
     private final boolean mValidData;
 
     public static final String IMMUNE_EXPRESSION_FILE = "trans_exp_file";
+    public static final String IMMUNE_EXPRESSION_FILE_CFG = "Immunogenic transcript expression";
 
     public TranscriptExpression(final String filename)
     {
@@ -26,7 +27,7 @@ public class TranscriptExpression
         mValidData = loadExpressionData(filename);
     }
 
-    public boolean hasValidData() { return mValidData; }
+    public boolean hasData() { return mValidData; }
 
     public Double getExpression(final String transName)
     {
@@ -77,20 +78,4 @@ public class TranscriptExpression
 
         return true;
     }
-
-    /*
-    private class ExpressionData
-    {
-        public final String GeneName;
-        public final String TransName;
-        public final double TPM;
-
-        public ExpressionData(final String geneName, final String transName, final double tpm)
-        {
-            GeneName = geneName;
-            TransName = transName;
-            TPM = tpm;
-        }
-    }
-    */
 }

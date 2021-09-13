@@ -1040,7 +1040,6 @@ public final class ExampleAnalysisTestFactory {
                 .integrations(2)
                 .interpretation("HPV")
                 .reported(true)
-                .reportedSummary(true)
                 .build());
     }
 }

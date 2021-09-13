@@ -66,7 +66,7 @@ public class NeoEpitopeAnnotator
 
         mSampleFusionMap = Maps.newHashMap();
 
-        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(NeoConfig.GENE_TRANSCRIPTS_DIR), RefGenomeVersion.V37);
+        mGeneTransCache = new EnsemblDataCache(cmd, RefGenomeVersion.V37);
         mGeneTransCache.setRequiredData(true, false, false, false);
         mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         mGeneTransCache.load(false);

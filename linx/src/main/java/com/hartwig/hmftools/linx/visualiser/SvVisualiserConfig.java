@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -43,7 +45,7 @@ public class SvVisualiserConfig
                 "Path to all Linx vis files, used instead of specifying them individually");
 
         options.addOption(CIRCOS, true, "Path to circos binary");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
+        EnsemblDataCache.addEnsemblDir(options);
 
         options.addOption(DEBUG, false, "Enabled debug mode");
         options.addOption(THREADS, true, "Number of threads to use");

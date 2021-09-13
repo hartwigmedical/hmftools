@@ -59,10 +59,9 @@ public final class AnnotatedVirusFile {
                 .add("integrations")
                 .add("interpretation")
                 .add("percentageCovered")
-                .add("coverage")
+                .add("meanCoverage")
                 .add("expectedClonalCoverage")
                 .add("reported")
-                .add("reportedSummary")
                 .toString();
     }
 
@@ -74,10 +73,9 @@ public final class AnnotatedVirusFile {
                 .add(String.valueOf(annotatedVirus.integrations()))
                 .add(annotatedVirus.interpretation())
                 .add(String.valueOf(annotatedVirus.percentageCovered()))
-                .add(String.valueOf(annotatedVirus.coverage()))
+                .add(String.valueOf(annotatedVirus.meanCoverage()))
                 .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))
                 .add(String.valueOf(annotatedVirus.reported()))
-                .add(String.valueOf(annotatedVirus.reportedSummary()))
                 .toString();
     }
 
@@ -91,10 +89,9 @@ public final class AnnotatedVirusFile {
                 .integrations(Integer.parseInt(values[3]))
                 .interpretation(values[4])
                 .percentageCovered(Double.parseDouble(values[5]))
-                .coverage(Double.parseDouble(values[6]))
+                .meanCoverage(Double.parseDouble(values[6]))
                 .expectedClonalCoverage(Double.parseDouble(values[7]))
                 .reported(Boolean.parseBoolean(values[8]))
-                .reportedSummary(Boolean.parseBoolean(values[9]))
                 .build();
     }
 }

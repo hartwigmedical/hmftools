@@ -67,6 +67,9 @@ public class NeoSampleBindTask implements Callable
             double score = mScorer.calcScore(predData.Allele, predData.Peptide);
             double rankPerc = mScorer.calcScoreRank(predData.Allele, predData.Peptide, score);
             double likelihood = mScorer.calcLikelihood(predData.Allele, predData.Peptide, rankPerc);
+
+            // TODO - update to use recognition, expression likelihood and likelihood rank
+
             predData.setScoreData(score, rankPerc, likelihood);
 
             List<BindingPredictionData> predictions = neoPredictions.get(predData.NeId);

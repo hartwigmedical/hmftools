@@ -21,6 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.VectorUtils;
+import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.TrainConfig;
 import com.hartwig.hmftools.neo.bind.RandomDistributionTask;
@@ -71,7 +72,7 @@ public class McfRandomDistribution
             NE_LOGGER.info("loading MCF random peptide predictions from file({}) using {}",
                     mMcfPredictionsFile, mUsePresentation ? "presentation" : "affinity");
 
-            String distributionFilename = TrainConfig.formFilename("mcf_random_peptide_dist", mConfig.OutputDir, mConfig.OutputId);
+            String distributionFilename = BindCommon.formFilename(mConfig.OutputDir, "mcf_random_peptide_dist", mConfig.OutputId);
             mDistributionWriter = initialiseWriter(distributionFilename);
 
             processFile(mMcfPredictionsFile);
@@ -101,7 +102,7 @@ public class McfRandomDistribution
 
         try
         {
-            String peptideFilename = TrainConfig.formFilename("mcf_validation_peptide_scores", mConfig.OutputDir, mConfig.OutputId);
+            String peptideFilename = BindCommon.formFilename(mConfig.OutputDir, "mcf_validation_peptide_scores", mConfig.OutputId);
 
             BufferedWriter peptideWriter = createBufferedWriter(peptideFilename, false);
             peptideWriter.write("Allele,Peptide,RankPerc,PredictedAffinity,AffinityPerc,PresentationScore,PresentationPerc");

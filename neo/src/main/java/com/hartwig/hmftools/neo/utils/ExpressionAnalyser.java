@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static java.lang.Math.min;
-
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -19,6 +18,7 @@ import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_LIKE_RANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
+import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE_CFG;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_PROTEOME;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_VALIDATION;
 
@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
 import org.apache.commons.cli.CommandLine;
@@ -51,8 +52,13 @@ public class ExpressionAnalyser
     private final Map<String,PeptideSearchData> mPeptideSearchDataMap;
     private final List<PeptideExpressionData> mProteomePeptides;
     private final List<PeptideExpressionData> mBinderPeptides;
+    private final ExpressionDistribution mExpressionDistribution;
+    private final GenePropensity mGenePropensity;
 
     private final Set<String> mValidationAlleles;
+
+    private final String mOutputDir;
+    private final String mOutputId;
 
     private final BufferedWriter mWriter;
 
@@ -71,24 +77,27 @@ public class ExpressionAnalyser
 
         mPeptideSearchDataMap = loadPeptideSearchData(cmd.getOptionValue(PEPTIDE_SEARCH_FILE));
 
-        String outputDir = parseOutputDir(cmd);
-        String outputFile = outputDir + "peptide_expression.csv";
+        mExpressionDistribution = new ExpressionDistribution();
+
+        mGenePropensity = new GenePropensity(mExpressionDistribution, cmd.getOptionValue(ENSEMBL_DATA_DIR));
+
+        mOutputDir = parseOutputDir(cmd);
+        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+
+        String outputFile = BindCommon.formFilename(mOutputDir, "peptide_expression", mOutputId);
         mWriter = initialiseWriter(outputFile);
     }
 
     public void run()
     {
-        if(!mTranscriptExpression.hasValidData() || mPeptideSearchDataMap.isEmpty() || mProteomePeptides.isEmpty() || mBinderPeptides.isEmpty())
+        if(!mTranscriptExpression.hasData() || mPeptideSearchDataMap.isEmpty() || mProteomePeptides.isEmpty() || mBinderPeptides.isEmpty())
         {
             NE_LOGGER.error("failed to initialise");
             System.exit(1);
         }
 
-        NE_LOGGER.info("finding expression data for {} validation peptides and {} proteome peptides",
-                mBinderPeptides.size(), mProteomePeptides.size());
-
-        int totalPeptides = mBinderPeptides.size() + mProteomePeptides.size();
-        ExpressionDistribution distribution = new ExpressionDistribution(totalPeptides);
+        NE_LOGGER.info("calculating expression for {} binding peptides from {} alleles",
+                mBinderPeptides.size(), mValidationAlleles.size());
 
         for(PeptideExpressionData pepExpData : mBinderPeptides)
         {
@@ -104,30 +113,49 @@ public class ExpressionAnalyser
 
             for(String transName : pepExpData.Transcripts)
             {
-                pepExpData.addTpm(mTranscriptExpression.getExpression(transName));
+                pepExpData.addTpm(transName, mTranscriptExpression.getExpression(transName));
             }
 
-            distribution.process(pepExpData);
+            mExpressionDistribution.process(pepExpData);
             writePeptideData(pepExpData);
         }
 
-        for(PeptideExpressionData pepExpData : mProteomePeptides)
+        NE_LOGGER.info("calculating expression for {} proteome peptides", mProteomePeptides.size());
+
+        for(int i = 0; i < mProteomePeptides.size(); ++i)
         {
+            PeptideExpressionData pepExpData = mProteomePeptides.get(i);
+
             if(!mValidationAlleles.contains(pepExpData.Allele))
                 continue;
 
             for(String transName : pepExpData.Transcripts)
             {
-                pepExpData.addTpm(mTranscriptExpression.getExpression(transName));
+                pepExpData.addTpm(transName, mTranscriptExpression.getExpression(transName));
             }
 
-            distribution.process(pepExpData);
+            mExpressionDistribution.process(pepExpData);
             writePeptideData(pepExpData);
+
+            if(i > 0 && (i % 100000) == 0)
+            {
+                NE_LOGGER.info("processed {} proteome peptides", i);
+            }
         }
 
         closeBufferedWriter(mWriter);
 
-        distribution.formTpmDeciles();
+        NE_LOGGER.info("generating and writing expression distributions");
+
+        mExpressionDistribution.formDistributions();
+        mExpressionDistribution.writeDistributions(mOutputDir, mOutputId);
+
+        NE_LOGGER.info("calculating gene propensity");
+
+        mBinderPeptides.forEach(x -> mGenePropensity.process(x));
+        mProteomePeptides.forEach(x -> mGenePropensity.process(x));
+
+        mGenePropensity.writeResults(mOutputDir, mOutputId);
 
         NE_LOGGER.info("peptide expression analysis complete");
     }
@@ -283,7 +311,7 @@ public class ExpressionAnalyser
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
-        options.addOption(IMMUNE_EXPRESSION_FILE, true, "Peptides to search for");
+        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
         options.addOption(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
         options.addOption(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
         options.addOption(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");

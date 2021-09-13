@@ -36,6 +36,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
@@ -136,8 +137,7 @@ public class RankProteomePeptides
     {
         try
         {
-            String outputFile = outputDir + outputId + "_allele_ranked_ref_peptides.csv";
-
+            String outputFile = BindCommon.formFilename(outputDir, "ranked_prot_peptides.csv", outputId);
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write("Allele,Peptide,LikelihoodRank,Genes,TransNames");

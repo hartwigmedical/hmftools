@@ -10,7 +10,9 @@ import static com.hartwig.hmftools.neo.NeoCommon.OUTPUT_ID;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
+import static com.hartwig.hmftools.neo.bind.ExpressionLikelihood.EXP_LIKELIHOOD_FILE;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
+import static com.hartwig.hmftools.neo.bind.ScoreConfig.scoreFileConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +31,7 @@ public class TrainConfig
     // the following reference scoring files can be read using the reference files id instead of specified individually
     public final String TrainingDataFile;
     public final String RecognitionDataFile;
+    public final String ExpressionLikelihoodFile;
 
     public final CalcConstants Constants;
     public final boolean CalcPairs;
@@ -81,6 +84,7 @@ public class TrainConfig
     {
         TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
         RecognitionDataFile = cmd.getOptionValue(RECOGNITION_DATA_FILE);
+        ExpressionLikelihoodFile = cmd.getOptionValue(EXP_LIKELIHOOD_FILE);
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -135,17 +139,14 @@ public class TrainConfig
         }
     }
 
-    public String formOutputFilename(final String fileType)
+    public String formTrainingFilename(final String fileType)
     {
-        return formFilename(fileType, OutputDir, OutputId);
+        return formTrainingFilename(OutputDir, fileType, OutputId);
     }
 
-    public static String formFilename(final String fileType, final String dir, final String fileId)
+    public static String formTrainingFilename(final String dir, final String fileType, final String fileId)
     {
-        if(fileId == null || fileId.isEmpty())
-            return String.format("%sbind_%s.csv", dir, fileType);
-        else
-            return String.format("%sbind_%s_%s.csv", dir, fileId, fileType);
+        return BindCommon.formFilename(dir, String.format("train_%s", fileType), fileId);
     }
 
     public static List<String> loadRequiredOutputAlleles(final String filename)
@@ -175,6 +176,7 @@ public class TrainConfig
         options.addOption(TRAINING_DATA_FILE, true, "Training data file");
         options.addOption(RECOGNITION_DATA_FILE, true, "Immunogenic recognition data file");
         options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
+        options.addOption(EXP_LIKELIHOOD_FILE, true, "Expression likelihood file");
 
         RandomPeptideConfig.addCmdLineArgs(options);
         CalcConstants.addCmdLineArgs(options);

@@ -1,7 +1,23 @@
 package com.hartwig.hmftools.neo.utils;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_DECILE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.EXP_TYPE_TPM_LEVEL;
+import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
+import static com.hartwig.hmftools.neo.bind.BindConstants.STRONG_BINDER_LIKELIHOOD;
+import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_VALIDATION;
 
+import static org.apache.commons.math3.util.FastMath.log;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -12,26 +28,26 @@ public class ExpressionDistribution
     private final List<TpmBucket> mTpmBuckets;
     private final List<TpmBucket> mDecileBuckets;
 
-    private final List<PeptideExpressionData> mAllExpData;
+    private final List<TpmBucket> mRoundedTpmBuckets;
 
-    private static final double MIN_TPM_BUCKET = 0.001;
-    private static final double MAX_TPM_BUCKET = 100000;
-    private static final double STRONG_BINDER_LIKELIHOOD = 0.001;
+    private static final int MIN_TPM_EXP = -5;
+    private static final int MAX_TPM_EXP = 15;
+    private static final double MIN_TPM_BUCKET = pow(2, MIN_TPM_EXP);
+    private static final double MAX_TPM_BUCKET = pow(2, MAX_TPM_EXP);
 
-    public ExpressionDistribution(int totalPeptides)
+    public ExpressionDistribution()
     {
-        mTpmBuckets = Lists.newArrayListWithCapacity(30);
-        mTpmBuckets.add(new TpmBucket(0));
+        mTpmBuckets = Lists.newArrayListWithCapacity(22);
 
         double tpmBucket = MIN_TPM_BUCKET;
-        while(tpmBucket < MAX_TPM_BUCKET)
+        while(tpmBucket <= MAX_TPM_BUCKET)
         {
             mTpmBuckets.add(new TpmBucket(tpmBucket));
             tpmBucket *= 2;
         }
 
-        mDecileBuckets = Lists.newArrayListWithCapacity(11);
-        mAllExpData = Lists.newArrayListWithCapacity(totalPeptides);
+        mDecileBuckets = Lists.newArrayListWithCapacity(10);
+        mRoundedTpmBuckets = Lists.newArrayList();
     }
 
     public void process(final PeptideExpressionData pepExpData)
@@ -47,155 +63,172 @@ public class ExpressionDistribution
         addToRankedList(pepExpData);
     }
 
-    public void formTpmDeciles()
+    public double calcLikelihood(double tpm)
     {
-        int peptidesPerDecile = mAllExpData.size() / 11;
+        if(tpm < mTpmBuckets.get(0).Bucket)
+            return mTpmBuckets.get(0).calcRate();
 
-        int nextCountTotal = peptidesPerDecile;
-
-        TpmBucket currentBucket = new TpmBucket(0);
-        mDecileBuckets.add(currentBucket);
-
-        for(int i = 0; i < mAllExpData.size(); ++i)
-        {
-            PeptideExpressionData pepExpData = mAllExpData.get(i);
-
-            if(i >= nextCountTotal || i == mAllExpData.size() - 1)
-            {
-                currentBucket.Bucket = pepExpData.tpm();
-
-                if(mDecileBuckets.size() < 11)
-                {
-                    currentBucket = new TpmBucket(0);
-                    mDecileBuckets.add(currentBucket);
-                    nextCountTotal += peptidesPerDecile;
-                }
-            }
-
-            currentBucket.add(pepExpData);
-        }
-    }
-
-    private void addToRankedList(final PeptideExpressionData pepExpData)
-    {
-        // early exits
-        if(mAllExpData.isEmpty())
-        {
-            mAllExpData.add(pepExpData);
-            return;
-        }
-
-        double tpm = pepExpData.tpm();
-
-        if(tpm < mAllExpData.get(0).tpm())
-        {
-            mAllExpData.add(0, pepExpData);
-            return;
-        }
-
-        int itemCount = mAllExpData.size();
-        if(tpm > mAllExpData.get(itemCount - 1).tpm())
-        {
-            mAllExpData.add(pepExpData);
-            return;
-        }
-
-        if(itemCount < 20)
-        {
-            int index = 0;
-            while(index < mAllExpData.size())
-            {
-                if(tpm < mAllExpData.get(index).tpm())
-                    break;
-
-                ++index;
-            }
-
-            mAllExpData.add(index, pepExpData);
-            return;
-        }
-
-        int lowIndex = 0;
-        int highIndex = mAllExpData.size() - 1;
-        int currentIndex = mAllExpData.size() / 2;
-
-        while(true)
-        {
-            double currentValue = mAllExpData.get(currentIndex).tpm();
-
-            if(currentValue == tpm)
-            {
-                mAllExpData.add(currentIndex, pepExpData);
-                return;
-            }
-
-            if(tpm < currentValue)
-            {
-                // current index is looking too high in the list
-                if(currentIndex == lowIndex + 1)
-                {
-                    // no need to look any lower (again
-                    mAllExpData.add(currentIndex, pepExpData);
-                    return;
-                }
-
-                highIndex = currentIndex;
-            }
-            else
-            {
-                if(currentIndex == highIndex - 1)
-                {
-                    mAllExpData.add(currentIndex + 1, pepExpData);
-                    return;
-                }
-
-                lowIndex = currentIndex;
-            }
-
-            int newIndex = lowIndex + (highIndex - lowIndex) / 2;
-
-            if(newIndex == currentIndex)
-            {
-                mAllExpData.add(currentIndex, pepExpData);
-                return;
-            }
-
-            currentIndex = newIndex;
-        }
-    }
-
-    private void addToTpmBucket(final PeptideExpressionData pepExpData)
-    {
-        double tpm = pepExpData.tpm();
+        if(tpm > mTpmBuckets.get(mTpmBuckets.size() - 1).Bucket)
+            return mTpmBuckets.get(mTpmBuckets.size() - 1).calcRate();
 
         for(int i = 0; i < mTpmBuckets.size(); ++i)
         {
             TpmBucket bucket = mTpmBuckets.get(i);
 
+            if(Doubles.equal(tpm, bucket.Bucket))
+                return bucket.calcRate();
+
+            TpmBucket nextBucket = i < mTpmBuckets.size() - 1 ? mTpmBuckets.get(i + 1) : null;
+
+            if(nextBucket != null && Doubles.equal(tpm, nextBucket.Bucket))
+                return nextBucket.calcRate();
+
             if(tpm > bucket.Bucket)
-                continue;
-
-            if(tpm < bucket.Bucket || Doubles.equal(bucket.Bucket, tpm))
             {
-                bucket.add(pepExpData);
-                break;
-            }
-
-            if(i < mTpmBuckets.size() - 1)
-            {
-                TpmBucket nextBucket = mTpmBuckets.get(i + 1);
-
-                if(tpm < nextBucket.Bucket || Doubles.equal(nextBucket.Bucket, tpm))
-                {
-                    nextBucket.add(pepExpData);
+                if(nextBucket == null)
                     break;
+
+                if(tpm < nextBucket.Bucket)
+                {
+                    // interpolate between the distribution to set the rank
+                    double upperPerc = (tpm - bucket.Bucket) / (nextBucket.Bucket - bucket.Bucket);
+                    return upperPerc * nextBucket.calcRate() + (1 - upperPerc) * bucket.calcRate();
                 }
+            }
+        }
+
+        return INVALID_CALC;
+    }
+
+    public void formDistributions()
+    {
+        // form deciles
+        int totalPeptides = mRoundedTpmBuckets.stream().mapToInt(x -> x.TotalCount).sum();
+        int peptidesPerDecile = totalPeptides / 10;
+
+        TpmBucket decileBucket = new TpmBucket(0.1);
+        mDecileBuckets.add(decileBucket);
+
+        for(int i = 0; i < mRoundedTpmBuckets.size(); ++i)
+        {
+            TpmBucket bucket = mRoundedTpmBuckets.get(i);
+
+            if(decileBucket.TotalCount + bucket.TotalCount >= peptidesPerDecile && mDecileBuckets.size() < 10) //  || i == mAllExpData.size() - 1)
+            {
+                int required = peptidesPerDecile - decileBucket.TotalCount;
+                int excess = bucket.TotalCount - required;
+                double requiredFraction = required / (double)bucket.TotalCount;
+                double excessFraction = 1 - requiredFraction;
+
+                decileBucket.TotalCount += required;
+                decileBucket.StrongBinders += (int)round(requiredFraction * bucket.StrongBinders);
+
+                decileBucket = new TpmBucket(decileBucket.Bucket + 0.1);
+                mDecileBuckets.add(decileBucket);
+
+                decileBucket.TotalCount += excess;
+                decileBucket.StrongBinders += (int)round(excessFraction * bucket.StrongBinders);
             }
             else
             {
-                TpmBucket lastBucket = mTpmBuckets.get(mTpmBuckets.size() - 1);
-                lastBucket.add(pepExpData);
+                decileBucket.TotalCount += bucket.TotalCount;
+                decileBucket.StrongBinders += bucket.StrongBinders;
             }
+        }
+    }
+
+    private static double roundTpm(double tpm)
+    {
+        if(Doubles.equal(tpm, 0))
+            return 0;
+
+        // for deciles - round to 3 digits of precison
+        int scale = (int)round(Math.log10(tpm));
+        double discrete = pow(10, scale) / 100.0;
+
+        return discrete * round(tpm / discrete);
+    }
+
+    private void addToRankedList(final PeptideExpressionData pepExpData)
+    {
+        // early exits
+        double tpmRounded = roundTpm(pepExpData.tpm());
+
+        int index = 0;
+
+        while(index < mRoundedTpmBuckets.size())
+        {
+            TpmBucket bucket = mRoundedTpmBuckets.get(index);
+
+            if(Doubles.equal(bucket.Bucket, tpmRounded))
+            {
+                bucket.add(pepExpData);
+                return;
+            }
+
+            if(tpmRounded < bucket.Bucket)
+                break;
+
+            ++index;
+        }
+
+        TpmBucket bucket = new TpmBucket(tpmRounded);
+        mRoundedTpmBuckets.add(index, bucket);
+        bucket.add(pepExpData);
+    }
+
+    private void addToTpmBucket(final PeptideExpressionData pepExpData)
+    {
+        double rawTpm = pepExpData.tpm();
+        double tpmRounded = pow(2, max(min(round(log(2, rawTpm)), MAX_TPM_EXP), MIN_TPM_EXP));  // 2**pmax(-5,pmin(14,round(log2(TPM),0));
+
+        int index = 0;
+        while(index < mTpmBuckets.size())
+        {
+            TpmBucket bucket = mTpmBuckets.get(index);
+
+            if(Doubles.equal(bucket.Bucket, tpmRounded) || tpmRounded < bucket.Bucket)
+                break;
+
+            ++index;
+        }
+
+        TpmBucket bucket = mTpmBuckets.get(index);
+        bucket.add(pepExpData);
+    }
+
+    public void writeDistributions(final String outputDir, final String outputId)
+    {
+        final String filename = formFilename(outputDir, "expression_dist", outputId);
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("DataType,Bucket,BindingRate,TotalCount");
+            writer.newLine();
+
+            for(TpmBucket bucket : mTpmBuckets)
+            {
+                writer.write(String.format("%s,%4.3e,%.6f,%d",
+                        EXP_TYPE_TPM_LEVEL, bucket.Bucket, bucket.calcRate(), bucket.TotalCount));
+
+                writer.newLine();
+            }
+
+            for(TpmBucket bucket : mDecileBuckets)
+            {
+                writer.write(String.format("%s,%.1f,%.6f,%d",
+                        EXP_TYPE_DECILE, bucket.Bucket, bucket.calcRate(), bucket.TotalCount));
+
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to write expression distribution file: {}", e.toString());
         }
     }
 
@@ -203,7 +236,7 @@ public class ExpressionDistribution
     {
         public double Bucket;
         public int TotalCount;
-        public double StrongBinders;
+        public int StrongBinders;
 
         public TpmBucket(double bucket)
         {
@@ -220,6 +253,12 @@ public class ExpressionDistribution
                 ++StrongBinders;
         }
 
-        public double calcRate() { return TotalCount > 0 ? StrongBinders / (double)TotalCount : 0; }
+        public double calcRate()
+        {
+            int proteome = TotalCount - StrongBinders;
+            return proteome > 0 ? StrongBinders / (double)proteome : 0;
+        }
+
+        public String toString() { return String.format("bucket(%.6f) total(%d) binders(%d)", Bucket, TotalCount, StrongBinders); }
     }
 }

@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class BindCommon
 {
     public static final String FLD_ALLELE = "Allele";
@@ -17,6 +19,9 @@ public final class BindCommon
     public static final String FLD_PEPTIDE_LEN = "PeptideLength";
     public static final String FLD_LIKE_RANK = "LikelihoodRank";
     public static final String FLD_IMMUNOGENIC = "Immunogenic";
+    public static final String FLD_TPM_BUCKET = "Bucket";
+    public static final String FLD_TPM_RATE = "BindingRate";
+    public static final String FLD_TPM = "TPM";
 
     public static final String FLD_DATA_TYPE = "DataType";
 
@@ -31,6 +36,9 @@ public final class BindCommon
     public static final String DATA_TYPE_NOISE = "NoiseCounts";
     public static final String DATA_TYPE_LENGTH_WEIGHTED = "PeptideLengthWeighted";
     public static final String DATA_TYPE_ALLELE_WEIGHTED = "AlleleMotifWeighted";
+
+    public static final String EXP_TYPE_DECILE = "Decile";
+    public static final String EXP_TYPE_TPM_LEVEL = "TpmLevel";
 
     public static final List<String> COUNT_DATA_TYPES = Lists.newArrayList(
             DATA_TYPE_BIND_COUNTS, DATA_TYPE_NOISE, DATA_TYPE_LENGTH_WEIGHTED, DATA_TYPE_ALLELE_WEIGHTED);
@@ -47,4 +55,14 @@ public final class BindCommon
         return allele.replaceAll("HLA-", "").replaceAll(":", "").replaceAll("\\*", "");
     }
 
+    public static final String NEO_PREFIX = "neo";
+
+
+    public static String formFilename(final String dir, final String type, final String id)
+    {
+        if(id != null)
+            return dir + NEO_PREFIX + "_" + type + "_" + id + ".csv";
+        else
+            return dir + NEO_PREFIX + "_" + type + ".csv";
+    }
 }

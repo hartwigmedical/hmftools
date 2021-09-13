@@ -40,6 +40,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
@@ -149,7 +150,7 @@ public class PeptideProteomeSimilarity
     {
         try
         {
-            String filename = mOutputDir + "peptide_prot_sim_" + mOutputId + ".csv";
+            String filename = BindCommon.formFilename(mOutputDir, "peptide_prot_sim_", mOutputId);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Allele,Peptide,PeptideLikelihoodRank");
