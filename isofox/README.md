@@ -52,7 +52,7 @@ output_dir | Directory for Isofox output files
 bam_file | Input BAM file - must be sorted, preferably with duplicates marked and requires a corresponding index file
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
-gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation or access below.
+ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation or access below.
 functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
 
 For instructions on how to generate the Ensembl data cache, see subsection below.
@@ -132,7 +132,7 @@ java -jar isofox.jar
     -functions "TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS"
     -bam_file /path_to_bam/sample.bam 
     -ref_genome /path_to_ref_files/ef-genome.fasta 
-    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -output_dir /path_to_output_data/ 
     -apply_calc_frag_lengths 
     -apply_exp_rates 
@@ -153,7 +153,7 @@ java -jar isofox.jar
     -functions FUSIONS
     -bam_file /path_to_bam/sample.bam 
     -ref_genome /path_to_ref_files/ef-genome.fasta 
-    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -output_dir /path_to_output_data/ 
     -read_length 151 
     -long_frag_limit 550 
@@ -168,7 +168,7 @@ To generate the cached transcript expression file, use the function EXPECTED_TRA
 java -jar isofox.jar 
     -functions EXPECTED_TRANS_COUNTS
     -output_dir /path_to_output_data/ 
-    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -read_length 151 
     -long_frag_limit 550 
     -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
@@ -184,7 +184,7 @@ java -jar isofox.jar
     -functions EXPECTED_GC_COUNTS
     -output_dir /path_to_output_data/ 
     -ref_genome /path_to_ref_files/ref-genome.fasta 
-    -gene_transcripts_dir /path_ensembl_data_cache_files/ 
+    -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -read_length 151 
     -threads 10 
 ```
