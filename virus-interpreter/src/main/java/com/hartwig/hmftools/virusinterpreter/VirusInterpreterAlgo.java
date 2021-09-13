@@ -44,7 +44,7 @@ public class VirusInterpreterAlgo {
                     .integrations(virusBreakend.integrations())
                     .interpretation(interpretation)
                     .percentageCovered(virusBreakend.coverage())
-                    .coverage(virusBreakend.meanDepth())
+                    .meanCoverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(coveragesAnalysis.expectedClonalCoverage())
                     .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage()))
                     .build());
