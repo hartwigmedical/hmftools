@@ -1,13 +1,22 @@
 package com.hartwig.hmftools.virusinterpreter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
@@ -24,14 +33,29 @@ import org.junit.Test;
 
 public class VirusInterpreterAlgoTest {
 
+    private static final String GENOMIC_DIR = Resources.getResource("genomic").getPath();
+
+    private static final String PURPLE_QC_FILE = GENOMIC_DIR + File.separator + "sample.purple.qc";
+    private static final String PURPLE_PURITY_TSV = GENOMIC_DIR + File.separator + "sample.purple.purity.tsv";
+
     @Test
-    public void canAnalyzeVirusBreakends() {
+    public void canTestisPurpleQcPass() throws IOException{
+        VirusInterpreterAlgo algo = createTestAlgo("Human gammaherpesvirus 4");
+        assertTrue(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
+        assertTrue(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.PASS)));
+        assertFalse(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
+        assertFalse(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
+    }
+
+    @Test
+    public void canAnalyzeVirusBreakends() throws IOException {
         String name = "Human gammaherpesvirus 4";
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
         VirusInterpreterAlgo algo = createTestAlgo(name);
+        PurityContext purityContext = PurityContextFile.readWithQC(PURPLE_QC_FILE, PURPLE_PURITY_TSV);
 
-        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends);
+        List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, purityContext);
         assertEquals(7, annotatedViruses.size());
         assertEquals(4, annotatedViruses.stream().filter(x -> x.reported()).count());
 
