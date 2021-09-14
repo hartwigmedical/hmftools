@@ -77,7 +77,7 @@ public class VirusInterpreterAlgo {
                     reported = true;
                 }
             } else {
-                if (virusBreakend.integrations() >= 1) {
+                if (minimalCoveragePercentage == null) {
                     reported = true;
                 }
             }
