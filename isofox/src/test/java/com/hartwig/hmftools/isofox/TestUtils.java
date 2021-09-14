@@ -31,6 +31,7 @@ import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionGeneFilters;
 import com.hartwig.hmftools.isofox.fusion.FusionWriter;
+import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -417,7 +418,9 @@ public class TestUtils
 
     public static FusionFinder createFusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
-        return new FusionFinder("FF", config, geneTransCache, new FusionGeneFilters(config, geneTransCache), new FusionWriter(config));
+        return new FusionFinder(
+                "FF", config, geneTransCache, new FusionGeneFilters(config, geneTransCache),
+                new PassingFusions(config.Fusions.KnownFusions, null), new FusionWriter(config));
     }
 
 }

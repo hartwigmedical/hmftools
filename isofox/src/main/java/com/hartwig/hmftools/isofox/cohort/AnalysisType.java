@@ -2,8 +2,8 @@ package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.FUSION_FILE_ID;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.isofox.fusion.FusionWriter.RAW_FUSION_FILE_ID;
+import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESULTS_FILE;
@@ -44,7 +44,7 @@ public enum AnalysisType
                 return SPLICE_SITE_FILE;
 
             case FUSION:
-                return FUSION_FILE_ID;
+                return RAW_FUSION_FILE_ID;
 
             case PASSING_FUSION:
                 return PASS_FUSION_FILE_ID;

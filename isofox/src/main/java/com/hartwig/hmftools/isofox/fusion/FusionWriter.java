@@ -19,12 +19,16 @@ public class FusionWriter
 {
     private final IsofoxConfig mConfig;
     private BufferedWriter mFusionWriter;
+    private BufferedWriter mPassingFusionWriter;
     private BufferedWriter mFragmentWriter;
     private final ChimericReadCache mChimericReadCache;
     private final boolean mWriteReads;
     private final boolean mWriteFragments;
 
     private int mNextFusionId;
+
+    public static final String RAW_FUSION_FILE_ID = "fusions.csv";
+    public static final String PASS_FUSION_FILE_ID = "pass_fusions.csv";
 
     public FusionWriter(final IsofoxConfig config)
     {
@@ -37,7 +41,7 @@ public class FusionWriter
         mChimericReadCache = new ChimericReadCache(config);
         mNextFusionId = 0;
 
-        initialiseFusionWriter();
+        initialiseFusionWriters();
         initialiseFragmentWriter();
     }
 
@@ -46,28 +50,25 @@ public class FusionWriter
     public void close()
     {
         closeBufferedWriter(mFusionWriter);
+        closeBufferedWriter(mPassingFusionWriter);
         closeBufferedWriter(mFragmentWriter);
         mChimericReadCache.close();
     }
 
-    public static final String FUSION_FILE_ID = "fusions.csv";
-
-    private void initialiseFusionWriter()
+    private void initialiseFusionWriters()
     {
         if(mConfig.OutputDir == null)
             return;
 
         try
         {
-            final String outputFileName = mConfig.formOutputFile(FUSION_FILE_ID);
-
-            mFusionWriter = createBufferedWriter(outputFileName, false);
-            mFusionWriter.write(FusionData.csvHeader());
-
-            // could write an additional fields - eg RelatedProxIds, HomologyOffset were previously written
-            // mFusionWriter.write(FusionReadData.csvHeader());
-
+            mFusionWriter = createBufferedWriter(mConfig.formOutputFile(RAW_FUSION_FILE_ID), false);
+            mFusionWriter.write(FusionData.csvHeader(false));
             mFusionWriter.newLine();
+
+            mPassingFusionWriter = createBufferedWriter(mConfig.formOutputFile(PASS_FUSION_FILE_ID), false);
+            mPassingFusionWriter.write(FusionData.csvHeader(true));
+            mPassingFusionWriter.newLine();
         }
         catch(IOException e)
         {
@@ -75,35 +76,36 @@ public class FusionWriter
         }
     }
 
-    public synchronized void writeFusionData(Map<String,List<FusionReadData>> fusionCandidates)
+    public synchronized void writeFusionData(
+            final List<FusionData> fusions, final List<FusionData> passingFusions, final Map<String,List<FusionReadData>> fusionCandidates)
     {
         if(mConfig.OutputDir == null)
             return;
 
         try
         {
-            for(Map.Entry<String, List<FusionReadData>> entry : fusionCandidates.entrySet())
+            for(FusionData fusionData : fusions)
             {
-                for (final FusionReadData fusion : entry.getValue())
-                {
-                    // TO-DO: convert to FusionData in thread and optionally run filtering logic
-                    FusionData fusionData = fusion.toFusionData();
-                    mFusionWriter.write(fusionData.toCsv());
+                mFusionWriter.write(fusionData.toCsv(false));
+                mFusionWriter.newLine();
+                // mFusionWriter.write(fusion.toCsv());
+            }
 
-                    // mFusionWriter.write(fusion.toCsv());
-                    mFusionWriter.newLine();
-                }
+            for(FusionData fusionData : passingFusions)
+            {
+                mPassingFusionWriter.write(fusionData.toCsv(true));
+                mPassingFusionWriter.newLine();
             }
 
             if(mWriteReads || mWriteFragments)
             {
-                for (List<FusionReadData> fusions : fusionCandidates.values())
+                for(List<FusionReadData> fusionCandidate : fusionCandidates.values())
                 {
-                    for (FusionReadData fusion : fusions)
+                    for(FusionReadData fusion : fusionCandidate)
                     {
                         for(Map.Entry<FusionFragmentType,List<FusionFragment>> entry : fusion.getFragments().entrySet())
                         {
-                            for (FusionFragment fragment : entry.getValue())
+                            for(FusionFragment fragment : entry.getValue())
                             {
                                 if(mWriteFragments)
                                     writeFragmentData(fragment, fusionId(fusion.id()), entry.getKey());

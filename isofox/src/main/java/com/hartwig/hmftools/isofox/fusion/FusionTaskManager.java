@@ -30,6 +30,7 @@ public class FusionTaskManager
     private final List<FusionFinder> mFusionTasks;
     private final FusionWriter mFusionWriter;
     private final FusionGeneFilters mGeneFilters;
+    private final PassingFusions mPassingFusions;
 
     private final Map<String,List<FusionFragment>> mRealignCandidateMap;
     private final Map<String,Map<String,ReadGroup>> mIncompleteReadGroups; // keyed by chromosome then readId
@@ -45,6 +46,8 @@ public class FusionTaskManager
 
         mGeneFilters = new FusionGeneFilters(config, geneTransCache);
 
+        mPassingFusions = new PassingFusions(config.Fusions.KnownFusions, config.Fusions.CohortFile);
+
         mRealignCandidateMap = Maps.newHashMap();
         mIncompleteReadGroups = Maps.newHashMap();
 
@@ -54,7 +57,7 @@ public class FusionTaskManager
 
     public FusionFinder createFusionFinder(final String id)
     {
-        return new FusionFinder(id, mConfig, mGeneTransCache, mGeneFilters, mFusionWriter);
+        return new FusionFinder(id, mConfig, mGeneTransCache, mGeneFilters, mPassingFusions, mFusionWriter);
     }
 
     public synchronized List<ReadGroup> addIncompleteReadGroup(

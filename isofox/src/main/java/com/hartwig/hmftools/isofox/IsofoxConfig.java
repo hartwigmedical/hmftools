@@ -307,6 +307,7 @@ public class IsofoxConfig
 
         if(cmd.hasOption(SPECIFIC_REGIONS))
         {
+            // expected format:
             final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
             for(String regionStr : regionStrs)
             {

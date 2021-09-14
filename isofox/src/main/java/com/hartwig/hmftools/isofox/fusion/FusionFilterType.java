@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.fusion.cohort;
+package com.hartwig.hmftools.isofox.fusion;
 
 public enum FusionFilterType
 {

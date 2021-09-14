@@ -648,13 +648,14 @@ public class FusionReadData
         FusionJunctionType[] junctionTypes = new FusionJunctionType[FS_PAIR];
 
         byte[] strands = new byte[FS_PAIR];
-        String[] geneIds = new String[FS_PAIR];
-        String[] geneNames = new String[FS_PAIR];
+        String[] geneIds = new String[] {"", ""};
+        String[] geneNames = new String[] {"", "" };
 
         int[] coverage = new int[FS_PAIR];
         int[] anchorDistance = new int[FS_PAIR];
-        String[] transData = new String[FS_PAIR];
-        String[] otherGenes = new String[FS_PAIR];
+        String[] transData = new String[] {"", ""};
+
+        // String[] otherGenes = new String[] {"", ""}; // not sure where this was every sourced from
 
         int splitFragments = 0;
         int realignedFragments = 0;
@@ -728,7 +729,7 @@ public class FusionReadData
                 mId, isValid, chromosomes, junctionPositions, junctionOrientations, junctionTypes, getImpliedSvType().toString(),
                 !sampleFragment.hasSuppAlignment(), geneIds, geneNames, strands,
                 totalFragments, splitFragments, realignedFragments, discordantFragments, coverage, anchorDistance,
-                transData, otherGenes, relatedFusionIds, getInitialFragment().readId());
+                transData, relatedFusionIds, getInitialFragment().readId());
     }
 
     /*

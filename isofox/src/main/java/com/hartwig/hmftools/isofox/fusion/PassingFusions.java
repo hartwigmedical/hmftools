@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.fusion.cohort;
+package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
@@ -7,20 +7,21 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.ALLELE_FREQUENCY;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.ANCHOR_DISTANCE;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.COHORT;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.FRAGMENT_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_OTHER;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_PAIR;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.KNOWN_PROM3;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.OTHER;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.OTHER_PROM3;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_KNOWN;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_OTHER;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.PROM5_PROM3;
-import static com.hartwig.hmftools.isofox.fusion.cohort.KnownGeneType.hasKnownPairGene;
+import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ALLELE_FREQUENCY;
+import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ANCHOR_DISTANCE;
+import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.COHORT;
+import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.FRAGMENT_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.KNOWN_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.KNOWN_PAIR;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.KNOWN_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.OTHER;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.OTHER_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_KNOWN;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_OTHER;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.PROM5_PROM3;
+import static com.hartwig.hmftools.isofox.fusion.KnownGeneType.hasKnownPairGene;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
@@ -34,15 +35,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.isofox.fusion.FusionData;
-import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
-
-import org.apache.commons.cli.CommandLine;
+import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortData;
 
 public class PassingFusions
 {
-    private final FusionCohortConfig mConfig;
-
     private final Map<String,Map<Integer,List<FusionCohortData>>> mCohortFusions;
     private final KnownFusionCache mKnownFusionCache;
 
@@ -55,32 +51,103 @@ public class PassingFusions
     private static final double AF_UNKNOWN_TIER = 0.05;
     private static final int LOCAL_FUSION_THRESHOLD = 1000000;
 
-    public PassingFusions(final FusionCohortConfig config, final CommandLine cmd)
+    public PassingFusions(final KnownFusionCache knownFusionCache, final String cohortFilename)
     {
-        mConfig = config;
-
         mCohortFusions = Maps.newHashMap();
 
-        if(mConfig.CohortFile != null)
-            loadCohortFile();
+        if(cohortFilename != null)
+            loadCohortFile(cohortFilename);
 
-        mKnownFusionCache = new KnownFusionCache();
-        mKnownFusionCache.loadFromFile(cmd);
+        mKnownFusionCache = knownFusionCache;
     }
 
+    public List<FusionData> findPassingFusions(final List<FusionData> allFusions)
+    {
+        // mark passing fusions, and then include any which are related to them
+        final List<FusionData> passingFusions = Lists.newArrayList();
+        final List<FusionData> nonPassingFusionsWithRelated = Lists.newArrayList();
+        final Map<String, List<FusionData>> lowSupportKnownFusions = Maps.newHashMap();
 
-    public static boolean isShortLocalFusion(final FusionData fusion)
+        for(FusionData fusion : allFusions)
+        {
+            markKnownGeneTypes(fusion);
+
+            FusionCohortData cohortMatch = findCohortFusion(fusion);
+
+            if(cohortMatch != null)
+                fusion.setCohortFrequency(cohortMatch.sampleCount());
+
+            if(isPassingFusion(fusion))
+            {
+                passingFusions.add(fusion);
+            }
+            else
+            {
+                boolean isShortLocal = isShortLocalFusion(fusion);
+
+                if(!isShortLocal && !fusion.relatedFusionIds().isEmpty())
+                    nonPassingFusionsWithRelated.add(fusion);
+
+                // combine fragment support for non-local known-pair fusions
+                if(fusion.getKnownFusionType() == KnownGeneType.KNOWN_PAIR && fusion.getFilter() == FRAGMENT_COUNT && !isShortLocal)
+                {
+                    List<FusionData> fusions = lowSupportKnownFusions.get(fusion.name());
+                    if(fusions == null)
+                        lowSupportKnownFusions.put(fusion.name(), Lists.newArrayList(fusion));
+                    else
+                        fusions.add(fusion);
+                }
+            }
+        }
+
+        for(final List<FusionData> fusions : lowSupportKnownFusions.values())
+        {
+            if(hasSufficientKnownFusionFragments(fusions))
+            {
+                passingFusions.addAll(fusions);
+            }
+        }
+
+        for(FusionData fusion : nonPassingFusionsWithRelated)
+        {
+            boolean matchesPassing = false;
+            for(FusionData passingFusion : passingFusions)
+            {
+                if(fusion.isRelated(passingFusion) && passingFusion.hasKnownSpliceSites())
+                {
+                    // use the same filters as for the passing fusion by using it's known and splice types
+                    if(isPassingFusion(fusion, passingFusion.getKnownFusionType(), passingFusion.hasKnownSpliceSites()))
+                    {
+                        matchesPassing = true;
+                        fusion.setHasRelatedKnownSpliceSites();
+                        break;
+                    }
+                }
+            }
+
+            if(matchesPassing)
+            {
+                passingFusions.add(fusion);
+            }
+        }
+
+        passingFusions.forEach(x -> x.setFilter(PASS));
+
+        return passingFusions;
+    }
+
+    private static boolean isShortLocalFusion(final FusionData fusion)
     {
         return fusion.Chromosomes[SE_START].equals(fusion.Chromosomes[SE_END]) &&
                 abs(fusion.JunctionPositions[SE_END] - fusion.JunctionPositions[SE_START]) < LOCAL_FUSION_THRESHOLD;
     }
 
-    public boolean isPassingFusion(final FusionData fusion)
+    private boolean isPassingFusion(final FusionData fusion)
     {
         return isPassingFusion(fusion, fusion.getKnownFusionType(), fusion.hasKnownSpliceSites());
     }
 
-    public boolean isPassingFusion(final FusionData fusion, final KnownGeneType knownType, boolean hasKnownSpliceSites)
+    private boolean isPassingFusion(final FusionData fusion, final KnownGeneType knownType, boolean hasKnownSpliceSites)
     {
         if(knownType == KNOWN_PAIR && !isShortLocalFusion(fusion))
         {
@@ -157,7 +224,7 @@ public class PassingFusions
             || (fusion.JunctionTypes[SE_START] == FusionJunctionType.KNOWN && fusion.JunctionTypes[SE_END] == FusionJunctionType.CANONICAL);
     }
 
-    public static boolean hasSufficientKnownFusionFragments(final List<FusionData> fusions)
+    private static boolean hasSufficientKnownFusionFragments(final List<FusionData> fusions)
     {
         int knownSpliceSiteFragments = fusions.stream()
                 .filter(x -> hasKnownSpliceSite(x))
@@ -168,7 +235,7 @@ public class PassingFusions
         return knownSpliceSiteFragments >= KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS || totalFragments >= KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
     }
 
-    public FusionCohortData findCohortFusion(final FusionData fusion)
+    private FusionCohortData findCohortFusion(final FusionData fusion)
     {
         final String chrPair = formChromosomePair(fusion.Chromosomes[SE_START], fusion.Chromosomes[SE_END]);
 
@@ -185,7 +252,7 @@ public class PassingFusions
         return fusionsByPosition.stream().filter(x -> x.matches(fusion)).findFirst().orElse(null);
     }
 
-    public void markKnownGeneTypes(final FusionData fusion)
+    private void markKnownGeneTypes(final FusionData fusion)
     {
         boolean[] isKnown = {false, false};
 
@@ -241,14 +308,16 @@ public class PassingFusions
         {
             fusion.setKnownFusionType(OTHER);
         }
-
     }
 
-    private void loadCohortFile()
+    private void loadCohortFile(final String filename)
     {
+        if(filename == null)
+            return;
+
         try
         {
-            final List<String> lines = Files.readAllLines(Paths.get(mConfig.CohortFile));
+            final List<String> lines = Files.readAllLines(Paths.get(filename));
 
             final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
 
@@ -290,11 +359,11 @@ public class PassingFusions
                 fusionsByPosition.add(fusion);
             }
 
-            ISF_LOGGER.info("loaded {} cohort fusions from file({})", fusionCount, mConfig.CohortFile);
+            ISF_LOGGER.info("loaded {} cohort fusions from file({})", fusionCount, filename);
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load fusion cohort file({}): {}", mConfig.CohortFile, e.toString());
+            ISF_LOGGER.error("failed to load fusion cohort file({}): {}", filename, e.toString());
         }
     }
 }

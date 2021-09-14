@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.loader;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
@@ -18,7 +20,19 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.PAN_CANCER;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COVERAGE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_DISCORD_FRAGS;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_MAX_ANCHOR;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_REALIGN_FLAGS;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SPLIT_FRAGS;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
+import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
@@ -321,25 +335,29 @@ public class IsofoxDataLoader
             {
                 final String[] items = line.split(DELIMITER, -1);
 
+                String fusionName = String.format("%s_%s",
+                        items[fieldsIndexMap.get(formStreamField(FLD_GENE_NAME, FS_UP))],
+                        items[fieldsIndexMap.get(formStreamField(FLD_GENE_NAME, FS_DOWN))]);
+
                 fusions.add(ImmutableRnaFusion.builder()
-                        .name(String.format("%s_%s", items[fieldsIndexMap.get("GeneNameUp")], items[fieldsIndexMap.get("GeneNameDown")]))
-                        .chromosomeUp(items[fieldsIndexMap.get("ChrUp")])
-                        .chromosomeDown(items[fieldsIndexMap.get("ChrDown")])
-                        .positionUp(Integer.parseInt(items[fieldsIndexMap.get("PosUp")]))
-                        .positionDown(Integer.parseInt(items[fieldsIndexMap.get("PosDown")]))
-                        .orientationUp(Byte.parseByte(items[fieldsIndexMap.get("OrientUp")]))
-                        .orientationDown(Byte.parseByte(items[fieldsIndexMap.get("OrientDown")]))
-                        .junctionTypeUp(items[fieldsIndexMap.get("JuncTypeUp")])
-                        .junctionTypeDown(items[fieldsIndexMap.get("JuncTypeDown")])
-                        .svType(items[fieldsIndexMap.get("SVType")])
-                        .splitFragments(Integer.parseInt(items[fieldsIndexMap.get("SplitFrags")]))
-                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get("RealignedFrags")]))
-                        .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get("DiscordantFrags")]))
-                        .depthUp(Integer.parseInt(items[fieldsIndexMap.get("CoverageUp")]))
-                        .depthDown(Integer.parseInt(items[fieldsIndexMap.get("CoverageDown")]))
-                        .maxAnchorLengthUp(Integer.parseInt(items[fieldsIndexMap.get("MaxAnchorLengthUp")]))
-                        .maxAnchorLengthDown(Integer.parseInt(items[fieldsIndexMap.get("MaxAnchorLengthDown")]))
-                        .cohortFrequency(Integer.parseInt(items[fieldsIndexMap.get("CohortCount")]))
+                        .name(fusionName)
+                        .chromosomeUp(items[fieldsIndexMap.get(formStreamField(FLD_CHR, FS_UP))])
+                        .chromosomeDown(items[fieldsIndexMap.get(formStreamField(FLD_CHR, FS_DOWN))])
+                        .positionUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_POS, FS_UP))]))
+                        .positionDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_POS, FS_DOWN))]))
+                        .orientationUp(Byte.parseByte(items[fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_UP))]))
+                        .orientationDown(Byte.parseByte(items[fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN))]))
+                        .junctionTypeUp(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_UP))])
+                        .junctionTypeDown(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))])
+                        .svType(items[fieldsIndexMap.get(FLD_SV_TYPE)])
+                        .splitFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLIT_FRAGS)]))
+                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS )]))
+                        .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_DISCORD_FRAGS)]))
+                        .depthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
+                        .depthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))
+                        .maxAnchorLengthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
+                        .maxAnchorLengthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))
+                        .cohortFrequency(Integer.parseInt(items[fieldsIndexMap.get(FLD_COHORT_COUNT)]))
                         .build());
             }
         }

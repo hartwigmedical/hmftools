@@ -21,10 +21,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
+import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -39,8 +41,6 @@ public class FusionCohort
 
     private BufferedWriter mWriter;
 
-    public static final String PASS_FUSION_FILE_ID = "pass_fusions.csv";
-
     /* Routines:
         1. generate a cohort file from multiple sample fusion files from Isofox
         2. write a set of filtered/passing fusions for each sample fusion file loaded
@@ -50,7 +50,11 @@ public class FusionCohort
     public FusionCohort(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
-        mFilters = new PassingFusions(mConfig.Fusions, cmd);
+
+        KnownFusionCache knownFusionCache = new KnownFusionCache();
+        knownFusionCache.loadFromFile(cmd);
+
+        mFilters = new PassingFusions(knownFusionCache, mConfig.Fusions.CohortFile);
         mExternalCompareWriter = mConfig.Fusions.ComparisonSource != null ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
         mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;
@@ -138,8 +142,7 @@ public class FusionCohort
             String fusionFileHeader = fileReader.readLine();
 
             mWriter = createBufferedWriter(outputFile, false);
-            mWriter.write(String.format("SampleId,%s", fusionFileHeader));
-            mWriter.write(",Filter,CohortCount,KnownFusionType");
+            mWriter.write(String.format("SampleId,%s", FusionData.csvHeader(true)));
             mWriter.newLine();
         }
         catch(IOException e)
@@ -157,9 +160,7 @@ public class FusionCohort
         {
             for (FusionData fusion : fusions)
             {
-                writer.write(String.format("%s,%s", sampleId, fusion.rawData()));
-                writer.write(String.format(",%s,%d,%s",
-                        fusion.getFilter(), fusion.cohortFrequency(), fusion.getKnownFusionType()));
+                writer.write(String.format("%s,%s", sampleId, fusion.toCsv(true)));
                 writer.newLine();
             }
         }

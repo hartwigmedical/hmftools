@@ -14,6 +14,7 @@ public class FusionConfig
     public final boolean WriteChimericFragments;
     public final boolean PerformanceStats;
     public final String ChimericReadsFile;
+    public final String CohortFile;
     public final boolean CacheFragments;
 
     public final KnownFusionCache KnownFusions;
@@ -21,6 +22,8 @@ public class FusionConfig
     private static final String WRITE_CHIMERIC_READS = "write_chimeric_reads";
     private static final String WRITE_CHIMERIC_FRAGS = "write_chimeric_frags";
     private static final String CHIMERIC_READ_FILE = "chimeric_reads_file";
+
+    public static final String FUSION_COHORT_FILE = "fusion_cohort_file";
 
     // debug
     public static final String LOG_READ_ID = "";
@@ -31,8 +34,11 @@ public class FusionConfig
         WriteChimericReads = cmd.hasOption(WRITE_CHIMERIC_READS);
         WriteChimericFragments = cmd.hasOption(WRITE_CHIMERIC_FRAGS);
         ChimericReadsFile = cmd.getOptionValue(CHIMERIC_READ_FILE);
+        CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
+
         KnownFusions = new KnownFusionCache();
         KnownFusions.loadFromFile(cmd);
+
         CacheFragments = WriteChimericFragments || WriteChimericReads || cmd.hasOption(LOG_DEBUG);
 
         PerformanceStats = true;
@@ -46,6 +52,7 @@ public class FusionConfig
         CacheFragments = true;
         KnownFusions = new KnownFusionCache();
         PerformanceStats = false;
+        CohortFile = null;
     }
 
     public static void addCommandLineOptions(final Options options)
@@ -54,5 +61,6 @@ public class FusionConfig
         options.addOption(WRITE_CHIMERIC_FRAGS, false, "Write chimeric fragment data");
         options.addOption(CHIMERIC_READ_FILE, true, "Replay chimeric reads from file without BAM");
         options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
+        options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
     }
 }

@@ -48,6 +48,7 @@ public class FusionFinder implements Callable
     private final String mTaskId;
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
+    private final PassingFusions mPassingFusions;
 
     private final List<FusionFragment> mAllFragments;
 
@@ -67,11 +68,12 @@ public class FusionFinder implements Callable
 
     public FusionFinder(
             final String taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
-            final FusionGeneFilters fusionGeneFilters, final FusionWriter fusionWriter)
+            final FusionGeneFilters fusionGeneFilters, final PassingFusions passingFusions, final FusionWriter fusionWriter)
     {
         mTaskId = taskId;
         mConfig = config;
         mGeneTransCache = geneTransCache;
+        mPassingFusions = passingFusions;
 
         mAllFragments = Lists.newArrayList();
 
@@ -418,9 +420,33 @@ public class FusionFinder implements Callable
 
     private void writeData()
     {
-        // write results
-        mFusionWriter.writeFusionData(mFusionCandidates);
-        mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
+        // write results and unused candidate fusion fragments
+        if(!mFusionCandidates.isEmpty())
+        {
+            // filter down to a list of passing fusions
+
+            List<FusionData> allFusions = Lists.newArrayList();
+
+            for(List<FusionReadData> fusionCandidates : mFusionCandidates.values())
+            {
+                for(final FusionReadData fusion : fusionCandidates)
+                {
+                    FusionData fusionData = fusion.toFusionData();
+
+                    allFusions.add(fusionData);
+
+                }
+            }
+
+            List<FusionData> passingFusions = mPassingFusions.findPassingFusions(allFusions);
+
+            ISF_LOGGER.debug("{}: passing fusions({}) from total({})", passingFusions.size(), allFusions.size());
+
+            mFusionWriter.writeFusionData(allFusions, passingFusions, mFusionCandidates);
+        }
+
+        if(!mDiscordantFragments.isEmpty())
+            mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
     }
 
     private FusionReadData findExistingFusion(final FusionFragment fragment)

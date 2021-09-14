@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
+import static com.hartwig.hmftools.isofox.fusion.FusionConfig.FUSION_COHORT_FILE;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -11,7 +12,6 @@ public class FusionCohortConfig
     private static final String GENERATE_COHORT = "fusion_gen_cohort";
     private static final String FUSION_MIN_SAMPLES = "fusion_min_samples";
     private static final String FUSION_MIN_FRAGS = "fusion_min_frags";
-    private static final String FUSION_COHORT_FILE = "fusion_cohort_file";
     private static final String WRITE_FILTERED_FUSIONS = "fusion_write_filtered";
     private static final String WRITE_COMBINED_FUSIONS = "fusion_write_combined";
     private static final String COMPARE_UNFILTERED = "fusion_compare_unfiltered";

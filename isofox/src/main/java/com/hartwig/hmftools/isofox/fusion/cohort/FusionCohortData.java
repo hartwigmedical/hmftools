@@ -2,9 +2,19 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
@@ -100,19 +110,17 @@ public class FusionCohortData
     {
         StringJoiner header = new StringJoiner(DELIMITER);
 
-        for(int se = SE_START; se <= SE_END; ++se)
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            String prefix = se == SE_START ? "Up" : "Down";
-
-            header.add(String.format("GeneId%s", prefix));
-            header.add(String.format("GeneName%s", prefix));
-            header.add(String.format("Chr%s", prefix));
-            header.add(String.format("Pos%s", prefix));
-            header.add(String.format("Orient%s", prefix));
-            header.add(String.format("JuncType%s", prefix));
+            header.add(formStreamField(FLD_GENE_ID, fs));
+            header.add(formStreamField(FLD_GENE_NAME, fs));
+            header.add(formStreamField(FLD_CHR, fs));
+            header.add(formStreamField(FLD_POS, fs));
+            header.add(formStreamField(FLD_ORIENT, fs));
+            header.add(formStreamField(FLD_JUNC_TYPE, fs));
         }
 
-        header.add("SVType");
+        header.add(FLD_SV_TYPE);
         header.add("SampleCount");
         header.add("TotalFragments");
         header.add("MaxFragments");
@@ -124,14 +132,14 @@ public class FusionCohortData
     {
         StringJoiner output = new StringJoiner(DELIMITER);
 
-        for (int se = SE_START; se <= SE_END; ++se)
+        for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            output.add(fusion.GeneIds[se]);
-            output.add(fusion.GeneNames[se]);
-            output.add(fusion.Chromosomes[se]);
-            output.add(String.valueOf(fusion.JunctionPositions[se]));
-            output.add(String.valueOf(fusion.JunctionOrientations[se]));
-            output.add(String.valueOf(fusion.JunctionTypes[se]));
+            output.add(fusion.GeneIds[fs]);
+            output.add(fusion.GeneNames[fs]);
+            output.add(fusion.Chromosomes[fs]);
+            output.add(String.valueOf(fusion.JunctionPositions[fs]));
+            output.add(String.valueOf(fusion.JunctionOrientations[fs]));
+            output.add(String.valueOf(fusion.JunctionTypes[fs]));
         }
 
         output.add(fusion.SvType);
@@ -147,21 +155,29 @@ public class FusionCohortData
     {
         final String[] items = data.split(DELIMITER);
 
-        final String[] geneIds = new String[] { items[fieldIndexMap.get("GeneIdUp")], items[fieldIndexMap.get("GeneIdDown")] };
-        final String[] geneNames = new String[] { items[fieldIndexMap.get("GeneNameUp")], items[fieldIndexMap.get("GeneNameDown")] };
+        final String[] geneIds = new String[] {
+                items[fieldIndexMap.get(formStreamField(FLD_GENE_ID, FS_UP))],
+                items[fieldIndexMap.get(formStreamField(FLD_GENE_ID, FS_DOWN))] };
 
-        final String[] chromosomes = new String[] { items[fieldIndexMap.get("ChrUp")], items[fieldIndexMap.get("ChrDown")] };
+        final String[] geneNames = new String[] {
+                items[fieldIndexMap.get(formStreamField(FLD_GENE_NAME, FS_UP))],
+                items[fieldIndexMap.get(formStreamField(FLD_GENE_NAME, FS_DOWN))] };
 
-        final int[] junctionPositions =
-                new int[] { Integer.parseInt(items[fieldIndexMap.get("PosUp")]), Integer.parseInt(items[fieldIndexMap.get("PosDown")]) };
+        final String[] chromosomes = new String[] {
+                items[fieldIndexMap.get(formStreamField(FLD_CHR, FS_UP))],
+                items[fieldIndexMap.get(formStreamField(FLD_CHR, FS_DOWN))] };
+
+        final int[] junctionPositions = new int[] {
+                Integer.parseInt(items[fieldIndexMap.get(formStreamField(FLD_POS, FS_UP))]),
+                Integer.parseInt(items[fieldIndexMap.get(formStreamField(FLD_POS, FS_DOWN))]) };
 
         final byte[] junctionOrientations =
-                new byte[] { Byte.parseByte(items[fieldIndexMap.get("OrientUp")]), Byte.parseByte(items[fieldIndexMap.get("OrientDown")]) };
+                new byte[] { Byte.parseByte(items[fieldIndexMap.get(formStreamField(FLD_ORIENT, FS_UP))]),
+                        Byte.parseByte(items[fieldIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN))]) };
 
         final FusionJunctionType[] junctionTypes = new FusionJunctionType[] {
-                FusionJunctionType.valueOf(items[fieldIndexMap.get("JuncTypeUp")]),
-                FusionJunctionType.valueOf(items[fieldIndexMap.get("JuncTypeDown")]) };
-
+                FusionJunctionType.valueOf(items[fieldIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_UP))]),
+                FusionJunctionType.valueOf(items[fieldIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))]) };
 
         final String svType = items[fieldIndexMap.get("SVType")];
 
