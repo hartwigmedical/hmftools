@@ -19,7 +19,7 @@ public abstract class AnnotatedVirus {
 
     public abstract int integrations();
 
-    @NotNull
+    @Nullable
     public abstract String interpretation();
 
     public abstract double percentageCovered();
