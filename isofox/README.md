@@ -157,11 +157,17 @@ java -jar isofox.jar
     -output_dir /path_to_output_data/ 
     -read_length 151 
     -long_frag_limit 550 
-    -known_fusion_file /path_to_fusion_ref_file/known_fusion_data.csv
+    -known_fusion_file /path_to_fusion_ref_files/known_fusion_data.csv
     -threads 10 
 ```
 
-To produce a filtered fusion file, additionally pass in the following (TBC):
+To produce a filtered (passing) fusion file, additionally pass a cohort PON file:
+
+```
+-fusion_cohort_file /path_to_fusion_ref_files/hmf_isofox_fusion_cohort.csv
+```
+
+A cohort file generated from ~2500 HMF samples is available from the HMF Resources page (see link above).
 
 ### Generating Transcript Expression and GC Ratio Cached Files
 To generate the cached transcript expression file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
