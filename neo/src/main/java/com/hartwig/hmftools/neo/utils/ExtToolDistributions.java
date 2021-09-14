@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
-import com.hartwig.hmftools.neo.bind.TrainConfig;
 import com.hartwig.hmftools.neo.bind.RandomDistributionTask;
 import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 import com.hartwig.hmftools.neo.bind.RandomPeptideDistribution;
@@ -38,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 
 // rather than use/trust McfFlurry's affinity and presentation score percentiles, rebuild a distribution for each of them using their
 // scores on a set of random peptides (eg 100K)
-public class McfRandomDistribution
+public class ExtToolDistributions
 {
     private final RandomPeptideConfig mConfig;
     private final String mMcfPredictionsFile;
@@ -52,7 +51,7 @@ public class McfRandomDistribution
     private static final String VALIDATION_FILE = "validation_data_file";
     private static final String USE_PRESENTATION = "use_presentation";
 
-    public McfRandomDistribution(final CommandLine cmd)
+    public ExtToolDistributions(final CommandLine cmd)
     {
         mMcfPredictionsFile = cmd.getOptionValue(PREDICTIONS_FILE);
         mValidationDataFile = cmd.getOptionValue(VALIDATION_FILE);
@@ -236,8 +235,8 @@ public class McfRandomDistribution
 
         setLogLevel(cmd);
 
-        McfRandomDistribution mcfRandomDistribution = new McfRandomDistribution(cmd);
-        mcfRandomDistribution.run();
+        ExtToolDistributions extToolDistributions = new ExtToolDistributions(cmd);
+        extToolDistributions.run();
     }
 
     @NotNull

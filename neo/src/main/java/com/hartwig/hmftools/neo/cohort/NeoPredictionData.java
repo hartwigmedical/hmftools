@@ -11,10 +11,6 @@ public class NeoPredictionData
     public int Peptides;
     public double MaxLikelihood;
     public double SumLikelihood;
-    public double MinPresentationPerc;
-    public double MinAffinity;
-    public double SumPresentation;
-    public double SumAffinity;
 
     public NeoPredictionData(final int neId)
     {
@@ -23,30 +19,13 @@ public class NeoPredictionData
         Peptides = 0;
         MaxLikelihood = 0;
         SumLikelihood = 0;
-        MinPresentationPerc = -1;
-        MinAffinity = -1;
-        SumPresentation = 0;
-        SumAffinity = 0;
     }
 
-    public void processPredictionData(final BindingPredictionData predData, double mcfFactor)
+    public void processPredictionData(final BindingPredictionData predData)
     {
         ++Peptides;
         MaxLikelihood = max(predData.likelihood(), MaxLikelihood);
         SumLikelihood += predData.likelihood();
-
-        if(MinAffinity < 0)
-            MinAffinity = predData.affinity();
-        else
-            MinAffinity = min(MinAffinity, predData.affinity());
-
-        if(MinPresentationPerc < 0)
-            MinPresentationPerc = predData.presentationPerc();
-        else
-            MinPresentationPerc = min(MinPresentationPerc, predData.presentationPerc());
-
-        SumPresentation += pow(predData.presentation(), mcfFactor);
-        SumAffinity += 1.0 / pow(predData.affinity(), mcfFactor);
     }
 
 }

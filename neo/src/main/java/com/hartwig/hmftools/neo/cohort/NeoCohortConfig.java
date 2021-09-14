@@ -24,12 +24,10 @@ public class NeoCohortConfig
     public final String NeoDataDir;
     public final String LilacDataDir;
     public final String IsofoxDataDir;
-    public final String McfPredictionsDir;
     public final List<String> SampleIds;
 
     public final List<CohortWriteType> WriteTypes;
 
-    public final double McfSumFactor;
     public final double LikelihoodThreshold;
     public final int Threads;
 
@@ -40,7 +38,6 @@ public class NeoCohortConfig
     public static final String ISF_DATA_DIR = "isofox_neo_dir";
     public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
 
-    private static final String MCF_SUM_FACTOR = "mcf_sum_factor";
     private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
 
     private static final String WRITE_TYPES = "write_types";
@@ -51,11 +48,9 @@ public class NeoCohortConfig
         loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE), SampleIds);
 
         NeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
-        McfPredictionsDir = cmd.getOptionValue(PREDICTION_DATA_DIR);
         LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
         IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
 
-        McfSumFactor = Double.parseDouble(cmd.getOptionValue(MCF_SUM_FACTOR, "2"));
         LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.001"));
 
         OutputDir = parseOutputDir(cmd);
@@ -90,7 +85,6 @@ public class NeoCohortConfig
 
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
-        options.addOption(MCF_SUM_FACTOR, true, "Affinity sum factor");
         options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
         options.addOption(THREADS, true, "Thread count");
 

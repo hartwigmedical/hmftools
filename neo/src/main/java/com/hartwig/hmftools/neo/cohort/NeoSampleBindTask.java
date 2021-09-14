@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadAlleleCoverage;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadNeoEpitopes;
-import static com.hartwig.hmftools.neo.cohort.DataLoader.loadPredictionData;
 import static com.hartwig.hmftools.neo.cohort.DataLoader.loadRnaNeoData;
 
 import java.util.List;
@@ -52,7 +51,7 @@ public class NeoSampleBindTask implements Callable
 
         // List<Boolean> geneLostStatus = getGeneStatus(alleleCoverages);
 
-        List<BindingPredictionData> allPredictions = loadPredictionData(mSampleId, mConfig.McfPredictionsDir);
+        List<BindingPredictionData> allPredictions = Lists.newArrayList(); // loadPredictionData(mSampleId, mConfig.McfPredictionsDir);
 
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(mSampleId, mConfig.IsofoxDataDir);
 
@@ -138,10 +137,10 @@ public class NeoSampleBindTask implements Callable
 
             for(BindingPredictionData predData : entry.getValue())
             {
-                neoPredData.processPredictionData(predData, mConfig.McfSumFactor);
+                neoPredData.processPredictionData(predData);
 
                 NeoPredictionData allelePredData = allelePredictions.get(predData.Allele);
-                allelePredData.processPredictionData(predData, mConfig.McfSumFactor);
+                allelePredData.processPredictionData(predData);
 
                 if(mConfig.WriteTypes.contains(CohortWriteType.ALLELE_PEPTIDE))
                 {

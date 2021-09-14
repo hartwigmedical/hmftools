@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.neo.cohort;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
@@ -22,8 +20,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NEO_FILE_ID;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.NeoCommon.loadSampleIdsFile;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.cohort.DataLoader.MCF_PREDICTION_FILE_ID;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,11 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
@@ -51,7 +44,6 @@ public class NeoEpitopeCohort
 {
     private final String mOutputDir;
     private final String mNeoDataDir;
-    private final String mPredictionsDataDir;
     private final List<String> mSampleIds;
 
     private BufferedWriter mCohortWriter;
@@ -68,7 +60,6 @@ public class NeoEpitopeCohort
         loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE), mSampleIds);
 
         mNeoDataDir = cmd.getOptionValue(NEO_DATA_DIR);
-        mPredictionsDataDir = cmd.getOptionValue(PREDICTION_DATA_DIR);
         mOutputDir = parseOutputDir(cmd);
         mCohortWriter = null;
     }
@@ -118,8 +109,6 @@ public class NeoEpitopeCohort
             Integer baseDepthUp = fieldsIndexMap.get("BaseDepthUp");
             Integer baseDepthDown = fieldsIndexMap.get("BaseDepthDown");
 
-            final Map<Integer,double[]> predictionSummary = loadPredictionSummary(sampleId);
-
             for(String line : lines)
             {
                 NeoEpitopeFile neoData = null;
@@ -145,9 +134,7 @@ public class NeoEpitopeCohort
                     rnaBaseDepth[SE_END] =  Integer.parseInt(items[baseDepthDown]);
                 }
 
-                final double[] peptideValues = predictionSummary.get(neoData.Id);
-
-                writeData(sampleId, neoData, hasRnaData, rnaFragCount, rnaBaseDepth, peptideValues);
+                writeData(sampleId, neoData, hasRnaData, rnaFragCount, rnaBaseDepth);
             }
 
             NE_LOGGER.debug("sample({}) loaded {} neo-epitopes {}", sampleId, lines.size(), hasRnaData ? "with RNA" : "");
@@ -156,74 +143,6 @@ public class NeoEpitopeCohort
         {
             NE_LOGGER.error("failed to read sample({}) neo-epitope file: {}", sampleId, exception.toString());
         }
-    }
-
-    private static final int NINE_MER_COUNT = 0;
-    private static final int MIN_AFFINITY = 1;
-    private static final int MAX_PRESENTATION = 2;
-
-    private Map<Integer,double[]> loadPredictionSummary(final String sampleId)
-    {
-        final Map<Integer,double[]> predictionSummary = Maps.newHashMap();
-
-        try
-        {
-            final String predictionsFile = mPredictionsDataDir + sampleId + MCF_PREDICTION_FILE_ID;
-            final List<String> fileContents = Files.readAllLines(new File(predictionsFile).toPath());
-
-            if(fileContents.isEmpty())
-                return predictionSummary;
-
-            final String header = fileContents.get(0);
-            fileContents.remove(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
-
-            // NeId,HlaAllele,Peptide,affinity,affinity_percentile,processing_score,presentation_score,presentation_percentile
-            int neIdIndex = fieldsIndexMap.get("NeId");
-            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-            int affinityIndex = fieldsIndexMap.get("affinity");
-            int presentationIndex = fieldsIndexMap.get("presentation_score");
-
-            int currentNeId = -1;
-            double[] predictionValues = null;
-            Set<String> ninemerPeptides = Sets.newHashSet();
-
-            for(String data : fileContents)
-            {
-                final String[] items = data.split(DELIMITER);
-
-                int neId = Integer.parseInt(items[neIdIndex]);
-                double affinity = Double.parseDouble(items[affinityIndex]);
-                double presentation = Double.parseDouble(items[presentationIndex]);
-                String peptide = items[peptideIndex];
-
-                if(currentNeId != neId)
-                {
-                    currentNeId = neId;
-                    predictionValues = new double[MAX_PRESENTATION + 1];
-                    predictionValues[MIN_AFFINITY] = affinity;
-                    predictionSummary.put(neId, predictionValues);
-                    ninemerPeptides.clear();
-                }
-
-                predictionValues[MAX_PRESENTATION] = max(predictionValues[MAX_PRESENTATION], presentation);
-
-                if(affinity < predictionValues[MIN_AFFINITY])
-                    predictionValues[MIN_AFFINITY] = affinity;
-
-                if(peptide.length() == 9)
-                {
-                    ninemerPeptides.add(peptide);
-                    predictionValues[NINE_MER_COUNT] = ninemerPeptides.size();
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.warn("failed to load sample predictions: {}", e.toString());
-        }
-
-        return predictionSummary;
     }
 
     private void initialiseWriter()
@@ -239,7 +158,6 @@ public class NeoEpitopeCohort
             mCohortWriter.write(",SkippedDonors,SkippedAcceptors,UpTranscripts,DownTranscripts");
             mCohortWriter.write(",TpmCancerUp,TpmCohortUp,TpmCancerDown,TpmCohortDown");
             mCohortWriter.write(",HasRna,RnaFragCount,RnaDepthUp,RnaDepthDown");
-            mCohortWriter.write(",NineMers,MinAffinity,MaxPresentation");
             mCohortWriter.newLine();
         }
         catch (IOException e)
@@ -249,8 +167,7 @@ public class NeoEpitopeCohort
     }
 
     private void writeData(
-            final String sampleId, final NeoEpitopeFile neData,
-            boolean hasRna, int rnaFragCount, final int[] rnaBaseDepth, final double[] peptideValues)
+            final String sampleId, final NeoEpitopeFile neData, boolean hasRna, int rnaFragCount, final int[] rnaBaseDepth)
     {
         try
         {
@@ -284,16 +201,6 @@ public class NeoEpitopeCohort
 
             mCohortWriter.write(String.format(",%s,%d,%d,%d",
                     hasRna, rnaFragCount, rnaBaseDepth[SE_START], rnaBaseDepth[SE_END]));
-
-            if(peptideValues != null)
-            {
-                mCohortWriter.write(String.format(",%.0f,%.2f,%.6f",
-                        peptideValues[NINE_MER_COUNT], peptideValues[MIN_AFFINITY], peptideValues[MAX_PRESENTATION]));
-            }
-            else
-            {
-                mCohortWriter.write(",0,0,0");
-            }
 
             mCohortWriter.newLine();
         }

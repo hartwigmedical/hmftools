@@ -25,11 +25,6 @@ import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 public class DataLoader
 {
     public static final String LILAC_COVERAGE_FILE_ID = ".lilac.csv";
-    public static final String MCF_PREDICTION_FILE_ID = ".mcf.predictions.csv";
-    public static final String MCF_AFFINITY = "affinity";
-    public static final String MCF_AFFINITY_PERC = "affinity_percentile";
-    public static final String MCF_PRESENTATION = "presentation_score";
-    public static final String MCF_PRESENTATION_PERC = "presentation_percentile";
 
     public static Map<Integer,NeoEpitopeData> loadNeoEpitopes(final String sampleId, final String neoDataDir)
     {
@@ -131,46 +126,6 @@ public class DataLoader
         }
 
         return alleleCoverages;
-    }
-
-    public static List<BindingPredictionData> loadPredictionData(final String sampleId, final String predictionsDir)
-    {
-        List<BindingPredictionData> predictionList = Lists.newArrayList();
-
-        try
-        {
-            String filename = predictionsDir + sampleId + MCF_PREDICTION_FILE_ID;
-
-            final List<String> lines = Files.readAllLines(new File(filename).toPath());
-
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
-            lines.remove(0);
-
-            // NeId,Allele,Peptide,Affinity=affinity,AffinityPerc=affinity_percentile,
-            // ProcScore=processing_score,PresScore=presentation_score,PresPerc=presentation_percentile
-
-            int alleleIndex = fieldsIndexMap.get("HlaAllele");
-            int neIdIndex = fieldsIndexMap.get("NeId");
-            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-            int affinityIndex = fieldsIndexMap.get(MCF_AFFINITY);
-            int affinityPercIndex = fieldsIndexMap.get(MCF_AFFINITY_PERC);
-            int presIndex = fieldsIndexMap.get(MCF_PRESENTATION);
-            int presPercIndex = fieldsIndexMap.get(MCF_PRESENTATION_PERC);
-
-            for(String line : lines)
-            {
-                predictionList.add(BindingPredictionData.fromMcfCsv(
-                        line, alleleIndex, neIdIndex, peptideIndex, affinityIndex, affinityPercIndex, presIndex, presPercIndex));
-            }
-
-            NE_LOGGER.debug("sample({}) loaded {} peptide predictions", sampleId, predictionList.size());
-        }
-        catch(IOException exception)
-        {
-            NE_LOGGER.error("failed to read sample({}) predictions file: {}", sampleId, exception.toString());
-        }
-
-        return predictionList;
     }
 
     public static List<RnaNeoEpitope> loadRnaNeoData(final String sampleId, final String isofoxDataDir)
