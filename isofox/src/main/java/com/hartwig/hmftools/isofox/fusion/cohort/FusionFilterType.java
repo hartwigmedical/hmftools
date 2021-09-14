@@ -8,5 +8,4 @@ public enum FusionFilterType
     FRAGMENT_COUNT,
     ALLELE_FREQUENCY,
     ANCHOR_DISTANCE;
-
 }

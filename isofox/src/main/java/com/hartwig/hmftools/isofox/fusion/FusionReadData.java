@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNC
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -629,6 +630,108 @@ public class FusionReadData
                 getGeneName(FS_UP), getGeneName(FS_DOWN), mFragmentCounts.values().stream().mapToInt(x -> x).sum());
     }
 
+    public static final String FUSION_ID_PREFIX = "Id_";
+    public static final String FUSION_NONE = "NONE";
+
+    public static String fusionId(int id) { return String.format("%s%d", FUSION_ID_PREFIX, id); }
+
+    public FusionData toFusionData()
+    {
+        boolean isValid = hasViableGenes() && !hasIncompleteData();
+
+        String[] chromosomes = new String[FS_PAIR];
+        int[] junctionPositions = new int[FS_PAIR];
+        byte[] junctionOrientations = new byte[FS_PAIR];
+
+        final FusionFragment sampleFragment = getInitialFragment();
+
+        FusionJunctionType[] junctionTypes = new FusionJunctionType[FS_PAIR];
+
+        byte[] strands = new byte[FS_PAIR];
+        String[] geneIds = new String[FS_PAIR];
+        String[] geneNames = new String[FS_PAIR];
+
+        int[] coverage = new int[FS_PAIR];
+        int[] anchorDistance = new int[FS_PAIR];
+        String[] transData = new String[FS_PAIR];
+        String[] otherGenes = new String[FS_PAIR];
+
+        int splitFragments = 0;
+        int realignedFragments = 0;
+        int discordantFragments = 0;
+
+        for(Map.Entry<FusionFragmentType,Integer> entry : mFragmentCounts.entrySet())
+        {
+            if(entry.getKey() == MATCHED_JUNCTION)
+                splitFragments = entry.getValue();
+            else if(entry.getKey() == DISCORDANT)
+                discordantFragments = entry.getValue();
+            else if(entry.getKey() == REALIGNED)
+                realignedFragments = entry.getValue();
+        }
+
+        int totalFragments = splitFragments + realignedFragments + discordantFragments;
+
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
+        {
+            chromosomes[fs] = mChromosomes[mStreamIndices[fs]];
+
+            junctionPositions[fs] = mJunctionPositions[mStreamIndices[fs]];
+            junctionOrientations[fs] = mJunctionOrientations[mStreamIndices[fs]];
+            junctionTypes[fs] = sampleFragment.junctionTypes()[mStreamIndices[fs]];
+
+            final GeneData geneData = mFusionGenes[fs];
+
+            if(geneData != null)
+            {
+                geneIds[fs] = geneData.GeneId;
+                geneNames[fs] = geneData.GeneName;
+                strands[fs] = geneData.Strand;
+            }
+
+            // since depth of 1 may have been discarded from the BaseDepth, correct for this
+            coverage[fs] = max(mReadDepth[mStreamIndices[fs]], splitFragments);
+
+            anchorDistance[fs] = mMaxSplitLengths[mStreamIndices[fs]];
+
+            final List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
+            if(transExonRefs.isEmpty())
+            {
+                transData[fs] = FUSION_NONE;
+            }
+            else
+            {
+                StringJoiner td = new StringJoiner(ITEM_DELIM);
+                for(final TransExonRef transExonRef : transExonRefs)
+                {
+                    td.add(String.format("%s-%d", transExonRef.TransName, transExonRef.ExonRank));
+                }
+
+                transData[fs] = td.toString();
+            }
+        }
+
+        String relatedFusionIds = "";
+
+        if(!mRelatedSplicedFusions.isEmpty())
+        {
+            StringJoiner rf = new StringJoiner(ITEM_DELIM);
+            mRelatedSplicedFusions.stream().map(x -> fusionId(x)).forEach(x -> rf.add(x));
+            relatedFusionIds = rf.toString();
+        }
+        else
+        {
+            relatedFusionIds = FUSION_NONE;
+        }
+
+        return new FusionData(
+                mId, isValid, chromosomes, junctionPositions, junctionOrientations, junctionTypes, getImpliedSvType().toString(),
+                !sampleFragment.hasSuppAlignment(), geneIds, geneNames, strands,
+                totalFragments, splitFragments, realignedFragments, discordantFragments, coverage, anchorDistance,
+                transData, otherGenes, relatedFusionIds, getInitialFragment().readId());
+    }
+
+    /*
     public static String csvHeader()
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
@@ -637,11 +740,6 @@ public class FusionReadData
                 + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown"
                 + ",RelatedSplicedIds,RelatedProxIds,InitReadId,HomologyOffset";
     }
-
-    public static final String FUSION_ID_PREFIX = "Id_";
-    public static final String FUSION_NONE = "NONE";
-
-    public static String fusionId(int id) { return String.format("%s%d", FUSION_ID_PREFIX, id); }
 
     public String toCsv()
     {
@@ -742,5 +840,6 @@ public class FusionReadData
 
         return csvData.toString();
     }
+    */
 
 }

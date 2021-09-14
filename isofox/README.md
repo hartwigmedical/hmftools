@@ -161,6 +161,8 @@ java -jar isofox.jar
     -threads 10 
 ```
 
+To produce a filtered fusion file, additionally pass in the following (TBC):
+
 ### Generating Transcript Expression and GC Ratio Cached Files
 To generate the cached transcript expression file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
 
@@ -193,13 +195,9 @@ The output file is approximately 120MB.
 
 ### Generating cached Ensembl data files
 To annotate SVs with gene information and to support fusion detection, ISOFOX uses gene, transcript, exon and protein domain information from the Ensembl database. 
-To improve performance, this data is first extracted into 4 CSV data files and then loaded into memory each time ISOFOX runs.
+This data is loaded from HMF's Ensembl data cache files which are available from the Hartwig resources page, or can be generated using the Hartwig GeneUtils application (see https://github.com/hartwigmedical/hmftools/gene-utils/README.md for instructions).
 
-These files can be downloaded from the Hartwig resources page, or generated using the Hartwig LINX application (see https://github.com/hartwigmedical/hmftools/blob/master/linx/README.md for instructions).
-
-Note that the ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
-
-
+Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
 
  
 ## Algorithm

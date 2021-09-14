@@ -34,32 +34,19 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 import org.apache.commons.cli.CommandLine;
 
-public class FusionFilters
+public class PassingFusions
 {
     private final FusionCohortConfig mConfig;
 
-    private final Map<String, Map<Integer, List<FusionCohortData>>> mCohortFusions;
+    private final Map<String,Map<Integer,List<FusionCohortData>>> mCohortFusions;
     private final KnownFusionCache mKnownFusionCache;
 
-    public FusionFilters(final FusionCohortConfig config, final CommandLine cmd)
-    {
-        mConfig = config;
-
-        mCohortFusions = Maps.newHashMap();
-
-        if(mConfig.CohortFile != null)
-        {
-            loadCohortFile();
-        }
-
-        mKnownFusionCache = new KnownFusionCache();
-        mKnownFusionCache.loadFromFile(cmd);
-    }
-
+    // constants as per documentation
     private static final int KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS = 2;
     private static final int KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS = 4;
     private static final int MIN_ANCHOR_DISTANCE = 20;
@@ -67,6 +54,20 @@ public class FusionFilters
     private static final double AF_KNOWN_TIER = 0.005;
     private static final double AF_UNKNOWN_TIER = 0.05;
     private static final int LOCAL_FUSION_THRESHOLD = 1000000;
+
+    public PassingFusions(final FusionCohortConfig config, final CommandLine cmd)
+    {
+        mConfig = config;
+
+        mCohortFusions = Maps.newHashMap();
+
+        if(mConfig.CohortFile != null)
+            loadCohortFile();
+
+        mKnownFusionCache = new KnownFusionCache();
+        mKnownFusionCache.loadFromFile(cmd);
+    }
+
 
     public static boolean isShortLocalFusion(final FusionData fusion)
     {
@@ -245,8 +246,6 @@ public class FusionFilters
 
     private void loadCohortFile()
     {
-        ISF_LOGGER.info("loading cohort fusion file", mConfig.CohortFile);
-
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(mConfig.CohortFile));
@@ -291,11 +290,11 @@ public class FusionFilters
                 fusionsByPosition.add(fusion);
             }
 
-            ISF_LOGGER.info("loaded {} cohort fusions", fusionCount);
+            ISF_LOGGER.info("loaded {} cohort fusions from file({})", fusionCount, mConfig.CohortFile);
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load fusion cohort file({}): {}", mConfig.CohortFile.toString(), e.toString());
+            ISF_LOGGER.error("failed to load fusion cohort file({}): {}", mConfig.CohortFile, e.toString());
         }
     }
 }

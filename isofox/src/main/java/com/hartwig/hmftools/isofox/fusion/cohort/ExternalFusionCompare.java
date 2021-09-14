@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 public class ExternalFusionCompare
@@ -116,7 +117,7 @@ public class ExternalFusionCompare
 
                 cacheMatchResults(sampleId, getMatchType(MT_MATCH), fusion.Id, fusion.Chromosomes, fusion.JunctionPositions, fusion.JunctionOrientations,
                         fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames, fusion.SplitFrags + fusion.RealignedFrags,
-                        fusion.DiscordantFrags, extFusion.SplitFragments, extFusion.DiscordantFragments, fusion.CohortCount, "");
+                        fusion.DiscordantFrags, extFusion.SplitFragments, extFusion.DiscordantFragments, fusion.cohortFrequency(), "");
             }
         }
 
@@ -214,6 +215,42 @@ public class ExternalFusionCompare
         {
             final String unfilteredFile = formSampleFilename(mConfig, sampleId, FUSION);
 
+            final List<FusionData> fusionData = FusionData.loadFromFile(Paths.get(unfilteredFile));
+
+            for(FusionData unfilteredFusion : fusionData)
+            {
+                int index = 0;
+                while(index < unmatchedExternalFusions.size())
+                {
+                    ExternalFusionData extFusion = unmatchedExternalFusions.get(index);
+
+                    if(junctionMatch(
+                            extFusion.Chromosomes, unfilteredFusion.Chromosomes, extFusion.JunctionPositions, unfilteredFusion.JunctionPositions))
+                    {
+                        final String otherData = String.format("reason=%s anchorDistance=%d af=%.3f",
+                                unfilteredFusion.getFilter().toString(),
+                                min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_END]),
+                                unfilteredFusion.alleleFrequency());
+
+                        cacheMatchResults(sampleId, getMatchType(MT_FILT_IN_ISOFOX), unfilteredFusion.Id,
+                                extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
+                                unfilteredFusion.JunctionTypes, extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
+                                unfilteredFusion.supportingFragments(), unfilteredFusion.DiscordantFrags,
+                                extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.cohortFrequency(), otherData);
+
+                        unmatchedExternalFusions.remove(index);
+
+                        if(unmatchedExternalFusions.isEmpty())
+                            return;
+
+                        continue;
+                    }
+
+                    ++index;
+                }
+            }
+
+            /*
             try
             {
                 BufferedReader fileReader = new BufferedReader(new FileReader(unfilteredFile));
@@ -247,7 +284,7 @@ public class ExternalFusionCompare
                                     extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
                                     unfilteredFusion.JunctionTypes, extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
                                     unfilteredFusion.supportingFragments(), unfilteredFusion.DiscordantFrags,
-                                    extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.CohortCount, otherData);
+                                    extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.cohortFrequency(), otherData);
 
                             unmatchedExternalFusions.remove(index);
 
@@ -265,6 +302,7 @@ public class ExternalFusionCompare
             {
                 ISF_LOGGER.error("failed to load unfiltered fusion file({}): {}", unfilteredFile, e.toString());
             }
+            */
         }
 
         for(ExternalFusionData extFusion : unmatchedExternalFusions)
@@ -383,7 +421,7 @@ public class ExternalFusionCompare
                             cacheMatchResults(sampleId, getMatchType(MT_FILT_IN_EXT), fusion.Id, fusion.Chromosomes,
                                     fusion.JunctionPositions, fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType,
                                     fusion.GeneIds, fusion.GeneNames, fusion.supportingFragments(), fusion.DiscordantFrags,
-                                    splitFragments, discordantFragments, fusion.CohortCount, otherData);
+                                    splitFragments, discordantFragments, fusion.cohortFrequency(), otherData);
 
                             fusions.remove(index);
 
@@ -408,7 +446,7 @@ public class ExternalFusionCompare
             cacheMatchResults(sampleId, getMatchType(MT_ISOFOX_ONLY), fusion.Id, fusion.Chromosomes, fusion.JunctionPositions,
                     fusion.JunctionOrientations, fusion.JunctionTypes, fusion.SvType, fusion.GeneIds, fusion.GeneNames,
                     fusion.SplitFrags + fusion.RealignedFrags, fusion.DiscordantFrags, 0, 0,
-                    fusion.CohortCount, fusionId(fusion.Id));
+                    fusion.cohortFrequency(), fusionId(fusion.Id));
         }
     }
 

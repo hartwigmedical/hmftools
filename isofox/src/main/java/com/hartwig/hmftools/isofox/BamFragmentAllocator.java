@@ -668,10 +668,7 @@ public class BamFragmentAllocator
                 }
 
                 // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
-                final List<RegionReadData> processedRegions = Lists.newArrayList();
-
-                processValidTranscript(transId, read1, processedRegions, isUniqueTrans);
-                processValidTranscript(transId, read2, processedRegions, isUniqueTrans);
+                processValidTranscript(transId, Lists.newArrayList(read1, read2), isUniqueTrans);
             }
 
             List<String> unsplicedGeneIds = comboTransMatchType == FragmentMatchType.SHORT ?
@@ -871,52 +868,56 @@ public class BamFragmentAllocator
         return transComboCounts;
     }
 
-    private void processValidTranscript(
-            int transId, final ReadRecord read, final List<RegionReadData> processedRegions, boolean isUniqueTrans)
+    private void processValidTranscript(int transId, final List<ReadRecord> reads, boolean isUniqueTrans)
     {
-        List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
-                .filter(x -> x.getKey().hasTransId(transId))
-                .filter(x -> validExonMatch(x.getValue()))
-                .map(x -> x.getKey()).collect(Collectors.toList());
+        final List<RegionReadData> processedRegions = Lists.newArrayList();
 
-        for(RegionReadData region : regions)
+        for(ReadRecord read : reads)
         {
-            if (!processedRegions.contains(region))
-            {
-                // register a read against this valid transcript region
-                region.addTranscriptReadMatch(transId, isUniqueTrans);
-            }
-        }
+            List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
+                    .filter(x -> x.getKey().hasTransId(transId))
+                    .filter(x -> validExonMatch(x.getValue()))
+                    .map(x -> x.getKey()).collect(Collectors.toList());
 
-        // any adjacent reads can record a splice junction count
-        if(regions.size() > 1 && read.getTranscriptClassification(transId) == SPLICE_JUNCTION)
-        {
-            for(int r1 = 0; r1 < regions.size() - 1; ++r1)
+            for(RegionReadData region : regions)
             {
-                RegionReadData region1 = regions.get(r1);
-
-                for(int r2 = r1 + 1; r2 < regions.size(); ++r2)
+                if(!processedRegions.contains(region))
                 {
-                    RegionReadData region2 = regions.get(r2);
+                    // register a read against this valid transcript region
+                    region.addTranscriptReadMatch(transId, isUniqueTrans);
+                }
+            }
 
-                    if(processedRegions.contains(region1) && processedRegions.contains(region2))
-                        continue;
+            // any adjacent reads can record a splice junction count
+            if(regions.size() > 1 && read.getTranscriptClassification(transId) == SPLICE_JUNCTION)
+            {
+                for(int r1 = 0; r1 < regions.size() - 1; ++r1)
+                {
+                    RegionReadData region1 = regions.get(r1);
 
-                    if(region1.getPostRegions().contains(region2))
+                    for(int r2 = r1 + 1; r2 < regions.size(); ++r2)
                     {
-                        region1.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
-                        region2.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
-                    }
-                    else if(region1.getPreRegions().contains(region2))
-                    {
-                        region1.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
-                        region2.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
+                        RegionReadData region2 = regions.get(r2);
+
+                        if(processedRegions.contains(region1) && processedRegions.contains(region2))
+                            continue;
+
+                        if(region1.getPostRegions().contains(region2))
+                        {
+                            region1.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
+                            region2.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
+                        }
+                        else if(region1.getPreRegions().contains(region2))
+                        {
+                            region1.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
+                            region2.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
+                        }
                     }
                 }
             }
-        }
 
-        regions.forEach(x -> processedRegions.add(x));
+            regions.forEach(x -> processedRegions.add(x));
+        }
     }
 
     private void processIntronicReads(final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2)

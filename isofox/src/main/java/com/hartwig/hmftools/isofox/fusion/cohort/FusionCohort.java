@@ -4,18 +4,15 @@ import static java.lang.Math.ceil;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.PASSING_FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.isofox.fusion.FusionData;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -34,7 +32,7 @@ public class FusionCohort
 {
     private final CohortConfig mConfig;
 
-    private final FusionFilters mFilters;
+    private final PassingFusions mFilters;
     private final BufferedWriter mExternalCompareWriter;
 
     private final FusionCollection mFusionCollection;
@@ -52,7 +50,7 @@ public class FusionCohort
     public FusionCohort(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
-        mFilters = new FusionFilters(mConfig.Fusions, cmd);
+        mFilters = new PassingFusions(mConfig.Fusions, cmd);
         mExternalCompareWriter = mConfig.Fusions.ComparisonSource != null ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
         mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;

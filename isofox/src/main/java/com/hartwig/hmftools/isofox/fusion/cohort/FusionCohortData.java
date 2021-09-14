@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.FusionJunctionType;
 
 import org.apache.commons.compress.utils.Lists;

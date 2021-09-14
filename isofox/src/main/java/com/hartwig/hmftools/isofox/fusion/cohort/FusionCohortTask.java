@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.PASS_FUSION
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.writeCombinedFusions;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.FRAGMENT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilterType.PASS;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.hasSufficientKnownFusionFragments;
-import static com.hartwig.hmftools.isofox.fusion.cohort.FusionFilters.isShortLocalFusion;
+import static com.hartwig.hmftools.isofox.fusion.cohort.PassingFusions.hasSufficientKnownFusionFragments;
+import static com.hartwig.hmftools.isofox.fusion.cohort.PassingFusions.isShortLocalFusion;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedWriter;
@@ -26,6 +26,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.fusion.FusionData;
 
 public class FusionCohortTask implements Callable
 {
@@ -35,13 +36,13 @@ public class FusionCohortTask implements Callable
     private final Map<String,Path> mSampleFileMap;
     private final Map<String,Integer> mFieldsMap;
     private String mFilteredFusionHeader;
-    private final FusionFilters mFilters;
+    private final PassingFusions mFilters;
     private final BufferedWriter mCombinedFusionWriter;
     private final FusionCollection mFusionCollection;
     private final ExternalFusionCompare mExternalFusionCompare;
 
     public FusionCohortTask(
-            int taskId, final CohortConfig config, final Map<String,Path> sampleFileMap, final FusionFilters filters,
+            int taskId, final CohortConfig config, final Map<String,Path> sampleFileMap, final PassingFusions filters,
             final FusionCollection fusionCollection, final BufferedWriter combinedFusionWriter, final BufferedWriter extCompareWriter)
     {
         mTaskId = taskId;
@@ -74,7 +75,7 @@ public class FusionCohortTask implements Callable
 
             ISF_LOGGER.debug("task {}: sample({}:{}) loading fusion data", mTaskId, totalProcessed, sampleId);
 
-            final List<FusionData> sampleFusions = loadSampleFile(fusionFile);
+            final List<FusionData> sampleFusions = FusionData.loadFromFile(fusionFile);
 
             ISF_LOGGER.info("task {}: sample({}:{}) loaded {} fusions", mTaskId, totalProcessed, sampleId, sampleFusions.size());
 
@@ -103,6 +104,7 @@ public class FusionCohortTask implements Callable
         return (long)0;
     }
 
+    /*
     private List<FusionData> loadSampleFile(final Path filename)
     {
         try
@@ -137,6 +139,7 @@ public class FusionCohortTask implements Callable
             return Lists.newArrayList();
         }
     }
+    */
 
     private void writeFilteredFusion(final String sampleId, final List<FusionData> sampleFusions)
     {
@@ -254,7 +257,4 @@ public class FusionCohortTask implements Callable
             ISF_LOGGER.error("failed to write filtered fusion file({}): {}", outputFile, e.toString());
         }
     }
-
-
-
 }

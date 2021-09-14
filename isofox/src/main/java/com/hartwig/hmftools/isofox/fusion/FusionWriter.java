@@ -62,7 +62,11 @@ public class FusionWriter
             final String outputFileName = mConfig.formOutputFile(FUSION_FILE_ID);
 
             mFusionWriter = createBufferedWriter(outputFileName, false);
-            mFusionWriter.write(FusionReadData.csvHeader());
+            mFusionWriter.write(FusionData.csvHeader());
+
+            // could write an additional fields - eg RelatedProxIds, HomologyOffset were previously written
+            // mFusionWriter.write(FusionReadData.csvHeader());
+
             mFusionWriter.newLine();
         }
         catch(IOException e)
@@ -82,7 +86,11 @@ public class FusionWriter
             {
                 for (final FusionReadData fusion : entry.getValue())
                 {
-                    mFusionWriter.write(fusion.toCsv());
+                    // TO-DO: convert to FusionData in thread and optionally run filtering logic
+                    FusionData fusionData = fusion.toFusionData();
+                    mFusionWriter.write(fusionData.toCsv());
+
+                    // mFusionWriter.write(fusion.toCsv());
                     mFusionWriter.newLine();
                 }
             }
