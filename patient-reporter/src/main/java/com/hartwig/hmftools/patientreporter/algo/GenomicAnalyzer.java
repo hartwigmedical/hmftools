@@ -48,10 +48,10 @@ public class GenomicAnalyzer {
     }
 
     @NotNull
-    public GenomicAnalysis run(@Nullable String tumorSampleRunId, @Nullable String referenceSampleRunId, @NotNull PatientReporterConfig config,
+    public GenomicAnalysis run(@Nullable String tumorSampleIdDuringRun, @Nullable String referenceSampleIdDuringRun, @NotNull PatientReporterConfig config,
             @NotNull LimsGermlineReportingLevel germlineReportingLevel, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
-        assert tumorSampleRunId != null;
-        PurpleData purpleData = PurpleDataLoader.load(tumorSampleRunId, referenceSampleRunId,
+        assert tumorSampleIdDuringRun != null;
+        PurpleData purpleData = PurpleDataLoader.load(tumorSampleIdDuringRun, referenceSampleIdDuringRun,
                 config.purpleQcFile(),
                 config.purplePurityTsv(),
                 config.purpleSomaticDriverCatalogTsv(),

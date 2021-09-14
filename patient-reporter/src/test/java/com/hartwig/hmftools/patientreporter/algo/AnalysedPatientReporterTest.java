@@ -27,10 +27,10 @@ public class AnalysedPatientReporterTest {
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(REF_SAMPLE_ID)
-                .refSampleRunId(REF_SAMPLE_ID)
+                .refSampleIdDuringRun(REF_SAMPLE_ID)
                 .refSampleBarcode(Strings.EMPTY)
                 .tumorSampleId(TUMOR_SAMPLE_ID)
-                .tumorSampleRunId(TUMOR_SAMPLE_ID)
+                .tumorSampleIdDuringRun(TUMOR_SAMPLE_ID)
                 .tumorSampleBarcode(Strings.EMPTY)
                 .build();
 

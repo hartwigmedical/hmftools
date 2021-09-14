@@ -147,18 +147,18 @@ public class PatientReporterApplication {
     private static SampleMetadata buildSampleMetadata(@NotNull PatientReporterConfig config) {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId(config.refSampleId())
-                .refSampleRunId(config.refSampleRunId())
+                .refSampleIdDuringRun(config.refSampleIdDuringRun())
                 .refSampleBarcode(config.refSampleBarcode())
                 .tumorSampleId(config.tumorSampleId())
-                .tumorSampleRunId(config.tumorSampleRunId())
+                .tumorSampleIdDuringRun(config.tumorSampleIdDuringRun())
                 .tumorSampleBarcode(config.tumorSampleBarcode())
                 .build();
 
         LOGGER.info("Printing sample meta data for {}", sampleMetadata.tumorSampleId());
-        LOGGER.info(" Tumor sample run id: {}", sampleMetadata.tumorSampleRunId());
+        LOGGER.info(" Tumor sample id during run: {}", sampleMetadata.tumorSampleIdDuringRun());
         LOGGER.info(" Tumor sample barcode: {}", sampleMetadata.tumorSampleBarcode());
         LOGGER.info(" Ref sample: {}", sampleMetadata.refSampleId());
-        LOGGER.info(" Ref sample run id: {}", sampleMetadata.refSampleRunId());
+        LOGGER.info(" Ref sample id during run: {}", sampleMetadata.refSampleIdDuringRun());
         LOGGER.info(" Ref sample barcode: {}", sampleMetadata.refSampleBarcode());
 
         return sampleMetadata;

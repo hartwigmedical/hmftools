@@ -56,8 +56,8 @@ public class AnalysedPatientReporter {
         checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
-        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleRunId(),
-                sampleMetadata.refSampleRunId(),
+        GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleIdDuringRun(),
+                sampleMetadata.refSampleIdDuringRun(),
                 config,
                 sampleReport.germlineReportingLevel(),
                 config.refGenomeVersion());

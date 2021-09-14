@@ -13,7 +13,7 @@ public abstract class SampleMetadata {
     public abstract String refSampleId();
 
     @Nullable
-    public abstract String refSampleRunId();
+    public abstract String refSampleIdDuringRun();
 
     @Nullable
     public abstract String refSampleBarcode();
@@ -22,7 +22,7 @@ public abstract class SampleMetadata {
     public abstract String tumorSampleId();
 
     @Nullable
-    public abstract String tumorSampleRunId();
+    public abstract String tumorSampleIdDuringRun();
 
     @NotNull
     public abstract String tumorSampleBarcode();
