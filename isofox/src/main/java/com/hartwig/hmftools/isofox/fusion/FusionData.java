@@ -205,11 +205,11 @@ public class FusionData
         sj.add(FLD_REALIGN_FLAGS);
         sj.add(FLD_DISCORD_FRAGS);
         sj.add(FLD_REL_SPLICED_IDS);
+        sj.add(FLD_COHORT_COUNT);
 
         if(isFiltered)
         {
             sj.add(FLD_FILTER);
-            sj.add(FLD_COHORT_COUNT);
             sj.add(FLD_KNOWN_TYPE);
         }
         else
@@ -252,13 +252,13 @@ public class FusionData
         sj.add(String.valueOf(RealignedFrags));
         sj.add(String.valueOf(DiscordantFrags));
         sj.add(RelatedSplicedIds);
+        sj.add(String.valueOf(mCohortFrequency));
 
         // could write an additional fields - eg RelatedProxIds, HomologyOffset were previously written
 
         if(isFiltered)
         {
             sj.add(mFilter.toString());
-            sj.add(String.valueOf(mCohortFrequency));
             sj.add(getKnownFusionType().toString());
         }
         else

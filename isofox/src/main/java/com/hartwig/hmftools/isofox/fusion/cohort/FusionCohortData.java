@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
@@ -99,13 +100,6 @@ public class FusionCohortData
     public int maxFragmentCount() { return mMaxFragments; }
     public final List<String> sampleIds() { return mSampleIds; }
 
-    public void setCohortStats(int totalFrags, int maxFrags, int sampleCount)
-    {
-        mTotalFragments = totalFrags;
-        mMaxFragments = maxFrags;
-        mSampleCount = sampleCount;
-    }
-
     public static String header()
     {
         StringJoiner header = new StringJoiner(DELIMITER);
@@ -121,7 +115,7 @@ public class FusionCohortData
         }
 
         header.add(FLD_SV_TYPE);
-        header.add("SampleCount");
+        header.add(FLD_COHORT_COUNT);
         header.add("TotalFragments");
         header.add("MaxFragments");
         header.add("Samples");
@@ -150,47 +144,4 @@ public class FusionCohortData
 
         return output.toString();
     }
-
-    public static FusionCohortData fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
-    {
-        final String[] items = data.split(DELIMITER);
-
-        final String[] geneIds = new String[] {
-                items[fieldIndexMap.get(formStreamField(FLD_GENE_ID, FS_UP))],
-                items[fieldIndexMap.get(formStreamField(FLD_GENE_ID, FS_DOWN))] };
-
-        final String[] geneNames = new String[] {
-                items[fieldIndexMap.get(formStreamField(FLD_GENE_NAME, FS_UP))],
-                items[fieldIndexMap.get(formStreamField(FLD_GENE_NAME, FS_DOWN))] };
-
-        final String[] chromosomes = new String[] {
-                items[fieldIndexMap.get(formStreamField(FLD_CHR, FS_UP))],
-                items[fieldIndexMap.get(formStreamField(FLD_CHR, FS_DOWN))] };
-
-        final int[] junctionPositions = new int[] {
-                Integer.parseInt(items[fieldIndexMap.get(formStreamField(FLD_POS, FS_UP))]),
-                Integer.parseInt(items[fieldIndexMap.get(formStreamField(FLD_POS, FS_DOWN))]) };
-
-        final byte[] junctionOrientations =
-                new byte[] { Byte.parseByte(items[fieldIndexMap.get(formStreamField(FLD_ORIENT, FS_UP))]),
-                        Byte.parseByte(items[fieldIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN))]) };
-
-        final FusionJunctionType[] junctionTypes = new FusionJunctionType[] {
-                FusionJunctionType.valueOf(items[fieldIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_UP))]),
-                FusionJunctionType.valueOf(items[fieldIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))]) };
-
-        final String svType = items[fieldIndexMap.get("SVType")];
-
-        FusionCohortData fusion = new FusionCohortData(
-                chromosomes, junctionPositions, junctionOrientations, junctionTypes, svType, geneIds, geneNames);
-
-        int sampleCount = Integer.parseInt(items[fieldIndexMap.get("SampleCount")]);
-        int totalFragmentCount = Integer.parseInt(items[fieldIndexMap.get("TotalFragments")]);
-        int maxFragmentCount = Integer.parseInt(items[fieldIndexMap.get("MaxFragments")]);
-
-        fusion.setCohortStats(totalFragmentCount, maxFragmentCount, sampleCount);
-
-        return fusion;
-    }
-
 }

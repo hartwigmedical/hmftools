@@ -3,10 +3,17 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
+import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.PASS;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 import static com.hartwig.hmftools.isofox.fusion.FusionFilterType.ALLELE_FREQUENCY;
@@ -35,11 +42,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortData;
 
 public class PassingFusions
 {
-    private final Map<String,Map<Integer,List<FusionCohortData>>> mCohortFusions;
+    private final Map<String,Map<Integer,List<CohortFusionData>>> mCohortFusions;
     private final KnownFusionCache mKnownFusionCache;
 
     // constants as per documentation
@@ -72,10 +78,10 @@ public class PassingFusions
         {
             markKnownGeneTypes(fusion);
 
-            FusionCohortData cohortMatch = findCohortFusion(fusion);
+            CohortFusionData cohortMatch = findCohortFusion(fusion);
 
             if(cohortMatch != null)
-                fusion.setCohortFrequency(cohortMatch.sampleCount());
+                fusion.setCohortFrequency(cohortMatch.CohortCount);
 
             if(isPassingFusion(fusion))
             {
@@ -235,16 +241,16 @@ public class PassingFusions
         return knownSpliceSiteFragments >= KNOWN_PAIR_KNOWN_SITE_REQ_FRAGS || totalFragments >= KNOWN_PAIR_NON_KNOWN_SITE_REQ_FRAGS;
     }
 
-    private FusionCohortData findCohortFusion(final FusionData fusion)
+    private CohortFusionData findCohortFusion(final FusionData fusion)
     {
         final String chrPair = formChromosomePair(fusion.Chromosomes[SE_START], fusion.Chromosomes[SE_END]);
 
-        final Map<Integer,List<FusionCohortData>> chrPairFusions = mCohortFusions.get(chrPair);
+        final Map<Integer,List<CohortFusionData>> chrPairFusions = mCohortFusions.get(chrPair);
 
         if(chrPairFusions == null)
             return null;
 
-        final List<FusionCohortData> fusionsByPosition = chrPairFusions.get(fusion.JunctionPositions[SE_START]);
+        final List<CohortFusionData> fusionsByPosition = chrPairFusions.get(fusion.JunctionPositions[SE_START]);
 
         if(fusionsByPosition == null)
             return null;
@@ -319,21 +325,29 @@ public class PassingFusions
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
             lines.remove(0);
 
+            int chrUpIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_UP));
+            int chrDownIndex = fieldsIndexMap.get(formStreamField(FLD_CHR, FS_DOWN));
+            int posUpIndex = fieldsIndexMap.get(formStreamField(FLD_POS, FS_UP));
+            int posDownIndex = fieldsIndexMap.get(formStreamField(FLD_POS, FS_DOWN));
+            int orientUpIndex = fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_UP));
+            int orientDownIndex = fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN));
+            int cohortFreqIndex = fieldsIndexMap.get(FLD_COHORT_COUNT);
+
             int fusionCount = 0;
-            for(String fusionData : lines)
+            for(String data : lines)
             {
-                FusionCohortData fusion = FusionCohortData.fromCsv(fusionData, fieldsMap);
+                CohortFusionData fusion = new CohortFusionData(
+                        data, chrUpIndex, chrDownIndex, posUpIndex, posDownIndex, orientUpIndex, orientDownIndex, cohortFreqIndex);
 
                 ++fusionCount;
 
                 final String chrPair = formChromosomePair(fusion.Chromosomes[SE_START], fusion.Chromosomes[SE_END]);
 
-                Map<Integer,List<FusionCohortData>> chrPairFusions = mCohortFusions.get(chrPair);
-                List<FusionCohortData> fusionsByPosition = null;
+                Map<Integer,List<CohortFusionData>> chrPairFusions = mCohortFusions.get(chrPair);
+                List<CohortFusionData> fusionsByPosition = null;
 
                 int fusionStartPos = fusion.JunctionPositions[SE_START];
 
@@ -366,4 +380,42 @@ public class PassingFusions
             ISF_LOGGER.error("failed to load fusion cohort file({}): {}", filename, e.toString());
         }
     }
-}
+
+    private class CohortFusionData
+    {
+        public final String[] Chromosomes;
+        public final int[] JunctionPositions;
+        public final byte[] JunctionOrientations;
+        public int CohortCount;
+
+        public CohortFusionData(
+                final String data, int chrUpIndex, int chrDownIndex, int posUpIndex, int posDownIndex,
+                int orientUpIndex, int orientDownIndex, int cohortCountIndex)
+        {
+            String[] values = data.split(DELIMITER, -1);
+
+            Chromosomes = new String[] { values[chrUpIndex], values[chrDownIndex]};
+            JunctionPositions = new int[] { Integer.parseInt(values[posUpIndex]), Integer.parseInt(values[posDownIndex])};
+            JunctionOrientations = new byte[] { Byte.parseByte(values[orientUpIndex]), Byte.parseByte(values[orientDownIndex])};
+            CohortCount = Integer.parseInt(values[cohortCountIndex]);
+        }
+
+        public boolean matches(final FusionData other)
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(!Chromosomes[se].equals(other.Chromosomes[se]))
+                    return false;
+
+                if(JunctionPositions[se] != other.JunctionPositions[se])
+                    return false;
+
+                if(JunctionOrientations[se] != other.JunctionOrientations[se])
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    }
