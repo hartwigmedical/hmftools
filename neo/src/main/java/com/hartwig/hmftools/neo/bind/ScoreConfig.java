@@ -23,6 +23,7 @@ public class ScoreConfig
     // allele + peptide to score & rank using training data
     public final String ValidationDataFile;
     public final String RecognitionDataFile;
+    public final boolean SkipSelfRecognition;
 
     public final String ScoreFileDir;
     public final String ScoreFileId;
@@ -45,6 +46,7 @@ public class ScoreConfig
     public static final String SCORE_FILE_DIR = "score_file_dir";
 
     private static final String VALIDATION_DATA_FILE = "validation_data_file";
+    private static final String SKIP_SELF_RECOGNITION = "skip_self_recog";
 
     private static final String WRITE_PEPTIDE_SCORES = "write_peptide_scores";
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
@@ -70,6 +72,7 @@ public class ScoreConfig
 
         WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
         WritePeptideScores = cmd.hasOption(WRITE_PEPTIDE_SCORES);
+        SkipSelfRecognition = cmd.hasOption(SKIP_SELF_RECOGNITION) || ValidationDataFile.equals(RecognitionDataFile);
     }
 
     public static String scoreFileConfig(final String fileType) { return fileType + "_file"; }
@@ -104,6 +107,7 @@ public class ScoreConfig
 
         options.addOption(WRITE_SUMMARY_DATA, false, "Write summary results per allele");
         options.addOption(WRITE_PEPTIDE_SCORES, false, "Write score and rank data per peptide");
+        options.addOption(SKIP_SELF_RECOGNITION, false, "Don't allow recognition with same peptide");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(OUTPUT_ID, true, "Output file id");
         options.addOption(LOG_DEBUG, false, "Log verbose");

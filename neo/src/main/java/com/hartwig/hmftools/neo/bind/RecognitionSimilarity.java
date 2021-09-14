@@ -25,7 +25,7 @@ public class RecognitionSimilarity
 
     public boolean hasData() { return !mAllelePeptideDataMap.isEmpty(); }
 
-    public double calcSimilarity(final String allele, final String peptide)
+    public double calcSimilarity(final String allele, final String peptide, boolean skipSelfRecognition)
     {
         if(peptide.contains(AMINO_ACID_21ST))
             return INVALID_CALC;
@@ -44,6 +44,9 @@ public class RecognitionSimilarity
 
         for(RecognitionData recogData : recogDataList)
         {
+            if(skipSelfRecognition && recogData.Peptide.equals(peptide) && recogData.Allele.equals(allele))
+                continue;
+
             double similarity = 0;
             boolean skip = false;
 

@@ -73,11 +73,25 @@ public class PeptideProteomeSimilarity
         mPeptideSimilarities = Lists.newArrayList();
         loadPeptides(cmd.getOptionValue(PEPTIDES_FILE));
 
-        Map<String,TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
-        mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
+        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        {
+            Map<String, TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
+            EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+            mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
+        }
+        else
+        {
+            mTransAminoAcidMap = null;
+        }
 
-        mRankedProteomePeptides = new RankedProteomePeptides(cmd.getOptionValue(PROTEOME_RANKS_FILE));
+        if(cmd.hasOption(PROTEOME_RANKS_FILE))
+        {
+            mRankedProteomePeptides = new RankedProteomePeptides(cmd.getOptionValue(PROTEOME_RANKS_FILE));
+        }
+        else
+        {
+            mRankedProteomePeptides = null;
+        }
 
         mScorer = new BindScorer(new ScoreConfig(cmd));
 
@@ -95,7 +109,7 @@ public class PeptideProteomeSimilarity
             System.exit(1);
         }
 
-        if(!mRankedProteomePeptides.isValid())
+        if(mRankedProteomePeptides != null && !mRankedProteomePeptides.isValid())
         {
             NE_LOGGER.info("ranked proteome peptides invalid");
             System.exit(1);
@@ -150,22 +164,31 @@ public class PeptideProteomeSimilarity
     {
         try
         {
-            String filename = BindCommon.formFilename(mOutputDir, "peptide_prot_sim_", mOutputId);
+            String filename = BindCommon.formFilename(mOutputDir, "peptide_prot_sim", mOutputId);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("Allele,Peptide,PeptideLikelihoodRank");
-            writer.write(",TopPeptide,TopLikelihoodRank,TopDtoS,TopPosDiffs,GeneName,TransName");
-            writer.write(",NearestBinderPeptide,NearestBinderLikelihoodRank,NearestBinderDtoS,NearestBinderPosDiffs");
-            writer.write(",WildtypePeptide,WildtypeLikelihoodRank,WildtypeDtoS,WildtypePosDiffs");
+
+            if(mTransAminoAcidMap != null)
+            {
+                writer.write(",TopPeptide,TopLikelihoodRank,TopDtoS,TopPosDiffs,GeneName,TransName");
+            }
+
+            if(mRankedProteomePeptides != null)
+            {
+                writer.write(",NearestBinderPeptide,NearestBinderLikelihoodRank,NearestBinderDtoS,NearestBinderPosDiffs");
+            }
+
+            boolean hasWildtypes = mPeptideSimilarities.stream().anyMatch(x -> !x.WildtypePeptide.isEmpty());
+
+            if(hasWildtypes)
+            {
+                writer.write(",WildtypePeptide,WildtypeLikelihoodRank,WildtypeDtoS,WildtypePosDiffs");
+            }
+
             writer.newLine();
 
             final BlosumMapping blosumMapping = new BlosumMapping();
-
-            /*
-            WildTypePeptide,DisToWT,PositionsMutatedWT,PositionsMutatedProteome,WildtypeLikelihoodRank
-            NearestPeptide,NearestLikelihoodRank,DisToProteome (overall for proteome)
-            NearestPeptideBinder (nearest peptide on that allele with a binding rank < XXX),NearestBinderLikelihoodRank,DisToBinder,PositionsMutatedBinder
-             */
 
             for(PeptideSimilarity peptideSim : mPeptideSimilarities)
             {
@@ -174,26 +197,35 @@ public class PeptideProteomeSimilarity
                 writer.write(String.format("%s,%s,%.6f",
                         peptideSim.Allele, peptideSim.Peptide, peptideRank));
 
-                double topSimRank = calcPeptideLikelihoodRank(peptideSim.Allele, peptideSim.topPeptide());
-                String topSimPosDiff = peptideSim.positionDiffs(peptideSim.topPeptide());
+                if(mTransAminoAcidMap != null)
+                {
+                    double topSimRank = calcPeptideLikelihoodRank(peptideSim.Allele, peptideSim.topPeptide());
+                    String topSimPosDiff = peptideSim.positionDiffs(peptideSim.topPeptide());
 
-                writer.write(String.format(",%s,%.6f,%.1f,%s,%s,%s",
-                        peptideSim.topPeptide(), topSimRank, peptideSim.topSimiliarity(), topSimPosDiff,
-                        peptideSim.topTransData() != null ? peptideSim.topTransData().GeneName : "NONE",
-                        peptideSim.topTransData() != null ? peptideSim.topTransData().TransName : "NONE"));
+                    writer.write(String.format(",%s,%.6f,%.1f,%s,%s,%s",
+                            peptideSim.topPeptide(), topSimRank, peptideSim.topSimiliarity(), topSimPosDiff,
+                            peptideSim.topTransData() != null ? peptideSim.topTransData().GeneName : "NONE",
+                            peptideSim.topTransData() != null ? peptideSim.topTransData().TransName : "NONE"));
+                }
 
-                double nearestSim = blosumMapping.calcSequenceSimilarity(peptideSim.Peptide, peptideSim.nearestBinder());
-                String nearestPosDiff = peptideSim.positionDiffs(peptideSim.nearestBinder());
+                if(mRankedProteomePeptides != null)
+                {
+                    double nearestSim = blosumMapping.calcSequenceSimilarity(peptideSim.Peptide, peptideSim.nearestBinder());
+                    String nearestPosDiff = peptideSim.positionDiffs(peptideSim.nearestBinder());
 
-                writer.write(String.format(",%s,%.6f,%.1f,%s",
-                        peptideSim.nearestBinder(), peptideSim.nearestBinderLikelihoodRank(), nearestSim, nearestPosDiff));
+                    writer.write(String.format(",%s,%.6f,%.1f,%s",
+                            peptideSim.nearestBinder(), peptideSim.nearestBinderLikelihoodRank(), nearestSim, nearestPosDiff));
+                }
 
-                double wildtypeSim = blosumMapping.calcSequenceSimilarity(peptideSim.Peptide, peptideSim.WildtypePeptide);
-                String wildtypePosDiff = peptideSim.positionDiffs(peptideSim.WildtypePeptide);
-                double wildtypeRank = calcPeptideLikelihoodRank(peptideSim.Allele, peptideSim.WildtypePeptide);
+                if(hasWildtypes)
+                {
+                    double wildtypeSim = blosumMapping.calcSequenceSimilarity(peptideSim.Peptide, peptideSim.WildtypePeptide);
+                    String wildtypePosDiff = peptideSim.positionDiffs(peptideSim.WildtypePeptide);
+                    double wildtypeRank = calcPeptideLikelihoodRank(peptideSim.Allele, peptideSim.WildtypePeptide);
 
-                writer.write(String.format(",%s,%.6f,%.1f,%s",
-                        peptideSim.WildtypePeptide, wildtypeRank, wildtypeSim, wildtypePosDiff));
+                    writer.write(String.format(",%s,%.6f,%.1f,%s",
+                            peptideSim.WildtypePeptide, wildtypeRank, wildtypeSim, wildtypePosDiff));
+                }
 
                 writer.newLine();
             }
@@ -205,7 +237,6 @@ public class PeptideProteomeSimilarity
             NE_LOGGER.error("failed to write peptide similarity results: {}", e.toString());
             return;
         }
-
     }
 
     private double calcPeptideLikelihoodRank(final String allele, final String peptide)
@@ -234,7 +265,7 @@ public class PeptideProteomeSimilarity
             // Peptide,Allele,Foreignness,WtPeptide,DisToSelf,DtsPeptide,Immunogenic,PRIME
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
-            int wildtypeIndex = fieldsIndexMap.get("WtPeptide");
+            Integer wildtypeIndex = fieldsIndexMap.get("WtPeptide");
 
             for(String line :lines)
             {
@@ -246,7 +277,7 @@ public class PeptideProteomeSimilarity
                 if(!RANKED_PROTEOME_PEPTIDE_LENGTHS.contains(peptide.length()))
                     continue;
 
-                String wtPeptide = values[wildtypeIndex];
+                String wtPeptide = wildtypeIndex != null ? values[wildtypeIndex] : "";
 
                 mPeptideSimilarities.add(new PeptideSimilarity(peptide, allele, wtPeptide));
             }
@@ -324,6 +355,10 @@ public class PeptideProteomeSimilarity
 
         private void findNearestBinder(final PeptideSimilarity peptideSim)
         {
+            if(mRankedProteomePeptides == null)
+                return;
+
+            // search amongst the strong binders from the proteome - previously computed and cached per allele
             String peptide = peptideSim.Peptide;
             int peptideLength = peptide.length();
 
@@ -386,6 +421,10 @@ public class PeptideProteomeSimilarity
 
         private void findTopSimilarity(final PeptideSimilarity peptideSim)
         {
+            if(mTransAminoAcidMap == null)
+                return;
+
+            // search the proteome for the nearest peptide
             String topPeptide = "";
             double topSimiliarity = 0;
             TranscriptAminoAcids topTrans = null;

@@ -291,7 +291,8 @@ public class BindScorer
 
                         if(calcRecognitionSim)
                         {
-                            writer.write(String.format(",%.1f", mRecognitionSimilarity.calcSimilarity(bindData.Allele, bindData.Peptide)));
+                            writer.write(String.format(",%.1f",
+                                    mRecognitionSimilarity.calcSimilarity(bindData.Allele, bindData.Peptide, mConfig.SkipSelfRecognition)));
                         }
 
                         if(hasOtherData)
