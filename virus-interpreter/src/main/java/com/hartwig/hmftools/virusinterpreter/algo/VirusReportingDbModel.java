@@ -21,7 +21,7 @@ public class VirusReportingDbModel {
         this.speciesToInterpretationMap = speciesToInterpretationMap;
     }
 
-    @NotNull
+    @Nullable
     public String interpretVirusSpecies(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
         if (!speciesHasInterpretation) {
@@ -30,7 +30,7 @@ public class VirusReportingDbModel {
 
         VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
 
-        return speciesHasInterpretation ? virusReportingDb.virusInterpretation() : Strings.EMPTY;
+        return speciesHasInterpretation ? virusReportingDb.virusInterpretation() : null;
     }
 
     @Nullable

@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep11;
 
 public class VirusInterpreterDAO {
 
@@ -28,7 +28,7 @@ public class VirusInterpreterDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<AnnotatedVirus> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = context.insertInto(VIRUSANNOTATION,
+            InsertValuesStep11 inserter = context.insertInto(VIRUSANNOTATION,
                     VIRUSANNOTATION.MODIFIED,
                     VIRUSANNOTATION.SAMPLEID,
                     VIRUSANNOTATION.TAXID,
@@ -36,13 +36,16 @@ public class VirusInterpreterDAO {
                     VIRUSANNOTATION.QCSTATUS,
                     VIRUSANNOTATION.INTEGRATIONS,
                     VIRUSANNOTATION.INTERPRETATION,
+                    VIRUSANNOTATION.PERCENTAGECOVERED,
+                    VIRUSANNOTATION.MEANCOVERAGE,
+                    VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE,
                     VIRUSANNOTATION.REPORTED);
             virusAnnotation.forEach(x -> addVirusAnnotation(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
+    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep11 inserter, @NotNull String sample,
             @NotNull AnnotatedVirus annotatedVirus) {
         inserter.values(timestamp,
                 sample,
@@ -51,6 +54,9 @@ public class VirusInterpreterDAO {
                 annotatedVirus.qcStatus(),
                 annotatedVirus.integrations(),
                 annotatedVirus.interpretation(),
+                annotatedVirus.percentageCovered(),
+                annotatedVirus.meanCoverage(),
+                annotatedVirus.expectedClonalCoverage(),
                 annotatedVirus.reported());
     }
 

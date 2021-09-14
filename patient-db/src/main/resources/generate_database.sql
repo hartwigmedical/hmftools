@@ -1114,6 +1114,9 @@ CREATE TABLE virusAnnotation
     qcStatus varchar(255) NOT NULL,
     integrations int NOT NULL,
     interpretation varchar(255),
+    percentageCovered double precision not null,
+    meanCoverage double precision not null,
+    expectedClonalCoverage double precision,
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id)
 );

@@ -29,5 +29,7 @@ public class VirusReportingDbFileTest {
         assertNull(virusReportingDbModel.integratedMinimalCoverage(1));
 
         assertNotEquals("HPV", virusReportingDbModel.interpretVirusSpecies(2));
+
+        assertNull(virusReportingDbModel.interpretVirusSpecies(5));
     }
 }

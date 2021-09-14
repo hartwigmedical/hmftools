@@ -3,6 +3,7 @@ package com.hartwig.hmftools.virusinterpreter;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -53,27 +54,32 @@ public class VirusInterpreterAlgo {
                     .percentageCovered(virusBreakend.coverage())
                     .meanCoverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(isPurpleQcPass(purityContext.qc().status()) ? coveragesAnalysis.expectedClonalCoverage() : null)
-                    .reported(isPurpleQcPass(purityContext.qc().status()) && report(virusBreakend,
-                            coveragesAnalysis.expectedClonalCoverage()))
-                    .build());
+                    .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status())).build());
         }
 
         return annotatedViruses;
     }
 
-    private boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalCoverage) {
+    @VisibleForTesting
+    public boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalCoverage, @NotNull Set<PurpleQCStatus> purpleQCStatuses) {
         boolean reported = false;
         if (virusReportingDbModel.hasInterpretation(virusBreakend.taxidSpecies())) {
             Integer minimalCoveragePercentage = determineMinimalCoverageVirus(virusBreakend.integrations(), virusBreakend.taxidSpecies());
             double viralPercentageCovered = virusBreakend.coverage();
             double viralCoverage = virusBreakend.meanDepth();
 
-            if (minimalCoveragePercentage != null) {
-                if (viralPercentageCovered > minimalCoveragePercentage && viralCoverage > expectedClonalCoverage) {
+            if (isPurpleQcPass(purpleQCStatuses)) {
+                if (minimalCoveragePercentage != null) {
+                    if (viralPercentageCovered > minimalCoveragePercentage && viralCoverage > expectedClonalCoverage) {
+                        reported = true;
+                    }
+                } else {
                     reported = true;
                 }
             } else {
-                reported = true;
+                if (minimalCoveragePercentage == null) {
+                    reported = true;
+                }
             }
         }
 

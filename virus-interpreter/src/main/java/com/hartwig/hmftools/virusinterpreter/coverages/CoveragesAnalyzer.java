@@ -28,6 +28,6 @@ public final class CoveragesAnalyzer {
 
         WGSMetrics metrics = WGSMetricsFile.read(tumorSampleWGSMetricsFile);
         double tumorMeanCoverage = metrics.meanCoverage();
-        return tumorMeanCoverage * purity / ploidy;
+        return (tumorMeanCoverage * purity) / ploidy;
     }
 }
