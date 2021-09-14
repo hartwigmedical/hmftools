@@ -39,7 +39,7 @@ public class VirusInterpreterAlgoTest {
     private static final String PURPLE_PURITY_TSV = GENOMIC_DIR + File.separator + "sample.purple.purity.tsv";
 
     @Test
-    public void canTestisPurpleQcPass() throws IOException{
+    public void canTestisPurpleQcPass() {
         VirusInterpreterAlgo algo = createTestAlgo("Human gammaherpesvirus 4");
         assertTrue(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
         assertTrue(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.PASS)));
@@ -88,6 +88,33 @@ public class VirusInterpreterAlgoTest {
 
         assertEquals(Integer.valueOf(90), algo.determineMinimalCoverageVirus(0, 1));
         assertNull(algo.determineMinimalCoverageVirus(1, 1));
+    }
+
+    @Test
+    public void canReportTest() {
+        String name = "Human gammaherpesvirus 4";
+
+        VirusInterpreterAlgo algo = createTestAlgo(name);
+
+        assertTrue(algo.report(createTestVirusBreakendsFail(1).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertTrue(algo.report(createTestVirusBreakendsFail(1).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
+        assertFalse(algo.report(createTestVirusBreakendsFail(0).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertFalse(algo.report(createTestVirusBreakendsFail(0).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
+    }
+
+    @NotNull
+    private static List<VirusBreakend> createTestVirusBreakendsFail(int intgerations) {
+        List<VirusBreakend> virusBreakends = Lists.newArrayList();
+
+        // This one should be added --reported
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(1)
+                .integrations(intgerations)
+                .coverage(0)
+                .build());
+        return virusBreakends;
     }
 
     private static VirusInterpreterAlgo createTestAlgo(@NotNull String name) {
