@@ -18,13 +18,15 @@ import org.apache.commons.cli.Options;
 
 public class NeoScorerConfig
 {
-    public final String OutputDir;
-    public final String OutputId;
     public final String NeoDataDir;
     public final String LilacDataDir;
     public final String IsofoxDataDir;
+    public final String SampleTranscriptExpressionFile;
+
     public final List<String> SampleIds;
 
+    public final String OutputDir;
+    public final String OutputId;
     public final List<OutputType> WriteTypes;
 
     public final double LikelihoodThreshold;
@@ -50,7 +52,9 @@ public class NeoScorerConfig
         LilacDataDir = cmd.getOptionValue(LILAC_DATA_DIR);
         IsofoxDataDir = cmd.getOptionValue(ISF_DATA_DIR);
 
-        LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.001"));
+        SampleTranscriptExpressionFile = cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE);
+
+        LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.02"));
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);

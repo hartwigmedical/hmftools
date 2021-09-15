@@ -77,7 +77,7 @@ public class RecognitionSimilarity
                 catch(Exception e)
                 {
                     NE_LOGGER.error("invalid index({}) of peptide({}) or recogPeptide({}) for recognition similarity calc",
-                            peptide, recogData.Peptide);
+                            i, peptide, recogData.Peptide);
                 }
             }
 

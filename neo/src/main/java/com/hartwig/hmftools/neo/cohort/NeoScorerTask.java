@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.cohort;
 
+import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
@@ -198,6 +199,9 @@ public class NeoScorerTask implements Callable
 
             for(PeptideData peptideData : peptides)
             {
+                if(peptideData.Peptide.contains(AA_SELENOCYSTEINE))
+                    continue;
+
                 BindData bindData = new BindData(
                         allele.Allele, peptideData.Peptide, "", peptideData.UpFlank, peptideData.DownFlank);
 

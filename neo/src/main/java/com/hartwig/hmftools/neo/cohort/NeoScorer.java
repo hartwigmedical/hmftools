@@ -27,14 +27,12 @@ public class NeoScorer
     private final NeoScorerConfig mConfig;
     private final NeoDataWriter mWriters;
     private final BindScorer mPeptideScorer;
-    private final RnaExpressionMatrix mTranscriptExpression;
 
     public NeoScorer(final CommandLine cmd)
     {
         mConfig = new NeoScorerConfig(cmd);
 
         mPeptideScorer = new BindScorer(new ScoreConfig(cmd));
-        mTranscriptExpression = new RnaExpressionMatrix(cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE), EXPRESSION_SCOPE_TRANS);
 
         mWriters = new NeoDataWriter(mConfig);
     }
@@ -50,13 +48,18 @@ public class NeoScorer
             System.exit(1);
         }
 
+        NE_LOGGER.info("running neoepitope scoring for {}",
+                mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : String.format("%d samples", mConfig.SampleIds.size()));
+
+        RnaExpressionMatrix transcriptExpression = new RnaExpressionMatrix(mConfig.SampleTranscriptExpressionFile, EXPRESSION_SCOPE_TRANS);
+
         NE_LOGGER.info("processing {} samples", mConfig.SampleIds.size());
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 
         for(String sampleId : mConfig.SampleIds)
         {
-            NeoScorerTask sampleTask = new NeoScorerTask(sampleId, mConfig, mPeptideScorer, mTranscriptExpression, mWriters);
+            NeoScorerTask sampleTask = new NeoScorerTask(sampleId, mConfig, mPeptideScorer, transcriptExpression, mWriters);
 
             sampleTasks.add(sampleTask);
         }

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class NeoEpitopeFile
     public static final String DELIMITER = ",";
     public static final String ITEM_DELIM = ";";
     public static final String VAR_INFO_DELIM = ":";
-    public static final String FUSION_INFO_DELIM = ";";
+    private static final String FUSION_INFO_DELIM = ";";
 
     protected static final Logger NEO_LOGGER = LogManager.getLogger(NeoEpitopeFile.class);
 
@@ -103,11 +104,17 @@ public class NeoEpitopeFile
         WildtypeNovelAAMatch = wildtypeNovelAAMatch;
     }
 
-    private static final String FILE_EXTENSION = ".imu.neo_epitopes.csv";
+    private static final String FILE_EXTENSION = ".neo.neoepitopes.csv";
+    private static final String OLD_FILE_EXTENSION = ".imu.neo_epitopes.csv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
     {
+        String filename = basePath + File.separator + sample + OLD_FILE_EXTENSION;
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
