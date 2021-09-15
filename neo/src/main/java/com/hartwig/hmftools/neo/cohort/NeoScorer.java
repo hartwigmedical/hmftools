@@ -3,7 +3,7 @@ package com.hartwig.hmftools.neo.cohort;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.cohort.NeoCohortConfig.SAMPLE_TRANS_EXP_FILE;
+import static com.hartwig.hmftools.neo.cohort.NeoScorerConfig.SAMPLE_TRANS_EXP_FILE;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
-import com.hartwig.hmftools.neo.bind.TrainConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,21 +22,21 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class NeoPresentation
+public class NeoScorer
 {
-    private final NeoCohortConfig mConfig;
-    private final CohortWriters mWriters;
+    private final NeoScorerConfig mConfig;
+    private final NeoDataWriter mWriters;
     private final BindScorer mPeptideScorer;
     private final RnaExpressionMatrix mTranscriptExpression;
 
-    public NeoPresentation(final CommandLine cmd)
+    public NeoScorer(final CommandLine cmd)
     {
-        mConfig = new NeoCohortConfig(cmd);
+        mConfig = new NeoScorerConfig(cmd);
 
         mPeptideScorer = new BindScorer(new ScoreConfig(cmd));
         mTranscriptExpression = new RnaExpressionMatrix(cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE), EXPRESSION_SCOPE_TRANS);
 
-        mWriters = new CohortWriters(mConfig);
+        mWriters = new NeoDataWriter(mConfig);
     }
 
     public void run()
@@ -53,11 +52,11 @@ public class NeoPresentation
 
         NE_LOGGER.info("processing {} samples", mConfig.SampleIds.size());
 
-        List<NeoSampleBindTask> sampleTasks = Lists.newArrayList();
+        List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 
         for(String sampleId : mConfig.SampleIds)
         {
-            NeoSampleBindTask sampleTask = new NeoSampleBindTask(sampleId, mConfig, mPeptideScorer, mTranscriptExpression, mWriters);
+            NeoScorerTask sampleTask = new NeoScorerTask(sampleId, mConfig, mPeptideScorer, mTranscriptExpression, mWriters);
 
             sampleTasks.add(sampleTask);
         }
@@ -81,14 +80,14 @@ public class NeoPresentation
     {
         final Options options = new Options();
 
-        NeoCohortConfig.addCmdLineArgs(options);
+        NeoScorerConfig.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
         setLogLevel(cmd);
 
-        NeoPresentation neoPresentation = new NeoPresentation(cmd);
-        neoPresentation.run();
+        NeoScorer neoScorer = new NeoScorer(cmd);
+        neoScorer.run();
     }
 
     @NotNull

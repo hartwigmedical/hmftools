@@ -17,15 +17,20 @@ public class RecognitionSimilarity
 
     private final BlosumMapping mBlosumMapping;
 
+    private boolean mCheckSelfSimilarity;
+
     public RecognitionSimilarity()
     {
         mAllelePeptideDataMap = Maps.newHashMap();
         mBlosumMapping = new BlosumMapping();
+        mCheckSelfSimilarity = false;
     }
+
+    public void setCheckSelfSimilarity(boolean toggle) { mCheckSelfSimilarity = toggle; }
 
     public boolean hasData() { return !mAllelePeptideDataMap.isEmpty(); }
 
-    public double calcSimilarity(final String allele, final String peptide, boolean skipSelfRecognition)
+    public double calcSimilarity(final String allele, final String peptide)
     {
         if(peptide.contains(AMINO_ACID_21ST))
             return INVALID_CALC;
@@ -44,7 +49,7 @@ public class RecognitionSimilarity
 
         for(RecognitionData recogData : recogDataList)
         {
-            if(skipSelfRecognition && recogData.Peptide.equals(peptide) && recogData.Allele.equals(allele))
+            if(mCheckSelfSimilarity && recogData.Peptide.equals(peptide) && recogData.Allele.equals(allele))
                 continue;
 
             double similarity = 0;

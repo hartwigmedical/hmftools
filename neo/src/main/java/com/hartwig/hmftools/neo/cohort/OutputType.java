@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo.cohort;
 
-public enum CohortWriteType
+public enum OutputType
 {
     SAMPLE_SUMMARY,
     NEOEPITOPE,

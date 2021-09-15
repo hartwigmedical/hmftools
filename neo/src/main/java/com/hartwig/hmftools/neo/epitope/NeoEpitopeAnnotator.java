@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.neo.PeptideData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -42,8 +43,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class NeoEpitopeAnnotator
@@ -55,14 +54,14 @@ public class NeoEpitopeAnnotator
     private final DatabaseAccess mDbAccess;
     private final CohortTpmData mCohortTpmData;
 
-    private BufferedWriter mCohortNeoEpitopeWriter;
-    private BufferedWriter mCohortPeptideWriter;
+    private BufferedWriter mNeoEpitopeWriter;
+    private BufferedWriter mPeptideWriter;
 
     public NeoEpitopeAnnotator(final CommandLine cmd)
     {
         mConfig = new NeoConfig(cmd);
-        mCohortNeoEpitopeWriter = null;
-        mCohortPeptideWriter = null;
+        mNeoEpitopeWriter = null;
+        mPeptideWriter = null;
 
         mSampleFusionMap = Maps.newHashMap();
 
@@ -89,11 +88,10 @@ public class NeoEpitopeAnnotator
         {
             NE_LOGGER.info("processing {} samples", mConfig.Samples.size());
 
-            if(mConfig.WriteCohortFiles)
-            {
-                mCohortNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, null);
-                mCohortPeptideWriter = initialisePeptideWriter(mConfig.OutputDir, null);
-            }
+            mNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, null);
+
+            if(mConfig.WritePeptides)
+                mPeptideWriter = initialisePeptideWriter(mConfig.OutputDir, null);
         }
 
         // check required inputs and config
@@ -102,7 +100,7 @@ public class NeoEpitopeAnnotator
         for(final SampleData sample : mConfig.Samples)
         {
             NeoSampleTask sampleTask = new NeoSampleTask(
-                    sample, mConfig, mGeneTransCache, mDbAccess, mCohortTpmData, mCohortNeoEpitopeWriter, mCohortPeptideWriter);
+                    sample, mConfig, mGeneTransCache, mDbAccess, mCohortTpmData, mNeoEpitopeWriter, mPeptideWriter);
 
             sampleTasks.add(sampleTask);
         }
@@ -117,10 +115,10 @@ public class NeoEpitopeAnnotator
             sampleTasks.forEach(x -> x.processSample());
         }
 
-        if(mConfig.WriteCohortFiles)
+        if(mConfig.WritePeptides)
         {
-            closeBufferedWriter(mCohortNeoEpitopeWriter);
-            closeBufferedWriter(mCohortPeptideWriter);
+            closeBufferedWriter(mNeoEpitopeWriter);
+            closeBufferedWriter(mPeptideWriter);
         }
     }
 

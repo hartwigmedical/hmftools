@@ -11,20 +11,22 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-public class CohortWriters
+import com.hartwig.hmftools.neo.bind.BindData;
+
+public class NeoDataWriter
 {
-    private final NeoCohortConfig mConfig;
+    private final NeoScorerConfig mConfig;
 
     private BufferedWriter mNeoWriter;
     private BufferedWriter mPeptideWriter;
 
-    public CohortWriters(final NeoCohortConfig config)
+    public NeoDataWriter(final NeoScorerConfig config)
     {
         mConfig = config;
 
-        mNeoWriter = null;
         mPeptideWriter = initPeptideWriter();
-        mNeoWriter = initNeoepitopeWriter();
+        mNeoWriter = null;
+        // mNeoWriter = initNeoepitopeWriter();
     }
 
     public void close()
@@ -33,6 +35,7 @@ public class CohortWriters
         closeBufferedWriter(mPeptideWriter);
     }
 
+    /*
     private BufferedWriter initNeoepitopeWriter()
     {
         try
@@ -81,6 +84,7 @@ public class CohortWriters
             NE_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
         }
     }
+    */
 
     private BufferedWriter initPeptideWriter()
     {
@@ -90,9 +94,9 @@ public class CohortWriters
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("SampleId,NeId,Allele,Peptide");
-            writer.write(",Score,Rank,Likelihood");
+            writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecognitionSim");
             writer.write(",AllelCN,AlleleDisrupted");
-            writer.write(",TpmCancer,TpmCohort,RnaFrags,RnaDepth");
+            writer.write(",TpmUp,TpmDown,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
             writer.newLine();
             return writer;
         }
@@ -104,27 +108,32 @@ public class CohortWriters
     }
 
     public synchronized void writePeptideData(
-            final String sampleId, final NeoEpitopeData neoData, final BindingPredictionData predData, final AlleleCoverage alleleCoverage)
+            final String sampleId, final NeoEpitopeData neoData, final NeoPredictionData predData, final AlleleCoverage alleleCoverage)
     {
         if(mPeptideWriter == null)
             return;
 
-        if(predData.likelihood() < mConfig.LikelihoodThreshold)
-            return;
-
         try
         {
-            mPeptideWriter.write(String.format("%s,%d,%s,%s", sampleId, neoData.Id, predData.Allele, predData.Peptide));
+            for(BindData bindData : predData.getPeptidePredictions(alleleCoverage.Allele))
+            {
+                if(bindData.likelihoodRank() > mConfig.LikelihoodThreshold)
+                    continue;
 
-            mPeptideWriter.write(String.format(",%.2f,%.6f,%.6f", predData.score(), predData.rankPercentile(), predData.likelihood()));
+                mPeptideWriter.write(String.format("%s,%d,%s,%s", sampleId, neoData.Id, bindData.Allele, bindData.Peptide));
 
-            mPeptideWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
+                mPeptideWriter.write(String.format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f",
+                        bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
+                        bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(), bindData.recognitionSimilarity()));
 
-            mPeptideWriter.write(String.format(",%4.3e,%4.3e,%d,%.0f",
-                    neoData.TpmCancer, neoData.TpmCohort,
-                    neoData.RnaNovelFragments, (neoData.RnaBaseDepth[SE_START] + neoData.RnaBaseDepth[SE_END]) * 0.5));
+                mPeptideWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
 
-            mPeptideWriter.newLine();
+                mPeptideWriter.write(String.format(",%4.3e,%4.3e,%4.3e,%4.3e,%d,%.0f",
+                        neoData.TransExpression[FS_UP], neoData.TransExpression[FS_DOWN], neoData.TpmCancer, neoData.TpmCohort,
+                        neoData.RnaNovelFragments, (neoData.RnaBaseDepth[SE_START] + neoData.RnaBaseDepth[SE_END]) * 0.5));
+
+                mPeptideWriter.newLine();
+            }
         }
         catch (IOException e)
         {

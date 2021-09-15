@@ -52,8 +52,10 @@ public class BindScorer
         mRandomDistribution = new RandomPeptideDistribution(config.RandomPeptides);
         mBindingLikelihood = new BindingLikelihood();
         mFlankScores = new FlankScores();
-        mRecognitionSimilarity = new RecognitionSimilarity();
         mExpressionLikelihood = new ExpressionLikelihood();
+
+        mRecognitionSimilarity = new RecognitionSimilarity();
+        mRecognitionSimilarity.setCheckSelfSimilarity(mConfig.CheckSelfRecognition);
     }
 
     public BindScorer(
@@ -100,33 +102,6 @@ public class BindScorer
 
     public static final double INVALID_CALC = -1;
 
-    public double calcScore(final String allele, final String peptide)
-    {
-        Map<Integer,BindScoreMatrix> pepLenMatrixMap = mAlleleBindMatrices.get(allele);
-        if(pepLenMatrixMap == null)
-            return INVALID_CALC;
-
-        BindScoreMatrix matrix = pepLenMatrixMap.get(peptide.length());
-
-        if(matrix == null)
-            return INVALID_CALC;
-
-        return matrix.calcScore(peptide);
-    }
-
-    public double calcScoreRank(final String allele, final String peptide, double score)
-    {
-        return mRandomDistribution.getScoreRank(allele, peptide.length(), score);
-    }
-
-    public double calcLikelihood(final String allele, final String peptide, double rank)
-    {
-        if(mBindingLikelihood == null || !mBindingLikelihood.hasData())
-            return INVALID_CALC;
-
-        return mBindingLikelihood.getBindingLikelihood(allele, peptide, rank);
-    }
-
     public void runScoring()
     {
         NE_LOGGER.info("running scoring");
@@ -155,7 +130,9 @@ public class BindScorer
                     if(matrix == null)
                         continue;
 
-                    calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood, mExpressionLikelihood);
+                    calcScoreData(
+                            bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood,
+                            mExpressionLikelihood, mRecognitionSimilarity);
                 }
             }
         }
@@ -185,13 +162,15 @@ public class BindScorer
         if(matrix == null)
             return;
 
-        calcScoreData(bindData, matrix, mFlankScores, mRandomDistribution, mBindingLikelihood, mExpressionLikelihood);
+        calcScoreData(
+                bindData, matrix, mFlankScores, mRandomDistribution,
+                mBindingLikelihood, mExpressionLikelihood, mRecognitionSimilarity);
     }
 
     public static void calcScoreData(
             final BindData bindData, final BindScoreMatrix matrix, final FlankScores flankScores,
             final RandomPeptideDistribution randomDistribution, final BindingLikelihood bindingLikelihood,
-            final ExpressionLikelihood expressionLikelihood)
+            final ExpressionLikelihood expressionLikelihood, final RecognitionSimilarity recognitionSimilarity)
     {
         double score = matrix.calcScore(bindData.Peptide);
 
@@ -205,23 +184,30 @@ public class BindScorer
         double rankPercentile = randomDistribution.getScoreRank(bindData.Allele, bindData.peptideLength(), score);
 
         double likelihood = INVALID_CALC;
-        double expLikelihood = INVALID_CALC;
         double likelihoodRank = INVALID_CALC;
+        double expLikelihood = INVALID_CALC;
+        double expLikelihoodRank = INVALID_CALC;
+        double recogSimilarity = INVALID_CALC;
 
         if(bindingLikelihood != null && bindingLikelihood.hasData())
         {
             likelihood = bindingLikelihood.getBindingLikelihood(bindData.Allele, bindData.Peptide, rankPercentile);
 
+            likelihoodRank = randomDistribution.getLikelihoodRank(bindData.Allele, likelihood);
+
             if(expressionLikelihood != null && expressionLikelihood.hasData() && bindData.hasTPM())
             {
-                expLikelihood = expressionLikelihood.calcLikelihood(bindData.tpm());
-                likelihood *= expLikelihood;
+                double tpmLikelihood = expressionLikelihood.calcLikelihood(bindData.tpm());
+                expLikelihood = likelihood * tpmLikelihood;
+                expLikelihoodRank = randomDistribution.getExpressionLikelihoodRank(bindData.Allele, expLikelihood);
             }
-
-            likelihoodRank = randomDistribution.getLikelihoodRank(bindData.Allele, likelihood);
         }
 
-        bindData.setScoreData(score, flankScore, rankPercentile, likelihood, expLikelihood, likelihoodRank);
+        if(recognitionSimilarity != null && recognitionSimilarity.hasData())
+            recogSimilarity = recognitionSimilarity.calcSimilarity(bindData.Allele, bindData.Peptide);
+
+        bindData.setScoreData(
+                score, flankScore, rankPercentile, likelihood, likelihoodRank, expLikelihood, expLikelihoodRank, recogSimilarity);
     }
 
     private void writePeptideScores()
@@ -247,7 +233,7 @@ public class BindScorer
                 writer.write(",FlankScore,UpFlank,DownFlank");
 
             if(writeExpression)
-                writer.write(",TPM,ExpLikelihood");
+                writer.write(",TPM,ExpLikelihood,ExpLikelihoodRank");
 
             boolean calcRecognitionSim = mRecognitionSimilarity != null && mRecognitionSimilarity.hasData();
 
@@ -286,13 +272,13 @@ public class BindScorer
 
                         if(writeExpression)
                         {
-                            writer.write(String.format(",%.4f,%.4f", bindData.tpm(), bindData.expressionLikelihood()));
+                            writer.write(String.format(",%.4f,%.6f,%.6f",
+                                    bindData.tpm(), bindData.expressionLikelihood(), bindData.expressionLikelihoodRank()));
                         }
 
                         if(calcRecognitionSim)
                         {
-                            writer.write(String.format(",%.1f",
-                                    mRecognitionSimilarity.calcSimilarity(bindData.Allele, bindData.Peptide, mConfig.SkipSelfRecognition)));
+                            writer.write(String.format(",%.1f", bindData.recognitionSimilarity()));
                         }
 
                         if(hasOtherData)

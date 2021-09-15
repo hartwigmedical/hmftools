@@ -15,12 +15,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.VectorUtils;
+import com.hartwig.hmftools.neo.PeptideData;
 
 public class RandomDistributionTask implements Callable
 {
     private final String mAllele;
 
-    private final Map<Integer,List<RandomPeptideData>> mRandomPeptideMap; // by length and with flanking data
+    private final Map<Integer,List<PeptideData>> mRandomPeptideMap; // by length and with flanking data
     private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoreDistributions;
     private final FlankScores mFlankScores;
     private final Map<Integer,BindScoreMatrix> mPeptideLengthMatrixMap;
@@ -45,7 +46,7 @@ public class RandomDistributionTask implements Callable
     // instantiate one of 2 tasks
     public RandomDistributionTask(
             final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
-            final Map<Integer,List<RandomPeptideData>> randomPeptideMap, final FlankScores flankScores)
+            final Map<Integer,List<PeptideData>> randomPeptideMap, final FlankScores flankScores)
     {
         this(TASK_TYPE_SCORE_RANK, allele, peptideLengthMatrixMap, randomPeptideMap, flankScores,
                 null, null, null);
@@ -53,7 +54,7 @@ public class RandomDistributionTask implements Callable
 
     public RandomDistributionTask(
             final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
-            final Map<Integer,List<RandomPeptideData>> randomPeptideMap, final FlankScores flankScores,
+            final Map<Integer,List<PeptideData>> randomPeptideMap, final FlankScores flankScores,
             final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions,
             final BindingLikelihood bindingLikelihood, final ExpressionLikelihood expressionLikelihood)
     {
@@ -63,7 +64,7 @@ public class RandomDistributionTask implements Callable
 
     private RandomDistributionTask(
             final int taskType, final String allele, final Map<Integer,BindScoreMatrix> peptideLengthMatrixMap,
-            final Map<Integer,List<RandomPeptideData>> randomPeptideMap, final FlankScores flankScores,
+            final Map<Integer,List<PeptideData>> randomPeptideMap, final FlankScores flankScores,
             final Map<String,Map<Integer,List<ScoreDistributionData>>> alleleScoreDistributions,
             final BindingLikelihood bindingLikelihood, final ExpressionLikelihood expressionLikelihood)
     {
@@ -118,7 +119,7 @@ public class RandomDistributionTask implements Callable
 
         for(BindScoreMatrix matrix : mPeptideLengthMatrixMap.values())
         {
-            List<RandomPeptideData> randomPeptides = mRandomPeptideMap.get(matrix.PeptideLength);
+            List<PeptideData> randomPeptides = mRandomPeptideMap.get(matrix.PeptideLength);
 
             if(randomPeptides == null || randomPeptides.isEmpty())
             {
@@ -130,7 +131,7 @@ public class RandomDistributionTask implements Callable
 
             int count = 0;
 
-            for(RandomPeptideData peptideData : randomPeptides)
+            for(PeptideData peptideData : randomPeptides)
             {
                 double score = BindScorer.calcScore(matrix, mFlankScores, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank);
 
@@ -166,12 +167,12 @@ public class RandomDistributionTask implements Callable
 
             int count = 0;
 
-            List<RandomPeptideData> randomPeptides = mRandomPeptideMap.get(matrix.PeptideLength);
+            List<PeptideData> randomPeptides = mRandomPeptideMap.get(matrix.PeptideLength);
 
             if(randomPeptides == null || randomPeptides.isEmpty())
                 return;
 
-            for(RandomPeptideData peptideData : randomPeptides)
+            for(PeptideData peptideData : randomPeptides)
             {
                 double score = BindScorer.calcScore(matrix, mFlankScores, peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank);
                 double rank = getScoreRank(mAlleleScoreDistributions, mAllele, matrix.PeptideLength, score);
@@ -179,7 +180,7 @@ public class RandomDistributionTask implements Callable
 
                 if(likelihood > 0 && mExpressionLikelihood != null && mExpressionLikelihood.hasData())
                 {
-                    double expLikelihood = mExpressionLikelihood.calcLikelihood(peptideData.Expression);
+                    double expLikelihood = mExpressionLikelihood.calcLikelihood(peptideData.TPM);
                     likelihood *= expLikelihood;
                 }
 

@@ -15,7 +15,9 @@ public class NeoEpitopeData
     public final String VariantInfo;
     public final String GeneId;
     public final String GeneName;
-    public final String AminoAcids;
+    public final String UpAminoAcids;
+    public final String NovelAminoAcids;
+    public final String DownAminoAcids;
     public final List<String>[] Transcripts;
     public final double TpmCancer;
     public final double TpmCohort;
@@ -25,14 +27,17 @@ public class NeoEpitopeData
 
     public NeoEpitopeData(
             final int id, final NeoEpitopeType variantType, final String variantInfo, final String geneId, final String geneName,
-            final String aminoAcids, final List<String> transNamesUp, final List<String> transNamesDown, double tpmCancer, double tpmCohort)
+            final String upAminoAcids, final String novelAminoAcids, final String downAminoAcids,
+            final List<String> transNamesUp, final List<String> transNamesDown, double tpmCancer, double tpmCohort)
     {
         Id = id;
         VariantType = variantType;
         VariantInfo = variantInfo;
         GeneId = geneId;
         GeneName = geneName;
-        AminoAcids = aminoAcids;
+        UpAminoAcids = upAminoAcids;
+        NovelAminoAcids = novelAminoAcids;
+        DownAminoAcids = downAminoAcids;
         Transcripts = new List[FS_PAIR];
         Transcripts[FS_UP] = transNamesUp;
         Transcripts[FS_DOWN] = transNamesDown;
@@ -41,5 +46,13 @@ public class NeoEpitopeData
         RnaNovelFragments = 0;
         RnaBaseDepth = new int[] {0, 0};
         TransExpression = new double[] {-1, -1}; // indicating not set
+    }
+
+    public double getTPM()
+    {
+        if(TransExpression[FS_UP] >= 0)
+            return TransExpression[FS_UP];
+
+        return TpmCancer;
     }
 }

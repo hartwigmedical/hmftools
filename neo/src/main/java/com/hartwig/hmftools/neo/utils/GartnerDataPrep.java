@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.neo.PeptideData;
 import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -288,22 +289,6 @@ public class GartnerDataPrep
         }
 
         return true;
-    }
-
-    private class PeptideData
-    {
-        public final String Peptide;
-        public final String UpFlank;
-        public final String DownFlank;
-
-        public PeptideData(final String peptide, final String upFlank, final String downFlank)
-        {
-            Peptide = peptide;
-            UpFlank = upFlank;
-            DownFlank = downFlank;
-        }
-
-        public String toString() { return String.format("%s flanks(%s - %s)", Peptide, UpFlank, DownFlank); }
     }
 
     private class MutationData

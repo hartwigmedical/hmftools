@@ -22,8 +22,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.neo.epitope.EpitopeUtils;
-import com.hartwig.hmftools.neo.epitope.PeptideData;
+import com.hartwig.hmftools.neo.PeptideData;
 
 import org.junit.Assert;
 import org.junit.Test;

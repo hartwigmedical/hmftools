@@ -384,7 +384,8 @@ public class ValidationRoutines
                 {
                     BindScoreMatrix matrix = pepLenMatrixMap.get(peptideLength);
 
-                    BindScorer.calcScoreData(bindData, matrix, flankScores, mRandomDistribution, bindingLikelihood, null);
+                    BindScorer.calcScoreData(
+                            bindData, matrix, flankScores, mRandomDistribution, bindingLikelihood, null, null);
 
                     writePeptideResults(mPeptideWriter, targetAllele, bindData);
 

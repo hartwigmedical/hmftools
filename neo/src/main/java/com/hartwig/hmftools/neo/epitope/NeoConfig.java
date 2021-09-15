@@ -43,7 +43,7 @@ public class NeoConfig
 
     public final int RequiredAminoAcids;
     public final boolean WriteTransData;
-    public final boolean WriteCohortFiles;
+    public final boolean WritePeptides;
     public final String SvFusionsDir;
     public final String OutputDir;
     public final int Threads;
@@ -60,11 +60,12 @@ public class NeoConfig
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String CANCER_TPM_FILE = "cancer_tpm_file";
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
-    public static final String WRITE_TRANS_DATA = "write_trans_data";
-    public static final String WRITE_COHORT_FILES = "write_cohort_files";
 
-    public static final String NEO_EPITOPE_FILE_ID = ".imu.neo_epitopes.csv";
-    public static final String HLA_PEPTIDE_FILE_ID = ".imu.hla_peptides.csv";
+    public static final String WRITE_PEPTIDES = "write_peptides";
+    public static final String WRITE_TRANS_DATA = "write_trans_data";
+
+    public static final String NEO_EPITOPE_FILE_ID = ".neo.neoepitopes.csv";
+    public static final String HLA_PEPTIDE_FILE_ID = ".neo.hla_peptides.csv";
 
     public static final int DEFAULT_AMINO_ACID_REF_COUNT = 18;
 
@@ -138,7 +139,7 @@ public class NeoConfig
         MutationsFile = cmd.getOptionValue(MUTATIONS_FILE);
 
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
-        WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
+        WritePeptides = cmd.hasOption(WRITE_PEPTIDES);
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
 
@@ -164,7 +165,7 @@ public class NeoConfig
         SvFusionsDir = "";
         OutputDir = "";
         WriteTransData = false;
-        WriteCohortFiles = false;
+        WritePeptides = false;
         Threads = 0;
     }
 
@@ -182,7 +183,7 @@ public class NeoConfig
         options.addOption(SV_FUSION_DATA_DIR, true, "SV fusion file (single sample or cohort)");
         options.addOption(CANCER_TPM_FILE, true, "TPM per cancer type and pan-cancer");
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");
-        options.addOption(WRITE_COHORT_FILES, false, "Write cohort files for multiple samples");
+        options.addOption(WRITE_PEPTIDES, false, "Write all allele + peptide combinations for each neoepitope");
         options.addOption(REQ_AMINO_ACIDS, true, "Number of amino acids in neo-epitopes (default: 18)");
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(THREADS, true, "Thread count");

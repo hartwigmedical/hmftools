@@ -4,9 +4,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_TPM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_UP_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindConstants.INVALID_SCORE;
-import static com.hartwig.hmftools.neo.bind.RandomPeptideData.loadRandomPeptides;
-import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD_RAND_DIST;
+import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD_DIST;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.formTrainingFilename;
 
@@ -14,6 +17,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,16 +29,23 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.neo.PeptideData;
 
 public class RandomPeptideDistribution
 {
     private final RandomPeptideConfig mConfig;
     private boolean mDataLoaded;
 
-    private final Map<Integer,List<RandomPeptideData>> mRandomPeptideMap; // by length and with flanking data
+    private final Map<Integer,List<PeptideData>> mRandomPeptideMap; // by length and with flanking data
 
-    private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoreDistributions; // allele to peptide length to distribution
-    private final Map<String,List<ScoreDistributionData>> mAlleleLikelihoodDistributions; // allele to distribution of likelihoods
+    // allele to peptide length to distribution
+    private final Map<String,Map<Integer,List<ScoreDistributionData>>> mAlleleScoreDistributions;
+
+    // allele to distribution of likelihoods
+    private final Map<String,List<ScoreDistributionData>> mAlleleLikelihoodDistributions;
+
+    // allele to distribution of expression likelihoods
+    private final Map<String,List<ScoreDistributionData>> mAlleleExpressionLikelihoodDistributions;
 
     public RandomPeptideDistribution(final RandomPeptideConfig config)
     {
@@ -42,13 +53,16 @@ public class RandomPeptideDistribution
 
         mAlleleScoreDistributions = Maps.newHashMap();
         mAlleleLikelihoodDistributions = Maps.newHashMap();
+        mAlleleExpressionLikelihoodDistributions = Maps.newHashMap();
         mRandomPeptideMap = Maps.newHashMap();
         mDataLoaded = false;
     }
 
     public boolean loadData()
     {
-        mDataLoaded = loadDistribution() && loadLikelihoodDistribution();
+        mDataLoaded = loadDistribution()
+                && loadLikelihoodDistribution(mConfig.LikelihoodDistributionFile, mAlleleLikelihoodDistributions, true)
+                && loadLikelihoodDistribution(mConfig.ExpressionLikelihoodDistributionFile, mAlleleExpressionLikelihoodDistributions, false);
         return mDataLoaded;
     }
 
@@ -80,6 +94,16 @@ public class RandomPeptideDistribution
     public double getLikelihoodRank(final String allele, double likelihood)
     {
         List<ScoreDistributionData> likelihoodDist = mAlleleLikelihoodDistributions.get(allele);
+
+        if(likelihoodDist == null || likelihoodDist.size() < 2)
+            return INVALID_SCORE;
+
+        return getRank(likelihoodDist, likelihood);
+    }
+
+    public double getExpressionLikelihoodRank(final String allele, double likelihood)
+    {
+        List<ScoreDistributionData> likelihoodDist = mAlleleExpressionLikelihoodDistributions.get(allele);
 
         if(likelihoodDist == null || likelihoodDist.size() < 2)
             return INVALID_SCORE;
@@ -294,7 +318,7 @@ public class RandomPeptideDistribution
         NE_LOGGER.info("writing random peptide likelihood distribution for {} alleles",
                 !mConfig.RequiredOutputAlleles.isEmpty() ? mConfig.RequiredOutputAlleles.size() : "all");
 
-        final String filename = formTrainingFilename(mConfig.OutputDir, FILE_ID_LIKELIHOOD_RAND_DIST, mConfig.OutputId);
+        final String filename = formTrainingFilename(mConfig.OutputDir, FILE_ID_LIKELIHOOD_DIST, mConfig.OutputId);
 
         try
         {
@@ -324,12 +348,12 @@ public class RandomPeptideDistribution
 
     private boolean loadDistribution()
     {
-        if(mConfig.RandomPeptideDistributionFile == null)
+        if(mConfig.ScoreDistributionFile == null)
             return false;
 
         try
         {
-            final List<String> lines = Files.readAllLines(new File(mConfig.RandomPeptideDistributionFile).toPath());
+            final List<String> lines = Files.readAllLines(new File(mConfig.ScoreDistributionFile).toPath());
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
             lines.remove(0);
@@ -368,14 +392,18 @@ public class RandomPeptideDistribution
         return true;
     }
 
-    private boolean loadLikelihoodDistribution()
+    private static boolean loadLikelihoodDistribution(
+            final String filename, final Map<String,List<ScoreDistributionData>> alleleScoreDistribution, boolean requireExists)
     {
-        if(mConfig.RandomLikelihoodDistributionFile == null)
+        if(filename == null)
             return true;
+
+        if(!Files.exists(Paths.get(filename)))
+            return !requireExists;
 
         try
         {
-            final List<String> lines = Files.readAllLines(new File(mConfig.RandomLikelihoodDistributionFile).toPath());
+            final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
             lines.remove(0);
@@ -384,18 +412,18 @@ public class RandomPeptideDistribution
             {
                 ScoreDistributionData data = ScoreDistributionData.fromLikelihoodCsv(line, fieldsIndexMap);
 
-                List<ScoreDistributionData> dataList = mAlleleLikelihoodDistributions.get(data.Allele);
+                List<ScoreDistributionData> dataList = alleleScoreDistribution.get(data.Allele);
 
                 if(dataList == null)
                 {
                     dataList = Lists.newArrayList();
-                    mAlleleLikelihoodDistributions.put(data.Allele, dataList);
+                    alleleScoreDistribution.put(data.Allele, dataList);
                 }
 
                 dataList.add(data);
             }
 
-            NE_LOGGER.info("loaded {} alleles with random peptide likelihood distribution data", mAlleleScoreDistributions.size());
+            NE_LOGGER.info("loaded {} alleles with random peptide likelihood distribution data", alleleScoreDistribution.size());
         }
         catch(IOException e)
         {
@@ -404,5 +432,78 @@ public class RandomPeptideDistribution
         }
 
         return true;
+    }
+
+    private boolean loadRandomPeptides(final String filename, final Set<Integer> peptideLengths, final Map<Integer,List<PeptideData>> randomPeptideMap)
+    {
+        if(!randomPeptideMap.isEmpty())
+            return true;
+
+        if(filename == null)
+        {
+            NE_LOGGER.error("missing random peptides file");
+            return false;
+        }
+
+        try
+        {
+            List<String> lines = Files.readAllLines(new File(filename).toPath());
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            lines.remove(0);
+
+            int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
+            Integer upFlankIndex = fieldsIndexMap.get(FLD_UP_FLANK);
+            Integer downFlankIndex = fieldsIndexMap.get(FLD_DOWN_FLANK);
+            Integer tpmIndex = fieldsIndexMap.get(FLD_TPM);
+
+            if(upFlankIndex != null && downFlankIndex != null)
+            {
+                List<PeptideData> peptideList = null;
+
+                for(String line : lines)
+                {
+                    String[] values = line.split(DELIM, -1);
+                    String peptide = values[peptideIndex];
+
+                    int peptideLength = peptide.length();
+                    peptideList = randomPeptideMap.get(peptideLength);
+
+                    if(peptideList == null)
+                    {
+                        peptideList = Lists.newArrayList();
+                        randomPeptideMap.put(peptideLength, peptideList);
+                    }
+
+                    double tpm = tpmIndex != null ? Double.parseDouble(values[tpmIndex]) : 0;
+
+                    peptideList.add(new PeptideData(
+                            peptide, values[upFlankIndex], values[downFlankIndex], tpm));
+                }
+            }
+            else
+            {
+                for(Integer peptideLength : peptideLengths)
+                {
+                    List<PeptideData> peptideList = Lists.newArrayList();
+                    randomPeptideMap.put(peptideLength, peptideList);
+
+                    for(String line : lines)
+                    {
+                        String[] values = line.split(DELIM, -1);
+                        String peptide = values[peptideIndex].substring(0, peptideLength);
+                        peptideList.add(new PeptideData(peptide, "", "", 0));
+                    }
+                }
+            }
+
+            NE_LOGGER.info("loaded {} random peptides", lines.size());
+            return true;
+        }
+        catch(IOException e)
+        {
+            NE_LOGGER.error("failed to load random peptide file: {}", e.toString());
+            return false;
+        }
     }
 }

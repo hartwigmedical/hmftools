@@ -12,12 +12,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
-import com.hartwig.hmftools.neo.bind.TrainConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public class NeoCohortConfig
+public class NeoScorerConfig
 {
     public final String OutputDir;
     public final String OutputId;
@@ -26,7 +25,7 @@ public class NeoCohortConfig
     public final String IsofoxDataDir;
     public final List<String> SampleIds;
 
-    public final List<CohortWriteType> WriteTypes;
+    public final List<OutputType> WriteTypes;
 
     public final double LikelihoodThreshold;
     public final int Threads;
@@ -42,7 +41,7 @@ public class NeoCohortConfig
 
     private static final String WRITE_TYPES = "write_types";
 
-    public NeoCohortConfig(final CommandLine cmd)
+    public NeoScorerConfig(final CommandLine cmd)
     {
         SampleIds = Lists.newArrayList();
         loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE), SampleIds);
@@ -62,7 +61,7 @@ public class NeoCohortConfig
         if(cmd.hasOption(WRITE_TYPES))
         {
             String[] types = cmd.getOptionValue(WRITE_TYPES).split(";");
-            Arrays.stream(types).map(x -> CohortWriteType.valueOf(x)).forEach(x -> WriteTypes.add(x));
+            Arrays.stream(types).map(x -> OutputType.valueOf(x)).forEach(x -> WriteTypes.add(x));
         }
     }
 

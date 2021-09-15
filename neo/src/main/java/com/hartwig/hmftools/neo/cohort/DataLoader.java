@@ -5,9 +5,8 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNa
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.loadMatrixDataFile;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.cohort.AlleleCoverage.EXPECTED_ALLELE_COUNT;
-import static com.hartwig.hmftools.neo.cohort.BindingPredictionData.DELIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,8 +63,6 @@ public class DataLoader
                 String geneIdDown = items[geneIdDownIndex];
                 String geneName = geneNameUp.equals(geneNameDown) ? geneNameUp : geneNameUp + "_" + geneNameDown;
 
-                String aminoAcids = items[upAaIndex] + items[novelAaIndex] + items[downAaIndex];
-
                 double tpmCancer = Double.parseDouble(items[tpmCancerIndex]);
                 double tpmCohort = Double.parseDouble(items[tpmCohortIndex]);
 
@@ -76,7 +73,7 @@ public class DataLoader
 
                 NeoEpitopeData neoData = new NeoEpitopeData(
                         neId, NeoEpitopeType.valueOf(items[varTypeIndex]), items[varInfoIndex], geneIdDown, geneName,
-                        aminoAcids, transUpNames, transDownNames, tpmCancer, tpmCohort);
+                        items[upAaIndex],items[novelAaIndex], items[downAaIndex], transUpNames, transDownNames, tpmCancer, tpmCohort);
 
                 neoDataMap.put(neId, neoData);
             }
@@ -105,7 +102,7 @@ public class DataLoader
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), AlleleCoverage.DELIM);
             lines.remove(0);
 
-            int alleleIndex = fieldsIndexMap.get("Allele");
+            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int tumorCnIndex = fieldsIndexMap.get("TumorCopyNumber");
 
             // only select the somatic mutations which are predicted to silence/disable the allele

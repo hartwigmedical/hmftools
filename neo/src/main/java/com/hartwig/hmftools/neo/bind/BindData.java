@@ -37,13 +37,14 @@ public class BindData
     private Double mTPM;
 
     // scoring fields
-
     private double mScore;
     private double mFlankScore;
     private double mRankPercentile;
     private double mLikelihood;
-    private double mExpLikelihood;
     private double mLikelihoodRank;
+    private double mExpLikelihood;
+    private double mExpLikelihoodRank;
+    private double mRecognitionSimilarity;
 
     public BindData(final String allele, final String peptide, final String source)
     {
@@ -65,8 +66,9 @@ public class BindData
         mFlankScore = INVALID_SCORE;
         mRankPercentile = INVALID_SCORE;
         mLikelihood = INVALID_SCORE;
-        mExpLikelihood = INVALID_SCORE;
         mLikelihoodRank = INVALID_SCORE;
+        mExpLikelihood = INVALID_SCORE;
+        mExpLikelihoodRank = INVALID_SCORE;
     }
 
     public int peptideLength() { return Peptide.length(); }
@@ -87,14 +89,17 @@ public class BindData
     public double tpm() { return mTPM != null ? mTPM : 0; }
 
     public void setScoreData(
-            double score, double flankScore, double rankPerc, double likelihood, double expLikelihood, double likelihoodRank)
+            double score, double flankScore, double rankPerc, double likelihood, double likelihoodRank,
+            double expLikelihood, double expLikelihoodRank, double recogSimilarity)
     {
         mScore = score;
         mFlankScore = flankScore;
         mRankPercentile = rankPerc;
         mLikelihood = likelihood;
-        mExpLikelihood = expLikelihood;
         mLikelihoodRank = likelihoodRank;
+        mExpLikelihood = expLikelihood;
+        mExpLikelihoodRank = expLikelihoodRank;
+        mRecognitionSimilarity = recogSimilarity;
     }
 
     public double score() { return mScore; }
@@ -102,7 +107,9 @@ public class BindData
     public double rankPercentile() { return mRankPercentile; }
     public double likelihood() { return mLikelihood; }
     public double expressionLikelihood() { return mExpLikelihood; }
+    public double expressionLikelihoodRank() { return mExpLikelihoodRank; }
     public double likelihoodRank() { return mLikelihoodRank; }
+    public double recognitionSimilarity() { return mRecognitionSimilarity; }
 
     public String toString()
     {
