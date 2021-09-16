@@ -49,7 +49,9 @@ public class VirusInterpreterAlgo {
                     .interpretation(interpretation)
                     .percentageCovered(virusBreakend.coverage())
                     .meanCoverage(virusBreakend.meanDepth())
-                    .expectedClonalCoverage(isAcceptablePurpleQuality(purityContext.qc().status()) ? coveragesAnalysis.expectedClonalCoverage() : null)
+                    .expectedClonalCoverage(hasAcceptablePurpleQuality(purityContext.qc().status())
+                            ? coveragesAnalysis.expectedClonalCoverage()
+                            : null)
                     .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status()))
                     .build());
         }
@@ -65,7 +67,7 @@ public class VirusInterpreterAlgo {
             double viralPercentageCovered = virusBreakend.coverage();
             double viralCoverage = virusBreakend.meanDepth();
 
-            if (isAcceptablePurpleQuality(purpleQCStatuses)) {
+            if (hasAcceptablePurpleQuality(purpleQCStatuses)) {
                 if (minimalCoveragePercentage != null) {
                     if (viralPercentageCovered > minimalCoveragePercentage && viralCoverage > expectedClonalCoverage) {
                         reported = true;
@@ -95,7 +97,7 @@ public class VirusInterpreterAlgo {
     }
 
     @VisibleForTesting
-    static boolean isAcceptablePurpleQuality(@NotNull Set<PurpleQCStatus> purpleQCStatus) {
+    static boolean hasAcceptablePurpleQuality(@NotNull Set<PurpleQCStatus> purpleQCStatus) {
         return !purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.FAIL_CONTAMINATION);
     }
 }
