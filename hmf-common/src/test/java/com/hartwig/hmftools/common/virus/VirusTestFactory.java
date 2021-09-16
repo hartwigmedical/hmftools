@@ -38,16 +38,27 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    public static ImmutableAnnotatedVirus.Builder testAnnotatedVirusBuilder() {
+    public static ImmutableAnnotatedVirusV1.Builder testAnnotatedVirusBuilder() {
+        return ImmutableAnnotatedVirusV1.builder()
+                .taxid(0)
+                .name(Strings.EMPTY)
+                .interpretation(Strings.EMPTY)
+                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+                .integrations(0)
+                .reported(false);
+    }
+
+    @NotNull
+    public static ImmutableAnnotatedVirus.Builder testAnnotatedVirusBuilderNewModel() {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)
                 .interpretation(Strings.EMPTY)
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(0)
-                .percentageCovered(2)
-                .meanCoverage(2)
-                .expectedClonalCoverage(2.0)
+                .percentageCovered(1.0)
+                .meanCoverage(1.0)
+                .expectedClonalCoverage(1.0)
                 .reported(false);
     }
 }

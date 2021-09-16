@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
@@ -62,12 +62,12 @@ public class VirusEvidenceTest {
 
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData() {
-        List<AnnotatedVirus> reportable = Lists.newArrayList();
+        List<AnnotatedVirusV1> reportable = Lists.newArrayList();
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("MCV").reported(true).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(true).build());
 
-        List<AnnotatedVirus> unreported = Lists.newArrayList();
+        List<AnnotatedVirusV1> unreported = Lists.newArrayList();
         unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).build());
         unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).build());
         unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(false).build());

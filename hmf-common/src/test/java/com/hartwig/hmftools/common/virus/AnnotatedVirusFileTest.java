@@ -22,7 +22,7 @@ public class AnnotatedVirusFileTest {
 
     @Test
     public void canConvertAnnotatedViruses() {
-        AnnotatedVirus virus = VirusTestFactory.testAnnotatedVirusBuilder().build();
+        AnnotatedVirus virus = VirusTestFactory.testAnnotatedVirusBuilderNewModel().build();
 
         List<String> lines = AnnotatedVirusFile.toLines(Lists.newArrayList(virus));
         List<AnnotatedVirus> converted = AnnotatedVirusFile.fromLines(lines);

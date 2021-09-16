@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +81,7 @@ public abstract class GenomicAnalysis {
     public abstract List<ReportableHomozygousDisruption> homozygousDisruptions();
 
     @NotNull
-    public abstract List<AnnotatedVirus> reportableViruses();
+    public abstract List<AnnotatedVirusV1> reportableViruses();
 
     @NotNull
     public abstract List<PeachGenotype> peachGenotypes();

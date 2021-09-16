@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
@@ -258,7 +258,7 @@ public class FrontPageChapter implements ReportChapter {
             return NONE;
         } else {
             Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-            for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
+            for (AnnotatedVirusV1 virus : report.virusInterpreter().reportableViruses()) {
                 if (virus.interpretation() != null) {
                     viruses.add(virus.interpretation().toString());
                 } else {

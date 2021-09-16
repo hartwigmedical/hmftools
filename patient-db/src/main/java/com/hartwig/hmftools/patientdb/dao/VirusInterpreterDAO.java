@@ -8,11 +8,11 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep11;
+import org.jooq.InsertValuesStep8;
 
 public class VirusInterpreterDAO {
 
@@ -23,12 +23,12 @@ public class VirusInterpreterDAO {
         this.context = context;
     }
 
-    void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+    void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirusV1> virusAnnotations) {
         deleteVirusAnnotationForSample(sample);
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
-        for (List<AnnotatedVirus> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep11 inserter = context.insertInto(VIRUSANNOTATION,
+        for (List<AnnotatedVirusV1> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE)) {
+            InsertValuesStep8 inserter = context.insertInto(VIRUSANNOTATION,
                     VIRUSANNOTATION.MODIFIED,
                     VIRUSANNOTATION.SAMPLEID,
                     VIRUSANNOTATION.TAXID,
@@ -36,17 +36,14 @@ public class VirusInterpreterDAO {
                     VIRUSANNOTATION.QCSTATUS,
                     VIRUSANNOTATION.INTEGRATIONS,
                     VIRUSANNOTATION.INTERPRETATION,
-                    VIRUSANNOTATION.PERCENTAGECOVERED,
-                    VIRUSANNOTATION.MEANCOVERAGE,
-                    VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE,
                     VIRUSANNOTATION.REPORTED);
             virusAnnotation.forEach(x -> addVirusAnnotation(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep11 inserter, @NotNull String sample,
-            @NotNull AnnotatedVirus annotatedVirus) {
+    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
+            @NotNull AnnotatedVirusV1 annotatedVirus) {
         inserter.values(timestamp,
                 sample,
                 annotatedVirus.taxid(),
@@ -54,9 +51,6 @@ public class VirusInterpreterDAO {
                 annotatedVirus.qcStatus(),
                 annotatedVirus.integrations(),
                 annotatedVirus.interpretation(),
-                annotatedVirus.percentageCovered(),
-                annotatedVirus.meanCoverage(),
-                annotatedVirus.expectedClonalCoverage(),
                 annotatedVirus.reported());
     }
 
