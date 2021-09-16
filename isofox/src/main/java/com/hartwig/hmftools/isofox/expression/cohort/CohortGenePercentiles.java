@@ -16,24 +16,20 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class SampleGenePercentiles
+public class CohortGenePercentiles
 {
     private final Map<String,Map<String,double[]>> mGenePercentiles; // by geneId and then cancer type
     private final Map<String,Map<String,Double>> mGeneMedians;
 
-    private BufferedWriter mWriter;
-
     public static final String PAN_CANCER = "ALL";
     public static final String CANCER_TYPE_OTHER = "Other";
 
-    public SampleGenePercentiles(final String cohortFile)
+    public CohortGenePercentiles(final String cohortFile)
     {
         mGenePercentiles = Maps.newHashMap();
         mGeneMedians = Maps.newHashMap();
 
         loadCohortFile(cohortFile);
-
-        mWriter = null;
     }
 
     private void loadCohortFile(final String filename)

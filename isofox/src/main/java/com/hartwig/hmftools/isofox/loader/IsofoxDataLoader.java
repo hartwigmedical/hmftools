@@ -18,14 +18,13 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.CANCER_TYPE_OTHER;
-import static com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles.PAN_CANCER;
+import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.CANCER_TYPE_OTHER;
+import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.PAN_CANCER;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COVERAGE;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_DISCORD_FRAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_MAX_ANCHOR;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_REALIGN_FLAGS;
@@ -58,7 +57,7 @@ import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
-import com.hartwig.hmftools.isofox.expression.cohort.SampleGenePercentiles;
+import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -73,13 +72,13 @@ import org.jooq.Result;
 public class IsofoxDataLoader
 {
     private final DataLoaderConfig mConfig;
-    private final SampleGenePercentiles mGeneDistribution;
+    private final CohortGenePercentiles mGeneDistribution;
     private final Map<String,Integer> mAltSjCohortFrequency;
 
     public IsofoxDataLoader(final CommandLine cmd)
     {
         mConfig = new DataLoaderConfig(cmd);
-        mGeneDistribution = new SampleGenePercentiles(mConfig.GeneDistributionFile);
+        mGeneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
 
         mAltSjCohortFrequency = Maps.newHashMap();
         loadAltSjCohortFile();

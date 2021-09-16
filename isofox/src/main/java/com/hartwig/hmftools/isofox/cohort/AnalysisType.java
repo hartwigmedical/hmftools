@@ -10,20 +10,26 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESUL
 
 public enum AnalysisType
 {
-    SUMMARY,
-    EXPRESSION_DISTRIBUTION, // produce pan-cancer and per-cancer median and percentile expression data
+    SUMMARY, // reads in the BAM reading summary files and makes a single cohort file
+
+    // novel junctions:
     ALT_SPLICE_JUNCTION, // combine and analyse alternate splice junctions for a cohort
     ALT_SPLICE_JUNCTION_MATRIX, // generates a for a cohort's alt-SJs
     SPLICE_VARIANT_MATCHING, // match alternate splice junctions with (candidate-splicing) somatic variants
     RECURRENT_SPLICE_VARIANTS, // find recurrent splice variants, input is a somatic table file
+    SPLICE_SITE_PERCENTILES, // produce cohort percentage-spiced-in data from per-sample splice data files
+
+    // fusions:
     FUSION, // process fusions for a cohort - filter passing fusions, form a cohort file, compare with external fusions
     PASSING_FUSION, // produce per-sample filtered fusions
     RETAINED_INTRON, // produce cohort file for retained introns
-    SPLICE_SITE_PERCENTILES, // produce cohort percentage-spiced-in data from per-sample splice data files
-    EXTERNAL_EXPRESSION_COMPARE, // combine expression data from Isofox and another source
+
+    // expression
+    EXPRESSION_DISTRIBUTION, // produce pan-cancer and per-cancer median and percentile expression data
     GENE_EXPRESSION_COMPARE, // compare gene expression across 2 cohorts of samples
     GENE_EXPRESSION_MATRIX, // generates a matrix for gene expression data
-    TRANSCRIPT_EXPRESSION_MATRIX; // as above but for transcript expression
+    TRANSCRIPT_EXPRESSION_MATRIX, // as above but for transcript expression
+    EXTERNAL_EXPRESSION_COMPARE; // combine expression data from Isofox and another source
 
     public static String getIsofoxFileId(AnalysisType type)
     {
