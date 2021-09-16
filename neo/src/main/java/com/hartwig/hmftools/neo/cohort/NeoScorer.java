@@ -48,12 +48,12 @@ public class NeoScorer
             System.exit(1);
         }
 
-        NE_LOGGER.info("running neoepitope scoring for {}",
-                mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : String.format("%d samples", mConfig.SampleIds.size()));
+        NE_LOGGER.info("loading cohort transcript expression");
 
         RnaExpressionMatrix transcriptExpression = new RnaExpressionMatrix(mConfig.SampleTranscriptExpressionFile, EXPRESSION_SCOPE_TRANS);
 
-        NE_LOGGER.info("processing {} samples", mConfig.SampleIds.size());
+        NE_LOGGER.info("running neoepitope scoring for {}",
+                mConfig.SampleIds.size() == 1 ? mConfig.SampleIds.get(0) : String.format("%d samples", mConfig.SampleIds.size()));
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 

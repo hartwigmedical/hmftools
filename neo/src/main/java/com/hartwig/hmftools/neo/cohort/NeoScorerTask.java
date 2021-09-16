@@ -14,10 +14,12 @@ import static com.hartwig.hmftools.neo.cohort.DataLoader.loadRnaNeoData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.neo.bind.BindData;
@@ -129,60 +131,6 @@ public class NeoScorerTask implements Callable
                 }
             }
         }
-
-        /*
-
-        // organise by neoepitope
-        Map<Integer,List<PeptidePredictionData>> neoPredictions = Maps.newHashMap();
-
-        // organise into map by peptide, avoiding repeated peptides
-        for(PeptidePredictionData predData : allPredictions)
-        {
-            List<PeptidePredictionData> predictions = neoPredictions.get(predData.NeId);
-
-            if(predictions == null)
-            {
-                predictions = Lists.newArrayList();
-                neoPredictions.put(predData.NeId, predictions);
-            }
-
-            predictions.add(predData);
-        }
-
-        for(Map.Entry<Integer,List<PeptidePredictionData>> entry : neoPredictions.entrySet())
-        {
-            NeoEpitopeData neoData = neoEpitopeDataMap.get(entry.getKey());
-
-            NeoPredictionData neoPredData = new NeoPredictionData(neoData.Id);
-
-            Map<String,NeoPredictionData> allelePredictions = Maps.newHashMap();
-            alleleCoverages.forEach(x -> allelePredictions.put(x.Allele, new NeoPredictionData(neoData.Id)));
-
-            for(PeptidePredictionData predData : entry.getValue())
-            {
-                neoPredData.processPredictionData(predData);
-
-                NeoPredictionData allelePredData = allelePredictions.get(predData.Allele);
-                allelePredData.processPredictionData(predData);
-
-                if(mConfig.WriteTypes.contains(CohortWriteType.ALLELE_PEPTIDE))
-                {
-                    AlleleCoverage alleleCoverage = alleleCoverages.stream().filter(x -> x.Allele.equals(predData.Allele)).findFirst().orElse(null);
-
-                    if(alleleCoverage != null)
-                        mWriters.writePeptideData(mSampleId, neoData, predData, alleleCoverage);
-                }
-            }
-
-            for(AlleleCoverage alleleCoverage : alleleCoverages)
-            {
-                NeoPredictionData allelePredData = allelePredictions.get(alleleCoverage.Allele);
-                mWriters.writeNeoData(mSampleId, neoData, allelePredData, alleleCoverage);
-            }
-        }
-
-        */
-
     }
 
     private NeoPredictionData produceAllelePeptides(final NeoEpitopeData neoData, final List<AlleleCoverage> alleleCoverages)
@@ -192,8 +140,15 @@ public class NeoScorerTask implements Callable
         final List<PeptideData> peptides = EpitopeUtils.generatePeptides(
                 neoData.UpAminoAcids, neoData.NovelAminoAcids, neoData.DownAminoAcids, PEPTIDE_LENGTH_RANGE, FLANK_BASE_COUNT);
 
+        Set<String> uniqueAlleles = Sets.newHashSet();
+
         for(AlleleCoverage allele : alleleCoverages)
         {
+            if(uniqueAlleles.contains(allele.Allele))
+                continue;
+
+            uniqueAlleles.add(allele.Allele);
+
             List<BindData> bindDataList = Lists.newArrayList();
             neoPredData.getPeptidePredictions().put(allele.Allele, bindDataList);
 

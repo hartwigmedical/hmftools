@@ -42,7 +42,7 @@ public class NeoDataWriter
             final String outputFileName = mConfig.formFilename("allele_peptide_scores");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("SampleId,NeId,Allele,Peptide");
+            writer.write("SampleId,NeId,VarType,VarInfo,Gene,Allele,Peptide");
             writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecognitionSim");
             writer.write(",AllelCN,AlleleDisrupted");
             writer.write(",TpmUp,TpmDown,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
@@ -69,7 +69,9 @@ public class NeoDataWriter
                 if(bindData.likelihoodRank() > mConfig.LikelihoodThreshold)
                     continue;
 
-                mPeptideWriter.write(String.format("%s,%d,%s,%s", sampleId, neoData.Id, bindData.Allele, bindData.Peptide));
+                mPeptideWriter.write(String.format("%s,%d,%s,%s,%s,%s,%s",
+                        sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
+                        bindData.Allele, bindData.Peptide));
 
                 mPeptideWriter.write(String.format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f",
                         bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
