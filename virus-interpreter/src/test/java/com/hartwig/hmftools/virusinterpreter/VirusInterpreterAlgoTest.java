@@ -41,10 +41,10 @@ public class VirusInterpreterAlgoTest {
 
     @Test
     public void canTestIsPurpleQCPass() {
-        assertTrue(VirusInterpreterAlgo.isPurpleQCPass(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
-        assertTrue(VirusInterpreterAlgo.isPurpleQCPass(Sets.newHashSet(PurpleQCStatus.PASS)));
-        assertFalse(VirusInterpreterAlgo.isPurpleQCPass(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
-        assertFalse(VirusInterpreterAlgo.isPurpleQCPass(Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertTrue(VirusInterpreterAlgo.isAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
+        assertTrue(VirusInterpreterAlgo.isAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.PASS)));
+        assertFalse(VirusInterpreterAlgo.isAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
+        assertFalse(VirusInterpreterAlgo.isAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
     }
 
     @Test
