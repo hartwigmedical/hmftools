@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.patientreporter.reportingdb;
 
+import static java.lang.String.format;
+
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.reportingdb.ReportingEntry;
@@ -31,7 +37,8 @@ public class ReportingDb {
         this.reportingDbTsv = reportingDbTsv;
     }
 
-    public void appendAnalysedReport(@NotNull AnalysedPatientReport report) throws IOException {
+    public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory)
+            throws IOException {
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
@@ -59,8 +66,38 @@ public class ReportingDb {
                 }
 
                 addToReportingDb(tumorBarcode, sampleId, cohort, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
+                writeApiUpdateJson(outputDirectory,
+                            tumorBarcode,
+                            sampleId,
+                            cohort,
+                            reportType,
+                            reportDate,
+                            purity,
+                            hasReliableQuality,
+                            hasReliablePurity);
             }
         }
+    }
+
+    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId, final LimsCohortConfig cohort,
+            final String reportType, final String reportDate, final String purity, final boolean hasReliableQuality,
+            final boolean hasReliablePurity) throws IOException {
+        File outputFile = new File(outputDirectory, format("%s_%s_api-update.json", sampleId, tumorBarcode));
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("barcode", tumorBarcode);
+        payload.put("report_type", reportType);
+        payload.put("report_date", reportDate);
+        payload.put("purity", Float.parseFloat(purity));
+        payload.put("cohort", cohort.cohortId());
+        payload.put("has_reliable_quality", hasReliableQuality);
+        payload.put("has_reliable_purity", hasReliablePurity);
+
+        appendToFile(outputFile.getAbsolutePath(), new GsonBuilder().serializeNulls()
+                .serializeSpecialFloatingPointValues()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create()
+                .toJson(payload));
     }
 
     private void addToReportingDb(@NotNull String tumorBarcode, @NotNull String sampleId, @NotNull LimsCohortConfig cohort,
@@ -80,7 +117,7 @@ public class ReportingDb {
             String stringToAppend =
                     tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t"
                             + hasReliableQuality + "\t" + hasReliablePurity + "\n";
-            appendToTsv(reportingDbTsv, stringToAppend);
+            appendToFile(reportingDbTsv, stringToAppend);
         }
     }
 
@@ -107,7 +144,7 @@ public class ReportingDb {
                 String stringToAppend =
                         tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING
                                 + "\t" + NA_STRING + "\t" + NA_STRING + "\n";
-                appendToTsv(reportingDbTsv, stringToAppend);
+                appendToFile(reportingDbTsv, stringToAppend);
             }
         }
     }
@@ -124,7 +161,7 @@ public class ReportingDb {
         return true;
     }
 
-    private static void appendToTsv(@NotNull String reportingDbTsv, @NotNull String stringToAppend) throws IOException {
+    private static void appendToFile(@NotNull String reportingDbTsv, @NotNull String stringToAppend) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(reportingDbTsv, true));
         writer.write(stringToAppend);
         writer.close();
