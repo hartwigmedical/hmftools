@@ -82,7 +82,7 @@ public class ReportingDbTest {
             reportingDb.appendAnalysedReport(ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config), "/tmp");
             reportingDb.appendQCFailReport(ExampleAnalysisTestFactory.createQCFailReport("CPCT01_FAIL",
                     QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
-                    cohortConfig));
+                    cohortConfig), "/tmp");
         }
     }
 

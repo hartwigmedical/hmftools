@@ -80,8 +80,8 @@ public class ReportingDb {
     }
 
     private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId, final LimsCohortConfig cohort,
-            final String reportType, final String reportDate, final String purity, final boolean hasReliableQuality,
-            final boolean hasReliablePurity) throws IOException {
+            final String reportType, final String reportDate, final String purity, final Boolean hasReliableQuality,
+            final Boolean hasReliablePurity) throws IOException {
         File outputFile = new File(outputDirectory, format("%s_%s_api-update.json", sampleId, tumorBarcode));
         Map<String, Object> payload = new HashMap<>();
         payload.put("barcode", tumorBarcode);
@@ -89,8 +89,8 @@ public class ReportingDb {
         payload.put("report_date", reportDate);
         payload.put("purity", Float.parseFloat(purity));
         payload.put("cohort", cohort.cohortId());
-        payload.put("has_reliable_quality", hasReliableQuality);
-        payload.put("has_reliable_purity", hasReliablePurity);
+        payload.put("has_reliable_quality", hasReliableQuality != null ? hasReliableQuality : NA_STRING);
+        payload.put("has_reliable_purity", hasReliablePurity != null ? hasReliablePurity : NA_STRING);
 
         appendToFile(outputFile.getAbsolutePath(), new GsonBuilder().serializeNulls()
                 .serializeSpecialFloatingPointValues()
@@ -121,7 +121,7 @@ public class ReportingDb {
         }
     }
 
-    public void appendQCFailReport(@NotNull QCFailReport report) throws IOException {
+    public void appendQCFailReport(@NotNull QCFailReport report, @NotNull String outputDirectory) throws IOException {
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
@@ -145,6 +145,15 @@ public class ReportingDb {
                         tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING
                                 + "\t" + NA_STRING + "\t" + NA_STRING + "\n";
                 appendToFile(reportingDbTsv, stringToAppend);
+                writeApiUpdateJson(outputDirectory,
+                        tumorBarcode,
+                        sampleId,
+                        cohort,
+                        reportType,
+                        reportDate,
+                        NA_STRING,
+                        null,
+                        null);
             }
         }
     }

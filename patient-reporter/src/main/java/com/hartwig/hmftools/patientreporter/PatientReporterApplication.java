@@ -115,7 +115,7 @@ public class PatientReporterApplication {
 
             writeReportDataToJson(report);
 
-            new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report);
+            new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report, config.outputDirReport());
         }
     }
 
