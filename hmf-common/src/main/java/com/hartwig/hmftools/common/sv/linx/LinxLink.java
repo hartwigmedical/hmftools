@@ -3,11 +3,13 @@ package com.hartwig.hmftools.common.sv.linx;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -67,7 +69,41 @@ public abstract class LinxLink
     @NotNull
     private static List<LinxLink> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxLink::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        lines.remove(0);
+
+        List<LinxLink> links = Lists.newArrayList();
+
+        int lowerSvIdIndex = fieldsIndexMap.containsKey("lowerSvId") ? fieldsIndexMap.get("lowerSvId") : fieldsIndexMap.get("lowerBreakendId");
+        int upperSvIdIndex = fieldsIndexMap.containsKey("upperSvId") ? fieldsIndexMap.get("upperSvId") : fieldsIndexMap.get("upperBreakendId");
+
+        for(int i = 0; i < lines.size(); ++i)
+        {
+            String[] values = lines.get(i).split(DELIMITER);
+
+            links.add(ImmutableLinxLink.builder()
+                    .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
+                    .chainId(Integer.parseInt(values[fieldsIndexMap.get("chainId")]))
+                    .chainIndex(values[fieldsIndexMap.get("chainIndex")])
+                    .chainCount(Integer.parseInt(values[fieldsIndexMap.get("chainCount")]))
+                    .lowerSvId(Integer.parseInt(values[lowerSvIdIndex]))
+                    .upperSvId(Integer.parseInt(values[upperSvIdIndex]))
+                    .lowerBreakendIsStart(Boolean.parseBoolean(values[fieldsIndexMap.get("lowerBreakendIsStart")]))
+                    .upperBreakendIsStart(Boolean.parseBoolean(values[fieldsIndexMap.get("upperBreakendIsStart")]))
+                    .chromosome(values[fieldsIndexMap.get("chromosome")])
+                    .arm(values[fieldsIndexMap.get("arm")])
+                    .assembled(Boolean.parseBoolean(values[fieldsIndexMap.get("assembled")]))
+                    .traversedSVCount(Integer.parseInt(values[fieldsIndexMap.get("traversedSVCount")]))
+                    .length(Long.parseLong(values[fieldsIndexMap.get("length")]))
+                    .junctionCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]))
+                    .junctionCopyNumberUncertainty(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumberUncertainty")]))
+                    .pseudogeneInfo(values[fieldsIndexMap.get("pseudogeneInfo")])
+                    .ecDna(Boolean.parseBoolean(values[fieldsIndexMap.get("ecDna")]))
+                    .build());
+        }
+
+        return links;
     }
 
     @NotNull
@@ -77,8 +113,8 @@ public abstract class LinxLink
                 .add("chainId")
                 .add("chainIndex")
                 .add("chainCount")
-                .add("lowerBreakendId")
-                .add("upperBreakendId")
+                .add("lowerSvId")
+                .add("upperSvId")
                 .add("lowerBreakendIsStart")
                 .add("upperBreakendIsStart")
                 .add("chromosome")
@@ -116,33 +152,4 @@ public abstract class LinxLink
                 .add(String.valueOf(svData.ecDna()))
                 .toString();
     }
-
-    @NotNull
-    private static LinxLink fromString(@NotNull final String tiData)
-    {
-        String[] values = tiData.split(DELIMITER);
-
-        int index = 0;
-
-        return ImmutableLinxLink.builder()
-                .clusterId(Integer.parseInt(values[index++]))
-                .chainId(Integer.parseInt(values[index++]))
-                .chainIndex(values[index++])
-                .chainCount(Integer.parseInt(values[index++]))
-                .lowerSvId(Integer.parseInt(values[index++]))
-                .upperSvId(Integer.parseInt(values[index++]))
-                .lowerBreakendIsStart(Boolean.parseBoolean(values[index++]))
-                .upperBreakendIsStart(Boolean.parseBoolean(values[index++]))
-                .chromosome(values[index++])
-                .arm(values[index++])
-                .assembled(Boolean.parseBoolean(values[index++]))
-                .traversedSVCount(Integer.parseInt(values[index++]))
-                .length(Long.parseLong(values[index++]))
-                .junctionCopyNumber(Double.parseDouble(values[index++]))
-                .junctionCopyNumberUncertainty(Double.parseDouble(values[index++]))
-                .pseudogeneInfo(index < values.length ? values[index++] : "")
-                .ecDna(Boolean.parseBoolean(values[index++]))
-                .build();
-    }
-
 }

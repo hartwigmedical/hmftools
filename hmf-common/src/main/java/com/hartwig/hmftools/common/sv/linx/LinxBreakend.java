@@ -3,11 +3,13 @@ package com.hartwig.hmftools.common.sv.linx;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -78,7 +80,47 @@ public abstract class LinxBreakend
     @NotNull
     private static List<LinxBreakend> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("id")).map(LinxBreakend::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        lines.remove(0);
+
+        List<LinxBreakend> breakends = Lists.newArrayList();
+
+        for(int i = 0; i < lines.size(); ++i)
+        {
+            String[] values = lines.get(i).split(DELIMITER);
+
+            breakends.add(ImmutableLinxBreakend.builder()
+                    .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))
+                    .svId(Integer.parseInt(values[fieldsIndexMap.get("svId")]))
+                    .isStart(Boolean.parseBoolean(values[fieldsIndexMap.get("isStart")]))
+                    .gene(values[fieldsIndexMap.get("gene")])
+                    .transcriptId(values[fieldsIndexMap.get("transcriptId")])
+                    .canonical(Boolean.parseBoolean(values[fieldsIndexMap.get("canonical")]))
+                    .geneOrientation(values[fieldsIndexMap.get("geneOrientation")])
+                    .disruptive(Boolean.parseBoolean(values[fieldsIndexMap.get("disruptive")]))
+                    .reportedDisruption(Boolean.parseBoolean(values[fieldsIndexMap.get("reportedDisruption")]))
+                    .undisruptedCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("undisruptedCopyNumber")]))
+                    .regionType(values[fieldsIndexMap.get("regionType")])
+                    .codingContext(values[fieldsIndexMap.get("codingContext")])
+                    .biotype(values[fieldsIndexMap.get("biotype")])
+                    .exonicBasePhase(Integer.parseInt(values[fieldsIndexMap.get("exonicBasePhase")]))
+                    .nextSpliceExonRank(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonRank")]))
+                    .nextSpliceExonPhase(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonPhase")]))
+                    .nextSpliceDistance(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceDistance")]))
+                    .totalExonCount(Integer.parseInt(values[fieldsIndexMap.get("totalExonCount")]))
+                    .type(values[fieldsIndexMap.get("type")])
+                    .chromosome(values[fieldsIndexMap.get("chromosome")])
+                    .orientation(Integer.parseInt(values[fieldsIndexMap.get("orientation")]))
+                    .strand(Integer.parseInt(values[fieldsIndexMap.get("strand")]))
+                    .chrBand(values[fieldsIndexMap.get("chrBand")])
+                    .exonUp(Integer.parseInt(values[fieldsIndexMap.get("exonUp")]))
+                    .exonDown(Integer.parseInt(values[fieldsIndexMap.get("exonDown")]))
+                    .junctionCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]))
+                    .build());
+        }
+
+        return breakends;
     }
 
     @NotNull
@@ -146,42 +188,4 @@ public abstract class LinxBreakend
                 .add(String.format("%.4f", breakend.junctionCopyNumber()))
                 .toString();
     }
-
-    @NotNull
-    private static LinxBreakend fromString(@NotNull final String breakend)
-    {
-        String[] values = breakend.split(DELIMITER, -1);
-
-        int index = 0;
-
-        return ImmutableLinxBreakend.builder()
-                .id(Integer.parseInt(values[index++]))
-                .svId(Integer.parseInt(values[index++]))
-                .isStart(Boolean.parseBoolean(values[index++]))
-                .gene(values[index++])
-                .transcriptId(values[index++])
-                .canonical(Boolean.parseBoolean(values[index++]))
-                .geneOrientation(values[index++])
-                .disruptive(Boolean.parseBoolean(values[index++]))
-                .reportedDisruption(Boolean.parseBoolean(values[index++]))
-                .undisruptedCopyNumber(Double.parseDouble(values[index++]))
-                .regionType(values[index++])
-                .codingContext(values[index++])
-                .biotype(values[index++])
-                .exonicBasePhase(Integer.parseInt(values[index++]))
-                .nextSpliceExonRank(Integer.parseInt(values[index++]))
-                .nextSpliceExonPhase(Integer.parseInt(values[index++]))
-                .nextSpliceDistance(Integer.parseInt(values[index++]))
-                .totalExonCount(Integer.parseInt(values[index++]))
-                .type(values[index++])
-                .chromosome(values[index++])
-                .orientation(Integer.parseInt(values[index++]))
-                .strand(Integer.parseInt(values[index++]))
-                .chrBand(values[index++])
-                .exonUp(Integer.parseInt(values[index++]))
-                .exonDown(Integer.parseInt(values[index++]))
-                .junctionCopyNumber(Double.parseDouble(values[index++]))
-                .build();
-    }
-
 }

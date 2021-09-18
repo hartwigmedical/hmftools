@@ -62,15 +62,30 @@ public abstract class LinxCluster
         final String header = lines.get(0);
         lines.remove(0);
 
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header,DELIMITER);
+
         if(header.contains("subClonal"))
         {
-            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header,DELIMITER);
-            return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
+            return lines.stream().map(x -> fromString_v1_10(x, fieldsIndexMap)).collect(toList());
         }
-        else
+
+        List<LinxCluster> clusters = Lists.newArrayList();
+
+        for(int i = 0; i < lines.size(); ++i)
         {
-            return lines.stream().map(LinxCluster::fromString).collect(toList());
+            String[] values = lines.get(i).split(DELIMITER);
+
+            clusters.add(ImmutableLinxCluster.builder()
+                    .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
+                    .category(values[fieldsIndexMap.get("category")])
+                    .synthetic(Boolean.parseBoolean(values[fieldsIndexMap.get("synthetic")]))
+                    .resolvedType(values[fieldsIndexMap.get("resolvedType")])
+                    .clusterCount(Integer.parseInt(values[fieldsIndexMap.get("clusterCount")]))
+                    .clusterDesc(values[fieldsIndexMap.get("clusterDesc")])
+                    .build());
         }
+
+        return clusters;
     }
 
     @NotNull
@@ -97,23 +112,6 @@ public abstract class LinxCluster
                 .add(String.valueOf(cluster.clusterCount()))
                 .add(String.valueOf(cluster.clusterDesc()))
                 .toString();
-    }
-
-    @NotNull
-    private static LinxCluster fromString(@NotNull final String clusterData)
-    {
-        String[] values = clusterData.split(DELIMITER);
-
-        int index = 0;
-
-        return ImmutableLinxCluster.builder()
-                .clusterId(Integer.parseInt(values[index++]))
-                .category(values[index++])
-                .synthetic(Boolean.parseBoolean(values[index++]))
-                .resolvedType(values[index++])
-                .clusterCount(Integer.parseInt(values[index++]))
-                .clusterDesc(values[index++])
-                .build();
     }
 
     @NotNull

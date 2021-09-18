@@ -2,10 +2,14 @@ package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -70,7 +74,24 @@ public abstract class LinxDriver
     @NotNull
     private static List<LinxDriver> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxDriver::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        lines.remove(0);
+
+        List<LinxDriver> drivers = Lists.newArrayList();
+
+        for(int i = 0; i < lines.size(); ++i)
+        {
+            String[] values = lines.get(i).split(DELIMITER);
+
+            drivers.add(ImmutableLinxDriver.builder()
+                    .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
+                    .gene(values[fieldsIndexMap.get("gene")])
+                    .eventType(values[fieldsIndexMap.get("eventType")])
+                    .build());
+        }
+
+        return drivers;
     }
 
     @NotNull
@@ -91,20 +112,4 @@ public abstract class LinxDriver
                 .add(String.valueOf(driver.eventType()))
                 .toString();
     }
-
-    @NotNull
-    private static LinxDriver fromString(@NotNull final String clusterData)
-    {
-        String[] values = clusterData.split(LinxCluster.DELIMITER);
-
-        int index = 0;
-
-        return ImmutableLinxDriver.builder()
-                .clusterId(Integer.parseInt(values[index++]))
-                .gene(values[index++])
-                .eventType(values[index++])
-                .build();
-    }
-
-
 }

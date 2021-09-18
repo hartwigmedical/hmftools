@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType.NA;
 import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.INFRAME;
@@ -83,15 +84,49 @@ public abstract class LinxFusion
         final String header = lines.get(0);
         lines.remove(0);
 
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+
         if(!header.contains("likelihood"))
         {
             final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header, LinxCluster.DELIMITER);
             return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
         }
-        else
+
+        List<LinxFusion> fusions = Lists.newArrayList();
+
+        for(int i = 0; i < lines.size(); ++i)
         {
-            return lines.stream().map(LinxFusion::fromString).collect(toList());
+            String[] values = lines.get(i).split(DELIMITER);
+
+            fusions.add(ImmutableLinxFusion.builder()
+                    .fivePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("fivePrimeBreakendId")]))
+                    .threePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("threePrimeBreakendId")]))
+                    .name(values[fieldsIndexMap.get("name")])
+                    .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
+                    .reportedType(values[fieldsIndexMap.get("reportedType")])
+                    .phased(FusionPhasedType.valueOf(values[fieldsIndexMap.get("phased")]))
+                    .likelihood(FusionLikelihoodType.valueOf(values[fieldsIndexMap.get("likelihood")]))
+                    .chainLength(Integer.parseInt(values[fieldsIndexMap.get("chainLength")]))
+                    .chainLinks(Integer.parseInt(values[fieldsIndexMap.get("chainLinks")]))
+                    .chainTerminated(Boolean.parseBoolean(values[fieldsIndexMap.get("chainTerminated")]))
+                    .domainsKept(values[fieldsIndexMap.get("domainsKept")])
+                    .domainsLost(values[fieldsIndexMap.get("domainsLost")])
+                    .skippedExonsUp(Integer.parseInt(values[fieldsIndexMap.get("skippedExonsUp")]))
+                    .skippedExonsDown(Integer.parseInt(values[fieldsIndexMap.get("skippedExonsDown")]))
+                    .fusedExonUp(Integer.parseInt(values[fieldsIndexMap.get("fusedExonUp")]))
+                    .fusedExonDown(Integer.parseInt(values[fieldsIndexMap.get("fusedExonDown")]))
+                    .geneStart(values[fieldsIndexMap.get("geneStart")])
+                    .geneContextStart(values[fieldsIndexMap.get("geneContextStart")])
+                    .geneTranscriptStart(values[fieldsIndexMap.get("transcriptStart")])
+                    .geneEnd(values[fieldsIndexMap.get("geneEnd")])
+                    .geneContextEnd(values[fieldsIndexMap.get("geneContextEnd")])
+                    .geneTranscriptEnd(values[fieldsIndexMap.get("transcriptEnd")])
+                    .junctionCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumber")]))
+                    .build());
         }
+
+        return fusions;
+
     }
 
     @NotNull
@@ -153,39 +188,6 @@ public abstract class LinxFusion
                 .add(String.format("%.4f", fusion.junctionCopyNumber()))
                 .toString();
     }
-
-    @NotNull
-    private static LinxFusion fromString(@NotNull final String fusion)
-    {
-        String[] values = fusion.split(LinxCluster.DELIMITER, -1);
-        int index = 0;
-
-        return ImmutableLinxFusion.builder()
-                .fivePrimeBreakendId(Integer.parseInt(values[index++]))
-                .threePrimeBreakendId(Integer.parseInt(values[index++]))
-                .name(values[index++])
-                .reported(Boolean.parseBoolean(values[index++]))
-                .reportedType(values[index++])
-                .phased(FusionPhasedType.valueOf(values[index++]))
-                .likelihood(FusionLikelihoodType.valueOf(values[index++]))
-                .chainLength(Integer.parseInt(values[index++]))
-                .chainLinks(Integer.parseInt(values[index++]))
-                .chainTerminated(Boolean.parseBoolean(values[index++]))
-                .domainsKept(values[index++])
-                .domainsLost(values[index++])
-                .skippedExonsUp(Integer.parseInt(values[index++]))
-                .skippedExonsDown(Integer.parseInt(values[index++]))
-                .fusedExonUp(Integer.parseInt(values[index++]))
-                .fusedExonDown(Integer.parseInt(values[index++]))
-                .geneStart(values[index++])
-                .geneContextStart(values[index++])
-                .geneTranscriptStart(values[index++])
-                .geneEnd(values[index++])
-                .geneContextEnd(values[index++])
-                .geneTranscriptEnd(values[index++])
-                .junctionCopyNumber(Double.parseDouble(values[index++]))
-                .build();
-     }
 
     @NotNull
     private static LinxFusion fromString_v1_10(@NotNull final String fusion, final Map<String,Integer> fieldIndexMap)
