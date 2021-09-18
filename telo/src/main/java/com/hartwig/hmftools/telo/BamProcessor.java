@@ -24,18 +24,18 @@ public class BamProcessor
 {
     public static void processBam(TeloConfig config) throws InterruptedException
     {
-        TE_LOGGER.info("processing bam: {} with {} threads", config.BamFile, config.Threads);
+        // we create one less for the bam writer
+        int numBamReaders = Math.max(config.ThreadCount - 1, 1);
+        TE_LOGGER.info("processing bam: {} with {} bam reader threads", config.BamFile, numBamReaders);
 
         final Queue<BamReader.Task> bamReaderTaskQ = new ConcurrentLinkedQueue<>();
         final BlockingQueue<TelBamRecord> telBamRecordQ = new LinkedBlockingDeque<>();
         final Set<String> incompleteReadNames = Collections.newSetFromMap(new ConcurrentHashMap<>());
         BamRecordWriter writer = new BamRecordWriter(config, telBamRecordQ, incompleteReadNames);
-        writer.setProcessingMateRegions(false);
+        writer.setProcessingMissingReadRegions(false);
         final List<BamReader> bamReaders = new ArrayList<>();
 
         // create all the bam readers
-        // we create one less for the bam writer
-        int numBamReaders = Math.max(config.Threads - 1, 1);
         for(int i = 0; i < numBamReaders; ++i)
         {
             BamReader bamReader = new BamReader(config, bamReaderTaskQ, telBamRecordQ, Collections.unmodifiableSet(incompleteReadNames));
@@ -65,15 +65,15 @@ public class BamProcessor
 
             // now we process the incomplete groups, since the threads have already finished there is no
             // concurrency problem
-            List<ChrBaseRegion> mateRegions = getMissingReadRegions(writer.getIncompleteReadGroups());
+            List<ChrBaseRegion> missingReadRegions = getMissingReadRegions(writer.getIncompleteReadGroups());
 
-            if (!mateRegions.isEmpty())
+            if (!missingReadRegions.isEmpty())
             {
-                TE_LOGGER.info("processing {} mate regions", mateRegions.size());
-                mateRegions.forEach(x -> bamReaderTaskQ.add(BamReader.Task.fromBaseRegion(x)));
+                TE_LOGGER.info("processing {} missing read regions", missingReadRegions.size());
+                missingReadRegions.forEach(x -> bamReaderTaskQ.add(BamReader.Task.fromBaseRegion(x)));
             }
 
-            writer.setProcessingMateRegions(true);
+            writer.setProcessingMissingReadRegions(true);
 
             // start processing threads and run til completion
             runThreadsTillCompletion(telBamRecordQ, bamReaders, writer);
@@ -128,7 +128,7 @@ public class BamProcessor
 
         if (!missingReadRegions.isEmpty())
         {
-            List<ChrBaseRegion> compactMateRegions = new ArrayList<>();
+            List<ChrBaseRegion> compactBaseRegions = new ArrayList<>();
 
             // now we go through the mate regions and create a new condense list
             ChrBaseRegion overlapRegion = null;
@@ -148,10 +148,10 @@ public class BamProcessor
                 }
                 // no longer can reuse old one, make a new one
                 overlapRegion = (ChrBaseRegion)br.clone();
-                compactMateRegions.add(overlapRegion);
+                compactBaseRegions.add(overlapRegion);
             }
 
-            missingReadRegions = compactMateRegions;
+            missingReadRegions = compactBaseRegions;
         }
 
         return missingReadRegions;

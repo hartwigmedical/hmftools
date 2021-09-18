@@ -23,6 +23,10 @@
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>tech.tablesaw</groupId>
+            <artifactId>tablesaw-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

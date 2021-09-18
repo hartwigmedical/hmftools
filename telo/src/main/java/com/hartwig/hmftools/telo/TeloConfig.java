@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.ConfigUtils;
+import org.apache.commons.cli.ParseException;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -21,29 +23,41 @@ public class TeloConfig
 {
     public final int ThreadCount;
 
+    public final String SampleId;
+
     public final String BamFile;
     public final String RefGenomeFile;
     public final String OutputDir;
 
+    public final String SampleType;
     public final List<String> SpecificChromosomes;
-    public final int Threads;
 
-    private static String THREADS = "threads";
+    private static String SAMPLE_ID = "sample_id";
     private static String BAM_FILE = "bam_file";
+    private static String SAMPLE_TYPE = "sample_type";
     private static String REF_GENOME = "ref_genome";
+    private static String THREADS = "threads";
     private static final String SPECIFIC_CHR = "specific_chr";
 
     public static final Logger TE_LOGGER = LogManager.getLogger(com.hartwig.hmftools.telo.TeloConfig.class);
 
-    public TeloConfig(final CommandLine cmd)
+    public TeloConfig(final CommandLine cmd) throws ParseException
     {
-        ThreadCount = getConfigValue(cmd, THREADS, 1);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME, "");
+        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
 
+        SampleId = cmd.getOptionValue(SAMPLE_ID);
         BamFile = cmd.getOptionValue(BAM_FILE);
         OutputDir = parseOutputDir(cmd);
+        SampleType = cmd.getOptionValue(SAMPLE_TYPE);
 
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        try
+        {
+            ThreadCount = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
+        }
+        catch (NumberFormatException e)
+        {
+            throw new ParseException(String.format("unable to parse %s arg: %s", THREADS, cmd.getOptionValue(THREADS)));
+        }
 
         SpecificChromosomes = Lists.newArrayList();
 
@@ -75,11 +89,13 @@ public class TeloConfig
     public static Options createOptions()
     {
         final Options options = new Options();
-        options.addOption(THREADS, true, "Number of threads");
-        options.addOption(BAM_FILE, true, "Path to bam file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
-        options.addOption(SPECIFIC_CHR, true, "Optional: list of chromosomes separated by ;");
+        options.addOption(Option.builder(SAMPLE_ID).hasArg().required().desc("ID of tumor sample").build());
+        options.addOption(Option.builder(BAM_FILE).hasArg().required().desc("Path to bam/cram file").build());
+        options.addOption(Option.builder(OUTPUT_DIR).hasArg().required().desc("Output directory").build());
+        options.addOption(Option.builder(SAMPLE_TYPE).hasArg().required().desc("Type of sample (germline / somatic)").build());
+        options.addOption(Option.builder(THREADS).hasArg().type(Number.class).desc("Number of bam reader threads (default = 1)").build());
+        options.addOption(Option.builder(REF_GENOME).hasArg().desc("Path to reference genome fasta file if using CRAM files").build());
+        options.addOption(Option.builder(SPECIFIC_CHR).hasArg().desc("Optional: list of chromosomes separated by ;").build());
         ConfigUtils.addLoggingOptions(options);
 
         return options;

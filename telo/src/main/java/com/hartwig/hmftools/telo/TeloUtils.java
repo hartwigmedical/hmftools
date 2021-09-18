@@ -211,7 +211,7 @@ public class TeloUtils
     public static SamReader openSamReader(final TeloConfig config)
     {
         SamReaderFactory factory = SamReaderFactory.makeDefault();
-        if(!config.RefGenomeFile.isEmpty())
+        if(config.RefGenomeFile != null && !config.RefGenomeFile.isEmpty())
         {
             factory = factory.referenceSequence(new File(config.RefGenomeFile));
         }

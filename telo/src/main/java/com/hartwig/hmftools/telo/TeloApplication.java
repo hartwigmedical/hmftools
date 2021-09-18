@@ -60,19 +60,21 @@ public class TeloApplication
     public static void main(final String... args)
     {
         final Options options = TeloConfig.createOptions();
+        TeloApplication application = null;
 
         try
         {
-            TeloApplication application = new TeloApplication(options, args);
-            application.run();
+            application = new TeloApplication(options, args);
         }
         catch(ParseException e)
         {
             TE_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("CountBamLinesApplication", options);
+            formatter.printHelp("TeloApplication", options);
             System.exit(1);
         }
+
+        application.run();
     }
 
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
