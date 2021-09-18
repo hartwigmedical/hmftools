@@ -28,6 +28,7 @@ import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.coverages.ImmutableCoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -39,12 +40,11 @@ public class VirusInterpreterAlgoTest {
     private static final String PURPLE_PURITY_TSV = GENOMIC_DIR + File.separator + "sample.purple.purity.tsv";
 
     @Test
-    public void canTestisPurpleQcPass() {
-        VirusInterpreterAlgo algo = createTestAlgo("Human gammaherpesvirus 4");
-        assertTrue(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
-        assertTrue(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.PASS)));
-        assertFalse(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
-        assertFalse(algo.isPurpleQcPass(Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
+    public void canTestIsPurpleQCPass() {
+        assertTrue(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
+        assertTrue(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.PASS)));
+        assertFalse(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
+        assertFalse(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
     }
 
     @Test
@@ -92,9 +92,7 @@ public class VirusInterpreterAlgoTest {
 
     @Test
     public void canReportTest() {
-        String name = "Human gammaherpesvirus 4";
-
-        VirusInterpreterAlgo algo = createTestAlgo(name);
+        VirusInterpreterAlgo algo = createTestAlgo();
 
         assertTrue(algo.report(createTestVirusBreakendsFail(1).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
         assertTrue(algo.report(createTestVirusBreakendsFail(1).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
@@ -103,20 +101,11 @@ public class VirusInterpreterAlgoTest {
     }
 
     @NotNull
-    private static List<VirusBreakend> createTestVirusBreakendsFail(int intgerations) {
-        List<VirusBreakend> virusBreakends = Lists.newArrayList();
-
-        // This one should be added --reported
-        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
-                .referenceTaxid(1)
-                .taxidGenus(2)
-                .taxidSpecies(1)
-                .integrations(intgerations)
-                .coverage(0)
-                .build());
-        return virusBreakends;
+    private static VirusInterpreterAlgo createTestAlgo() {
+        return createTestAlgo(Strings.EMPTY);
     }
 
+    @NotNull
     private static VirusInterpreterAlgo createTestAlgo(@NotNull String name) {
         VirusReportingDb virusReporting1 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
@@ -214,6 +203,21 @@ public class VirusInterpreterAlgoTest {
                 .coverage(90)
                 .build());
 
+        return virusBreakends;
+    }
+
+    @NotNull
+    private static List<VirusBreakend> createTestVirusBreakendsFail(int integrations) {
+        List<VirusBreakend> virusBreakends = Lists.newArrayList();
+
+        // This one should be added --reported
+        virusBreakends.add(VirusTestFactory.testVirusBreakendBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(1)
+                .integrations(integrations)
+                .coverage(0)
+                .build());
         return virusBreakends;
     }
 }

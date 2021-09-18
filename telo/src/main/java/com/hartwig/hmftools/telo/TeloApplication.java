@@ -2,9 +2,7 @@ package com.hartwig.hmftools.telo;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.telo.TeloConfig.TE_LOGGER;
-import static com.hartwig.hmftools.telo.TeloUtils.createPartitions;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.Duration;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -62,19 +60,21 @@ public class TeloApplication
     public static void main(final String... args)
     {
         final Options options = TeloConfig.createOptions();
+        TeloApplication application = null;
 
         try
         {
-            TeloApplication application = new TeloApplication(options, args);
-            application.run();
+            application = new TeloApplication(options, args);
         }
         catch(ParseException e)
         {
             TE_LOGGER.warn(e);
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("CountBamLinesApplication", options);
+            formatter.printHelp("TeloApplication", options);
             System.exit(1);
         }
+
+        application.run();
     }
 
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
@@ -82,5 +82,4 @@ public class TeloApplication
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }

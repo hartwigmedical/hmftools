@@ -40,7 +40,7 @@ import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxLink;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
@@ -458,7 +458,7 @@ public class DatabaseAccess implements AutoCloseable {
         virusBreakendDAO.writeVirusBreakend(sample, virusBreakends);
     }
 
-    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirus> virusAnnotations) {
+    public void writeVirusInterpreter(@NotNull String sample, @NotNull List<AnnotatedVirusV1> virusAnnotations) {
         virusInterpreterDAO.writeVirusInterpreter(sample, virusAnnotations);
     }
 

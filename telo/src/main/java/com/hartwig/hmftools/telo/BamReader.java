@@ -6,21 +6,40 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMTag;
 import htsjdk.samtools.SamReader;
 
 public class BamReader implements Runnable
 {
+    public static class Task
+    {
+        private ChrBaseRegion mBaseRegion;
+        private boolean mQueryUnmapped;
+        public ChrBaseRegion baseRegion() { return mBaseRegion; }
+        public boolean queryUnmapped() { return mQueryUnmapped; }
+        public static Task fromBaseRegion(ChrBaseRegion baseRegion)
+        {
+            Task t = new Task();
+            t.mBaseRegion = baseRegion;
+            return t;
+        }
+        public static Task fromQueryUnmapped()
+        {
+            Task t = new Task();
+            t.mQueryUnmapped = true;
+            return t;
+        }
+    }
+
     private final TeloConfig mConfig;
 
-    private final Queue<ChrBaseRegion> mBaseRegionQ;
+    private final Queue<Task> mTaskQ;
     private final Queue<TelBamRecord> mTelBamRecordQ;
     private final Set<String> mIncompleteReadNames;
 
@@ -29,10 +48,10 @@ public class BamReader implements Runnable
     // one sam reader per thread
     private SamReader mSamReader;
 
-    public BamReader(final TeloConfig config, Queue<ChrBaseRegion> baseRegionQ, Queue<TelBamRecord> telBamRecordQ, Set<String> incompleteReadNames)
+    public BamReader(final TeloConfig config, Queue<Task> taskQ, Queue<TelBamRecord> telBamRecordQ, Set<String> incompleteReadNames)
     {
         mConfig = config;
-        mBaseRegionQ = baseRegionQ;
+        mTaskQ = taskQ;
         mTelBamRecordQ = telBamRecordQ;
         mIncompleteReadNames = incompleteReadNames;
         mSamReader = TeloUtils.openSamReader(mConfig);
@@ -43,51 +62,67 @@ public class BamReader implements Runnable
     {
         while(true)
         {
-            ChrBaseRegion baseRegion;
+            Task task;
+
             try
             {
-                baseRegion = mBaseRegionQ.remove();
+                task = mTaskQ.remove();
             }
             catch (NoSuchElementException e)
             {
                 // finished processing
                 break;
             }
-            findTelomereContent(baseRegion);
+            findTelomereContent(task);
         }
     }
 
-    public void findTelomereContent(ChrBaseRegion baseRegion)
+    public void findTelomereContent(Task task)
     {
-        if(!baseRegion.equals(TeloConstants.UNMAPPED_BASE_REGION))
-        {
-            processBamByRegion(baseRegion);
-        }
-        else
+        if(task.queryUnmapped())
         {
             processUnmappedReads();
         }
+        if(task.baseRegion() != null)
+        {
+            processBamByRegion(task.baseRegion());
+        }
     }
 
+    // Important note:
+    // here we must use SamReader::query. I have tested that this function would return unmapped read that has
+    // chromosome and start position set. We need that cause unfortunately the queryUnmapped function is not going to return
+    // them. See https://github.com/samtools/htsjdk/issues/278
     private void processBamByRegion(ChrBaseRegion baseRegion)
     {
         TE_LOGGER.info("processing region({})", baseRegion.toString());
         mReadCount = 0;
 
-        BamSlicer bamSlicer = new BamSlicer(1, false, false, false);
-        bamSlicer.slice(mSamReader, Lists.newArrayList(baseRegion), this::processReadRecord);
+        // do not change the follow line to use functions other than query without testing that unmapped reads are returned
+        try (final SAMRecordIterator iterator = mSamReader.query(baseRegion.Chromosome, baseRegion.start(), baseRegion.end(), false))
+        {
+            while (iterator.hasNext())
+            {
+                final SAMRecord record = iterator.next();
+                processReadRecord(record);
+            }
+        }
 
         TE_LOGGER.info("processed region({}) read count({})", baseRegion.toString(), mReadCount);
     }
 
+    // Important note:
+    // queryUnmapped will not return unmapped read that has chromosome / pos start set. These are
+    // unmapped read where the mate is mapped.
+    // see https://github.com/samtools/htsjdk/issues/278
     private void processUnmappedReads()
     {
         TE_LOGGER.info("processing unmapped reads, incomplete={}", mIncompleteReadNames.size());
         mReadCount = 0;
 
-        try (final SAMRecordIterator iterator = mSamReader.queryUnmapped())
+        try(final SAMRecordIterator iterator = mSamReader.queryUnmapped())
         {
-            while (iterator.hasNext())
+            while(iterator.hasNext())
             {
                 final SAMRecord record = iterator.next();
                 processReadRecord(record);
@@ -104,9 +139,12 @@ public class BamReader implements Runnable
 
     private void processReadRecord(@NotNull final SAMRecord record)
     {
-        // we discard any supplementary / secondary alignments
-        if(record.isSecondaryOrSupplementary())
+        // we filter out secondary alignment, cannot seem to find them in our
+        // cram file so for now not relevant
+        if (record.isSecondaryAlignment())
+        {
             return;
+        }
 
         boolean hasTeloContent = hasTelomericContent(record);
 

@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +37,7 @@ public final class ConsentFilterFunctions {
             notifyPerVariant.put(filtered.variant(), filtered.notifyVariant());
         }
 
-        List<AnnotatedVirus> filteredViruses =
+        List<AnnotatedVirusV1> filteredViruses =
                 reportViralPresence ? genomicAnalysis.reportableViruses() : Lists.newArrayList();
 
         List<PeachGenotype> filteredPeachGenotypes = reportPeach ? genomicAnalysis.peachGenotypes() : Lists.newArrayList();
