@@ -97,6 +97,12 @@ public class BindScorer
         writeAlleleSummary();
         writePeptideScores();
 
+        if(mConfig.CheckSelfRecognition)
+        {
+            String recogSimFilename = BindCommon.formFilename(mConfig.OutputDir, "recog_allele_sim", mConfig.OutputId);
+            mRecognitionSimilarity.logCrossAlleleSimilarities(recogSimFilename);
+        }
+
         NE_LOGGER.info("scoring complete");
     }
 
@@ -188,6 +194,7 @@ public class BindScorer
         double expLikelihood = INVALID_CALC;
         double expLikelihoodRank = INVALID_CALC;
         double recogSimilarity = INVALID_CALC;
+        double otherAlleleRecogSimilarity = INVALID_CALC;
 
         if(bindingLikelihood != null && bindingLikelihood.hasData())
         {
@@ -204,10 +211,14 @@ public class BindScorer
         }
 
         if(recognitionSimilarity != null && recognitionSimilarity.hasData())
+        {
             recogSimilarity = recognitionSimilarity.calcSimilarity(bindData.Allele, bindData.Peptide);
+            otherAlleleRecogSimilarity = recognitionSimilarity.calcOtherAlleleSimilarity(bindData.Allele, bindData.Peptide);
+        }
 
         bindData.setScoreData(
-                score, flankScore, rankPercentile, likelihood, likelihoodRank, expLikelihood, expLikelihoodRank, recogSimilarity);
+                score, flankScore, rankPercentile, likelihood, likelihoodRank, expLikelihood, expLikelihoodRank,
+                recogSimilarity, otherAlleleRecogSimilarity);
     }
 
     private void writePeptideScores()

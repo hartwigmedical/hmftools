@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class NeoDataWriter
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("SampleId,NeId,VarType,VarInfo,Gene,Allele,Peptide");
-            writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecognitionSim");
+            writer.write(",Score,Rank,Likelihood,LikelihoodRank,ExpLikelihood,ExpLikelihoodRank,RecogSim,OtherAlleleRecogSim");
             writer.write(",AllelCN,AlleleDisrupted");
             writer.write(",TpmUp,TpmDown,TpmCancer,TpmCohort,RnaFrags,RnaDepth");
             writer.newLine();
@@ -56,6 +57,20 @@ public class NeoDataWriter
         }
     }
 
+    private boolean logPeptide(final BindData bindData)
+    {
+        if(bindData.likelihoodRank() != INVALID_CALC && bindData.likelihoodRank() <= mConfig.LikelihoodThreshold)
+            return true;
+
+        if(bindData.recognitionSimilarity() != INVALID_CALC && bindData.recognitionSimilarity() <= mConfig.SimilarityThreshold)
+            return true;
+
+        if(bindData.otherAlleleRecognitionSimilarity() != INVALID_CALC && bindData.otherAlleleRecognitionSimilarity() <= mConfig.SimilarityThreshold)
+            return true;
+
+        return false;
+    }
+
     public synchronized void writePeptideData(
             final String sampleId, final NeoEpitopeData neoData, final NeoPredictionData predData, final AlleleCoverage alleleCoverage)
     {
@@ -66,16 +81,18 @@ public class NeoDataWriter
         {
             for(BindData bindData : predData.getPeptidePredictions(alleleCoverage.Allele))
             {
-                if(bindData.likelihoodRank() > mConfig.LikelihoodThreshold)
+
+                if(!logPeptide(bindData))
                     continue;
 
                 mPeptideWriter.write(String.format("%s,%d,%s,%s,%s,%s,%s",
                         sampleId, neoData.Id, neoData.VariantType, neoData.VariantInfo, neoData.GeneName,
                         bindData.Allele, bindData.Peptide));
 
-                mPeptideWriter.write(String.format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f",
+                mPeptideWriter.write(String.format(",%.4f,%.6f,%.6f,%.6f,%.6f,%.6f,%.1f,%.1f",
                         bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
-                        bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(), bindData.recognitionSimilarity()));
+                        bindData.expressionLikelihood(), bindData.expressionLikelihoodRank(),
+                        bindData.recognitionSimilarity(), bindData.otherAlleleRecognitionSimilarity()));
 
                 mPeptideWriter.write(String.format(",%.2f,%s", alleleCoverage.CopyNumber, alleleCoverage.isLost()));
 

@@ -30,6 +30,7 @@ public class NeoScorerConfig
     public final List<OutputType> WriteTypes;
 
     public final double LikelihoodThreshold;
+    public final double SimilarityThreshold;
     public final int Threads;
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
@@ -40,6 +41,7 @@ public class NeoScorerConfig
     public static final String SAMPLE_TRANS_EXP_FILE = "sample_trans_exp_file";
 
     private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
+    private static final String SIMILARITY_THRESHOLD = "sim_threshold";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -55,6 +57,7 @@ public class NeoScorerConfig
         SampleTranscriptExpressionFile = cmd.getOptionValue(SAMPLE_TRANS_EXP_FILE);
 
         LikelihoodThreshold = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_THRESHOLD, "0.02"));
+        SimilarityThreshold = Double.parseDouble(cmd.getOptionValue(SIMILARITY_THRESHOLD, "10"));
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
@@ -89,6 +92,7 @@ public class NeoScorerConfig
         ScoreConfig.addCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
         options.addOption(LIKELIHOOD_THRESHOLD, true, "Rank threshold to write full peptide data");
+        options.addOption(SIMILARITY_THRESHOLD, true, "Immunogenic similarity threshold to write full peptide data");
         options.addOption(THREADS, true, "Thread count");
 
         options.addOption(WRITE_TYPES, true, "Valid types: ALLELE_PEPTIDE, PEPTIDE, NEOEPITOPE, SAMPLE_SUMMARY sep by ';'");

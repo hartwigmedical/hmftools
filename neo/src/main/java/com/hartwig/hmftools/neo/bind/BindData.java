@@ -45,6 +45,7 @@ public class BindData
     private double mExpLikelihood;
     private double mExpLikelihoodRank;
     private double mRecognitionSimilarity;
+    private double mOtherAlleleRecognitionSimilarity;
 
     public BindData(final String allele, final String peptide, final String source)
     {
@@ -69,6 +70,8 @@ public class BindData
         mLikelihoodRank = INVALID_SCORE;
         mExpLikelihood = INVALID_SCORE;
         mExpLikelihoodRank = INVALID_SCORE;
+        mRecognitionSimilarity = INVALID_SCORE;
+        mOtherAlleleRecognitionSimilarity = INVALID_SCORE;
     }
 
     public int peptideLength() { return Peptide.length(); }
@@ -90,7 +93,7 @@ public class BindData
 
     public void setScoreData(
             double score, double flankScore, double rankPerc, double likelihood, double likelihoodRank,
-            double expLikelihood, double expLikelihoodRank, double recogSimilarity)
+            double expLikelihood, double expLikelihoodRank, double recogSimilarity, double otherAlleleRecogSimilarity)
     {
         mScore = score;
         mFlankScore = flankScore;
@@ -100,6 +103,7 @@ public class BindData
         mExpLikelihood = expLikelihood;
         mExpLikelihoodRank = expLikelihoodRank;
         mRecognitionSimilarity = recogSimilarity;
+        mOtherAlleleRecognitionSimilarity = otherAlleleRecogSimilarity;
     }
 
     public double score() { return mScore; }
@@ -110,6 +114,7 @@ public class BindData
     public double expressionLikelihoodRank() { return mExpLikelihoodRank; }
     public double likelihoodRank() { return mLikelihoodRank; }
     public double recognitionSimilarity() { return mRecognitionSimilarity; }
+    public double otherAlleleRecognitionSimilarity() { return mOtherAlleleRecognitionSimilarity; }
 
     public String toString()
     {
