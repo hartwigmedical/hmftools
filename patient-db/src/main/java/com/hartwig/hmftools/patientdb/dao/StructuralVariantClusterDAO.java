@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVANNOT
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVCLUSTER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVDRIVER;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVLINK;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.VIRALINSERTION;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -20,12 +19,11 @@ import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxLink;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep19;
-import org.jooq.InsertValuesStep22;
+import org.jooq.InsertValuesStep20;
 import org.jooq.InsertValuesStep5;
 import org.jooq.InsertValuesStep8;
 import org.jooq.Record;
@@ -84,7 +82,7 @@ class StructuralVariantClusterDAO
 
         for (List<LinxSvAnnotation> batch : Iterables.partition(svData, DB_BATCH_INSERT_SIZE))
         {
-            InsertValuesStep22 inserter = context.insertInto(SVANNOTATION,
+            InsertValuesStep20 inserter = context.insertInto(SVANNOTATION,
                     SVANNOTATION.SAMPLEID,
                     SVANNOTATION.MODIFIED,
                     SVANNOTATION.SVID,
@@ -99,8 +97,6 @@ class StructuralVariantClusterDAO
                     SVANNOTATION.JUNCTIONCOPYNUMBERMAX,
                     SVANNOTATION.GENESTART,
                     SVANNOTATION.GENEEND,
-                    SVANNOTATION.REPLICATIONTIMINGSTART,
-                    SVANNOTATION.REPLICATIONTIMINGEND,
                     SVANNOTATION.LOCALTOPOLOGYIDSTART,
                     SVANNOTATION.LOCALTOPOLOGYIDEND,
                     SVANNOTATION.LOCALTOPOLOGYSTART,
@@ -113,7 +109,7 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep22 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull String sample,
             @NotNull LinxSvAnnotation svData)
     {
         inserter.values(sample,
@@ -130,8 +126,6 @@ class StructuralVariantClusterDAO
                 DatabaseUtil.decimal(svData.junctionCopyNumberMax()),
                 DatabaseUtil.checkStringLength(svData.geneStart(), SVANNOTATION.GENESTART),
                 DatabaseUtil.checkStringLength(svData.geneEnd(), SVANNOTATION.GENEEND),
-                DatabaseUtil.decimal(svData.replicationTimingStart()),
-                DatabaseUtil.decimal(svData.replicationTimingEnd()),
                 svData.localTopologyIdStart(),
                 svData.localTopologyIdEnd(),
                 svData.localTopologyStart(),
@@ -251,8 +245,6 @@ class StructuralVariantClusterDAO
                     .junctionCopyNumberMax(record.getValue(SVANNOTATION.JUNCTIONCOPYNUMBERMAX))
                     .geneStart(record.getValue(SVANNOTATION.GENESTART))
                     .geneEnd(record.getValue(SVANNOTATION.GENEEND))
-                    .replicationTimingStart(record.getValue(SVANNOTATION.REPLICATIONTIMINGSTART))
-                    .replicationTimingEnd(record.getValue(SVANNOTATION.REPLICATIONTIMINGEND))
                     .localTopologyIdStart(record.getValue(SVANNOTATION.LOCALTOPOLOGYIDSTART))
                     .localTopologyIdEnd(record.getValue(SVANNOTATION.LOCALTOPOLOGYIDEND))
                     .localTopologyStart(record.getValue(SVANNOTATION.LOCALTOPOLOGYSTART))

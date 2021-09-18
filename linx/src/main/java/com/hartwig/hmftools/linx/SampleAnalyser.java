@@ -296,7 +296,6 @@ public class SampleAnalyser implements Callable
         }
 
         mSvAnnotators.KataegisAnnotator.annotateVariants(mCurrentSampleId, mAnalyser.getState().getChrBreakendMap());
-        mSvAnnotators.ReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
 
         mPerfCounters.get(PERF_COUNTER_PREP).stop();
 
@@ -499,8 +498,6 @@ public class SampleAnalyser implements Callable
                     .junctionCopyNumberMax(var.jcnMax())
                     .geneStart(var.getGeneInBreakend(true, false))
                     .geneEnd(var.getGeneInBreakend(false, false))
-                    .replicationTimingStart(var.getReplicationOrigin(true))
-                    .replicationTimingEnd(var.getReplicationOrigin(false))
                     .localTopologyIdStart(armClusterStart.id())
                     .localTopologyIdEnd(armClusterEnd != null ? armClusterEnd.id() : -1)
                     .localTopologyStart(armClusterStart.getTypeStr())

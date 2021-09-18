@@ -66,11 +66,10 @@ Argument  | Description
 ---|---
 fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
 line_element_file | List of known LINE source regions - specify Chromosome,PosStart,PosEnd
-replication_origins_file | Optional: Replication timing input - in BED format with replication timing as the 4th column
-gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
+ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
-- Linx: fragile sites, LINE source regions and replication origins
+- Linx: fragile sites and LINE source regions
 - Ensembl: cached Ensembl files
 - KnownFusions: HMF known fusion data
 - GenePanel: HMF driver genes
@@ -107,8 +106,7 @@ java -jar linx.jar
     -output_dir /path_to_sample_data/ 
     -fragile_site_file fragile_sites.csv 
     -line_element_file line_elements.csv 
-    -replication_origins_file heli_rep_origins.bed 
-    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
     -check_drivers
@@ -125,8 +123,7 @@ java -jar linx.jar
     -output_dir /path_to_sample_data/ 
     -fragile_site_file fragile_sites.csv 
     -line_element_file line_elements.csv 
-    -replication_origins_file heli_rep_origins.bed 
-    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
     -check_drivers
@@ -144,11 +141,12 @@ java -jar linx.jar
     -output_dir /path_to_sample_data/ 
     -fragile_site_file fragile_sites.csv 
     -line_element_file line_elements.csv 
-    -gene_transcripts_dir /path_to_ensembl_data_cache/ 
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
     -check_fusions 
     -known_fusion_file known_fusion_data.csv 
     -check_drivers
     -driver_gene_panel DriverGenePanel.tsv
+    -threads 10
     -write_all
 ```
 
@@ -176,8 +174,6 @@ junctionCopyNumberMin | Minimum bound JCN estimate for breakjunction
 junctionCopyNumberMax | Maximum bound JCN estimate for breakjunction
 geneStart | Gene(s) overlapping start breakend of SV
 geneEnd | Gene(s) overlapping end breakend of SV
-replicationTimingStart | Start breakend of break junction is in a known fragile site (based on HeLa replication timing, ref genome 37 only)
-replicationTimingEnd | End breakend of break junction is in a known fragile site (based on HeLa replication timing, ref genome 37 only)
 localTopologyIdStart | Id for group of proximate breakends to the start breakend of break junction within an extending 5kb window 
 localTopologyIdEnd | Id for group of proximate breakends to the end breakend of break junction within an extending 5kb window 
 localTopologyStart | Local breakend topology type at site of start breakend.  One of ('ISOLATED_BE','DSB','TI_ONLY','SIMPLE_DUP','FOLDBACK', 'FOLDBACK_DSB','SAME_ORIENT','COMPLEX_FOLDBACK','COMPLEX_LINE','COMPLEX_OTHER')
@@ -418,7 +414,6 @@ To help resolve and characterise events, Linx first annotates a number of genomi
 Each breakend is first annotated with the following information from external sources
 - Whether it is in a known fragile site
 - Whether it is in a known LINE source region [Ref: https://www.nature.com/articles/s41588-019-0562-0]
-- The replication timing of the breakend 
 
 #### Identification of foldback inversions
 Foldback inversions are important structural features in the genome since they are a hallmark of the breakage fusion bridge process. Linx use foldbacks in a number of ways in both the clustering and chaining algorithms, and they can be objectively identified independently of the clustering and chaining so it is useful to identify them upfront. We perform a genome wide search for both simple foldback inversions and chained foldback inversions which are disrupted by the insertion of a shard. A pair of breakends is marked as forming a foldback if they meet the following criteria:

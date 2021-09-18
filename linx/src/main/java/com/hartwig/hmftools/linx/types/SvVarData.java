@@ -65,8 +65,6 @@ public class SvVarData
 
     private final StartEndPair<List<BreakendGeneData>> mGenes;
 
-    private final double[] mReplicationOrigin;
-
     // copy number related data
     private final double[] mCopyNumber; // cached from SV data but modifiable
     private final double[] mCopyNumberChange;
@@ -121,8 +119,6 @@ public class SvVarData
         mFoldbackInfo = new String[] {"", ""};
 
         mGenes = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
-
-        mReplicationOrigin = new double[SE_PAIR];
 
         mAssemblyData = new String[SE_PAIR];
         mTIAssemblies = new StartEndPair<>(Lists.newArrayList(), Lists.newArrayList());
@@ -516,12 +512,6 @@ public class SvVarData
                 }
             }
         }
-    }
-
-    public double getReplicationOrigin(boolean isStart) { return mReplicationOrigin[seIndex(isStart)]; }
-    public void setReplicationOrigin(boolean isStart, double value)
-    {
-        mReplicationOrigin[seIndex(isStart)] = value;
     }
 
     public void setJcnRecalcData(double minJcn, double maxJcn)

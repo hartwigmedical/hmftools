@@ -164,8 +164,8 @@ public class CohortDataWriter
             // local topology from arm cluster
             writer.write(",LocTopIdStart,LocTopTypeStart,LocTopTIStart,LocTopIdEnd,LocTopTypeEnd,LocTopTIEnd");
 
-            // gene & replication info
-            writer.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,Annotations");
+            // gene info
+            writer.write(",GeneStart,GeneEnd,Annotations");
 
             if(mConfig.Output.WriteSvData)
             {
@@ -311,9 +311,9 @@ public class CohortDataWriter
                         writer.write(",-1,,0");
                 }
 
-                writer.write(String.format(",%s,%s,%.4f,%.4f,%s",
+                writer.write(String.format(",%s,%s,%s",
                         var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
-                        var.getReplicationOrigin(true), var.getReplicationOrigin(false), var.getAnnotations()));
+                        var.getAnnotations()));
 
                 if(mConfig.Output.WriteSvData)
                 {

@@ -2,11 +2,15 @@ package com.hartwig.hmftools.common.sv.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -30,8 +34,6 @@ public abstract class LinxSvAnnotation
     public abstract double junctionCopyNumberMax();
     public abstract String geneStart();
     public abstract String geneEnd();
-    public abstract double replicationTimingStart();
-    public abstract double replicationTimingEnd();
     public abstract int localTopologyIdStart();
     public abstract int localTopologyIdEnd();
     public abstract String localTopologyStart();
@@ -72,13 +74,45 @@ public abstract class LinxSvAnnotation
     @NotNull
     private static List<LinxSvAnnotation> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("vcfId")).map(LinxSvAnnotation::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+
+        List<LinxSvAnnotation> annotations = Lists.newArrayList();
+
+        for(int i = 1; i < lines.size(); ++i)
+        {
+            String[] values = lines.get(i).split(DELIMITER);
+
+            annotations.add(ImmutableLinxSvAnnotation.builder()
+                    .vcfId(values[fieldsIndexMap.get("vcfId")])
+                    .svId(Integer.parseInt(values[fieldsIndexMap.get("svId")]))
+                    .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
+                    .clusterReason(values[fieldsIndexMap.get("clusterReason")])
+                    .fragileSiteStart(Boolean.parseBoolean(values[fieldsIndexMap.get("fragileSiteStart")]))
+                    .fragileSiteEnd(Boolean.parseBoolean(values[fieldsIndexMap.get("fragileSiteEnd")]))
+                    .isFoldback(Boolean.parseBoolean(values[fieldsIndexMap.get("isFoldback")]))
+                    .lineTypeStart(values[fieldsIndexMap.get("lineTypeStart")])
+                    .lineTypeEnd(values[fieldsIndexMap.get("lineTypeEnd")])
+                    .junctionCopyNumberMin(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumberMin")]))
+                    .junctionCopyNumberMax(Double.parseDouble(values[fieldsIndexMap.get("junctionCopyNumberMax")]))
+                    .geneStart(values[fieldsIndexMap.get("geneStart")])
+                    .geneEnd(values[fieldsIndexMap.get("geneEnd")])
+                    .localTopologyIdStart(Integer.parseInt(values[fieldsIndexMap.get("localTopologyIdStart")]))
+                    .localTopologyIdEnd(Integer.parseInt(values[fieldsIndexMap.get("localTopologyIdEnd")]))
+                    .localTopologyStart(values[fieldsIndexMap.get("localTopologyStart")])
+                    .localTopologyEnd(values[fieldsIndexMap.get("localTopologyEnd")])
+                    .localTICountStart(Integer.parseInt(values[fieldsIndexMap.get("localTICountStart")]))
+                    .localTICountEnd(Integer.parseInt(values[fieldsIndexMap.get("localTICountEnd")]))
+                    .build());
+        }
+
+        return annotations;
     }
 
     @NotNull
     private static String header()
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(DELIMITER)
                 .add("vcfId")
                 .add("svId")
                 .add("clusterId")
@@ -92,8 +126,6 @@ public abstract class LinxSvAnnotation
                 .add("junctionCopyNumberMax")
                 .add("geneStart")
                 .add("geneEnd")
-                .add("replicationTimingStart")
-                .add("replicationTimingEnd")
                 .add("localTopologyIdStart")
                 .add("localTopologyIdEnd")
                 .add("localTopologyStart")
@@ -106,7 +138,7 @@ public abstract class LinxSvAnnotation
     @NotNull
     private static String toString(@NotNull final LinxSvAnnotation svData) 
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(DELIMITER)
                 .add(String.valueOf(svData.vcfId()))
                 .add(String.valueOf(svData.svId()))
                 .add(String.valueOf(svData.clusterId()))
@@ -120,8 +152,6 @@ public abstract class LinxSvAnnotation
                 .add(DECIMAL_FORMAT.format(svData.junctionCopyNumberMax()))
                 .add(String.valueOf(svData.geneStart()))
                 .add(String.valueOf(svData.geneEnd()))
-                .add(DECIMAL_FORMAT.format(svData.replicationTimingStart()))
-                .add(DECIMAL_FORMAT.format(svData.replicationTimingEnd()))
                 .add(String.valueOf(svData.localTopologyIdStart()))
                 .add(String.valueOf(svData.localTopologyIdEnd()))
                 .add(String.valueOf(svData.localTopologyStart()))
@@ -130,37 +160,4 @@ public abstract class LinxSvAnnotation
                 .add(String.valueOf(svData.localTICountEnd()))
                 .toString();
     }
-
-    @NotNull
-    private static LinxSvAnnotation fromString(@NotNull final String svData)
-    {
-        String[] values = svData.split(LinxCluster.DELIMITER);
-
-        int index = 0;
-
-        return ImmutableLinxSvAnnotation.builder()
-                .vcfId(values[index++])
-                .svId(Integer.parseInt(values[index++]))
-                .clusterId(Integer.parseInt(values[index++]))
-                .clusterReason(values[index++])
-                .fragileSiteStart(Boolean.parseBoolean(values[index++]))
-                .fragileSiteEnd(Boolean.parseBoolean(values[index++]))
-                .isFoldback(Boolean.parseBoolean(values[index++]))
-                .lineTypeStart(values[index++])
-                .lineTypeEnd(values[index++])
-                .junctionCopyNumberMin(Double.parseDouble(values[index++]))
-                .junctionCopyNumberMax(Double.parseDouble(values[index++]))
-                .geneStart(values[index++])
-                .geneEnd(values[index++])
-                .replicationTimingStart(Double.parseDouble(values[index++]))
-                .replicationTimingEnd(Double.parseDouble(values[index++]))
-                .localTopologyIdStart(Integer.parseInt(values[index++]))
-                .localTopologyIdEnd(Integer.parseInt(values[index++]))
-                .localTopologyStart(values[index++])
-                .localTopologyEnd(values[index++])
-                .localTICountStart(Integer.parseInt(values[index++]))
-                .localTICountEnd(Integer.parseInt(values[index++]))
-                .build();
-    }
-
 }

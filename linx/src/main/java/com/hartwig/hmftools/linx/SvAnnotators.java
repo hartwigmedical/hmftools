@@ -6,14 +6,12 @@ import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
 import com.hartwig.hmftools.linx.annotators.KataegisAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
-import com.hartwig.hmftools.linx.annotators.ReplicationOriginAnnotator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class SvAnnotators
 {
     public final FragileSiteAnnotator FragileSiteAnnotator;
     public final LineElementAnnotator LineElementAnnotator;
-    public final ReplicationOriginAnnotator ReplicationOriginAnnotator;
     public final KataegisAnnotator KataegisAnnotator;
     public final PseudoGeneFinder PseudoGeneFinder;
     public final IndelAnnotator IndelAnnotator;
@@ -31,9 +29,6 @@ public class SvAnnotators
         PseudoGeneFinder = new PseudoGeneFinder(geneDataCache);
 
         LineElementAnnotator.setPseudoGeneFinder(PseudoGeneFinder);
-
-        ReplicationOriginAnnotator = new ReplicationOriginAnnotator();
-        ReplicationOriginAnnotator.loadReplicationOrigins(config.ReplicationOriginsFile);
 
         KataegisAnnotator = new KataegisAnnotator(config.OutputDataPath);
         KataegisAnnotator.loadKataegisData(config.KataegisFile);

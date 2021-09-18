@@ -52,7 +52,6 @@ public class LinxConfig
     public final String FragileSiteFile;
     public final String KataegisFile;
     public final String LineElementFile;
-    public final String ReplicationOriginsFile;
     public final int ChainingSvLimit; // for analysis and chaining
     public final boolean IsGermline;
     public final boolean IndelAnnotation;
@@ -98,7 +97,6 @@ public class LinxConfig
     private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String INDEL_FILE = "indel_input_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
     public static final String GENE_ID_FILE = "gene_id_file";
 
     private static final String THREADS = "threads";
@@ -164,7 +162,6 @@ public class LinxConfig
         FragileSiteFile = cmd.getOptionValue(FRAGILE_SITE_FILE, "");
         KataegisFile = cmd.getOptionValue(KATAEGIS_FILE, "");
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
-        ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
 
@@ -291,7 +288,6 @@ public class LinxConfig
         KataegisFile = "";
         LineElementFile = "";
         IndelFile = "";
-        ReplicationOriginsFile = "";
         IndelAnnotation = false;
         RequiredAnnotations = Lists.newArrayList();
         mSampleIds = Lists.newArrayList();
@@ -310,8 +306,7 @@ public class LinxConfig
         return configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SAMPLE_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
             && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE) && configPathValid(cmd, DRIVER_GENE_PANEL_OPTION)
-            && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
-            && FusionDisruptionAnalyser.validConfig(cmd);
+            && configPathValid(cmd, INDEL_FILE) && FusionDisruptionAnalyser.validConfig(cmd);
     }
 
     public static boolean configPathValid(final CommandLine cmd, final String configItem)
@@ -346,7 +341,6 @@ public class LinxConfig
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(KATAEGIS_FILE, true, "Kataegis data file");
-        options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(GERMLINE, false, "Process germline SVs");
         options.addOption(GENE_ID_FILE, true, "Limit to Ensembl gene ids specified in file");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");

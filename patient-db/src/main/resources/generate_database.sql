@@ -883,8 +883,6 @@ CREATE TABLE svAnnotation
     junctionCopyNumberMax DOUBLE PRECISION,
     geneStart VARCHAR(20),
     geneEnd varchar(20),
-    replicationTimingStart DOUBLE PRECISION,
-    replicationTimingEnd DOUBLE PRECISION,
     localTopologyIdStart INT,
     localTopologyIdEnd INT,
     localTopologyStart varchar(20),
