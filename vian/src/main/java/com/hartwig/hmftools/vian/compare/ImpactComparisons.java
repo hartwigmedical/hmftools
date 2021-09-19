@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.vian.compare;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
@@ -14,9 +14,9 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
-import static com.hartwig.hmftools.vian.ImpactAnnotator.findVariantImpacts;
-import static com.hartwig.hmftools.vian.ImpactConfig.VI_LOGGER;
-import static com.hartwig.hmftools.vian.RefVariantData.hasCodingEffectDiff;
+import static com.hartwig.hmftools.vian.VianApplication.findVariantImpacts;
+import static com.hartwig.hmftools.vian.VianConfig.VI_LOGGER;
+import static com.hartwig.hmftools.vian.compare.RefVariantData.hasCodingEffectDiff;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,6 +34,11 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
+import com.hartwig.hmftools.vian.GeneDataCache;
+import com.hartwig.hmftools.vian.ImpactClassifier;
+import com.hartwig.hmftools.vian.VianConfig;
+import com.hartwig.hmftools.vian.VariantData;
+import com.hartwig.hmftools.vian.VariantImpactBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,7 +51,7 @@ import org.jooq.Result;
 
 public class ImpactComparisons
 {
-    private final ImpactConfig mConfig;
+    private final VianConfig mConfig;
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
@@ -72,7 +77,7 @@ public class ImpactComparisons
 
     public ImpactComparisons(final CommandLine cmd)
     {
-        mConfig = new ImpactConfig(cmd);
+        mConfig = new VianConfig(cmd);
 
         mSampleIds = Lists.newArrayList();
 
@@ -339,7 +344,7 @@ public class ImpactComparisons
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = ImpactConfig.createOptions();
+        final Options options = VianConfig.createOptions();
 
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");

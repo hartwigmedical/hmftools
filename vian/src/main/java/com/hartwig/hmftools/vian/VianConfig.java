@@ -2,7 +2,6 @@ package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
@@ -21,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ImpactConfig
+public class VianConfig
 {
     public final String SampleId;
 
@@ -39,9 +38,9 @@ public class ImpactConfig
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
-    public static final Logger VI_LOGGER = LogManager.getLogger(ImpactConfig.class);
+    public static final Logger VI_LOGGER = LogManager.getLogger(VianConfig.class);
 
-    public ImpactConfig(final CommandLine cmd)
+    public VianConfig(final CommandLine cmd)
     {
         SampleId = cmd.getOptionValue(SAMPLE);
         VcfFile = cmd.getOptionValue(VCF_FILE);

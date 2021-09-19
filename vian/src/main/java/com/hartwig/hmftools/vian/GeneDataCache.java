@@ -2,8 +2,8 @@ package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.vian.ImpactConfig.VI_LOGGER;
-import static com.hartwig.hmftools.vian.ImpactConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.vian.VianConfig.VI_LOGGER;
+import static com.hartwig.hmftools.vian.VianConstants.GENE_UPSTREAM_DISTANCE;
 
 import java.io.IOException;
 import java.util.List;

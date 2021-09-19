@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
 import static com.hartwig.hmftools.vian.CodingContext.determineContext;
-import static com.hartwig.hmftools.vian.ImpactConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.vian.VianConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.vian.SpliceClassifier.isWithinSpliceRegion;
 
 import java.util.List;
@@ -65,8 +65,6 @@ public class ImpactClassifier
 
         boolean inSpliceRegion = false;
         int exonRank = 0;
-
-        final List<Integer> nonRefPositions = variant.nonRefPositions();
 
         // check intron variant
         int exonCount = transData.exons().size();
@@ -152,10 +150,10 @@ public class ImpactClassifier
 
     private VariantTransImpact checkNonCodingImpact(final VariantData variant, final TranscriptData transData)
     {
-        int position = variant.Position;
-
         if(transData.posStrand())
         {
+            int position = variant.Position;
+
             // check pre-gene region
             if(position >= transData.TransStart - GENE_UPSTREAM_DISTANCE && position < transData.TransStart)
                 return new VariantTransImpact(transData, UPSTREAM_GENE_VARIANT);
@@ -170,6 +168,8 @@ public class ImpactClassifier
         }
         else
         {
+            int position = variant.EndPosition;
+
             if(position > transData.TransEnd && position <= transData.TransEnd + GENE_UPSTREAM_DISTANCE)
                 return new VariantTransImpact(transData, UPSTREAM_GENE_VARIANT);
 

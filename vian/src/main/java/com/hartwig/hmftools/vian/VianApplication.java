@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
-import static com.hartwig.hmftools.vian.ImpactConfig.VI_LOGGER;
-import static com.hartwig.hmftools.vian.ImpactConstants.DELIM;
-import static com.hartwig.hmftools.vian.ImpactConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.vian.VianConfig.VI_LOGGER;
+import static com.hartwig.hmftools.vian.VianConstants.DELIM;
+import static com.hartwig.hmftools.vian.VianConstants.ITEM_DELIM;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -44,9 +44,9 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class ImpactAnnotator
+public class VianApplication
 {
-    private final ImpactConfig mConfig;
+    private final VianConfig mConfig;
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
@@ -54,9 +54,9 @@ public class ImpactAnnotator
     private ImpactVcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
 
-    public ImpactAnnotator(final CommandLine cmd)
+    public VianApplication(final CommandLine cmd)
     {
-        mConfig = new ImpactConfig(cmd);
+        mConfig = new VianConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
@@ -372,13 +372,13 @@ public class ImpactAnnotator
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = ImpactConfig.createOptions();
+        final Options options = VianConfig.createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
         setLogLevel(cmd);
 
-        ImpactAnnotator impactAnnotator = new ImpactAnnotator(cmd);
-        impactAnnotator.run();
+        VianApplication vianApplication = new VianApplication(cmd);
+        vianApplication.run();
     }
 
     @NotNull

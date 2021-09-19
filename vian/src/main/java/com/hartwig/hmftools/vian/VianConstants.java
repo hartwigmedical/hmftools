@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vian;
 
-public class ImpactConstants
+public class VianConstants
 {
     public static final int GENE_UPSTREAM_DISTANCE = 1000;
     public static final int SPLICE_REGION_INTRON_RANGE = 8;
