@@ -1,9 +1,8 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
-import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_3;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -15,9 +14,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
-import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
@@ -26,18 +23,14 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UTR_VARIANT;
-import static com.hartwig.hmftools.sage.impact.ImpactClassifier.checkStopStartCodons;
+import static com.hartwig.hmftools.vian.ImpactClassifier.checkStopStartCodons;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.Set;
-
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.junit.Test;
 

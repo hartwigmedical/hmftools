@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_CANONICAL;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_WORST;
-import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.effectsToVcf;
 
 import java.io.File;
@@ -16,15 +15,11 @@ import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class ImpactVcfWriter
 {

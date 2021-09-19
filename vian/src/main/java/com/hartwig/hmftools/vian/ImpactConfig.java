@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
@@ -17,6 +17,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ImpactConfig
@@ -36,6 +38,8 @@ public class ImpactConfig
     private static final String OVERWRITE_VCF = "overwrite_vcf";
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
+
+    public static final Logger VI_LOGGER = LogManager.getLogger(ImpactConfig.class);
 
     public ImpactConfig(final CommandLine cmd)
     {

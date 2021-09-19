@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;

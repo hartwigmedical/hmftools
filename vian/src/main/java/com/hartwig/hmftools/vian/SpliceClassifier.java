@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static java.lang.Math.abs;
 
@@ -7,12 +7,12 @@ import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCE
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_ACCEPTOR_END_RANGE;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_ACCEPTOR_START_RANGE;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_DONOR_END_RANGE;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_DONOR_START_RANGE;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_REGION_EXON_RANGE;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.SPLICE_REGION_INTRON_RANGE;
+import static com.hartwig.hmftools.vian.ImpactConstants.SPLICE_ACCEPTOR_END_RANGE;
+import static com.hartwig.hmftools.vian.ImpactConstants.SPLICE_ACCEPTOR_START_RANGE;
+import static com.hartwig.hmftools.vian.ImpactConstants.SPLICE_DONOR_END_RANGE;
+import static com.hartwig.hmftools.vian.ImpactConstants.SPLICE_DONOR_START_RANGE;
+import static com.hartwig.hmftools.vian.ImpactConstants.SPLICE_REGION_EXON_RANGE;
+import static com.hartwig.hmftools.vian.ImpactConstants.SPLICE_REGION_INTRON_RANGE;
 
 import java.util.List;
 

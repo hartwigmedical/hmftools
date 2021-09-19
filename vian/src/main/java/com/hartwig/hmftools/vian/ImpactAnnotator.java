@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.DELIM;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.vian.ImpactConfig.VI_LOGGER;
+import static com.hartwig.hmftools.vian.ImpactConstants.DELIM;
+import static com.hartwig.hmftools.vian.ImpactConstants.ITEM_DELIM;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -78,13 +78,13 @@ public class ImpactAnnotator
     {
         if(!mConfig.isValid())
         {
-            SG_LOGGER.error("invalid config, exiting");
+            VI_LOGGER.error("invalid config, exiting");
             System.exit(1);
         }
 
         if(!mGeneDataCache.loadCache())
         {
-            SG_LOGGER.error("Ensembl data cache loading failed, exiting");
+            VI_LOGGER.error("Ensembl data cache loading failed, exiting");
             System.exit(1);
         }
 
@@ -92,12 +92,12 @@ public class ImpactAnnotator
 
         closeBufferedWriter(mCsvTranscriptWriter);
 
-        SG_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
+        VI_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
     }
 
     private void processVcfFile(final String sampleId)
     {
-        SG_LOGGER.info("sample({}) reading VCF file({})", sampleId, mConfig.VcfFile);
+        VI_LOGGER.info("sample({}) reading VCF file({})", sampleId, mConfig.VcfFile);
 
         int variantCount = 0;
 
@@ -117,10 +117,10 @@ public class ImpactAnnotator
         }
         catch(IOException e)
         {
-            SG_LOGGER.error(" failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
+            VI_LOGGER.error(" failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
         }
 
-        SG_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
+        VI_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
 
         mVcfWriter.close();
     }
@@ -174,7 +174,7 @@ public class ImpactAnnotator
 
                     if(geneData == null)
                     {
-                        SG_LOGGER.debug("ignoring unknown gene({}:{})", annotation.geneID(), annotation.gene());
+                        VI_LOGGER.debug("ignoring unknown gene({}:{})", annotation.geneID(), annotation.gene());
                     }
                     else
                     {
@@ -257,7 +257,7 @@ public class ImpactAnnotator
         }
         catch(IOException e)
         {
-            SG_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
+            VI_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
             return;
         }
     }
@@ -287,7 +287,7 @@ public class ImpactAnnotator
         }
         catch(IOException e)
         {
-            SG_LOGGER.error("failed to write variant CSV file: {}", e.toString());
+            VI_LOGGER.error("failed to write variant CSV file: {}", e.toString());
             return;
         }
     }
@@ -365,7 +365,7 @@ public class ImpactAnnotator
         }
         catch(IOException e)
         {
-            SG_LOGGER.error("failed to write variant CSV file: {}", e.toString());
+            VI_LOGGER.error("failed to write variant CSV file: {}", e.toString());
             return;
         }
     }

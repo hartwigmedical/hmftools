@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 public class ImpactConstants
 {

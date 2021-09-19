@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.vian.ImpactConfig.VI_LOGGER;
+import static com.hartwig.hmftools.vian.ImpactConstants.GENE_UPSTREAM_DISTANCE;
 
 import java.io.IOException;
 import java.util.List;
@@ -84,7 +84,7 @@ public class GeneDataCache
         }
         catch (IOException e)
         {
-            SG_LOGGER.error("failed to load driver gene panel file({}): {}", driverGeneFile, e.toString());
+            VI_LOGGER.error("failed to load driver gene panel file({}): {}", driverGeneFile, e.toString());
         }
     }
 
@@ -110,7 +110,7 @@ public class GeneDataCache
 
         if(mCurrentChromosomeGenes == null)
         {
-            SG_LOGGER.error("invalid chromosome({})", chromosome);
+            VI_LOGGER.error("invalid chromosome({})", chromosome);
             return Lists.newArrayList();
         }
 
@@ -133,7 +133,7 @@ public class GeneDataCache
             {
                 if(mCurrentGenes.contains(geneData))
                 {
-                    SG_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, mCurrentGeneIndex);
+                    VI_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, mCurrentGeneIndex);
                     break;
                 }
 

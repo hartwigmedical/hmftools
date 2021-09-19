@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -6,21 +6,14 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAME
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantImpactBuilder
 {

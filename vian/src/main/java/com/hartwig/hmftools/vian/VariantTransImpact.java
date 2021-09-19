@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.sage.impact;
+package com.hartwig.hmftools.vian;
 
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.vian.ImpactConstants.ITEM_DELIM;
 
 import java.util.List;
 import java.util.StringJoiner;
