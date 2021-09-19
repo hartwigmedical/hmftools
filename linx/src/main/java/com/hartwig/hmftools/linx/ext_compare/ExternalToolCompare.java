@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.ext_compare;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
@@ -79,8 +80,8 @@ public class ExternalToolCompare
 
         boolean selectiveGeneLoading = (samplesList.size() == 1 && !checkDrivers);
 
-        final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
-                new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
+        final EnsemblDataCache ensemblDataCache = cmd.hasOption(ENSEMBL_DATA_DIR) ?
+                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RG_VERSION) : null;
 
         CohortDataWriter cohortDataWriter = new CohortDataWriter(config, ensemblDataCache);
 
@@ -205,7 +206,7 @@ public class ExternalToolCompare
         addDatabaseCmdLineArgs(options);
         options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
+        addEnsemblDir(options);
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
 
         // allow sub-components to add their specific config

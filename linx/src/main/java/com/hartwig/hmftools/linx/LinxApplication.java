@@ -2,14 +2,13 @@ package com.hartwig.hmftools.linx;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -26,8 +25,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
@@ -106,7 +103,7 @@ public class LinxApplication
             System.exit(1);
         }
 
-        if(!cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+        if(!cmd.hasOption(ENSEMBL_DATA_DIR))
         {
             if(config.RunFusions || config.RunDrivers || config.IsGermline)
             {
@@ -115,8 +112,8 @@ public class LinxApplication
             }
         }
 
-        final EnsemblDataCache ensemblDataCache = cmd.hasOption(GENE_TRANSCRIPTS_DIR) ?
-                new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION) : null;
+        final EnsemblDataCache ensemblDataCache = cmd.hasOption(ENSEMBL_DATA_DIR) ?
+                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RG_VERSION) : null;
 
         if(ensemblDataCache != null)
         {
@@ -280,7 +277,7 @@ public class LinxApplication
         addDatabaseCmdLineArgs(options);
         options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Optional: Ensembl data cache directory");
+        options.addOption(ENSEMBL_DATA_DIR, true, "Optional: Ensembl data cache directory");
         options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
 

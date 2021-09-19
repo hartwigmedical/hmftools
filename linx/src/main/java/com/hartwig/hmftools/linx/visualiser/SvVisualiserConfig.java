@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.visualiser;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.StringJoiner;

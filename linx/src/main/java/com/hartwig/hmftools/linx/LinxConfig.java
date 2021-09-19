@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
@@ -17,7 +14,6 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -305,7 +301,7 @@ public class LinxConfig
     {
         return configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SAMPLE_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
-            && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE) && configPathValid(cmd, DRIVER_GENE_PANEL_OPTION)
+            && configPathValid(cmd, ENSEMBL_DATA_DIR) && configPathValid(cmd, VCF_FILE) && configPathValid(cmd, DRIVER_GENE_PANEL_OPTION)
             && configPathValid(cmd, INDEL_FILE) && FusionDisruptionAnalyser.validConfig(cmd);
     }
 

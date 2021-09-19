@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
@@ -184,7 +184,7 @@ public class SampleData
         options.addOption(CNA, true, "Path to copy number alteration file - eg 'COLO829T.linx.vis_copy_number.tsv'");
         options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
+        addEnsemblDir(options);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
@@ -312,7 +312,7 @@ public class SampleData
         EnsemblDataCache geneTransCache = null;
         Map<String, HmfTranscriptRegion> geneMap = null;
 
-        if(cmd.hasOption(ENSEMBL_DATA_DIR) || cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+        if(cmd.hasOption(ENSEMBL_DATA_DIR))
         {
             geneTransCache = new EnsemblDataCache(cmd, refGenomeVersion);
             geneTransCache.setRequiredData(true, false, false, true);
