@@ -89,14 +89,14 @@ public class ImpactClassifier
                 addConsequenceEffect(consequenceEffects, mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
-            if(positionWithin(position, exon.Start, exon.End) || positionWithin(variant.endPosition(), exon.Start, exon.End))
+            if(positionWithin(position, exon.Start, exon.End) || positionWithin(variant.EndPosition, exon.Start, exon.End))
             {
                 exonRank = exon.Rank;
                 transImpact = classifyExonicPosition(variant, transData, exon);
                 break;
             }
 
-            if(nextExon != null && positionsWithin(position, variant.endPosition(), exon.End + 1, nextExon.Start - 1))
+            if(nextExon != null && positionsWithin(position, variant.EndPosition, exon.End + 1, nextExon.Start - 1))
             {
                 addConsequenceEffect(consequenceEffects, INTRON_VARIANT_EFFECT);
                 break;
@@ -191,7 +191,7 @@ public class ImpactClassifier
             if(variant.Position == exon.End)
                 return null;
 
-            if(variant.isInsert() && variant.endPosition() == exon.Start)
+            if(variant.isInsert() && variant.EndPosition == exon.Start)
                 return null;
 
             // if the variant crosses the exon boundary then only check the bases which are exonic to decide between frameshift or inframe

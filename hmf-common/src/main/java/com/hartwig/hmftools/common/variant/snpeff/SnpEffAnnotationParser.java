@@ -38,15 +38,13 @@ public final class SnpEffAnnotationParser
     public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context)
     {
         if(context.hasAttribute(SNPEFF_IDENTIFIER))
-        {
             return fromAnnotationList(context, context.getAttributeAsStringList(SNPEFF_IDENTIFIER, ""));
-        }
+
         return Collections.emptyList();
     }
 
     @NotNull
-    private static List<SnpEffAnnotation> fromAnnotationList(@NotNull final VariantContext context,
-            @NotNull final List<String> annotation)
+    private static List<SnpEffAnnotation> fromAnnotationList(@NotNull final VariantContext context, @NotNull final List<String> annotation)
     {
         return annotation.stream()
                 .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
@@ -58,9 +56,7 @@ public final class SnpEffAnnotationParser
     private static boolean isCorrectNumberOfParts(@NotNull String[] parts)
     {
         if(parts.length == EXPECTED_FIELD_SIZE_PER_ANNOTATION)
-        {
             return true;
-        }
 
         final StringJoiner joiner = new StringJoiner("|");
         Stream.of(parts).forEach(joiner::add);

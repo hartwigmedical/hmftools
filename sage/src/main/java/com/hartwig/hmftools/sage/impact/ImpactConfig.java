@@ -29,10 +29,12 @@ public class ImpactConfig
     public final String OutputDir;
     public final boolean OverwriteVcf;
     public final boolean WriteTranscriptCsv;
+    public final boolean CompareSnpEff;
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String OVERWRITE_VCF = "overwrite_vcf";
+    private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
     public ImpactConfig(final CommandLine cmd)
@@ -44,6 +46,7 @@ public class ImpactConfig
 
         OverwriteVcf = cmd.hasOption(OVERWRITE_VCF);
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
+        CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -63,6 +66,7 @@ public class ImpactConfig
         options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(VCF_FILE, true, "VCF input file");
         options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
+        options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
 
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");

@@ -133,17 +133,35 @@ public class ImpactAnnotator
 
         variant.setVariantDetails(phasedInframeIndel, "", "");
 
+        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
+
+        VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
+
+        mVcfWriter.writeVariant(variantContext, variant, variantImpact);
+
+        if(!mConfig.WriteTranscriptCsv)
+            return;
+
+        if(!mConfig.CompareSnpEff)
+        {
+            for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
+            {
+                final String geneName = entry.getKey();
+                writeVariantTranscriptData(variant, geneName);
+            }
+
+            return;
+        }
+
         // extract SnpEff data for comparison sake
         List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext);
-
-        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
         if(variant.getImpacts().isEmpty())
         {
             // could skip these if sure that valid genes aren't being incorrectly missed
             // variant.addImpact("NONE", new VariantTransImpact(null, INTRAGENIC_VARIANT));
 
-            if(!snpEffAnnotations.isEmpty())
+            if(snpEffAnnotations != null && !snpEffAnnotations.isEmpty())
             {
                 for(SnpEffAnnotation annotation : snpEffAnnotations)
                 {
@@ -176,22 +194,18 @@ public class ImpactAnnotator
         for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
         {
             final String geneName = entry.getKey();
-            final List<VariantTransImpact> geneImpacts = entry.getValue();
 
             writeVariantTranscriptData(
                     variant, geneName,
                     snpEffAnnotations.stream().filter(x -> x.gene().equals(geneName)).collect(Collectors.toList()));
         }
 
-        VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
-
-        mVcfWriter.writeVariant(variantContext, variant, variantImpact);
     }
 
     public static void findVariantImpacts(
             final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
     {
-        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position);
+        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
 
         if(geneCandidates.isEmpty())
             return;
@@ -199,7 +213,7 @@ public class ImpactAnnotator
         // analyse against each of the genes and their transcripts
         for(GeneData geneData : geneCandidates)
         {
-            List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position);
+            List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
 
             // non-coding transcripts are skipped for now
             if(transDataList.isEmpty())
@@ -234,12 +248,46 @@ public class ImpactAnnotator
             mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
 
             mCsvTranscriptWriter.write(VariantData.csvCommonHeader());
-            mCsvTranscriptWriter.write(",GeneId,GeneName,TransId,Consequence,ConsequenceEffect,SnpEffConsequence,SnpEffConsequenceEffect");
+            mCsvTranscriptWriter.write(",GeneId,GeneName,TransId,Consequence,ConsequenceEffect");
+
+            if(mConfig.CompareSnpEff)
+                mCsvTranscriptWriter.write(",SnpEffConsequence,SnpEffConsequenceEffect");
+
             mCsvTranscriptWriter.newLine();
         }
         catch(IOException e)
         {
             SG_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
+            return;
+        }
+    }
+
+    private void writeVariantTranscriptData(final VariantData variant, final String geneName)
+    {
+        if(mCsvTranscriptWriter == null)
+            return;
+
+        List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
+
+        if(geneImpacts == null)
+            return;
+
+        try
+        {
+            for(VariantTransImpact impact : geneImpacts)
+            {
+                if(impact.TransData == null)
+                    continue;
+
+                mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
+                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
+                        impact.TransData.GeneId, geneName, impact.TransData.TransName, impact.consequencesStr(), impact.effectsStr()));
+                mCsvTranscriptWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("failed to write variant CSV file: {}", e.toString());
             return;
         }
     }
@@ -321,7 +369,6 @@ public class ImpactAnnotator
             return;
         }
     }
-
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

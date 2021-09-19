@@ -2,13 +2,10 @@ package com.hartwig.hmftools.sage.impact;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.DELIM;
-import static com.hartwig.hmftools.sage.impact.ImpactConstants.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -17,11 +14,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -30,6 +23,7 @@ public class VariantData
 {
     public final String Chromosome;
     public final int Position;
+    public final int EndPosition;
     public final String Ref;
     public final String Alt;
 
@@ -39,6 +33,12 @@ public class VariantData
     public String mRepeatSequence;
 
     private final int mIndelBaseDiff;
+
+    // compute and cache base positions which have changed due to this variant:
+    // for an insert, none
+    // for a delete, the deleted positions, so starting after the first (ref) position
+    // for SNVs and MNVs, all of them
+
     private final List<Integer> mNonRefPositions;
 
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
@@ -59,6 +59,7 @@ public class VariantData
         if(isInsert())
         {
             mNonRefPositions = Lists.newArrayListWithExpectedSize(0);
+            EndPosition = Position + 1;
         }
         else
         {
@@ -70,6 +71,8 @@ public class VariantData
             {
                 mNonRefPositions.add(Position + i);
             }
+
+            EndPosition = mNonRefPositions.get(mNonRefPositions.size() - 1);
         }
 
         mGeneImpacts = Maps.newHashMap();
@@ -77,7 +80,7 @@ public class VariantData
 
     public static VariantData fromContext(final VariantContext variantContext)
     {
-        int variantPosition = (int)variantContext.getStart();
+        int variantPosition = variantContext.getStart();
         String chromosome = variantContext.getContig();
 
         String ref = variantContext.getReference().getBaseString();
@@ -99,14 +102,6 @@ public class VariantData
     public boolean isIndel() { return mIndelBaseDiff != 0; }
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
-
-    public int endPosition()
-    {
-        if(isInsert())
-            return Position + 1;
-        else
-            return mNonRefPositions.get(mNonRefPositions.size() - 1);
-    }
 
     public List<Integer> nonRefPositions() { return mNonRefPositions; }
 
@@ -135,7 +130,7 @@ public class VariantData
             return;
         }
 
-        if(geneImpacts.stream().filter(x -> x.TransData != null) .anyMatch(x -> x.TransData.TransId == impact.TransData.TransId))
+        if(geneImpacts.stream().filter(x -> x.TransData != null).anyMatch(x -> x.TransData.TransId == impact.TransData.TransId))
             return;
 
         geneImpacts.add(impact);

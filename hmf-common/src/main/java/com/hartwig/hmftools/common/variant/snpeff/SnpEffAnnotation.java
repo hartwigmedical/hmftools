@@ -16,7 +16,7 @@ public abstract class SnpEffAnnotation
     private static final String FEATURE_TYPE_TRANSCRIPT = "transcript";
 
     @NotNull
-    public abstract String gene();
+    public abstract String gene(); // Ensembl gene name
 
     @NotNull
     public abstract String effects();
@@ -25,16 +25,16 @@ public abstract class SnpEffAnnotation
     public abstract List<VariantConsequence> consequences();
 
     @NotNull
-    public abstract String geneID();
+    public abstract String geneID(); // Ensembl gene ID
 
     @NotNull
     public abstract String featureType();
 
     @NotNull
-    public abstract String featureID();
+    public abstract String featureID(); // Ensembl transcript name
 
     @NotNull
-    public abstract String rank();
+    public abstract String rank(); // exon rank
 
     @NotNull
     public abstract String hgvsCoding();
@@ -48,7 +48,7 @@ public abstract class SnpEffAnnotation
         return VariantConsequence.consequenceString(consequences());
     }
 
-    // when we use the feature ID it is in practice always a transcript, but this mapping may not hold for every single snpeff annotation!
+    // when we use the feature ID it is in practice always a transcript, but this mapping may not hold for every annotation
     public String transcript()
     {
         String transcript = featureID();

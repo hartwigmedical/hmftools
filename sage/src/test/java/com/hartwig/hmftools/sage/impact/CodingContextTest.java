@@ -117,7 +117,6 @@ public class CodingContextTest
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
         assertEquals(INFRAME_DELETION, impact.consequence());
-
     }
 
     @Test

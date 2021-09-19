@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.impact;
 
-import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.ITEM_DELIM;
 
 import java.util.List;

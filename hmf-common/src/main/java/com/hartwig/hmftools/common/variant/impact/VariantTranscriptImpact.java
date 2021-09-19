@@ -41,7 +41,7 @@ public class VariantTranscriptImpact
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 VAR_TRANS_IMPACT_ANNOATATION, VAR_TRANS_IMPACT_PARTS, VCFHeaderLineType.String,
-                "Transcript impact [Allele | Effects | GeneName | GeneId | Transcript | ExonRank | HGVS.c | HGVS.p]"));
+                "Transcript impact [ GeneId | GeneName | Transcript | Effects | HGVS.c | HGVS.p]"));
     }
 
     public static void writeVcfData(

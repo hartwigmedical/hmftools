@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.impact;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.impact.ImpactConstants.GENE_UPSTREAM_DISTANCE;
 
@@ -87,17 +88,17 @@ public class GeneDataCache
         }
     }
 
-    public List<TranscriptData> findTranscripts(final String geneId, int position)
+    public List<TranscriptData> findTranscripts(final String geneId, int startPosition, int endPosition)
     {
         List<TranscriptData> transDataList = mEnsemblDataCache.getTranscripts(geneId);
 
         return transDataList.stream()
-                .filter(x -> x.TransStart <= position && position <= x.TransEnd)
+                .filter(x -> positionsOverlap(startPosition, endPosition, x.TransStart, x.TransEnd))
                 .filter(x -> x.CodingStart != null)
                 .collect(Collectors.toList());
     }
 
-    public List<GeneData> findGenes(final String chromosome, int position)
+    public List<GeneData> findGenes(final String chromosome, int startPosition, int endPosition)
     {
         if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
         {
@@ -117,17 +118,18 @@ public class GeneDataCache
         int index = 0;
         while(index < mCurrentGenes.size())
         {
-            if(mCurrentGenes.get(index).GeneEnd < position)
+            if(mCurrentGenes.get(index).GeneEnd < endPosition)
                 mCurrentGenes.remove(index);
             else
                 ++index;
         }
 
+        // otherwise search forward and add any additional genes which overlap the position
         for(; mCurrentGeneIndex < mCurrentChromosomeGenes.size(); ++mCurrentGeneIndex)
         {
             GeneData geneData = mCurrentChromosomeGenes.get(mCurrentGeneIndex);
 
-            if(isWithinGeneRange(geneData, position))
+            if(isWithinGeneRange(geneData, startPosition, endPosition))
             {
                 if(mCurrentGenes.contains(geneData))
                 {
@@ -137,11 +139,11 @@ public class GeneDataCache
 
                 mCurrentGenes.add(geneData);
             }
-            else if(position > geneData.GeneEnd)
+            else if(startPosition > geneData.GeneEnd)
             {
                 continue;
             }
-            else if(geneData.GeneStart > position)
+            else if(geneData.GeneStart > startPosition)
             {
                 break;
             }
@@ -150,11 +152,16 @@ public class GeneDataCache
         return mCurrentGenes;
     }
 
-    private boolean isWithinGeneRange(final GeneData geneData, int position)
+    private boolean isWithinGeneRange(final GeneData geneData, int startPosition, int endPosition)
     {
+        int geneRangeStart = geneData.GeneStart;
+        int geneRangeEnd = geneData.GeneEnd;
+
         if(geneData.Strand == POS_STRAND)
-            return position >= geneData.GeneStart - GENE_UPSTREAM_DISTANCE && position <= geneData.GeneEnd;
+            geneRangeStart -= GENE_UPSTREAM_DISTANCE;
         else
-            return position >= geneData.GeneStart && position <= geneData.GeneEnd + GENE_UPSTREAM_DISTANCE;
+            geneRangeEnd += GENE_UPSTREAM_DISTANCE;
+
+        return positionsOverlap(startPosition, endPosition, geneRangeStart, geneRangeEnd);
     }
 }

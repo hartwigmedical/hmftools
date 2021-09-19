@@ -43,7 +43,6 @@ import org.junit.Test;
 
 public class VariantImpactTest
 {
-
     @Test
     public void testNonCodingImpacts()
     {
