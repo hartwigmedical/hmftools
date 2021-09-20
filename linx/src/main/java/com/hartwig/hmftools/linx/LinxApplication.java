@@ -5,11 +5,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
-import static com.hartwig.hmftools.linx.LinxConfig.CHECK_DRIVERS;
-import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -132,7 +129,7 @@ public class LinxApplication
                     ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
                     ensemblLoadOk = ensemblDataCache.load(false);
                 }
-                else if(!config.RunFusions && config.RunDrivers)
+                else if(!config.RunFusions && config.RunDrivers && !config.HomDisAllGenes)
                 {
                     // only load transcripts for the driver gene panel
                     ensemblLoadOk = ensemblDataCache.load(true);
@@ -275,11 +272,8 @@ public class LinxApplication
     {
         final Options options = new Options();
         addDatabaseCmdLineArgs(options);
-        options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
-        options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(ENSEMBL_DATA_DIR, true, "Optional: Ensembl data cache directory");
         options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
-        options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
 
         // allow sub-components to add their specific config
         LinxConfig.addCmdLineArgs(options);

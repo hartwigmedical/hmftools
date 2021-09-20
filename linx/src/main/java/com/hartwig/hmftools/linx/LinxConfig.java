@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -66,6 +65,7 @@ public class LinxConfig
     public final CommandLine CmdLineArgs;
     public final boolean RunFusions;
     public final boolean RunDrivers;
+    public final boolean HomDisAllGenes;
 
     public final int Threads;
 
@@ -77,6 +77,7 @@ public class LinxConfig
 
     public static final String CHECK_DRIVERS = "check_drivers";
     public static final String CHECK_FUSIONS = "check_fusions";
+    public static final String HOM_DIS_ALL_GENES = "hom_dis_all_genes";
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
@@ -170,6 +171,7 @@ public class LinxConfig
 
         DriverGenes = loadDriverGenes(cmd);
         RunDrivers = cmd.hasOption(CHECK_DRIVERS) && !DriverGenes.isEmpty();
+        HomDisAllGenes = cmd.hasOption(HOM_DIS_ALL_GENES);
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
@@ -293,6 +295,7 @@ public class LinxConfig
         DriverGenes = Lists.newArrayList();
         RestrictedGeneIds = Lists.newArrayList();
         RunDrivers = false;
+        HomDisAllGenes = false;
         RunFusions = false;
         Threads = 0;
     }
@@ -332,6 +335,10 @@ public class LinxConfig
         options.addOption(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         options.addOption(UPLOAD_TO_DB, true, "Upload all LINX data to DB (true/false), single-sample default=true, batch-mode default=false");
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
+        options.addOption(CHECK_DRIVERS, false, "Check SVs against drivers catalog");
+        options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
+        options.addOption(HOM_DIS_ALL_GENES, false, "Run fusion detection");
+        options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");

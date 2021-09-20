@@ -82,7 +82,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         List<String> disruptionGeneIds = disruptionGeneIds(config.DriverGenes, true, geneTransCache).stream()
                 .map(x -> x.GeneId).collect(Collectors.toList());
 
-        mDelDrivers = new DeletionDrivers(disruptionGeneIds, mDataCache);
+        mDelDrivers = new DeletionDrivers(disruptionGeneIds, mDataCache, mConfig.HomDisAllGenes);
 
         mVisSampleData = visSampleData;
 
