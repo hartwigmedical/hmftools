@@ -74,8 +74,6 @@ public class ClusteringPrep
                 .filter(x -> x.type() == INF)
                 .collect(Collectors.toList());
 
-        int nextSvId = allVariants.stream().mapToInt(x -> x.id()).max().orElse(0);
-
         for(SvVarData sgl : sgls)
         {
             boolean matched = false;

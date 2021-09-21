@@ -218,7 +218,7 @@ public class SampleAnalyser implements Callable
 
         if(mEnsemblDataCache != null)
         {
-            VariantPrep.setSvGeneData(svDataList, mEnsemblDataCache, mConfig.RunFusions, mConfig.breakendGeneLoading());
+            VariantPrep.setSvGeneData(mAllVariants, mEnsemblDataCache, mConfig.RunFusions, mConfig.breakendGeneLoading());
         }
 
         analyse();
@@ -231,7 +231,7 @@ public class SampleAnalyser implements Callable
 
         // when matching RNA, allow all transcripts regardless of their viability for fusions
         boolean purgeInvalidTranscripts = !mFusionAnalyser.hasRnaSampleData();
-        mFusionAnalyser.annotateTranscripts(svDataList, purgeInvalidTranscripts);
+        mFusionAnalyser.annotateTranscripts(mAllVariants, purgeInvalidTranscripts);
 
         annotate();
 
@@ -239,7 +239,7 @@ public class SampleAnalyser implements Callable
             mDriverGeneAnnotator.annotateSVs(mCurrentSampleId, getChrBreakendMap());
 
         if(mConfig.RunFusions || mConfig.IsGermline)
-            mFusionAnalyser.run(mCurrentSampleId, svDataList, getClusters(), getChrBreakendMap());
+            mFusionAnalyser.run(mCurrentSampleId, mAllVariants, getClusters(), getChrBreakendMap());
 
         writeOutput();
         close();
@@ -260,6 +260,8 @@ public class SampleAnalyser implements Callable
             return;
 
         mAllVariants.addAll(variants);
+
+        linkSglMappedInferreds(mAllVariants);
 
         if(!mConfig.IsGermline)
         {
@@ -283,7 +285,6 @@ public class SampleAnalyser implements Callable
 
         mPerfCounters.get(PERF_COUNTER_PREP).start();
 
-        linkSglMappedInferreds(mAllVariants);
         annotateAndFilterVariants();
 
         mAnalyser.setSampleData(mCurrentSampleId, mAllVariants);
