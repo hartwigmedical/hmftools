@@ -205,6 +205,43 @@ LILAC gathers the set of variants from the vcf (filter = PASS) that overlap eith
 #### RNA ‘expression’ of alleles
 LILAC also optionally accepts a RNA bam.  As per the fragments in the bam are counted for each allele in the determined type.  This can be interpreted as a proxy for allele specific expression.
 
+### PON
+
+We report unmatched haplotypes and indels and use them for QC warnings, since they may indicate an incorrect fit.   However, we observe a number of INDELS and haplotype artefacts.  We therefore 'PON' filter the following indels and haploytypes prior to calculating QC metrics for the fit
+
+#### INDEL PON
+37_Position | 38_Position | Variant | Curation
+--- | --- | --- | ---
+29912028 | 29944251 | AN>A | Recurrent HLA-H artefact
+29911899 | 29944122 | A>ACC | Recurrent HLA-Y artefact
+29911318 | 29943541 | CN>C | Recurrent artefact
+31324524 | 31356747 | GNN>G | Phased alignment issue
+31324528 | 31356751 | G>GGT | Phased alignment issue
+29910716 | 29942939 | CN>C | Recurrent artefact
+29910657 | 29942880 | G>GT | Recurrent artefact
+29912392 | 29944615 | A>AGG | Recurrent artefact
+29911899 | 29944122 | A>AC | Recurrent artefact
+
+#### HAPLOTYPE PON
+Start | Haplotype | Curation
+--- | --- | ---
+1 | AVVAPRTLLLLLSGALALTQTWAG | HLA-Y
+25 | SHSMRYFSTSVSRPGSGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWMEQEEPEYWDRQTEISKTNAQIDLESLRIALRYYNQSED | HLA-Y
+47 | AVGYVDDTQFVRFDSDAASQRMEPRAPWMEQEEPEYWDRQTQISKTNAQIDLESLRIALR | HLA-Y
+96 | IDLESLRIALRYYNQSEA | HLA-Y
+117 | TIQRMSGCDVGSDGRFLRGYRQDAYDGKDYIALNEDLRSWTAADMAAQITQRKWEAARQAEQLRAYLEGECMEWLRRYLENGKETLQRT | HLA-Y
+206 | DAPKTHMTHHAVSDNEATLRCXALSFYPAEITLTWQR | HLA-Y
+206 | DPPKTHMTHYPISDHEATLRCWALG | HLA-H
+206 | DPPKTHMTHHPISDHEATLRCWALGFYPAEITLTWQRDGEDQTQDTELVETRPAGDG | HLA-H
+206 | DPPKTHMTHHPISDHEATLRCWALSFYPAEITLTWQRDGEDQTQDTELVETRPAGDG | Likely HLA-Y
+242 | RDGEDQTQDTELVETRPAGDGTFQKWASVVVPSGQEQRYTCHVQHEGLPKPLTLRWE | Likely HLA-Y
+262 | GIFQKWAAVVVPSGEEQRYTCHVQHEGLPKPLTLRWE | HLA-Y
+298 | EPSSQPTIPIVGILAGLVLFGAVIAGAVVAAVMWRRKS | Likely HLA-Y
+299 | PSSHPTIPIVGILAGLVLFGAVIAGAVVAAVMWRRKS | HLA-Y
+299 | IPNLGIVSGPAVLAVLAVLAVLAV | Alignment issue with C*17 indel
+337 | DRKGGSYSQAAS | HLA-Y or HLA-H
+351 | IAQGSDVSLTAC | HLA-Y
+
 
 ## Output
 
@@ -279,43 +316,6 @@ WARN_LOW_COVERAGE | More than 50 distinct bases of HLA-A, HLA-B and HLA-C combin
 FAIL_LOW_COVERAGE | More than 200 distinct bases of HLA-A, HLA-B and HLA-C combined have less than 10 coverage.
 
 In general the warnings may indicate one of either a novel germline variant/allele, presence of an unusual pseudogene type or a incorrectly typed sample.
-
-Whilst unmatched haplotypes and indels may indicate a poor we observe a number of INDELS and haplotype artefacts.  We therefore 'PON' filter the following indels and haploytypes prior to reporting the unmatched counts in the QC output:
-
-#### INDEL PON
-37_Position | 38_Position | Variant | Curation
---- | --- | --- | ---
-29912028 | 29944251 | AN>A | Recurrent HLA-H artefact
-29911899 | 29944122 | A>ACC | Recurrent HLA-Y artefact
-29911318 | 29943541 | CN>C | Recurrent artefact
-31324524 | 31356747 | GNN>G | Phased alignment issue
-31324528 | 31356751 | G>GGT | Phased alignment issue
-29910716 | 29942939 | CN>C | Recurrent artefact
-29910657 | 29942880 | G>GT | Recurrent artefact
-29912392 | 29944615 | A>AGG | Recurrent artefact
-29911899 | 29944122 | A>AC | Recurrent artefact
-
-#### HAPLOTYPE PON
-Start | Haplotype | Curation
---- | --- | ---
-1 | AVVAPRTLLLLLSGALALTQTWAG | HLA-Y
-25 | SHSMRYFSTSVSRPGSGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWMEQEEPEYWDRQTEISKTNAQIDLESLRIALRYYNQSED | HLA-Y
-47 | AVGYVDDTQFVRFDSDAASQRMEPRAPWMEQEEPEYWDRQTQISKTNAQIDLESLRIALR | HLA-Y
-96 | IDLESLRIALRYYNQSEA | HLA-Y
-117 | TIQRMSGCDVGSDGRFLRGYRQDAYDGKDYIALNEDLRSWTAADMAAQITQRKWEAARQAEQLRAYLEGECMEWLRRYLENGKETLQRT | HLA-Y
-206 | DAPKTHMTHHAVSDNEATLRCXALSFYPAEITLTWQR | HLA-Y
-206 | DPPKTHMTHYPISDHEATLRCWALG | HLA-H
-206 | DPPKTHMTHHPISDHEATLRCWALGFYPAEITLTWQRDGEDQTQDTELVETRPAGDG | HLA-H
-206 | DPPKTHMTHHPISDHEATLRCWALSFYPAEITLTWQRDGEDQTQDTELVETRPAGDG | Likely HLA-Y
-242 | RDGEDQTQDTELVETRPAGDGTFQKWASVVVPSGQEQRYTCHVQHEGLPKPLTLRWE | Likely HLA-Y
-262 | GIFQKWAAVVVPSGEEQRYTCHVQHEGLPKPLTLRWE | HLA-Y
-298 | EPSSQPTIPIVGILAGLVLFGAVIAGAVVAAVMWRRKS | Likely HLA-Y
-299 | PSSHPTIPIVGILAGLVLFGAVIAGAVVAAVMWRRKS | HLA-Y
-299 | IPNLGIVSGPAVLAVLAVLAVLAV | Alignment issue with C*17 indel
-337 | DRKGGSYSQAAS | HLA-Y or HLA-H
-351 | IAQGSDVSLTAC | HLA-Y
-
-
 
 #### Additional output files
 
