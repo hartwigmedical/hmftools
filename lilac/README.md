@@ -1,7 +1,5 @@
 # Lilac
 
-## Introduction
-
 LILAC is a tool to determine the HLA Class I types for the germline of each patient as well as determining the status of each of those alleles in the tumor including complete loss of one or more alleles, allele specific somatic mutations and allelic imbalance.
 
 LILAC uses the IMGT/HLA database (https://www.ebi.ac.uk/ipd/imgt/hla/download.html) as a reference set of Human MHC class I alleles, and performs typing to 4-digits, which means it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences (8 digits).
@@ -17,8 +15,6 @@ LILAC is designed to take SAGE somatic point mutation output and PURPLE predicti
 LILAC supports GRCH37, hg19 and hg38 (no alt) ref genomes.   Note that if the genome has been aligned to an hg38 genome with HLA alt contigs, that fragments from these contigs will need to be extracted and realigned to the no alt genome prior to running LILAC.   
 
 LILAC has been optimised to 30-40x germline coverage and 100x tumor coverage with paired 151 base reads.  Shorter reads or lower depth coverage may be problematic. LILAC will achieve accurate results on tumor samples with sufficient coverage (ideally >=100x), but in tumors with high purity and LOH, the lost allele in the tumor may be difficult to detect.   
-
-
 
 ## Configuration
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
@@ -336,6 +332,20 @@ SAMPLE_ID.candidates.nucleotides.txt|Fragment support for nucleotides in the can
 
 The log file contains additional detailed information about the fit including details of all unmatched haplotypes and indels.
 
-# Version History and Download Links
+## Known issues / future improvements
+
+- **HG38 reference genome with alt contigs are not supported** - LILAC currently only obtains reads aligned to the HLA Class 1 genes.  Also need to get all the contigs with ref_name =~ /^HLA|chr6.*alt/"
+- **Explicit novel allele prediction** - LILAC reports unmatched_haplotype, but do not explicitly predict the AA sequence of novel alleles.
+- **Allele elimination in tumor samples with high purity & LOH** -  Where there is a LOH in the tumor combined with a high purity one of the germline alleles may have very little support in the tumor.  In such cases it is possible that LILAC eliminate the correct allele and end up choosing another similar but incorrect allele (generally either a rare allele which escaped elimination or a common allele that was recovered), instead of calling the LOH.   Depending on the coverage pattern, this  could occur at amino acid elimination or during phasing.   It may make sense to use lower thresholds at the heterozygous amino acid stage and impose higher minimum coverage requirements in the phasing stage to counter this.
+- **Recovery** - LILAC currently only recover a common allele if the allele is part of a uniquely supported 2 digit type.   However where alleles are similar across groups, we may not always find unique support for a single 2 digit type.
+- **Elimination of alleles where coverage is very weak** - If coverage is very weak for a specific base (say <8 reads) in a gene we should mark that location as heterozygous AND not phase or eliminate alleles based on that location.  This may impact low or variable coverage samples, especially where base quality is low.
+- **Indel realignment** - Sometimes we miss evidence supporting INDELs due to realignment issues.  In particular if a fragment does not have a soft clip or an INDEL it is not considered for realignment.  This can be a problem for C*17 indels which have long homology and sometimes align without soft clip or INDEL.
+- **Generic handling of out-of-frame indel** - We currently have special handling for C*04:09N only.    At least 2 other alleles are relatively common: B*51:11N, A*24:09N.   We should handle this more generically.
+- **Quality trimming** - We currently quality trim all heterozygous amino acids which have at least 1 nt with base qual <min(30,medianBaseQuality).   A more optimal logic would be to fuzzy match the amino acids.  A better algorithm would be the following:
+```
+If a fragment has an amino acid which does not match ANY of the amino acid candidates at a heterozygous location, but has at least 1 nucleotide with base qual>=min(30,medianBaseQuality), then the amino acid is deemed to match if it matches any combination of the exact high confidence nucleotides with base qual >=min(30,medianBaseQuality) together with any of the candidate nucleotides at the bases locations with qual < min(30,medianBaseQuality).   For exon boundaries only exact nucleotide matches are permitted.
+```
+
+## Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
  
