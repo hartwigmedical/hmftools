@@ -205,9 +205,24 @@ LILAC gathers the set of variants from the vcf (filter = PASS) that overlap eith
 #### RNA ‘expression’ of alleles
 LILAC also optionally accepts a RNA bam.  As per the fragments in the bam are counted for each allele in the determined type.  This can be interpreted as a proxy for allele specific expression.
 
-### PON
+### QC metrics and PON
 
-We report unmatched haplotypes and indels and use them for QC warnings, since they may indicate an incorrect fit.   However, we observe a number of INDELS and haplotype artefacts.  We therefore 'PON' filter the following indels and haploytypes prior to calculating QC metrics for the fit
+LILAC produces a comprehensive set of QC metrics and provides warning statuses if the typing confidence may be diminished.   The full list of possible QC warnings is
+
+Warning | Description 
+--- | ---
+WARN_UNMATCHED_TYPE | all A, B or C types eliminated
+WARN_UNMATCHED_INDEL | A novel (non PON) indel is present that was not fit to any allele supported by at least 0.5% of fitted fragments. 
+WARN_UNMATCHED_HAPLOTYPE | A novel (non PON) haplotype is present that was not fit to any allele supported by at least 1% of fitted fragments.
+WARN_UNMATCHED_AMINO_ACID | A novel (non PON) amino acid is present that was not fit to any allele supported by at least 1% of fitted fragments. 
+WARN_UNMATCHED_SOMATIC_VARIANT | A somatic variant from the input vcf could not be assigned to any allele
+WARN_LOW_BASE_QUALITY | Median base quality < 25
+WARN_LOW_COVERAGE | More than 50 distinct bases of HLA-A, HLA-B and HLA-C combined have less than 10 coverage.
+FAIL_LOW_COVERAGE | More than 200 distinct bases of HLA-A, HLA-B and HLA-C combined have less than 10 coverage.
+
+In general the warnings may indicate one of either a novel germline variant/allele, presence of an unusual pseudogene type or a incorrectly typed sample.
+
+In the case of unmatched haplotypes and indels, we find that there are a number of recurrent artefacts found across many samples in our cohort.  We therefore 'PON' filter the following indels and haploytypes prior to calculating QC metrics for the fit
 
 #### INDEL PON
 37_Position | 38_Position | Variant | Curation
@@ -302,20 +317,6 @@ UnusedHaplotypeMaxFrags | Maximum support for an unmatched haplotype not present
 SomaticVariantsMatched | Somatic variants supported by solution allele
 SomaticVariantsUnmatched | Somatic variants not supported by solution allele
 
-The following QC warnings are supported:
-
-Warning | Description 
---- | ---
-WARN_UNMATCHED_TYPE | all A, B or C types eliminated
-WARN_UNMATCHED_INDEL | A novel (non PON) indel is present that was not fit to any allele supported by at least 0.5% of fitted fragments. 
-WARN_UNMATCHED_HAPLOTYPE | A novel (non PON) haplotype is present that was not fit to any allele supported by at least 1% of fitted fragments.
-WARN_UNMATCHED_AMINO_ACID | A novel (non PON) amino acid is present that was not fit to any allele supported by at least 1% of fitted fragments. 
-WARN_UNMATCHED_SOMATIC_VARIANT | A somatic variant from the input vcf could not be assigned to any allele
-WARN_LOW_BASE_QUALITY | Median base quality < 25
-WARN_LOW_COVERAGE | More than 50 distinct bases of HLA-A, HLA-B and HLA-C combined have less than 10 coverage.
-FAIL_LOW_COVERAGE | More than 200 distinct bases of HLA-A, HLA-B and HLA-C combined have less than 10 coverage.
-
-In general the warnings may indicate one of either a novel germline variant/allele, presence of an unusual pseudogene type or a incorrectly typed sample.
 
 #### Additional output files
 
