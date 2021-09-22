@@ -383,6 +383,7 @@ public class DisruptionFinder implements CohortFileInterface
         List<BreakendGeneData> genesStart = chainStart.getGenesList();
         List<BreakendGeneData> genesEnd = chainEnd.getGenesList();
 
+        // both chain ends must start in non-genic regions
         if(!genesStart.isEmpty() || !genesEnd.isEmpty())
             return;
 
@@ -401,6 +402,12 @@ public class DisruptionFinder implements CohortFileInterface
             List<BreakendGeneData> genes2 = breakend2.getGenesList();
 
             if(genes1.isEmpty() || genes2.isEmpty())
+                continue;
+
+            // neither breakend can be in a deletion bridge with a breakend in the same cluster and gene
+            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend1, x.GeneName)))
+                continue;
+            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend2, x.GeneName)))
                 continue;
 
             for(BreakendGeneData gene1 : genes1)
@@ -546,15 +553,19 @@ public class DisruptionFinder implements CohortFileInterface
         }
     }
 
-    private boolean inDeletionBridgeWithinGene(final SvBreakend breakend, final String geneName)
+    private boolean inDeletionBridgeWithinGene(final SvChain chain, final SvBreakend breakend, final String geneName)
     {
-        // check if this breakend is in a deletion bridge with a disruptive breakend in the same gene
+        // check if this breakend is in a deletion bridge with a disruptive breakend in the same gene but a different chain
         if(breakend.getDBLink() == null)
             return false;
 
         final SvBreakend otherBreakend = breakend.getDBLink().getOtherBreakend(breakend);
 
         if(otherBreakend.getCluster() != breakend.getCluster())
+            return false;
+
+        // breakends in the same chain can form DBs with each other and their TIs can be tested as usual
+        if(otherBreakend.getCluster().findChain(otherBreakend.getSV()) == chain)
             return false;
 
         return otherBreakend.getGenesList().stream()
@@ -586,9 +597,9 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
 
             // neither breakend can be in a deletion bridge with a breakend in the same cluster and gene
-            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(breakend1, x.GeneName)))
+            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend1, x.GeneName)))
                 continue;
-            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(breakend2, x.GeneName)))
+            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend2, x.GeneName)))
                 continue;
 
             SvBreakend otherBreakend1 = breakend1.getOtherBreakend();

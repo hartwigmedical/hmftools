@@ -212,13 +212,9 @@ public class DisruptionTest
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
+        prepareGeneAnnotations(tester, geneTransCache);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
@@ -235,11 +231,7 @@ public class DisruptionTest
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+        prepareGeneAnnotations(tester, geneTransCache);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
@@ -262,13 +254,7 @@ public class DisruptionTest
         tester.AllVariants.add(var3);
         tester.AllVariants.add(var4);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+        prepareGeneAnnotations(tester, geneTransCache);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
@@ -291,13 +277,7 @@ public class DisruptionTest
         tester.AllVariants.add(var3);
         tester.AllVariants.add(var4);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
-
-        assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
+        prepareGeneAnnotations(tester, geneTransCache);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
@@ -323,13 +303,9 @@ public class DisruptionTest
         tester.AllVariants.add(var4);
         tester.AllVariants.add(var5);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
+        prepareGeneAnnotations(tester, geneTransCache);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
@@ -370,13 +346,9 @@ public class DisruptionTest
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
+        prepareGeneAnnotations(tester, geneTransCache);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));
 
@@ -393,13 +365,9 @@ public class DisruptionTest
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
+        prepareGeneAnnotations(tester, geneTransCache);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));
 
@@ -424,13 +392,9 @@ public class DisruptionTest
         tester.AllVariants.add(var3);
         tester.AllVariants.add(var4);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
+        prepareGeneAnnotations(tester, geneTransCache);
 
         assertEquals(1, tester.Analyser.getClusters().size());
-
-        setSvGeneData(tester.AllVariants, geneTransCache, false, false);
-        tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
@@ -440,33 +404,97 @@ public class DisruptionTest
 
 
         // test 4: multiple TIs within the same intro within a chain which has its ends outside genic regions
+        // sorounded by a non-disruptive intronic DEL
         tester.clearClustersAndSVs();
 
-        var1 = createBnd(tester.nextVarId(), chromosome, 12000, -1, remoteChr, 100, 1);
-        var2 = createInv(tester.nextVarId(), chromosome, 12100, 14100, 1);
+        var1 = createDel(tester.nextVarId(), chromosome, 11800, 14500);
+        var2 = createBnd(tester.nextVarId(), chromosome, 12000, -1, remoteChr, 100, 1);
+        var3 = createInv(tester.nextVarId(), chromosome, 12100, 14100, 1);
 
-        var1.setAssemblyData(true, "asmb_A1_A2");
-        var2.setAssemblyData(true, "asmb_A1_A2");
+        var2.setAssemblyData(true, "asmb_A2_A3");
+        var3.setAssemblyData(true, "asmb_A2_A3");
 
-        var3 = createBnd(tester.nextVarId(), chromosome, 14000, -1, remoteChr, 200, -1);
-        var2.setAssemblyData(false, "asmb_A2_A3");
+        var4 = createBnd(tester.nextVarId(), chromosome, 14000, -1, remoteChr, 200, -1);
+        var3.setAssemblyData(false, "asmb_A3_A4");
+        var4.setAssemblyData(true, "asmb_A3_A4");
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        prepareGeneAnnotations(tester, geneTransCache);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+
+        assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+
+        assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var3.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+
+
+        // test 5: single remote TI without an intron, but forming DBs with a DEL in the same cluster
+        // meaning the TI is not isolated and remain disruptive
+
+        tester.clearClustersAndSVs();
+
+        var1 = createDel(tester.nextVarId(), chromosome, 12000, 25500);
+        var2 = createBnd(tester.nextVarId(), chromosome, 12100, -1, remoteChr, 100, 1);
+        var3 = createBnd(tester.nextVarId(), chromosome, 12500, 1, remoteChr, 200, -1);
+
+        var2.setAssemblyData(true, "asmb_A2_A3");
         var3.setAssemblyData(true, "asmb_A2_A3");
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);
 
-        tester.preClusteringInit();
-        tester.Analyser.clusterAndAnalyse();
+        prepareGeneAnnotations(tester, geneTransCache);
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
+        assertTrue(var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+
+
+        // test 5: more complicated example, with 2 TIs spanning an intron, but forming DBs with SVs in another chain in the same cluster
+        // menaning the TIs are not isolated and remain disruptive
+
+        tester.clearClustersAndSVs();
+
+        var1 = createDel(tester.nextVarId(), chromosome, 12000, 25500);
+        var2 = createBnd(tester.nextVarId(), chromosome, 12100, -1, remoteChr, 100, 1);
+        var3 = createInv(tester.nextVarId(), chromosome, 12500, 25400, 1);
+        var4 = createBnd(tester.nextVarId(), chromosome, 25000, -1, remoteChr, 200, -1);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+
+        prepareGeneAnnotations(tester, geneTransCache);
+
+        assertEquals(1, tester.Analyser.getClusters().size());
+
+        assertTrue(var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var1.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var3.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
+        assertTrue(var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+
+    }
+
+    private void prepareGeneAnnotations(final LinxTester tester, final EnsemblDataCache geneTransCache)
+    {
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
         setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
-
-        assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var2.getGenesList(false).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
     }
 }
