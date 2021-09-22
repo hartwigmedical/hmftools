@@ -343,7 +343,11 @@ The log file contains additional detailed information about the fit including de
 - **Generic handling of out-of-frame indel** - We currently have special handling for C*04:09N only.    At least 2 other alleles are relatively common: B*51:11N, A*24:09N.   We should handle this more generically.
 - **Quality trimming** - We currently quality trim all heterozygous amino acids which have at least 1 nt with base qual <min(30,medianBaseQuality).   A more optimal logic would be to fuzzy match the amino acids.  A better algorithm would be the following:
 ```
-If a fragment has an amino acid which does not match ANY of the amino acid candidates at a heterozygous location, but has at least 1 nucleotide with base qual>=min(30,medianBaseQuality), then the amino acid is deemed to match if it matches any combination of the exact high confidence nucleotides with base qual >=min(30,medianBaseQuality) together with any of the candidate nucleotides at the bases locations with qual < min(30,medianBaseQuality).   For exon boundaries only exact nucleotide matches are permitted.
+If a fragment has an amino acid which does not match ANY of the amino acid candidates at a heterozygous location, but has at 
+least 1 nucleotide with base qual>=min(30,medianBaseQuality), then the amino acid is deemed to match if it matches any 
+combination of the exact high confidence nucleotides with base qual >=min(30,medianBaseQuality) together with any of the 
+candidate nucleotides at the bases locations with qual < min(30,medianBaseQuality).   For exon boundaries only exact 
+nucleotide matches are permitted.
 ```
 
 ## Version History and Download Links
