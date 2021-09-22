@@ -335,20 +335,20 @@ The log file contains additional detailed information about the fit including de
 ## Known issues / future improvements
 
 - **HG38 reference genome with alt contigs are not supported** - LILAC currently only obtains reads aligned to the HLA Class 1 genes.  Also need to get all the contigs with ref_name =~ /^HLA|chr6.*alt/"
-- **Explicit novel allele prediction** - LILAC reports unmatched_haplotype, but do not explicitly predict the AA sequence of novel alleles.
+- **Support for explicit novel allele prediction** - LILAC reports unmatched_haplotype, but do not explicitly predict the AA sequence of novel alleles.
 - **Allele elimination in tumor samples with high purity & LOH** -  Where there is a LOH in the tumor combined with a high purity one of the germline alleles may have very little support in the tumor.  In such cases it is possible that LILAC eliminate the correct allele and end up choosing another similar but incorrect allele (generally either a rare allele which escaped elimination or a common allele that was recovered), instead of calling the LOH.   Depending on the coverage pattern, this  could occur at amino acid elimination or during phasing.   It may make sense to use lower thresholds at the heterozygous amino acid stage and impose higher minimum coverage requirements in the phasing stage to counter this.
 - **Recovery** - LILAC currently only recover a common allele if the allele is part of a uniquely supported 2 digit type.   However where alleles are similar across groups, we may not always find unique support for a single 2 digit type.
 - **Elimination of alleles where coverage is very weak** - If coverage is very weak for a specific base (say <8 reads) in a gene we should mark that location as heterozygous AND not phase or eliminate alleles based on that location.  This may impact low or variable coverage samples, especially where base quality is low.
 - **Indel realignment** - Sometimes we miss evidence supporting INDELs due to realignment issues.  In particular if a fragment does not have a soft clip or an INDEL it is not considered for realignment.  This can be a problem for C*17 indels which have long homology and sometimes align without soft clip or INDEL.
 - **Generic handling of out-of-frame indel** - We currently have special handling for C*04:09N only.    At least 2 other alleles are relatively common: B*51:11N, A*24:09N.   We should handle this more generically.
 - **Quality trimming** - We currently quality trim all heterozygous amino acids which have at least 1 nt with base qual <min(30,medianBaseQuality).   A more optimal logic would be to fuzzy match the amino acids.  A better algorithm would be the following:
-```
+ <pre>
 If a fragment has an amino acid which does not match ANY of the amino acid candidates at a heterozygous location, but has at 
 least 1 nucleotide with base qual>=min(30,medianBaseQuality), then the amino acid is deemed to match if it matches any 
 combination of the exact high confidence nucleotides with base qual >=min(30,medianBaseQuality) together with any of the 
 candidate nucleotides at the bases locations with qual < min(30,medianBaseQuality).   For exon boundaries only exact 
 nucleotide matches are permitted.
-```
+ </pre>
 
 ## Version History and Download Links
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.0)
