@@ -74,7 +74,15 @@ public class TeloApplication
             System.exit(1);
         }
 
-        application.run();
+        try
+        {
+            application.run();
+        }
+        catch (IllegalStateException e)
+        {
+            TE_LOGGER.warn(e);
+            System.exit(1);
+        }
     }
 
     private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException

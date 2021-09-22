@@ -65,7 +65,7 @@ public class BamProcessor
 
             // now we process the incomplete groups, since the threads have already finished there is no
             // concurrency problem
-            List<ChrBaseRegion> missingReadRegions = getMissingReadRegions(writer.getIncompleteReadGroups());
+            List<ChrBaseRegion> missingReadRegions = getMissingReadRegions(writer.getIncompleteReadGroups(), config.SpecificChromosomes);
 
             if (!missingReadRegions.isEmpty())
             {
@@ -86,6 +86,12 @@ public class BamProcessor
         }
 
         writer.finish();
+
+        if (!writer.getIncompleteReadGroups().isEmpty())
+        {
+            // this should be flagged as an error
+            throw new IllegalStateException(String.format("%d read groups could not be completed", writer.getIncompleteReadGroups().size()));
+        }
     }
 
     // run the bam reader and record writer threads till completion
@@ -114,13 +120,25 @@ public class BamProcessor
         TE_LOGGER.info("writer thread finished");
     }
 
-    private static List<ChrBaseRegion> getMissingReadRegions(Map<String, ReadGroup> incompleteReadGroups)
+    private static List<ChrBaseRegion> getMissingReadRegions(Map<String, ReadGroup> incompleteReadGroups, List<String> specificChromosomes)
     {
         List<ChrBaseRegion> missingReadRegions = new ArrayList<>();
         for(ReadGroup readGroup : incompleteReadGroups.values())
         {
             assert(readGroup.invariant());
             missingReadRegions.addAll(readGroup.findMissingReadBaseRegions());
+            if (!specificChromosomes.isEmpty())
+            {
+                List<ChrBaseRegion> list = new ArrayList<>();
+                for (ChrBaseRegion x : missingReadRegions)
+                {
+                    if (specificChromosomes.contains(x.Chromosome))
+                    {
+                        list.add(x);
+                    }
+                }
+                missingReadRegions = list;
+            }
         }
 
         // sort the mate regions

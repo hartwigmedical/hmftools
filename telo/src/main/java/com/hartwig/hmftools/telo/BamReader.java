@@ -139,13 +139,6 @@ public class BamReader implements Runnable
 
     private void processReadRecord(@NotNull final SAMRecord record)
     {
-        // we filter out secondary alignment, cannot seem to find them in our
-        // cram file so for now not relevant
-        if (record.isSecondaryAlignment())
-        {
-            return;
-        }
-
         boolean hasTeloContent = hasTelomericContent(record);
 
         if (!hasTeloContent && !mIncompleteReadNames.contains(record.getReadName()))
