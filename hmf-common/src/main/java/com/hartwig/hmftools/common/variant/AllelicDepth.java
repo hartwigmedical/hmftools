@@ -17,7 +17,7 @@ public interface AllelicDepth {
     }
 
     static boolean containsAllelicDepth(final Genotype genotype) {
-        return genotype.hasAD() && genotype.getAD().length > 1;
+        return genotype != null && genotype.hasAD() && genotype.getAD().length > 1;
     }
 
     @NotNull
