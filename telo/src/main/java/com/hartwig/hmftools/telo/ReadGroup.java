@@ -7,8 +7,11 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
+import org.jetbrains.annotations.NotNull;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
+import org.apache.logging.log4j.Level;
 
 public class ReadGroup
 {
@@ -32,27 +35,50 @@ public class ReadGroup
 
     public final String getName() { return mName; }
 
-    public boolean isComplete()
+    public boolean isComplete() { return isComplete(null); }
+
+    public boolean isComplete(Level logLevel)
     {
         if (Reads.isEmpty())
-            return false;
-
-        // we check several things
-        if (Reads.get(0).getReadPairedFlag() && Reads.size() < 2)
         {
-            // we havent got all the reads yet
+            TE_LOGGER.log(logLevel, "Read is empty");
             return false;
         }
 
-        return findMissingReadBaseRegions().isEmpty();
+        // we check several things
+        if (Reads.get(0).getReadPairedFlag() && Reads.size() != 2)
+        {
+            // we havent got all the reads yet
+            TE_LOGGER.log(logLevel, "{} missing mate pair", Reads.get(0));
+            return false;
+        }
+
+        // check for any of the supplementary reads
+        for(SAMRecord read : Reads)
+        {
+            String saAttribute = read.getStringAttribute(SAMTag.SA.name());
+            if (saAttribute != null)
+            {
+                List<ChrBaseRegion> supplementaryRegions = ReadGroup.suppAlignmentPositions(saAttribute);
+                for (ChrBaseRegion br : supplementaryRegions)
+                {
+                    // check if this supplementary read exists
+                    if (SupplementaryReads.stream()
+                            .noneMatch(x -> x.getFirstOfPairFlag() == read.getFirstOfPairFlag() &&
+                                    x.getAlignmentStart() == br.start() &&
+                                    x.getReferenceName().equals(br.Chromosome)))
+                    {
+                        TE_LOGGER.log(logLevel, "{} Missing supplementary read: aligned to {}:{}", Reads.get(0),
+                                br.chromosome(), br.start());
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
-    public static boolean hasSuppAlignment(final List<SAMRecord> reads)
-    {
-        return reads.stream().anyMatch(SAMRecord::getSupplementaryAlignmentFlag);
-    }
-
-    public boolean contains(SAMRecord read)
+    public boolean contains(@NotNull SAMRecord read)
     {
         if (!read.getReadName().equals(getName()))
         {
@@ -60,7 +86,7 @@ public class ReadGroup
         }
 
         List<SAMRecord> listToLook;
-        if (read.getSupplementaryAlignmentFlag())
+        if (read.isSecondaryOrSupplementary())
         {
             listToLook = SupplementaryReads;
         }
@@ -111,7 +137,7 @@ public class ReadGroup
             final String[] items = si.split(SUPP_ALIGNMENT_DELIM);
 
             if (items.length < 5)
-                return null;
+                continue;
 
             // supplementary(SA) string attribute looks like
             // 4,191039958,+,68S33M,0,0
@@ -146,7 +172,7 @@ public class ReadGroup
         {
             return false;
         }
-        if (SupplementaryReads.stream().allMatch(SAMRecord::getSupplementaryAlignmentFlag))
+        if (SupplementaryReads.stream().anyMatch(x -> !x.getSupplementaryAlignmentFlag()))
         {
             return false;
         }
@@ -161,8 +187,9 @@ public class ReadGroup
         List<ChrBaseRegion> baseRegions = new ArrayList<>();
         assert(invariant());
 
-        for(SAMRecord read : Reads)
+        if(Reads.size() == 1)
         {
+            SAMRecord read = Reads.get(0);
             if(read.getReadPairedFlag() && read.getMateReferenceIndex() != SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX)
             {
                 // note that even if the mate unmapped flag is set, we still might not be there
@@ -173,16 +200,17 @@ public class ReadGroup
                     TE_LOGGER.warn("read({}) invalid mate reference, mate ref index({})",
                             read, read.getMateReferenceIndex());
                 }
-                else if (Reads.stream().noneMatch(
-                        x -> x.getFirstOfPairFlag() != read.getFirstOfPairFlag() && // we must check this condition since unmapped read would have
-                                // alignment of mate
-                                x.getAlignmentStart() == read.getMateAlignmentStart() &&
-                                x.getReferenceName().equals(read.getMateReferenceName())))
+                else
                 {
                     baseRegions.add(new ChrBaseRegion(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart()));
+                    TE_LOGGER.trace("{} missing read mate: aligned to {}:{}", Reads.get(0),
+                            read.getMateReferenceName(), read.getMateAlignmentStart());
                 }
             }
+        }
 
+        for(SAMRecord read : Reads)
+        {
             String saAttribute = read.getStringAttribute(SAMTag.SA.name());
             if (saAttribute != null)
             {
@@ -198,6 +226,8 @@ public class ReadGroup
                                         x.getReferenceName().equals(br.Chromosome)))
                         {
                             baseRegions.add(br);
+                            TE_LOGGER.trace("{} Missing supplementary read: aligned to {}:{}", Reads.get(0),
+                                    br.chromosome(), br.start());
                         }
                     }
                 }
