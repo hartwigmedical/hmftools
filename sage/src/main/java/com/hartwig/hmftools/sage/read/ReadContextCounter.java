@@ -349,7 +349,8 @@ public class ReadContextCounter implements VariantHotspot
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(Variant, mapQuality, numberOfEvents, record.getProperPairFlag());
+        boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(Variant, mapQuality, numberOfEvents, properPairFlag);
         double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
@@ -389,7 +390,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private void incrementQualityFlags(@NotNull final SAMRecord record)
     {
-        if(!record.getProperPairFlag())
+        if(!record.getReadPairedFlag() || !record.getProperPairFlag())
         {
             mImproperPair++;
         }
