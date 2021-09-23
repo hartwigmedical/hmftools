@@ -58,41 +58,6 @@ public class SomaticPeakStream
         mIndelCount = 0;
         mSnpCount = 0;
 
-        /*
-        if(somaticVariants.isEmpty())
-            return Lists.newArrayList();
-
-        // gather up passing variants less then max ploidy
-        final List<ModifiableWeightedPloidy> weightedPloidies = newArrayList();
-
-        for(final SomaticVariant variant : somaticVariants)
-        {
-            if(Doubles.lessThan(variant.variantCopyNumber(), mSomaticFitConfig.clonalityMaxPloidy())
-                    && variant.filter().equals(FILTER_PASS)
-                    && HumanChromosome.contains(variant.chromosome()) && HumanChromosome.fromString(variant.chromosome()).isAutosome())
-            {
-                weightedPloidies.add(ModifiableWeightedPloidy.create()
-                        .totalReadCount(variant.totalReadCount())
-                        .alleleReadCount(variant.alleleReadCount())
-                        .setPloidy(variant.variantCopyNumber())
-                        .setWeight(1));
-            }
-
-            if(variant.filter().equals(FILTER_PASS))
-            {
-                if(variant.type() == VariantType.INDEL)
-                {
-                    mIndelCount++;
-                }
-                else
-                {
-                    mSnpCount++;
-                }
-            }
-
-        }
-         */
-
         try (VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcfFile), false))
         {
             // gather up passing variants less then max ploidy

@@ -163,9 +163,7 @@ public class StructuralVariantCache
         }
     }
 
-    @NotNull
-    private Iterable<VariantContext> enriched(@NotNull final PurityAdjuster purityAdjuster,
-            @NotNull final List<PurpleCopyNumber> copyNumbers)
+    private Iterable<VariantContext> enriched(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
         assert (mVcfHeader.isPresent());
 
@@ -195,9 +193,7 @@ public class StructuralVariantCache
         return enrichedCollection;
     }
 
-    @NotNull
-    private VariantContext enrich(@NotNull final EnrichedStructuralVariant variant, @NotNull final VariantContext template,
-            boolean reverse)
+    private VariantContext enrich(final EnrichedStructuralVariant variant, final VariantContext template, boolean reverse)
     {
         final List<Double> purpleAF = Lists.newArrayList();
         Optional.ofNullable(variant.start().adjustedAlleleFrequency()).ifPresent(purpleAF::add);

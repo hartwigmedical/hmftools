@@ -121,7 +121,7 @@ minor_allele_ploidy_pdf <- function(copyNumberRegions) {
 copynumber_pdf <- function(copyNumberRegions) {
 
     mapColours = c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462")
-    mapColours = setNames(mapColours, c("MAP0", "MAP1","MAP2","MAP3","MAP4", "MAP5+"))
+    mapColours = setNames(mapColours, c("MACN0", "MACN1","MACN2","MACN3","MACN4", "MACN5+"))
 
     totalBafCount = sum(copyNumberRegions$bafCount)
 
@@ -129,7 +129,7 @@ copynumber_pdf <- function(copyNumberRegions) {
       filter(!chromosome %in% c('X','Y'), bafCount > 0) %>%
       mutate(
         map = round(minorAlleleCopyNumber),
-        map = ifelse(map>=5, "MAP5+", paste0("MAP", map)),
+        map = ifelse(map>=5, "MACN5+", paste0("MACN", map)),
         chromosome = factor(chromosome, levels= c(1:22), ordered = T),
         weight = bafCount/totalBafCount )
     

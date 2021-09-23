@@ -114,7 +114,8 @@ public class BestFitFactory
         if(!useSomatics)
             return builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
 
-        final Optional<FittedPurity> somaticFit = mSomaticPurityFitter.fromSomatics(mVariantsInReadCountRange, diploidCandidates);
+        final Optional<FittedPurity> somaticFit = mSomaticPurityFitter.fromSomatics(
+                mVariantsInReadCountRange, structuralVariants, diploidCandidates);
 
         if(!somaticFit.isPresent())
         {

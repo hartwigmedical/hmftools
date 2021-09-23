@@ -178,7 +178,8 @@ public class PurpleApplication
             sampleData.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData, mConfig.TumorOnlyMode);
 
             return sampleData;
-        } catch(Exception e)
+        }
+        catch(Exception e)
         {
             PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
             return null;
