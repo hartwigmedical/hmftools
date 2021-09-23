@@ -321,7 +321,7 @@ public class DisruptionFinder implements CohortFileInterface
                         final BreakendTransData downTrans = otherGene.transcripts().stream()
                                 .filter(x -> x.transId() == upTrans.transId()).findFirst().orElse(null);
 
-                        if(upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
+                        if(downTrans != null && upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
                         {
                             markNonDisruptiveTranscript(upTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
                             markNonDisruptiveTranscript(downTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
