@@ -193,6 +193,7 @@ public class ReferenceData
 
     private void buildHlaYAminoAcidSequences()
     {
+        // construct the AA allele sequences for HLA-Y from the nucleotides if it wasn't loaded
         HlaYAminoAcidSequences.addAll(AminoAcidSequences.stream().filter(x -> x.Allele.Gene.equals(GENE_Y)).collect(Collectors.toList()));
 
         if(!HlaYAminoAcidSequences.isEmpty())

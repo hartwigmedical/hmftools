@@ -115,9 +115,10 @@ public class GenerateReferenceSequences
         mNucleotideSequences.addAll(nucleotideLoci(mResourceDir + "C_nuc.txt"));
 
         List<HlaSequenceLoci> yNucSequences = nucleotideLoci(mResourceDir + "Y_nuc.txt");
-        List<HlaSequenceLoci> hNucSequences = nucleotideLoci(mResourceDir + "H_nuc.txt");
         mNucleotideSequences.addAll(yNucSequences);
-        mNucleotideSequences.addAll(hNucSequences);
+
+        // List<HlaSequenceLoci> hNucSequences = nucleotideLoci(mResourceDir + "H_nuc.txt");
+        // mNucleotideSequences.addAll(hNucSequences);
 
         LL_LOGGER.info("reading protein files");
 
@@ -132,7 +133,7 @@ public class GenerateReferenceSequences
         if(sequenceTemplate != null)
         {
             yNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
-            hNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
+            // hNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
         }
 
         return true;
