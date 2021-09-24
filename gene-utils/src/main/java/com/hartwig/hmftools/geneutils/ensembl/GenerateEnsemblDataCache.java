@@ -7,8 +7,10 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -218,8 +220,8 @@ public class GenerateEnsemblDataCache
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(OUTPUT_DIR, true, "Directory to write Ensembl data files");
-        options.addOption(LOG_DEBUG, false, "Log in verbose mode");
+        addLoggingOptions(options);
+        addOutputDir(options);
         EnsemblDAO.addCmdLineArgs(options);
 
         return options;

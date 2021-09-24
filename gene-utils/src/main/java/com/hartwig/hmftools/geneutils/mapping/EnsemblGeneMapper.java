@@ -126,18 +126,12 @@ public class EnsemblGeneMapper
                         break;
                     }
 
-                    // if(gene38.GeneStart > liftOverRegion.GeneStart + GENE_COORD_BUFFER)
-                    //    continue;
-
                     if(liftOverRegion != null && liftOverRegion.positionMatches(gene38.GeneStart, gene38.GeneEnd, GENE_COORD_BUFFER))
                     {
                         writeMappingData(geneData37, gene38, MappingType.COORDS);
                         found = true;
                         break;
                     }
-
-                    // if(gene38.GeneStart > liftOverRegion.GeneEnd)
-                    //    break;
                 }
 
                 if(!found)

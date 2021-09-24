@@ -16,6 +16,7 @@ public enum RefGenomeVersion
 
     // config option
     public static final String REF_GENOME_VERSION = "ref_genome_version";
+    public static final String REF_GENOME_VERSION_CFG_DESC = "Ref genome version, 37 or 38";
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeVersion.class);
     private static final String GZIP_EXTENSION = ".gz";

@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.DEFAULT_DELIM;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.EXON_DATA_DELIM;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
@@ -84,7 +87,7 @@ public class GenerateGenePanelRefSeq
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
             writer.write(HmfTranscriptRegionFile.header());
-            writer.write(",EntrezIdsHgnc");
+            // writer.write(",EntrezIdsHgnc");
             writer.newLine();
 
             int recordIndex = 0;
@@ -102,7 +105,7 @@ public class GenerateGenePanelRefSeq
                 Byte strand = (Byte) record.get("strand");
 
                 String entrezIds = record.get("entrezId") == null ? "" : (String) record.get("entrezId");
-                String entrezIdsHgnc = record.get("entrezId") == null ? "" : (String) record.get("entrezIdHgnc");
+                // String entrezIdsHgnc = record.get("entrezId") == null ? "" : (String) record.get("entrezIdHgnc");
                 String chrBand = (String) record.get("chromosome_band");
 
                 String transId = (String) record.get("transcript_id");
@@ -144,7 +147,7 @@ public class GenerateGenePanelRefSeq
                 sj.add(exonData.toString());
 
                 writer.write(sj.toString());
-                writer.write(String.format(",%s", entrezIdsHgnc));
+                // writer.write(String.format(",%s", entrezIdsHgnc));
                 writer.newLine();
             }
 
@@ -171,11 +174,11 @@ public class GenerateGenePanelRefSeq
     private static Options createOptions()
     {
         final Options options = new Options();
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         EnsemblDAO.addCmdLineArgs(options);
         addEnsemblDir(options);
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
+        addOutputDir(options);
         return options;
     }
 

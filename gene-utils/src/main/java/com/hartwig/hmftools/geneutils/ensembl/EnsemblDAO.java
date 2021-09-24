@@ -49,13 +49,13 @@ public class EnsemblDAO
     private DSLContext mDbContext;
     private final int mCoordSystemId;
     private final RefGenomeVersion mRefGenomeVersion;
-    private final Set<String> mGeneIds;
+    private final Map<String,GeneData> mGeneIdDataMap; // geneId to gene data
     private final Set<Integer> mTranscriptIds;
 
     public EnsemblDAO(final CommandLine cmd)
     {
         mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
-        mGeneIds = Sets.newHashSet();
+        mGeneIdDataMap = Maps.newHashMap();
         mTranscriptIds = Sets.newHashSet();
 
         mDbContext = createEnsemblDbConnection(cmd);
@@ -168,38 +168,53 @@ public class EnsemblDAO
 
             String queryStr = readQueryString(Resources.getResource("sql/ensembl_gene_data.sql"));
             queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
-            // GU_LOGGER.debug("gene query: {}", queryStr);
+
             Result<Record> results = mDbContext.fetch(queryStr);
 
             final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
-            final Set<String> geneNames = Sets.newHashSet();
+            final Map<String,GeneData> geneNameMap = Maps.newHashMap();
+            final Map<String,GeneData> geneIdMap = Maps.newHashMap();
 
             for(final Record record : results)
             {
                 String geneName = (String)record.get("GeneName");
                 String geneId = (String)record.get("GeneId");
+                Object entrezId = record.get("EntrezId");
 
-                if(geneNames.contains(geneName) || mGeneIds.contains(geneId))
+                if(mGeneIdDataMap.containsKey(geneId))
                     continue;
-
-                geneNames.add(geneName);
-                mGeneIds.add(geneId);
 
                 String chromosome = (String)record.get("Chromosome");
                 UInteger geneStart = (UInteger) record.get("GeneStart");
                 UInteger geneEnd = (UInteger) record.get("GeneEnd");
                 Byte strand = (Byte) record.get("Strand");
-                Object entrezId = record.get("EntrezId");
+                String karyotypeBand = record.get("KaryotypeBand").toString();
 
                 if(entrezId != null)
-                {
                     geneName = (String) entrezId;
+
+                GeneData existingGeneData = geneNameMap.get(geneName);
+
+                if(existingGeneData != null)
+                {
+                    if(!existingGeneData.Chromosome.equals(chromosome) || existingGeneData.GeneStart != geneStart.intValue()
+                    || existingGeneData.GeneEnd != geneEnd.intValue())
+                    {
+                        // log any duplicates
+                        GU_LOGGER.debug("geneName({}) has duplicate: new(id={} coord={}:{}-{}) existing(id={} coord={}:{}-{})",
+                                geneName, geneId, chromosome, geneStart, geneEnd,
+                                existingGeneData.GeneId, existingGeneData.Chromosome, existingGeneData.GeneStart, existingGeneData.GeneEnd);
+                    }
+
+                    continue;
                 }
 
                 GeneData geneData = new GeneData(
-                        geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(),
-                        record.get("KaryotypeBand").toString());
+                        geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(), karyotypeBand);
+
+                mGeneIdDataMap.put(geneId, geneData);
+                geneNameMap.put(geneName, geneData);
 
                 geneData.addSynonyms(record.get("Synonyms").toString());
 
@@ -268,8 +283,12 @@ public class EnsemblDAO
                 if(ignoreTranscript(transName))
                     continue;
 
-                UInteger canTransId = (UInteger) record.get("CanonicalTranscriptId");
                 String geneId = (String)record.get("GeneId");
+
+                if(!mGeneIdDataMap.containsKey(geneId))
+                    continue;
+
+                UInteger canTransId = (UInteger) record.get("CanonicalTranscriptId");
                 UInteger transId = (UInteger) record.get("TransId");
                 Byte strand = (Byte) record.get("Strand");
                 UInteger transStart = (UInteger) record.get("TransStart");
@@ -281,9 +300,6 @@ public class EnsemblDAO
                 Byte exonPhaseEnd = (Byte) record.get("ExonEndPhase");
                 ULong codingStart = (ULong) record.get("CodingStart");
                 ULong codingEnd = (ULong) record.get("CodingEnd");
-
-                if(!mGeneIds.contains(geneId))
-                    continue;
 
                 writer.write(String.format("%s,%d,%d,%d,%s,%s,%d,%d",
                         geneId, canTransId.intValue(), strand, transId.intValue(),

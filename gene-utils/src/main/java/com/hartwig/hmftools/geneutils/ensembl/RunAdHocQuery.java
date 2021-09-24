@@ -2,8 +2,10 @@ package com.hartwig.hmftools.geneutils.ensembl;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
@@ -68,7 +70,7 @@ public class RunAdHocQuery
         EnsemblDAO.addCmdLineArgs(options);
         options.addOption(QUERY_FILE, true, "Ad-hoc query SQL file");
         options.addOption(OUTPUT_FILE, true, "Output file for test query results");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        addLoggingOptions(options);
         return options;
     }
 
