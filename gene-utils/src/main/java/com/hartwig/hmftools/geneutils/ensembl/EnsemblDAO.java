@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
+import static com.hartwig.hmftools.geneutils.ensembl.GenerateEnsemblDataCache.HGNC_GENE_DATA_FILE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -52,11 +53,24 @@ public class EnsemblDAO
     private final Map<String,GeneData> mGeneIdDataMap; // geneId to gene data
     private final Set<Integer> mTranscriptIds;
 
+    private final HgncGenes mHgncGenes;
+
     public EnsemblDAO(final CommandLine cmd)
     {
         mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
         mGeneIdDataMap = Maps.newHashMap();
         mTranscriptIds = Sets.newHashSet();
+
+        if(cmd.hasOption(HGNC_GENE_DATA_FILE))
+        {
+            mHgncGenes = new HgncGenes(cmd.getOptionValue(HGNC_GENE_DATA_FILE));
+        }
+        else
+        {
+            mHgncGenes = null;
+        }
+
+
 
         mDbContext = createEnsemblDbConnection(cmd);
 
@@ -166,57 +180,72 @@ public class EnsemblDAO
             writer.write("GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,KaryotypeBand,Synonyms");
             writer.newLine();
 
-            String queryStr = readQueryString(Resources.getResource("sql/ensembl_gene_data.sql"));
+            String queryFile = mRefGenomeVersion == V38 && mHgncGenes.hasData() ?
+                    "sql/ensembl_hgnc_gene_data.sql" : "sql/ensembl_gene_data.sql";
+
+            String queryStr = readQueryString(Resources.getResource(queryFile));
             queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
 
             Result<Record> results = mDbContext.fetch(queryStr);
 
-            final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
+            GU_LOGGER.debug("gene query return {} records", results.size());
 
-            final Map<String,GeneData> geneNameMap = Maps.newHashMap();
-            final Map<String,GeneData> geneIdMap = Maps.newHashMap();
+            final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
             for(final Record record : results)
             {
                 String geneName = (String)record.get("GeneName");
                 String geneId = (String)record.get("GeneId");
-                Object entrezId = record.get("EntrezId");
+
+                String synonyms = "";
+
+                if(mHgncGenes.hasData())
+                {
+                    HgncGene hgncGene = null;
+
+                    if(mRefGenomeVersion == V38)
+                    {
+                        String hgncId = (String)record.get("HgncId");
+                        hgncGene = mHgncGenes.getByHgncId(hgncId);
+                    }
+                    else
+                    {
+                        hgncGene = mHgncGenes.getByGeneId(geneId);
+
+                        if(hgncGene == null)
+                            hgncGene = mHgncGenes.getBySymbol(geneName);
+
+                        synonyms = (String)record.get("Synonyms");
+                    }
+
+                    if(hgncGene == null)
+                        continue;
+
+                    geneName = hgncGene.Symbol;
+                }
+                else
+                {
+                    Object entrezId = record.get("EntrezId");
+                    if(entrezId != null)
+                        geneName = (String)entrezId;
+                }
 
                 if(mGeneIdDataMap.containsKey(geneId))
                     continue;
 
+                // String hgncGeneName = (String)record.get("HgncGeneName");
                 String chromosome = (String)record.get("Chromosome");
                 UInteger geneStart = (UInteger) record.get("GeneStart");
                 UInteger geneEnd = (UInteger) record.get("GeneEnd");
                 Byte strand = (Byte) record.get("Strand");
-                String karyotypeBand = record.get("KaryotypeBand").toString();
-
-                if(entrezId != null)
-                    geneName = (String) entrezId;
-
-                GeneData existingGeneData = geneNameMap.get(geneName);
-
-                if(existingGeneData != null)
-                {
-                    if(!existingGeneData.Chromosome.equals(chromosome) || existingGeneData.GeneStart != geneStart.intValue()
-                    || existingGeneData.GeneEnd != geneEnd.intValue())
-                    {
-                        // log any duplicates
-                        GU_LOGGER.debug("geneName({}) has duplicate: new(id={} coord={}:{}-{}) existing(id={} coord={}:{}-{})",
-                                geneName, geneId, chromosome, geneStart, geneEnd,
-                                existingGeneData.GeneId, existingGeneData.Chromosome, existingGeneData.GeneStart, existingGeneData.GeneEnd);
-                    }
-
-                    continue;
-                }
+                String karyotypeBand = (String)record.get("KaryotypeBand");
 
                 GeneData geneData = new GeneData(
                         geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(), karyotypeBand);
 
                 mGeneIdDataMap.put(geneId, geneData);
-                geneNameMap.put(geneName, geneData);
 
-                geneData.addSynonyms(record.get("Synonyms").toString());
+                geneData.addSynonyms(synonyms);
 
                 List<GeneData> geneList = chrGeneMap.get(chromosome);
 
@@ -252,7 +281,7 @@ public class EnsemblDAO
                 }
             }
 
-            writer.close();
+                writer.close();
         }
         catch (final IOException e)
         {
@@ -275,6 +304,8 @@ public class EnsemblDAO
             final String queryStr = readQueryString(Resources.getResource("sql/ensembl_transcript.sql"));
             // GU_LOGGER.debug("transcript query: {}", queryStr);
             Result<Record> results = mDbContext.fetch(queryStr);
+
+            GU_LOGGER.debug("transcript query return {} records", results.size());
 
             for(final Record record : results)
             {

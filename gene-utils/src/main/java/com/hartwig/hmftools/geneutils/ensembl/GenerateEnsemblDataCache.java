@@ -6,10 +6,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -38,6 +36,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class GenerateEnsemblDataCache
 {
+    public static final String HGNC_GENE_DATA_FILE = "hgnc_gene_data_file";
+
     public static void writeEnsemblDataFiles(final CommandLine cmd)
     {
         String outputDir = parseOutputDir(cmd);
@@ -222,6 +222,7 @@ public class GenerateEnsemblDataCache
         final Options options = new Options();
         addLoggingOptions(options);
         addOutputDir(options);
+        options.addOption(HGNC_GENE_DATA_FILE, true, "HGNC gene data file");
         EnsemblDAO.addCmdLineArgs(options);
 
         return options;
