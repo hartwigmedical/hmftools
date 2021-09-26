@@ -55,8 +55,6 @@ ref_genome_version | 37 (default) or 38
 ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation or access below.
 functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
 
-For instructions on how to generate the Ensembl data cache, see subsection below.
-
 ### Optional
 Argument | Description
 ---|---
@@ -69,8 +67,10 @@ drop_dups | Default is false. By default duplicate fragments will be counted tow
 ### Reference Files
 Reference files are available for HG19 and HG38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
 - Isofox: expected transcript expression and GC Bias
-- Ensembl: cached Ensembl files
 - KnownFusions: HMF known fusion data
+- Ensembl: cached Ensembl files.  Instructions for how to generate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
+
+Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
 
 ### Transcript Expression
 The expression function in Isofox depends on the calculation of expected rates for each gene and transcript given a set of fragment lengths. These can be computed from scratch each time a sample is run, or pre-computed independently once and then loaded from file for subsequent sample runs. Using the pre-computed expected counts file reduces the processing time by around 95%. 
@@ -198,13 +198,6 @@ java -jar isofox.jar
 ```
 
 The output file is approximately 120MB.
-
-### Generating cached Ensembl data files
-To annotate SVs with gene information and to support fusion detection, ISOFOX uses gene, transcript, exon and protein domain information from the Ensembl database. 
-This data is loaded from HMF's Ensembl data cache files which are available from the Hartwig resources page, or can be generated using the Hartwig GeneUtils application.  Instructions for how to generate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
-
-Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
-
  
 ## Algorithm
 
