@@ -48,7 +48,7 @@ Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](h
 - GenePanel: HMF driver genes
 - KnownFusions: HMF known fusion data
 - Linx: fragile sites, LINE source regions and replication origins
-- Ensembl: cached Ensembl files
+- Ensembl: cached Ensembl files.   Instructions for how to genereate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
  
 ### Example Usage
 This is a typical command to run LINX for a single sample from PURPLE output.
