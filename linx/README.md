@@ -26,9 +26,9 @@ Linx is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 The latest version of Linx can be downloaded from the [Hartwig releases page](https://github.com/hartwigmedical/hmftools/releases/)
 
 ## Configuration
+### Core configuration
 All values are optional unless otherwise specified.
 
-### Core configuration
 Argument | Description
 ---|---
 sample  | Required: Specific sample ID
@@ -51,7 +51,7 @@ Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](h
 - Ensembl: cached Ensembl files
  
 ### Example Usage
-To run LINX 
+This is a typical command to run LINX for a single sample from PURPLE output.
 
 ```
 java -jar linx.jar 
