@@ -35,13 +35,13 @@ public final class EnsemblDataLoader
     public static final String ENSEMBL_DELIM = ",";
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String, List<GeneData>> chrGeneDataMap, RefGenomeVersion version)
+            final Map<String,List<GeneData>> chrGeneDataMap, RefGenomeVersion version)
     {
         return loadEnsemblGeneData(dataPath, restrictedGeneIds, chrGeneDataMap, version, false);
     }
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String, List<GeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
+            final Map<String,List<GeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
     {
         String filename = dataPath;
 
