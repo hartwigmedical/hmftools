@@ -201,7 +201,7 @@ The output file is approximately 120MB.
 
 ### Generating cached Ensembl data files
 To annotate SVs with gene information and to support fusion detection, ISOFOX uses gene, transcript, exon and protein domain information from the Ensembl database. 
-This data is loaded from HMF's Ensembl data cache files which are available from the Hartwig resources page, or can be generated using the Hartwig GeneUtils application (see https://github.com/hartwigmedical/hmftools/gene-utils/README.md for instructions).
+This data is loaded from HMF's Ensembl data cache files which are available from the Hartwig resources page, or can be generated using the Hartwig GeneUtils application.  Instructions for how to generate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
 
 Note that the Ensembl gene cache currently generates for standard autosomes and sex chromosomes only (alt contigs and MT chromosomes are excluded).
 
