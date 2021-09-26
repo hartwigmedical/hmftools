@@ -14,7 +14,7 @@ Linx is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 * [Key Concepts in Linx](#key-concepts-in-linx)
   + [Linx terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
   + [Overview of event classification system in Linx](#overview-of-event-classification-system-in-linx)
-* [Linx ALGORITHM](#linx-algorithm)
+* [Linx Algorithm](#linx-algorithm)
   + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
   + [Clustering of SVs into events](#clustering-of-svs-into-events)
   + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
