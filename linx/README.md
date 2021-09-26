@@ -36,12 +36,12 @@ sv_vcf | Full path and filename for the SV VCF
 purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
 output_dir | Required: directory where all output files are written
 ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
-check_drivers | run driver annotation logic
-driver_gene_panel | DriverGenePanel.tsv
-check_fusions | discover and annotate gene fusions
+check_drivers | Run driver annotation logic
+driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
+check_fusions | Discover and annotate gene fusions
 known_fusion_file | known_fusion_data.csv 
-fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
-line_element_file | List of known LINE source regions - specify Chromosome,PosStart,PosEnd
+fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
+line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
 gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
