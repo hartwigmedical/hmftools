@@ -5,12 +5,16 @@ Linx is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 ## Contents
 
 * [Configuration](#configuration)
+  + [Core Configuration](#core-configuration)
   + [Example Usage](#example-usage)
+  + [Optional additional parameters](#optional-additional-parameters)
+  + [Running LINX from the HMF MySQL database](#Running-LINX-from-the-HMF-MySQL-database)
+  + [Running LINX in multi sample batch mode](#Running-LINX-in-multi-sample-batch-mode)
 * [Outputs](#outputs)
 * [Key Concepts in Linx](#key-concepts-in-linx)
   + [Linx terminology and conventions for linking proximate breakends](#linx-terminology-and-conventions-for-linking-proximate-breakends)
   + [Overview of event classification system in Linx](#overview-of-event-classification-system-in-linx)
-* [Linx ALGORITHM](#linx-algorithm)
+* [Linx Algorithm](#linx-algorithm)
   + [Annotation of genomic properties and features](#annotation-of-genomic-properties-and-features)
   + [Clustering of SVs into events](#clustering-of-svs-into-events)
   + [Chaining of Derivative Chromosomes](#chaining-of-derivative-chromosomes)
@@ -22,80 +26,32 @@ Linx is an annotation, interpretation and [visualisation](./README_VIS.md) tool 
 The latest version of Linx can be downloaded from the [Hartwig releases page](https://github.com/hartwigmedical/hmftools/releases/)
 
 ## Configuration
+### Core configuration
 All values are optional unless otherwise specified.
 
-### Core
 Argument | Description
 ---|---
-sample  | Required: Specific sample ID
-sv_vcf | Full path and filename for the SV VCF
-purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
-output_dir | Required: directory where all output files are written
-ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
-
-#### Database Connectivity
-Linx can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
-In this case specify database connection config: db_user, db_pass and db_url.
-
-Linx will read sample data from the following HMF tables:
-* copyNumber
-* structuralVariant
-* purity
-* geneCopyNumber and driverCatalog - if running driver annotation
-
-and upload samples data to the following HMF tables:
-* svAnnotation, svCluster and svLink
-* svBreakend, svFusion and svDriver
-
-#### Multi-sample batch mode
-Linx can run in a batch mode where it processes multiple samples at once. In this case it downloads SV and copy number data for each sample from the HMF MySQL database.
-
-The set of samples to be processed is specified in the 'sample' config value in 1 of 3 ways:
-* a list of samples separated by ','
-* a CSV containing sample IDs with file header SampleId
-* an '*' to process all samples in the HMF purity table. If the config option 'filter_qc_pass' is present then only samples passing QC are processed.
-
-### Modes and Routines
-Argument  | Description
----|---
-check_drivers | run driver annotation logic
-check_fusions | discover and annotate gene fusions
-
-### Reference files
-Argument  | Description
----|---
-fragile_site_file | List of known fragile sites - specify Chromosome,PosStart,PosEnd
-line_element_file | List of known LINE source regions - specify Chromosome,PosStart,PosEnd
-ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation below.
+-sample  | Required: Specific sample ID
+-sv_vcf | Full path and filename for the SV VCF
+-purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
+-output_dir | Required: directory where all output files are written
+-ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
+-check_drivers | Run driver annotation logic
+-driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
+-check_fusions | Discover and annotate gene fusions
+-known_fusion_file | known_fusion_data.csv 
+-fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
+-line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
+-ensembl_data_dir | Directory for Ensembl reference files
 
 Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
-- Linx: fragile sites and LINE source regions
-- Ensembl: cached Ensembl files
-- KnownFusions: HMF known fusion data
 - GenePanel: HMF driver genes
+- KnownFusions: HMF known fusion data
+- Linx: fragile sites, LINE source regions and replication origins
+- Ensembl: cached Ensembl files.   Instructions for how to genereate can be found [here](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils#generating-cached-ensembl-data-files)
  
-### Clustering
-Argument  | Description
----|---
-proximity_distance | (default = 5000), minimum distance to cluster SVs 
-chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 2000)
-
-### Fusions Analysis
-Argument  | Description
----|---
-log_reportable_fusion | only log reportable fusions
-known_fusion_file | Known fusion reference data - known pairs, promiscuous 5' and 3' genes, IG regions and exon DELs & DUPs 
-fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
-restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
-
-### Logging
-Argument  | Description
----|---
-write_vis_data | write output to for generation of Circos clustering and chaining plots
-log_debug | logs in debug mode
-
 ### Example Usage
-Single sample - Load SVs and purple data from file, upload Linx results to database:
+This is a typical command to run LINX for a single sample from PURPLE output.
 
 ```
 java -jar linx.jar 
@@ -114,7 +70,32 @@ java -jar linx.jar
     -log_debug
 ```
 
-Single sample - query SVs and purple data from database, upload Linx results to database:
+### Optional additional parameters
+Argument  | Description
+---|---
+-proximity_distance | minimum distance to cluster SVs (default = 5000)
+-chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 2000)
+-log_reportable_fusion | only log reportable fusions
+-fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
+-restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
+-write_vis_data | write output to for generation of Circos clustering and chaining plots
+-log_debug | logs in debug mode
+
+### Running LINX from the HMF MySQL database
+Linx can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
+In this case specify database connection config: db_user, db_pass and db_url.
+
+Linx will read sample data from the following HMF tables:
+* copyNumber
+* structuralVariant
+* purity
+* geneCopyNumber and driverCatalog - if running driver annotation
+
+and upload samples data to the following HMF tables:
+* svAnnotation, svCluster and svLink
+* svBreakend, svFusion and svDriver
+
+Example usage sourcing from mysql database:
 
 ```
 java -jar linx.jar 
@@ -131,8 +112,15 @@ java -jar linx.jar
     -log_debug
 ```
 
-Cohort analysis - run all samples by sampleId in provided file, query SVs and purple data from database.
-Write Linx results to cohort files, no upload to database:
+### Running LINX in multi sample batch mode
+Linx can run in a batch mode where it processes multiple samples at once. In this case it downloads SV and copy number data for each sample from the HMF MySQL database.
+
+The set of samples to be processed is specified in the 'sample' config value in 1 of 3 ways:
+* a list of samples separated by ','
+* a CSV containing sample IDs with file header SampleId
+* an '*' to process all samples in the HMF purity table. If the config option 'filter_qc_pass' is present then only samples passing QC are processed.
+
+Example usage in multi sample batch mode:
 
 ```
 java -jar linx.jar 

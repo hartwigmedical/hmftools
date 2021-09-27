@@ -24,7 +24,7 @@ exonic_somatics <- function(somatics, gr_genes) {
 
 data("cancergenes_cgc81", package="dndscv")
 data("covariates_hg19", package="dndscv")
-refdb="/data/common/dbs/dnds/HmfRefCDS.RData"
+refdb="/data/resources/custom/dnds/HmfRefCDS.RData"
 load(refdb)
 
 summary = read.table(file = mutation_load_input_file, header = T)

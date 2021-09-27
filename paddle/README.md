@@ -46,7 +46,7 @@ The outputs are:
 ## Run dNdScv
 
 The next step is to run dNdScv on the data collected by step 2. This requires a modified version of the [original dndscv tool](https://github.com/im3sanger/dndscv).
-In addition, this step requires a custom HmfRefCDS.RData. Both the modified tool as well as the HMF ref data are installed/present on datastore (Hartwig internal server).
+In addition, this step requires a custom HmfRefCDS.RData. Both the modified tool as well as the HMF ref data are kept in Hartwig's internal GCP environment.
 
 To actually run the modified version of dndscv, use the dnds.R script provided alongside the paddle jar,
 and pass a working dir that is the directory containing the output of step 2.
