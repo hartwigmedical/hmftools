@@ -33,7 +33,7 @@ public class GeneData
     public boolean forwardStrand() { return Strand == POS_STRAND; }
     public boolean reverseStrand() { return Strand == NEG_STRAND; }
 
-    public void addSynonyms(final String synonyms) { mSynonyms = synonyms; }
+    public void setSynonyms(final String synonyms) { mSynonyms = synonyms; }
     public boolean hasSynonym(final String name) { return mSynonyms.contains(name); }
     public String getSynonyms() { return mSynonyms; }
 

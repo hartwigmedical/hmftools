@@ -3,6 +3,7 @@ package com.hartwig.hmftools.geneutils.ensembl;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_GENE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_EXON_DATA_FILE;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBaseLength;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
@@ -31,7 +32,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
@@ -59,9 +59,11 @@ public class EnsemblDAO
     private final Map<String,GeneData> mGeneIdDataMap; // geneId to gene data
     private final Set<Integer> mTranscriptIds;
 
+    // reference data to guide building the cachc
     private final HgncGenes mHgncGenes;
     private final Map<String,List<TranscriptData>> mReferenceTranscriptMap; // keyed by geneId
-    private final Map<String,String> mReferenceGeneNameIdMap;
+    private final Map<String,GeneData> mReferenceGeneDataById;
+    private final Map<String,GeneData> mReferenceGeneDataByName;
 
     public EnsemblDAO(final CommandLine cmd)
     {
@@ -79,7 +81,8 @@ public class EnsemblDAO
         }
 
         mReferenceTranscriptMap = Maps.newHashMap();
-        mReferenceGeneNameIdMap = Maps.newHashMap();
+        mReferenceGeneDataById = Maps.newHashMap();
+        mReferenceGeneDataByName = Maps.newHashMap();
 
         if(cmd.hasOption(CANONICAL_TRANS_DIR))
         {
@@ -95,7 +98,8 @@ public class EnsemblDAO
             {
                 for(final GeneData geneData : entry.getValue())
                 {
-                    mReferenceGeneNameIdMap.put(geneData.GeneName, geneData.GeneId);
+                    mReferenceGeneDataById.put(geneData.GeneId, geneData);
+                    mReferenceGeneDataByName.put(geneData.GeneName, geneData);
                 }
             }
         }
@@ -219,6 +223,7 @@ public class EnsemblDAO
             GU_LOGGER.debug("gene query return {} records", results.size());
 
             final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
+            Set<String> uniqueGeneNames = Sets.newHashSet();
 
             for(final Record record : results)
             {
@@ -235,21 +240,27 @@ public class EnsemblDAO
                     {
                         String hgncId = (String)record.get("HgncId");
                         hgncGene = mHgncGenes.getByHgncId(hgncId);
+
+                        if(hgncGene == null)
+                            continue;
+
+                        geneName = hgncGene.Symbol;
+                        synonyms = hgncGene.HgncId;
                     }
                     else
                     {
-                        hgncGene = mHgncGenes.getByGeneId(geneId);
+                        // rely on the v38 genes to find and check gene details, so v37 will limited to those genes in v38
+                        GeneData refGeneData = findReferenceGeneData(geneId, geneName);
 
-                        if(hgncGene == null)
-                            hgncGene = mHgncGenes.getBySymbol(geneName);
+                        if(refGeneData == null)
+                            continue;
 
+                        geneName = refGeneData.GeneName;
                         synonyms = (String)record.get("Synonyms");
+
+                        if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
+                            synonyms = refGeneData.getSynonyms() + "-" + refGeneData.getSynonyms();
                     }
-
-                    if(hgncGene == null)
-                        continue;
-
-                    geneName = hgncGene.Symbol;
                 }
                 else
                 {
@@ -261,7 +272,12 @@ public class EnsemblDAO
                 if(mGeneIdDataMap.containsKey(geneId))
                     continue;
 
-                // String hgncGeneName = (String)record.get("HgncGeneName");
+                // remove duplicates - there are about 18 for v38
+                if(uniqueGeneNames.contains(geneName))
+                    continue;
+
+                uniqueGeneNames.add(geneName);
+
                 String chromosome = (String)record.get("Chromosome");
                 UInteger geneStart = (UInteger) record.get("GeneStart");
                 UInteger geneEnd = (UInteger) record.get("GeneEnd");
@@ -273,7 +289,7 @@ public class EnsemblDAO
 
                 mGeneIdDataMap.put(geneId, geneData);
 
-                geneData.addSynonyms(synonyms);
+                geneData.setSynonyms(synonyms);
 
                 List<GeneData> geneList = chrGeneMap.get(chromosome);
 
@@ -317,6 +333,16 @@ public class EnsemblDAO
         {
             GU_LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
         }
+    }
+
+    private GeneData findReferenceGeneData(final String geneId, final String geneName)
+    {
+        GeneData geneData = mReferenceGeneDataById.get(geneId);
+
+        if(geneData != null)
+            return geneData;
+
+        return mReferenceGeneDataByName.get(geneName);
     }
 
     private void writeTranscriptExonData(final String outputFile)
@@ -444,7 +470,7 @@ public class EnsemblDAO
         if(mReferenceTranscriptMap.isEmpty())
             return canonicalTrans;
 
-        // assigment logging: GeneId,SelectedTrans,Ref38Trans,CanonicalTrans,MatchType
+        // assigment logging: GeneId,SelectedTrans,Ref38Trans,CanonicalTrans,MatchType,CodingBases
 
         // otherwise search for the canonical in the reference data or a match based on its exons
         List<TranscriptData> refTransDataList = mReferenceTranscriptMap.get(geneId);
@@ -453,14 +479,16 @@ public class EnsemblDAO
         {
             GeneData geneData = mGeneIdDataMap.get(geneId);
 
-            String altGeneId = mReferenceGeneNameIdMap.get(geneData.GeneName);
+            GeneData altGeneData = mReferenceGeneDataByName.get(geneData.GeneName);
 
-            if(altGeneId != null)
-                refTransDataList = mReferenceTranscriptMap.get(altGeneId);
+            if(altGeneData != null)
+                refTransDataList = mReferenceTranscriptMap.get(altGeneData.GeneId);
 
             if(refTransDataList == null)
             {
-                GU_LOGGER.debug("{},{},NONE,{},NoRefByGeneId", geneId, canonicalTrans.TransName, canonicalTrans.TransName);
+                GU_LOGGER.debug("{},{},NONE,{},NoRefByGeneId,{},{},{}",
+                        geneId, canonicalTrans.TransName, canonicalTrans.TransName,
+                        codingBaseLength(canonicalTrans), -1, codingBaseLength(canonicalTrans));
                 return canonicalTrans;
             }
         }
@@ -477,8 +505,9 @@ public class EnsemblDAO
 
         if(matchingTrans.isEmpty())
         {
-            GU_LOGGER.debug("{},{},{},{},NoCodingMatch",
-                    geneId, canonicalTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName);
+            GU_LOGGER.debug("{},{},{},{},NoCodingMatch,{},{},{}",
+                    geneId, canonicalTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
+                    codingBaseLength(canonicalTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
 
             return canonicalTrans;
         }
@@ -489,8 +518,9 @@ public class EnsemblDAO
         {
             if(!matchedTrans.IsCanonical)
             {
-                GU_LOGGER.debug("{},{},{},{},RefNameMatch",
-                        geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName);
+                GU_LOGGER.debug("{},{},{},{},RefNameMatch,{},{},{}",
+                        geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
+                        codingBaseLength(matchedTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
             }
 
             // don't log for no change to canonical and name
@@ -505,8 +535,9 @@ public class EnsemblDAO
 
         if(matchedTrans != null)
         {
-            GU_LOGGER.debug("{},{},{},{},RefCanonicalNameChange",
-                    geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName);
+            GU_LOGGER.debug("{},{},{},{},RefCanonicalNameChange,{},{},{}",
+                    geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
+                    codingBaseLength(matchedTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
 
             return matchedTrans;
         }
@@ -514,8 +545,9 @@ public class EnsemblDAO
         // any match
         matchedTrans = matchingTrans.get(0);
 
-        GU_LOGGER.debug("{},{},{},{},RefOtherMatch",
-                geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName);
+        GU_LOGGER.debug("{},{},{},{},RefOtherMatch,{},{},{}",
+                geneId, matchedTrans.TransName, refCanonicalTrans.TransName, canonicalTrans.TransName,
+                codingBaseLength(matchedTrans), codingBaseLength(refCanonicalTrans), codingBaseLength(canonicalTrans));
 
         return matchedTrans;
     }
@@ -525,7 +557,7 @@ public class EnsemblDAO
         if(transData.exons().size() != otherTransData.exons().size())
             return false;
 
-        if(TranscriptUtils.codingBaseLength(transData) != TranscriptUtils.codingBaseLength(otherTransData))
+        if(codingBaseLength(transData) != codingBaseLength(otherTransData))
             return false;
 
         for(int i = 0; i < otherTransData.exons().size(); ++i)

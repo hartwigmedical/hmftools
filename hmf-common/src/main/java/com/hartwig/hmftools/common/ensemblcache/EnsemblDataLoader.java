@@ -99,7 +99,7 @@ public final class EnsemblDataLoader
                         Integer.parseInt(items[geneStartIndex]), Integer.parseInt(items[geneEndIndex]), items[karyotypeBandIndex]);
 
                 if(loadSynonyms)
-                    geneData.addSynonyms(items[synonymIndex]);
+                    geneData.setSynonyms(items[synonymIndex]);
 
                 if(!currentChr.equals(chromosome))
                 {
