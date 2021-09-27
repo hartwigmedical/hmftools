@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBaseLength;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
@@ -46,24 +47,32 @@ import org.jooq.types.ULong;
 
 public class EnsemblDAO
 {
-    private static final String DB_URL = "ensembl_db";
-    private static final String DB_USER = "ensembl_user";
-    private static final String DB_PASS = "ensembl_pass";
-
-    private static final int COORD_SYSTEM_V37 = 2;
-    private static final int COORD_SYSTEM_V38 = 4;
-
     private DSLContext mDbContext;
     private final int mCoordSystemId;
     private final RefGenomeVersion mRefGenomeVersion;
     private final Map<String,GeneData> mGeneIdDataMap; // geneId to gene data
     private final Set<Integer> mTranscriptIds;
 
-    // reference data to guide building the cachc
+    // reference data to guide building the cache
     private final HgncGenes mHgncGenes;
     private final Map<String,List<TranscriptData>> mReferenceTranscriptMap; // keyed by geneId
     private final Map<String,GeneData> mReferenceGeneDataById;
     private final Map<String,GeneData> mReferenceGeneDataByName;
+
+    private static final int COORD_SYSTEM_V37 = 2;
+    private static final int COORD_SYSTEM_V38 = 4;
+
+    // not in HGNC but retained
+    private static final List<GeneData> GENE_DATA_OVERRIDES = Lists.newArrayList(
+            new GeneData("ENSG00000258414", "AL121790.1","14", POS_STRAND,
+                    37564047,37579125, "q21.1"));
+
+    // GOPC processed transcript which matches a ROS1 splice site - only in v38
+    private static final List<String> TRANSCRIPT_EXCLUSIONS = Lists.newArrayList("ENST00000467125");
+
+    private static final String DB_URL = "ensembl_db";
+    private static final String DB_USER = "ensembl_user";
+    private static final String DB_PASS = "ensembl_pass";
 
     public EnsemblDAO(final CommandLine cmd)
     {
@@ -125,14 +134,6 @@ public class EnsemblDAO
     }
 
     public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
-
-    private boolean ignoreTranscript(final String transName)
-    {
-        if(mRefGenomeVersion == V38)
-            return false;
-
-        return transName.equals("ENST00000467125"); // GOPC processed transcript which matches a ROS1 splice site
-    }
 
     public static boolean hasDatabaseConfig(final CommandLine cmd)
     {
@@ -229,7 +230,6 @@ public class EnsemblDAO
             {
                 String geneName = (String)record.get("GeneName");
                 String geneId = (String)record.get("GeneId");
-
                 String synonyms = "";
 
                 if(mHgncGenes.hasData())
@@ -239,7 +239,7 @@ public class EnsemblDAO
                     if(mRefGenomeVersion == V38)
                     {
                         String hgncId = (String)record.get("HgncId");
-                        hgncGene = mHgncGenes.getByHgncId(hgncId);
+                        hgncGene = mHgncGenes.getByHgncId((String)hgncId);
 
                         if(hgncGene == null)
                             continue;
@@ -259,7 +259,7 @@ public class EnsemblDAO
                         synonyms = (String)record.get("Synonyms");
 
                         if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
-                            synonyms = refGeneData.getSynonyms() + "-" + refGeneData.getSynonyms();
+                            synonyms = refGeneData.getSynonyms() + "-" + synonyms;
                     }
                 }
                 else
@@ -291,25 +291,15 @@ public class EnsemblDAO
 
                 geneData.setSynonyms(synonyms);
 
-                List<GeneData> geneList = chrGeneMap.get(chromosome);
+                addGeneData(chrGeneMap, geneData);
+            }
 
-                if(geneList == null)
+            if(mRefGenomeVersion == V38)
+            {
+                for(GeneData geneData : GENE_DATA_OVERRIDES)
                 {
-                    chrGeneMap.put(chromosome, Lists.newArrayList(geneData));
-                }
-                else
-                {
-                    // add in order
-                    int index = 0;
-                    while(index < geneList.size())
-                    {
-                        if(geneData.GeneStart < geneList.get(index).GeneStart)
-                            break;
-
-                        ++index;
-                    }
-
-                    geneList.add(index, geneData);
+                    addGeneData(chrGeneMap, geneData);
+                    mGeneIdDataMap.put(geneData.GeneId, geneData);
                 }
             }
 
@@ -332,6 +322,30 @@ public class EnsemblDAO
         catch (final IOException e)
         {
             GU_LOGGER.error("error writing Ensembl gene data file: {}", e.toString());
+        }
+    }
+
+    private static void addGeneData(final Map<String,List<GeneData>> chrGeneMap, final GeneData geneData)
+    {
+        List<GeneData> geneList = chrGeneMap.get(geneData.Chromosome);
+
+        if(geneList == null)
+        {
+            chrGeneMap.put(geneData.Chromosome, Lists.newArrayList(geneData));
+        }
+        else
+        {
+            // add in order
+            int index = 0;
+            while(index < geneList.size())
+            {
+                if(geneData.GeneStart < geneList.get(index).GeneStart)
+                    break;
+
+                ++index;
+            }
+
+            geneList.add(index, geneData);
         }
     }
 
@@ -372,7 +386,7 @@ public class EnsemblDAO
             {
                 String transName = (String)record.get("Trans");
 
-                if(ignoreTranscript(transName))
+                if(TRANSCRIPT_EXCLUSIONS.contains(transName))
                     continue;
 
                 String geneId = (String)record.get("GeneId");
@@ -429,13 +443,16 @@ public class EnsemblDAO
                 String geneId = entry.getKey();
                 List<TranscriptData> transDataList = entry.getValue();
 
-                TranscriptData canonicalTrans = findCanonicalTranscript(geneId, transDataList);
+                TranscriptData canonicalTrans = transDataList.stream().filter(x -> x.IsCanonical).findFirst().orElse(null);
                 int canonicalTransId = canonicalTrans != null ? canonicalTrans.TransId : -1;
+
+                /*
 
                 if(canonicalTrans == null)
                 {
                     GU_LOGGER.warn("geneId({}) canonical transcript not found from {} trans", geneId, transDataList.size());
                 }
+                */
 
                 for(TranscriptData transData : transDataList)
                 {
