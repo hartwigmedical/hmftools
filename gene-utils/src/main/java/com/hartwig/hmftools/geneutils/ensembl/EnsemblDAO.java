@@ -259,7 +259,7 @@ public class EnsemblDAO
                         synonyms = (String)record.get("Synonyms");
 
                         if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
-                            synonyms = refGeneData.getSynonyms() + "-" + synonyms;
+                            synonyms = refGeneData.getSynonyms() + ";" + synonyms;
                     }
                 }
                 else
