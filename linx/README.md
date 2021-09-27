@@ -31,18 +31,18 @@ All values are optional unless otherwise specified.
 
 Argument | Description
 ---|---
-sample  | Required: Specific sample ID
-sv_vcf | Full path and filename for the SV VCF
-purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
-output_dir | Required: directory where all output files are written
-ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
-check_drivers | Run driver annotation logic
-driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
-check_fusions | Discover and annotate gene fusions
-known_fusion_file | known_fusion_data.csv 
-fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
-line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
-gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
+-sample  | Required: Specific sample ID
+-sv_vcf | Full path and filename for the SV VCF
+-purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
+-output_dir | Required: directory where all output files are written
+-ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
+-check_drivers | Run driver annotation logic
+-driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
+-check_fusions | Discover and annotate gene fusions
+-known_fusion_file | known_fusion_data.csv 
+-fragile_site_file | List of known fragile sites  {Chromosome,PosStart,PosEnd}
+-line_element_file | List of known LINE source regions {Chromosome,PosStart,PosEnd}
+-gene_transcripts_dir | Directory for Ensembl reference files - see instructions for generation below.
 
 Reference files are available for ref genome 19/37 and 38 [HMFTools-Resources](https://resources.hartwigmedicalfoundation.nl/):
 - GenePanel: HMF driver genes
@@ -74,13 +74,13 @@ java -jar linx.jar
 ### Optional additional parameters
 Argument  | Description
 ---|---
-proximity_distance | minimum distance to cluster SVs (default = 5000)
-chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 2000)
-log_reportable_fusion | only log reportable fusions
-fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
-restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
-write_vis_data | write output to for generation of Circos clustering and chaining plots
-log_debug | logs in debug mode
+-proximity_distance | minimum distance to cluster SVs (default = 5000)
+-chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 2000)
+-log_reportable_fusion | only log reportable fusions
+-fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
+-restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
+-write_vis_data | write output to for generation of Circos clustering and chaining plots
+-log_debug | logs in debug mode
 
 ### Running LINX from the HMF MySQL database
 Linx can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
