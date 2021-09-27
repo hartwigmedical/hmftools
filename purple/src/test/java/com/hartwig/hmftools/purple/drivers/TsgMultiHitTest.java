@@ -1,14 +1,15 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.common.drivercatalog.TsgDriversTest.countMap;
-import static com.hartwig.hmftools.common.drivercatalog.TsgDriversTest.create;
-import static com.hartwig.hmftools.common.drivercatalog.TsgDriversTest.createLikelihood;
+import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.countMap;
+import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.create;
+import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.createLikelihood;
 
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;

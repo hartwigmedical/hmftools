@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
@@ -12,6 +12,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;

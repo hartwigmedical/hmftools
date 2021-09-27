@@ -1,8 +1,11 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
@@ -10,10 +13,11 @@ import com.hartwig.hmftools.common.drivercatalog.dnds.ModifiableDndsDriverGeneLi
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,7 +55,7 @@ public class OncoDriversTest {
                 likelihood,
                 Lists.newArrayList(frameshiftHotspot, frameshiftNearHotspot, inframe, missense),
                 null);
-        assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
+        Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
 

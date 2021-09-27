@@ -48,27 +48,27 @@ public enum DriverImpact
         return UNKNOWN;
     }
 
-    static boolean isFrameshift(SomaticVariant variant)
+    public static boolean isFrameshift(SomaticVariant variant)
     {
         return isFrameshift(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isNonsense(SomaticVariant variant)
+    public static boolean isNonsense(SomaticVariant variant)
     {
         return isNonsense(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isMissense(SomaticVariant variant)
+    public static boolean isMissense(SomaticVariant variant)
     {
         return isMissense(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isInframe(SomaticVariant variant)
+    public static boolean isInframe(SomaticVariant variant)
     {
         return isInframe(variant.type(), variant.canonicalCodingEffect());
     }
 
-    static boolean isSplice(SomaticVariant variant)
+    public static boolean isSplice(SomaticVariant variant)
     {
         return isSplice(variant.canonicalCodingEffect());
     }

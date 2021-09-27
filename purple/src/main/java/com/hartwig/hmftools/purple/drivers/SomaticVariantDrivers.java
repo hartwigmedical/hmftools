@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import java.util.List;
 import java.util.Map;
@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;

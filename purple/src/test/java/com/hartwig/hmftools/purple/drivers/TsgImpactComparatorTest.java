@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isFrameshift;
 import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isInframe;
@@ -14,7 +14,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;

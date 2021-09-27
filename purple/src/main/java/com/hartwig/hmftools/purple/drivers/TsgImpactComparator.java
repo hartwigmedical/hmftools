@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isFrameshift;
 import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isMissense;
@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverImpact.isSplice;
 
 import java.util.Comparator;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 class TsgImpactComparator implements Comparator<SomaticVariant>
@@ -22,38 +23,38 @@ class TsgImpactComparator implements Comparator<SomaticVariant>
             return 0;
         }
 
-        if(isFrameshift(o1))
+        if(DriverImpact.isFrameshift(o1))
         {
             return firstWins;
         }
-        else if(isFrameshift(o2))
+        else if(DriverImpact.isFrameshift(o2))
         {
             return secondWins;
         }
 
-        if(isNonsense(o1))
+        if(DriverImpact.isNonsense(o1))
         {
             return firstWins;
         }
-        else if(isNonsense(o2))
+        else if(DriverImpact.isNonsense(o2))
         {
             return secondWins;
         }
 
-        if(isSplice(o1))
+        if(DriverImpact.isSplice(o1))
         {
             return firstWins;
         }
-        else if(isSplice(o2))
+        else if(DriverImpact.isSplice(o2))
         {
             return secondWins;
         }
 
-        if(isMissense(o1))
+        if(DriverImpact.isMissense(o1))
         {
             return firstWins;
         }
-        else if(isMissense(o2))
+        else if(DriverImpact.isMissense(o2))
         {
             return secondWins;
         }

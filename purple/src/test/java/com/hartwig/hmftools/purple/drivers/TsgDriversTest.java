@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverGeneLikelihood;
@@ -14,10 +16,11 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
+import com.hartwig.hmftools.common.test.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +59,7 @@ public class TsgDriversTest {
         Map<VariantType, Long> counts = countMap(5161, 10000);
         DriverCatalog victim =
                 TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense), counts, counts, null);
-        assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
+        Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
 

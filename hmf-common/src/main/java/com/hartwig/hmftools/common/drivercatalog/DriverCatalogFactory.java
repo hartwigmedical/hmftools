@@ -13,14 +13,14 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
 
-final class DriverCatalogFactory
+public final class DriverCatalogFactory
 {
     private DriverCatalogFactory()
     {
     }
 
     @NotNull
-    static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants)
+    public static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants)
     {
         return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()));
     }
@@ -38,7 +38,7 @@ final class DriverCatalogFactory
         return variants.stream().filter(predicate).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
     }
 
-    static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood)
+    public static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood)
     {
         return probabilityDriverVariantSameImpact(0, sampleSNVCount, likelihood);
     }
@@ -58,7 +58,7 @@ final class DriverCatalogFactory
         return likelihood.driversPerSample() / (likelihood.driversPerSample() + pVariantNonDriver * (1 - likelihood.driversPerSample()));
     }
 
-    static double probabilityDriverVariant(long firstVariantTypeCount, long secondVariantTypeCount,
+    public static double probabilityDriverVariant(long firstVariantTypeCount, long secondVariantTypeCount,
             @NotNull final DndsDriverImpactLikelihood firstLikelihood, @NotNull final DndsDriverImpactLikelihood secondLikelihood)
     {
         if(firstLikelihood.equals(secondLikelihood))

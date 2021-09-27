@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.probabilityDriverVariant;
 
@@ -7,6 +7,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.DriverImpact;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -117,7 +124,7 @@ class OncoDrivers
                 final long sampleVariantCount =
                         impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME ? sampleIndelCount : sampleSNVCount;
 
-                driverLikelihood = Math.max(driverLikelihood, probabilityDriverVariant(sampleVariantCount, likelihood));
+                driverLikelihood = Math.max(driverLikelihood, DriverCatalogFactory.probabilityDriverVariant(sampleVariantCount, likelihood));
             }
         }
 
