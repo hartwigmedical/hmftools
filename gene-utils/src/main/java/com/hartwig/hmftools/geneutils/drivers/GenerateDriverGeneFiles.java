@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog.panel;
+package com.hartwig.hmftools.geneutils.drivers;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting;
+import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
@@ -25,13 +29,12 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class DriverGenePanelConversion
+public class GenerateDriverGeneFiles
 {
-    private static final Logger LOGGER = LogManager.getLogger(DriverGenePanelConversion.class);
+    private static final Logger LOGGER = LogManager.getLogger(GenerateDriverGeneFiles.class);
 
     private static final String NEW_DRIVER_GENE_PANEL_37_TSV = "new_driver_gene_panel_37_tsv";
     private static final String RESOURCE_REPO_DIR = "resource_repo_dir";
@@ -44,26 +47,24 @@ public class DriverGenePanelConversion
 
         LOGGER.info("Starting driver gene panel generation");
 
-        new DriverGenePanelConversion(cmd.getOptionValue(NEW_DRIVER_GENE_PANEL_37_TSV), cmd.getOptionValue(RESOURCE_REPO_DIR)).run();
+        new GenerateDriverGeneFiles(cmd.getOptionValue(NEW_DRIVER_GENE_PANEL_37_TSV), cmd.getOptionValue(RESOURCE_REPO_DIR)).run();
 
         LOGGER.info("Complete");
     }
 
-    @NotNull
-    private final String newDriverGenePanel37Tsv;
-    @NotNull
-    private final String resourceRepoDir;
+    private final String mNewDriverGenePanel37Tsv;
+    private final String mResourceRepoDir;
 
-    public DriverGenePanelConversion(@NotNull final String newDriverGenePanel37Tsv, @NotNull final String resourceRepoDir)
+    public GenerateDriverGeneFiles(final String newDriverGenePanel37Tsv, final String resourceRepoDir)
     {
-        this.newDriverGenePanel37Tsv = newDriverGenePanel37Tsv;
-        this.resourceRepoDir = resourceRepoDir;
+        mNewDriverGenePanel37Tsv = newDriverGenePanel37Tsv;
+        mResourceRepoDir = resourceRepoDir;
     }
 
     public void run() throws IOException
     {
-        List<DriverGene> v37DriverGenes = DriverGeneFile.read(newDriverGenePanel37Tsv);
-        LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), newDriverGenePanel37Tsv);
+        List<DriverGene> v37DriverGenes = DriverGeneFile.read(mNewDriverGenePanel37Tsv);
+        LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), mNewDriverGenePanel37Tsv);
 
         GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
         List<DriverGene> v38DriverGenes = Lists.newArrayList();
@@ -90,17 +91,17 @@ public class DriverGenePanelConversion
         process(RefGenomeVersion.V38, v38DriverGenes);
     }
 
-    public void process(@NotNull RefGenomeVersion refGenomeVersion, @NotNull List<DriverGene> driverGenes) throws IOException
+    public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes) throws IOException
     {
-        String genePanelDir = resourceRepoDir + "/gene_panel/" + (refGenomeVersion.is37() ? "37" : "38");
-        String sageDir = resourceRepoDir + "/sage/" + (refGenomeVersion.is37() ? "37" : "38");
+        String genePanelDir = mResourceRepoDir + "/gene_panel/" + (refGenomeVersion.is37() ? "37" : "38");
+        String sageDir = mResourceRepoDir + "/sage/" + (refGenomeVersion.is37() ? "37" : "38");
 
         String qualityBedFile = getResourceURL(refGenomeVersion.addVersionToFilePath("/drivercatalog/QualityRecalibration.bed"));
         Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
 
         String clinvarFile = refGenomeVersion == RefGenomeVersion.V37
-                ? resourceRepoDir + "/sage/37/clinvar.37.vcf.gz"
-                : resourceRepoDir + "/sage/38/clinvar.38.vcf.gz";
+                ? mResourceRepoDir + "/sage/37/clinvar.37.vcf.gz"
+                : mResourceRepoDir + "/sage/38/clinvar.38.vcf.gz";
         LOGGER.info(" Located clinvar file for {} at {}", refGenomeVersion, clinvarFile);
 
         String driverGeneFile = refGenomeVersion.addVersionToFilePath(genePanelDir + "/DriverGenePanel.tsv");
@@ -114,7 +115,7 @@ public class DriverGenePanelConversion
         Collections.sort(driverGenes);
 
         // This will throw an exception if there is a problem with the driver genes for this ref genome version.
-        DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
+        // DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
 
         // Write out driver gene panel
         DriverGeneFile.write(driverGeneFile, driverGenes);
@@ -152,7 +153,7 @@ public class DriverGenePanelConversion
         GermlineBlacklistVCF.process(germlineBlacklistFile, germlineBlackList);
     }
 
-    private static void createSliceFile(@NotNull String file, @NotNull Collection<GenomeRegion>... allRegions) throws IOException
+    private static void createSliceFile(final String file, final Collection<GenomeRegion>... allRegions) throws IOException
     {
         GenomeRegionsBuilder builder = new GenomeRegionsBuilder();
         for(Collection<GenomeRegion> regions : allRegions)
@@ -167,24 +168,22 @@ public class DriverGenePanelConversion
         NamedBedFile.writeUnnamedBedFile(file, combined);
     }
 
-    private static void createNamedBedFiles(boolean includeUTR, @NotNull String file, @NotNull Set<String> genes,
-            @NotNull List<HmfTranscriptRegion> transcripts) throws IOException
+    private static void createNamedBedFiles(boolean includeUTR, final String file, final Set<String> genes,
+            final List<HmfTranscriptRegion> transcripts) throws IOException
     {
         List<NamedBed> somaticBed = HmfExonPanelBed.createNamedCodingRegions(includeUTR, genes, transcripts);
         NamedBedFile.writeBedFile(file, somaticBed);
     }
 
-    @NotNull
-    private static List<GenomeRegion> createUnnamedBedFiles(boolean includeUTR, @NotNull String file, @NotNull Set<String> genes,
-            @NotNull List<HmfTranscriptRegion> transcripts) throws IOException
+    private static List<GenomeRegion> createUnnamedBedFiles(boolean includeUTR, final String file, final Set<String> genes,
+            final List<HmfTranscriptRegion> transcripts) throws IOException
     {
         List<GenomeRegion> somaticBed = HmfExonPanelBed.createUnnamedCodingRegions(includeUTR, genes, transcripts);
         NamedBedFile.writeUnnamedBedFile(file, somaticBed);
         return somaticBed;
     }
 
-    @NotNull
-    private static Set<String> somaticGenes(@NotNull List<DriverGene> genePanel)
+    private static Set<String> somaticGenes(final List<DriverGene> genePanel)
     {
         Set<String> somaticReportableGenes = Sets.newHashSet();
         for(DriverGene driverGene : genePanel)
@@ -198,8 +197,7 @@ public class DriverGenePanelConversion
         return somaticReportableGenes;
     }
 
-    @NotNull
-    private static Set<String> germlineGenes(@NotNull List<DriverGene> genePanel)
+    private static Set<String> germlineGenes(final List<DriverGene> genePanel)
     {
         Set<String> germlineReportableGenes = Sets.newHashSet();
         for(DriverGene driverGene : genePanel)
@@ -208,14 +206,12 @@ public class DriverGenePanelConversion
             {
                 germlineReportableGenes.add(driverGene.gene());
             }
-
         }
 
         return germlineReportableGenes;
     }
 
-    @NotNull
-    private static Set<String> germlineHotspotGenes(@NotNull List<DriverGene> genePanel)
+    private static Set<String> germlineHotspotGenes(final List<DriverGene> genePanel)
     {
         Set<String> germlineHotspotGenes = Sets.newHashSet();
         for(DriverGene driverGene : genePanel)
@@ -224,19 +220,16 @@ public class DriverGenePanelConversion
             {
                 germlineHotspotGenes.add(driverGene.gene());
             }
-
         }
 
         return germlineHotspotGenes;
     }
 
-    @NotNull
-    private static String getResourceURL(@NotNull String location)
+    private static String getResourceURL(final String location)
     {
-        return DriverGenePanelConversion.class.getResource(location).toString();
+        return GenerateDriverGeneFiles.class.getResource(location).toString();
     }
 
-    @NotNull
     private static Options createOptions()
     {
         Options options = new Options();

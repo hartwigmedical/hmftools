@@ -62,7 +62,7 @@ public class GenerateRefSeq
 
     private static void generateRefSeqMapping(final DSLContext context, final String outputFile)
     {
-        final Result<Record> refseqMappingResult = context.fetch(readQueryString(Resources.getResource("sql/ensembl_refseq_mapping.sql")));
+        final Result<Record> refseqMappingResult = context.fetch(readQueryString(Resources.getResource("ensembl_sql/ensembl_refseq_mapping.sql")));
         GU_LOGGER.info("RefSeq mapping query returned {} entries", refseqMappingResult.size());
 
         writeRecordsAsTsv(outputFile, refseqMappingResult);

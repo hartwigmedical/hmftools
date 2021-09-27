@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog.panel;
+package com.hartwig.hmftools.geneutils.drivers;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -19,25 +19,25 @@ final class GermlineResources
     @NotNull
     static List<VariantContext> whitelist37() throws IOException
     {
-        return resource(resourceURL("/drivercatalog/GermlineHotspots.whitelist.37.vcf"));
+        return resource(resourceURL("/drivers/GermlineHotspots.whitelist.37.vcf"));
     }
 
     @NotNull
     static List<VariantContext> whitelist38() throws IOException
     {
-        return resource(resourceURL("/drivercatalog/GermlineHotspots.whitelist.38.vcf"));
+        return resource(resourceURL("/drivers/GermlineHotspots.whitelist.38.vcf"));
     }
 
     @NotNull
     static List<VariantContext> blacklist37() throws IOException
     {
-        return resource(resourceURL("/drivercatalog/GermlineHotspots.blacklist.37.vcf"));
+        return resource(resourceURL("/drivers/GermlineHotspots.blacklist.37.vcf"));
     }
 
     @NotNull
     static List<VariantContext> blacklist38() throws IOException
     {
-        return resource(resourceURL("/drivercatalog/GermlineHotspots.blacklist.38.vcf"));
+        return resource(resourceURL("/drivers/GermlineHotspots.blacklist.38.vcf"));
     }
 
     @NotNull
@@ -49,6 +49,6 @@ final class GermlineResources
     @NotNull
     private static String resourceURL(@NotNull String location)
     {
-        return DriverGenePanelConversion.class.getResource(location).toString();
+        return GenerateDriverGeneFiles.class.getResource(location).toString();
     }
 }

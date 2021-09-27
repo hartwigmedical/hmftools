@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.hla.HlaType;
@@ -500,8 +500,8 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalDAO.writeSampleClinicalData(patientIdentifier, blacklisted, samples);
     }
 
-    public void writeGenePanel(@NotNull DriverGenePanel panel) {
-        driverGenePanelDAO.writePanel(panel);
+    public void writeGenePanel(@NotNull final List<DriverGene> driverGenes) {
+        driverGenePanelDAO.writeDriverGenes(driverGenes);
     }
 
     public void writeDrupEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients) {

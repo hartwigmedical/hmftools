@@ -214,7 +214,7 @@ public class EnsemblDAO
             writer.newLine();
 
             String queryFile = mRefGenomeVersion == V38 && mHgncGenes.hasData() ?
-                    "sql/ensembl_hgnc_gene_data.sql" : "sql/ensembl_gene_data.sql";
+                    "ensembl_sql/ensembl_hgnc_gene_data.sql" : "ensembl_sql/ensembl_gene_data.sql";
 
             String queryStr = readQueryString(Resources.getResource(queryFile));
             queryStr = queryStr.replaceAll("COORD_SYSTEM", String.valueOf(mCoordSystemId));
@@ -371,7 +371,7 @@ public class EnsemblDAO
             writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd");
             writer.newLine();
 
-            final String queryStr = readQueryString(Resources.getResource("sql/ensembl_transcript.sql"));
+            final String queryStr = readQueryString(Resources.getResource("ensembl_sql/ensembl_transcript.sql"));
 
             Result<Record> results = mDbContext.fetch(queryStr);
 
@@ -600,7 +600,7 @@ public class EnsemblDAO
             writer.write("TranscriptId,TranslationId,ProteinFeatureId,SeqStart,SeqEnd,HitDescription");
             writer.newLine();
 
-            final String queryStr = readQueryString(Resources.getResource("sql/ensembl_protein.sql"));
+            final String queryStr = readQueryString(Resources.getResource("ensembl_sql/ensembl_protein.sql"));
             Result<Record> results = mDbContext.fetch(queryStr);
 
             GU_LOGGER.info("caching protein data to {}", outputFile);

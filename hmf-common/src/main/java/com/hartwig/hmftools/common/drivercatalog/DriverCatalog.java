@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface DriverCatalog
 {
-
     @NotNull
     String chromosome();
 

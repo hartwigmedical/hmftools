@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERG
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
@@ -21,7 +22,7 @@ public class DriverGenePanelDAO {
         this.context = context;
     }
 
-    void writePanel(@NotNull DriverGenePanel genePanel) {
+    void writeDriverGenes(@NotNull final List<DriverGene> driverGenes) {
         context.truncate(DRIVERGENEPANEL).execute();
         Timestamp timestamp = new Timestamp(new Date().getTime());
         InsertValuesStep12 inserter = context.insertInto(DRIVERGENEPANEL,
@@ -38,7 +39,7 @@ public class DriverGenePanelDAO {
                 DRIVERGENEPANEL.REPORTGERMLINEHOTSPOT,
                 DRIVERGENEPANEL.LIKELIHOODTYPE);
 
-        for (DriverGene driverGene : genePanel.driverGenes()) {
+        for (DriverGene driverGene : driverGenes) {
             inserter.values(timestamp,
                     driverGene.gene(),
                     driverGene.reportMissenseAndInframe(),

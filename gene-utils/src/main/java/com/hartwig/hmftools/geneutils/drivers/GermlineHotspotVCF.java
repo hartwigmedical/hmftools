@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog.panel;
+package com.hartwig.hmftools.geneutils.drivers;
 
 import java.io.File;
 import java.io.IOException;
