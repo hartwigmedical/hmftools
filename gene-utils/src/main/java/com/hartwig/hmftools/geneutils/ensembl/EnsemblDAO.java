@@ -55,9 +55,11 @@ public class EnsemblDAO
 
     // reference data to guide building the cache
     private final HgncGenes mHgncGenes;
-    private final Map<String,List<TranscriptData>> mReferenceTranscriptMap; // keyed by geneId
     private final Map<String,GeneData> mReferenceGeneDataById;
     private final Map<String,GeneData> mReferenceGeneDataByName;
+
+    // reference transcripts are loaded only to evaluate difference between Ensembl versions and v37 vs v38
+    private final Map<String,List<TranscriptData>> mReferenceTranscriptMap; // keyed by geneId
 
     private static final int COORD_SYSTEM_V37 = 2;
     private static final int COORD_SYSTEM_V38 = 4;
@@ -97,10 +99,8 @@ public class EnsemblDAO
         {
             String ensemblDataDir = cmd.getOptionValue(CANONICAL_TRANS_DIR);
 
-            List<String> restrictedGeneIds = Lists.newArrayList();
-            EnsemblDataLoader.loadTranscriptData(ensemblDataDir, mReferenceTranscriptMap, restrictedGeneIds, true, true);
-
             Map<String, List<GeneData>> chrGeneDataMap = Maps.newHashMap();
+            List<String> restrictedGeneIds = Lists.newArrayList();
             EnsemblDataLoader.loadEnsemblGeneData(ensemblDataDir, restrictedGeneIds, chrGeneDataMap, V38);
 
             for(Map.Entry<String, List<GeneData>> entry : chrGeneDataMap.entrySet())
@@ -111,6 +111,9 @@ public class EnsemblDAO
                     mReferenceGeneDataByName.put(geneData.GeneName, geneData);
                 }
             }
+
+            // not currently used
+            // EnsemblDataLoader.loadTranscriptData(ensemblDataDir, mReferenceTranscriptMap, restrictedGeneIds, true, true);
         }
 
         mDbContext = createEnsemblDbConnection(cmd);
