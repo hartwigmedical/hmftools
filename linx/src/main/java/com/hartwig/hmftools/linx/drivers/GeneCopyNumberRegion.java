@@ -18,8 +18,8 @@ public class GeneCopyNumberRegion
 
     public GeneCopyNumberRegion(final GeneCopyNumber geneCN)
     {
-        GeneName = geneCN.gene();
-        TransName = geneCN.transcriptID();
+        GeneName = geneCN.geneName();
+        TransName = geneCN.transName();
         RegionStart = (int)geneCN.minRegionStart();
         RegionEnd = (int)geneCN.minRegionEnd();
         MinCopyNumber = geneCN.minCopyNumber();

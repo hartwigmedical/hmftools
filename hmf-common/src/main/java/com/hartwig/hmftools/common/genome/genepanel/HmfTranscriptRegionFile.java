@@ -13,20 +13,17 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.ModifiableHmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class HmfTranscriptRegionFile
 {
@@ -50,6 +47,7 @@ public final class HmfTranscriptRegionFile
         header.add("EntrezIds");
         header.add("ChrBand");
         header.add("TranscriptId");
+        header.add("IsCanonical");
         header.add("TransStart");
         header.add("TransEnd");
         header.add("CodingStart");
@@ -63,8 +61,8 @@ public final class HmfTranscriptRegionFile
     public String toString(final HmfTranscriptRegion transRegion, final String delim)
     {
         StringJoiner sj = new StringJoiner(delim);
-        sj.add(transRegion.geneID());
-        sj.add(transRegion.gene());
+        sj.add(transRegion.geneId());
+        sj.add(transRegion.geneName());
         sj.add(transRegion.chromosome());
         sj.add(String.valueOf(transRegion.geneStart()));
         sj.add(String.valueOf(transRegion.geneEnd()));
@@ -75,7 +73,8 @@ public final class HmfTranscriptRegionFile
         sj.add(entrezIds.toString());
         sj.add(transRegion.chromosomeBand());
 
-        sj.add(transRegion.transcriptID());
+        sj.add(transRegion.transName());
+        sj.add(String.valueOf(transRegion.isCanonical()));
         sj.add(String.valueOf(transRegion.start()));
         sj.add(String.valueOf(transRegion.end()));
 
@@ -83,7 +82,7 @@ public final class HmfTranscriptRegionFile
         sj.add(String.valueOf(transRegion.codingEnd()));
 
         StringJoiner exonData = new StringJoiner(ITEM_DELIM);
-        transRegion.exome().forEach(x -> exonData.add(String.format("%d%s%s", x.start(), EXON_DATA_DELIM, x.end())));
+        transRegion.exons().forEach(x -> exonData.add(String.format("%d%s%s", x.start(), EXON_DATA_DELIM, x.end())));
         sj.add(exonData.toString());
 
         return sj.toString();
@@ -119,6 +118,7 @@ public final class HmfTranscriptRegionFile
         int entrezIdsIndex = fieldsIndexMap.get("EntrezIds");
         int chrBandIndex = fieldsIndexMap.get("ChrBand");
         int transIdIndex = fieldsIndexMap.get("TranscriptId");
+        Integer canonicalIndex = fieldsIndexMap.get("IsCanonical");
         int transStartIndex = fieldsIndexMap.get("TransStart");
         int transEndIndex = fieldsIndexMap.get("TransEnd");
         int codingStartIndex = fieldsIndexMap.get("CodingStart");
@@ -152,12 +152,12 @@ public final class HmfTranscriptRegionFile
 
             String[] exonsData = values[exonDataIndex].split(ITEM_DELIM, -1);
 
-            List<HmfExonRegion> exome = Lists.newArrayList();
+            List<HmfExonRegion> exons = Lists.newArrayList();
 
             for(String exonData : exonsData)
             {
                 String[] exonItems = exonData.split(EXON_DATA_DELIM);
-                exome.add(ImmutableHmfExonRegion.builder()
+                exons.add(ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
                         .exonRank(0) // unsed and will be deprecated
                         .start(Integer.parseInt(exonItems[0]))
@@ -172,20 +172,21 @@ public final class HmfTranscriptRegionFile
                     ? 0 : Integer.parseInt(values[codingEndIndex]);
 
             transcriptRegions.add(ImmutableHmfTranscriptRegion.builder()
-                    .geneID(geneId)
-                    .gene(geneName)
+                    .geneId(geneId)
+                    .geneName(geneName)
                     .chromosome(chromosome)
                     .strand(Strand.valueOf(Integer.parseInt(values[strandIndex])))
                     .geneStart(Integer.parseInt(values[geneStartIndex]))
                     .geneEnd(Integer.parseInt(values[geneEndIndex]))
                     .entrezId(entrezIds)
                     .chromosomeBand(values[chrBandIndex])
-                    .transcriptID(values[transIdIndex])
+                    .transName(values[transIdIndex])
+                    .isCanonical(canonicalIndex != null ? Boolean.parseBoolean(values[canonicalIndex]) : true)
                     .start(Integer.parseInt(values[transStartIndex]))
                     .end(Integer.parseInt(values[transEndIndex]))
                     .codingStart(codingStart)
                     .codingEnd(codingEnd)
-                    .exome(exome)
+                    .exons(exons)
                     .build());
         }
 

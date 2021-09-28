@@ -5,10 +5,13 @@ import org.jetbrains.annotations.NotNull;
 public interface TranscriptRegion extends GenomeRegion {
 
     @NotNull
-    String transcriptID();
+    String transName();
 
     @NotNull
-    String gene();
+    boolean isCanonical();
+
+    @NotNull
+    String geneName();
 
     @NotNull
     String chromosomeBand();

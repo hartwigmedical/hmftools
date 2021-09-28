@@ -36,7 +36,7 @@ public class CNADriversTest {
 
         List<DriverCatalog> drivers =
                 new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).amplifications(2, Lists.newArrayList(oncoAmp));
-        assertEquals(oncoAmp.gene(), drivers.get(0).gene());
+        assertEquals(oncoAmp.geneName(), drivers.get(0).gene());
         assertEquals(DriverCategory.ONCO, drivers.get(0).category());
     }
 
@@ -49,10 +49,10 @@ public class CNADriversTest {
                 new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).amplifications(2, Lists.newArrayList(partialAmp, fullAmp));
         assertEquals(2, drivers.size());
 
-        assertEquals(partialAmp.gene(), drivers.get(0).gene());
+        assertEquals(partialAmp.geneName(), drivers.get(0).gene());
         assertEquals(DriverType.PARTIAL_AMP, drivers.get(0).driver());
 
-        assertEquals(fullAmp.gene(), drivers.get(1).gene());
+        assertEquals(fullAmp.geneName(), drivers.get(1).gene());
         assertEquals(DriverType.AMP, drivers.get(1).driver());
     }
 
@@ -70,13 +70,13 @@ public class CNADriversTest {
                 germline1,
                 germline2));
         assertEquals(1, drivers.size());
-        assertEquals(somatic.gene(), drivers.get(0).gene());
+        assertEquals(somatic.geneName(), drivers.get(0).gene());
     }
 
     @Test
     public void testAmpWithWarn() {
         String gene = Lists.newArrayList(genePanel.amplificationTargets()).get(0).gene();
-        GeneCopyNumber ampNoSupport = createTestCopyNumberBuilder(gene).gene(gene)
+        GeneCopyNumber ampNoSupport = createTestCopyNumberBuilder(gene).geneName(gene)
                 .minCopyNumber(100)
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
@@ -104,7 +104,7 @@ public class CNADriversTest {
     @Test
     public void testDelWithWarn() {
         String gene = Lists.newArrayList(genePanel.deletionTargets()).get(0).gene();
-        GeneCopyNumber longDelNoSupport = createTestCopyNumberBuilder(gene).gene(gene)
+        GeneCopyNumber longDelNoSupport = createTestCopyNumberBuilder(gene).geneName(gene)
                 .minRegionStart(1)
                 .minRegionEnd(100_000_000)
                 .minCopyNumber(0.01)
@@ -170,7 +170,7 @@ public class CNADriversTest {
         return ImmutableGeneCopyNumber.builder()
                 .start(1)
                 .end(2)
-                .gene(gene)
+                .geneName(gene)
                 .chromosome("1")
                 .chromosomeBand("band")
                 .minRegionStart(0)
@@ -184,7 +184,8 @@ public class CNADriversTest {
                 .somaticRegions(1)
                 .minCopyNumber(0.1)
                 .maxCopyNumber(0.1)
-                .transcriptID("trans")
+                .transName("trans")
+                .isCanonical(true)
                 .minMinorAlleleCopyNumber(0);
     }
 }

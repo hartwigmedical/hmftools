@@ -47,7 +47,7 @@ public final class CanonicalTranscriptFactory {
         int codingBases = 0;
         int codingExons = 0;
 
-        for (final HmfExonRegion exon : region.exome()) {
+        for (final HmfExonRegion exon : region.exons()) {
             if (exonStart == 0) {
                 exonStart = exon.start();
             }
@@ -63,11 +63,11 @@ public final class CanonicalTranscriptFactory {
 
         return ImmutableCanonicalTranscript.builder()
                 .from(region)
-                .geneID(region.geneID())
+                .geneId(region.geneId())
                 .geneStart(region.geneStart())
                 .geneEnd(region.geneEnd())
-                .gene(region.gene())
-                .exons(region.exome().size())
+                .geneName(region.geneName())
+                .exonCount(region.exons().size())
                 .codingExons(codingExons)
                 .exonStart(exonStart)
                 .exonEnd(exonEnd)

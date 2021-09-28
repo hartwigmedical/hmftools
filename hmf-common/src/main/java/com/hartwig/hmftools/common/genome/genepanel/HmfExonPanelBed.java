@@ -29,7 +29,7 @@ public final class HmfExonPanelBed {
         GenomeRegionsBuilder builder = new GenomeRegionsBuilder();
         regions.stream()
                 .distinct()
-                .filter(transcript -> transcript.codingStart() != 0 && actionableGenes.contains(transcript.gene()))
+                .filter(transcript -> transcript.codingStart() != 0 && actionableGenes.contains(transcript.geneName()))
                 .flatMap(transcript -> NamedBedFactory.codingRegions(includeUTR, transcript).stream())
                 .sorted()
                 .forEach(builder::addRegion);
@@ -41,7 +41,7 @@ public final class HmfExonPanelBed {
             @NotNull final List<HmfTranscriptRegion> regions) {
         final List<NamedBed> namedExons = regions.stream()
                 .distinct()
-                .filter(transcript -> transcript.codingStart() != 0 && actionableGenes.contains(transcript.gene()))
+                .filter(transcript -> transcript.codingStart() != 0 && actionableGenes.contains(transcript.geneName()))
                 .flatMap(transcript -> NamedBedFactory.codingRegions(includeUTR, transcript).stream())
                 .sorted()
                 .collect(Collectors.toList());

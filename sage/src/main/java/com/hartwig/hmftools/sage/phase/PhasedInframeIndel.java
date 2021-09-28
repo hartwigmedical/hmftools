@@ -88,7 +88,7 @@ public class PhasedInframeIndel extends BufferedPostProcessor
     @Nullable
     static HmfExonRegion selectExon(final long position, @NotNull final HmfTranscriptRegion transcript)
     {
-        for(HmfExonRegion exon : transcript.exome())
+        for(HmfExonRegion exon : transcript.exons())
         {
             if(position >= exon.start() && position <= exon.end())
             {

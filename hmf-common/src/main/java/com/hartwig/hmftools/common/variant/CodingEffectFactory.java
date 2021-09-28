@@ -29,7 +29,7 @@ public class CodingEffectFactory
 
     public CodingEffectFactory(final List<HmfTranscriptRegion> transcripts)
     {
-        mTranscripts = transcripts.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
+        mTranscripts = transcripts.stream().collect(Collectors.toMap(TranscriptRegion::geneName, x -> x));
     }
 
     @NotNull

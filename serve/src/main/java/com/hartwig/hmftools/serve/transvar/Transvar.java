@@ -88,7 +88,7 @@ public class Transvar implements ProteinResolver {
             return Lists.newArrayList();
         }
 
-        TransvarRecord best = pickBestRecord(records, specificTranscript, canonicalTranscript.transcriptID());
+        TransvarRecord best = pickBestRecord(records, specificTranscript, canonicalTranscript.transName());
         if (specificTranscript != null && !best.transcript().equals(specificTranscript)) {
             LOGGER.warn("No record found on specific transcript '{}'. "
                             + "Instead a record was resolved for '{}' for {}:p.{}. Skipping interpretation",

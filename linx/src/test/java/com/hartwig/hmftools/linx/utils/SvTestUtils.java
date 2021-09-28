@@ -194,7 +194,7 @@ public class SvTestUtils
                 .chromosomeBand("")
                 .start(posStart)
                 .end(posEnd)
-                .gene(gene)
+                .geneName(gene)
                 .maxCopyNumber(minCopyNumber)
                 .minCopyNumber(minCopyNumber)
                 .somaticRegions(0)
@@ -207,7 +207,8 @@ public class SvTestUtils
                 .minRegionEndSupport(SegmentSupport.BND)
                 .minRegionMethod(BAF_WEIGHTED)
                 .minMinorAlleleCopyNumber(0)
-                .transcriptID("")
+                .transName("")
+                .isCanonical(true)
                 .build();
     }
 

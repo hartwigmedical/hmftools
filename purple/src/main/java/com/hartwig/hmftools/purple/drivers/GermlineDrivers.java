@@ -46,7 +46,7 @@ public class GermlineDrivers
     {
         final List<VariantContextDecorator> decoratedVariants = variants.stream().map(VariantContextDecorator::new).collect(toList());
         final Set<String> genes = decoratedVariants.stream().map(VariantContextDecorator::gene).collect(toSet());
-        final Map<String, GeneCopyNumber> geneCopyNumbers = geneCopyNumberList.stream().collect(toMap(TranscriptRegion::gene, x -> x));
+        final Map<String, GeneCopyNumber> geneCopyNumbers = geneCopyNumberList.stream().collect(toMap(TranscriptRegion::geneName, x -> x));
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
         for(String gene : genes)
         {

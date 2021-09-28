@@ -55,9 +55,9 @@ public final class SpliceSites
 
         if(transcript.strand() == FORWARD)
         {
-            for(int i = 0; i < transcript.exome().size() - 1; i++)
+            for(int i = 0; i < transcript.exons().size() - 1; i++)
             {
-                long donorSite = transcript.exome().get(i).end() + 1;
+                long donorSite = transcript.exons().get(i).end() + 1;
 
                 if(position == donorSite + offset)
                     return true;
@@ -65,9 +65,9 @@ public final class SpliceSites
         }
         else
         {
-            for(int i = 1; i < transcript.exome().size(); i++)
+            for(int i = 1; i < transcript.exons().size(); i++)
             {
-                long donorSite = transcript.exome().get(i).start() - 1;
+                long donorSite = transcript.exons().get(i).start() - 1;
 
                 if(position == donorSite - offset)
                     return true;
@@ -88,9 +88,9 @@ public final class SpliceSites
 
         if(transcript.strand() == FORWARD)
         {
-            for(int i = 1; i < transcript.exome().size(); i++)
+            for(int i = 1; i < transcript.exons().size(); i++)
             {
-                long acceptorSide = transcript.exome().get(i).start() - 1;
+                long acceptorSide = transcript.exons().get(i).start() - 1;
 
                 if(position == acceptorSide - offset)
                     return true;
@@ -98,9 +98,9 @@ public final class SpliceSites
         }
         else
         {
-            for(int i = 0; i < transcript.exome().size() - 1; i++)
+            for(int i = 0; i < transcript.exons().size() - 1; i++)
             {
-                long donorSite = transcript.exome().get(i).end() + 1;
+                long donorSite = transcript.exons().get(i).end() + 1;
 
                 if(position == donorSite + offset)
                     return true;

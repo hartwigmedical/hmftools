@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIAN
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -60,7 +63,6 @@ public class ReferenceData
     public final DriverGenePanel GenePanel;
 
     public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
-
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
 
     public final String GcProfileFilename;
@@ -70,6 +72,7 @@ public class ReferenceData
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
     private static final String GC_PROFILE = "gc_profile";
+    private static final String ALL_GENES_FILE = "all_genes";
 
     // rename to driver enabled or always true anyway?
     public static String DRIVER_ENABLED = "driver_catalog";
@@ -81,7 +84,8 @@ public class ReferenceData
 
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
-        options.addOption(GC_PROFILE, true, "Path to GC profile.");
+        options.addOption(GC_PROFILE, true, "Path to GC profile");
+        options.addOption(ALL_GENES_FILE, true, "Path to all genes TSV");
 
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
@@ -152,8 +156,28 @@ public class ReferenceData
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        TranscriptRegions = refGenomeCoords == RefGenomeCoordinates.COORDS_38 ?
-                HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
+        TranscriptRegions = Lists.newArrayList();
+
+        if(cmd.hasOption(ALL_GENES_FILE))
+        {
+            String allGenesFile = cmd.getOptionValue(ALL_GENES_FILE);
+
+            try
+            {
+                TranscriptRegions.addAll(HmfTranscriptRegionFile.fromLines(Files.readAllLines(Paths.get(allGenesFile))));
+            }
+            catch(IOException e)
+            {
+                PPL_LOGGER.error("failed to load all-genes file(): {}", allGenesFile, e.toString());
+            }
+        }
+        else
+        {
+            if(refGenomeCoords == RefGenomeCoordinates.COORDS_38)
+                TranscriptRegions.addAll(HmfGenePanelSupplier.allGeneList38());
+            else
+                TranscriptRegions.addAll(HmfGenePanelSupplier.allGeneList37());
+        }
 
         ChromosomeLengths = toPosition(refGenomeCoords.lengths(), chromosomeNames);
         Centromeres = toPosition(refGenomeCoords.centromeres(), chromosomeNames);

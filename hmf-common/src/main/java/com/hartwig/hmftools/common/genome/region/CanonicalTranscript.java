@@ -9,13 +9,13 @@ import org.jetbrains.annotations.Nullable;
 public interface CanonicalTranscript extends TranscriptRegion {
 
     @NotNull
-    String geneID();
+    String geneId();
 
     long geneStart();
 
     long geneEnd();
 
-    int exons();
+    int exonCount();
 
     int codingExons();
 

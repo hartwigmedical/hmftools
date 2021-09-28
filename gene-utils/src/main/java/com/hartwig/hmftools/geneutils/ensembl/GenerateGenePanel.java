@@ -32,7 +32,6 @@ import org.apache.commons.cli.ParseException;
 
 public class GenerateGenePanel
 {
-    // private static final String CDKN2A_ALT_V37 = "ENST00000361570"; // the old, incorrect one
     private static final String CDKN2A_ALT = "ENST00000579755";
 
     // could consider loading these from the alt-transcripts soon to be in the driver panel file
@@ -88,6 +87,7 @@ public class GenerateGenePanel
                         sj.add(geneData.KaryotypeBand);
 
                         sj.add(transData.TransName);
+                        sj.add(String.valueOf(transData.IsCanonical));
                         sj.add(String.valueOf(transData.TransStart));
                         sj.add(String.valueOf(transData.TransEnd));
                         sj.add(transData.CodingStart != null ? String.valueOf(transData.CodingStart) : "");

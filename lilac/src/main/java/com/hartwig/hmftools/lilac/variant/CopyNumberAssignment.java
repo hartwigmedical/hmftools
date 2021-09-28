@@ -42,10 +42,10 @@ public class CopyNumberAssignment
             if(config.CopyNumberFile.contains(config.Sample))
             {
                 List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                        .filter(x -> HLA_GENES.contains(x.gene())).collect(Collectors.toList());
+                        .filter(x -> HLA_GENES.contains(x.geneName())).collect(Collectors.toList());
 
                 List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
-                        .map(x -> new CopyNumberData(x.gene(), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
+                        .map(x -> new CopyNumberData(x.geneName(), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
                         .collect(Collectors.toList());
 
                 mSampleCopyNumberData.put(config.Sample, cnDataList);

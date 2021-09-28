@@ -119,9 +119,9 @@ public class HmfTranscriptRegionUtils
             return codonRegions;
 
         int basesCovered = 0;
-        for(int i = 0; i < transcript.exome().size(); i++)
+        for(int i = 0; i < transcript.exons().size(); i++)
         {
-            final HmfExonRegion exon = transcript.exome().get(i);
+            final HmfExonRegion exon = transcript.exons().get(i);
             long exonCodingStart = Math.max(exon.start(), transcript.codingStart());
             long exonCodingEnd = Math.min(exon.end(), transcript.codingEnd());
             long exonBaseLength = exonCodingEnd - exonCodingStart + 1;
@@ -140,7 +140,7 @@ public class HmfTranscriptRegionUtils
                 // Do we need previous exon?
                 if(position - lookBack < exon.start() && i > 0)
                 {
-                    final HmfExonRegion previous = transcript.exome().get(i - 1);
+                    final HmfExonRegion previous = transcript.exons().get(i - 1);
                     final long previousExonLookBack = lookBack + exon.start() - position - 1;
                     codonRegions.add(GenomeRegions.create(transcript.chromosome(),
                             Math.max(previous.start(), previous.end() - previousExonLookBack),
@@ -153,9 +153,9 @@ public class HmfTranscriptRegionUtils
                         Math.min(exon.end(), position + lookForward)));
 
                 // Do we need next exon?
-                if(position + lookForward > exon.end() && i < transcript.exome().size() - 1)
+                if(position + lookForward > exon.end() && i < transcript.exons().size() - 1)
                 {
-                    final HmfExonRegion next = transcript.exome().get(i + 1);
+                    final HmfExonRegion next = transcript.exons().get(i + 1);
                     final long nextExonLookForward = lookForward - exon.end() + position - 1;
                     codonRegions.add(GenomeRegions.create(transcript.chromosome(),
                             next.start(),

@@ -762,6 +762,7 @@ CREATE TABLE geneCopyNumber
     gene varchar(255) NOT NULL,
     chromosomeBand varchar(255) NOT NULL,
     transcriptId varchar(255) NOT NULL,
+    canonicalTranscript BOOLEAN NOT NULL,
     minCopyNumber DOUBLE PRECISION not null,
     maxCopyNumber DOUBLE PRECISION not null,
     somaticRegions int not null,

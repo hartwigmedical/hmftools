@@ -189,7 +189,7 @@ public final class PurpleDataLoader {
         List<DriverGene> allGenes = Lists.newArrayList();
         for (GeneCopyNumber geneCopyNumber : geneCopyNumbers) {
             allGenes.add(ImmutableDriverGene.builder()
-                    .gene(geneCopyNumber.gene())
+                    .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
                     .reportNonsenseAndFrameshift(false)
                     .reportSplice(false)

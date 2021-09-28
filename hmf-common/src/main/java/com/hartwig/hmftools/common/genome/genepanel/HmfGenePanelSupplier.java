@@ -56,8 +56,8 @@ public final class HmfGenePanelSupplier
         Map<String, HmfTranscriptRegion> geneMap = Maps.newHashMap();
         for(HmfTranscriptRegion region : regions)
         {
-            assert !geneMap.containsKey(region.gene());
-            geneMap.put(region.gene(), region);
+            assert !geneMap.containsKey(region.geneName());
+            geneMap.put(region.geneName(), region);
         }
         return geneMap;
     }

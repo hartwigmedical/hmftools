@@ -95,21 +95,21 @@ public class VisExons
     {
         final List<Exon> result = Lists.newArrayList();
 
-        for (int i = 0; i < transcript.exome().size(); i++)
+        for (int i = 0; i < transcript.exons().size(); i++)
         {
-            final HmfExonRegion hmfExon = transcript.exome().get(i);
-            int rank = transcript.strand().equals(Strand.FORWARD) ? i + 1 : transcript.exome().size() - i;
+            final HmfExonRegion hmfExon = transcript.exons().get(i);
+            int rank = transcript.strand().equals(Strand.FORWARD) ? i + 1 : transcript.exons().size() - i;
 
             Exon exon = ImmutableExon.builder()
                     .type(DRIVER)
                     .sampleId(sampleId)
                     .clusterId(clusterId)
-                    .gene(transcript.gene())
+                    .gene(transcript.geneName())
                     .chromosome(transcript.chromosome())
                     .rank(rank)
                     .start(hmfExon.start())
                     .end(hmfExon.end())
-                    .transcript(transcript.transcriptID())
+                    .transcript(transcript.transName())
                     .build();
 
             result.add(exon);

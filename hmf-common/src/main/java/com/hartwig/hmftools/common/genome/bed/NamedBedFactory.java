@@ -25,17 +25,17 @@ public final class NamedBedFactory {
         final List<NamedBed> result = Lists.newArrayList();
         final GenomeRegionsBuilder regionBuilder = new GenomeRegionsBuilder();
 
-        for (int i = 0; i < transcript.exome().size(); i++) {
-            final HmfExonRegion exon = transcript.exome().get(i);
+        for (int i = 0; i < transcript.exons().size(); i++) {
+            final HmfExonRegion exon = transcript.exons().get(i);
             long exonStart = i == 0 ? exon.start() : exon.start() - SPLICE_SIZE;
-            long exonEnd = i == transcript.exome().size() - 1 ? exon.end() : exon.end() + SPLICE_SIZE;
+            long exonEnd = i == transcript.exons().size() - 1 ? exon.end() : exon.end() + SPLICE_SIZE;
 
             if (startPosition < exonEnd && endPosition > exonStart) {
                 regionBuilder.addRegion(exon.chromosome(), Math.max(startPosition, exonStart), Math.min(endPosition, exonEnd));
             }
         }
 
-        regionBuilder.build().stream().map(x -> ImmutableNamedBed.builder().from(x).name(transcript.gene()).build()).forEach(result::add);
+        regionBuilder.build().stream().map(x -> ImmutableNamedBed.builder().from(x).name(transcript.geneName()).build()).forEach(result::add);
 
         Collections.sort(result);
         return result;

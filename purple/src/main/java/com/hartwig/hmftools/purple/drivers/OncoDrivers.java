@@ -47,7 +47,7 @@ class OncoDrivers
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<String, GeneCopyNumber> geneCopyNumbers =
-                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
+                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::geneName, x -> x));
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
         long sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0L);
 

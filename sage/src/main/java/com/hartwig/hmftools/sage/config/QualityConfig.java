@@ -67,7 +67,7 @@ public class QualityConfig
     public void populateGeneData(final List<HmfTranscriptRegion> allTranscripts)
     {
         HighlyPolymorphicGenes.addAll(allTranscripts.stream()
-                .filter(x -> mHighlyPolymorphicGeneNames.contains(x.gene())).collect(Collectors.toList()));
+                .filter(x -> mHighlyPolymorphicGeneNames.contains(x.geneName())).collect(Collectors.toList()));
     }
 
     public QualityConfig()

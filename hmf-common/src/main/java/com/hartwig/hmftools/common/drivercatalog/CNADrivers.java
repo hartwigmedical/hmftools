@@ -47,7 +47,7 @@ public class CNADrivers
     @NotNull
     public List<DriverCatalog> amplifications(final double ploidy, @NotNull final List<GeneCopyNumber> geneCopyNumbers)
     {
-        Predicate<GeneCopyNumber> targetPredicate = x -> mAmplificationTargets.containsKey(x.gene());
+        Predicate<GeneCopyNumber> targetPredicate = x -> mAmplificationTargets.containsKey(x.geneName());
         Predicate<GeneCopyNumber> qcStatusPredicate =
                 mQcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE) ? CNADrivers::supportedByOneSV : x -> true;
 
@@ -82,7 +82,7 @@ public class CNADrivers
 
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
-                .filter(x -> mDeletionTargets.containsKey(x.gene()))
+                .filter(x -> mDeletionTargets.containsKey(x.geneName()))
                 .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
                 .filter(qcStatusPredicate)
                 .map(this::del)
@@ -122,21 +122,21 @@ public class CNADrivers
     @NotNull
     private DriverCatalog amp(GeneCopyNumber x)
     {
-        DriverGene driverGene = mAmplificationTargets.get(x.gene());
+        DriverGene driverGene = mAmplificationTargets.get(x.geneName());
         return cnaDriver(driverGene.likelihoodType(), DriverType.AMP, LikelihoodMethod.AMP, false, x);
     }
 
     @NotNull
     private DriverCatalog partialAmp(GeneCopyNumber x)
     {
-        DriverGene driverGene = mAmplificationTargets.get(x.gene());
+        DriverGene driverGene = mAmplificationTargets.get(x.geneName());
         return cnaDriver(driverGene.likelihoodType(), DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, x);
     }
 
     @NotNull
     private DriverCatalog del(GeneCopyNumber x)
     {
-        DriverGene driverGene = mDeletionTargets.get(x.gene());
+        DriverGene driverGene = mDeletionTargets.get(x.geneName());
         return cnaDriver(driverGene.likelihoodType(), DriverType.DEL, LikelihoodMethod.DEL, true, x);
     }
 
@@ -147,7 +147,7 @@ public class CNADrivers
         return ImmutableDriverCatalog.builder()
                 .chromosome(x.chromosome())
                 .chromosomeBand(x.chromosomeBand())
-                .gene(x.gene())
+                .gene(x.geneName())
                 .missense(0)
                 .nonsense(0)
                 .inframe(0)

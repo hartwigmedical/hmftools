@@ -211,7 +211,7 @@ public class DriverDataCache
     {
         for(GeneCopyNumber geneCN : mGeneCopyNumberData)
         {
-            if(geneCN.gene().equals(geneName))
+            if(geneCN.geneName().equals(geneName))
                 return geneCN;
         }
 

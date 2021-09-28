@@ -44,7 +44,7 @@ public class CodonExtractor {
             HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
             assert canonicalTranscript != null;
 
-            if (transcriptId == null || transcriptId.equals(canonicalTranscript.transcriptID())) {
+            if (transcriptId == null || transcriptId.equals(canonicalTranscript.transName())) {
                 Integer codonIndex = extractCodonIndex(event);
                 if (codonIndex == null) {
                     LOGGER.warn("Could not extract codon index from '{}'", event);
@@ -60,7 +60,7 @@ public class CodonExtractor {
                 if (codonAnnotations == null) {
                     LOGGER.warn("Could not resolve codon index {} on transcript '{}' for gene '{}'",
                             codonIndex,
-                            canonicalTranscript.transcriptID(),
+                            canonicalTranscript.transName(),
                             gene);
                 }
 
@@ -68,7 +68,7 @@ public class CodonExtractor {
             } else {
                 LOGGER.warn("Transcript IDs not equal for provided transcript '{}' and HMF canonical transcript '{}' for {} ",
                         transcriptId,
-                        canonicalTranscript.transcriptID(),
+                        canonicalTranscript.transName(),
                         event);
             }
         }
@@ -103,7 +103,7 @@ public class CodonExtractor {
             for (GenomeRegion region : regions) {
                 codonAnnotations.add(ImmutableCodonAnnotation.builder()
                         .gene(gene)
-                        .transcript(canonicalTranscript.transcriptID())
+                        .transcript(canonicalTranscript.transName())
                         .chromosome(region.chromosome())
                         .start(region.start())
                         .end(region.end())

@@ -58,6 +58,7 @@ public final class DriverGeneFile
         Integer germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
         Integer germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
         Integer germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
+        Integer altTransIndex = fieldsIndexMap.get("alternativeTranscripts");
 
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder();
 
@@ -83,7 +84,8 @@ public final class DriverGeneFile
                             DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase())
                             : DriverGeneGermlineReporting.NONE)
                     .reportGermlineDisruption(germlineDisruptionIndex != null ?
-                            Boolean.parseBoolean(values[germlineDisruptionIndex]) : Boolean.parseBoolean(values[disruptionIndex]));
+                            Boolean.parseBoolean(values[germlineDisruptionIndex]) : Boolean.parseBoolean(values[disruptionIndex]))
+                    .alternativeTranscripts(altTransIndex != null ? values[altTransIndex] : "");
 
             driverGenes.add(builder.build());
         }
@@ -106,13 +108,15 @@ public final class DriverGeneFile
                 .add("reportGermlineVariant")
                 .add("reportGermlineHotspot")
                 .add("reportGermlineDisruption")
+                .add("alternativeTranscripts")
                 .toString();
     }
 
     @NotNull
     private static String toString(@NotNull final DriverGene gene)
     {
-        return new StringJoiner(DELIMITER).add(gene.gene())
+        return new StringJoiner(DELIMITER)
+                .add(gene.gene())
                 .add(String.valueOf(gene.reportMissenseAndInframe()))
                 .add(String.valueOf(gene.reportNonsenseAndFrameshift()))
                 .add(String.valueOf(gene.reportSplice()))
@@ -124,6 +128,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineVariant()))
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
+                .add(gene.alternativeTranscripts())
                 .toString();
     }
 

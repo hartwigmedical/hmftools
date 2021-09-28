@@ -29,8 +29,8 @@ public class CanonicalAnnotation {
         // We need to filter it out since this map assumes only "real" canonical transcripts.
         // See also DEV-783
         this.canonicalTranscriptGeneMap = transcripts.stream()
-                .filter(canonicalTranscript -> !canonicalTranscript.transcriptID().equals(CDKN2A_P14ARF_TRANSCRIPT))
-                .collect(Collectors.toMap(TranscriptRegion::transcriptID, TranscriptRegion::gene));
+                .filter(canonicalTranscript -> !canonicalTranscript.transName().equals(CDKN2A_P14ARF_TRANSCRIPT))
+                .collect(Collectors.toMap(TranscriptRegion::transName, TranscriptRegion::geneName));
     }
 
     @NotNull

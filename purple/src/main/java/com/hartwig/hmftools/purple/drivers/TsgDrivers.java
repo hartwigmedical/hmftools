@@ -40,7 +40,7 @@ class TsgDrivers
             final Map<VariantType, Long> variantTypeCounts, final Map<VariantType, Long> variantTypeCountsBiallelic)
     {
         final Map<String, GeneCopyNumber> geneCopyNumbers =
-                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::gene, x -> x));
+                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::geneName, x -> x));
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<String, List<SomaticVariant>> codingVariants = codingVariantsByGene(variants);

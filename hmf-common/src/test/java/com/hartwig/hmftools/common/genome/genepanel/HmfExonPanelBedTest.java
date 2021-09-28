@@ -18,10 +18,10 @@ public class HmfExonPanelBedTest {
     @Test
     public void testReverseTranscript() {
         final HmfTranscriptRegion transcript = HmfGenePanelSupplier.allGenesMap37().get("TP53");
-        HmfExonRegion firstExon = transcript.exome().get(0);
-        HmfExonRegion secondExon = transcript.exome().get(1);
-        HmfExonRegion thirdExon = transcript.exome().get(2);
-        HmfExonRegion finalCodingExon = transcript.exome().get(transcript.exome().size() - 2);
+        HmfExonRegion firstExon = transcript.exons().get(0);
+        HmfExonRegion secondExon = transcript.exons().get(1);
+        HmfExonRegion thirdExon = transcript.exons().get(2);
+        HmfExonRegion finalCodingExon = transcript.exons().get(transcript.exons().size() - 2);
 
         List<? extends GenomeRegion> regions =
                 HmfExonPanelBed.createNamedCodingRegions(false, Sets.newHashSet("TP53"), Lists.newArrayList(transcript, transcript));

@@ -46,7 +46,7 @@ public class HmfGenePanelSupplierTest {
     @Test
     public void verifyManuallyAddedGenesArePresent() {
         final List<String> allGenes =
-                HmfGenePanelSupplier.allGeneList37().stream().map(TranscriptRegion::gene).collect(Collectors.toList());
+                HmfGenePanelSupplier.allGeneList37().stream().map(TranscriptRegion::geneName).collect(Collectors.toList());
         assertTrue(allGenes.contains("C11orf95"));
         assertTrue(allGenes.contains("CDKN2Ap14ARF"));
     }
