@@ -20,22 +20,24 @@ public final class DriverCatalogFactory
     }
 
     @NotNull
-    public static <T extends SomaticVariant> Map<DriverImpact, Long> driverImpactCount(@NotNull final List<T> variants)
+    public static <T extends SomaticVariant> Map<DriverImpact,Integer> driverImpactCount(@NotNull final List<T> variants)
     {
-        return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()));
+        return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()))
+                .entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().intValue()));
     }
 
     @NotNull
-    static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final List<T> variants)
+    static <T extends SomaticVariant> Map<VariantType,Integer> variantTypeCount(@NotNull final List<T> variants)
     {
         return variantTypeCount(t -> true, variants);
     }
 
     @NotNull
-    static <T extends SomaticVariant> Map<VariantType, Long> variantTypeCount(@NotNull final Predicate<T> predicate,
-            @NotNull final List<T> variants)
+    static <T extends SomaticVariant> Map<VariantType,Integer> variantTypeCount(final Predicate<T> predicate, final List<T> variants)
     {
-        return variants.stream().filter(predicate).collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()));
+        return variants.stream().filter(predicate)
+                .collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()))
+                .entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().intValue()));
     }
 
     public static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood)
@@ -43,14 +45,11 @@ public final class DriverCatalogFactory
         return probabilityDriverVariantSameImpact(0, sampleSNVCount, likelihood);
     }
 
-    private static double probabilityDriverVariantSameImpact(int count, long sampleSNVCount,
-            @NotNull final DndsDriverImpactLikelihood likelihood)
+    private static double probabilityDriverVariantSameImpact(int count, long sampleSNVCount, final DndsDriverImpactLikelihood likelihood)
     {
         double lambda = sampleSNVCount * likelihood.passengersPerMutation();
         if(Doubles.isZero(lambda))
-        {
             return 0.0;
-        }
 
         PoissonDistribution poissonDistribution = new PoissonDistribution(lambda);
 

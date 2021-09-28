@@ -42,7 +42,7 @@ public class TsgMultiHitTest {
 
     @Test
     public void testMultiHitIsNeverLessThanEquivalentMissense() {
-        Map<VariantType, Long> counts = countMap(83135, 241917);
+        Map<VariantType,Integer> counts = countMap(83135, 241917);
 
         SomaticVariant missense = create(VariantType.SNP, CodingEffect.MISSENSE, false, 0.5);
         SomaticVariant frameshift = create(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, false, 0.5);

@@ -28,15 +28,15 @@ public interface DriverCatalog
 
     double driverLikelihood();
 
-    long missense();
+    int missense();
 
-    long nonsense();
+    int nonsense();
 
-    long splice();
+    int splice();
 
-    long inframe();
+    int inframe();
 
-    long frameshift();
+    int frameshift();
 
     boolean biallelic();
 

@@ -56,7 +56,7 @@ public class TsgDriversTest {
 
     @Test
     public void testHotspotFirst() {
-        Map<VariantType, Long> counts = countMap(5161, 10000);
+        Map<VariantType,Integer> counts = countMap(5161, 10000);
         DriverCatalog victim =
                 TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(hotspot, biallelic, missense), counts, counts, null);
         Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
@@ -65,7 +65,7 @@ public class TsgDriversTest {
 
     @Test
     public void testBiallelicSecond() {
-        Map<VariantType, Long> counts = countMap(5161, 10000);
+        Map<VariantType,Integer> counts = countMap(5161, 10000);
         DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(biallelic, missense), counts, counts, null);
         assertEquals(LikelihoodMethod.BIALLELIC, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -73,7 +73,7 @@ public class TsgDriversTest {
 
     @Test
     public void testSingleMissense() {
-        Map<VariantType, Long> counts = countMap(351610, 10000);
+        Map<VariantType,Integer> counts = countMap(351610, 10000);
         DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense), counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.33, victim.driverLikelihood(), 0.01);
@@ -81,7 +81,7 @@ public class TsgDriversTest {
 
     @Test
     public void testMultiMissense() {
-        Map<VariantType, Long> counts = countMap(351610, 10000);
+        Map<VariantType,Integer> counts = countMap(351610, 10000);
         DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, missense), counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.97, victim.driverLikelihood(), 0.01);
@@ -89,7 +89,7 @@ public class TsgDriversTest {
 
     @Test
     public void testSingleNonsense() {
-        Map<VariantType, Long> counts = countMap(351610, 10000);
+        Map<VariantType,Integer> counts = countMap(351610, 10000);
         DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(nonsense), counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.74, victim.driverLikelihood(), 0.01);
@@ -97,7 +97,7 @@ public class TsgDriversTest {
 
     @Test
     public void testMixed() {
-        Map<VariantType, Long> counts = countMap(351610, 10000);
+        Map<VariantType,Integer> counts = countMap(351610, 10000);
         DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(missense, nonsense), counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -105,7 +105,7 @@ public class TsgDriversTest {
 
     @Test
     public void testIndel() {
-        Map<VariantType, Long> counts = countMap(351610, 10000);
+        Map<VariantType,Integer> counts = countMap(351610, 10000);
         DriverCatalog victim = TsgDrivers.geneDriver(geneLikelihood, Lists.newArrayList(indel), counts, counts, null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -134,10 +134,10 @@ public class TsgDriversTest {
     }
 
     @NotNull
-    static Map<VariantType, Long> countMap(int snp, int indel) {
-        Map<VariantType, Long> countMap = Maps.newHashMap();
-        countMap.put(VariantType.SNP, (long) snp);
-        countMap.put(VariantType.INDEL, (long) indel);
+    static Map<VariantType,Integer> countMap(int snp, int indel) {
+        Map<VariantType,Integer> countMap = Maps.newHashMap();
+        countMap.put(VariantType.SNP, snp);
+        countMap.put(VariantType.INDEL, indel);
         return countMap;
     }
 }

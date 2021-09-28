@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -64,13 +65,15 @@ public class GermlineDrivers
     static DriverCatalog germlineDriver(DriverCategory category, final String gene,
             final List<VariantContextDecorator> geneVariants, @Nullable GeneCopyNumber geneCopyNumber)
     {
-        final Map<DriverImpact, Long> variantCounts =
-                geneVariants.stream().collect(groupingBy(VariantContextDecorator::impact, counting()));
-        long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
-        long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
-        long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
-        long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
-        long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
+        final Map<DriverImpact,Integer> variantCounts =
+                geneVariants.stream().collect(groupingBy(VariantContextDecorator::impact, counting()))
+                        .entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().intValue()));
+
+        int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
+        int nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0);
+        int spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0);
+        int inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0);
+        int frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0);
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())

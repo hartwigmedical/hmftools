@@ -23,8 +23,8 @@ public class SomaticVariantDrivers
 
     private final List<SomaticVariant> mTsgVariants;
     private final List<SomaticVariant> mOncoVariants;
-    private final Map<VariantType, Long> mVariantTypeCounts;
-    private final Map<VariantType, Long> mVariantTypeCountsBiallelic;
+    private final Map<VariantType,Integer> mVariantTypeCounts;
+    private final Map<VariantType,Integer> mVariantTypeCountsBiallelic;
 
     private final Predicate<SomaticVariant> mOncoPredicate;
     private final Predicate<SomaticVariant> mTsgPredicate;
@@ -46,10 +46,10 @@ public class SomaticVariantDrivers
     {
         if(!variant.isFiltered())
         {
-            mVariantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+            mVariantTypeCounts.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0) + 1);
             if(variant.biallelic())
             {
-                mVariantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0L) + 1);
+                mVariantTypeCountsBiallelic.compute(variant.type(), (key, oldValue) -> Optional.ofNullable(oldValue).orElse(0) + 1);
             }
 
             if(mOncoPredicate.test(variant))

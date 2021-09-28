@@ -42,12 +42,12 @@ class OncoDrivers
 
     List<DriverCatalog> drivers(
             final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
-            final Map<VariantType,Long> variantTypeCounts)
+            final Map<VariantType,Integer> variantTypeCounts)
     {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
-        long sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0L);
+        int sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
+        int sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
 
         final Map<String, List<SomaticVariant>> codingVariants = oncogenicVariantsByGene(variants);
 
@@ -74,16 +74,16 @@ class OncoDrivers
     }
 
     @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, long sampleIndelCount, final String gene,
-            @Nullable final DndsDriverGeneLikelihood geneLikelihood, final List<SomaticVariant> geneVariants,
-            @Nullable GeneCopyNumber geneCopyNumber)
+    static DriverCatalog geneDriver(
+            int sampleSNVCount, int sampleIndelCount, final String gene,
+            final DndsDriverGeneLikelihood geneLikelihood, final List<SomaticVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
     {
-        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
-        long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
-        long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
-        long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
-        long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
-        long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
+        final Map<DriverImpact,Integer> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
+        int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
+        int nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0);
+        int spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0);
+        int inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0);
+        int frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0);
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
@@ -122,7 +122,7 @@ class OncoDrivers
 
                 final DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
 
-                final long sampleVariantCount =
+                final int sampleVariantCount =
                         impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME ? sampleIndelCount : sampleSNVCount;
 
                 driverLikelihood = Math.max(driverLikelihood, DriverCatalogFactory.probabilityDriverVariant(sampleVariantCount, likelihood));

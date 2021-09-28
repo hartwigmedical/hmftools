@@ -37,7 +37,7 @@ class TsgDrivers
 
     List<DriverCatalog> drivers(
             final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
-            final Map<VariantType, Long> variantTypeCounts, final Map<VariantType, Long> variantTypeCountsBiallelic)
+            final Map<VariantType,Integer> variantTypeCounts, final Map<VariantType,Integer> variantTypeCountsBiallelic)
     {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
@@ -59,18 +59,18 @@ class TsgDrivers
     }
 
     @NotNull
-    static DriverCatalog geneDriver(final DndsDriverGeneLikelihood likelihood, final List<SomaticVariant> geneVariants,
-            final Map<VariantType, Long> standardCounts, final Map<VariantType, Long> biallelicCounts,
-            @Nullable GeneCopyNumber geneCopyNumber)
+    static DriverCatalog geneDriver(
+            final DndsDriverGeneLikelihood likelihood, final List<SomaticVariant> geneVariants, final Map<VariantType, Integer> standardCounts,
+            final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber)
     {
         geneVariants.sort(new TsgImpactComparator());
 
-        final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
-        long missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0L);
-        long nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0L);
-        long spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0L);
-        long inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0L);
-        long frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0L);
+        final Map<DriverImpact,Integer> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
+        int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
+        int nonsenseVariants = variantCounts.getOrDefault(DriverImpact.NONSENSE, 0);
+        int spliceVariants = variantCounts.getOrDefault(DriverImpact.SPLICE, 0);
+        int inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0);
+        int frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0);
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
@@ -101,10 +101,10 @@ class TsgDrivers
 
         final DriverImpact firstImpact = DriverImpact.select(geneVariants.get(0));
         final DndsDriverImpactLikelihood firstImpactLikelihood = likelihood.select(firstImpact);
-        final long firstVariantTypeCount =
+        final int firstVariantTypeCount =
                 variantCount(geneVariants.get(0).biallelic(), geneVariants.get(0), standardCounts, biallelicCounts);
 
-        long nonBiallelicMissenseCount = standardCounts.getOrDefault(VariantType.SNP, 0L);
+        int nonBiallelicMissenseCount = standardCounts.getOrDefault(VariantType.SNP, 0);
 
         if(geneVariants.size() == 1)
         {
@@ -118,7 +118,7 @@ class TsgDrivers
         // MultiHit
         final DriverImpact secondImpact = DriverImpact.select(geneVariants.get(1));
         final DndsDriverImpactLikelihood secondImpactLikelihood = likelihood.select(secondImpact);
-        final long secondVariantTypeCount =
+        final int secondVariantTypeCount =
                 variantCount(geneVariants.get(1).biallelic(), geneVariants.get(1), standardCounts, biallelicCounts);
         double multiHit = multiHit(firstVariantTypeCount, secondVariantTypeCount, firstImpactLikelihood, secondImpactLikelihood);
 
@@ -138,7 +138,7 @@ class TsgDrivers
         return builder.driverLikelihood(combinedResult).build();
     }
 
-    private static double multiHit(long firstVariantTypeCount, long secondVariantTypeCount,
+    private static double multiHit(int firstVariantTypeCount, int secondVariantTypeCount,
             final DndsDriverImpactLikelihood firstLikelihood, final DndsDriverImpactLikelihood secondLikelihood)
     {
         return DriverCatalogFactory.probabilityDriverVariant(firstVariantTypeCount,
@@ -147,7 +147,7 @@ class TsgDrivers
                 secondLikelihood);
     }
 
-    private static double singleHit(long sampleCount, final DndsDriverImpactLikelihood likelihood)
+    private static double singleHit(int sampleCount, final DndsDriverImpactLikelihood likelihood)
     {
         return DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood);
     }
@@ -158,10 +158,10 @@ class TsgDrivers
         return variants.stream().filter(mReportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
-    private static long variantCount(boolean useBiallelic, final SomaticVariant variant,
-            final Map<VariantType, Long> standard, final Map<VariantType, Long> biallelic)
+    private static int variantCount(boolean useBiallelic, final SomaticVariant variant,
+            final Map<VariantType, Integer> standard, final Map<VariantType, Integer> biallelic)
     {
-        final Map<VariantType, Long> map;
+        final Map<VariantType, Integer> map;
         if(!useBiallelic)
         {
             map = standard;
@@ -175,6 +175,6 @@ class TsgDrivers
             map = standard;
         }
 
-        return variant.type() == VariantType.INDEL ? map.getOrDefault(VariantType.INDEL, 0L) : map.getOrDefault(VariantType.SNP, 0L);
+        return variant.type() == VariantType.INDEL ? map.getOrDefault(VariantType.INDEL, 0) : map.getOrDefault(VariantType.SNP, 0);
     }
 }
