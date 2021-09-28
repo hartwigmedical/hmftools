@@ -47,7 +47,7 @@ expectedClonalMeanCoverage | The expected coverage assuming the virus is clonall
 reported | A boolean indicating whether the detected viral presence is considered a driver
 
  ## Version History and Download Links
- - [1.1] (coming)
+ - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.1)
    - New reporting strategy of viruses to report only clinical relevant viruses
  - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.0)
    - Initial release. 
