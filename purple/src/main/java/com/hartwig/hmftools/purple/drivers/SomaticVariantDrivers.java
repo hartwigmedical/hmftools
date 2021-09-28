@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -67,15 +68,15 @@ public class SomaticVariantDrivers
         return false;
     }
 
-    @NotNull
-    public List<DriverCatalog> build(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
+    public List<DriverCatalog> build(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
         final OncoDrivers oncoDrivers = new OncoDrivers(mGenePanel);
         final TsgDrivers tsgDrivers = new TsgDrivers(mGenePanel);
 
         final List<DriverCatalog> result = Lists.newArrayList();
-        result.addAll(oncoDrivers.drivers(mOncoVariants, geneCopyNumbers, mVariantTypeCounts));
-        result.addAll(tsgDrivers.drivers(mTsgVariants, geneCopyNumbers, mVariantTypeCounts, mVariantTypeCountsBiallelic));
+
+        result.addAll(oncoDrivers.drivers(mOncoVariants, geneCopyNumberMap, mVariantTypeCounts));
+        result.addAll(tsgDrivers.drivers(mTsgVariants, geneCopyNumberMap, mVariantTypeCounts, mVariantTypeCountsBiallelic));
 
         return result;
     }

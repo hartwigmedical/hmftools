@@ -98,8 +98,6 @@ public final class HmfTranscriptRegionFile
     {
         List<HmfTranscriptRegion> transcriptRegions = Lists.newArrayList();
 
-        Set<String> uniqueGenes = Sets.newHashSet();
-
         if (lines.isEmpty())
         {
             LOGGER.error("empty transcript region data file");
@@ -138,11 +136,6 @@ public final class HmfTranscriptRegionFile
 
             String geneId = values[geneIdIndex];
             String geneName = values[geneNameIndex];
-
-            if(uniqueGenes.contains(geneName))
-                continue;
-
-            uniqueGenes.add(geneName);
 
             String entrezIdsStr = values[entrezIdsIndex];
 

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -120,9 +121,9 @@ public class SomaticStream implements Consumer<VariantContext>
         return mEnabled ? TumorMutationalStatus.fromLoad(tumorMutationalLoad()) : TumorMutationalStatus.UNKNOWN;
     }
 
-    public List<DriverCatalog> drivers(final List<GeneCopyNumber> geneCopyNumbers)
+    public List<DriverCatalog> drivers(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
-        return mDrivers.build(geneCopyNumbers);
+        return mDrivers.build(geneCopyNumberMap);
     }
 
     public Set<String> reportedGenes()

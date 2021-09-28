@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.purple.gene.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -336,14 +339,17 @@ public class PurpleApplication
             if(mConfig.DriverEnabled)
             {
                 PPL_LOGGER.info("Generating driver catalog");
-                somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
+
+                final Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
+
+                somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumberMap));
 
                 final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), mReferenceData.GenePanel);
                 somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
                 somaticDriverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
 
                 final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.GenePanel.driverGenes());
-                germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumbers));
+                germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
 
                 DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(outputDir, tumorSample), somaticDriverCatalog);
                 DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(outputDir, tumorSample), germlineDriverCatalog);
@@ -363,7 +369,7 @@ public class PurpleApplication
 
             if(hasDatabaseConfig(mCmdLineArgs))
             {
-                final DatabaseAccess dbAccess = databaseAccess(mCmdLineArgs);
+                final DatabaseAccess dbAccess = createDatabaseAccess(mCmdLineArgs);
                 PPL_LOGGER.info("Writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
 
                 persistToDatabase(dbAccess,

@@ -169,11 +169,11 @@ public class CodingEffectFactoryTest {
     private void assertEffect(@NotNull CodingEffect expected, @NotNull String line) {
         VariantContext variant = VariantContextFromString.decode(line);
         SnpEffAnnotation snpEffSummary = SnpEffAnnotationParser.fromContext(variant).get(0);
-        CodingEffect codingEffect = victim.effect(variant, snpEffSummary.gene(), snpEffSummary.consequences());
+        CodingEffect codingEffect = victim.effect(variant, snpEffSummary.gene(), snpEffSummary.featureID(), snpEffSummary.consequences());
         assertEquals(expected, codingEffect);
     }
 
     private void assertEffect(@NotNull final CodingEffect expected, @NotNull final VariantConsequence... consequences) {
-        assertEquals(expected, victim.effect(dummyVariant, "dummy_gene", Lists.newArrayList(consequences)));
+        assertEquals(expected, victim.effect(dummyVariant, "dummy_gene", "dummy_trans", Lists.newArrayList(consequences)));
     }
 }

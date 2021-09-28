@@ -34,20 +34,18 @@ class OncoDrivers
     private final ReportablePredicate mReportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
 
-    public OncoDrivers(@NotNull DriverGenePanel genePanel)
+    public OncoDrivers(final DriverGenePanel genePanel)
     {
         mLikelihoodsByGene = genePanel.oncoLikelihood();
         mReportablePredicate = new ReportablePredicate(DriverCategory.ONCO, genePanel);
     }
 
-    @NotNull
-    List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList,
-            @NotNull final Map<VariantType, Long> variantTypeCounts)
+    List<DriverCatalog> drivers(
+            final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
+            final Map<VariantType,Long> variantTypeCounts)
     {
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        final Map<String, GeneCopyNumber> geneCopyNumbers =
-                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::geneName, x -> x));
         long sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0L);
         long sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0L);
 
@@ -59,22 +57,25 @@ class OncoDrivers
 
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
+            // TODO: decide how to handle multiple transcripts per gene
+            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene).get(0);
+
             driverCatalog.add(geneDriver(
-                    sampleSNVCount, sampleINDELCount, gene, geneMissenseLikelihood, geneVariants, geneCopyNumbers.get(gene)));
+                    sampleSNVCount, sampleINDELCount, gene, geneMissenseLikelihood, geneVariants, geneCopyNumber));
         }
 
         return driverCatalog;
     }
 
     @NotNull
-    private Map<String, List<SomaticVariant>> oncogenicVariantsByGene(@NotNull final List<SomaticVariant> variants)
+    private Map<String, List<SomaticVariant>> oncogenicVariantsByGene(final List<SomaticVariant> variants)
     {
         return variants.stream().filter(mReportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
     @NotNull
-    static DriverCatalog geneDriver(long sampleSNVCount, long sampleIndelCount, @NotNull final String gene,
-            @Nullable final DndsDriverGeneLikelihood geneLikelihood, @NotNull final List<SomaticVariant> geneVariants,
+    static DriverCatalog geneDriver(long sampleSNVCount, long sampleIndelCount, final String gene,
+            @Nullable final DndsDriverGeneLikelihood geneLikelihood, final List<SomaticVariant> geneVariants,
             @Nullable GeneCopyNumber geneCopyNumber)
     {
         final Map<DriverImpact, Long> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
@@ -131,7 +132,7 @@ class OncoDrivers
         return builder.driverLikelihood(driverLikelihood).build();
     }
 
-    private static boolean isKnownInframeIndel(@NotNull final SomaticVariant variant)
+    private static boolean isKnownInframeIndel(final SomaticVariant variant)
     {
         return variant.type() == VariantType.INDEL && variant.canonicalCodingEffect() == CodingEffect.MISSENSE
                 && variant.repeatCount() <= MAX_REPEAT_COUNT;

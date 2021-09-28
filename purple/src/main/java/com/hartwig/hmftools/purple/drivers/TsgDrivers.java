@@ -29,18 +29,16 @@ class TsgDrivers
     private final ReportablePredicate mReportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
 
-    public TsgDrivers(@NotNull DriverGenePanel genePanel)
+    public TsgDrivers(final DriverGenePanel genePanel)
     {
         mLikelihoodsByGene = genePanel.tsgLikelihood();
         mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel);
     }
 
-    @NotNull
-    List<DriverCatalog> drivers(@NotNull final List<SomaticVariant> variants, @NotNull final List<GeneCopyNumber> geneCopyNumberList,
+    List<DriverCatalog> drivers(
+            final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
             final Map<VariantType, Long> variantTypeCounts, final Map<VariantType, Long> variantTypeCountsBiallelic)
     {
-        final Map<String, GeneCopyNumber> geneCopyNumbers =
-                geneCopyNumberList.stream().collect(Collectors.toMap(TranscriptRegion::geneName, x -> x));
         final List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         final Map<String, List<SomaticVariant>> codingVariants = codingVariantsByGene(variants);
@@ -50,19 +48,19 @@ class TsgDrivers
             final DndsDriverGeneLikelihood likelihood = mLikelihoodsByGene.get(gene);
 
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
-            driverCatalog.add(geneDriver(likelihood,
-                    geneVariants,
-                    variantTypeCounts,
-                    variantTypeCountsBiallelic,
-                    geneCopyNumbers.get(gene)));
+
+            // TODO: decide how to handle multiple transcripts per gene
+            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene).get(0);
+
+            driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
         }
 
         return driverCatalog;
     }
 
     @NotNull
-    static DriverCatalog geneDriver(@NotNull final DndsDriverGeneLikelihood likelihood, @NotNull final List<SomaticVariant> geneVariants,
-            @NotNull final Map<VariantType, Long> standardCounts, @NotNull final Map<VariantType, Long> biallelicCounts,
+    static DriverCatalog geneDriver(final DndsDriverGeneLikelihood likelihood, final List<SomaticVariant> geneVariants,
+            final Map<VariantType, Long> standardCounts, final Map<VariantType, Long> biallelicCounts,
             @Nullable GeneCopyNumber geneCopyNumber)
     {
         geneVariants.sort(new TsgImpactComparator());
@@ -141,7 +139,7 @@ class TsgDrivers
     }
 
     private static double multiHit(long firstVariantTypeCount, long secondVariantTypeCount,
-            @NotNull final DndsDriverImpactLikelihood firstLikelihood, @NotNull final DndsDriverImpactLikelihood secondLikelihood)
+            final DndsDriverImpactLikelihood firstLikelihood, final DndsDriverImpactLikelihood secondLikelihood)
     {
         return DriverCatalogFactory.probabilityDriverVariant(firstVariantTypeCount,
                 secondVariantTypeCount,
@@ -149,19 +147,19 @@ class TsgDrivers
                 secondLikelihood);
     }
 
-    private static double singleHit(long sampleCount, @NotNull final DndsDriverImpactLikelihood likelihood)
+    private static double singleHit(long sampleCount, final DndsDriverImpactLikelihood likelihood)
     {
         return DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood);
     }
 
     @NotNull
-    private <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(@NotNull final List<T> variants)
+    private <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(final List<T> variants)
     {
         return variants.stream().filter(mReportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
-    private static long variantCount(boolean useBiallelic, @NotNull final SomaticVariant variant,
-            @NotNull final Map<VariantType, Long> standard, @NotNull final Map<VariantType, Long> biallelic)
+    private static long variantCount(boolean useBiallelic, final SomaticVariant variant,
+            final Map<VariantType, Long> standard, final Map<VariantType, Long> biallelic)
     {
         final Map<VariantType, Long> map;
         if(!useBiallelic)
