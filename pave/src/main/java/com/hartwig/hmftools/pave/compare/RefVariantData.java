@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian.compare;
+package com.hartwig.hmftools.pave.compare;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;

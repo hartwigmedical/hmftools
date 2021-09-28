@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
-import static com.hartwig.hmftools.vian.VianConfig.VI_LOGGER;
-import static com.hartwig.hmftools.vian.VianConstants.DELIM;
-import static com.hartwig.hmftools.vian.VianConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.pave.PaveConfig.VI_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
+import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -44,9 +44,9 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class VianApplication
+public class PaveApplication
 {
-    private final VianConfig mConfig;
+    private final PaveConfig mConfig;
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
@@ -54,9 +54,9 @@ public class VianApplication
     private ImpactVcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
 
-    public VianApplication(final CommandLine cmd)
+    public PaveApplication(final CommandLine cmd)
     {
-        mConfig = new VianConfig(cmd);
+        mConfig = new PaveConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
@@ -372,13 +372,13 @@ public class VianApplication
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = VianConfig.createOptions();
+        final Options options = PaveConfig.createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
         setLogLevel(cmd);
 
-        VianApplication vianApplication = new VianApplication(cmd);
-        vianApplication.run();
+        PaveApplication paveApplication = new PaveApplication(cmd);
+        paveApplication.run();
     }
 
     @NotNull

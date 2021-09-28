@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UTR_VARIANT;
-import static com.hartwig.hmftools.vian.ImpactClassifier.checkStopStartCodons;
+import static com.hartwig.hmftools.pave.ImpactClassifier.checkStopStartCodons;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;

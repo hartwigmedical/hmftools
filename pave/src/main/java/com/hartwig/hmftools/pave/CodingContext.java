@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;

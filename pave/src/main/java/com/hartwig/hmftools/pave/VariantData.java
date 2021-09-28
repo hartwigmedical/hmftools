@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.vian.VianConstants.DELIM;
+import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
 import java.util.Map;

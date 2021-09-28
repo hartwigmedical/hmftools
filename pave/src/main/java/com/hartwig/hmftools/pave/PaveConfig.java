@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
@@ -20,7 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class VianConfig
+public class PaveConfig
 {
     public final String SampleId;
 
@@ -38,9 +38,9 @@ public class VianConfig
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
-    public static final Logger VI_LOGGER = LogManager.getLogger(VianConfig.class);
+    public static final Logger VI_LOGGER = LogManager.getLogger(PaveConfig.class);
 
-    public VianConfig(final CommandLine cmd)
+    public PaveConfig(final CommandLine cmd)
     {
         SampleId = cmd.getOptionValue(SAMPLE);
         VcfFile = cmd.getOptionValue(VCF_FILE);

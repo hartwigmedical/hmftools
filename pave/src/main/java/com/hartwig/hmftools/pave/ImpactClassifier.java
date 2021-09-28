@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -21,9 +21,9 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
-import static com.hartwig.hmftools.vian.CodingContext.determineContext;
-import static com.hartwig.hmftools.vian.VianConstants.GENE_UPSTREAM_DISTANCE;
-import static com.hartwig.hmftools.vian.SpliceClassifier.isWithinSpliceRegion;
+import static com.hartwig.hmftools.pave.CodingContext.determineContext;
+import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
 
 import java.util.List;
 

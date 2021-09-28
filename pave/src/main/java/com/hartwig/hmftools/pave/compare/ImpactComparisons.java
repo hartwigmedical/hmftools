@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian.compare;
+package com.hartwig.hmftools.pave.compare;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
@@ -14,9 +14,9 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
-import static com.hartwig.hmftools.vian.VianApplication.findVariantImpacts;
-import static com.hartwig.hmftools.vian.VianConfig.VI_LOGGER;
-import static com.hartwig.hmftools.vian.compare.RefVariantData.hasCodingEffectDiff;
+import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
+import static com.hartwig.hmftools.pave.PaveConfig.VI_LOGGER;
+import static com.hartwig.hmftools.pave.compare.RefVariantData.hasCodingEffectDiff;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,11 +34,11 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
-import com.hartwig.hmftools.vian.GeneDataCache;
-import com.hartwig.hmftools.vian.ImpactClassifier;
-import com.hartwig.hmftools.vian.VianConfig;
-import com.hartwig.hmftools.vian.VariantData;
-import com.hartwig.hmftools.vian.VariantImpactBuilder;
+import com.hartwig.hmftools.pave.GeneDataCache;
+import com.hartwig.hmftools.pave.ImpactClassifier;
+import com.hartwig.hmftools.pave.PaveConfig;
+import com.hartwig.hmftools.pave.VariantData;
+import com.hartwig.hmftools.pave.VariantImpactBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -51,7 +51,7 @@ import org.jooq.Result;
 
 public class ImpactComparisons
 {
-    private final VianConfig mConfig;
+    private final PaveConfig mConfig;
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
@@ -77,7 +77,7 @@ public class ImpactComparisons
 
     public ImpactComparisons(final CommandLine cmd)
     {
-        mConfig = new VianConfig(cmd);
+        mConfig = new PaveConfig(cmd);
 
         mSampleIds = Lists.newArrayList();
 
@@ -344,7 +344,7 @@ public class ImpactComparisons
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = VianConfig.createOptions();
+        final Options options = PaveConfig.createOptions();
 
         addDatabaseCmdLineArgs(options);
         options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");

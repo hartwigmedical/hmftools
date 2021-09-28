@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.abs;
 
@@ -7,12 +7,12 @@ import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCE
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
-import static com.hartwig.hmftools.vian.VianConstants.SPLICE_ACCEPTOR_END_RANGE;
-import static com.hartwig.hmftools.vian.VianConstants.SPLICE_ACCEPTOR_START_RANGE;
-import static com.hartwig.hmftools.vian.VianConstants.SPLICE_DONOR_END_RANGE;
-import static com.hartwig.hmftools.vian.VianConstants.SPLICE_DONOR_START_RANGE;
-import static com.hartwig.hmftools.vian.VianConstants.SPLICE_REGION_EXON_RANGE;
-import static com.hartwig.hmftools.vian.VianConstants.SPLICE_REGION_INTRON_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_END_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_START_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_END_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_START_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_EXON_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_INTRON_RANGE;
 
 import java.util.List;
 

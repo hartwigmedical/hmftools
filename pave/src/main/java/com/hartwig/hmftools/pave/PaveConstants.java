@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
-public class VianConstants
+public class PaveConstants
 {
     public static final int GENE_UPSTREAM_DISTANCE = 1000;
     public static final int SPLICE_REGION_INTRON_RANGE = 8;

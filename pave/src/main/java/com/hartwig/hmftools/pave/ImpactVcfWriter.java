@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vian;
+package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_CANONICAL;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_WORST;

@@ -8,10 +8,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>vian</artifactId>
+    <artifactId>pave</artifactId>
     <packaging>jar</packaging>
-    <version>${vian.version}</version>
-    <name>HMF Tools - Variant Impact Annotator</name>
+    <version>${pave.version}</version>
+    <name>HMF Tools - Pave</name>
 
     <dependencies>
         <dependency>
@@ -61,7 +61,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.vian.VianApplication
+                            <mainClass>com.hartwig.hmftools.pave.PaveApplication
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
