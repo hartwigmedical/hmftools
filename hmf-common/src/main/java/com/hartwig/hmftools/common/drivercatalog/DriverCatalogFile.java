@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,11 +9,13 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,12 +39,6 @@ public final class DriverCatalogFile
         return basePath + File.separator + sample + GERMLINE_DRIVER_CATALOG_EXTENSION;
     }
 
-    @NotNull
-    public static List<DriverCatalog> read(@NotNull final String fileName) throws IOException
-    {
-        return fromLines(Files.readAllLines(new File(fileName).toPath()));
-    }
-
     public static void write(@NotNull final String filename, @NotNull final List<DriverCatalog> catalog) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(catalog));
@@ -54,13 +52,6 @@ public final class DriverCatalogFile
         lines.add(header());
         catalog.stream().map(DriverCatalogFile::toString).forEach(lines::add);
         return lines;
-    }
-
-    @VisibleForTesting
-    @NotNull
-    static List<DriverCatalog> fromLines(@NotNull final List<String> lines)
-    {
-        return lines.stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
     }
 
     @NotNull
@@ -106,51 +97,44 @@ public final class DriverCatalogFile
     }
 
     @NotNull
-    private static DriverCatalog fromString(@NotNull final String line)
+    public static List<DriverCatalog> read(@NotNull final String fileName) throws IOException
     {
-        // TODO: Clean up the version with 16 entries. This is the entry that contains dndsDriverLikelihood
-        //      This can be cleaned up following the instructions in DEV-1924
-        String[] values = line.split(DELIMITER);
-        if(values.length == 16)
+        return fromLines(Files.readAllLines(new File(fileName).toPath()));
+    }
+
+    @VisibleForTesting
+    @NotNull
+    static List<DriverCatalog> fromLines(@NotNull final List<String> lines)
+    {
+        List<DriverCatalog> drivers = Lists.newArrayList();
+
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        lines.remove(0);
+
+        for(String line : lines)
         {
-            return ImmutableDriverCatalog.builder().chromosome(values[0])
-                    .chromosomeBand(values[1])
-                    .gene(values[2])
-                    .driver(DriverType.valueOf(values[3]))
-                    .category(DriverCategory.valueOf(values[4]))
-                    .likelihoodMethod(LikelihoodMethod.valueOf(values[5]))
-                    .driverLikelihood(Double.parseDouble(values[6]))
-                    .missense(Long.parseLong(values[8]))
-                    .nonsense(Long.parseLong(values[9]))
-                    .splice(Long.parseLong(values[10]))
-                    .inframe(Long.parseLong(values[11]))
-                    .frameshift(Long.parseLong(values[12]))
-                    .biallelic(Boolean.parseBoolean(values[13]))
-                    .minCopyNumber(Double.parseDouble(values[14]))
-                    .maxCopyNumber(Double.parseDouble(values[15])).build();
+            String[] values = line.split(DELIMITER, -1);
+
+            drivers.add(ImmutableDriverCatalog.builder()
+                    .chromosome(values[fieldsIndexMap.get("chromosome")])
+                    .chromosomeBand(values[fieldsIndexMap.get("chromosomeBand")])
+                    .gene(values[fieldsIndexMap.get("gene")])
+                    .driver(DriverType.valueOf(values[fieldsIndexMap.get("driver")]))
+                    .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
+                    .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
+                    .driverLikelihood(Double.parseDouble(values[fieldsIndexMap.get("driverLikelihood")]))
+                    .missense(Long.parseLong(values[fieldsIndexMap.get("missense")]))
+                    .nonsense(Long.parseLong(values[fieldsIndexMap.get("nonsense")]))
+                    .splice(Long.parseLong(values[fieldsIndexMap.get("splice")]))
+                    .inframe(Long.parseLong(values[fieldsIndexMap.get("inframe")]))
+                    .frameshift(Long.parseLong(values[fieldsIndexMap.get("frameshift")]))
+                    .biallelic(Boolean.parseBoolean(values[fieldsIndexMap.get("biallelic")]))
+                    .minCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("minCopyNumber")]))
+                    .maxCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("maxCopyNumber")]))
+                    .build());
         }
-        else if(values.length == 15)
-        {
-            return ImmutableDriverCatalog.builder().chromosome(values[0])
-                    .chromosomeBand(values[1])
-                    .gene(values[2])
-                    .driver(DriverType.valueOf(values[3]))
-                    .category(DriverCategory.valueOf(values[4]))
-                    .likelihoodMethod(LikelihoodMethod.valueOf(values[5]))
-                    .driverLikelihood(Double.parseDouble(values[6]))
-                    .missense(Long.parseLong(values[7]))
-                    .nonsense(Long.parseLong(values[8]))
-                    .splice(Long.parseLong(values[9]))
-                    .inframe(Long.parseLong(values[10]))
-                    .frameshift(Long.parseLong(values[11]))
-                    .biallelic(Boolean.parseBoolean(values[12]))
-                    .minCopyNumber(Double.parseDouble(values[13]))
-                    .maxCopyNumber(Double.parseDouble(values[14]))
-                    .build();
-        }
-        else
-        {
-            throw new IllegalStateException("Invalid driver catalog entry found: '" + line + "'");
-        }
+
+        return drivers;
     }
 }
