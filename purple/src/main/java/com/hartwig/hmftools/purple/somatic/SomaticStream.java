@@ -72,7 +72,7 @@ public class SomaticStream implements Consumer<VariantContext>
         mReferenceData = referenceData;
         mConfig = config;
 
-        mGenePanel = referenceData.GenePanel;
+        mGenePanel = referenceData.DriverGenes;
         mPeakModel = peakModel;
         mOutputVCF = config.OutputDir + config.TumorId + ".purple.somatic.vcf.gz";
         mEnabled = !somaticVcfFilename.isEmpty();

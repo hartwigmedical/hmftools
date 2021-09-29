@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -12,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
@@ -60,7 +64,10 @@ public class ReferenceData
 
     public final List<HmfTranscriptRegion> TranscriptRegions;
 
-    public final DriverGenePanel GenePanel;
+    public final EnsemblDataCache GeneTransCache;
+
+    public final DriverGenePanel DriverGenes;
+    public final List<String> AlternativeTransNames;
 
     public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
@@ -72,7 +79,6 @@ public class ReferenceData
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
     private static final String GC_PROFILE = "gc_profile";
-    private static final String ALL_GENES_FILE = "all_genes";
 
     // rename to driver enabled or always true anyway?
     public static String DRIVER_ENABLED = "driver_catalog";
@@ -85,7 +91,7 @@ public class ReferenceData
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
         options.addOption(GC_PROFILE, true, "Path to GC profile");
-        options.addOption(ALL_GENES_FILE, true, "Path to all genes TSV");
+        EnsemblDataCache.addEnsemblDir(options);
 
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
@@ -156,28 +162,8 @@ public class ReferenceData
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        TranscriptRegions = Lists.newArrayList();
-
-        if(cmd.hasOption(ALL_GENES_FILE))
-        {
-            String allGenesFile = cmd.getOptionValue(ALL_GENES_FILE);
-
-            try
-            {
-                TranscriptRegions.addAll(HmfTranscriptRegionFile.fromLines(Files.readAllLines(Paths.get(allGenesFile))));
-            }
-            catch(IOException e)
-            {
-                PPL_LOGGER.error("failed to load all-genes file(): {}", allGenesFile, e.toString());
-            }
-        }
-        else
-        {
-            if(refGenomeCoords == RefGenomeCoordinates.COORDS_38)
-                TranscriptRegions.addAll(HmfGenePanelSupplier.allGeneList38());
-            else
-                TranscriptRegions.addAll(HmfGenePanelSupplier.allGeneList37());
-        }
+        TranscriptRegions = refGenomeCoords == RefGenomeCoordinates.COORDS_38 ?
+                HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
 
         ChromosomeLengths = toPosition(refGenomeCoords.lengths(), chromosomeNames);
         Centromeres = toPosition(refGenomeCoords.centromeres(), chromosomeNames);
@@ -221,7 +207,7 @@ public class ReferenceData
 
             final RefGenomeVersion driverGeneRefGenomeVersion = RefGenVersion.is37() ? RefGenomeVersion.V37 : RefGenomeVersion.V38;
 
-            GenePanel = DriverGenePanelFactory.create(driverGeneRefGenomeVersion, driverGenes);
+            DriverGenes = DriverGenePanelFactory.create(driverGeneRefGenomeVersion, driverGenes);
 
             if(cmd.hasOption(GERMLINE_VARIANTS))
             {
@@ -240,8 +226,36 @@ public class ReferenceData
         }
         else
         {
-            GenePanel = DriverGenePanelFactory.empty();
+            DriverGenes = DriverGenePanelFactory.empty();
         }
+
+        AlternativeTransNames = Lists.newArrayList();
+
+        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        {
+            GeneTransCache = new EnsemblDataCache(cmd, RefGenVersion);
+
+            // load transcripts with any alts from the driver gene panel in mind
+            List<String> alternativeTrans = DriverGenes.driverGenes().stream().map(x -> x.alternativeTranscripts()).collect(Collectors.toList());
+
+            if(!alternativeTrans.isEmpty())
+            {
+                alternativeTrans.forEach(x -> Arrays.stream(x.split(ITEM_DELIM)).forEach(y -> AlternativeTransNames.add(y)));
+                GeneTransCache.setRequiredData(true, false, false, true);
+                GeneTransCache.load(true);
+                GeneTransCache.loadTranscriptData(Lists.newArrayList(), AlternativeTransNames);
+            }
+            else
+            {
+                GeneTransCache.setRequiredData(true, false, false, true);
+                GeneTransCache.load(false);
+            }
+        }
+        else
+        {
+            GeneTransCache = null;
+        }
+
 
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();

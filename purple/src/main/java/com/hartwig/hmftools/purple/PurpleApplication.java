@@ -344,11 +344,11 @@ public class PurpleApplication
 
                 somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumberMap));
 
-                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), mReferenceData.GenePanel);
+                final CNADrivers cnaDrivers = new CNADrivers(qcChecks.status(), mReferenceData.DriverGenes);
                 somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
                 somaticDriverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
 
-                final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.GenePanel.driverGenes());
+                final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.driverGenes());
                 germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
 
                 DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(outputDir, tumorSample), somaticDriverCatalog);
