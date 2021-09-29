@@ -30,15 +30,10 @@ public class ReportingDb {
 
     private static final String NA_STRING = "N/A";
 
-    @NotNull
-    private final String reportingDbTsv;
-
-    public ReportingDb(@NotNull final String reportingDbTsv) {
-        this.reportingDbTsv = reportingDbTsv;
+    public ReportingDb() {
     }
 
-    public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory)
-            throws IOException {
+    public void appendAnalysedReport(@NotNull AnalysedPatientReport report, @NotNull String outputDirectory) throws IOException {
         if (shouldBeAddedToReportingDb(report.sampleReport())) {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
@@ -65,23 +60,22 @@ public class ReportingDb {
                     reportType = reportType + "_corrected";
                 }
 
-                addToReportingDb(tumorBarcode, sampleId, cohort, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
                 writeApiUpdateJson(outputDirectory,
-                            tumorBarcode,
-                            sampleId,
-                            cohort,
-                            reportType,
-                            reportDate,
-                            purity,
-                            hasReliableQuality,
-                            hasReliablePurity);
+                        tumorBarcode,
+                        sampleId,
+                        cohort,
+                        reportType,
+                        reportDate,
+                        purity,
+                        hasReliableQuality,
+                        hasReliablePurity);
             }
         }
     }
 
-    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId, final LimsCohortConfig cohort,
-            final String reportType, final String reportDate, final String purity, final Boolean hasReliableQuality,
-            final Boolean hasReliablePurity) throws IOException {
+    private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId,
+            final LimsCohortConfig cohort, final String reportType, final String reportDate, final String purity,
+            final Boolean hasReliableQuality, final Boolean hasReliablePurity) throws IOException {
         File outputFile = new File(outputDirectory, format("%s_%s_api-update.json", sampleId, tumorBarcode));
         Map<String, Object> payload = new HashMap<>();
         payload.put("barcode", tumorBarcode);
@@ -92,33 +86,13 @@ public class ReportingDb {
         payload.put("has_reliable_quality", hasReliableQuality != null ? hasReliableQuality : NA_STRING);
         payload.put("has_reliable_purity", hasReliablePurity != null ? hasReliablePurity : NA_STRING);
 
-        appendToFile(outputFile.getAbsolutePath(), new GsonBuilder().serializeNulls()
-                .serializeSpecialFloatingPointValues()
-                .setPrettyPrinting()
-                .disableHtmlEscaping()
-                .create()
-                .toJson(payload));
-    }
-
-    private void addToReportingDb(@NotNull String tumorBarcode, @NotNull String sampleId, @NotNull LimsCohortConfig cohort,
-            @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, boolean hasReliableQuality,
-            boolean hasReliablePurity) throws IOException {
-        boolean present = false;
-        for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
-            if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
-                    && reportType.equals(entry.reportType())) {
-                LOGGER.warn("Sample {} has already been reported with report type '{}'!", sampleId, reportType);
-                present = true;
-            }
-        }
-
-        if (!present) {
-            LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
-            String stringToAppend =
-                    tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t"
-                            + hasReliableQuality + "\t" + hasReliablePurity + "\n";
-            appendToFile(reportingDbTsv, stringToAppend);
-        }
+        appendToFile(outputFile.getAbsolutePath(),
+                new GsonBuilder().serializeNulls()
+                        .serializeSpecialFloatingPointValues()
+                        .setPrettyPrinting()
+                        .disableHtmlEscaping()
+                        .create()
+                        .toJson(payload));
     }
 
     public void appendQCFailReport(@NotNull QCFailReport report, @NotNull String outputDirectory) throws IOException {
@@ -130,31 +104,8 @@ public class ReportingDb {
 
             String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
 
-            boolean present = false;
-            for (ReportingEntry entry : ReportingDatabase.read(reportingDbTsv)) {
-                if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
-                        && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
-                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportType, reportDate);
-                    present = true;
-                }
-            }
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, reportDate, NA_STRING, null, null);
 
-            if (!present) {
-                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
-                String stringToAppend =
-                        tumorBarcode + "\t" + sampleId + "\t" + cohort.cohortId() + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING
-                                + "\t" + NA_STRING + "\t" + NA_STRING + "\n";
-                appendToFile(reportingDbTsv, stringToAppend);
-                writeApiUpdateJson(outputDirectory,
-                        tumorBarcode,
-                        sampleId,
-                        cohort,
-                        reportType,
-                        reportDate,
-                        NA_STRING,
-                        null,
-                        null);
-            }
         }
     }
 

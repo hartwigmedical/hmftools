@@ -67,7 +67,6 @@ public final class PatientReporterTestFactory {
                 .tumorSampleBarcode(Strings.EMPTY)
                 .outputDirReport(Strings.EMPTY)
                 .outputDirData(Strings.EMPTY)
-                .reportingDbTsv(Strings.EMPTY)
                 .primaryTumorTsv(Strings.EMPTY)
                 .limsDir(Strings.EMPTY)
                 .rvaLogo(RVA_LOGO_PATH)

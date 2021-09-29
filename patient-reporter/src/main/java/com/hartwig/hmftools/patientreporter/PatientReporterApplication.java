@@ -92,7 +92,7 @@ public class PatientReporterApplication {
 
             writeReportDataToJson(report);
 
-            new ReportingDb(config.reportingDbTsv()).appendAnalysedReport(report, config.outputDirData());
+            new ReportingDb().appendAnalysedReport(report, config.outputDirData());
         }
     }
 
@@ -115,7 +115,7 @@ public class PatientReporterApplication {
 
             writeReportDataToJson(report);
 
-            new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report, config.outputDirReport());
+            new ReportingDb().appendQCFailReport(report, config.outputDirReport());
         }
     }
 

@@ -1,3 +1,0 @@
-tumorBarcode	sampleId	cohort	reportDate	reportType	purity	hasReliableQuality	hasReliablePurity
-ABCD	sampleId1	A	22-Oct-2019	dna_analysis_report	0.70	true	false
-EFGH	sampleId2	B	23-Oct-2019	insufficient_dna	N/A	N/A	N/A
