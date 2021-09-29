@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -130,8 +131,9 @@ public final class EnsemblDataLoader
         return true;
     }
 
-    public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
-            final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly)
+    public static boolean loadTranscriptData(
+            final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
+            final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly, final List<String> nonCanonicalTrans)
     {
         String filename = dataPath;
 
@@ -208,9 +210,18 @@ public final class EnsemblDataLoader
                 {
                     int canonicalTransId = Integer.parseInt(items[canonicalTransIdIndex]);
                     boolean isCanonical = (canonicalTransId == transId);
+                    String transName = items[transNameIndex];
 
-                    if(!isCanonical && canonicalOnly)
-                        continue;
+                    if(canonicalOnly)
+                    {
+                        if(!isCanonical && !nonCanonicalTrans.contains(transName))
+                            continue;
+                    }
+                    else
+                    {
+                        if(!nonCanonicalTrans.contains(transName))
+                            continue;
+                    }
 
                     exonDataList = Lists.newArrayList();
 
@@ -218,7 +229,7 @@ public final class EnsemblDataLoader
                     Integer codingEnd = !items[codingEndIndex].equalsIgnoreCase("NULL") ? Integer.parseInt(items[codingEndIndex]) : null;
 
                     currentTrans = new TranscriptData(
-                            transId, items[transNameIndex], geneId, isCanonical, Byte.parseByte(items[strandIndex]),
+                            transId, transName, geneId, isCanonical, Byte.parseByte(items[strandIndex]),
                             Integer.parseInt(items[transStartIndex]), Integer.parseInt(items[transEndIndex]),
                             codingStart, codingEnd, items[biotypeIndex]);
 
@@ -251,8 +262,8 @@ public final class EnsemblDataLoader
         return true;
     }
 
-    public static boolean loadTranscriptProteinData(final String dataPath, Map<Integer, List<TranscriptProteinData>> proteinDataMap,
-            List<Integer> restrictedTransIds)
+    public static boolean loadTranscriptProteinData(
+            final String dataPath, Map<Integer, List<TranscriptProteinData>> proteinDataMap, Set<Integer> restrictedTransIds)
     {
         String filename = dataPath;
 
@@ -332,7 +343,7 @@ public final class EnsemblDataLoader
     }
 
     public static boolean loadTranscriptSpliceAcceptorData(
-            final String dataPath, Map<Integer,Integer> transSaPositionDataMap, final List<Integer> restrictedTransIds)
+            final String dataPath, Map<Integer,Integer> transSaPositionDataMap, final Set<Integer> restrictedTransIds)
     {
         String filename = dataPath;
 

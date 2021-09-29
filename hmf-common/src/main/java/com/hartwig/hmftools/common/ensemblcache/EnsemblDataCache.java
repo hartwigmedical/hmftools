@@ -20,10 +20,12 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.BreakendTransData;
@@ -752,13 +754,16 @@ public class EnsemblDataCache
 
         if(!delayTranscriptLoading)
         {
-            if(!EnsemblDataLoader.loadTranscriptData(mDataPath, mTranscriptDataMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly))
+            if(!EnsemblDataLoader.loadTranscriptData(
+                    mDataPath, mTranscriptDataMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly, Lists.newArrayList()))
+            {
+                return false;
+            }
+
+            if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Sets.newHashSet()))
                 return false;
 
-            if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
-                return false;
-
-            if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
+            if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Sets.newHashSet()))
                 return false;
         }
 
@@ -767,18 +772,22 @@ public class EnsemblDataCache
 
     public boolean loadTranscriptData(final List<String> restrictedGeneIds)
     {
-        if(!EnsemblDataLoader.loadTranscriptData(mDataPath, mTranscriptDataMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly))
-            return false;
+        return loadTranscriptData(restrictedGeneIds, Lists.newArrayList());
+    }
 
-        List<Integer> uniqueTransIds = Lists.newArrayList();
+    public boolean loadTranscriptData(final List<String> restrictedGeneIds, final List<String> nonCanonicalTrans)
+    {
+        if(!EnsemblDataLoader.loadTranscriptData(
+                mDataPath, mTranscriptDataMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly, nonCanonicalTrans))
+        {
+            return false;
+        }
+
+        Set<Integer> uniqueTransIds = Sets.newHashSet();
 
         for(List<TranscriptData> transDataList : mTranscriptDataMap.values())
         {
-            for(TranscriptData transData : transDataList)
-            {
-                if(!uniqueTransIds.contains(transData.TransId))
-                    uniqueTransIds.add(transData.TransId);
-            }
+            transDataList.forEach(x -> uniqueTransIds.add(x.TransId));
         }
 
         if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
