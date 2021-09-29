@@ -32,11 +32,6 @@ import org.apache.commons.cli.ParseException;
 
 public class GenerateGenePanel
 {
-    private static final String CDKN2A_ALT = "ENST00000579755";
-
-    // could consider loading these from the alt-transcripts soon to be in the driver panel file
-    private static final List<String> NON_CANONICAL_TRANSCRIPTS = Lists.newArrayList(CDKN2A_ALT);
-
     public static void main(String[] args) throws ParseException, IOException, SQLException
     {
         final Options options = createOptions();
@@ -73,7 +68,7 @@ public class GenerateGenePanel
 
                     for(TranscriptData transData : transDataList)
                     {
-                        if(!transData.IsCanonical && !NON_CANONICAL_TRANSCRIPTS.contains(transData.TransName))
+                        if(!transData.IsCanonical)
                             continue;
 
                         StringJoiner sj = new StringJoiner(DEFAULT_DELIM);
