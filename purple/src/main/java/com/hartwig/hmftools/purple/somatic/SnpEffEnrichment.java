@@ -10,8 +10,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -136,9 +136,13 @@ public class SnpEffEnrichment implements VariantContextEnrichment
         if(geneData == null)
         {
             // try mapping
+            String geneNameNew = mGeneTransCache.getGeneMappings().getNewName(annotation.gene());
 
+            if(geneNameNew != null)
+                geneData = mGeneTransCache.getGeneDataByName(geneNameNew);
         }
-        else
+
+        if(geneData != null)
         {
             List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 

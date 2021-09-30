@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,6 +45,35 @@ public class HmfTranscriptRegionUtils
                 .codingEnd(transData.CodingEnd)
                 .exons(exons)
                 .build();
+    }
+
+    public static GeneData createGeneData(final HmfTranscriptRegion transcriptRegion)
+    {
+        return createGeneData(transcriptRegion, null);
+    }
+
+    public static GeneData createGeneData(final HmfTranscriptRegion transcriptRegion, final String geneNameOverride)
+    {
+        return new GeneData(
+                transcriptRegion.geneId(), geneNameOverride != null ? geneNameOverride : transcriptRegion.geneName(),
+                transcriptRegion.chromosome(), transcriptRegion.strand().asByte(),
+                (int)transcriptRegion.geneStart(), (int)transcriptRegion.geneEnd(), transcriptRegion.chromosomeBand());
+    }
+
+    public static TranscriptData createTranscriptData(final HmfTranscriptRegion transcriptRegion, int transId)
+    {
+        TranscriptData transData = new TranscriptData(
+                transId++, transcriptRegion.transName(), transcriptRegion.geneId(), transcriptRegion.isCanonical(),
+                transcriptRegion.strand().asByte(), (int)transcriptRegion.start(), (int)transcriptRegion.end(),
+                (int)transcriptRegion.codingStart(), (int)transcriptRegion.codingEnd(), "");
+
+        for(HmfExonRegion exon : transcriptRegion.exons())
+        {
+            transData.exons().add(new ExonData(
+                    transId, (int)exon.start(), (int)exon.end(), exon.exonRank(), -1, -1));
+        }
+
+        return transData;
     }
 
     @Nullable

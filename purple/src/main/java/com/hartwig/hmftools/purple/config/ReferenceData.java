@@ -20,12 +20,17 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
@@ -35,14 +40,15 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -192,11 +198,32 @@ public class ReferenceData
         }
 
         AlternativeTransNames = Lists.newArrayList();
+        GeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR, ""), RefGenVersion);
+        loadGeneTransCache(cmd);
 
+        SomaticHotspots = ArrayListMultimap.create();
+        GermlineHotspots = ArrayListMultimap.create();
+
+        try
+        {
+            SomaticHotspots.putAll(somaticHotspotVcf.equals(Strings.EMPTY) ?
+                    ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(somaticHotspotVcf));
+
+            GermlineHotspots.putAll(germlineHotspotVcf.equals(Strings.EMPTY) ?
+                    ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(germlineHotspotVcf));
+        }
+        catch (IOException e)
+        {
+            mIsValid = false;
+            PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
+
+        }
+    }
+
+    private void loadGeneTransCache(final CommandLine cmd)
+    {
         if(cmd.hasOption(ENSEMBL_DATA_DIR))
         {
-            GeneTransCache = new EnsemblDataCache(cmd, RefGenVersion);
-
             // load transcripts with any alts from the driver gene panel in mind
             List<String> alternativeTrans = DriverGenes.driverGenes().stream().map(x -> x.additionalReportedTranscripts()).collect(Collectors.toList());
 
@@ -218,25 +245,46 @@ public class ReferenceData
         }
         else
         {
-            GeneTransCache = null;
-        }
+            // build from the all-genes TSV file for now but the information will be incomplete for some operations
+            List<HmfTranscriptRegion> canonicalTranscripts = RefGenVersion.is37() ?
+                    HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
-        SomaticHotspots = ArrayListMultimap.create();
-        GermlineHotspots = ArrayListMultimap.create();
+            GeneNameMapping geneNameMapping = GeneTransCache.getGeneMappings();
 
-        try
-        {
-            SomaticHotspots.putAll(somaticHotspotVcf.equals(Strings.EMPTY) ?
-                    ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(somaticHotspotVcf));
+            int transId = 0;
 
-            GermlineHotspots.putAll(germlineHotspotVcf.equals(Strings.EMPTY) ?
-                    ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(germlineHotspotVcf));
-        }
-        catch (IOException e)
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
+            for(HmfTranscriptRegion transcriptRegion : canonicalTranscripts)
+            {
+                String geneNameNew = geneNameMapping.getNewName(transcriptRegion.geneName());
 
+                GeneData geneData = HmfTranscriptRegionUtils.createGeneData(transcriptRegion, geneNameNew);
+
+                List<GeneData> geneDataList = GeneTransCache.getChrGeneDataMap().get(geneData.Chromosome);
+
+                if(geneDataList == null)
+                {
+                    geneDataList = Lists.newArrayList(geneData);
+                    GeneTransCache.getChrGeneDataMap().put(geneData.Chromosome, geneDataList);
+                }
+                else
+                {
+                    geneDataList.add(geneData);
+                }
+
+                TranscriptData transData = HmfTranscriptRegionUtils.createTranscriptData(transcriptRegion, transId++);
+
+                List<TranscriptData> transDataList = GeneTransCache.getTranscripts(geneData.GeneId);
+
+                if(transDataList == null)
+                {
+                    transDataList = Lists.newArrayList(transData);
+                    GeneTransCache.getTranscriptDataMap().put(geneData.GeneId, transDataList);
+                }
+                else
+                {
+                    transDataList.add(transData);
+                }
+            }
         }
     }
 

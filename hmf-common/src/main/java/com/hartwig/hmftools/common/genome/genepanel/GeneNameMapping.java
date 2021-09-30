@@ -32,7 +32,7 @@ public class GeneNameMapping
         final Map<String, String> v38Map = Maps.newHashMap();
         final Set<String> unchangedGenes = Sets.newHashSet();
 
-        final InputStream inputStream = GeneNameMapping.class.getResourceAsStream("/ensembl/gene_name_mapping.tsv");
+        final InputStream inputStream = GeneNameMapping.class.getResourceAsStream("/ensembl/gene_name_mapping_37_38.tsv");
         List<String> mappingLines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
         mappingLines.remove(0);
 

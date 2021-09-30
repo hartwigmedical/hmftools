@@ -24,4 +24,6 @@ public enum Strand
 
         throw new IllegalArgumentException("Invalid direction " + direction);
     }
+
+    public byte asByte() { return this == FORWARD ? POS_STRAND : NEG_STRAND; }
 }
