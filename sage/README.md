@@ -436,16 +436,16 @@ The specific filters and default settings for each tier are:
 
 Filter  | Hotspot | Panel | High Confidence | Low Confidence | Field
 ---|---|---|---|---|---
-min_tumor_qual*|70**|100|160|240|`QUAL`
+min_tumor_qual**|70***|100|160|240|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
-max_germline_vaf***|10%|4%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
+max_germline_vaf****|10%|4%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
 max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 
-* These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150)
-** Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
-*** A special filter (max_germline_alt_support) is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
+** These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150)
+*** Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
+**** A special filter (max_germline_alt_support) is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 
 If multiple tumors are supplied, a variant remains unfiltered if it is unfiltered for any single tumor. 
 
