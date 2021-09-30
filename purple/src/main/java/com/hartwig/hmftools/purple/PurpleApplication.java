@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.gene.GeneCopyNumber.listToMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.persistToDatabase;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
@@ -14,6 +17,8 @@ import static com.hartwig.hmftools.purple.purity.FittedPurityScoreFactory.polycl
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,15 +32,13 @@ import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurityAdjusterAbnormalChromosome;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmFile;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeFactory;
+import com.hartwig.hmftools.common.purple.copynumber.GenerateCnPerChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -82,8 +85,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -100,10 +101,11 @@ public class PurpleApplication
     private final Segmentation mSegmentation;
     private final Charts mCharts;
 
+    private final DatabaseAccess mDbAccess;
+
     private static final int THREADS_DEFAULT = 2;
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
-    private static final String LOG_DEBUG = "log_debug";
 
     private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
     {
@@ -117,10 +119,9 @@ public class PurpleApplication
             System.exit(0);
         }
 
-        if(mCmdLineArgs.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
+        setLogLevel(mCmdLineArgs);
+
+        mDbAccess = hasDatabaseConfig(mCmdLineArgs) ? createDatabaseAccess(mCmdLineArgs) : null;
 
         final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
 
@@ -130,13 +131,20 @@ public class PurpleApplication
         mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
 
         // and common reference data
-        mReferenceData = new ReferenceData(mCmdLineArgs);
+        mReferenceData = new ReferenceData(mCmdLineArgs, mConfig);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
 
-        mSegmentation = new Segmentation(mConfig, mReferenceData);
-
-        mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
+        if(!mConfig.DriversOnly)
+        {
+            mSegmentation = new Segmentation(mConfig, mReferenceData);
+            mCharts = new Charts(mConfig, mExecutorService, mReferenceData.RefGenVersion.is38());
+        }
+        else
+        {
+            mSegmentation = null;
+            mCharts = null;
+        }
 
         if(!mConfig.isValid() || !mReferenceData.isValid())
         {
@@ -150,9 +158,10 @@ public class PurpleApplication
     {
         try
         {
-            processSample(mConfig.ReferenceId, mConfig.TumorId, mConfig.RG_VERSION);
+            processSample(mConfig.ReferenceId, mConfig.TumorId);
 
-        } finally
+        }
+        finally
         {
             mExecutorService.shutdown();
         }
@@ -164,19 +173,28 @@ public class PurpleApplication
     {
         try
         {
-            // load amber and cobalt sample data
-            final AmberData amberData = new AmberData(tumorSample, sampleDataFiles.AmberDirectory);
+            SampleData sampleData = null;
 
-            final CobaltData cobaltData = new CobaltData(referenceId,
-                    tumorSample,
-                    sampleDataFiles.CobaltDirectory,
-                    amberData.PatientGender,
-                    mConfig.TumorOnlyMode);
+            if(!mConfig.DriversOnly)
+            {
+                // load amber and cobalt sample data
+                final AmberData amberData = new AmberData(tumorSample, sampleDataFiles.AmberDirectory);
 
-            // load structural and somatic variants
-            final StructuralVariantCache svCache = createStructuralVariantCache(tumorSample, sampleDataFiles);
+                final CobaltData cobaltData = new CobaltData(referenceId,
+                        tumorSample,
+                        sampleDataFiles.CobaltDirectory,
+                        amberData.PatientGender,
+                        mConfig.TumorOnlyMode);
 
-            SampleData sampleData = new SampleData(referenceId, tumorSample, amberData, cobaltData, svCache);
+                // load structural and somatic variants
+                final StructuralVariantCache svCache = createStructuralVariantCache(tumorSample, sampleDataFiles);
+
+                sampleData = new SampleData(referenceId, tumorSample, amberData, cobaltData, svCache);
+            }
+            else
+            {
+                sampleData = new SampleData(referenceId, tumorSample, null, null, null);
+            }
 
             sampleData.loadSomatics(sampleDataFiles.SomaticVcfFile, mReferenceData, mConfig.TumorOnlyMode);
 
@@ -189,11 +207,264 @@ public class PurpleApplication
         }
     }
 
-    private void processSample(final String referenceId, final String tumorSample, final RefGenomeVersion refGenomeVersion)
+    private void processSample(final String referenceId, final String tumorSample)
     {
         PPL_LOGGER.info("Processing sample(ref={} tumor={})", referenceId, tumorSample);
 
-        final String outputDir = checkAddDirSeparator(mConfig.OutputDir);
+        try
+        {
+            final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
+
+            if(mConfig.DriversOnly)
+            {
+                findDrivers(tumorSample, sampleDataFiles);
+            }
+            else
+            {
+                final SampleData sampleData = loadSampleData(referenceId, tumorSample, sampleDataFiles);
+
+                if(sampleData == null)
+                    return;
+
+                performFit(referenceId, tumorSample, sampleDataFiles, sampleData);
+            }
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed processing sample({}): {}", tumorSample, e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    private void performFit(
+            final String referenceId, final String tumorSample,
+            final SampleDataFiles sampleDataFiles, final SampleData sampleData) throws Exception
+    {
+        final AmberData amberData = sampleData.Amber;
+        final CobaltData cobaltData = sampleData.Cobalt;
+
+        final Gender amberGender = amberData.PatientGender;
+        final Gender cobaltGender = cobaltData.gender();
+        final CobaltChromosomes cobaltChromosomes = cobaltData.CobaltChromosomes;
+
+        if(cobaltGender.equals(amberGender))
+        {
+            PPL_LOGGER.info("Sample gender is {}", cobaltGender.toString().toLowerCase());
+        }
+        else
+        {
+            PPL_LOGGER.warn("COBALT gender {} does not match AMBER gender {}", cobaltGender, amberGender);
+        }
+
+        PPL_LOGGER.info("Applying segmentation");
+        final List<ObservedRegion> observedRegions = mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
+
+        PPL_LOGGER.info("Fitting purity");
+        final FittedRegionFactory fittedRegionFactory =
+                createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
+
+        final BestFit bestFit = fitPurity(sampleData, observedRegions, fittedRegionFactory, sampleData.SvCache.variants());
+
+        final FittedPurity fittedPurity = bestFit.fit();
+
+        final PurityAdjuster purityAdjuster =
+                new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
+
+        final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(mConfig.Fitting.MinDiploidTumorRatioCount,
+                mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
+                amberData.AverageTumorDepth,
+                fittedPurity.ploidy(),
+                purityAdjuster,
+                cobaltData.CobaltChromosomes);
+
+        PPL_LOGGER.info("Calculating copy number");
+        List<FittedRegion> fittedRegions =
+                fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), observedRegions);
+        copyNumberFactory.invoke(fittedRegions, sampleData.SvCache.variants());
+
+        final int recoveredSVCount = recoverStructuralVariants(
+                sampleData, sampleDataFiles, purityAdjuster, copyNumberFactory.copyNumbers());
+
+        if(recoveredSVCount > 0)
+        {
+            PPL_LOGGER.info("Reapplying segmentation with {} recovered structural variants", recoveredSVCount);
+            final List<ObservedRegion> recoveredObservedRegions =
+                    mSegmentation.createSegments(sampleData.SvCache.variants(), amberData, cobaltData);
+
+            PPL_LOGGER.info("Recalculating copy number");
+            fittedRegions = fittedRegionFactory.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), recoveredObservedRegions);
+            copyNumberFactory.invoke(fittedRegions, sampleData.SvCache.variants());
+        }
+
+        final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
+        sampleData.SvCache.inferMissingVariant(copyNumbers);
+
+        final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
+        final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
+
+        final List<GeneCopyNumber> geneCopyNumbers =
+                GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.TranscriptRegions, copyNumbers, germlineDeletions);
+
+        PPL_LOGGER.info("Generating QC Stats");
+        final PurpleQC qcChecks = PurpleQCFactory.create(amberData.Contamination,
+                bestFit,
+                amberGender,
+                cobaltGender,
+                copyNumbers,
+                geneCopyNumbers,
+                cobaltChromosomes.germlineAberrations(),
+                amberData.AverageTumorDepth);
+
+        PPL_LOGGER.info("Modelling somatic peaks");
+        final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
+
+        final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(purityAdjuster,
+                copyNumbers,
+                enrichedFittedRegions,
+                sampleData.SomaticVariants,
+                sampleDataFiles.SomaticVcfFile);
+
+        // at the moment the enriching of somatic variants is also contributing to the purity context,
+        // so it cannot be done afterwards
+        // if the read and write process were split then so could the fitting and enriching steps
+        PPL_LOGGER.info("Enriching somatic variants");
+
+        final SomaticStream somaticStream = new SomaticStream(
+                mConfig, mReferenceData, somaticPeakStream.snpCount(), somaticPeakStream.indelCount(),
+                somaticPeaks, sampleDataFiles.SomaticVcfFile);
+
+        somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
+
+        final Set<String> reportedGenes = somaticStream.reportedGenes();
+
+        if(!sampleDataFiles.GermlineVcfFile.isEmpty())
+        {
+            mGermlineVariants.processAndWrite(referenceId,
+                    tumorSample,
+                    sampleDataFiles.GermlineVcfFile,
+                    purityAdjuster,
+                    copyNumbers,
+                    reportedGenes);
+        }
+
+        final PurityContext purityContext = ImmutablePurityContext.builder()
+                .version(mPurpleVersion.version())
+                .bestFit(bestFit.fit())
+                .method(bestFit.method())
+                .gender(cobaltGender)
+                .score(bestFit.score())
+                .polyClonalProportion(polyclonalProportion(copyNumbers))
+                .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
+                .microsatelliteIndelsPerMb(somaticStream.microsatelliteIndelsPerMb())
+                .microsatelliteStatus(somaticStream.microsatelliteStatus())
+                .tumorMutationalLoad(somaticStream.tumorMutationalLoad())
+                .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
+                .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
+                .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
+                .svTumorMutationalBurden(sampleData.SvCache.passingBnd())
+                .qc(qcChecks)
+                .build();
+
+        // write fit results
+        PPL_LOGGER.info("Writing purple data to directory: {}", mConfig.OutputDir);
+        mPurpleVersion.write(mConfig.OutputDir);
+        PurityContextFile.write(mConfig.OutputDir, tumorSample, purityContext);
+        FittedPurityRangeFile.write(mConfig.OutputDir, tumorSample, bestFit.allFits());
+        PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
+        PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(mConfig.OutputDir, tumorSample), germlineDeletions);
+        GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
+        SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
+
+        /* this file isn't used by any component in the system
+        PPL_LOGGER.info("Calculating chromosome copy number arm");
+        List<CnPerChromosomeArmData> cnPerChromosome = GenerateCnPerChromosome.extractCnPerChromosomeArm(
+                copyNumbers, mReferenceData.RefGeCoordinates);
+
+        CnPerChromosomeArmFile.write(CnPerChromosomeArmFile.generateFilename(mConfig.OutputDir, tumorSample), cnPerChromosome);
+        */
+
+        if(mDbAccess != null)
+        {
+            PPL_LOGGER.info("Writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
+
+            mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
+            mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
+            mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
+            mDbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
+            mDbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+        }
+
+        if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())
+        {
+            PPL_LOGGER.info("Generating charts");
+
+            mCharts.write(
+                    referenceId, tumorSample, !sampleDataFiles.SomaticVcfFile.isEmpty(),
+                    cobaltGender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
+                    fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+        }
+
+        if(mConfig.RunDrivers)
+        {
+            findDrivers(tumorSample, purityContext, geneCopyNumbers, somaticStream);
+        }
+    }
+
+    private void findDrivers(final String tumorSample, final SampleDataFiles sampleDataFiles) throws IOException
+    {
+        final String purpleDataPath = mConfig.OutputDir;
+
+        String somaticVcf = purpleDataPath + tumorSample + PURPLE_SOMATIC_VCF_SUFFIX;
+
+        // the counts passed in here are only for down-sampling for charting, which is not an applicable task
+        final SomaticStream somaticStream = new SomaticStream(
+                mConfig, mReferenceData, 0, 0, null, somaticVcf);
+
+        final String germlineVcf = purpleDataPath + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
+
+        if(Files.exists(Paths.get(germlineVcf)))
+            mGermlineVariants.loadReportableVariants(germlineVcf);
+
+        final PurityContext purityContext = PurityContextFile.read(purpleDataPath, tumorSample);
+
+        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(
+                GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorSample));
+
+        findDrivers(tumorSample, purityContext, geneCopyNumbers, somaticStream);
+    }
+
+    private void findDrivers(
+            final String tumorSample, final PurityContext purityContext, final List<GeneCopyNumber> geneCopyNumbers,
+            final SomaticStream somaticStream) throws IOException
+    {
+        final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
+        final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
+
+        PPL_LOGGER.info("Generating driver catalog");
+
+        final Map<String,List<GeneCopyNumber>> geneCopyNumberMap = listToMap(geneCopyNumbers);
+
+        somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumberMap));
+
+        final CNADrivers cnaDrivers = new CNADrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+        somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+        somaticDriverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));
+
+        final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.driverGenes());
+        germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
+
+        DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(mConfig.OutputDir, tumorSample), somaticDriverCatalog);
+        DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(mConfig.OutputDir, tumorSample), germlineDriverCatalog);
+
+        if(mDbAccess != null)
+            mDbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
+    }
+
+    private void processSampleOld(final String referenceId, final String tumorSample)
+    {
+        PPL_LOGGER.info("Processing sample(ref={} tumor={})", referenceId, tumorSample);
+
+        final String outputDir = mConfig.OutputDir;
 
         try
         {
@@ -270,13 +541,6 @@ public class PurpleApplication
             final List<GeneCopyNumber> geneCopyNumbers =
                     GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.TranscriptRegions, copyNumbers, germlineDeletions);
 
-            PPL_LOGGER.info("Calculating chromosome copy number arm");
-            final RefGenomeCoordinates refGenomeCoordinates =
-                    refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-
-            List<CnPerChromosomeArmData> cnPerChromosome =
-                    CnPerChromosomeFactory.extractCnPerChromosomeArm(copyNumbers, refGenomeCoordinates);
-
             PPL_LOGGER.info("Generating QC Stats");
             final PurpleQC qcChecks = PurpleQCFactory.create(amberData.Contamination,
                     bestFit,
@@ -336,7 +600,7 @@ public class PurpleApplication
             final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
             final List<DriverCatalog> germlineDriverCatalog = Lists.newArrayList();
 
-            if(mConfig.DriverEnabled)
+            if(mConfig.RunDrivers)
             {
                 PPL_LOGGER.info("Generating driver catalog");
 
@@ -361,7 +625,12 @@ public class PurpleApplication
             FittedPurityRangeFile.write(outputDir, tumorSample, bestFit.allFits());
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(outputDir, tumorSample), copyNumbers);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(outputDir, tumorSample), germlineDeletions);
-            CnPerChromosomeArmFile.write(CnPerChromosomeArmFile.generateFilenameForWriting(outputDir, tumorSample), cnPerChromosome);
+
+            PPL_LOGGER.info("Calculating chromosome copy number arm");
+            List<CnPerChromosomeArmData> cnPerChromosome = GenerateCnPerChromosome.extractCnPerChromosomeArm(
+                    copyNumbers, mReferenceData.RefGeCoordinates);
+
+            CnPerChromosomeArmFile.write(CnPerChromosomeArmFile.generateFilename(outputDir, tumorSample), cnPerChromosome);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(outputDir, tumorSample), geneCopyNumbers);
             SegmentFile.write(SegmentFile.generateFilename(outputDir, tumorSample), fittedRegions);
             sampleData.SvCache.write(purityAdjuster, copyNumbers);

@@ -4,19 +4,21 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PurityAdjusterTypicalChromosome extends PurityAdjuster {
-
+public class PurityAdjusterTypicalChromosome extends PurityAdjuster
+{
     @NotNull
-    private final Gender gender;
+    private final Gender mGender;
 
-    public PurityAdjusterTypicalChromosome(@NotNull final Gender gender, final double purity, final double normFactor) {
+    public PurityAdjusterTypicalChromosome(@NotNull final Gender gender, final double purity, final double normFactor)
+    {
         super(purity, normFactor);
-        this.gender = gender;
+        mGender = gender;
     }
 
     @Override
-    public double germlineRatio(@NotNull final String contig) {
-        return HumanChromosome.fromString(contig).isDiploid(gender) ? 1 : 0.5;
+    public double germlineRatio(@NotNull final String contig)
+    {
+        return HumanChromosome.fromString(contig).isDiploid(mGender) ? 1 : 0.5;
     }
 
 }

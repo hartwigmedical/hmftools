@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
@@ -45,6 +46,29 @@ public class GermlineVariants
         return mReportableVariants;
     }
 
+    public void loadReportableVariants(final String germlineVcf)
+    {
+        if(germlineVcf.isEmpty())
+            return;
+
+        PPL_LOGGER.info("Loading germline variants from {}", germlineVcf);
+
+        try
+        {
+            VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+
+            for(VariantContext context : vcfReader)
+            {
+                if(context.getAttributeAsBoolean(VariantHeader.REPORTED_FLAG, false))
+                    mReportableVariants.add(context);
+            }
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed to read germline VCF from file({}): {}", germlineVcf, e.toString());
+        }
+    }
+
     public void processAndWrite(
             final String referenceId, final String tumorSample, final String germlineVcf,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
@@ -55,7 +79,7 @@ public class GermlineVariants
         if(germlineVcf.isEmpty())
             return;
 
-        final String outputVCF = mConfig.OutputDir + File.separator + tumorSample + ".purple.germline.vcf.gz";
+        final String outputVCF = mConfig.OutputDir + File.separator + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
 
         PPL_LOGGER.info("Loading germline variants from {}", germlineVcf);
         PPL_LOGGER.info("Enriching germline variants");

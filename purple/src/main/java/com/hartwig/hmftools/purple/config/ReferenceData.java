@@ -5,15 +5,13 @@ import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFi
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +31,6 @@ import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -55,8 +52,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ReferenceData
 {
     public final RefGenomeVersion RefGenVersion;
-
     public final IndexedFastaSequenceFile RefGenome;
+    public final RefGenomeCoordinates RefGeCoordinates;
 
     public final Map<Chromosome, GenomePosition> ChromosomeLengths;
 
@@ -80,27 +77,23 @@ public class ReferenceData
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
     private static final String GC_PROFILE = "gc_profile";
 
-    // rename to driver enabled or always true anyway?
-    public static String DRIVER_ENABLED = "driver_catalog";
-
     public static void addOptions(final Options options)
     {
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37 (default) or V38");
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
         options.addOption(GC_PROFILE, true, "Path to GC profile");
         EnsemblDataCache.addEnsemblDir(options);
-
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
 
-    public ReferenceData(final CommandLine cmd)
+    public ReferenceData(final CommandLine cmd, final PurpleConfig config)
     {
         mIsValid = true;
 
-        if(!cmd.hasOption(REF_GENOME))
+        if(!cmd.hasOption(REF_GENOME) && !config.DriversOnly)
         {
             mIsValid = false;
             PPL_LOGGER.error(REF_GENOME + " is a mandatory argument");
@@ -109,82 +102,63 @@ public class ReferenceData
         final String refGenomePath = cmd.getOptionValue(REF_GENOME);
         GcProfileFilename = cmd.getOptionValue(GC_PROFILE);
 
+        // TO-DO is this really necessary
         final Map<Chromosome, GenomePosition> lengthPositions = Maps.newHashMap();
 
         IndexedFastaSequenceFile refGenome = null;
 
-        try
+        if(!config.DriversOnly)
         {
-            refGenome = new IndexedFastaSequenceFile(new File(refGenomePath));
-
-            SAMSequenceDictionary sequenceDictionary = refGenome.getSequenceDictionary();
-            if(sequenceDictionary == null)
+            try
             {
-                throw new ParseException("Supplied ref genome must have associated sequence dictionary");
-            }
+                refGenome = new IndexedFastaSequenceFile(new File(refGenomePath));
 
-            lengthPositions.putAll(fromLengths(ChromosomeLengthFactory.create(refGenome.getSequenceDictionary())));
-        }
-        catch (Exception e)
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("failed to load ref genome: {}", e.toString());
+                SAMSequenceDictionary sequenceDictionary = refGenome.getSequenceDictionary();
+                if(sequenceDictionary == null)
+                {
+                    throw new ParseException("Supplied ref genome must have associated sequence dictionary");
+                }
+
+                lengthPositions.putAll(fromLengths(ChromosomeLengthFactory.create(refGenome.getSequenceDictionary())));
+            }
+            catch(Exception e)
+            {
+                mIsValid = false;
+                PPL_LOGGER.error("failed to load ref genome: {}", e.toString());
+            }
         }
 
         RefGenome = refGenome;
 
-        RefGenomeVersion version;
-
-        if(cmd.hasOption(REF_GENOME_VERSION))
-        {
-            version = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
-        }
-        else
-        {
-            // determine automatically from chromosome length
-            final GenomePosition chr1Length = lengthPositions.get(HumanChromosome._1);
-            if(chr1Length != null && chr1Length.position() == RefGenomeCoordinates.COORDS_38.lengths().get(HumanChromosome._1))
-            {
-                version = V38;
-            }
-            else
-            {
-                version = V37;
-            }
-        }
-
-        RefGenVersion = version;
-
+        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
         PPL_LOGGER.info("Using ref genome: {}", RefGenVersion);
 
-        final RefGenomeCoordinates refGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        RefGeCoordinates = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        TranscriptRegions = refGenomeCoords == RefGenomeCoordinates.COORDS_38 ?
+        TranscriptRegions = RefGeCoordinates == RefGenomeCoordinates.COORDS_38 ?
                 HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
 
-        ChromosomeLengths = toPosition(refGenomeCoords.lengths(), chromosomeNames);
-        Centromeres = toPosition(refGenomeCoords.centromeres(), chromosomeNames);
-
-        boolean enabled = cmd.hasOption(DRIVER_ENABLED);
+        ChromosomeLengths = toPosition(RefGeCoordinates.lengths(), chromosomeNames);
+        Centromeres = toPosition(RefGeCoordinates.centromeres(), chromosomeNames);
 
         String somaticHotspotVcf = cmd.getOptionValue(SOMATIC_HOTSPOT, Strings.EMPTY);
         String germlineHotspotVcf = cmd.getOptionValue(GERMLINE_HOTSPOT, Strings.EMPTY);
 
-        if(enabled)
+        if(config.RunDrivers || config.DriversOnly)
         {
             if(!DriverGenePanelConfig.isConfigured(cmd))
             {
                 mIsValid = false;
-                PPL_LOGGER.error(DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
+                PPL_LOGGER.error(DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION + " is a mandatory argument when running drivers");
             }
 
             if(somaticHotspotVcf.isEmpty())
             {
                 mIsValid = false;
-                PPL_LOGGER.error(SOMATIC_HOTSPOT + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
+                PPL_LOGGER.error(SOMATIC_HOTSPOT + " is a mandatory argument when running drivers");
             }
 
             if(!new File(somaticHotspotVcf).exists())
@@ -214,7 +188,7 @@ public class ReferenceData
                 if(germlineHotspotVcf.isEmpty())
                 {
                     mIsValid = false;
-                    PPL_LOGGER.error(GERMLINE_HOTSPOT + " is a mandatory argument when " + DRIVER_ENABLED + " enabled");
+                    PPL_LOGGER.error(GERMLINE_HOTSPOT + " is a mandatory argument when running drivers");
                 }
 
                 if(!new File(germlineHotspotVcf).exists())
@@ -278,7 +252,7 @@ public class ReferenceData
 
     public boolean isValid() { return mIsValid; }
 
-    private static Map<Chromosome, GenomePosition> toPosition(final Map<Chromosome, Long> longs, final Map<Chromosome, String> contigMap)
+    private static Map<Chromosome, GenomePosition> toPosition(final Map<Chromosome,Long> longs, final Map<Chromosome, String> contigMap)
     {
         final Map<Chromosome, GenomePosition> result = Maps.newHashMap();
 

@@ -65,16 +65,13 @@ public class LoadPurpleData {
                 Files.exists(Paths.get(germlineDriverFile)) ? DriverCatalogFile.read(germlineDriverFile) : Lists.newArrayList();
 
         LOGGER.info("Persisting purple data to db for {}", sample);
-        persistToDatabase(dbAccess,
-                sample,
-                bestFitPerPurity,
-                copyNumbers,
-                germlineCopyNumbers,
-                purityContext,
-                purityContext.qc(),
-                geneCopyNumbers,
-                somaticDriverCatalog,
-                germlineDriverCatalog);
+
+        dbAccess.writePurity(sample, purityContext, purityContext.qc());
+        dbAccess.writeBestFitPerPurity(sample, bestFitPerPurity);
+        dbAccess.writeCopynumbers(sample, copyNumbers);
+        dbAccess.writeGermlineCopynumbers(sample, germlineCopyNumbers);
+        dbAccess.writeGeneCopynumberRegions(sample, geneCopyNumbers);
+        dbAccess.writePurpleDriverCatalog(sample, somaticDriverCatalog, germlineDriverCatalog);
 
         LOGGER.info("Complete");
     }

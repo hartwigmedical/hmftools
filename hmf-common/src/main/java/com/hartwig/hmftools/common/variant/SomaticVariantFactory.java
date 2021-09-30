@@ -34,10 +34,11 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantFactory implements VariantContextFilter {
-
+public class SomaticVariantFactory implements VariantContextFilter
+{
     @NotNull
-    public static SomaticVariantFactory passOnlyInstance() {
+    public static SomaticVariantFactory passOnlyInstance()
+    {
         return new SomaticVariantFactory(new PassingVariantFilter());
     }
 
@@ -49,7 +50,8 @@ public class SomaticVariantFactory implements VariantContextFilter {
     @NotNull
     private final CompoundFilter filter;
 
-    public SomaticVariantFactory(@NotNull final VariantContextFilter... filters) {
+    public SomaticVariantFactory(@NotNull final VariantContextFilter... filters)
+    {
         this.filter = new CompoundFilter(true);
         this.filter.addAll(Arrays.asList(filters));
         this.filter.add(new HumanChromosomeFilter());
@@ -57,19 +59,22 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException {
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException
+    {
         return fromVCFFile(tumor, null, null, vcfFile);
     }
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String reference, @NotNull final String vcfFile)
-            throws IOException {
+            throws IOException
+    {
         return fromVCFFileWithoutCheck(tumor, reference, null, vcfFile);
     }
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile) throws IOException {
+            @NotNull final String vcfFile) throws IOException
+    {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, rna, vcfFile, true, result::add);
         return result;
@@ -77,36 +82,47 @@ public class SomaticVariantFactory implements VariantContextFilter {
 
     @NotNull
     public List<SomaticVariant> fromVCFFileWithoutCheck(@NotNull final String tumor, @Nullable final String reference,
-            @Nullable final String rna, @NotNull final String vcfFile) throws IOException {
+            @Nullable final String rna, @NotNull final String vcfFile) throws IOException
+    {
         final List<SomaticVariant> result = Lists.newArrayList();
         fromVCFFile(tumor, reference, rna, vcfFile, false, result::add);
         return result;
     }
 
-    public void fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
-            @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException {
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
+    public void fromVCFFile(
+            @NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
+            @NotNull final String vcfFile, boolean useCheckReference, @NotNull Consumer<SomaticVariant> consumer) throws IOException
+    {
+        try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
+        {
             final VCFHeader header = (VCFHeader) reader.getHeader();
-            if (!sampleInFile(tumor, header)) {
+            if(!sampleInFile(tumor, header))
+            {
                 throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
             }
 
-            if (useCheckReference) {
-                if (reference != null && !sampleInFile(reference, header)) {
+            if(useCheckReference)
+            {
+                if(reference != null && !sampleInFile(reference, header))
+                {
                     throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
                 }
             }
 
-            if (rna != null && !sampleInFile(rna, header)) {
+            if(rna != null && !sampleInFile(rna, header))
+            {
                 throw new IllegalArgumentException("Sample " + rna + " not found in vcf file " + vcfFile);
             }
 
-            if (!header.hasFormatLine("AD")) {
+            if(!header.hasFormatLine("AD"))
+            {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            for (VariantContext variant : reader.iterator()) {
-                if (filter.test(variant)) {
+            for(VariantContext variant : reader.iterator())
+            {
+                if(filter.test(variant))
+                {
                     createVariant(tumor, reference, rna, variant).ifPresent(consumer);
                 }
             }
@@ -114,19 +130,22 @@ public class SomaticVariantFactory implements VariantContextFilter {
     }
 
     @NotNull
-    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context)
+    {
         return createVariant(sample, null, null, context);
     }
 
     @NotNull
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @Nullable final String reference,
-            @Nullable final String rna, @NotNull final VariantContext context) {
+            @Nullable final String rna, @NotNull final VariantContext context)
+    {
         final Genotype genotype = context.getGenotype(sample);
 
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : null;
 
-        if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
+        if(filter.test(context) && AllelicDepth.containsAllelicDepth(genotype))
+        {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
 
             final Optional<AllelicDepth> referenceDepth = Optional.ofNullable(reference)
@@ -139,7 +158,8 @@ public class SomaticVariantFactory implements VariantContextFilter {
                     .filter(AllelicDepth::containsAllelicDepth)
                     .map(AllelicDepth::fromGenotype);
 
-            if (tumorDepth.totalReadCount() > 0) {
+            if(tumorDepth.totalReadCount() > 0)
+            {
                 ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
                 builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
 
@@ -154,7 +174,8 @@ public class SomaticVariantFactory implements VariantContextFilter {
 
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
-            @NotNull final VariantContext context) {
+            @NotNull final VariantContext context)
+    {
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = decorator.variantImpact();
 
@@ -197,27 +218,32 @@ public class SomaticVariantFactory implements VariantContextFilter {
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false));
 
-        if (context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL)) {
+        if(context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL))
+        {
             builder.phasedInframeIndelIdentifier(context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0));
         }
 
-        if (context.hasAttribute(SageMetaData.LOCAL_PHASE_SET)) {
+        if(context.hasAttribute(SageMetaData.LOCAL_PHASE_SET))
+        {
             builder.localPhaseSet(context.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0));
         }
 
-        if (context.hasAttribute(SageMetaData.LOCAL_REALIGN_SET)) {
+        if(context.hasAttribute(SageMetaData.LOCAL_REALIGN_SET))
+        {
             builder.localRealignmentSet(context.getAttributeAsInt(SageMetaData.LOCAL_REALIGN_SET, 0));
         }
 
         return builder;
     }
 
-    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header) {
+    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header)
+    {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }
 
     @Override
-    public boolean test(final VariantContext variantContext) {
+    public boolean test(final VariantContext variantContext)
+    {
         return filter.test(variantContext);
     }
 }

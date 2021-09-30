@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -137,7 +138,7 @@ public class LilacConfig
             String purpleGeneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(SampleDataDir, Sample);
             CopyNumberFile = checkFileExists(purpleGeneCopyNumberFile);
 
-            SomaticVariantsFile = checkFileExists(SampleDataDir + Sample + ".purple.somatic.vcf.gz");
+            SomaticVariantsFile = checkFileExists(SampleDataDir + Sample + PURPLE_SOMATIC_VCF_SUFFIX);
         }
         else
         {

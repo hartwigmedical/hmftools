@@ -34,25 +34,30 @@ import org.jooq.Record1;
 import org.jooq.Record3;
 import org.jooq.Result;
 
-public class SomaticVariantDAO {
-
+public class SomaticVariantDAO
+{
     @NotNull
     private final DSLContext context;
 
-    SomaticVariantDAO(@NotNull final DSLContext context) {
+    SomaticVariantDAO(@NotNull final DSLContext context)
+    {
         this.context = context;
     }
 
     @NotNull
-    public BufferedWriter<SomaticVariant> writer(String tumorSample) {
-        BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>() {
+    public BufferedWriter<SomaticVariant> writer(String tumorSample)
+    {
+        BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>()
+        {
             @Override
-            public void initialise() {
+            public void initialise()
+            {
                 context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(tumorSample)).execute();
             }
 
             @Override
-            public void accept(final Timestamp timestamp, final List<SomaticVariant> entries) {
+            public void accept(final Timestamp timestamp, final List<SomaticVariant> entries)
+            {
                 writeAll(timestamp, tumorSample, entries);
             }
         };
@@ -60,7 +65,8 @@ public class SomaticVariantDAO {
         return new BufferedWriter<>(consumer);
     }
 
-    public DndsMutationalLoad readDndsLoad(@NotNull String sample) {
+    public DndsMutationalLoad readDndsLoad(@NotNull String sample)
+    {
         Result<Record3<Byte, String, Integer>> result = context.select(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE, count())
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.SAMPLEID.eq(sample))
@@ -74,20 +80,25 @@ public class SomaticVariantDAO {
         int indelBiallelic = 0;
         int indelNonBiallelic = 0;
 
-        for (Record3<Byte, String, Integer> record : result) {
+        for(Record3<Byte, String, Integer> record : result)
+        {
             boolean isBiallelic = byteToBoolean(record.value1());
             VariantType type = VariantType.valueOf(record.value2());
             int count = record.value3();
-            if (isBiallelic && type == VariantType.INDEL) {
+            if(isBiallelic && type == VariantType.INDEL)
+            {
                 indelBiallelic = count;
             }
-            if (isBiallelic && type == VariantType.SNP) {
+            if(isBiallelic && type == VariantType.SNP)
+            {
                 snvBiallelic = count;
             }
-            if (!isBiallelic && type == VariantType.INDEL) {
+            if(!isBiallelic && type == VariantType.INDEL)
+            {
                 indelNonBiallelic = count;
             }
-            if (!isBiallelic && type == VariantType.SNP) {
+            if(!isBiallelic && type == VariantType.SNP)
+            {
                 snvNonBiallelic = count;
             }
         }
@@ -102,7 +113,8 @@ public class SomaticVariantDAO {
     }
 
     @NotNull
-    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample) {
+    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample)
+    {
         List<DndsVariant> variants = Lists.newArrayList();
 
         Result<Record> result = context.select()
@@ -114,7 +126,8 @@ public class SomaticVariantDAO {
                 .and(SOMATICVARIANT.TYPE.in(VariantType.INDEL.toString(), VariantType.SNP.toString()))
                 .fetch();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             variants.add(ImmutableDndsVariant.builder()
                     .sampleId(record.getValue(SOMATICVARIANT.SAMPLEID))
                     .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
@@ -137,7 +150,8 @@ public class SomaticVariantDAO {
     }
 
     @NotNull
-    public List<SomaticVariant> read(@NotNull String sample, VariantType type) {
+    public List<SomaticVariant> read(@NotNull String sample, VariantType type)
+    {
         List<SomaticVariant> variants = Lists.newArrayList();
 
         Result<Record> result = type == VariantType.UNDEFINED
@@ -148,7 +162,8 @@ public class SomaticVariantDAO {
                         .and(SOMATICVARIANT.TYPE.eq(type.toString()))
                         .fetch();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             variants.add(buildFromRecord(record));
         }
 
@@ -222,14 +237,17 @@ public class SomaticVariantDAO {
                 .build();
     }
 
-    private static boolean byteToBoolean(@Nullable Byte b) {
-        if (b == null) {
+    private static boolean byteToBoolean(@Nullable Byte b)
+    {
+        if(b == null)
+        {
             throw new IllegalStateException("NULL value present in database for non-null field");
         }
         return b != 0;
     }
 
-    void writeAll(@NotNull final Timestamp timestamp, @NotNull String sample, @NotNull List<SomaticVariant> variants) {
+    void writeAll(@NotNull final Timestamp timestamp, @NotNull String sample, @NotNull List<SomaticVariant> variants)
+    {
         final InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
                 SOMATICVARIANT.SAMPLEID,
                 SOMATICVARIANT.CHROMOSOME,
@@ -280,7 +298,8 @@ public class SomaticVariantDAO {
     }
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStepN inserter, @NotNull String sample,
-            @NotNull SomaticVariant variant) {
+            @NotNull SomaticVariant variant)
+    {
         inserter.values(sample,
                 variant.chromosome(),
                 variant.position(),
@@ -327,18 +346,21 @@ public class SomaticVariantDAO {
                 timestamp);
     }
 
-    void deleteSomaticVariantForSample(@NotNull String sample) {
+    void deleteSomaticVariantForSample(@NotNull String sample)
+    {
         context.delete(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).execute();
     }
 
     @NotNull
-    List<String> getSamplesList() {
+    List<String> getSamplesList()
+    {
         Result<Record1<String>> result =
                 context.select(SOMATICVARIANT.SAMPLEID).from(SOMATICVARIANT).groupBy(SOMATICVARIANT.SAMPLEID).fetch();
 
         List<String> samplesList = Lists.newArrayList();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             samplesList.add(record.getValue(SOMATICVARIANT.SAMPLEID));
         }
 

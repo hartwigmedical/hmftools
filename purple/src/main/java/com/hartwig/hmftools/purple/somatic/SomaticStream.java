@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
@@ -74,7 +75,7 @@ public class SomaticStream implements Consumer<VariantContext>
 
         mGenePanel = referenceData.DriverGenes;
         mPeakModel = peakModel;
-        mOutputVCF = config.OutputDir + config.TumorId + ".purple.somatic.vcf.gz";
+        mOutputVCF = config.OutputDir + config.TumorId + PURPLE_SOMATIC_VCF_SUFFIX;
         mEnabled = !somaticVcfFilename.isEmpty();
         mInputVCF = somaticVcfFilename;
         mTumorMutationalLoad = new TumorMutationalLoad();
@@ -136,7 +137,7 @@ public class SomaticStream implements Consumer<VariantContext>
     public void processAndWrite(
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions)
     {
-        if(!mEnabled)
+        if(!mEnabled || mPeakModel == null)
             return;
 
         try
@@ -148,7 +149,7 @@ public class SomaticStream implements Consumer<VariantContext>
                     .build();
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    mConfig.DriverEnabled, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
+                    mConfig.RunDrivers, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
                     mConfig.ReferenceId, mConfig.TumorId, mReferenceData.RefGenome,
                     purityAdjuster, mGenePanel, copyNumbers, fittedRegions,
                     mReferenceData.SomaticHotspots, mReferenceData.TranscriptRegions, mPeakModel, this::accept);

@@ -19,8 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadPurpleSomaticVariants {
-
+public class LoadPurpleSomaticVariants
+{
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
 
     private static final String SAMPLE = "sample";
@@ -29,7 +29,8 @@ public class LoadPurpleSomaticVariants {
 
     private static final String SOMATIC_VCF = "somatic_vcf";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
@@ -42,16 +43,26 @@ public class LoadPurpleSomaticVariants {
         String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
         LOGGER.info("Removing old data of sample {}", tumorSample);
-        try (BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(tumorSample)) {
+
+        try
+        {
+            BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(tumorSample);
+
             LOGGER.info("Streaming data from {} to db", somaticVcf);
             new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, true, somaticWriter);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load somatic VCF({}): {}", somaticVcf, e.toString());
+            System.exit(1);
         }
 
         LOGGER.info("Complete");
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(REFERENCE, true, "Optional name of the reference sample. This should correspond to the value used in PURPLE.");

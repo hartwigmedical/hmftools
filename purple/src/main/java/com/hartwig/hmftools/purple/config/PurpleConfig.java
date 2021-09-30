@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.ReferenceData.DRIVER_ENABLED;
 
 import java.io.File;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -20,13 +17,13 @@ public class PurpleConfig
 {
     public final String ReferenceId;
     public final String TumorId;
-    public final RefGenomeVersion RG_VERSION;
 
     public final String Version;
     public final String OutputDir;
 
     public final boolean TumorOnlyMode;
-    public final boolean DriverEnabled;
+    public final boolean RunDrivers;
+    public final boolean DriversOnly;
 
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
@@ -42,6 +39,10 @@ public class PurpleConfig
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
     private static final String TUMOR_ONLY = "tumor_only";
+
+    public static String RUN_DRIVERS = "run_drivers";
+    public static String DRIVER_ENABLED = "driver_catalog";
+    public static String DRIVERS_ONLY = "drivers_only";
 
     public PurpleConfig(final String version, final CommandLine cmd)
     {
@@ -72,7 +73,8 @@ public class PurpleConfig
         }
 
         TumorOnlyMode = cmd.hasOption(TUMOR_ONLY);
-        DriverEnabled = cmd.hasOption(DRIVER_ENABLED);
+        RunDrivers = cmd.hasOption(RUN_DRIVERS) || cmd.hasOption(DRIVER_ENABLED);
+        DriversOnly = cmd.hasOption(DRIVERS_ONLY);
 
         TumorId = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
         ReferenceId = refSample;
@@ -113,12 +115,6 @@ public class PurpleConfig
             PPL_LOGGER.info("Reference Sample: {}, Tumor Sample: {}", ReferenceId, TumorId);
         }
 
-        if(cmd.hasOption(REF_GENOME_VERSION)) {
-            RG_VERSION = RefGenomeVersion.from(parameter(cmd, REF_GENOME_VERSION, missingJoiner));
-        } else {
-            RG_VERSION = null;
-        }
-
         PPL_LOGGER.info("Output Directory: {}", OutputDir);
 
         Charting = new ChartConfig(cmd, OutputDir);
@@ -151,7 +147,9 @@ public class PurpleConfig
                 true,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        options.addOption(DRIVER_ENABLED, false, "Persist data to DB");
+        options.addOption(RUN_DRIVERS, false, "Run driver routine");
+        options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
+        options.addOption(DRIVER_ENABLED, false, "Deprecated, use 'run_drivers' instead");
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
