@@ -8,39 +8,36 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, HmfExonRegion>
+public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber,HmfExonRegion>
 {
-    private final ImmutableGeneCopyNumber.Builder builder;
+    private final ImmutableGeneCopyNumber.Builder mBuilder;
 
-    private double minCopyNumber = Double.MAX_VALUE;
-    private double minMinorAllelePloidy = Double.MAX_VALUE;
-    private double maxCopyNumber = -Double.MAX_VALUE;
-    private int somaticCount;
-    private int homCount;
-    private int het2HomCount;
+    private double mMinCopyNumber = Double.MAX_VALUE;
+    private double mMinMinorAllelePloidy = Double.MAX_VALUE;
+    private double mMaxCopyNumber = -Double.MAX_VALUE;
+    private int mSomaticCount;
+    private int mHomCount;
+    private int mHet2HomCount;
 
-    @Nullable
-    private PurpleCopyNumber previous;
+    private PurpleCopyNumber mPrevious;
 
-    private double previousCopyNumber = -Double.MAX_VALUE;
-    private HmfExonRegion exon;
-    private PurpleCopyNumber copyNumber;
+    private double mPreviousCopyNumber = -Double.MAX_VALUE;
+    private HmfExonRegion mExon;
+    private PurpleCopyNumber mCopyNumber;
 
-    private int minRegions = 0;
-    private long minRegionStart = 0;
-    private long minRegionEnd = 0;
-    private SegmentSupport minRegionStartSupport = SegmentSupport.NONE;
-    private SegmentSupport minRegionEndSupport = SegmentSupport.NONE;
-    private CopyNumberMethod minRegionMethod = CopyNumberMethod.UNKNOWN;
+    private int mMinRegions = 0;
+    private long mMinRegionStart = 0;
+    private long mMinRegionEnd = 0;
+    private SegmentSupport mMinRegionStartSupport = SegmentSupport.NONE;
+    private SegmentSupport mMinRegionEndSupport = SegmentSupport.NONE;
+    private CopyNumberMethod mMinRegionMethod = CopyNumberMethod.UNKNOWN;
 
-    GeneCopyNumberBuilder(@NotNull final HmfTranscriptRegion gene)
+    public GeneCopyNumberBuilder(final HmfTranscriptRegion gene)
     {
-        builder = ImmutableGeneCopyNumber.builder()
+        mBuilder = ImmutableGeneCopyNumber.builder()
                 .from(gene)
                 .minRegionStart(gene.start())
                 .minRegionEnd(gene.end())
@@ -50,107 +47,107 @@ class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumber, Hmf
     }
 
     @Override
-    public void enterChromosome(@NotNull final String chromosome)
+    public void enterChromosome(final String chromosome)
     {
         // IGNORE
     }
 
     @Override
-    public void primary(@NotNull final PurpleCopyNumber copyNumber)
+    public void primary(final PurpleCopyNumber copyNumber)
     {
-        this.copyNumber = copyNumber;
-        if(exon != null)
+        this.mCopyNumber = copyNumber;
+        if(mExon != null)
         {
-            addOverlap(exon, this.copyNumber);
+            addOverlap(mExon, this.mCopyNumber);
         }
     }
 
     @Override
-    public void secondary(@NotNull final HmfExonRegion exon)
+    public void secondary(final HmfExonRegion exon)
     {
-        this.exon = exon;
-        if(copyNumber != null)
+        this.mExon = exon;
+        if(mCopyNumber != null)
         {
-            addOverlap(this.exon, copyNumber);
+            addOverlap(this.mExon, mCopyNumber);
         }
     }
 
-    private void addOverlap(@NotNull final HmfExonRegion exon, @NotNull final PurpleCopyNumber copyNumber)
+    private void addOverlap(final HmfExonRegion exon, final PurpleCopyNumber copyNumber)
     {
         long overlap = exon.overlappingBases(copyNumber);
         if(overlap > 0)
         {
             double currentCopyNumber = copyNumber.averageTumorCopyNumber();
 
-            maxCopyNumber = Math.max(maxCopyNumber, currentCopyNumber);
-            minMinorAllelePloidy = Math.min(minMinorAllelePloidy, copyNumber.minorAlleleCopyNumber());
+            mMaxCopyNumber = Math.max(mMaxCopyNumber, currentCopyNumber);
+            mMinMinorAllelePloidy = Math.min(mMinMinorAllelePloidy, copyNumber.minorAlleleCopyNumber());
 
-            if(!Doubles.equal(currentCopyNumber, previousCopyNumber))
+            if(!Doubles.equal(currentCopyNumber, mPreviousCopyNumber))
             {
                 switch(copyNumber.method())
                 {
                     case GERMLINE_HOM_DELETION:
-                        homCount++;
+                        mHomCount++;
                         break;
                     case GERMLINE_HET2HOM_DELETION:
-                        het2HomCount++;
+                        mHet2HomCount++;
                         break;
                     default:
-                        somaticCount++;
+                        mSomaticCount++;
                 }
             }
 
             if(isUnprocessedCopyNumberRegion(copyNumber))
             {
-                if(Doubles.lessThan(currentCopyNumber, minCopyNumber))
+                if(Doubles.lessThan(currentCopyNumber, mMinCopyNumber))
                 {
-                    minRegions = 1;
-                    minCopyNumber = currentCopyNumber;
-                    minRegionStart = copyNumber.start();
-                    minRegionStartSupport = copyNumber.segmentStartSupport();
-                    minRegionEnd = copyNumber.end();
-                    minRegionEndSupport = copyNumber.segmentEndSupport();
-                    minRegionMethod = copyNumber.method();
+                    mMinRegions = 1;
+                    mMinCopyNumber = currentCopyNumber;
+                    mMinRegionStart = copyNumber.start();
+                    mMinRegionStartSupport = copyNumber.segmentStartSupport();
+                    mMinRegionEnd = copyNumber.end();
+                    mMinRegionEndSupport = copyNumber.segmentEndSupport();
+                    mMinRegionMethod = copyNumber.method();
 
                 }
-                else if(Doubles.equal(currentCopyNumber, minCopyNumber))
+                else if(Doubles.equal(currentCopyNumber, mMinCopyNumber))
                 {
-                    minRegionEnd = copyNumber.end();
-                    minRegionEndSupport = copyNumber.segmentEndSupport();
-                    minRegionMethod = copyNumber.method();
+                    mMinRegionEnd = copyNumber.end();
+                    mMinRegionEndSupport = copyNumber.segmentEndSupport();
+                    mMinRegionMethod = copyNumber.method();
 
-                    if(!Doubles.equal(currentCopyNumber, previousCopyNumber))
+                    if(!Doubles.equal(currentCopyNumber, mPreviousCopyNumber))
                     {
-                        minRegions++;
+                        mMinRegions++;
                     }
                 }
             }
 
-            previousCopyNumber = currentCopyNumber;
-            previous = copyNumber;
+            mPreviousCopyNumber = currentCopyNumber;
+            mPrevious = copyNumber;
         }
     }
 
-    private boolean isUnprocessedCopyNumberRegion(@NotNull final PurpleCopyNumber copyNumber)
+    private boolean isUnprocessedCopyNumberRegion(final PurpleCopyNumber copyNumber)
     {
-        return previous == null || !previous.equals(copyNumber);
+        return mPrevious == null || !mPrevious.equals(copyNumber);
     }
 
     @NotNull
     public GeneCopyNumber build()
     {
-        return builder.maxCopyNumber(maxCopyNumber)
-                .minRegionStartSupport(minRegionStartSupport)
-                .minRegionEndSupport(minRegionEndSupport)
-                .minRegionMethod(minRegionMethod)
-                .minRegionStart(minRegionStart)
-                .minRegionEnd(minRegionEnd)
-                .minCopyNumber(minCopyNumber)
-                .somaticRegions(somaticCount)
-                .germlineHomRegions(homCount)
-                .germlineHet2HomRegions(het2HomCount)
-                .minRegions(minRegions)
-                .minMinorAlleleCopyNumber(minMinorAllelePloidy)
+        return mBuilder.maxCopyNumber(mMaxCopyNumber)
+                .minRegionStartSupport(mMinRegionStartSupport)
+                .minRegionEndSupport(mMinRegionEndSupport)
+                .minRegionMethod(mMinRegionMethod)
+                .minRegionStart(mMinRegionStart)
+                .minRegionEnd(mMinRegionEnd)
+                .minCopyNumber(mMinCopyNumber)
+                .somaticRegions(mSomaticCount)
+                .germlineHomRegions(mHomCount)
+                .germlineHet2HomRegions(mHet2HomCount)
+                .minRegions(mMinRegions)
+                .minMinorAlleleCopyNumber(mMinMinorAllelePloidy)
                 .build();
     }
 }

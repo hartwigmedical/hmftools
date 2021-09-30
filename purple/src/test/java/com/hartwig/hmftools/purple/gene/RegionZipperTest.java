@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils.zipper;
+package com.hartwig.hmftools.purple.gene;
 
 import java.util.List;
 

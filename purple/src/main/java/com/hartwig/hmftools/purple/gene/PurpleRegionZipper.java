@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.gene;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -7,13 +7,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.ImmutableFittedRegion;
-import com.hartwig.hmftools.common.utils.zipper.RegionZipper;
-import com.hartwig.hmftools.common.utils.zipper.RegionZipperHandler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, FittedRegion>
+public class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, FittedRegion>
 {
     private final BiFunction<PurpleCopyNumber, FittedRegion, FittedRegion> mTransform;
     private final List<FittedRegion> mResult = Lists.newArrayList();
@@ -57,7 +55,7 @@ class PurpleRegionZipper implements RegionZipperHandler<PurpleCopyNumber, Fitted
         }
     }
 
-    static List<FittedRegion> updateRegionsWithCopyNumbers(@NotNull final List<FittedRegion> fittedRegions,
+    public static List<FittedRegion> updateRegionsWithCopyNumbers(@NotNull final List<FittedRegion> fittedRegions,
             @NotNull final List<PurpleCopyNumber> smoothRegions)
     {
         return insertSmoothRegions(smoothRegions, fittedRegions);

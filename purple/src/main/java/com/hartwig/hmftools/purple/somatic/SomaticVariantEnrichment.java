@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -42,7 +43,7 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
             final String referenceId, final String tumorSample, final IndexedFastaSequenceFile reference,
             final PurityAdjuster purityAdjuster, final DriverGenePanel genePanel,
             final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
-            final Multimap<Chromosome, VariantHotspot> hotspots, final List<HmfTranscriptRegion> transcripts,
+            final Multimap<Chromosome, VariantHotspot> hotspots, final EnsemblDataCache geneTransCache,
             final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
     {
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample, consumer);
@@ -59,7 +60,7 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
         final Set<String> somaticGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
 
-        mSnpEffEnrichment = new SnpEffEnrichment(somaticGenes, transcripts, mSomaticRefContextEnrichment);
+        mSnpEffEnrichment = new SnpEffEnrichment(somaticGenes, geneTransCache, mSomaticRefContextEnrichment);
 
         if(hotspotEnabled)
         {

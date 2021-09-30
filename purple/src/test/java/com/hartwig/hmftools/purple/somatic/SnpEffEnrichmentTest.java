@@ -27,6 +27,7 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public class SnpEffEnrichmentTest
 {
+    /*
     private final List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
     private final Set<String> driverGenes = Sets.newHashSet();
     private VCFCodec codec;
@@ -55,7 +56,6 @@ public class SnpEffEnrichmentTest
         return codec;
     }
 
-    /*
     @Test
     public void favourCanonicalGeneWhenPossible()
     {

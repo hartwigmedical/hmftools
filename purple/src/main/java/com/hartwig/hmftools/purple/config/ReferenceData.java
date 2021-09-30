@@ -59,7 +59,7 @@ public class ReferenceData
 
     public final Map<Chromosome, GenomePosition> Centromeres;
 
-    public final List<HmfTranscriptRegion> TranscriptRegions;
+    // public final List<HmfTranscriptRegion> TranscriptRegions;
 
     public final EnsemblDataCache GeneTransCache;
 
@@ -76,18 +76,6 @@ public class ReferenceData
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
     private static final String GC_PROFILE = "gc_profile";
-
-    public static void addOptions(final Options options)
-    {
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-
-        options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
-        options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
-        options.addOption(GC_PROFILE, true, "Path to GC profile");
-        EnsemblDataCache.addEnsemblDir(options);
-        DriverGenePanelConfig.addGenePanelOption(false, options);
-    }
 
     public ReferenceData(final CommandLine cmd, final PurpleConfig config)
     {
@@ -138,8 +126,8 @@ public class ReferenceData
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        TranscriptRegions = RefGeCoordinates == RefGenomeCoordinates.COORDS_38 ?
-                HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
+        //TranscriptRegions = RefGeCoordinates == RefGenomeCoordinates.COORDS_38 ?
+        //        HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
 
         ChromosomeLengths = toPosition(RefGeCoordinates.lengths(), chromosomeNames);
         Centromeres = toPosition(RefGeCoordinates.centromeres(), chromosomeNames);
@@ -215,6 +203,9 @@ public class ReferenceData
             if(!alternativeTrans.isEmpty())
             {
                 alternativeTrans.forEach(x -> Arrays.stream(x.split(ITEM_DELIM)).forEach(y -> AlternativeTransNames.add(y)));
+
+                PPL_LOGGER.info("loaded {} alternative transcripts", AlternativeTransNames.size());
+
                 GeneTransCache.setRequiredData(true, false, false, true);
                 GeneTransCache.load(true);
                 GeneTransCache.loadTranscriptData(Lists.newArrayList(), AlternativeTransNames);
@@ -229,7 +220,6 @@ public class ReferenceData
         {
             GeneTransCache = null;
         }
-
 
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
@@ -251,6 +241,18 @@ public class ReferenceData
     }
 
     public boolean isValid() { return mIsValid; }
+
+    public static void addOptions(final Options options)
+    {
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+
+        options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
+        options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
+        options.addOption(GC_PROFILE, true, "Path to GC profile");
+        EnsemblDataCache.addEnsemblDir(options);
+        DriverGenePanelConfig.addGenePanelOption(false, options);
+    }
 
     private static Map<Chromosome, GenomePosition> toPosition(final Map<Chromosome,Long> longs, final Map<Chromosome, String> contigMap)
     {

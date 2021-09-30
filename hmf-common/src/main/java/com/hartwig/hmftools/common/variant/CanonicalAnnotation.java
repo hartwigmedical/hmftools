@@ -13,44 +13,52 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CanonicalAnnotation {
+// soon to be deprecated
+public class CanonicalAnnotation
+{
+    private final Set<String> mDriverCatalogGenes;
+    private final Map<String, String> mTranscriptGeneMap;
 
     private static final String CDKN2A_P14ARF_TRANSCRIPT = "ENST00000361570";
 
-    @NotNull
-    private final Set<String> driverCatalogGenes;
-    @NotNull
-    private final Map<String, String> canonicalTranscriptGeneMap;
+    public CanonicalAnnotation(final Set<String> driverGenes, final List<HmfTranscriptRegion> transcripts)
+    {
+        mDriverCatalogGenes = driverGenes;
 
-    public CanonicalAnnotation(@NotNull final Set<String> driverGenes, @NotNull final List<HmfTranscriptRegion> transcripts) {
-        this.driverCatalogGenes = driverGenes;
-
-        // The p14Arf transcript for CDKN2A is included in our canonical transcript map.
-        // We need to filter it out since this map assumes only "real" canonical transcripts.
-        // See also DEV-783
-        this.canonicalTranscriptGeneMap = transcripts.stream()
-                .filter(canonicalTranscript -> !canonicalTranscript.transName().equals(CDKN2A_P14ARF_TRANSCRIPT))
+        mTranscriptGeneMap = transcripts.stream()
                 .collect(Collectors.toMap(TranscriptRegion::transName, TranscriptRegion::geneName));
     }
 
-    @NotNull
-    public Optional<SnpEffAnnotation> canonicalSnpEffAnnotation(@NotNull final List<SnpEffAnnotation> allAnnotations) {
-        final List<SnpEffAnnotation> transcriptAnnotations =
-                allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
+    public CanonicalAnnotation(final Set<String> driverGenes, final Map<String,String> transGeneMap)
+    {
+        mDriverCatalogGenes = driverGenes;
+        mTranscriptGeneMap = transGeneMap;
+    }
+
+    public Optional<SnpEffAnnotation> canonicalSnpEffAnnotation(final List<SnpEffAnnotation> allAnnotations)
+    {
+        final List<SnpEffAnnotation> transcriptAnnotations = allAnnotations.stream()
+                .filter(SnpEffAnnotation::isTranscriptFeature)
+                .filter(x -> !x.featureID().equals(CDKN2A_P14ARF_TRANSCRIPT))
+                .collect(Collectors.toList());
+
         return pickCanonicalFavourDriverGene(transcriptAnnotations);
     }
 
     @VisibleForTesting
     @NotNull
-    <T extends SnpEffAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
+    <T extends SnpEffAnnotation> Optional<T> pickCanonicalFavourDriverGene(List<T> annotations)
+    {
         List<T> canonicalAnnotations = annotations.stream()
-                .filter(annotation -> canonicalTranscriptGeneMap.containsKey(trimEnsembleVersion(annotation.transcript())))
+                .filter(annotation -> mTranscriptGeneMap.containsKey(trimEnsembleVersion(annotation.transcript())))
                 .collect(Collectors.toList());
 
-        if (!canonicalAnnotations.isEmpty()) {
+        if(!canonicalAnnotations.isEmpty())
+        {
             Optional<T> canonicalOnDriverGene =
-                    canonicalAnnotations.stream().filter(annotation -> driverCatalogGenes.contains(annotation.gene())).findFirst();
-            if (canonicalOnDriverGene.isPresent()) {
+                    canonicalAnnotations.stream().filter(annotation -> mDriverCatalogGenes.contains(annotation.gene())).findFirst();
+            if(canonicalOnDriverGene.isPresent())
+            {
                 return canonicalOnDriverGene;
             }
 
@@ -60,9 +68,10 @@ public class CanonicalAnnotation {
         return Optional.empty();
     }
 
-    @NotNull
-    static String trimEnsembleVersion(@NotNull final String transcriptId) {
-        if (transcriptId.startsWith("EN") && transcriptId.contains(".")) {
+    static String trimEnsembleVersion(final String transcriptId)
+    {
+        if(transcriptId.startsWith("EN") && transcriptId.contains("."))
+        {
             return transcriptId.substring(0, transcriptId.indexOf("."));
         }
 

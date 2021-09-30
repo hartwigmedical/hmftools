@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
@@ -42,12 +43,12 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     private final VariantContextEnrichment mLowTumorVCNEnrichment;
     private final VariantContextEnrichment mLowVafRescueEnrichment;
 
-    public GermlineVariantEnrichment(@NotNull final String purpleVersion, @NotNull final String referenceSample,
-            @NotNull final String tumorSample, @NotNull final IndexedFastaSequenceFile reference,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final DriverGenePanel genePanel, @NotNull final List<HmfTranscriptRegion> transcripts,
-            @NotNull final Multimap<Chromosome, VariantHotspot> germlineHotspots, @NotNull final Set<String> somaticReportedGenes,
-            @NotNull final Consumer<VariantContext> consumer)
+    public GermlineVariantEnrichment(final String purpleVersion, final String referenceSample,
+            final String tumorSample, final IndexedFastaSequenceFile reference,
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
+            final DriverGenePanel genePanel, final EnsemblDataCache geneTransCache,
+            final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
+            final Consumer<VariantContext> consumer)
     {
         final Set<String> germlineGenes =
                 genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
@@ -57,7 +58,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         mPathogenicEnrichment = new GermlinePathogenicEnrichment(mReportableEnrichment);
         mRefGenomeEnrichment = new SomaticRefContextEnrichment(reference, mPathogenicEnrichment);
 
-        mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, transcripts, mRefGenomeEnrichment);
+        mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, geneTransCache, mRefGenomeEnrichment);
 
         // Purity must go before lowTumorVCNEnrichment
         // Hotspot must be before lowTumorVCNEnrichment
@@ -80,7 +81,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     }
 
     @Override
-    public void accept(@NotNull final VariantContext context)
+    public void accept(final VariantContext context)
     {
         mGenotypeEnrichment.accept(context);
     }
@@ -101,7 +102,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
 
     @NotNull
     @Override
-    public VCFHeader enrichHeader(@NotNull final VCFHeader template)
+    public VCFHeader enrichHeader(final VCFHeader template)
     {
         VCFHeader header = mPurityEnrichment.enrichHeader(template);
         header = mHotspotEnrichment.enrichHeader(header);

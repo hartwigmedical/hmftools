@@ -152,7 +152,7 @@ public class SomaticStream implements Consumer<VariantContext>
                     mConfig.RunDrivers, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
                     mConfig.ReferenceId, mConfig.TumorId, mReferenceData.RefGenome,
                     purityAdjuster, mGenePanel, copyNumbers, fittedRegions,
-                    mReferenceData.SomaticHotspots, mReferenceData.TranscriptRegions, mPeakModel, this::accept);
+                    mReferenceData.SomaticHotspots, mReferenceData.GeneTransCache, mPeakModel, this::accept);
 
             final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
             mVcfWriter.writeHeader(header);

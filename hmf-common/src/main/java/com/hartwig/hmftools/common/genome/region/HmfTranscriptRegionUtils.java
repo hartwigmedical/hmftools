@@ -4,25 +4,65 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HmfTranscriptRegionUtils
 {
+    public static HmfTranscriptRegion fromTranscript(final GeneData geneData, final TranscriptData transData)
+    {
+        List<HmfExonRegion> exons = Lists.newArrayList();
+
+        for(ExonData exon : transData.exons())
+        {
+            exons.add(ImmutableHmfExonRegion.builder()
+                    .chromosome(geneData.Chromosome)
+                    .exonRank(exon.Rank)
+                    .start(exon.Start)
+                    .end(exon.End)
+                    .build());
+        }
+
+        return ImmutableHmfTranscriptRegion.builder()
+                .geneId(geneData.GeneId)
+                .geneName(geneData.GeneName)
+                .chromosome(geneData.Chromosome)
+                .strand(Strand.valueOf(geneData.Strand))
+                .geneStart(geneData.GeneStart)
+                .geneEnd(geneData.GeneEnd)
+                .entrezId(Lists.newArrayList())
+                .chromosomeBand(geneData.KaryotypeBand)
+                .transName(transData.TransName)
+                .isCanonical(transData.IsCanonical)
+                .start(transData.TransStart)
+                .end(transData.TransEnd)
+                .codingStart(transData.CodingStart)
+                .codingEnd(transData.CodingEnd)
+                .exons(exons)
+                .build();
+    }
+
     @Nullable
-    public static List<GenomeRegion> codonByIndex(final HmfTranscriptRegion transcript, int index) {
+    public static List<GenomeRegion> codonByIndex(final HmfTranscriptRegion transcript, int index)
+    {
         return codonRangeByIndex(transcript, index, index);
     }
 
     @Nullable
-    public static List<GenomeRegion> codonRangeByIndex(final HmfTranscriptRegion transcript, int startCodon, int endCodon) {
-        if (startCodon < 1 || endCodon < 1) {
+    public static List<GenomeRegion> codonRangeByIndex(final HmfTranscriptRegion transcript, int startCodon, int endCodon)
+    {
+        if(startCodon < 1 || endCodon < 1)
+        {
             // Enforce 1-based codons.
             return null;
         }
 
-        if (transcript.codingStart() == 0 || transcript.codingEnd() == 0) {
+        if(transcript.codingStart() == 0 || transcript.codingEnd() == 0)
+        {
             // Only coding transcripts have codons.
             return null;
         }
@@ -34,23 +74,27 @@ public class HmfTranscriptRegionUtils
         int basesCovered = 0;
         Long startPosition = null;
         Long endPosition = null;
-        for (HmfExonRegion exon : transcript.strandSortedExome()) {
+        for(HmfExonRegion exon : transcript.strandSortedExome())
+        {
             long exonCodingStart = Math.max(exon.start(), transcript.codingStart());
             long exonCodingEnd = Math.min(exon.end(), transcript.codingEnd());
             long exonBaseLength = exonCodingEnd - exonCodingStart + 1;
 
-            if (exonBaseLength <= 0) {
+            if(exonBaseLength <= 0)
+            {
                 // Exon is entirely non-coding so can be skipped.
                 continue;
             }
 
-            if (basesCovered + exonBaseLength >= effectiveStartBase && startPosition == null) {
+            if(basesCovered + exonBaseLength >= effectiveStartBase && startPosition == null)
+            {
                 startPosition = transcript.strand() == Strand.FORWARD
                         ? exonCodingStart + effectiveStartBase - basesCovered - 1
                         : exonCodingEnd - effectiveStartBase + basesCovered + 1;
             }
 
-            if (basesCovered + exonBaseLength >= effectiveEndBase && endPosition == null) {
+            if(basesCovered + exonBaseLength >= effectiveEndBase && endPosition == null)
+            {
                 endPosition = transcript.strand() == Strand.FORWARD
                         ? exonCodingStart + effectiveEndBase - basesCovered - 1
                         : exonCodingEnd - effectiveEndBase + basesCovered + 1;
@@ -63,11 +107,13 @@ public class HmfTranscriptRegionUtils
                             transcript, startPosition, endPosition, exonCodingStart, exonCodingEnd,
                             codonRegions.size() > 0);
 
-            if (region != null) {
+            if(region != null)
+            {
                 codonRegions.add(region);
             }
 
-            if (startPosition != null && endPosition != null) {
+            if(startPosition != null && endPosition != null)
+            {
                 Collections.sort(codonRegions);
                 return codonRegions;
             }
@@ -79,26 +125,40 @@ public class HmfTranscriptRegionUtils
     @Nullable
     private static GenomeRegion decideOnRangeToIncludeForExon(
             final HmfTranscriptRegion transcript, @Nullable Long startPosition, @Nullable Long endPosition, long exonCodingStart,
-            long exonCodingEnd, boolean hasCodingRegionsDefinedAlready) {
-        if (startPosition != null) {
-            if (endPosition == null) {
+            long exonCodingEnd, boolean hasCodingRegionsDefinedAlready)
+    {
+        if(startPosition != null)
+        {
+            if(endPosition == null)
+            {
                 // Check to see if we need to include the entire exon we are considering.
-                if (hasCodingRegionsDefinedAlready) {
-                    return ImmutableGenomeRegionImpl.builder().chromosome(transcript.chromosome()).start(exonCodingStart).end(exonCodingEnd).build();
-                } else {
+                if(hasCodingRegionsDefinedAlready)
+                {
+                    return ImmutableGenomeRegionImpl.builder()
+                            .chromosome(transcript.chromosome())
+                            .start(exonCodingStart)
+                            .end(exonCodingEnd)
+                            .build();
+                }
+                else
+                {
                     return ImmutableGenomeRegionImpl.builder()
                             .chromosome(transcript.chromosome())
                             .start(transcript.strand() == Strand.FORWARD ? startPosition : exonCodingStart)
                             .end(transcript.strand() == Strand.FORWARD ? exonCodingEnd : startPosition)
                             .build();
                 }
-            } else if (hasCodingRegionsDefinedAlready) {
+            }
+            else if(hasCodingRegionsDefinedAlready)
+            {
                 return ImmutableGenomeRegionImpl.builder()
                         .chromosome(transcript.chromosome())
                         .start(transcript.strand() == Strand.FORWARD ? exonCodingStart : endPosition)
                         .end(transcript.strand() == Strand.FORWARD ? endPosition : exonCodingEnd)
                         .build();
-            } else {
+            }
+            else
+            {
                 return ImmutableGenomeRegionImpl.builder()
                         .chromosome(transcript.chromosome())
                         .start(transcript.strand() == Strand.FORWARD ? startPosition : endPosition)
@@ -116,7 +176,9 @@ public class HmfTranscriptRegionUtils
         final List<GenomeRegion> codonRegions = Lists.newArrayList();
 
         if(position < transcript.codingStart() || position > transcript.codingEnd())
+        {
             return codonRegions;
+        }
 
         int basesCovered = 0;
         for(int i = 0; i < transcript.exons().size(); i++)

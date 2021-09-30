@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
@@ -20,8 +20,14 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 
@@ -29,15 +35,28 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class CodingEffectFactoryTest {
+public class CodingEffectFactoryTest
+{
+    private VariantContext decode(final String line)
+    {
+        VCFCodec codec = new VCFCodec();
+        VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet("TEST_SAMPLE"));
+        codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
+        return codec.decode(line);
+    }
 
-    private final CodingEffectFactory victim = new CodingEffectFactory(HmfGenePanelSupplier.allGeneList37());
+    private final List<HmfTranscriptRegion> mOldTranscripts = HmfGenePanelSupplier.allGeneList37();
+
     private final VariantContext dummyVariant =
-            VariantContextFromString.decode("17\t7579312\t.\tC\tA\t2453\tPASS\tTIER=PANEL;TNC=CCG\tGT\t0/0\t0/1");
+            decode("17\t7579312\t.\tC\tA\t2453\tPASS\tTIER=PANEL;TNC=CCG\tGT\t0/0\t0/1");
 
     @Test
-    public void testDonorMinusOne() {
+    public void testDonorMinusOne()
+    {
         String vcf = "17\t7579312\t.\tC\tA\t2453\tPASS\tANN=A|splice_region_variant&synonymous_variant|LOW|TP53|ENSG00000141510|transcript|"
                 + "ENST00000269305|protein_coding|4/11|c.375G>T|p.Thr125Thr|565/2579|375/1182|125/393||,;TIER=PANEL;TNC=CCG\t"
                 + "GT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:34,0:0:34:1384,0:36,0:0,0,0,0,34,34:0:0,0,0:0,0,0,0,"
@@ -46,7 +65,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testDonorMinusOneMnv() {
+    public void testDonorMinusOneMnv()
+    {
         String vcf = "17\t7579311\t.\tCC\tAA\t2453\tPASS\tANN=A|splice_region_variant&synonymous_variant|LOW|TP53|ENSG00000141510|"
                 + "transcript|ENST00000269305|protein_coding|4/11|c.375G>T|p.Thr125Thr|565/2579|375/1182|125/393||,;TIER=PANEL;TNC=CCG\t"
                 + "GT:AD:AF:DP:RABQ:RAD:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RDP\t0/0:34,0:0:34:1384,0:36,0:0,0,0,0,34,34:0:0,0,0:0,0,0,0,"
@@ -55,7 +75,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testDonorPlusFive() {
+    public void testDonorPlusFive()
+    {
         String vcf = "4\t74021343\t.\tA\tT\t824\tPASS\tANN=T|splice_region_variant&intron_variant|LOW|ANKRD17|ENSG00000132466|transcript|"
                 + "ENST00000358602|protein_coding|5/33|c.1000+5T>A||||||,T|splice_region_variant&intron_variant|LOW|ANKRD17|"
                 + "ENSG00000132466|transcript|ENST00000558247|protein_coding|5/33|c.652+5T>A||||||WARNING_TRANSCRIPT_NO_START_CODON,T|"
@@ -74,7 +95,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testAcceptorPlusThreeForwardStrandG() {
+    public void testAcceptorPlusThreeForwardStrandG()
+    {
         String vcf = "5\t76640675\t.\tC\tG\t972\tPASS\tANN=G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|"
                 + "ENST00000264917|protein_coding|6/21|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|"
                 + "transcript|ENST00000340978|protein_coding|6/20|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|"
@@ -92,7 +114,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testAcceptorPlusThreeForwardStrandC() {
+    public void testAcceptorPlusThreeForwardStrandC()
+    {
         String vcf = "5\t76640675\t.\tT\tC\t972\tPASS\tANN=G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|transcript|"
                 + "ENST00000264917|protein_coding|6/21|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|ENSG00000113231|"
                 + "transcript|ENST00000340978|protein_coding|6/20|c.798-3C>G||||||,G|splice_region_variant&intron_variant|LOW|PDE8B|"
@@ -110,7 +133,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testAcceptorPlusThreeReverseStrandG() {
+    public void testAcceptorPlusThreeReverseStrandG()
+    {
         String vcf = "13\t28610183\t.\tA\tG\t409.0\tPASS\tRC=CTGTA;RC_IDX=2;RC_LF=TGAGGTTTCC;RC_NM=1;RC_RF=GAAAAGAACG;REP_C=2;REP_S=TA;"
                 + "TIER=PANEL;TNC=TAT;AC=0;AN=0;MAPPABILITY=1;ANN=G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|"
                 + "transcript|ENST00000380982|protein_coding|10/23|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|"
@@ -124,7 +148,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testAcceptorPlusThreeReverseStrandC() {
+    public void testAcceptorPlusThreeReverseStrandC()
+    {
         String vcf = "13\t28610183\t.\tA\tC\t409.0\tPASS\tRC=CTGTA;RC_IDX=2;RC_LF=TGAGGTTTCC;RC_NM=1;RC_RF=GAAAAGAACG;REP_C=2;REP_S=TA;"
                 + "TIER=PANEL;TNC=TAT;AC=0;AN=0;MAPPABILITY=1;ANN=G|splice_region_variant&intron_variant|LOW|FLT3|ENSG00000122025|"
                 + "transcript|ENST00000380982|protein_coding|10/23|c.1310-3T>C||||||,G|splice_region_variant&intron_variant|LOW|FLT3|"
@@ -138,7 +163,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testSingleEffect() {
+    public void testSingleEffect()
+    {
         assertEffect(NONSENSE_OR_FRAMESHIFT, FRAMESHIFT_VARIANT);
         assertEffect(NONSENSE_OR_FRAMESHIFT, STOP_GAINED);
 
@@ -157,7 +183,8 @@ public class CodingEffectFactoryTest {
     }
 
     @Test
-    public void testEffectPriority() {
+    public void testEffectPriority()
+    {
         assertEffect(NONSENSE_OR_FRAMESHIFT, STOP_GAINED, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, INTRON_VARIANT);
         assertEffect(SPLICE, MISSENSE_VARIANT, SPLICE_ACCEPTOR_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
         assertEffect(MISSENSE, MISSENSE_VARIANT, SYNONYMOUS_VARIANT, INTRON_VARIANT);
@@ -166,14 +193,26 @@ public class CodingEffectFactoryTest {
         assertEffect(NONE, INTRON_VARIANT);
     }
 
-    private void assertEffect(@NotNull CodingEffect expected, @NotNull String line) {
-        VariantContext variant = VariantContextFromString.decode(line);
+    private void assertEffect(final CodingEffect expected, final String line)
+    {
+        VariantContext variant = decode(line);
         SnpEffAnnotation snpEffSummary = SnpEffAnnotationParser.fromContext(variant).get(0);
-        CodingEffect codingEffect = victim.effect(variant, snpEffSummary.gene(), snpEffSummary.featureID(), snpEffSummary.consequences());
+
+        HmfTranscriptRegion transcriptRegion = mOldTranscripts.stream()
+                .filter(x -> x.transName().equals(snpEffSummary.featureID())).findFirst().orElse(null);
+
+        if(transcriptRegion == null)
+        {
+            transcriptRegion = mOldTranscripts.stream()
+                    .filter(x -> x.geneName().equals(snpEffSummary.gene())).findFirst().orElse(null);
+        }
+
+        CodingEffect codingEffect = CodingEffectFactory.effect(variant, transcriptRegion, snpEffSummary.consequences());
         assertEquals(expected, codingEffect);
     }
 
-    private void assertEffect(@NotNull final CodingEffect expected, @NotNull final VariantConsequence... consequences) {
-        assertEquals(expected, victim.effect(dummyVariant, "dummy_gene", "dummy_trans", Lists.newArrayList(consequences)));
+    private void assertEffect(@NotNull final CodingEffect expected, @NotNull final VariantConsequence... consequences)
+    {
+        assertEquals(expected, CodingEffectFactory.effect(dummyVariant, null, Lists.newArrayList(consequences)));
     }
 }

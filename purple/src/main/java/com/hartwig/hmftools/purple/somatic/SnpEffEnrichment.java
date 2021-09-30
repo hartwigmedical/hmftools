@@ -3,17 +3,22 @@ package com.hartwig.hmftools.purple.somatic;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.CodingEffectFactory;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
@@ -30,20 +35,33 @@ public class SnpEffEnrichment implements VariantContextEnrichment
     private final Consumer<VariantContext> mConsumer;
 
     private final CanonicalAnnotation mCanonicalAnnotation;
-    private final CodingEffectFactory mCodingEffectFactory;
-
-    private final Set<String> mMissingGenes;
+    private final EnsemblDataCache mGeneTransCache;
 
     public SnpEffEnrichment(
-            final Set<String> driverGenes, final List<HmfTranscriptRegion> transcripts, final Consumer<VariantContext> consumer)
+            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final Consumer<VariantContext> consumer)
     {
         mConsumer = consumer;
-        mCanonicalAnnotation = new CanonicalAnnotation(driverGenes, transcripts);
-        mCodingEffectFactory = new CodingEffectFactory(transcripts);
-        mMissingGenes = Sets.newHashSet();
-    }
 
-    public Set<String> missingGenes() { return mMissingGenes; }
+        mGeneTransCache = geneTransCache;
+        mGeneTransCache.createGeneNameIdMap();
+
+        Map<String,String> transGeneMap = Maps.newHashMap();
+
+        for(List<GeneData> geneDataList : geneTransCache.getChrGeneDataMap().values())
+        {
+            for(GeneData geneData : geneDataList)
+            {
+                List<TranscriptData> transDataList = geneTransCache.getTranscripts(geneData.GeneId);
+
+                for(TranscriptData tranData : transDataList)
+                {
+                    transGeneMap.put(tranData.TransName, geneData.GeneName);
+                }
+            }
+        }
+
+        mCanonicalAnnotation = new CanonicalAnnotation(driverGenes, transGeneMap);
+    }
 
     @Override
     public void accept(@NotNull final VariantContext context)
@@ -110,15 +128,31 @@ public class SnpEffEnrichment implements VariantContextEnrichment
 
     private CodingEffect codingEffect(final VariantContext context, boolean phasedInframeIndel, final SnpEffAnnotation annotation)
     {
-        /*
-        if(!mMissingGenes.contains(annotation.gene()) && !mCodingEffectFactory.hasGene(annotation.gene()))
-        {
-            PPL_LOGGER.warn("gene({}: {}) not in global list", annotation.geneID(), annotation.gene());
-            mMissingGenes.add(annotation.gene());
-        }
-        */
+        // locate the Ensembl data and translate to HmfTranscriptRegion until Pave is complete
+        HmfTranscriptRegion transcriptRegion = null;
 
-        CodingEffect effect = mCodingEffectFactory.effect(context, annotation.gene(), annotation.featureID(), annotation.consequences());
+        GeneData geneData = mGeneTransCache.getGeneDataByName(annotation.gene());
+
+        if(geneData == null)
+        {
+            // try mapping
+
+        }
+        else
+        {
+            List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
+
+            if(transDataList == null)
+            {
+                TranscriptData transData = transDataList.stream()
+                        .filter(x -> x.TransName.equals(annotation.featureID())).findFirst().orElse(null);
+
+                if(transData != null)
+                    transcriptRegion = HmfTranscriptRegionUtils.fromTranscript(geneData, transData);
+            }
+        }
+
+        CodingEffect effect = CodingEffectFactory.effect(context, transcriptRegion, annotation.consequences());
         return phasedInframeIndel && effect.equals(CodingEffect.NONSENSE_OR_FRAMESHIFT) ? CodingEffect.MISSENSE : effect;
     }
 

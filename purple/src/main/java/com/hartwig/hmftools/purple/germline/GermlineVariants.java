@@ -103,7 +103,7 @@ public class GermlineVariants
             final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                     mVersion, referenceId, tumorSample,
                     mReferenceData.RefGenome, purityAdjuster, copyNumbers,
-                    mReferenceData.DriverGenes, mReferenceData.TranscriptRegions, mReferenceData.GermlineHotspots,
+                    mReferenceData.DriverGenes, mReferenceData.GeneTransCache, mReferenceData.GermlineHotspots,
                     somaticReportedGenes, consumer);
 
             writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
