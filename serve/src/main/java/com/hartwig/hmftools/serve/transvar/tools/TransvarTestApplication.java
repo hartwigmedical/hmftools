@@ -22,16 +22,15 @@ public class TransvarTestApplication {
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
 
-        String refGenomeFastaFile37 = System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+        String refGenomeFastaFile37 = "/data/resources/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina.fasta";
         Transvar transvar37 = Transvar.withRefGenome(RefGenomeVersion.V37, refGenomeFastaFile37, HmfGenePanelSupplier.allGenesMap37());
 
-        extractAndPrintHotspots(transvar37, "FGFR3", "ENST00000440486", "K650Q");
+        extractAndPrintHotspots(transvar37, "BRAF", "ENST00000288602", "V600E");
 
-        String refGenomeFastaFile38 =
-                System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
+        String refGenomeFastaFile38 = "/data/resources/reference_genome/38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna";
         Transvar transvar38 = Transvar.withRefGenome(RefGenomeVersion.V38, refGenomeFastaFile38, HmfGenePanelSupplier.allGenesMap38());
 
-        extractAndPrintHotspots(transvar38, "NUAK2", null, "R618Q");
+        extractAndPrintHotspots(transvar38, "BRAF", null, "V600E");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
