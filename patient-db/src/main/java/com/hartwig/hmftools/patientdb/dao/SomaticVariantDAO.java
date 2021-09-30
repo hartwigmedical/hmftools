@@ -196,11 +196,9 @@ public class SomaticVariantDAO
                 .alt(record.getValue(SOMATICVARIANT.ALT))
                 .gene(record.getValue(SOMATICVARIANT.GENE))
                 .genesAffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
-                .worstEffect(record.getValue(SOMATICVARIANT.WORSTEFFECT))
                 .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
                         ? CodingEffect.UNDEFINED
                         : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
-                .worstEffectTranscript(record.getValue(SOMATICVARIANT.WORSTEFFECTTRANSCRIPT))
                 .canonicalTranscript("")
                 .canonicalEffect(record.getValue(SOMATICVARIANT.CANONICALEFFECT))
                 .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
@@ -208,6 +206,8 @@ public class SomaticVariantDAO
                         : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
                 .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
                 .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
+                .spliceRegion(byteToBoolean(record.getValue(SOMATICVARIANT.SPLICEREGION)))
+                .otherReportedEffects(record.getValue(SOMATICVARIANT.OTHERTRANSCRIPTEFFECTS))
                 .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
                 .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
                 .adjustedCopyNumber(record.getValue(SOMATICVARIANT.COPYNUMBER))
@@ -259,13 +259,13 @@ public class SomaticVariantDAO
                 SOMATICVARIANT.GENE,
                 SOMATICVARIANT.GENESEFFECTED,
                 SOMATICVARIANT.REPORTED,
-                SOMATICVARIANT.WORSTEFFECT,
                 SOMATICVARIANT.WORSTCODINGEFFECT,
-                SOMATICVARIANT.WORSTEFFECTTRANSCRIPT,
                 SOMATICVARIANT.CANONICALEFFECT,
                 SOMATICVARIANT.CANONICALCODINGEFFECT,
                 SOMATICVARIANT.CANONICALHGVSCODINGIMPACT,
                 SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
+                SOMATICVARIANT.SPLICEREGION,
+                SOMATICVARIANT.OTHERTRANSCRIPTEFFECTS,
                 SOMATICVARIANT.ALLELEREADCOUNT,
                 SOMATICVARIANT.TOTALREADCOUNT,
                 SOMATICVARIANT.COPYNUMBER,
@@ -310,13 +310,13 @@ public class SomaticVariantDAO
                 variant.gene(),
                 variant.genesAffected(),
                 variant.reported(),
-                variant.worstEffect(),
                 variant.worstCodingEffect() != CodingEffect.UNDEFINED ? variant.worstCodingEffect() : Strings.EMPTY,
-                variant.worstEffectTranscript(),
                 variant.canonicalEffect(),
                 variant.canonicalCodingEffect() != CodingEffect.UNDEFINED ? variant.canonicalCodingEffect() : Strings.EMPTY,
                 variant.canonicalHgvsCodingImpact(),
                 variant.canonicalHgvsProteinImpact(),
+                variant.spliceRegion(),
+                variant.otherReportedEffects(),
                 variant.alleleReadCount(),
                 variant.totalReadCount(),
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),

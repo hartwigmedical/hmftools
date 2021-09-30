@@ -76,6 +76,8 @@ class TsgDrivers
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
                 .gene(likelihood.gene())
+                .transcript("")
+                .isCanonical(true)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
@@ -87,7 +89,8 @@ class TsgDrivers
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS);
+                .likelihoodMethod(LikelihoodMethod.DNDS)
+                .variantInfo("");
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {

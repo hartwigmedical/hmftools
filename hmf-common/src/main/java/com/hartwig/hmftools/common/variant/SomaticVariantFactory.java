@@ -48,14 +48,14 @@ public class SomaticVariantFactory implements VariantContextFilter
     public static final String PASS_FILTER = "PASS";
 
     @NotNull
-    private final CompoundFilter filter;
+    private final CompoundFilter mFilter;
 
     public SomaticVariantFactory(@NotNull final VariantContextFilter... filters)
     {
-        this.filter = new CompoundFilter(true);
-        this.filter.addAll(Arrays.asList(filters));
-        this.filter.add(new HumanChromosomeFilter());
-        this.filter.add(new NTFilter());
+        mFilter = new CompoundFilter(true);
+        mFilter.addAll(Arrays.asList(filters));
+        mFilter.add(new HumanChromosomeFilter());
+        mFilter.add(new NTFilter());
     }
 
     @NotNull
@@ -121,7 +121,7 @@ public class SomaticVariantFactory implements VariantContextFilter
 
             for(VariantContext variant : reader.iterator())
             {
-                if(filter.test(variant))
+                if(mFilter.test(variant))
                 {
                     createVariant(tumor, reference, rna, variant).ifPresent(consumer);
                 }
@@ -144,7 +144,7 @@ public class SomaticVariantFactory implements VariantContextFilter
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : null;
 
-        if(filter.test(context) && AllelicDepth.containsAllelicDepth(genotype))
+        if(mFilter.test(context) && AllelicDepth.containsAllelicDepth(genotype))
         {
             final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
 
@@ -200,18 +200,17 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .microhomology(decorator.microhomology())
                 .repeatCount(decorator.repeatCount())
                 .repeatSequence(decorator.repeatSequence())
-                // Note: getAttributeAsBoolean(x, false) is safer than hasAttribute(x)
                 .reported(decorator.reported())
                 .biallelic(decorator.biallelic())
-                .worstEffect(variantImpact.WorstEffect)
-                .worstCodingEffect(variantImpact.WorstCodingEffect)
-                .worstEffectTranscript(variantImpact.WorstTranscript)
-                .canonicalEffect(variantImpact.CanonicalEffect)
+                .gene(variantImpact.gene())
                 .canonicalTranscript(variantImpact.CanonicalTranscript)
+                .canonicalEffect(variantImpact.CanonicalEffect)
                 .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)
                 .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCodingImpact)
                 .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProteinImpact)
-                .gene(variantImpact.gene())
+                .spliceRegion(variantImpact.CanonicalSpliceRegion)
+                .otherReportedEffects(variantImpact.OtherReportableEffects)
+                .worstCodingEffect(variantImpact.WorstCodingEffect)
                 .genesAffected(variantImpact.GenesAffected)
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
@@ -244,6 +243,6 @@ public class SomaticVariantFactory implements VariantContextFilter
     @Override
     public boolean test(final VariantContext variantContext)
     {
-        return filter.test(variantContext);
+        return mFilter.test(variantContext);
     }
 }

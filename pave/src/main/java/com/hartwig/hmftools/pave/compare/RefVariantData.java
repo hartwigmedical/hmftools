@@ -22,9 +22,7 @@ public class RefVariantData
     public final String CanonicalHgvsCodingImpact;
     public final String CanonicalHgvsProteinImpact;
 
-    public final String WorstEffect;
     public final CodingEffect WorstCodingEffect;
-    public final String WorstEffectTranscript;
     public final int GenesAffected;
 
     public final String Microhomology;
@@ -36,7 +34,7 @@ public class RefVariantData
     public RefVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
-            final String worstEffect, final CodingEffect worstCodingEffect, final String worstEffectTranscript, final int genesAffected,
+            final CodingEffect worstCodingEffect, final int genesAffected,
             final String canonicalHgvsCodingImpact, final String canonicalHgvsProteinImpact,
             final String microhomology, final String repeatSequence, boolean phasedInframeIndel)
     {
@@ -49,9 +47,7 @@ public class RefVariantData
 
         CanonicalEffect = canonicalEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
-        WorstEffect = worstEffect;
         WorstCodingEffect = worstCodingEffect;
-        WorstEffectTranscript = worstEffectTranscript;
         GenesAffected = genesAffected;
 
         CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
@@ -65,17 +61,16 @@ public class RefVariantData
     {
         return new RefVariantData(
                 variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(), variant.type(), variant.gene(),
-                variant.canonicalEffect(), variant.canonicalCodingEffect(),
-                variant.worstEffect(), variant.worstCodingEffect(), variant.worstEffectTranscript(),
+                variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
                 variant.genesAffected(),  variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.phasedInframeIndelIdentifier() > 0);
     }
 
     public String toString()
     {
-        return String.format("pos(%s:%d) variant(%s: %s>%s) canon(%s: %s) worst(%s: %s)",
+        return String.format("pos(%s:%d) variant(%s: %s>%s) canon(%s: %s) worst(%s)",
                 Chromosome, Position, Type, Ref, Alt, CanonicalCodingEffect, CanonicalEffect,
-                WorstCodingEffect, WorstEffect);
+                WorstCodingEffect);
     }
 
     public static boolean hasCodingEffectDiff(final CodingEffect effect1, final CodingEffect effect2)

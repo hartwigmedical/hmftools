@@ -227,6 +227,8 @@ public class SvTestUtils
                 .biallelic(biallelic)
                 .category(category)
                 .gene(gene)
+                .transcript("")
+                .isCanonical(true)
                 .chromosome(chromosome)
                 .chromosomeBand("")
                 .driver(type)
@@ -239,6 +241,7 @@ public class SvTestUtils
                 .splice(0)
                 .inframe(0)
                 .frameshift(0)
+                .variantInfo("")
                 .build();
     }
 

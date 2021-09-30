@@ -39,7 +39,7 @@ public interface DriverGene extends Comparable<DriverGene>
     boolean reportGermlineDisruption();
 
     @Nullable
-    String alternativeTranscripts();
+    String additionalReportedTranscripts();
 
     @Override
     default int compareTo(@NotNull final DriverGene o)

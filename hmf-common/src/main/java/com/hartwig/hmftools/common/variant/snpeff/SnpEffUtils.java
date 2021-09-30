@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
@@ -22,7 +25,49 @@ public final class SnpEffUtils
         final List<String> worst = context.getAttributeAsStringList(SNPEFF_WORST, Strings.EMPTY);
         final List<String> canonical = context.getAttributeAsStringList(SNPEFF_CANONICAL, Strings.EMPTY);
 
-        // return SnpEffSummarySerialiser.fromDetails(worst, canonical);
-        return VariantImpactSerialiser.fromVcfAnnotation(worst, canonical);
+        String canonicalGeneName = "";
+        String canonicalEffect = "";
+        String canonicalTranscript = "";
+        CodingEffect canonicalCodingEffect = UNDEFINED;
+        String canonicalHgvsCodingImpact = "";
+        String canonicalHgvsProteinImpact = "";
+        boolean canonicalSpliceRegion = false;
+        String otherReportableEffects = "";
+        CodingEffect worstCodingEffect = UNDEFINED;
+        int genesAffected = 0;
+
+        if(worst.size() == 5)
+        {
+            /*
+            worstGene = worst.get(0);
+            worstTranscript = worst.get(1);
+            worstEffect = readEffect(worst.get(2));
+            */
+
+            worstCodingEffect = CodingEffect.valueOf(worst.get(3));
+            genesAffected = Integer.parseInt(worst.get(4));
+        }
+
+        if(canonical.size() == 6)
+        {
+            canonicalGeneName = canonical.get(0);
+            canonicalTranscript = canonical.get(1);
+            canonicalEffect = canonical.get(2);
+            canonicalCodingEffect = CodingEffect.valueOf(canonical.get(3));
+            canonicalHgvsCodingImpact = canonical.get(4);
+            canonicalHgvsProteinImpact = canonical.get(5);
+
+            canonicalSpliceRegion = canonicalEffect.contains("splice");
+        }
+
+        return new VariantImpact(
+                canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
     }
+
+    private static String readEffect(final String effect)
+    {
+        return effect.replace("&", "; ").replace("_", " ");
+    }
+
 }

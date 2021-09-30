@@ -58,7 +58,7 @@ public final class DriverGeneFile
         Integer germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
         Integer germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
         Integer germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
-        Integer altTransIndex = fieldsIndexMap.get("alternativeTranscripts");
+        Integer altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
 
         ImmutableDriverGene.Builder builder = ImmutableDriverGene.builder();
 
@@ -85,7 +85,7 @@ public final class DriverGeneFile
                             : DriverGeneGermlineReporting.NONE)
                     .reportGermlineDisruption(germlineDisruptionIndex != null ?
                             Boolean.parseBoolean(values[germlineDisruptionIndex]) : Boolean.parseBoolean(values[disruptionIndex]))
-                    .alternativeTranscripts(altTransIndex != null ? values[altTransIndex] : "");
+                    .additionalReportedTranscripts(altTransIndex != null ? values[altTransIndex] : "");
 
             driverGenes.add(builder.build());
         }
@@ -108,7 +108,7 @@ public final class DriverGeneFile
                 .add("reportGermlineVariant")
                 .add("reportGermlineHotspot")
                 .add("reportGermlineDisruption")
-                .add("alternativeTranscripts")
+                .add("additionalReportedTranscripts")
                 .toString();
     }
 
@@ -128,7 +128,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineVariant()))
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
-                .add(gene.alternativeTranscripts())
+                .add(gene.additionalReportedTranscripts())
                 .toString();
     }
 

@@ -202,9 +202,7 @@ public class ImpactComparisons
             int geneIndex = fieldsIndexMap.get("gene");
             int canonicalEffectIndex = fieldsIndexMap.get("canonicalEffect");
             int canonicalCodingEffectIndex = fieldsIndexMap.get("canonicalCodingEffect");
-            int worstEffectIndex = fieldsIndexMap.get("worstEffect");
             int worstCodingEffectIndex = fieldsIndexMap.get("worstCodingEffect");
-            int worstEffectTranscriptIndex = fieldsIndexMap.get("worstEffectTranscript");
             int genesAffectedIndex = fieldsIndexMap.get("genesEffected");
             int canonicalHgvsCodingImpactIndex = fieldsIndexMap.get("canonicalHgvsCodingImpact");
             int canonicalHgvsProteinImpactIndex = fieldsIndexMap.get("canonicalHgvsProteinImpact");
@@ -251,8 +249,8 @@ public class ImpactComparisons
                         items[chrIndex], Integer.parseInt(items[posIndex]), items[refIndex], items[altIndex],
                         VariantType.valueOf(items[typeIndex]), items[geneIndex], items[canonicalEffectIndex],
                         items[canonicalCodingEffectIndex].isEmpty() ? NONE : CodingEffect.valueOf(items[canonicalCodingEffectIndex]),
-                        items[worstEffectIndex], CodingEffect.valueOf(items[worstCodingEffectIndex]), items[worstEffectTranscriptIndex],
-                        Integer.parseInt(items[genesAffectedIndex]), items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
+                        CodingEffect.valueOf(items[worstCodingEffectIndex]), Integer.parseInt(items[genesAffectedIndex]),
+                        items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
                         items[microhomologyIndex], items[repeatSequenceIndex], Boolean.parseBoolean(items[phasedInframeIndelIndex]));
 
                 processVariant(sampleId, variant);
@@ -299,10 +297,10 @@ public class ImpactComparisons
 
             mCsvWriter.write("SampleId,");
             mCsvWriter.write(VariantData.csvCommonHeader());
-            mCsvWriter.write(",GeneId,GeneName,IsDriver,CanonEffect,CanonCodingEffect");
+            mCsvWriter.write(",GeneName,IsDriver,CanonEffect,CanonCodingEffect");
             mCsvWriter.write(",WorstEffect,WorstCodingEffect,WorstTrans,GenesAffected");
             mCsvWriter.write(",SnpEffGeneName,SnpEffCanonEffect,SnpEffCanonCodingEffect");
-            mCsvWriter.write(",SnpEffWorstEffect,SnpEffWorstCodingEffect,SnpEffWorstTrans,SnpEffGenesAffected");
+            mCsvWriter.write(",SnpEffWorstCodingEffect,SnpEffGenesAffected");
             mCsvWriter.newLine();
         }
         catch(IOException e)
@@ -317,21 +315,21 @@ public class ImpactComparisons
     {
         try
         {
-            mCsvWriter.write(String.format("%s,%s,%s,%s",
-                    sampleId, variant.toCsv(), variantImpact.CanonicalGeneId, variantImpact.CanonicalGeneName));
+            mCsvWriter.write(String.format("%s,%s,%s",
+                    sampleId, variant.toCsv(), variantImpact.CanonicalGeneName));
 
             boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(variantImpact.CanonicalGeneName);
 
             if(!isDriver && !variantImpact.CanonicalGeneName.equals(refVariant.Gene))
                 isDriver = mGeneDataCache.getDriverPanelGenes().contains(refVariant.Gene);
 
-            mCsvWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
+            mCsvWriter.write(String.format(",%s,%s,%s,%s,%d",
                     isDriver, variantImpact.CanonicalEffect, variantImpact.CanonicalCodingEffect,
-                    variantImpact.WorstEffect, variantImpact.WorstCodingEffect, variantImpact.WorstTranscript, variantImpact.GenesAffected));
+                    variantImpact.WorstCodingEffect, variantImpact.GenesAffected));
 
-            mCsvWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
-                    refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect, refVariant.WorstEffect,
-                    refVariant.WorstCodingEffect, refVariant.WorstEffectTranscript, refVariant.GenesAffected));
+            mCsvWriter.write(String.format(",%s,%s,%s,%s,%d",
+                    refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect,
+                    refVariant.WorstCodingEffect, refVariant.GenesAffected));
 
             mCsvWriter.newLine();
         }

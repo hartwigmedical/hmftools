@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_CANONICAL;
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_WORST;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.effectsToVcf;
 
 import java.io.File;
@@ -42,8 +41,7 @@ public class ImpactVcfWriter
         newHeader.addMetaDataLine(new VCFHeaderLine("SageVersion", sageVersion));
 
         VariantTranscriptImpact.writeHeader(newHeader);
-        VariantImpactSerialiser.writeHeader(newHeader, VAR_IMPACT_CANONICAL, VAR_IMPACT_WORST);
-        // newHeader.addMetaDataLine(new VCFInfoHeaderLine(HLA, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "HLA Type"));
+        VariantImpactSerialiser.writeHeader(newHeader);
 
         mWriter.writeHeader(newHeader);
     }
@@ -61,13 +59,13 @@ public class ImpactVcfWriter
             {
                 transImpacts.add(new VariantTranscriptImpact(
                         transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
-                        effectsToVcf((transImpact.consequenceEffects())),
+                        effectsToVcf((transImpact.consequenceEffects())), transImpact.inSpliceRegion(),
                         transImpact.hgvsCodingChange(), transImpact.hgvsProteinChange()));
             }
         }
 
         VariantTranscriptImpact.writeVcfData(context, transImpacts);
-        VariantImpactSerialiser.writeImpactDetails(context, variantImpact, VAR_IMPACT_CANONICAL, VAR_IMPACT_WORST);
+        VariantImpactSerialiser.writeImpactDetails(context, variantImpact);
 
         mWriter.add(context);
     }

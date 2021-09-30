@@ -17,6 +17,12 @@ public interface DriverCatalog
     @NotNull
     String gene();
 
+    @Nullable
+    String transcript();
+
+    @NotNull
+    boolean isCanonical();
+
     @NotNull
     DriverCategory category();
 
@@ -43,4 +49,7 @@ public interface DriverCatalog
     double minCopyNumber();
 
     double maxCopyNumber();
+
+    @Nullable
+    String variantInfo();
 }

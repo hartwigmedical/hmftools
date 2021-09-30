@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep17;
+import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -69,11 +70,13 @@ class DriverCatalogDAO {
     private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep17 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep20 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.CHROMOSOME,
                     DRIVERCATALOG.CHROMOSOMEBAND,
                     DRIVERCATALOG.GENE,
+                    DRIVERCATALOG.TRANSCRIPT,
+                    DRIVERCATALOG.CANONICALTRANSCRIPT,
                     DRIVERCATALOG.DRIVER,
                     DRIVERCATALOG.CATEGORY,
                     DRIVERCATALOG.LIKELIHOODMETHOD,
@@ -86,18 +89,21 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.BIALLELIC,
                     DRIVERCATALOG.MINCOPYNUMBER,
                     DRIVERCATALOG.MAXCOPYNUMBER,
+                    DRIVERCATALOG.VARIANTINFO,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep17 inserter, @NotNull String sample,
-            @NotNull DriverCatalog entry) {
+    private static void addRecord(
+            Timestamp timestamp, InsertValuesStep20 inserter, String sample, DriverCatalog entry) {
         inserter.values(sample,
                 entry.chromosome(),
                 entry.chromosomeBand(),
                 entry.gene(),
+                entry.transcript(),
+                entry.isCanonical(),
                 entry.driver(),
                 entry.category(),
                 entry.likelihoodMethod(),
@@ -110,20 +116,21 @@ class DriverCatalogDAO {
                 entry.biallelic(),
                 entry.minCopyNumber(),
                 entry.maxCopyNumber(),
+                entry.variantInfo(),
                 timestamp);
     }
 
-    void deleteForSample(@NotNull String sample) {
+    void deleteForSample(String sample) {
         context.delete(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).execute();
     }
 
-    void deleteForSample(@NotNull String sample, @NotNull Collection<DriverType> types) {
+    void deleteForSample(String sample, Collection<DriverType> types) {
         final List<String> stringTypes = types.stream().map(Enum::toString).collect(Collectors.toList());
         context.delete(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).and(DRIVERCATALOG.DRIVER.in(stringTypes)).execute();
     }
 
     @NotNull
-    List<DriverCatalog> readDriverData(@NotNull String sample) {
+    List<DriverCatalog> readDriverData(String sample) {
         List<DriverCatalog> dcList = Lists.newArrayList();
 
         Result<Record> result = context.select().from(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).fetch();

@@ -89,6 +89,8 @@ class OncoDrivers
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
                 .gene(gene)
+                .transcript("")
+                .isCanonical(true)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
@@ -100,7 +102,8 @@ class OncoDrivers
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS);
+                .likelihoodMethod(LikelihoodMethod.DNDS)
+                .variantInfo("");
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {

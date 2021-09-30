@@ -127,6 +127,7 @@ public class SomaticVariantFactoryTest {
         assertEquals("SPATA13", variant.gene());
     }
 
+    /*
     @Test
     public void useFirstGeneIfNonInCanonical() {
         final String line =
@@ -139,6 +140,7 @@ public class SomaticVariantFactoryTest {
         final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("RP11-307N16.6", variant.gene());
     }
+     */
 
     @Test
     public void canonicalFieldsUseTranscriptAnnotation() {

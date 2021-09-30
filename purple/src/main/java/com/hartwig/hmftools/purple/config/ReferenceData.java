@@ -210,7 +210,7 @@ public class ReferenceData
             GeneTransCache = new EnsemblDataCache(cmd, RefGenVersion);
 
             // load transcripts with any alts from the driver gene panel in mind
-            List<String> alternativeTrans = DriverGenes.driverGenes().stream().map(x -> x.alternativeTranscripts()).collect(Collectors.toList());
+            List<String> alternativeTrans = DriverGenes.driverGenes().stream().map(x -> x.additionalReportedTranscripts()).collect(Collectors.toList());
 
             if(!alternativeTrans.isEmpty())
             {

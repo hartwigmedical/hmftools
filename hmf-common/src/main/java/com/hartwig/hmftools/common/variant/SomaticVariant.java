@@ -16,16 +16,16 @@ public interface SomaticVariant extends Variant {
     int genesAffected();
 
     @NotNull
-    String worstEffect();
+    String canonicalEffect();
 
     @NotNull
-    String worstEffectTranscript();
+    boolean spliceRegion();
+
+    @NotNull
+    String otherReportedEffects();
 
     @NotNull
     CodingEffect worstCodingEffect();
-
-    @NotNull
-    String canonicalEffect();
 
     @NotNull
     Hotspot hotspot();

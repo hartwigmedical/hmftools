@@ -45,6 +45,8 @@ public class ReportableVariantFactoryTest {
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
+                .transcript("")
+                .isCanonical(true)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .likelihoodMethod(LikelihoodMethod.DNDS)
@@ -57,6 +59,7 @@ public class ReportableVariantFactoryTest {
                 .biallelic(false)
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
+                .variantInfo("")
                 .build();
     }
 }

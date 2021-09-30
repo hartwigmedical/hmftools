@@ -60,6 +60,8 @@ public final class DriverCatalogFile
         return new StringJoiner(DELIMITER).add("chromosome")
                 .add("chromosomeBand")
                 .add("gene")
+                .add("transcript")
+                .add("isCanonical")
                 .add("driver")
                 .add("category")
                 .add("likelihoodMethod")
@@ -72,6 +74,7 @@ public final class DriverCatalogFile
                 .add("biallelic")
                 .add("minCopyNumber")
                 .add("maxCopyNumber")
+                .add("variantInfo")
                 .toString();
     }
 
@@ -81,6 +84,8 @@ public final class DriverCatalogFile
         return new StringJoiner(DELIMITER).add(driverCatalog.chromosome())
                 .add(driverCatalog.chromosomeBand())
                 .add(driverCatalog.gene())
+                .add(driverCatalog.transcript())
+                .add(String.valueOf(driverCatalog.isCanonical()))
                 .add(String.valueOf(driverCatalog.driver()))
                 .add(String.valueOf(driverCatalog.category()))
                 .add(String.valueOf(driverCatalog.likelihoodMethod()))
@@ -93,6 +98,7 @@ public final class DriverCatalogFile
                 .add(String.valueOf(driverCatalog.biallelic()))
                 .add(FORMAT.format(driverCatalog.minCopyNumber()))
                 .add(FORMAT.format(driverCatalog.maxCopyNumber()))
+                .add(driverCatalog.variantInfo())
                 .toString();
     }
 
@@ -120,6 +126,10 @@ public final class DriverCatalogFile
                     .chromosome(values[fieldsIndexMap.get("chromosome")])
                     .chromosomeBand(values[fieldsIndexMap.get("chromosomeBand")])
                     .gene(values[fieldsIndexMap.get("gene")])
+                    .transcript(fieldsIndexMap.containsKey("transcript") ?
+                            values[fieldsIndexMap.get("transcript")] : "")
+                    .isCanonical(fieldsIndexMap.containsKey("isCanonical") ?
+                            Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]) : true)
                     .driver(DriverType.valueOf(values[fieldsIndexMap.get("driver")]))
                     .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
                     .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
@@ -132,6 +142,8 @@ public final class DriverCatalogFile
                     .biallelic(Boolean.parseBoolean(values[fieldsIndexMap.get("biallelic")]))
                     .minCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("minCopyNumber")]))
                     .maxCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("maxCopyNumber")]))
+                    .variantInfo(fieldsIndexMap.containsKey("variantInfo") ?
+                            values[fieldsIndexMap.get("variantInfo")] : "")
                     .build());
         }
 

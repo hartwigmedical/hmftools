@@ -141,13 +141,15 @@ public class CNADrivers
     }
 
     @NotNull
-    private DriverCatalog cnaDriver(DriverCategory category, DriverType driver, LikelihoodMethod likelihoodMethod, boolean biallelic,
-            GeneCopyNumber x)
+    private DriverCatalog cnaDriver(
+            DriverCategory category, DriverType driver, LikelihoodMethod likelihoodMethod, boolean biallelic, GeneCopyNumber x)
     {
         return ImmutableDriverCatalog.builder()
                 .chromosome(x.chromosome())
                 .chromosomeBand(x.chromosomeBand())
                 .gene(x.geneName())
+                .transcript("")
+                .isCanonical(true)
                 .missense(0)
                 .nonsense(0)
                 .inframe(0)
@@ -160,6 +162,7 @@ public class CNADrivers
                 .biallelic(biallelic)
                 .minCopyNumber(x.minCopyNumber())
                 .maxCopyNumber(x.maxCopyNumber())
+                .variantInfo("")
                 .build();
     }
 }

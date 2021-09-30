@@ -4,44 +4,52 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 
 public class VariantImpact
 {
-    public final int GenesAffected;
-
     public final String CanonicalGeneName;
-    public final String CanonicalGeneId;
     public final String CanonicalEffect;
     public final String CanonicalTranscript;
     public final CodingEffect CanonicalCodingEffect;
     public final String CanonicalHgvsCodingImpact;
     public final String CanonicalHgvsProteinImpact;
+    public final boolean CanonicalSpliceRegion;
 
-    public final String WorstGene;
-    public final String WorstEffect;
-    public final String WorstTranscript;
+    public final String OtherReportableEffects;
     public final CodingEffect WorstCodingEffect;
+    public final int GenesAffected;
 
     public VariantImpact(
-            final int genesAffected, final String canonicalGeneId, final String canonicalGeneName, final String canonicalEffect,
-            final String canonicalTranscript, final CodingEffect canonicalCodingEffect, final String canonicalHgvsCodingImpact,
-            final String canonicalHgvsProteinImpact, final String worstGene,
-            final String worstEffect, final String worstTranscript, final CodingEffect worstCodingEffect)
+            final String canonicalGeneName, final String canonicalTranscript, final String canonicalEffect,
+            final CodingEffect canonicalCodingEffect, final String canonicalHgvsCodingImpact, final String canonicalHgvsProteinImpact,
+            boolean canonicalSpliceRegion, final String otherReportableEffects, final CodingEffect worstCodingEffect, int genesAffected)
     {
-        GenesAffected = genesAffected;
         CanonicalGeneName = canonicalGeneName;
-        CanonicalGeneId = canonicalGeneId;
-        CanonicalEffect = canonicalEffect;
         CanonicalTranscript = canonicalTranscript;
+        CanonicalEffect = canonicalEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
+        CanonicalSpliceRegion = canonicalSpliceRegion;
         CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
         CanonicalHgvsProteinImpact = canonicalHgvsProteinImpact;
-        WorstGene = worstGene;
-        WorstEffect = worstEffect;
-        WorstTranscript = worstTranscript;
+        OtherReportableEffects = otherReportableEffects;
         WorstCodingEffect = worstCodingEffect;
+        GenesAffected = genesAffected;
     }
 
     public String gene()
     {
-        return CanonicalGeneName.isEmpty() ? WorstGene : CanonicalGeneName;
+        return CanonicalGeneName;
+    }
+
+    public boolean equals(final VariantImpact other)
+    {
+        return CanonicalGeneName.equals(other.CanonicalGeneName) &&
+                CanonicalTranscript.equals(other.CanonicalTranscript) &&
+                CanonicalEffect.equals(other.CanonicalEffect) &&
+                CanonicalCodingEffect == other.CanonicalCodingEffect &&
+                CanonicalHgvsCodingImpact.equals(other.CanonicalHgvsCodingImpact) &&
+                CanonicalHgvsProteinImpact.equals(other.CanonicalHgvsProteinImpact) &&
+                CanonicalSpliceRegion == other.CanonicalSpliceRegion &&
+                OtherReportableEffects.equals(other.OtherReportableEffects) &&
+                WorstCodingEffect == other.WorstCodingEffect &&
+                GenesAffected == other.GenesAffected;
     }
 
 }

@@ -55,21 +55,7 @@ public class SnpEffEnrichmentTest
         return codec;
     }
 
-    @Test
-    public void useFirstGeneIfNonInCanonical()
-    {
-        final String line =
-                "13\t24871731\t.\tC\tT\t.\tPASS\tAC=0;AF=0;AN=0;MAPPABILITY=1.000000;NT=ref;QSS=43;QSS_NT=43;SGT=CC->CT;SOMATIC;TQSS=1;"
-                        + "TQSS_NT=1;set=snvs;ANN=T|synonymous_variant|LOW|RP11-307N16.6|ENSG00000273167|transcript|ENST00000382141|"
-                        + "nonsense_mediated_decay|12/16|c.3075C>T|p.Leu1025Leu|3653/4157|3075/3318|1025/1105||,T|synonymous_variant|LOW|"
-                        + "SPATA13|ENSG00000182957|transcript|ENST00000382108|protein_coding|11/13|c.3441C>T|p.Leu1147Leu|3763/8457|"
-                        + "3441/3834|1147/1277||\tGT:AD:DP\t0/1:36,38:75";
-        final VariantContext variantContext = codec.decode(line);
-        victim.accept(variantContext);
-        final VariantImpact summary = SnpEffUtils.fromSnpEffEnrichedVariant(capture.get(0));
-        assertEquals("RP11-307N16.6", summary.gene());
-    }
-
+    /*
     @Test
     public void favourCanonicalGeneWhenPossible()
     {
@@ -182,4 +168,5 @@ public class SnpEffEnrichmentTest
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, summary1.CanonicalCodingEffect);
         assertEquals(CodingEffect.MISSENSE, summary2.CanonicalCodingEffect);
     }
+     */
 }

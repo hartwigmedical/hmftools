@@ -162,6 +162,8 @@ public class DriverDataCache
                 .driver(DriverType.HOM_DISRUPTION)
                 .category(TSG)
                 .gene(gene.GeneName)
+                .transcript(gene.canonical().transName())
+                .isCanonical(true)
                 .chromosome(gene.chromosome())
                 .chromosomeBand(gene.karyotypeBand())
                 .likelihoodMethod(DEL)
@@ -174,6 +176,7 @@ public class DriverDataCache
                 .biallelic(true)
                 .minCopyNumber(gcnData != null ? gcnData.minCopyNumber() : 0)
                 .maxCopyNumber(gcnData != null ? gcnData.maxCopyNumber() : 0)
+                .variantInfo("")
                 .build();
 
         mDriverCatalog.add(driverRecord);

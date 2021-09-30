@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
-import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
-import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +49,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
     public void accept(@NotNull final VariantContext context)
     {
         final VariantImpact variantImpact = formVariantImpact(context);
-        VariantImpactSerialiser.writeImpactDetails(context, variantImpact, SNPEFF_CANONICAL, SNPEFF_WORST);
+        VariantImpactSerialiser.writeImpactDetails(context, variantImpact);
         mConsumer.accept(context);
     }
 
@@ -60,7 +57,7 @@ public class SnpEffEnrichment implements VariantContextEnrichment
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader header)
     {
-        return VariantImpactSerialiser.writeHeader(header, SNPEFF_CANONICAL, SNPEFF_WORST);
+        return VariantImpactSerialiser.writeHeader(header);
     }
 
     private VariantImpact formVariantImpact(@NotNull final VariantContext context)
@@ -79,24 +76,18 @@ public class SnpEffEnrichment implements VariantContextEnrichment
                 .count();
 
         String canonicalGeneName = "";
-        String canonicalGeneId = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = UNDEFINED;
         String canonicalHgvsCodingImpact = "";
         String canonicalHgvsProteinImpact = "";
-        String worstGene = "";
-        String worstEffect = "";
-        String worstTranscript = "";
+        boolean canonicalIsSplice = false;
         CodingEffect worstCodingEffect = UNDEFINED;
 
         if(!transcriptAnnotations.isEmpty())
         {
             final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
-            worstGene = worstAnnotation.gene();
-            worstEffect = worstAnnotation.consequenceString();
             worstCodingEffect = codingEffect(context, phasedInframeIndel, worstAnnotation);
-            worstTranscript = worstAnnotation.transcript();
         }
 
         final Optional<SnpEffAnnotation> canonicalAnnotation = mCanonicalAnnotation.canonicalSnpEffAnnotation(transcriptAnnotations);
@@ -109,11 +100,12 @@ public class SnpEffEnrichment implements VariantContextEnrichment
             canonicalHgvsCodingImpact = annotation.hgvsCoding();
             canonicalHgvsProteinImpact = annotation.hgvsProtein();
             canonicalTranscript = annotation.transcript();
+            canonicalIsSplice = canonicalEffect.contains("splice");
         }
 
         return new VariantImpact(
-                genesAffected, canonicalGeneId, canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
-                canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
+                canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                canonicalHgvsProteinImpact, canonicalIsSplice, "", worstCodingEffect, genesAffected);
     }
 
     private CodingEffect codingEffect(final VariantContext context, boolean phasedInframeIndel, final SnpEffAnnotation annotation)

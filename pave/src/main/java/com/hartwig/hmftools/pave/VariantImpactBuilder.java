@@ -81,39 +81,34 @@ public class VariantImpactBuilder
         }
 
         String canonicalGeneName = "";
-        String canonicalGeneId = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
         CodingEffect canonicalCodingEffect = UNDEFINED;
         String canonicalHgvsCodingImpact = "";
         String canonicalHgvsProteinImpact = "";
-        String worstGene = "";
-        String worstEffect = "";
-        String worstTranscript = "";
+        boolean canonicalSpliceRegion = false;
         CodingEffect worstCodingEffect = UNDEFINED;
 
         if(worstImpact != null)
         {
-            worstGene = worstGeneName;
-            worstEffect = VariantConsequence.consequenceString(worstImpact.consequences());
             worstCodingEffect = determineCodingEffect(variant, worstImpact);
-            worstTranscript = worstImpact.TransData.TransName;
         }
 
         if(worstCanonicalImpact != null)
         {
             canonicalGeneName = worstGeneName;
-            canonicalGeneId = worstCanonicalImpact.TransData.GeneId;
             canonicalEffect = VariantConsequence.consequenceString(worstCanonicalImpact.consequences());
             canonicalCodingEffect = determineCodingEffect(variant, worstCanonicalImpact);
             canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCodingChange();
             canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProteinChange();
             canonicalTranscript = worstCanonicalImpact.TransData.TransName;
+            canonicalSpliceRegion = worstCanonicalImpact.inSpliceRegion();
         }
 
         return new VariantImpact(
-                variant.getImpacts().size(), canonicalGeneId, canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect,
-                canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, worstGene, worstEffect, worstTranscript, worstCodingEffect);
+                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect,
+                canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, canonicalSpliceRegion, "", worstCodingEffect,
+                variant.getImpacts().size());
     }
 
     private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact)
