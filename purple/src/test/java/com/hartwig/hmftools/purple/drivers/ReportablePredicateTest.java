@@ -65,6 +65,6 @@ public class ReportablePredicateTest {
                 .reportGermlineDisruption(false)
                 .build());
 
-        return DriverGenePanelFactory.create(RefGenomeVersion.V37, driverGenes);
+        return DriverGenePanelFactory.create(driverGenes);
     }
 }

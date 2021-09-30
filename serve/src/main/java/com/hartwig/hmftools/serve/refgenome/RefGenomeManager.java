@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -27,13 +27,13 @@ public class RefGenomeManager {
     @NotNull
     private final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap;
     @NotNull
-    private final GeneNameMapping geneNameMapping;
+    private final GeneNameMapping37to38 geneNameMapping;
     @NotNull
     private final ConversionFilter conversionFilter;
 
     RefGenomeManager(@NotNull final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap) {
         this.refGenomeResourceMap = refGenomeResourceMap;
-        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+        this.geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
         this.conversionFilter = new ConversionFilter();
     }
 

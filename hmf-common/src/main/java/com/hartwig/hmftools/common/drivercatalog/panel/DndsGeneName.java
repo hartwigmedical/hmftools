@@ -4,14 +4,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.jetbrains.annotations.NotNull;
 
 class DndsGeneName
 {
-    private final GeneNameMapping mGeneNameMapping;
+    private final GeneNameMapping37to38 mGeneNameMapping;
     private final Predicate<DriverGene> mAlignmentMapPredicate;
     private final Function<DriverGene, String> mDndsGeneFunction;
     private final Set<String> mDndsGenes;
@@ -19,7 +19,7 @@ class DndsGeneName
     public DndsGeneName(@NotNull final RefGenomeVersion refGenomeVersion, @NotNull final Set<String> dndsGenes)
     {
         mDndsGenes = dndsGenes;
-        mGeneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+        mGeneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
 
         if(refGenomeVersion == RefGenomeVersion.V37)
         {

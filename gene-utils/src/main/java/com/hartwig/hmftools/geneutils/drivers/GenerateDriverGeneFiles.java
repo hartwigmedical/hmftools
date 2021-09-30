@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -66,7 +66,7 @@ public class GenerateDriverGeneFiles
         List<DriverGene> v37DriverGenes = DriverGeneFile.read(mNewDriverGenePanel37Tsv);
         LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), mNewDriverGenePanel37Tsv);
 
-        GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+        GeneNameMapping37to38 geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
         List<DriverGene> v38DriverGenes = Lists.newArrayList();
         for(DriverGene input : v37DriverGenes)
         {

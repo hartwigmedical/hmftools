@@ -13,9 +13,9 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-// a resource to map gene names between v37 and v38
+// a resource to map gene names between v37 and v38 - will be deprecated. Use Ensembl GenenNameMapping instead
 // if a gene is not present, then it's name has not changed
-public class GeneNameMapping
+public class GeneNameMapping37to38
 {
     public static final Set<String> IG_GENES = Sets.newHashSet("IGH", "IGK", "IGL");
 
@@ -26,13 +26,13 @@ public class GeneNameMapping
     private static final String DELIM = "\t";
 
     @NotNull
-    public static GeneNameMapping loadFromEmbeddedResource()
+    public static GeneNameMapping37to38 loadFromEmbeddedResource()
     {
         final Map<String, String> v37Map = Maps.newHashMap();
         final Map<String, String> v38Map = Maps.newHashMap();
         final Set<String> unchangedGenes = Sets.newHashSet();
 
-        final InputStream inputStream = GeneNameMapping.class.getResourceAsStream("/ensembl/gene_name_mapping_37_38.tsv");
+        final InputStream inputStream = GeneNameMapping37to38.class.getResourceAsStream("/ensembl/gene_name_mapping_37_38.tsv");
         List<String> mappingLines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
         mappingLines.remove(0);
 
@@ -53,10 +53,10 @@ public class GeneNameMapping
             }
         }
 
-        return new GeneNameMapping(v37Map, v38Map, unchangedGenes);
+        return new GeneNameMapping37to38(v37Map, v38Map, unchangedGenes);
     }
 
-    public GeneNameMapping(final Map<String,String> v37Map, final Map<String,String> v38Map, final Set<String> unchangedGenes)
+    public GeneNameMapping37to38(final Map<String,String> v37Map, final Map<String,String> v38Map, final Set<String> unchangedGenes)
     {
         m37to38Map = v37Map;
         m38to37Map = v38Map;

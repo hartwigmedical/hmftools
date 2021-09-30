@@ -9,7 +9,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -61,7 +61,7 @@ public class RefGenomeConverterTest {
                 RefGenomeVersion.V38,
                 RefGenomeResourceTestFactory.loadTestRefSequence38(),
                 new DummyLiftOver(),
-                new GeneNameMapping(v37, v38, Sets.newHashSet()));
+                new GeneNameMapping37to38(v37, v38, Sets.newHashSet()));
 
         KnownCopyNumber copyNumber37 =
                 ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("X").build();
@@ -73,7 +73,7 @@ public class RefGenomeConverterTest {
                 RefGenomeVersion.V37,
                 RefGenomeResourceTestFactory.loadTestRefSequence37(),
                 new DummyLiftOver(),
-                new GeneNameMapping(v37, v38, Sets.newHashSet()));
+                new GeneNameMapping37to38(v37, v38, Sets.newHashSet()));
 
         KnownCopyNumber copyNumber38 =
                 ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("Y").build();
@@ -241,7 +241,7 @@ public class RefGenomeConverterTest {
                 RefGenomeVersion.V38,
                 RefGenomeResourceTestFactory.loadTestRefSequence38(),
                 algo,
-                GeneNameMapping.loadFromEmbeddedResource());
+                GeneNameMapping37to38.loadFromEmbeddedResource());
     }
 
     private static class DummyLiftOver implements LiftOverAlgo {

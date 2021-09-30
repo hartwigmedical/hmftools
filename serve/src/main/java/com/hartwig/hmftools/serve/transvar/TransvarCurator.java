@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,7 +35,7 @@ class TransvarCurator {
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
     @NotNull
-    private final GeneNameMapping geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+    private final GeneNameMapping37to38 geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
 
     public TransvarCurator(@NotNull final RefGenomeVersion refGenomeVersion) {
         this.refGenomeVersion = refGenomeVersion;

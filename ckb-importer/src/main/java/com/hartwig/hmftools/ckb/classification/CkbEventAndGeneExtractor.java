@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.ckb.classification;
 
 import com.hartwig.hmftools.ckb.datamodel.variant.Variant;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,10 +12,10 @@ public class CkbEventAndGeneExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CkbEventAndGeneExtractor.class);
 
     @NotNull
-    private final GeneNameMapping geneNameMapping;
+    private final GeneNameMapping37to38 geneNameMapping;
 
     public CkbEventAndGeneExtractor() {
-        this.geneNameMapping = GeneNameMapping.loadFromEmbeddedResource();
+        this.geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
     }
 
     @NotNull

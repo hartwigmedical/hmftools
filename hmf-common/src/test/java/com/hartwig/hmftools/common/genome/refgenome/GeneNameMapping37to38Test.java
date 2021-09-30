@@ -4,13 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 
 import org.junit.Test;
 
-public class GeneNameMappingTest {
+public class GeneNameMapping37to38Test
+{
 
-    private final GeneNameMapping victim = GeneNameMapping.loadFromEmbeddedResource();
+    private final GeneNameMapping37to38 victim = GeneNameMapping37to38.loadFromEmbeddedResource();
 
     @Test
     public void mappingWorksForPRAMEF11() {
@@ -50,7 +51,7 @@ public class GeneNameMappingTest {
 
     @Test
     public void promiscuousIGGenesAreRetained() {
-        for (String igGene : GeneNameMapping.IG_GENES) {
+        for (String igGene : GeneNameMapping37to38.IG_GENES) {
             assertTrue(victim.isValidV37Gene(igGene));
             assertTrue(victim.isValidV38Gene(igGene));
 

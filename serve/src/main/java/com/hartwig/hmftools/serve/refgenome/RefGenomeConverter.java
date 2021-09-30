@@ -3,7 +3,7 @@ package com.hartwig.hmftools.serve.refgenome;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -54,11 +54,11 @@ class RefGenomeConverter {
     @NotNull
     private final LiftOverAlgo liftOverAlgo;
     @NotNull
-    private final GeneNameMapping geneNameMapping;
+    private final GeneNameMapping37to38 geneNameMapping;
 
     public RefGenomeConverter(@NotNull final RefGenomeVersion sourceVersion, @NotNull final RefGenomeVersion targetVersion,
             @NotNull final IndexedFastaSequenceFile targetSequence, @NotNull final LiftOverAlgo liftOverAlgo,
-            @NotNull final GeneNameMapping geneNameMapping) {
+            @NotNull final GeneNameMapping37to38 geneNameMapping) {
         this.sourceVersion = sourceVersion;
         this.targetVersion = targetVersion;
         this.targetSequence = targetSequence;

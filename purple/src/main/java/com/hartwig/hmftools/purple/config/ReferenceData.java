@@ -173,9 +173,7 @@ public class ReferenceData
                 PPL_LOGGER.error("Unable to load driver genes: {}", e.toString());
             }
 
-            final RefGenomeVersion driverGeneRefGenomeVersion = RefGenVersion.is37() ? RefGenomeVersion.V37 : RefGenomeVersion.V38;
-
-            DriverGenes = DriverGenePanelFactory.create(driverGeneRefGenomeVersion, driverGenes);
+            DriverGenes = DriverGenePanelFactory.create(driverGenes);
 
             if(cmd.hasOption(GERMLINE_VARIANTS))
             {
