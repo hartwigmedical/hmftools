@@ -47,7 +47,7 @@ public class TransvarTestApplication {
         Transvar transvar38 = Transvar.withRefGenome(RefGenomeVersion.V38,
                 config.refGenome38FastaFile(), HmfGenePanelSupplier.allGenesMap38());
 
-        extractAndPrintHotspots(transvar38, config.gene38(), config.gene38(), config.protein38());
+        extractAndPrintHotspots(transvar38, config.gene38(), config.transcript38(), config.protein38());
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @Nullable String specificTranscript,
