@@ -326,7 +326,7 @@ public class PaveApplication
 
                     if(annotation != null)
                     {
-                        sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
+                        sj.add(consequencesToString(annotation.consequences()));
                         sj.add(annotation.effects());
                         matchedAnnotations.add(annotation);
                     }
@@ -353,7 +353,7 @@ public class PaveApplication
                 sj.add(annotation.gene());
                 sj.add(annotation.featureID());
                 sj.add("UNMATCHED");
-                sj.add(consequencesToString(annotation.consequences(), ITEM_DELIM));
+                sj.add(consequencesToString(annotation.consequences()));
                 transcriptLines.add(sj.toString());
             }
 

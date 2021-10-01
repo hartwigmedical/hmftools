@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_DELIM;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toOtherReportableTransInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -135,17 +137,14 @@ public class SnpEffEnrichment implements VariantContextEnrichment
                     .filter(x -> mOtherReportableTranscripts.contains(x.featureID()))
                     .collect(Collectors.toList());
 
-            StringJoiner sj = new StringJoiner("|");
+            StringJoiner sj = new StringJoiner(VAR_IMPACT_OTHER_REPORT_DELIM);
 
             for(SnpEffAnnotation annotation : otherReportableTrans)
             {
-                // ENST00000579755|c.209_210delCCinsTT|p.Pro70Leu|missense_variant|MISSENSE;
-                String annotationStr = String.format("%s-%s-%s-%s-%s",
+                sj.add(toOtherReportableTransInfo(
                         annotation.featureID(), annotation.hgvsCoding(), annotation.hgvsProtein(),
                         annotation.consequenceString(),
-                        codingEffect(context, phasedInframeIndel, annotation));
-
-                sj.add(annotationStr);
+                        codingEffect(context, phasedInframeIndel, annotation)));
             }
 
             otherReportableTransData = sj.toString();

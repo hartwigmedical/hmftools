@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
-import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.effectsToVcf;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -59,7 +57,7 @@ public class ImpactVcfWriter
             {
                 transImpacts.add(new VariantTranscriptImpact(
                         transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
-                        effectsToVcf((transImpact.consequenceEffects())), transImpact.inSpliceRegion(),
+                        consequencesToString(transImpact.consequences()), transImpact.inSpliceRegion(),
                         transImpact.hgvsCodingChange(), transImpact.hgvsProteinChange()));
             }
         }

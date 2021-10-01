@@ -34,9 +34,9 @@ public class VariantTranscriptImpact
     // serialisation
     public static final String VAR_TRANS_IMPACT_ANNOATATION = "VAR_TI";
 
+    // the in the VCF, transcript impacts are separated by ',', the components by ',' and the effects by '&"
     public static final String VAR_TRANS_IMPACT_DELIM = ",";
     public static final String VAR_TRANS_IMPACT_ITEM_DELIM = "|";
-    public static final String VAR_TRANS_IMPACT_EFFECTS_DELIM = "&";
 
     public static void writeHeader(final VCFHeader header)
     {
@@ -79,13 +79,5 @@ public class VariantTranscriptImpact
         sj.add(HgvsCoding);
         sj.add(HgvsProtein);
         return sj.toString();
-    }
-
-    public static String effectsToVcf(final List<String> effects)
-    {
-        StringJoiner sj = new StringJoiner(VAR_TRANS_IMPACT_EFFECTS_DELIM);
-        effects.forEach(x -> sj.add(x));
-        return sj.toString();
-
     }
 }

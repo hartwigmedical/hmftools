@@ -18,6 +18,12 @@ public final class VariantImpactSerialiser
 {
     public static final String VAR_IMPACT = "IMPACT";
 
+    // in the VCF, the components of the variant impact are separated by ',' and effects are separated by '&'
+    // other reportable effects are separated by '-' and their sub-details by '|'
+
+    public static final String VAR_IMPACT_OTHER_REPORT_ITEM_DELIM = "|";
+    public static final String VAR_IMPACT_OTHER_REPORT_DELIM = "-";
+
     public static VCFHeader writeHeader(final VCFHeader header)
     {
         StringJoiner fields = new StringJoiner(", ");
@@ -46,10 +52,16 @@ public final class VariantImpactSerialiser
     public static List<String> toVcfData(final VariantImpact impact)
     {
         return Lists.newArrayList(
-                impact.CanonicalGeneName, impact.CanonicalTranscript, writeEffect(impact.CanonicalEffect),
-                String.valueOf(impact.CanonicalCodingEffect), String.valueOf(impact.CanonicalSpliceRegion),
-                impact.CanonicalHgvsCodingImpact, impact.CanonicalHgvsProteinImpact,
-                impact.OtherReportableEffects, String.valueOf(impact.WorstCodingEffect), String.valueOf(impact.GenesAffected));
+                impact.CanonicalGeneName,
+                impact.CanonicalTranscript,
+                impact.CanonicalEffect,
+                String.valueOf(impact.CanonicalCodingEffect),
+                String.valueOf(impact.CanonicalSpliceRegion),
+                impact.CanonicalHgvsCodingImpact,
+                impact.CanonicalHgvsProteinImpact,
+                impact.OtherReportableEffects,
+                String.valueOf(impact.WorstCodingEffect),
+                String.valueOf(impact.GenesAffected));
     }
 
     public static VariantImpact fromVariantContext(final VariantContext context)
@@ -81,14 +93,18 @@ public final class VariantImpactSerialiser
         return new VariantImpact(
                 canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
-
     }
 
-    private static String writeEffect(final String effect)
+    public static String toOtherReportableTransInfo(
+            final String transName, final String hgvsCoding, final String hgvsProtein, final String effects, final CodingEffect codingEffect)
     {
-        return effect.replace("; ", "&")
-                .replace(";", "&")
-                .replace(" ", "_");
+        // eg ENST00000579755|c.209_210delCCinsTT|p.Pro70Leu|missense_variant|MISSENSE;
+        StringJoiner sj = new StringJoiner(VAR_IMPACT_OTHER_REPORT_ITEM_DELIM);
+        sj.add(transName);
+        sj.add(hgvsCoding);
+        sj.add(hgvsProtein);
+        sj.add(effects);
+        sj.add(codingEffect.toString());
+        return sj.toString();
     }
-
 }

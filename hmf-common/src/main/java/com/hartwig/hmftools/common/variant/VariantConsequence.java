@@ -61,6 +61,8 @@ public enum VariantConsequence
     private final String mParentSequenceOntologyTerm;
     private final List<String> mSequenceOntologySubTerms;
 
+    public static final String VARIANT_EFFECTS_DELIM = "&";
+
     VariantConsequence(final String parentSequenceOntologyTerm, final String... sequenceOntologySubTerms)
     {
         mParentSequenceOntologyTerm = parentSequenceOntologyTerm;
@@ -86,6 +88,11 @@ public enum VariantConsequence
         return VariantConsequence.OTHER;
     }
 
+    public static String consequencesToString(final List<VariantConsequence> consequences)
+    {
+        return consequencesToString(consequences, VARIANT_EFFECTS_DELIM);
+    }
+
     public static String consequencesToString(final List<VariantConsequence> consequences, final String delim)
     {
         StringJoiner sj = new StringJoiner(delim);
@@ -95,7 +102,7 @@ public enum VariantConsequence
 
     public static String consequenceString(final List<VariantConsequence> consequences)
     {
-        final StringJoiner consequenceString = new StringJoiner("&");
+        final StringJoiner consequenceString = new StringJoiner(VARIANT_EFFECTS_DELIM);
         for(final VariantConsequence consequence : consequences)
         {
             if(!consequence.parentTerm().isEmpty())
@@ -155,11 +162,5 @@ public enum VariantConsequence
             default:
                 return 0;
         }
-    }
-
-    @NotNull
-    public String readableSequenceOntologyTerm()
-    {
-        return mParentSequenceOntologyTerm.replace("_", " ");
     }
 }

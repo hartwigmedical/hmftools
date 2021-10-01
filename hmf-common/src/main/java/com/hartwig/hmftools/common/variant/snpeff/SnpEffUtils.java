@@ -38,12 +38,6 @@ public final class SnpEffUtils
 
         if(worst.size() == 5)
         {
-            /*
-            worstGene = worst.get(0);
-            worstTranscript = worst.get(1);
-            worstEffect = readEffect(worst.get(2));
-            */
-
             worstCodingEffect = CodingEffect.valueOf(worst.get(3));
             genesAffected = Integer.parseInt(worst.get(4));
         }
@@ -64,11 +58,4 @@ public final class SnpEffUtils
                 canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
     }
-
-    /*
-    private static String readEffect(final String effect)
-    {
-        return effect.replace("&", "; ").replace("_", " ");
-    }
-    */
 }
