@@ -41,8 +41,8 @@ public class HmfTranscriptRegionUtils
                 .isCanonical(transData.IsCanonical)
                 .start(transData.TransStart)
                 .end(transData.TransEnd)
-                .codingStart(transData.CodingStart)
-                .codingEnd(transData.CodingEnd)
+                .codingStart(transData.CodingStart != null ? transData.CodingStart : -1)
+                .codingEnd(transData.CodingEnd != null ? transData.CodingEnd : -1)
                 .exons(exons)
                 .build();
     }

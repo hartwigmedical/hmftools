@@ -8,6 +8,5 @@ ALTER TABLE somaticVariant
     DROP COLUMN worstEffectTranscript;
 
 ALTER TABLE driverCatalog
-    ADD COLUMN transcript varchar(50) NOT NULL AFTER gene,
-    ADD COLUMN canonicalTranscript BOOLEAN NOT NULL DEFAULT 1 after transcript,
-    ADD COLUMN variantInfo varchar(50) NOT NULL;
+                                                                                   ADD COLUMN transcript varchar(50) NOT NULL AFTER gene,
+                                                                                   ADD COLUMN canonicalTranscript BOOLEAN NOT NULL DEFAULT 1 after transcript;

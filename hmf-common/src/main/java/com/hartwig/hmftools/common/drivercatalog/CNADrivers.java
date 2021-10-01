@@ -61,11 +61,11 @@ public class CNADrivers
             {
                 if(minCopyNumberPredicate.test(geneCopyNumber))
                 {
-                    result.add(amp(geneCopyNumber));
+                    result.add(createAmpDriver(geneCopyNumber));
                 }
                 else if(maxCopyNumberPredicate.test(geneCopyNumber))
                 {
-                    result.add(partialAmp(geneCopyNumber));
+                    result.add(createPartialAmpDriver(geneCopyNumber));
                 }
             }
         }
@@ -85,71 +85,62 @@ public class CNADrivers
                 .filter(x -> mDeletionTargets.containsKey(x.geneName()))
                 .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
                 .filter(qcStatusPredicate)
-                .map(this::del)
+                .map(this::createDelDriver)
                 .collect(Collectors.toList());
     }
 
-    static boolean supportedByOneSV(@NotNull final GeneCopyNumber geneCopyNumber)
+    static boolean supportedByOneSV(final GeneCopyNumber geneCopyNumber)
     {
         return geneCopyNumber.minRegionStartSupport().isSV() || geneCopyNumber.minRegionEndSupport().isSV();
     }
 
-    static boolean supportedByTwoSVs(@NotNull final GeneCopyNumber geneCopyNumber)
+    static boolean supportedByTwoSVs(final GeneCopyNumber geneCopyNumber)
     {
         return geneCopyNumber.minRegionStartSupport().isSV() && geneCopyNumber.minRegionEndSupport().isSV();
     }
 
-    static boolean shortAndSupportedByOneSVAndMere(@NotNull final GeneCopyNumber geneCopyNumber)
+    static boolean shortAndSupportedByOneSVAndMere(final GeneCopyNumber geneCopyNumber)
     {
         if(geneCopyNumber.minRegionBases() >= 10_000_000)
-        {
             return false;
-        }
 
         if(MERE.contains(geneCopyNumber.minRegionStartSupport()))
-        {
             return geneCopyNumber.minRegionEndSupport().isSV();
-        }
 
         if(MERE.contains(geneCopyNumber.minRegionEndSupport()))
-        {
             return geneCopyNumber.minRegionStartSupport().isSV();
-        }
 
         return false;
     }
 
-    @NotNull
-    private DriverCatalog amp(GeneCopyNumber x)
+    private DriverCatalog createAmpDriver(final GeneCopyNumber geneCopyNumber)
     {
-        DriverGene driverGene = mAmplificationTargets.get(x.geneName());
-        return cnaDriver(driverGene.likelihoodType(), DriverType.AMP, LikelihoodMethod.AMP, false, x);
+        DriverGene driverGene = mAmplificationTargets.get(geneCopyNumber.geneName());
+        return cnaDriver(driverGene.likelihoodType(), DriverType.AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
     }
 
-    @NotNull
-    private DriverCatalog partialAmp(GeneCopyNumber x)
+    private DriverCatalog createPartialAmpDriver(final GeneCopyNumber geneCopyNumber)
     {
-        DriverGene driverGene = mAmplificationTargets.get(x.geneName());
-        return cnaDriver(driverGene.likelihoodType(), DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, x);
+        DriverGene driverGene = mAmplificationTargets.get(geneCopyNumber.geneName());
+        return cnaDriver(driverGene.likelihoodType(), DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
     }
 
-    @NotNull
-    private DriverCatalog del(GeneCopyNumber x)
+    private DriverCatalog createDelDriver(final GeneCopyNumber geneCopyNumber)
     {
-        DriverGene driverGene = mDeletionTargets.get(x.geneName());
-        return cnaDriver(driverGene.likelihoodType(), DriverType.DEL, LikelihoodMethod.DEL, true, x);
+        DriverGene driverGene = mDeletionTargets.get(geneCopyNumber.geneName());
+        return cnaDriver(driverGene.likelihoodType(), DriverType.DEL, LikelihoodMethod.DEL, true, geneCopyNumber);
     }
 
-    @NotNull
     private DriverCatalog cnaDriver(
-            DriverCategory category, DriverType driver, LikelihoodMethod likelihoodMethod, boolean biallelic, GeneCopyNumber x)
+            DriverCategory category, DriverType driver, LikelihoodMethod likelihoodMethod, boolean biallelic,
+            final GeneCopyNumber geneCopyNumber)
     {
         return ImmutableDriverCatalog.builder()
-                .chromosome(x.chromosome())
-                .chromosomeBand(x.chromosomeBand())
-                .gene(x.geneName())
-                .transcript("")
-                .isCanonical(true)
+                .chromosome(geneCopyNumber.chromosome())
+                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .gene(geneCopyNumber.geneName())
+                .transcript(geneCopyNumber.transName())
+                .isCanonical(geneCopyNumber.isCanonical())
                 .missense(0)
                 .nonsense(0)
                 .inframe(0)
@@ -160,9 +151,8 @@ public class CNADrivers
                 .likelihoodMethod(likelihoodMethod)
                 .category(category)
                 .biallelic(biallelic)
-                .minCopyNumber(x.minCopyNumber())
-                .maxCopyNumber(x.maxCopyNumber())
-                .variantInfo("")
+                .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
                 .build();
     }
 }

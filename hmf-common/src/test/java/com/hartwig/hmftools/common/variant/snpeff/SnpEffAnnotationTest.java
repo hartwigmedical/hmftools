@@ -20,14 +20,14 @@ public class SnpEffAnnotationTest
         assertEquals(Strings.EMPTY, noConsequences.consequenceString());
 
         SnpEffAnnotation oneConsequence = withConsequences(VariantConsequence.MISSENSE_VARIANT);
-        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(), oneConsequence.consequenceString());
+        assertEquals(VariantConsequence.MISSENSE_VARIANT.parentTerm(), oneConsequence.consequenceString());
 
         SnpEffAnnotation twoConsequences = withConsequences(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.INFRAME_DELETION);
-        assertTrue(twoConsequences.consequenceString().contains(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm()));
-        assertTrue(twoConsequences.consequenceString().contains(VariantConsequence.INFRAME_DELETION.readableSequenceOntologyTerm()));
+        assertTrue(twoConsequences.consequenceString().contains(VariantConsequence.MISSENSE_VARIANT.parentTerm()));
+        assertTrue(twoConsequences.consequenceString().contains(VariantConsequence.INFRAME_DELETION.parentTerm()));
 
         SnpEffAnnotation twoConsequencesIgnoreOne = withConsequences(VariantConsequence.MISSENSE_VARIANT, VariantConsequence.OTHER);
-        assertEquals(VariantConsequence.MISSENSE_VARIANT.readableSequenceOntologyTerm(), twoConsequencesIgnoreOne.consequenceString());
+        assertEquals(VariantConsequence.MISSENSE_VARIANT.parentTerm(), twoConsequencesIgnoreOne.consequenceString());
     }
 
     @Test

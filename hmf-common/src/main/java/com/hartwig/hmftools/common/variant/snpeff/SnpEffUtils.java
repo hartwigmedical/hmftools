@@ -65,9 +65,10 @@ public final class SnpEffUtils
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableEffects, worstCodingEffect, genesAffected);
     }
 
+    /*
     private static String readEffect(final String effect)
     {
         return effect.replace("&", "; ").replace("_", " ");
     }
-
+    */
 }

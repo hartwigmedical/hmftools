@@ -51,7 +51,7 @@ public class VariantTranscriptImpact
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 VAR_TRANS_IMPACT_ANNOATATION, fields.length(), VCFHeaderLineType.String,
-                String.format("Transcript impact [{}]", fields.toString())));
+                String.format("Transcript impact [%s]", fields.toString())));
     }
 
     public static void writeVcfData(
@@ -84,7 +84,7 @@ public class VariantTranscriptImpact
     public static String effectsToVcf(final List<String> effects)
     {
         StringJoiner sj = new StringJoiner(VAR_TRANS_IMPACT_EFFECTS_DELIM);
-        effects.forEach(x -> sj.add(x.toString()));
+        effects.forEach(x -> sj.add(x));
         return sj.toString();
 
     }

@@ -241,7 +241,6 @@ public class SvTestUtils
                 .splice(0)
                 .inframe(0)
                 .frameshift(0)
-                .variantInfo("")
                 .build();
     }
 

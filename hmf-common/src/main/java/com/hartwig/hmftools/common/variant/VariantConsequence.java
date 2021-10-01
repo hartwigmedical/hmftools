@@ -95,12 +95,12 @@ public enum VariantConsequence
 
     public static String consequenceString(final List<VariantConsequence> consequences)
     {
-        final StringJoiner consequenceString = new StringJoiner("; ");
+        final StringJoiner consequenceString = new StringJoiner("&");
         for(final VariantConsequence consequence : consequences)
         {
-            if(!consequence.readableSequenceOntologyTerm().isEmpty())
+            if(!consequence.parentTerm().isEmpty())
             {
-                consequenceString.add(consequence.readableSequenceOntologyTerm());
+                consequenceString.add(consequence.parentTerm());
             }
         }
         return consequenceString.toString();

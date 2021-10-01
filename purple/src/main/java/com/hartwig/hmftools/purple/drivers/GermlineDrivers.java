@@ -63,7 +63,7 @@ public class GermlineDrivers
     }
 
     static DriverCatalog germlineDriver(DriverCategory category, final String gene,
-            final List<VariantContextDecorator> geneVariants, @Nullable GeneCopyNumber geneCopyNumber)
+            final List<VariantContextDecorator> geneVariants, final GeneCopyNumber geneCopyNumber)
     {
         final Map<DriverImpact,Integer> variantCounts =
                 geneVariants.stream().collect(groupingBy(VariantContextDecorator::impact, counting()))
@@ -79,6 +79,8 @@ public class GermlineDrivers
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
                 .gene(gene)
+                .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
+                .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
                 .driver(DriverType.GERMLINE)
                 .category(category)
                 .driverLikelihood(1)

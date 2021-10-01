@@ -59,7 +59,6 @@ public class ReportableVariantFactoryTest {
                 .biallelic(false)
                 .minCopyNumber(0)
                 .maxCopyNumber(0)
-                .variantInfo("")
                 .build();
     }
 }

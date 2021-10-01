@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep17;
+import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -70,7 +71,7 @@ class DriverCatalogDAO {
     private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep20 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep19 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.CHROMOSOME,
                     DRIVERCATALOG.CHROMOSOMEBAND,
@@ -89,7 +90,6 @@ class DriverCatalogDAO {
                     DRIVERCATALOG.BIALLELIC,
                     DRIVERCATALOG.MINCOPYNUMBER,
                     DRIVERCATALOG.MAXCOPYNUMBER,
-                    DRIVERCATALOG.VARIANTINFO,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(x -> addRecord(timestamp, inserter, sample, x));
             inserter.execute();
@@ -97,7 +97,7 @@ class DriverCatalogDAO {
     }
 
     private static void addRecord(
-            Timestamp timestamp, InsertValuesStep20 inserter, String sample, DriverCatalog entry) {
+            Timestamp timestamp, InsertValuesStep19 inserter, String sample, DriverCatalog entry) {
         inserter.values(sample,
                 entry.chromosome(),
                 entry.chromosomeBand(),
@@ -116,7 +116,6 @@ class DriverCatalogDAO {
                 entry.biallelic(),
                 entry.minCopyNumber(),
                 entry.maxCopyNumber(),
-                entry.variantInfo(),
                 timestamp);
     }
 

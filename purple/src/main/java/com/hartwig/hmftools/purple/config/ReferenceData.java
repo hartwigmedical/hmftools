@@ -223,7 +223,9 @@ public class ReferenceData
         if(cmd.hasOption(ENSEMBL_DATA_DIR))
         {
             // load transcripts with any alts from the driver gene panel in mind
-            List<String> alternativeTrans = DriverGenes.driverGenes().stream().map(x -> x.additionalReportedTranscripts()).collect(Collectors.toList());
+            List<String> alternativeTrans = DriverGenes.driverGenes().stream()
+                    .filter(x -> !x.additionalReportedTranscripts().isEmpty())
+                    .map(x -> x.additionalReportedTranscripts()).collect(Collectors.toList());
 
             if(!alternativeTrans.isEmpty())
             {

@@ -176,7 +176,6 @@ public class DriverDataCache
                 .biallelic(true)
                 .minCopyNumber(gcnData != null ? gcnData.minCopyNumber() : 0)
                 .maxCopyNumber(gcnData != null ? gcnData.maxCopyNumber() : 0)
-                .variantInfo("")
                 .build();
 
         mDriverCatalog.add(driverRecord);

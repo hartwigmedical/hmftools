@@ -33,7 +33,7 @@ public final class VariantImpactSerialiser
         fields.add("GenesAffected");
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                VAR_IMPACT, fields.length(), VCFHeaderLineType.String, String.format("PAVE Variant Impact [{}]", fields.toString())));
+                VAR_IMPACT, fields.length(), VCFHeaderLineType.String, String.format("PAVE Variant Impact [%s]", fields.toString())));
         return header;
     }
 
@@ -86,7 +86,9 @@ public final class VariantImpactSerialiser
 
     private static String writeEffect(final String effect)
     {
-        return effect.replace("; ", "&").replace(" ", "_");
+        return effect.replace("; ", "&")
+                .replace(";", "&")
+                .replace(" ", "_");
     }
 
 }

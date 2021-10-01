@@ -208,14 +208,13 @@ public class PurpleApplication
 
         try
         {
-            final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
-
             if(mConfig.DriversOnly)
             {
-                findDrivers(tumorSample, sampleDataFiles);
+                findDrivers(tumorSample);
             }
             else
             {
+                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, tumorSample);
                 final SampleData sampleData = loadSampleData(referenceId, tumorSample, sampleDataFiles);
 
                 if(sampleData == null)
@@ -405,7 +404,7 @@ public class PurpleApplication
         }
     }
 
-    private void findDrivers(final String tumorSample, final SampleDataFiles sampleDataFiles) throws IOException
+    private void findDrivers(final String tumorSample) throws IOException
     {
         final String purpleDataPath = mConfig.OutputDir;
 
@@ -415,10 +414,16 @@ public class PurpleApplication
         final SomaticStream somaticStream = new SomaticStream(
                 mConfig, mReferenceData, 0, 0, null, somaticVcf);
 
+        int somaticVariantCount = somaticStream.loadVariantsForDriver(somaticVcf);
+        PPL_LOGGER.info("loaded {} somatic variants", somaticVariantCount);
+
         final String germlineVcf = purpleDataPath + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;
 
         if(Files.exists(Paths.get(germlineVcf)))
+        {
             mGermlineVariants.loadReportableVariants(germlineVcf);
+            PPL_LOGGER.info("loaded {} reportable germline variants", mGermlineVariants.reportableVariants().size());
+        }
 
         final PurityContext purityContext = PurityContextFile.read(purpleDataPath, tumorSample);
 
@@ -442,6 +447,7 @@ public class PurpleApplication
         somaticDriverCatalog.addAll(somaticStream.drivers(geneCopyNumberMap));
 
         final CNADrivers cnaDrivers = new CNADrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+
         somaticDriverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
         somaticDriverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));
 

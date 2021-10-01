@@ -24,7 +24,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class TsgDrivers
+public class TsgDrivers
 {
     private final ReportablePredicate mReportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
@@ -35,7 +35,7 @@ class TsgDrivers
         mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel);
     }
 
-    List<DriverCatalog> drivers(
+    public List<DriverCatalog> drivers(
             final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
             final Map<VariantType,Integer> variantTypeCounts, final Map<VariantType,Integer> variantTypeCountsBiallelic)
     {
@@ -49,17 +49,21 @@ class TsgDrivers
 
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
-            // TODO: decide how to handle multiple transcripts per gene
-            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene).get(0);
+            List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
-            driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
+            if(geneCopyNumbers == null)
+                continue;
+
+            for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+            {
+                driverCatalog.add(geneDriver(likelihood, geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber));
+            }
         }
 
         return driverCatalog;
     }
 
-    @NotNull
-    static DriverCatalog geneDriver(
+    public static DriverCatalog geneDriver(
             final DndsDriverGeneLikelihood likelihood, final List<SomaticVariant> geneVariants, final Map<VariantType, Integer> standardCounts,
             final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber)
     {
@@ -76,8 +80,8 @@ class TsgDrivers
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
                 .gene(likelihood.gene())
-                .transcript("")
-                .isCanonical(true)
+                .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
+                .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)
@@ -89,8 +93,7 @@ class TsgDrivers
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS)
-                .variantInfo("");
+                .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {
@@ -155,7 +158,6 @@ class TsgDrivers
         return DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood);
     }
 
-    @NotNull
     private <T extends SomaticVariant> Map<String, List<T>> codingVariantsByGene(final List<T> variants)
     {
         return variants.stream().filter(mReportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));

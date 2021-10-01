@@ -802,7 +802,6 @@ CREATE TABLE driverCatalog
     biallelic BOOLEAN NOT NULL,
     minCopyNumber DOUBLE PRECISION NOT NULL,
     maxCopyNumber DOUBLE PRECISION NOT NULL,
-    variantInfo varchar(255),
     PRIMARY KEY (id),
     INDEX(sampleId, gene),
     INDEX(gene)

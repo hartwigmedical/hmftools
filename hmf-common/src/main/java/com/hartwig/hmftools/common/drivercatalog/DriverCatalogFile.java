@@ -74,7 +74,6 @@ public final class DriverCatalogFile
                 .add("biallelic")
                 .add("minCopyNumber")
                 .add("maxCopyNumber")
-                .add("variantInfo")
                 .toString();
     }
 
@@ -98,7 +97,6 @@ public final class DriverCatalogFile
                 .add(String.valueOf(driverCatalog.biallelic()))
                 .add(FORMAT.format(driverCatalog.minCopyNumber()))
                 .add(FORMAT.format(driverCatalog.maxCopyNumber()))
-                .add(driverCatalog.variantInfo())
                 .toString();
     }
 
@@ -142,8 +140,6 @@ public final class DriverCatalogFile
                     .biallelic(Boolean.parseBoolean(values[fieldsIndexMap.get("biallelic")]))
                     .minCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("minCopyNumber")]))
                     .maxCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("maxCopyNumber")]))
-                    .variantInfo(fieldsIndexMap.containsKey("variantInfo") ?
-                            values[fieldsIndexMap.get("variantInfo")] : "")
                     .build());
         }
 

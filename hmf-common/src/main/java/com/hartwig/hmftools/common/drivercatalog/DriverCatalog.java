@@ -49,7 +49,4 @@ public interface DriverCatalog
     double minCopyNumber();
 
     double maxCopyNumber();
-
-    @Nullable
-    String variantInfo();
 }

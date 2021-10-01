@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.variant.VariantHeader;
 import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -192,7 +193,7 @@ public class SomaticStream implements Consumer<VariantContext>
         {
             mTumorMutationalLoad.processVariant(variant);
             mMicrosatelliteIndels.processVariant(context);
-            checkDrivers(context, variant);
+            checkDrivers(context, variant, true);
         }
 
         mVcfWriter.add(context);
@@ -204,7 +205,34 @@ public class SomaticStream implements Consumer<VariantContext>
         }
     }
 
-    private void checkDrivers(final VariantContext context, final VariantContextDecorator variant)
+    public int loadVariantsForDriver(final String somaticVcf)
+    {
+        if(somaticVcf.isEmpty())
+            return 0;
+
+        PPL_LOGGER.info("Loading somatic variants from {}", somaticVcf);
+        int variantCount = 0;
+
+        try
+        {
+            VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
+
+            for(VariantContext context : vcfReader)
+            {
+                VariantContextDecorator variant = new VariantContextDecorator(context);
+                checkDrivers(context, variant, false);
+                ++variantCount;
+            }
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error("failed to read somatic VCF from file({}): {}", somaticVcf, e.toString());
+        }
+
+        return variantCount;
+    }
+
+    private void checkDrivers(final VariantContext context, final VariantContextDecorator variant, boolean updateVcf)
     {
         Optional<SomaticVariant> somaticVariant = mSomaticVariantFactory.createVariant(mConfig.TumorId, context);
 
@@ -212,7 +240,7 @@ public class SomaticStream implements Consumer<VariantContext>
         {
             boolean reported = mDrivers.add(somaticVariant.get());
 
-            if(reported)
+            if(reported && updateVcf)
             {
                 context.getCommonInfo().putAttribute(REPORTED_FLAG, true);
                 mReportedGenes.add(variant.gene());

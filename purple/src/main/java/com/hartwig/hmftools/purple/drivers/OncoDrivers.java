@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverCatalogFactory.probabilityDriverVariant;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,7 +15,6 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -25,11 +22,10 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-class OncoDrivers
+public class OncoDrivers
 {
-    static final int MAX_REPEAT_COUNT = 7;
+    public static final int MAX_REPEAT_COUNT = 7;
 
     private final ReportablePredicate mReportablePredicate;
     private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
@@ -40,7 +36,7 @@ class OncoDrivers
         mReportablePredicate = new ReportablePredicate(DriverCategory.ONCO, genePanel);
     }
 
-    List<DriverCatalog> drivers(
+    public List<DriverCatalog> drivers(
             final List<SomaticVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap,
             final Map<VariantType,Integer> variantTypeCounts)
     {
@@ -49,7 +45,7 @@ class OncoDrivers
         int sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
         int sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
 
-        final Map<String, List<SomaticVariant>> codingVariants = oncogenicVariantsByGene(variants);
+        final Map<String,List<SomaticVariant>> codingVariants = oncogenicVariantsByGene(variants);
 
         for(String gene : codingVariants.keySet())
         {
@@ -57,26 +53,30 @@ class OncoDrivers
 
             final List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
-            // TODO: decide how to handle multiple transcripts per gene
-            GeneCopyNumber geneCopyNumber = geneCopyNumberMap.get(gene).get(0);
+            List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
-            driverCatalog.add(geneDriver(
-                    sampleSNVCount, sampleINDELCount, gene, geneMissenseLikelihood, geneVariants, geneCopyNumber));
+            if(geneCopyNumbers == null)
+                continue;
+
+            for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+            {
+                driverCatalog.add(geneDriver(
+                        sampleSNVCount, sampleINDELCount, geneMissenseLikelihood, geneVariants, geneCopyNumber));
+            }
+
         }
 
         return driverCatalog;
     }
 
-    @NotNull
     private Map<String, List<SomaticVariant>> oncogenicVariantsByGene(final List<SomaticVariant> variants)
     {
         return variants.stream().filter(mReportablePredicate).collect(Collectors.groupingBy(SomaticVariant::gene));
     }
 
-    @NotNull
-    static DriverCatalog geneDriver(
-            int sampleSNVCount, int sampleIndelCount, final String gene,
-            final DndsDriverGeneLikelihood geneLikelihood, final List<SomaticVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
+    public static DriverCatalog geneDriver(
+            int sampleSNVCount, int sampleIndelCount, final DndsDriverGeneLikelihood geneLikelihood,
+            final List<SomaticVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
     {
         final Map<DriverImpact,Integer> variantCounts = DriverCatalogFactory.driverImpactCount(geneVariants);
         int missenseVariants = variantCounts.getOrDefault(DriverImpact.MISSENSE, 0);
@@ -88,9 +88,9 @@ class OncoDrivers
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
-                .gene(gene)
-                .transcript("")
-                .isCanonical(true)
+                .gene(geneLikelihood.gene())
+                .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
+                .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)
@@ -102,8 +102,7 @@ class OncoDrivers
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS)
-                .variantInfo("");
+                .likelihoodMethod(LikelihoodMethod.DNDS);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {
