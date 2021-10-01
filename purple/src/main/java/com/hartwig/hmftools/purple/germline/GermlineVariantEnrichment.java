@@ -23,8 +23,10 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.somatic.SnpEffEnrichment;
 
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -43,22 +45,21 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
     private final VariantContextEnrichment mLowTumorVCNEnrichment;
     private final VariantContextEnrichment mLowVafRescueEnrichment;
 
-    public GermlineVariantEnrichment(final String purpleVersion, final String referenceSample,
-            final String tumorSample, final IndexedFastaSequenceFile reference,
+    public GermlineVariantEnrichment(
+            final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
-            final DriverGenePanel genePanel, final EnsemblDataCache geneTransCache,
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
             final Consumer<VariantContext> consumer)
     {
-        final Set<String> germlineGenes =
-                genePanel.driverGenes().stream().filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
+        final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
+                .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
 
         // Hotspot must be before reportable
-        mReportableEnrichment = new GermlineReportedEnrichment(genePanel.driverGenes(), somaticReportedGenes, consumer);
+        mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.driverGenes(), somaticReportedGenes, consumer);
         mPathogenicEnrichment = new GermlinePathogenicEnrichment(mReportableEnrichment);
-        mRefGenomeEnrichment = new SomaticRefContextEnrichment(reference, mPathogenicEnrichment);
+        mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, mPathogenicEnrichment);
 
-        mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, geneTransCache, mRefGenomeEnrichment);
+        mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mRefGenomeEnrichment);
 
         // Purity must go before lowTumorVCNEnrichment
         // Hotspot must be before lowTumorVCNEnrichment

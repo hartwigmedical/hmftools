@@ -10,10 +10,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
+import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
 import com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticPurityEnrichment;
@@ -40,11 +40,9 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
     public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityBinWidth, final String purpleVersion,
-            final String referenceId, final String tumorSample, final IndexedFastaSequenceFile reference,
-            final PurityAdjuster purityAdjuster, final DriverGenePanel genePanel,
-            final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
-            final Multimap<Chromosome, VariantHotspot> hotspots, final EnsemblDataCache geneTransCache,
-            final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
+            final String referenceId, final String tumorSample, final ReferenceData refData,
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
+            final Multimap<Chromosome, VariantHotspot> hotspots, final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
     {
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(referenceId, tumorSample, consumer);
 
@@ -55,12 +53,13 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
 
         mKataegisEnrichment = new KataegisEnrichment(mPurityEnrichment);
 
-        mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(reference, mKataegisEnrichment);
+        mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, mKataegisEnrichment);
 
-        final Set<String> somaticGenes =
-                genePanel.driverGenes().stream().filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
+        final Set<String> somaticGenes = refData.DriverGenes.driverGenes().stream()
+                .filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
 
-        mSnpEffEnrichment = new SnpEffEnrichment(somaticGenes, geneTransCache, mSomaticRefContextEnrichment);
+        mSnpEffEnrichment = new SnpEffEnrichment(
+                somaticGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mSomaticRefContextEnrichment);
 
         if(hotspotEnabled)
         {

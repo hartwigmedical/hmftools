@@ -19,8 +19,6 @@ public class CanonicalAnnotation
     private final Set<String> mDriverCatalogGenes;
     private final Map<String, String> mTranscriptGeneMap;
 
-    private static final String CDKN2A_P14ARF_TRANSCRIPT = "ENST00000361570";
-
     public CanonicalAnnotation(final Set<String> driverGenes, final List<HmfTranscriptRegion> transcripts)
     {
         mDriverCatalogGenes = driverGenes;
@@ -39,7 +37,6 @@ public class CanonicalAnnotation
     {
         final List<SnpEffAnnotation> transcriptAnnotations = allAnnotations.stream()
                 .filter(SnpEffAnnotation::isTranscriptFeature)
-                .filter(x -> !x.featureID().equals(CDKN2A_P14ARF_TRANSCRIPT))
                 .collect(Collectors.toList());
 
         return pickCanonicalFavourDriverGene(transcriptAnnotations);

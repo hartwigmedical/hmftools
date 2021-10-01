@@ -37,6 +37,7 @@ public class AnnotatedHotspotVCFPrinter {
 
     public void run(@NotNull String annotatedInputVcf) throws IOException {
         List<HmfTranscriptRegion> canonicalTranscripts = HmfGenePanelSupplier.allGeneList37();
+
         CanonicalAnnotation factory = new CanonicalAnnotation(Sets.newHashSet(), canonicalTranscripts);
 
         LOGGER.info("Simplifying variants from '{}'", annotatedInputVcf);

@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
-import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -40,7 +39,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -65,12 +63,10 @@ public class ReferenceData
 
     public final Map<Chromosome, GenomePosition> Centromeres;
 
-    // public final List<HmfTranscriptRegion> TranscriptRegions;
-
     public final EnsemblDataCache GeneTransCache;
 
     public final DriverGenePanel DriverGenes;
-    public final List<String> AlternativeTransNames;
+    public final List<String> OtherReportableTranscripts;
 
     public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
@@ -195,7 +191,7 @@ public class ReferenceData
             DriverGenes = DriverGenePanelFactory.empty();
         }
 
-        AlternativeTransNames = Lists.newArrayList();
+        OtherReportableTranscripts = Lists.newArrayList();
         GeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR, ""), RefGenVersion);
         loadGeneTransCache(cmd);
 
@@ -229,13 +225,13 @@ public class ReferenceData
 
             if(!alternativeTrans.isEmpty())
             {
-                alternativeTrans.forEach(x -> Arrays.stream(x.split(ITEM_DELIM)).forEach(y -> AlternativeTransNames.add(y)));
+                alternativeTrans.forEach(x -> Arrays.stream(x.split(ITEM_DELIM)).forEach(y -> OtherReportableTranscripts.add(y)));
 
-                PPL_LOGGER.info("loaded {} alternative transcripts", AlternativeTransNames.size());
+                PPL_LOGGER.info("loaded {} alternative transcripts", OtherReportableTranscripts.size());
 
                 GeneTransCache.setRequiredData(true, false, false, true);
                 GeneTransCache.load(true);
-                GeneTransCache.loadTranscriptData(Lists.newArrayList(), AlternativeTransNames);
+                GeneTransCache.loadTranscriptData(Lists.newArrayList(), OtherReportableTranscripts);
             }
             else
             {

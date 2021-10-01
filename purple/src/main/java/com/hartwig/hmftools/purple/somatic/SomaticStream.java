@@ -151,9 +151,8 @@ public class SomaticStream implements Consumer<VariantContext>
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
                     mConfig.RunDrivers, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
-                    mConfig.ReferenceId, mConfig.TumorId, mReferenceData.RefGenome,
-                    purityAdjuster, mGenePanel, copyNumbers, fittedRegions,
-                    mReferenceData.SomaticHotspots, mReferenceData.GeneTransCache, mPeakModel, this::accept);
+                    mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions,
+                    mReferenceData.SomaticHotspots, mPeakModel, this::accept);
 
             final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
             mVcfWriter.writeHeader(header);

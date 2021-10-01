@@ -24,10 +24,6 @@ import org.junit.Test;
 
 public class CanonicalAnnotationTest {
 
-    private static final String CDKN2A = "ENST00000498124";
-    private static final String CDKN2A_P14ARF = "ENST00000361570";
-    private static final String CDKN2A_OTHER = "ENST00000000000";
-
     private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
     private final Set<String> driverGenes = genePanel.driverGenes().stream().map(DriverGene::gene).collect(Collectors.toSet());
     private final List<HmfTranscriptRegion> transcripts = HmfGenePanelSupplier.allGeneList37();
@@ -36,19 +32,6 @@ public class CanonicalAnnotationTest {
     public void testTrimEnsembleTranscriptId() {
         assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570"));
         assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570.v8"));
-    }
-
-    @Test
-    public void favourCDKN2ASnpEffAnnotation() {
-        SnpEffAnnotation p16 = createSnpEffAnnotation("CDKN2A", CDKN2A, VariantConsequence.MISSENSE_VARIANT);
-        SnpEffAnnotation p14 = createSnpEffAnnotation("CDKN2A", CDKN2A_P14ARF, VariantConsequence.MISSENSE_VARIANT);
-        SnpEffAnnotation other = createSnpEffAnnotation("CDKN2A", CDKN2A_OTHER, VariantConsequence.MISSENSE_VARIANT);
-
-        List<SnpEffAnnotation> all = Lists.newArrayList(other, p14, p16);
-
-        CanonicalAnnotation victim = new CanonicalAnnotation(driverGenes, transcripts);
-        assertEquals(p16, victim.canonicalSnpEffAnnotation(all).get());
-        assertFalse(victim.canonicalSnpEffAnnotation(Lists.newArrayList(p14)).isPresent());
     }
 
     @Test

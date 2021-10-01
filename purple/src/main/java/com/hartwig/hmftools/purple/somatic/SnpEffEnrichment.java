@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -36,11 +36,15 @@ public class SnpEffEnrichment implements VariantContextEnrichment
 
     private final CanonicalAnnotation mCanonicalAnnotation;
     private final EnsemblDataCache mGeneTransCache;
+    private final List<String> mOtherReportableTranscripts;
 
     public SnpEffEnrichment(
-            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final Consumer<VariantContext> consumer)
+            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final List<String> otherReportableTranscripts,
+            final Consumer<VariantContext> consumer)
     {
         mConsumer = consumer;
+
+        mOtherReportableTranscripts = otherReportableTranscripts;
 
         mGeneTransCache = geneTransCache;
         mGeneTransCache.createGeneNameIdMap();
@@ -55,7 +59,8 @@ public class SnpEffEnrichment implements VariantContextEnrichment
 
                 for(TranscriptData tranData : transDataList)
                 {
-                    transGeneMap.put(tranData.TransName, geneData.GeneName);
+                    if(tranData.IsCanonical)
+                        transGeneMap.put(tranData.TransName, geneData.GeneName);
                 }
             }
         }
@@ -121,9 +126,34 @@ public class SnpEffEnrichment implements VariantContextEnrichment
             canonicalIsSplice = canonicalEffect.contains("splice");
         }
 
+        String otherReportableTransData = "";
+
+        if(!mOtherReportableTranscripts.isEmpty())
+        {
+            final List<SnpEffAnnotation> otherReportableTrans = allAnnotations.stream()
+                    .filter(SnpEffAnnotation::isTranscriptFeature)
+                    .filter(x -> mOtherReportableTranscripts.contains(x.featureID()))
+                    .collect(Collectors.toList());
+
+            StringJoiner sj = new StringJoiner("|");
+
+            for(SnpEffAnnotation annotation : otherReportableTrans)
+            {
+                // ENST00000579755|c.209_210delCCinsTT|p.Pro70Leu|missense_variant|MISSENSE;
+                String annotationStr = String.format("%s-%s-%s-%s-%s",
+                        annotation.featureID(), annotation.hgvsCoding(), annotation.hgvsProtein(),
+                        annotation.consequenceString(),
+                        codingEffect(context, phasedInframeIndel, annotation));
+
+                sj.add(annotationStr);
+            }
+
+            otherReportableTransData = sj.toString();
+        }
+
         return new VariantImpact(
-                canonicalGeneName, canonicalEffect, canonicalTranscript, canonicalCodingEffect, canonicalHgvsCodingImpact,
-                canonicalHgvsProteinImpact, canonicalIsSplice, "", worstCodingEffect, genesAffected);
+                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                canonicalHgvsProteinImpact, canonicalIsSplice, otherReportableTransData, worstCodingEffect, genesAffected);
     }
 
     private CodingEffect codingEffect(final VariantContext context, boolean phasedInframeIndel, final SnpEffAnnotation annotation)
