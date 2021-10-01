@@ -78,10 +78,10 @@ public interface OrangeConfig {
     static Options createOptions() {
         Options options = new Options();
 
-        options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which PROTECT will run.");
-        options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which PROTECT will run.");
+        options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
+        options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
-        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PROTECT output data will be written to.");
+        options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
 
