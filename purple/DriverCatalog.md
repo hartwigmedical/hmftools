@@ -19,8 +19,8 @@ Report Deletion | T/F | Report if gene copy number < 0.5
 Report Disruption | T/F | LINX will report ‘homozygous disruptions’ - ie disruptions where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain
 Report Hotspot | T/F | Report somatic hotspot mutation regardless of other rules
 Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
-reportGermlineVariant	| 'WILDTYPE_LOST','NONE','ANY','VARIANT_NOT_LOST'| Report any germline variants that meet pathogenic criteria based on specified tumor status
-reportGermlineHotspot | 'WILDTYPE_LOST','NONE','ANY','VARIANT_NOT_LOST'| Report hotspot germline pathogenic variants based on specified tumor status
+reportGermlineVariant	| 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report any germline variants that meet pathogenic criteria based on specified tumor status
+reportGermlineHotspot | 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report hotspot germline pathogenic variants based on specified tumor status
 
 
 The Hartwig Medical Foundation curated gene panel is available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl) and is updated periodically. 
