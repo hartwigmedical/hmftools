@@ -38,10 +38,10 @@ public class SnpEffEnrichment implements VariantContextEnrichment
 
     private final CanonicalAnnotation mCanonicalAnnotation;
     private final EnsemblDataCache mGeneTransCache;
-    private final List<String> mOtherReportableTranscripts;
+    private final Map<String,List<String>> mOtherReportableTranscripts;
 
     public SnpEffEnrichment(
-            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final List<String> otherReportableTranscripts,
+            final Set<String> driverGenes, final EnsemblDataCache geneTransCache, final Map<String,List<String>> otherReportableTranscripts,
             final Consumer<VariantContext> consumer)
     {
         mConsumer = consumer;
@@ -130,11 +130,13 @@ public class SnpEffEnrichment implements VariantContextEnrichment
 
         String otherReportableTransData = "";
 
-        if(!mOtherReportableTranscripts.isEmpty())
+        if(!canonicalGeneName.isEmpty() && mOtherReportableTranscripts.containsKey(canonicalGeneName))
         {
+            final List<String> otherTransNames = mOtherReportableTranscripts.get(canonicalGeneName);
+
             final List<SnpEffAnnotation> otherReportableTrans = allAnnotations.stream()
                     .filter(SnpEffAnnotation::isTranscriptFeature)
-                    .filter(x -> mOtherReportableTranscripts.contains(x.featureID()))
+                    .filter(x -> otherTransNames.contains(x.featureID()))
                     .collect(Collectors.toList());
 
             StringJoiner sj = new StringJoiner(VAR_IMPACT_OTHER_REPORT_DELIM);

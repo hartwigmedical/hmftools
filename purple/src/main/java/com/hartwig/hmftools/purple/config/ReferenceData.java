@@ -66,7 +66,7 @@ public class ReferenceData
     public final EnsemblDataCache GeneTransCache;
 
     public final DriverGenePanel DriverGenes;
-    public final List<String> OtherReportableTranscripts;
+    public final Map<String,List<String>> OtherReportableTranscripts;
 
     public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
@@ -191,7 +191,7 @@ public class ReferenceData
             DriverGenes = DriverGenePanelFactory.empty();
         }
 
-        OtherReportableTranscripts = Lists.newArrayList();
+        OtherReportableTranscripts = Maps.newHashMap();
         GeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR, ""), RefGenVersion);
         loadGeneTransCache(cmd);
 
@@ -219,19 +219,28 @@ public class ReferenceData
         if(cmd.hasOption(ENSEMBL_DATA_DIR))
         {
             // load transcripts with any alts from the driver gene panel in mind
-            List<String> alternativeTrans = DriverGenes.driverGenes().stream()
-                    .filter(x -> !x.additionalReportedTranscripts().isEmpty())
-                    .map(x -> x.additionalReportedTranscripts()).collect(Collectors.toList());
 
-            if(!alternativeTrans.isEmpty())
+            for(DriverGene driverGene : DriverGenes.driverGenes())
             {
-                alternativeTrans.forEach(x -> Arrays.stream(x.split(ITEM_DELIM)).forEach(y -> OtherReportableTranscripts.add(y)));
+                if(!driverGene.additionalReportedTranscripts().isEmpty())
+                {
+                    OtherReportableTranscripts.put(
+                            driverGene.gene(),
+                            Arrays.stream(driverGene.additionalReportedTranscripts().split(ITEM_DELIM)).collect(Collectors.toList()));
+                }
+            }
 
-                PPL_LOGGER.info("loaded {} alternative transcripts", OtherReportableTranscripts.size());
+            if(!OtherReportableTranscripts.isEmpty())
+            {
+                List<String> additionalTransNames = Lists.newArrayList();
+                OtherReportableTranscripts.values().forEach(x -> additionalTransNames.addAll(x));
+
+                PPL_LOGGER.info("loaded {} alternative transcripts from {} genes",
+                        additionalTransNames.size(), OtherReportableTranscripts.size());
 
                 GeneTransCache.setRequiredData(true, false, false, true);
                 GeneTransCache.load(true);
-                GeneTransCache.loadTranscriptData(Lists.newArrayList(), OtherReportableTranscripts);
+                GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
             }
             else
             {
