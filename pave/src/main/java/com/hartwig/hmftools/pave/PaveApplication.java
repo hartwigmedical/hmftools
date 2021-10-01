@@ -281,7 +281,7 @@ public class PaveApplication
 
                 mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
                 mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
-                        impact.TransData.GeneId, geneName, impact.TransData.TransName, impact.consequencesStr(), impact.effectsStr()));
+                        impact.TransData.GeneId, geneName, impact.TransData.TransName, impact.rawConsequencesStr(), impact.effectsStr()));
                 mCsvTranscriptWriter.newLine();
             }
         }
@@ -321,7 +321,7 @@ public class PaveApplication
                     sj.add(geneName);
 
                     sj.add(impact.TransData.TransName);
-                    sj.add(String.valueOf(impact.consequencesStr()));
+                    sj.add(String.valueOf(impact.rawConsequencesStr()));
                     sj.add(String.valueOf(impact.effectsStr()));
 
                     if(annotation != null)

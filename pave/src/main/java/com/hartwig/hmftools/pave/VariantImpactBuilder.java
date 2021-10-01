@@ -6,14 +6,19 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAME
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT_OTHER_REPORT_DELIM;
+import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toOtherReportableTransInfo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class VariantImpactBuilder
 {
@@ -35,6 +40,7 @@ public class VariantImpactBuilder
         VariantTransImpact worstCanonicalImpact = null;
         int worstCanonicalRank = -1;
         String worstGeneName = "";
+        String otherReportableTransData = "";
 
         boolean hasDriverGene = false;
 
@@ -78,6 +84,26 @@ public class VariantImpactBuilder
                     worstGeneName = geneName;
                 }
             }
+
+            if(isDriverGene && mGeneDataCache.getOtherReportableTranscripts().containsKey(geneName))
+            {
+                List<String> otherReportableTrans = mGeneDataCache.getOtherReportableTranscripts().get(geneName);
+                StringJoiner sj = new StringJoiner(VAR_IMPACT_OTHER_REPORT_DELIM);
+
+                for(VariantTransImpact transImpact : geneImpacts)
+                {
+                    if(otherReportableTrans.contains(transImpact.TransData.TransName))
+                    {
+                        CodingEffect codingEffect = determineCodingEffect(variant, transImpact);
+
+                        sj.add(toOtherReportableTransInfo(
+                                transImpact.TransData.TransName, transImpact.hgvsCodingChange(), transImpact.hgvsProteinChange(),
+                                transImpact.effectsStr(), codingEffect));
+                    }
+                }
+
+                otherReportableTransData = sj.toString();
+            }
         }
 
         String canonicalGeneName = "";
@@ -106,9 +132,8 @@ public class VariantImpactBuilder
         }
 
         return new VariantImpact(
-                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect,
-                canonicalHgvsCodingImpact, canonicalHgvsProteinImpact, canonicalSpliceRegion, "", worstCodingEffect,
-                variant.getImpacts().size());
+                canonicalGeneName, canonicalTranscript, canonicalEffect, canonicalCodingEffect, canonicalHgvsCodingImpact,
+                canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableTransData, worstCodingEffect, variant.getImpacts().size());
     }
 
     private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact)

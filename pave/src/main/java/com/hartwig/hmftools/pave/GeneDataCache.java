@@ -1,14 +1,18 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.pave.PaveConfig.VI_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -23,6 +27,7 @@ public class GeneDataCache
     private final EnsemblDataCache mEnsemblDataCache;
 
     private final List<String> mDriverGenes;
+    private final Map<String,List<String>> mOtherReportableTranscripts;
 
     private String mCurrentChromosome;
     private List<GeneData> mCurrentChromosomeGenes;
@@ -34,6 +39,7 @@ public class GeneDataCache
         mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
 
         mDriverGenes = Lists.newArrayList();
+        mOtherReportableTranscripts = Maps.newHashMap();
         loadDriverGenes(driverGenePanel);
 
         mCurrentChromosome = null;
@@ -44,6 +50,7 @@ public class GeneDataCache
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
     public List<String> getDriverPanelGenes() { return mDriverGenes; }
+    public Map<String,List<String>> getOtherReportableTranscripts() { return mOtherReportableTranscripts; }
 
     public boolean loadCache() { return loadCache(false, false); }
 
@@ -80,7 +87,24 @@ public class GeneDataCache
         try
         {
             List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneFile);
-            driverGenes.forEach(x -> mDriverGenes.add(x.gene()));
+
+            for(DriverGene driverGene : driverGenes)
+            {
+                driverGenes.forEach(x -> mDriverGenes.add(x.gene()));
+
+                if(!driverGene.additionalReportedTranscripts().isEmpty())
+                {
+                    mOtherReportableTranscripts.put(
+                            driverGene.gene(),
+                            Arrays.stream(driverGene.additionalReportedTranscripts().split(ITEM_DELIM)).collect(Collectors.toList()));
+                }
+            }
+
+            if(!mOtherReportableTranscripts.isEmpty())
+            {
+                VI_LOGGER.info("loaded {} driver alternative transcripts from {} genes",
+                        mOtherReportableTranscripts.values().stream().mapToInt(x -> x.size()).sum(), mOtherReportableTranscripts.size());
+            }
         }
         catch (IOException e)
         {

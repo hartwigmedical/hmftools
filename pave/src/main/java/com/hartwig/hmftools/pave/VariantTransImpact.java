@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import java.util.List;
@@ -93,23 +94,21 @@ public class VariantTransImpact
                 .findFirst().orElse(null);
     }
 
-    public String consequencesStr()
-    {
-        StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        consequences().forEach(x -> sj.add(x.toString()));
-        return sj.toString();
-    }
-
     public String effectsStr()
     {
+        return consequencesToString(consequences());
+    }
+
+    public String rawConsequencesStr()
+    {
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mConsequenceEffects.forEach(x -> sj.add(x.toString()));
+        mConsequenceEffects.forEach(x -> sj.add(x));
         return sj.toString();
     }
 
     public String toString()
     {
         return String.format("trans(%s) conseq(%s) effects(%s) inSplice(%s)",
-                TransData.TransName, consequencesStr(), effectsStr(), mInSpliceRegion);
+                TransData.TransName, rawConsequencesStr(), effectsStr(), mInSpliceRegion);
     }
 }
