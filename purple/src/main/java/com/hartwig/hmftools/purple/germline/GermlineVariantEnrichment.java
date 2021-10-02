@@ -110,6 +110,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         header = mRefGenomeEnrichment.enrichHeader(header);
         header = mSnpEffEnrichment.enrichHeader(header);
         header = mLowVafRescueEnrichment.enrichHeader(header);
+        header = mLowTumorVCNEnrichment.enrichHeader(header);
         header = mReportableEnrichment.enrichHeader(header);
         header = mGenotypeEnrichment.enrichHeader(header);
         return mPathogenicEnrichment.enrichHeader(header);
