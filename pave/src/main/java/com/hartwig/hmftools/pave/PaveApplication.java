@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
+import com.hartwig.hmftools.pave.compare.ComparisonUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -312,7 +313,7 @@ public class PaveApplication
                     if(impact.TransData == null)
                         continue;
 
-                    SnpEffAnnotation annotation = impact.findMatchingAnnotation(annotations);
+                    SnpEffAnnotation annotation = ComparisonUtils.findMatchingAnnotation(impact, annotations);
 
                     StringJoiner sj = new StringJoiner(DELIM);
                     sj.add(variant.toCsv());

@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 public class VariantTransImpact
 {
@@ -86,13 +85,6 @@ public class VariantTransImpact
 
     public String hgvsCodingChange() { return ""; }
     public String hgvsProteinChange() { return ""; }
-
-    public SnpEffAnnotation findMatchingAnnotation(final List<SnpEffAnnotation> annotations)
-    {
-        return annotations.stream()
-                .filter(x -> x.featureID() != null && x.featureID().equals(TransData.TransName))
-                .findFirst().orElse(null);
-    }
 
     public String effectsStr()
     {
