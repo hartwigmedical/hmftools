@@ -13,9 +13,9 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
+import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.genepanel.HmfExonPanelBed;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -96,7 +96,7 @@ public class GenerateDriverGeneFiles
         String genePanelDir = mResourceRepoDir + "/gene_panel/" + (refGenomeVersion.is37() ? "37" : "38");
         String sageDir = mResourceRepoDir + "/sage/" + (refGenomeVersion.is37() ? "37" : "38");
 
-        String qualityBedFile = getResourceURL(refGenomeVersion.addVersionToFilePath("/drivercatalog/QualityRecalibration.bed"));
+        String qualityBedFile = getResourceURL(refGenomeVersion.addVersionToFilePath("/drivers/QualityRecalibration.bed"));
         Collection<GenomeRegion> qualityRecalibrationRegions = BEDFileLoader.fromBedFile(qualityBedFile).values();
 
         String clinvarFile = refGenomeVersion == RefGenomeVersion.V37
