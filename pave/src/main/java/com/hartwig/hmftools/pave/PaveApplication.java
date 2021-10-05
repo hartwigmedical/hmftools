@@ -224,7 +224,7 @@ public class PaveApplication
             {
                 VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
 
-                if(transImpact != null)
+                if(transImpact != null && !transImpact.consequences().isEmpty())
                     variant.addImpact(geneData.GeneName, transImpact);
             }
         }

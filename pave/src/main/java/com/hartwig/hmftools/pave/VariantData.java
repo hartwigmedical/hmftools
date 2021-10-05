@@ -22,8 +22,16 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class VariantData
 {
     public final String Chromosome;
-    public final int Position;
+
+    public final int Position; // as per the variant definition
+
+    // position and end position should be symmetrical, so that EndPosition functions like Position on the negative strand
+    // pos for an SNV
+    // pos + alt-length - 1 for MNV
+    // pos + ref-length - 1 for DEL
+    // pos + 1 for an INS
     public final int EndPosition;
+
     public final String Ref;
     public final String Alt;
 
@@ -38,7 +46,6 @@ public class VariantData
     // for an insert, none
     // for a delete, the deleted positions, so starting after the first (ref) position
     // for SNVs and MNVs, all of them
-
     private final List<Integer> mNonRefPositions;
 
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
@@ -61,18 +68,29 @@ public class VariantData
             mNonRefPositions = Lists.newArrayListWithExpectedSize(0);
             EndPosition = Position + 1;
         }
-        else
+        else if(isDeletion())
         {
-            int count = mIndelBaseDiff == 0 ? Ref.length() : abs(mIndelBaseDiff);
+            int count = abs(mIndelBaseDiff);
             mNonRefPositions = Lists.newArrayListWithExpectedSize(count);
 
-            int startPos = isIndel() ? 1 : 0;
-            for(int i = startPos; i < Ref.length(); ++i)
+            for(int i = 1; i < Ref.length(); ++i)
             {
                 mNonRefPositions.add(Position + i);
             }
 
-            EndPosition = mNonRefPositions.get(mNonRefPositions.size() - 1);
+            EndPosition = Position + count; // the first based after the deleted section
+        }
+        else
+        {
+            int count = Ref.length();
+            mNonRefPositions = Lists.newArrayListWithExpectedSize(count);
+
+            for(int i = 0; i < Ref.length(); ++i)
+            {
+                mNonRefPositions.add(Position + i);
+            }
+
+            EndPosition = Position + count - 1;
         }
 
         mGeneImpacts = Maps.newHashMap();
@@ -102,6 +120,8 @@ public class VariantData
     public boolean isIndel() { return mIndelBaseDiff != 0; }
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
+
+    public int[] positions() { return new int[] { Position, EndPosition }; }
 
     public List<Integer> nonRefPositions() { return mNonRefPositions; }
 

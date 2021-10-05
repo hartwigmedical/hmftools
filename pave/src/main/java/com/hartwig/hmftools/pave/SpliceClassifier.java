@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCEPTOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
@@ -31,12 +32,12 @@ public class SpliceClassifier
         int exonEndSpliceRegionStart = exon.End - SPLICE_REGION_EXON_RANGE + 1;
         int exonEndSpliceRegionEnd = exon.End + SPLICE_REGION_INTRON_RANGE;
 
-
         boolean atTransStart = exon.Start == transData.TransStart;
         boolean atTransEnd = exon.End == transData.TransEnd;
 
         List<Integer> nonRefPositions = variant.nonRefPositions();
 
+        /* doesn't handle INS correctly
         if(!atTransStart)
         {
             if(nonRefPositions.stream().anyMatch(x -> positionWithin(x, exonStartSpliceRegionStart, exonStartSpliceRegionEnd)))
@@ -48,6 +49,19 @@ public class SpliceClassifier
             if(nonRefPositions.stream().anyMatch(x -> positionWithin(x, exonEndSpliceRegionStart, exonEndSpliceRegionEnd)))
                 return true;
         }
+        */
+
+        if(!atTransStart)
+        {
+            if(positionsOverlap(variant.Position, variant.EndPosition, exonStartSpliceRegionStart, exonStartSpliceRegionEnd))
+                return true;
+        }
+
+        if(!atTransEnd)
+        {
+            if(positionsOverlap(variant.Position, variant.EndPosition, exonEndSpliceRegionStart, exonEndSpliceRegionEnd))
+                return true;
+        }
 
         return false;
     }
@@ -55,13 +69,13 @@ public class SpliceClassifier
     public String classifyVariant(final VariantData variant, final TranscriptData transData, final ExonData exon)
     {
         /* Rules:
-            - mark any variant hitting slice donor sites (D-1,D+1,D+2,D+5) as splice_donor_variant
-            - mark any variant hitting slice acceptor sites (A+1;A+2; A+3 if ALT=G only, ALT=C neg-strand) as splice_acceptor_variant
+            - mark any variant hitting splice donor sites (D-1,D+1,D+2,D+5) as splice_donor_variant
+            - mark any variant hitting splice acceptor sites (A+1;A+2; A+3 if ALT=G only, ALT=C neg-strand) as splice_acceptor_variant
             - INDELS at D+2 (+ve strand only), D+3 and D+4, D+5 (-ve strand only) should be treated as splice_donor_variant
                 UNLESS the repeat sequence = microhomology and the 5th base is not altered
             - DELs near DONOR sites on the negative strand may also delete the D+5 position if exonDistance-length(REF)<=5 and
                 should also be treated as splice_donor_variant
-            - SNV may also be synonymous, missense or nonsense if at D-1 (ranked by NONSENSE,SPLICE,MISSENSE,SYNONYMOUS
+            - SNV may also be synonymous, missense or nonsense if at D-1 (ranked by NONSENSE,SPLICE,MISSENSE,SYNONYMOUS)
         */
 
         int donorExonPos = transData.posStrand() ? exon.End : exon.Start;

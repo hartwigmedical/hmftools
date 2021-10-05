@@ -40,10 +40,10 @@ public enum VariantConsequence
     UTR_VARIANT("UTR_variant", THREE_PRIME_UTR_EFFECT, FIVE_PRIME_UTR_EFFECT,
             "5_prime_UTR_premature_start_codon_gain_variant", "5_prime_UTR_truncation", "3_prime_UTR_truncation"),
     UPSTREAM_GENE_VARIANT("upstream_gene_variant"),
+    NON_CODING_TRANSCRIPT_VARIANT("non_coding_transcript_variant", "non_coding_transcript_exon_variant"),
 
     INTRAGENIC_VARIANT("intragenic_variant"),
     TRANSCRIPT("transcript"),
-    NON_CODING_TRANSCRIPT_VARIANT("non_coding_transcript_variant", "non_coding_transcript_exon_variant"),
     SEQUENCE_FEATURE("sequence_feature"),
     REGULATORY_REGION_VARIANT("regulatory_region_variant", "TF_binding_site_variant"),
     INITIATOR_CODON_VARIANT("initiator_codon_variant"),

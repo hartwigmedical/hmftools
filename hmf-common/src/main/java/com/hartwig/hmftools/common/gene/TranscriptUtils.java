@@ -202,7 +202,6 @@ public class TranscriptUtils
         }
 
         // adjust for strand of the gene
-
         if(transData.Strand == NEG_STRAND)
         {
             if(posInCodingRegion && isExonic)

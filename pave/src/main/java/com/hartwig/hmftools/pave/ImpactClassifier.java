@@ -6,7 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
 import static com.hartwig.hmftools.common.variant.ConsequenceEffects.INTRON_VARIANT_EFFECT;
@@ -16,12 +16,12 @@ import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
-import static com.hartwig.hmftools.pave.CodingContext.determineContext;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
 
@@ -47,26 +47,40 @@ public class ImpactClassifier
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)
     {
-        // non-coding transcripts are ignored
+        if(isOutsideTransRange(variant, transData))
+            return null;
+
         if(transData.CodingStart == null)
-            return null;
+        {
+            // check if exonic otherwise ignore
+            if(transData.exons().stream().noneMatch(x -> positionsOverlap(variant.Position, variant.EndPosition, x.Start, x.End)))
+                return null;
+        }
 
-        int position = variant.Position;
+        VariantTransImpact transImpact = new VariantTransImpact(transData);
 
-        if(isOutsideTransRange(transData, position))
-            return null;
+        CodingContext codingContext = CodingContext.determineContext(variant, transData);
+        transImpact.setCodingContext(codingContext);
 
-        VariantTransImpact transImpact = checkNonCodingImpact(variant, transData);
-
-        if(transImpact != null)
+        if(transData.CodingStart == null)
+        {
+            transImpact.addConsequence(NON_CODING_TRANSCRIPT_VARIANT);
             return transImpact;
+        }
 
-        List<String> consequenceEffects = Lists.newArrayList();
+        if(codingContext.isCoding())
+        {
+            ProteinContext proteinContext = ProteinContext.determineContext(variant, codingContext, transData, mRefGenome);
+            transImpact.setProteinContext(proteinContext);
+        }
+
+        if(checPrePostCodingImpact(variant, transImpact))
+            return transImpact;
 
         boolean inSpliceRegion = false;
         int exonRank = 0;
 
-        // check intron variant
+        // loop through all exons checking if the variant falls in a splice region and is intronic or exonic
         int exonCount = transData.exons().size();
         for(int i = 0; i < exonCount; ++i)
         {
@@ -78,41 +92,35 @@ public class ImpactClassifier
             {
                 inSpliceRegion = true;
                 exonRank = exon.Rank;
-                addConsequenceEffect(consequenceEffects, mSpliceClassifier.classifyVariant(variant, transData, exon));
+                transImpact.addConsequence(mSpliceClassifier.classifyVariant(variant, transData, exon));
             }
             else if(!inSpliceRegion && nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
             {
                 inSpliceRegion = true;
                 exonRank = nextExon.Rank;
-                addConsequenceEffect(consequenceEffects, mSpliceClassifier.classifyVariant(variant, transData, nextExon));
+                transImpact.addConsequence(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
-            if(positionWithin(position, exon.Start, exon.End) || positionWithin(variant.EndPosition, exon.Start, exon.End))
+            if(positionsWithin(variant.Position, variant.EndPosition, exon.Start, exon.End))
             {
                 exonRank = exon.Rank;
-                transImpact = classifyExonicPosition(variant, transData, exon);
+                classifyExonicPosition(variant, transImpact, exon);
                 break;
             }
 
-            if(nextExon != null && positionsWithin(position, variant.EndPosition, exon.End + 1, nextExon.Start - 1))
+            if(nextExon != null && positionsWithin(variant.Position, variant.EndPosition, exon.End + 1, nextExon.Start - 1))
             {
-                addConsequenceEffect(consequenceEffects, INTRON_VARIANT_EFFECT);
+                transImpact.addConsequence(INTRON_VARIANT_EFFECT);
                 break;
             }
-        }
 
-        if(transImpact == null)
-        {
-            if(consequenceEffects.isEmpty())
-                return null;
-
-            transImpact = new VariantTransImpact(transData, consequenceEffects.get(0));
-            consequenceEffects.remove(0);
-        }
-
-        for(String effect : consequenceEffects)
-        {
-            transImpact.addConsequence(effect);
+            // variant which full straddles the splice region
+            if(!inSpliceRegion && variant.Position < exon.Start && variant.EndPosition >= exon.Start)
+            {
+                // TO-DO - confirm that should be splice_donor_variant or splice_acceptor_variant
+                transImpact.addConsequence(SPLICE_REGION_EFFECT);
+                break;
+            }
         }
 
         if(inSpliceRegion)
@@ -140,67 +148,81 @@ public class ImpactClassifier
         consequenceEffects.add(consequenceEffect);
     }
 
-    private boolean isOutsideTransRange(final TranscriptData transData, int position)
+    private boolean isOutsideTransRange(final VariantData variant, final TranscriptData transData)
     {
         if(transData.posStrand())
-            return position < transData.TransStart - GENE_UPSTREAM_DISTANCE || position > transData.TransEnd;
+            return variant.EndPosition < transData.TransStart - GENE_UPSTREAM_DISTANCE || variant.Position > transData.TransEnd;
         else
-            return position < transData.TransStart || position > transData.TransEnd + GENE_UPSTREAM_DISTANCE;
+            return variant.EndPosition < transData.TransStart || variant.Position > transData.TransEnd + GENE_UPSTREAM_DISTANCE;
     }
 
-    private VariantTransImpact checkNonCodingImpact(final VariantData variant, final TranscriptData transData)
+    private boolean checPrePostCodingImpact(final VariantData variant, final VariantTransImpact transImpact)
     {
+        final TranscriptData transData = transImpact.TransData;
+
         if(transData.posStrand())
         {
-            int position = variant.Position;
-
             // check pre-gene region
-            if(position >= transData.TransStart - GENE_UPSTREAM_DISTANCE && position < transData.TransStart)
-                return new VariantTransImpact(transData, UPSTREAM_GENE_VARIANT);
+            if(variant.Position >= transData.TransStart - GENE_UPSTREAM_DISTANCE && variant.EndPosition < transData.TransStart)
+            {
+                transImpact.addConsequence(UPSTREAM_GENE_VARIANT);
+                return true;
+            }
 
             // check 5' and 3' UTR
-            if(position >= transData.TransStart && position < transData.CodingStart)
-                return new VariantTransImpact(transData, FIVE_PRIME_UTR_EFFECT);
+            if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
+            {
+                transImpact.addConsequence(FIVE_PRIME_UTR_EFFECT);
+                return true;
+            }
 
-            if(position > transData.CodingEnd && position <= transData.TransEnd)
-                return new VariantTransImpact(transData, THREE_PRIME_UTR_EFFECT);
-
+            if(variant.Position > transData.CodingEnd && variant.Position <= transData.TransEnd)
+            {
+                transImpact.addConsequence(THREE_PRIME_UTR_EFFECT);
+                return true;
+            }
         }
         else
         {
-            int position = variant.EndPosition;
+            if(variant.Position > transData.TransEnd && variant.EndPosition <= transData.TransEnd + GENE_UPSTREAM_DISTANCE)
+            {
+                transImpact.addConsequence(UPSTREAM_GENE_VARIANT);
+                return true;
+            }
 
-            if(position > transData.TransEnd && position <= transData.TransEnd + GENE_UPSTREAM_DISTANCE)
-                return new VariantTransImpact(transData, UPSTREAM_GENE_VARIANT);
+            if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
+            {
+                transImpact.addConsequence(THREE_PRIME_UTR_EFFECT);
+                return true;
+            }
 
-            if(position >= transData.TransStart && position < transData.CodingStart)
-                return new VariantTransImpact(transData, THREE_PRIME_UTR_EFFECT);
-
-            if(position > transData.CodingEnd && position <= transData.TransEnd)
-                return new VariantTransImpact(transData, FIVE_PRIME_UTR_EFFECT);
+            if(variant.Position > transData.CodingEnd && variant.EndPosition <= transData.TransEnd)
+            {
+                transImpact.addConsequence(FIVE_PRIME_UTR_EFFECT);
+                return true;
+            }
         }
 
-        return null;
+        return false;
     }
 
-    private VariantTransImpact classifyExonicPosition(final VariantData variant, final TranscriptData transData, final ExonData exon)
+    private void classifyExonicPosition(final VariantData variant, final VariantTransImpact transImpact, final ExonData exon)
     {
+        final TranscriptData transData = transImpact.TransData;
+
         if(variant.isIndel())
         {
             // if only the end of an exon is affected (either strand) then this doesn't change the coding bases
-            if(variant.Position == exon.End)
-                return null;
-
-            if(variant.isInsert() && variant.EndPosition == exon.Start)
-                return null;
+            if(variant.EndPosition == exon.Start || variant.Position == exon.End)
+                return;
 
             // if the variant crosses the exon boundary then only check the bases which are exonic to decide between frameshift or inframe
             int exonicBases = 0;
 
             if(variant.isDeletion())
             {
-                int firstDelBase = variant.Position + 1;
-                int lastDelBase = variant.Position + abs(variant.baseDiff());
+                int firstDelBase = variant.nonRefPositions().get(0);
+                int lastDelBase = variant.nonRefPositions().get(variant.nonRefPositions().size() - 1);
 
                 if(abs(exon.Start - variant.Position) < abs(exon.End - variant.Position))
                     exonicBases = lastDelBase - max(firstDelBase, exon.Start) + 1;
@@ -212,94 +234,26 @@ public class ImpactClassifier
                 exonicBases = variant.baseDiff();
             }
 
-            /*
-            if(positionWithin(exon.Start, firstDelBase, lastDelBase) && positionWithin(exon.Start + 1, firstDelBase, lastDelBase))
-                return new VariantTransImpact(transData, FRAMESHIFT_VARIANT);
-            else if(positionWithin(exon.End, firstDelBase, lastDelBase) && positionWithin(exon.End + 1, firstDelBase, lastDelBase))
-                return new VariantTransImpact(transData, FRAMESHIFT_VARIANT);
-            */
-
             if((exonicBases % 3) == 0)
             {
                 // could use phasing info to set conservative vs disruptive type
-                VariantTransImpact transImpact = variant.isDeletion() ?
-                        new VariantTransImpact(transData, INFRAME_DELETION) : new VariantTransImpact(transData, INFRAME_INSERTION);
 
-                CodingContext codingContext = determineContext(
-                        variant.Chromosome, variant.Position, variant.Ref, variant.Alt, transData, mRefGenome);
-
-                transImpact.setCodingContext(codingContext);
-
-                return transImpact;
+                if(variant.isDeletion())
+                    transImpact.addConsequence(INFRAME_DELETION);
+                else
+                    transImpact.addConsequence(INFRAME_INSERTION);
             }
             else
             {
-                return new VariantTransImpact(transData, FRAMESHIFT_VARIANT);
+                transImpact.addConsequence(FRAMESHIFT_VARIANT);
             }
         }
         else
         {
-            CodingContext codingContext = determineContext(
-                    variant.Chromosome, variant.Position, variant.Ref, variant.Alt, transData, mRefGenome);
-
-            /*
-            // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
-            int varLength = variant.Ref.length();
-            boolean posStrand = transData.posStrand();
-
-            int upstreamStartPos = posStrand ? variant.Position : variant.Position + varLength - 1;
-            final CodingBaseData cbData = calcCodingBases(transData, upstreamStartPos);
-
-            // this is 0 if the variant starts on the first base of a codon (phase=1), 1 if it starts on the 2nd, and 2 if on the 3rd/last
-            int openCodonBases = getOpenCodonBases(cbData.Phase);
-
-            int codingBaseLen = (int)(Math.ceil((openCodonBases + varLength) / 3.0)) * 3;
-
-            int codonStartPos = posStrand ? upstreamStartPos - openCodonBases : upstreamStartPos + openCodonBases;
-
-            List<int[]> codingRanges = getCodingBaseRanges(transData, codonStartPos, posStrand, codingBaseLen);
-            String refCodingBases = mRefGenome.getBaseString(variant.Chromosome, codingRanges);
-
-            String altCodingBases;
-            String refAminoAcids;
-            String altAminoAcids;
-
-            if(posStrand)
-            {
-                if(openCodonBases > 0)
-                {
-                    altCodingBases = refCodingBases.substring(0, openCodonBases) + variant.Alt
-                            + refCodingBases.substring(openCodonBases + varLength);
-                }
-                else
-                {
-                    altCodingBases = variant.Alt + refCodingBases.substring(varLength);
-                }
-
-                refAminoAcids = Codons.aminoAcidFromBases(refCodingBases);
-                altAminoAcids = Codons.aminoAcidFromBases(altCodingBases);
-            }
+            if(transImpact.getProteinContext().hasProteinChange())
+                transImpact.addConsequence(MISSENSE_VARIANT);
             else
-            {
-                if(openCodonBases > 0)
-                {
-                    altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength - openCodonBases) + variant.Alt
-                            + refCodingBases.substring(codingBaseLen - openCodonBases);
-                }
-                else
-                {
-                    altCodingBases = refCodingBases.substring(0, codingBaseLen - varLength) + variant.Alt;
-                }
-
-                refAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(refCodingBases));
-                altAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(altCodingBases));
-            }
-            */
-
-            VariantConsequence consequence = codingContext.hasProteinChange() ? MISSENSE_VARIANT : SYNONYMOUS_VARIANT;
-            VariantTransImpact transImpact = new VariantTransImpact(transData, consequence);
-            transImpact.setCodingContext(codingContext);
-            return transImpact;
+                transImpact.addConsequence(SYNONYMOUS_VARIANT);
         }
     }
 
@@ -309,7 +263,7 @@ public class ImpactClassifier
             return;
 
         VariantConsequence ssConsequence = checkStopStartCodons(
-                transImpact.getCodingContext().WildtypeAA, transImpact.getCodingContext().NovelAA);
+                transImpact.getProteinContext().WildtypeAA, transImpact.getProteinContext().NovelAA);
 
         if(ssConsequence != null)
         {

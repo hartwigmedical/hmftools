@@ -298,7 +298,7 @@ public class ImpactComparisons
             mCsvWriter.write("SampleId,");
             mCsvWriter.write(VariantData.csvCommonHeader());
             mCsvWriter.write(",GeneName,IsDriver,CanonEffect,CanonCodingEffect");
-            mCsvWriter.write(",WorstEffect,WorstCodingEffect,WorstTrans,GenesAffected");
+            mCsvWriter.write(",WorstCodingEffect,GenesAffected");
             mCsvWriter.write(",SnpEffGeneName,SnpEffCanonEffect,SnpEffCanonCodingEffect");
             mCsvWriter.write(",SnpEffWorstCodingEffect,SnpEffGenesAffected");
             mCsvWriter.newLine();

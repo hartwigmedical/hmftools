@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INTRON_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
@@ -59,28 +60,28 @@ public class VariantImpactTest
         VariantData var = createSnv(pos, refBases);
 
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(UPSTREAM_GENE_VARIANT, impact.consequence());
+        assertEquals(UPSTREAM_GENE_VARIANT, impact.topConsequence());
 
         // 5' UTR
         pos = 120;
         var = createSnv(pos, refBases);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(UTR_VARIANT, impact.consequence());
+        assertEquals(UTR_VARIANT, impact.topConsequence());
 
         // 3' UTR
         pos = 440;
         var = createSnv(pos, refBases);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(UTR_VARIANT, impact.consequence());
+        assertEquals(UTR_VARIANT, impact.topConsequence());
 
         // intronic
         pos = 175;
         var = createSnv(pos, refBases);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(INTRON_VARIANT, impact.consequence());
+        assertEquals(INTRON_VARIANT, impact.topConsequence());
 
         TranscriptData transDataNegStrand = createTransExons(
                 GENE_ID_2, TRANS_ID_2, NEG_STRAND, exonStarts, 50, codingStart, codingEnd, false, "");
@@ -90,14 +91,31 @@ public class VariantImpactTest
         var = createSnv(pos, refBases);
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
-        assertEquals(UPSTREAM_GENE_VARIANT, impact.consequence());
+        assertEquals(UPSTREAM_GENE_VARIANT, impact.topConsequence());
 
         // intronic
         pos = 375;
         var = createSnv(pos, refBases);
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
-        assertEquals(INTRON_VARIANT, impact.consequence());
+        assertEquals(INTRON_VARIANT, impact.topConsequence());
+
+        // non-coding exonic
+        TranscriptData transDataNonCoding = createTransExons(
+                GENE_ID_2, TRANS_ID_2, NEG_STRAND, exonStarts, 50, null, null, false, "");
+
+        // intronic is nothing
+        pos = 160;
+        var = createSnv(pos, refBases);
+
+        impact = classifier.classifyVariant(var, transDataNonCoding);
+        assertEquals(null, impact);
+
+        pos = 220;
+        var = createSnv(pos, refBases);
+
+        impact = classifier.classifyVariant(var, transDataNonCoding);
+        assertEquals(NON_CODING_TRANSCRIPT_VARIANT, impact.topConsequence());
     }
 
     private VariantData createSnv(int position, final String refBases)
@@ -151,7 +169,7 @@ public class VariantImpactTest
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(SYNONYMOUS_VARIANT, impact.consequence());
+        assertEquals(SYNONYMOUS_VARIANT, impact.topConsequence());
 
         // now missense
         pos = 41;
@@ -160,7 +178,7 @@ public class VariantImpactTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(MISSENSE_VARIANT, impact.consequence());
+        assertEquals(MISSENSE_VARIANT, impact.topConsequence());
 
         // first base of a codon changes
         codonPos = 46;
@@ -176,7 +194,7 @@ public class VariantImpactTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(SYNONYMOUS_VARIANT, impact.consequence());
+        assertEquals(SYNONYMOUS_VARIANT, impact.topConsequence());
 
         // test for an MNV spanning 3 codons - first in the last codon pos at 42 then all the next and 2 into the final one at 46
         pos = 42;
@@ -185,14 +203,14 @@ public class VariantImpactTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(SYNONYMOUS_VARIANT, impact.consequence());
+        assertEquals(SYNONYMOUS_VARIANT, impact.topConsequence());
 
         // now missense by change middle codon
         alt = "G" + "AAT" + "C";
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(MISSENSE_VARIANT, impact.consequence());
+        assertEquals(MISSENSE_VARIANT, impact.topConsequence());
 
         // test reverse strand
         TranscriptData transDataNegStrand = createTransExons(
@@ -218,7 +236,7 @@ public class VariantImpactTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
-        assertEquals(SYNONYMOUS_VARIANT, impact.consequence());
+        assertEquals(SYNONYMOUS_VARIANT, impact.topConsequence());
 
         // now missense
         pos = 243;
@@ -227,7 +245,7 @@ public class VariantImpactTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
-        assertEquals(MISSENSE_VARIANT, impact.consequence());
+        assertEquals(MISSENSE_VARIANT, impact.topConsequence());
 
         // test a MNV spanning 3 codons as before
         pos = 241;
@@ -236,14 +254,14 @@ public class VariantImpactTest
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
-        assertEquals(SYNONYMOUS_VARIANT, impact.consequence());
+        assertEquals(SYNONYMOUS_VARIANT, impact.topConsequence());
 
         // and missense
         alt = reverseStrandBases("G" + "AAT" + "C");
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNegStrand);
-        assertEquals(MISSENSE_VARIANT, impact.consequence());
+        assertEquals(MISSENSE_VARIANT, impact.topConsequence());
     }
 
     @Test
@@ -265,22 +283,22 @@ public class VariantImpactTest
         ImpactClassifier classifier = new ImpactClassifier(refGenome);
 
         // inframe conservative deletion of 2 codons (ie 3 -> 1)
-        int pos = 46; // first base of codon
-        String ref = chr1Bases.substring(pos, pos + 9);
-        String alt = chr1Bases.substring(pos, pos + 3);
+        int pos = 48; // 3rd base of codon
+        String ref = chr1Bases.substring(pos, pos + 7);
+        String alt = chr1Bases.substring(pos, pos + 1);
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(INFRAME_DELETION, impact.consequence());
+        assertEquals(INFRAME_DELETION, impact.topConsequence());
 
         // inframe disruptive (spans first and last codon boundaries) deletion of 3 codons (ie 4 -> 1)
-        pos = 45; // first base of codon
-        ref = chr1Bases.substring(pos, pos + 12);
-        alt = chr1Bases.substring(pos, pos + 3);
+        pos = 47; // first base of codon
+        ref = chr1Bases.substring(pos, pos + 10);
+        alt = chr1Bases.substring(pos, pos + 1);
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(INFRAME_DELETION, impact.consequence());
+        assertEquals(INFRAME_DELETION, impact.topConsequence());
 
         // conservative insertion of 2 codons
         pos = 46; // first base of codon
@@ -328,7 +346,7 @@ public class VariantImpactTest
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
         VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(STOP_GAINED, impact.consequence());
+        assertEquals(STOP_GAINED, impact.topConsequence());
     }
 
     @Test

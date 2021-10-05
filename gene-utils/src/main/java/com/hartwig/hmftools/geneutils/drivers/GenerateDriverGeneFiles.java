@@ -64,7 +64,7 @@ public class GenerateDriverGeneFiles
     public void run() throws IOException
     {
         List<DriverGene> v37DriverGenes = DriverGeneFile.read(mNewDriverGenePanel37Tsv);
-        LOGGER.info(" Loaded {} driver genes from {}", v37DriverGenes.size(), mNewDriverGenePanel37Tsv);
+        LOGGER.info("Loaded {} driver genes from {}", v37DriverGenes.size(), mNewDriverGenePanel37Tsv);
 
         GeneNameMapping37to38 geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
         List<DriverGene> v38DriverGenes = Lists.newArrayList();
