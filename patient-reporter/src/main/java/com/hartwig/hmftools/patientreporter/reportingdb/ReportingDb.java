@@ -81,7 +81,7 @@ public class ReportingDb {
         payload.put("barcode", tumorBarcode);
         payload.put("report_type", reportType);
         payload.put("report_date", reportDate);
-        payload.put("purity", Float.parseFloat(purity));
+        payload.put("purity", purity.equals(NA_STRING) ? purity : Float.parseFloat(purity));
         payload.put("cohort", cohort.cohortId());
         payload.put("has_reliable_quality", hasReliableQuality != null ? hasReliableQuality : NA_STRING);
         payload.put("has_reliable_purity", hasReliablePurity != null ? hasReliablePurity : NA_STRING);
