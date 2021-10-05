@@ -1,22 +1,19 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import java.util.List;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public class VariantTransImpact
 {
     public final TranscriptData TransData;
 
-    private final List<String> mConsequenceEffects;
-    private final List<VariantConsequence> mConsequences;
+    private final List<VariantEffect> mEffects;
 
     private CodingContext mCodingContext;
     private ProteinContext mProteinContext;
@@ -26,26 +23,11 @@ public class VariantTransImpact
 
     private int mLocalPhaseSetId;
 
-    @Deprecated
-    public VariantTransImpact(final TranscriptData transData, final String consequenceEffect)
-    {
-        TransData = transData;
-
-        mConsequenceEffects = Lists.newArrayList(consequenceEffect);
-        mConsequences = Lists.newArrayList();
-
-        mCodingContext = null;
-        mExonRank = 0;
-        mLocalPhaseSetId = -1;
-        mInSpliceRegion = false;
-    }
-
     public VariantTransImpact(final TranscriptData transData)
     {
         TransData = transData;
 
-        mConsequenceEffects = Lists.newArrayList();
-        mConsequences = Lists.newArrayList();
+        mEffects = Lists.newArrayList();
 
         mCodingContext = null;
         mExonRank = 0;
@@ -53,52 +35,31 @@ public class VariantTransImpact
         mInSpliceRegion = false;
     }
 
-    public void addConsequence(final String consequenceEffect)
+    public void addEffect(final VariantEffect effect)
     {
-        if(consequenceEffect == null)
+        if(effect == null)
             return;
 
-        VariantConsequence consequence = VariantConsequence.fromEffect(consequenceEffect);
-        addConsequence(consequence, consequenceEffect);
-    }
-
-    public void addConsequence(final VariantConsequence consequence)
-    {
-        addConsequence(consequence, consequence.parentTerm());
-    }
-
-    public void addConsequence(final VariantConsequence consequence, final String consequenceEffect)
-    {
-        if(consequence == null || consequenceEffect == null)
-            return;
-
-        if(mConsequences.contains(consequence))
+        if(mEffects.contains(effect))
             return;
 
         // add in order of significance
         int index = 0;
-        while(index < mConsequences.size())
+        while(index < mEffects.size())
         {
-            if(consequence.rank() > mConsequences.get(index).rank())
+            if(effect.rank() > mEffects.get(index).rank())
                 break;
 
             ++index;
         }
 
-        mConsequences.add(index, consequence);
-        mConsequenceEffects.add(index, consequenceEffect);
+        mEffects.add(index, effect);
     }
 
-    public VariantConsequence topConsequence() { return mConsequences.get(0); };
+    public List<VariantEffect> effects() { return mEffects; }
 
-    public List<String> consequenceEffects() { return mConsequenceEffects; }
-
-    public List<VariantConsequence> consequences()
-    {
-        return mConsequences;
-    }
-
-    public int topRank() { return consequences().stream().mapToInt(x -> x.rank()).max().orElse(-1); }
+    public VariantEffect topEffect() { return mEffects.get(0); };
+    public int topRank() { return mEffects.stream().mapToInt(x -> x.rank()).max().orElse(-1); }
 
     public CodingContext getCodingContext() { return mCodingContext; }
     public void setCodingContext(final CodingContext context) { mCodingContext = context; }
@@ -118,19 +79,13 @@ public class VariantTransImpact
 
     public String effectsStr()
     {
-        return consequencesToString(consequences());
+        return effectsToString(mEffects);
     }
-
-    public String rawConsequencesStr()
-    {
-        StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mConsequenceEffects.forEach(x -> sj.add(x));
-        return sj.toString();
-    }
+    public String effectsToCsv() { return effectsToString(mEffects, ITEM_DELIM); }
 
     public String toString()
     {
-        return String.format("trans(%s) conseq(%s) effects(%s) inSplice(%s)",
-                TransData.TransName, rawConsequencesStr(), effectsStr(), mInSpliceRegion);
+        return String.format("trans(%s) effects(%s) inSplice(%s)",
+                TransData.TransName, effectsStr(), mInSpliceRegion);
     }
 }

@@ -15,10 +15,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class VariantImpactBuilder
 {
@@ -123,7 +120,7 @@ public class VariantImpactBuilder
         if(worstCanonicalImpact != null)
         {
             canonicalGeneName = worstGeneName;
-            canonicalEffect = VariantConsequence.consequenceString(worstCanonicalImpact.consequences());
+            canonicalEffect = worstCanonicalImpact.effectsStr();
             canonicalCodingEffect = determineCodingEffect(variant, worstCanonicalImpact);
             canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCodingChange();
             canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProteinChange();
@@ -138,7 +135,7 @@ public class VariantImpactBuilder
 
     private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact)
     {
-        final List<CodingEffect> simplifiedEffects = transImpact.consequences().stream().map(CodingEffect::effect).collect(Collectors.toList());
+        final List<CodingEffect> simplifiedEffects = transImpact.effects().stream().map(CodingEffect::effect).collect(Collectors.toList());
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
         {

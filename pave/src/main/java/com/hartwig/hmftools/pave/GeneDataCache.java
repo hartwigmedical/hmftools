@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.pave.PaveConfig.VI_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 
 import java.io.IOException;
@@ -102,13 +102,13 @@ public class GeneDataCache
 
             if(!mOtherReportableTranscripts.isEmpty())
             {
-                VI_LOGGER.info("loaded {} driver alternative transcripts from {} genes",
+                PV_LOGGER.info("loaded {} driver alternative transcripts from {} genes",
                         mOtherReportableTranscripts.values().stream().mapToInt(x -> x.size()).sum(), mOtherReportableTranscripts.size());
             }
         }
         catch (IOException e)
         {
-            VI_LOGGER.error("failed to load driver gene panel file({}): {}", driverGeneFile, e.toString());
+            PV_LOGGER.error("failed to load driver gene panel file({}): {}", driverGeneFile, e.toString());
         }
     }
 
@@ -134,7 +134,7 @@ public class GeneDataCache
 
         if(mCurrentChromosomeGenes == null)
         {
-            VI_LOGGER.error("invalid chromosome({})", chromosome);
+            // PV_LOGGER.error("invalid chromosome({})", chromosome); // just MT
             return Lists.newArrayList();
         }
 
@@ -157,7 +157,7 @@ public class GeneDataCache
             {
                 if(mCurrentGenes.contains(geneData))
                 {
-                    VI_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, mCurrentGeneIndex);
+                    PV_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, mCurrentGeneIndex);
                     break;
                 }
 

@@ -1,12 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.INTRON_VARIANT_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCEPTOR_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_REGION_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.THREE_PRIME_UTR_EFFECT;
-
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -19,9 +12,9 @@ public enum VariantConsequence
 {
     // See also http://sequenceontology.org
     // starting with the ones used by HMF
-    SPLICE_ACCEPTOR_VARIANT(SPLICE_ACCEPTOR_EFFECT),
-    SPLICE_DONOR_VARIANT(SPLICE_DONOR_EFFECT),
-    SPLICE_REGION_VARIANT(SPLICE_REGION_EFFECT,
+    SPLICE_ACCEPTOR_VARIANT("splice_acceptor_variant"),
+    SPLICE_DONOR_VARIANT("splice_donor_variant"),
+    SPLICE_REGION_VARIANT("splice_region_variant",
             "exonic_splice_region_variant", "non_coding_transcript_splice_region_variant"),
     STOP_GAINED("stop_gained"),
     STOP_LOST("stop_lost"),
@@ -36,8 +29,8 @@ public enum VariantConsequence
             "conservative_missense_variant", "non_conservative_missense_variant",
             "rare_amino_acid_variant", "pyrrolysine_loss", "selenocysteine_loss"),
     SYNONYMOUS_VARIANT("synonymous_variant", "stop_retained_variant"),
-    INTRON_VARIANT(INTRON_VARIANT_EFFECT),
-    UTR_VARIANT("UTR_variant", THREE_PRIME_UTR_EFFECT, FIVE_PRIME_UTR_EFFECT,
+    INTRON_VARIANT("intron_variant"),
+    UTR_VARIANT("UTR_variant", "3_prime_UTR_variant", "5_prime_UTR_variant",
             "5_prime_UTR_premature_start_codon_gain_variant", "5_prime_UTR_truncation", "3_prime_UTR_truncation"),
     UPSTREAM_GENE_VARIANT("upstream_gene_variant"),
     NON_CODING_TRANSCRIPT_VARIANT("non_coding_transcript_variant", "non_coding_transcript_exon_variant"),
@@ -61,7 +54,8 @@ public enum VariantConsequence
     private final String mParentSequenceOntologyTerm;
     private final List<String> mSequenceOntologySubTerms;
 
-    public static final String VARIANT_EFFECTS_DELIM = "&";
+    public static final String VARIANT_CONSEQ_DELIM = "&";
+    public static final String SPLICE_DONOR_CONSEQUENCE = "splice_donor_variant";
 
     VariantConsequence(final String parentSequenceOntologyTerm, final String... sequenceOntologySubTerms)
     {
@@ -90,7 +84,7 @@ public enum VariantConsequence
 
     public static String consequencesToString(final List<VariantConsequence> consequences)
     {
-        return consequencesToString(consequences, VARIANT_EFFECTS_DELIM);
+        return consequencesToString(consequences, VARIANT_CONSEQ_DELIM);
     }
 
     public static String consequencesToString(final List<VariantConsequence> consequences, final String delim)
@@ -102,7 +96,7 @@ public enum VariantConsequence
 
     public static String consequenceString(final List<VariantConsequence> consequences)
     {
-        final StringJoiner consequenceString = new StringJoiner(VARIANT_EFFECTS_DELIM);
+        final StringJoiner consequenceString = new StringJoiner(VARIANT_CONSEQ_DELIM);
         for(final VariantConsequence consequence : consequences)
         {
             if(!consequence.parentTerm().isEmpty())

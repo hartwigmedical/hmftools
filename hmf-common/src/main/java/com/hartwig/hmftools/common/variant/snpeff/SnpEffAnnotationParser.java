@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.addEffect;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.toEffects;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_CONSEQUENCE;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.LogManager;
@@ -83,6 +83,19 @@ public final class SnpEffAnnotationParser
                 .build();
     }
 
+
+
+    private static List<String> toEffects(final String effectString)
+    {
+        return Lists.newArrayList(effectString.split(VARIANT_CONSEQ_DELIM));
+    }
+
+    private static String addEffect(final String effect, final String effects, boolean atStart)
+    {
+        return atStart ? effect + VARIANT_CONSEQ_DELIM + effects : effects + VARIANT_CONSEQ_DELIM + effect;
+    }
+
+
     @NotNull
     private static String extractAnnotationEffects(@NotNull VariantContext variant, @NotNull String[] parts)
     {
@@ -98,7 +111,7 @@ public final class SnpEffAnnotationParser
         boolean indel = variant.isIndel();
         if(!indel)
         {
-            return hgvsCoding.contains("+5") ? addEffect(SPLICE_DONOR_EFFECT, effects, true) : effects;
+            return hgvsCoding.contains("+5") ? addEffect(SPLICE_DONOR_CONSEQUENCE, effects, true) : effects;
         }
 
         final String hgvsCodingType;
@@ -142,7 +155,7 @@ public final class SnpEffAnnotationParser
             adjustedSpliceBase = initialSpliceBase;
         }
 
-        return adjustedSpliceBase <= 5 ? addEffect(SPLICE_DONOR_EFFECT, effects, true) : effects;
+        return adjustedSpliceBase <= 5 ? addEffect(SPLICE_DONOR_CONSEQUENCE, effects, true) : effects;
     }
 
     @VisibleForTesting

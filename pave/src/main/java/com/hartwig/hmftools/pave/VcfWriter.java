@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +16,12 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 
-public class ImpactVcfWriter
+public class VcfWriter
 {
     private final VCFFileReader mHeader;
     private final VariantContextWriter mWriter;
 
-    public ImpactVcfWriter(final String outputVCF, final String templateVCF)
+    public VcfWriter(final String outputVCF, final String templateVCF)
     {
         mHeader = new VCFFileReader(new File(templateVCF), false);
 
@@ -33,10 +31,10 @@ public class ImpactVcfWriter
                 .build();
     }
 
-    public final void writeHeader(final String sageVersion)
+    public final void writeHeader(final String paveVersion)
     {
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
-        newHeader.addMetaDataLine(new VCFHeaderLine("SageVersion", sageVersion));
+        newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
 
         VariantTranscriptImpact.writeHeader(newHeader);
         VariantImpactSerialiser.writeHeader(newHeader);
@@ -57,7 +55,7 @@ public class ImpactVcfWriter
             {
                 transImpacts.add(new VariantTranscriptImpact(
                         transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
-                        consequencesToString(transImpact.consequences()), transImpact.inSpliceRegion(),
+                        transImpact.effectsStr(), transImpact.inSpliceRegion(),
                         transImpact.hgvsCodingChange(), transImpact.hgvsProteinChange()));
             }
         }

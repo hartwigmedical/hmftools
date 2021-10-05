@@ -4,10 +4,10 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_ACCEPTOR_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_DONOR_EFFECT;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_END_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_START_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_END_RANGE;
@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public class SpliceClassifier
 {
@@ -66,7 +67,21 @@ public class SpliceClassifier
         return false;
     }
 
-    public String classifyVariant(final VariantData variant, final TranscriptData transData, final ExonData exon)
+    public static VariantEffect checkStraddlesSpliceRegion(final VariantData variant, final TranscriptData transData, final ExonData exon)
+    {
+        if(positionWithin(exon.Start, variant.Position, variant.EndPosition))
+        {
+            return transData.posStrand() ? SPLICE_ACCEPTOR : SPLICE_DONOR;
+        }
+        else if(positionWithin(exon.End, variant.Position, variant.EndPosition))
+        {
+            return transData.posStrand() ? SPLICE_DONOR : SPLICE_ACCEPTOR;
+        }
+
+        return null;
+    }
+
+    public VariantEffect classifyVariant(final VariantData variant, final TranscriptData transData, final ExonData exon)
     {
         /* Rules:
             - mark any variant hitting splice donor sites (D-1,D+1,D+2,D+5) as splice_donor_variant
@@ -101,7 +116,7 @@ public class SpliceClassifier
                     int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
                     if(donorPos >= SPLICE_DONOR_START_RANGE && donorPos <= SPLICE_DONOR_END_RANGE)
-                        return SPLICE_DONOR_EFFECT;
+                        return SPLICE_DONOR;
 
                     //if(donorPos == SPLICE_DONOR_END_RANGE)
                     //    deletesD5 = true;
@@ -134,7 +149,7 @@ public class SpliceClassifier
                     //if(donorPos == -1 || donorPos == 1 || donorPos == 2 || donorPos == 5)
 
                     if(donorPos >= SPLICE_DONOR_START_RANGE && donorPos <= SPLICE_DONOR_END_RANGE)
-                        return SPLICE_DONOR_EFFECT;
+                        return SPLICE_DONOR;
                 }
                 else
                 {
@@ -147,11 +162,11 @@ public class SpliceClassifier
                             final char requiredBase = transData.posStrand() ? 'G' : 'C';
 
                             if(altBase == requiredBase)
-                                return SPLICE_ACCEPTOR_EFFECT;
+                                return SPLICE_ACCEPTOR;
                         }
                         else
                         {
-                            return SPLICE_ACCEPTOR_EFFECT;
+                            return SPLICE_ACCEPTOR;
                         }
                     }
                 }

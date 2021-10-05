@@ -38,7 +38,7 @@ public class PaveConfig
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
-    public static final Logger VI_LOGGER = LogManager.getLogger(PaveConfig.class);
+    public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
 
     public PaveConfig(final CommandLine cmd)
     {

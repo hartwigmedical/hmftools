@@ -7,11 +7,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.consequencesToString;
-import static com.hartwig.hmftools.pave.PaveConfig.VI_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
-import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -23,6 +20,8 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.GeneMappingData;
+import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -51,8 +50,9 @@ public class PaveApplication
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
+    private final GeneNameMapping mGeneNameMapping;
 
-    private ImpactVcfWriter mVcfWriter;
+    private VcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
 
     public PaveApplication(final CommandLine cmd)
@@ -73,19 +73,21 @@ public class PaveApplication
 
         if(mConfig.WriteTranscriptCsv)
             initialiseTranscriptWriter();
+
+        mGeneNameMapping = mConfig.CompareSnpEff ? new GeneNameMapping() : null;
     }
 
     public void run()
     {
         if(!mConfig.isValid())
         {
-            VI_LOGGER.error("invalid config, exiting");
+            PV_LOGGER.error("invalid config, exiting");
             System.exit(1);
         }
 
         if(!mGeneDataCache.loadCache())
         {
-            VI_LOGGER.error("Ensembl data cache loading failed, exiting");
+            PV_LOGGER.error("Ensembl data cache loading failed, exiting");
             System.exit(1);
         }
 
@@ -93,12 +95,12 @@ public class PaveApplication
 
         closeBufferedWriter(mCsvTranscriptWriter);
 
-        VI_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
+        PV_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
     }
 
     private void processVcfFile(final String sampleId)
     {
-        VI_LOGGER.info("sample({}) reading VCF file({})", sampleId, mConfig.VcfFile);
+        PV_LOGGER.info("sample({}) reading VCF file({})", sampleId, mConfig.VcfFile);
 
         int variantCount = 0;
 
@@ -118,10 +120,10 @@ public class PaveApplication
         }
         catch(IOException e)
         {
-            VI_LOGGER.error(" failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
+            PV_LOGGER.error(" failed to read somatic VCF file({}): {}", mConfig.VcfFile, e.toString());
         }
 
-        VI_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
+        PV_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
 
         mVcfWriter.close();
     }
@@ -175,12 +177,21 @@ public class PaveApplication
 
                     if(geneData == null)
                     {
-                        VI_LOGGER.debug("ignoring unknown gene({}:{})", annotation.geneID(), annotation.gene());
+                        GeneMappingData mappingData = mGeneNameMapping.getMappingDataByOld(annotation.gene());
+
+                        if(mappingData != null)
+                        {
+                            geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(mappingData.GeneId);
+                        }
                     }
-                    else
+
+                    if(geneData == null)
                     {
-                        writeVariantTranscriptData(variant, geneData.GeneName, snpEffAnnotations);
+                        //  PV_LOGGER.debug("ignoring unknown gene({}:{})", annotation.geneID(), annotation.gene());
+                        continue;
                     }
+
+                    writeVariantTranscriptData(variant, geneData.GeneName, snpEffAnnotations);
                 }
             }
             else
@@ -196,11 +207,13 @@ public class PaveApplication
         {
             final String geneName = entry.getKey();
 
+            final String snpEffGeneName = mGeneNameMapping.isUnchanged(geneName) ?
+                    geneName : mGeneNameMapping.getOldName(geneName);
+
             writeVariantTranscriptData(
                     variant, geneName,
-                    snpEffAnnotations.stream().filter(x -> x.gene().equals(geneName)).collect(Collectors.toList()));
+                    snpEffAnnotations.stream().filter(x -> x.gene().equals(snpEffGeneName)).collect(Collectors.toList()));
         }
-
     }
 
     public static void findVariantImpacts(
@@ -224,7 +237,7 @@ public class PaveApplication
             {
                 VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
 
-                if(transImpact != null && !transImpact.consequences().isEmpty())
+                if(transImpact != null && !transImpact.effects().isEmpty())
                     variant.addImpact(geneData.GeneName, transImpact);
             }
         }
@@ -232,33 +245,37 @@ public class PaveApplication
 
     private void initialiseVcfWriter()
     {
-        final VersionInfo version = new VersionInfo("sage.version");
+        final VersionInfo version = new VersionInfo("pave.version");
 
         String vcfFilename = mConfig.OverwriteVcf ?
-                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleId + ".sage.ann.vcf";
+                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleId + ".pave.annotated.vcf";
 
-        mVcfWriter = new ImpactVcfWriter(vcfFilename, mConfig.VcfFile);
-        mVcfWriter.writeHeader(version.version());
+        mVcfWriter = new VcfWriter(vcfFilename, mConfig.VcfFile);
+
+        // TO-DO
+        // mVcfWriter.writeHeader(version.version());
+        mVcfWriter.writeHeader("1.0");
     }
 
     private void initialiseTranscriptWriter()
     {
         try
         {
-            String transFileName = mConfig.OutputDir + mConfig.SampleId + ".sage.transcript_ann_compare.csv";
+            String fileSuffix = mConfig.CompareSnpEff ? ".pave.transcript_compare.csv" : ".pave.transcript.csv";
+            String transFileName = mConfig.OutputDir + mConfig.SampleId + fileSuffix;
             mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
 
             mCsvTranscriptWriter.write(VariantData.csvCommonHeader());
-            mCsvTranscriptWriter.write(",GeneId,GeneName,TransId,Consequence,ConsequenceEffect");
+            mCsvTranscriptWriter.write(",GeneId,GeneName,TransId,Effects");
 
             if(mConfig.CompareSnpEff)
-                mCsvTranscriptWriter.write(",SnpEffConsequence,SnpEffConsequenceEffect");
+                mCsvTranscriptWriter.write(",SnpEffEffects,SnpEffHgvsCoding,SnpEffHgvsProtein");
 
             mCsvTranscriptWriter.newLine();
         }
         catch(IOException e)
         {
-            VI_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
+            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
             return;
         }
     }
@@ -282,13 +299,13 @@ public class PaveApplication
 
                 mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
                 mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
-                        impact.TransData.GeneId, geneName, impact.TransData.TransName, impact.rawConsequencesStr(), impact.effectsStr()));
+                        impact.TransData.GeneId, geneName, impact.TransData.TransName, impact.effectsToCsv()));
                 mCsvTranscriptWriter.newLine();
             }
         }
         catch(IOException e)
         {
-            VI_LOGGER.error("failed to write variant CSV file: {}", e.toString());
+            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
             return;
         }
     }
@@ -322,12 +339,11 @@ public class PaveApplication
                     sj.add(geneName);
 
                     sj.add(impact.TransData.TransName);
-                    sj.add(String.valueOf(impact.rawConsequencesStr()));
-                    sj.add(String.valueOf(impact.effectsStr()));
+                    sj.add(String.valueOf(impact.effectsToCsv()));
 
                     if(annotation != null)
                     {
-                        sj.add(consequencesToString(annotation.consequences()));
+                        // sj.add(consequencesToString(annotation.consequences()));
                         sj.add(annotation.effects());
                         matchedAnnotations.add(annotation);
                     }
@@ -345,16 +361,13 @@ public class PaveApplication
                 if(matchedAnnotations.contains(annotation))
                     continue;
 
-                if(annotation.consequences().contains(NON_CODING_TRANSCRIPT_VARIANT))
-                    continue;
-
                 StringJoiner sj = new StringJoiner(DELIM);
                 sj.add(variant.toCsv());
                 sj.add(annotation.geneID());
                 sj.add(annotation.gene());
                 sj.add(annotation.featureID());
                 sj.add("UNMATCHED");
-                sj.add(consequencesToString(annotation.consequences()));
+                sj.add(annotation.effects());
                 transcriptLines.add(sj.toString());
             }
 
@@ -366,7 +379,7 @@ public class PaveApplication
         }
         catch(IOException e)
         {
-            VI_LOGGER.error("failed to write variant CSV file: {}", e.toString());
+            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
             return;
         }
     }

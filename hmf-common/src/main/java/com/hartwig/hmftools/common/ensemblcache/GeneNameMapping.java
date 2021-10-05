@@ -18,8 +18,8 @@ import org.jetbrains.annotations.NotNull;
 // a resource to map gene names between GRCh37 and HGNC + GRCh38
 public class GeneNameMapping
 {
-    private final Map<String, String> mGeneNameOldToNewMap;
-    private final Map<String, String> mGeneNameNewToOldMap;
+    private final Map<String,GeneMappingData> mGeneNameOldToNewMap;
+    private final Map<String,GeneMappingData> mGeneNameNewToOldMap;
     private final Set<String> mUnchangedGenes;
     private final Set<String> mUnmappedGenes;
 
@@ -60,8 +60,9 @@ public class GeneNameMapping
             }
             else
             {
-                mGeneNameOldToNewMap.put(geneNameOld, geneNameNew);
-                mGeneNameNewToOldMap.put(geneNameNew, geneNameOld);
+                GeneMappingData data = new GeneMappingData(geneId, geneNameNew, geneNameOld);
+                mGeneNameOldToNewMap.put(geneNameOld, data);
+                mGeneNameNewToOldMap.put(geneNameNew, data);
             }
         }
     }
@@ -70,6 +71,8 @@ public class GeneNameMapping
     {
         return mUnchangedGenes.contains(geneNameOld) || mGeneNameOldToNewMap.containsKey(geneNameOld);
     }
+
+    public boolean isUnchanged(final String geneName) { return mUnchangedGenes.contains(geneName); }
 
     public boolean hasNewGene(final String geneNameNew)
     {
@@ -81,7 +84,8 @@ public class GeneNameMapping
         if(mUnchangedGenes.contains(geneNameOld))
             return geneNameOld;
 
-        return mGeneNameOldToNewMap.get(geneNameOld);
+        GeneMappingData data = mGeneNameOldToNewMap.get(geneNameOld);
+        return data != null ? data.GeneNameNew : null;
     }
 
     public String getOldName(final String geneNameNew)
@@ -89,6 +93,24 @@ public class GeneNameMapping
         if(mUnchangedGenes.contains(geneNameNew))
             return geneNameNew;
 
+        GeneMappingData data = mGeneNameNewToOldMap.get(geneNameNew);
+        return data != null ? data.GeneNameOld : null;
+    }
+
+    public GeneMappingData getMappingDataByOld(final String geneNameOld)
+    {
+        if(mUnchangedGenes.contains(geneNameOld))
+            return null;
+
+        return mGeneNameOldToNewMap.get(geneNameOld);
+    }
+
+    public GeneMappingData getMappingDataByNew(final String geneNameNew)
+    {
+        if(mUnchangedGenes.contains(geneNameNew))
+            return null;
+
         return mGeneNameNewToOldMap.get(geneNameNew);
     }
+
 }

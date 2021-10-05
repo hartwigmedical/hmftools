@@ -217,11 +217,6 @@ public final class EnsemblDataLoader
                         if(!isCanonical && !nonCanonicalTrans.contains(transName))
                             continue;
                     }
-                    else
-                    {
-                        if(!nonCanonicalTrans.contains(transName))
-                            continue;
-                    }
 
                     exonDataList = Lists.newArrayList();
 

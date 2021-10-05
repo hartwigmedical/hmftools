@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
-import static com.hartwig.hmftools.pave.PaveConfig.VI_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.compare.RefVariantData.hasCodingEffectDiff;
 
 import java.io.BufferedReader;
@@ -113,19 +113,19 @@ public class ImpactComparisons
     {
         if(mSampleIds.isEmpty())
         {
-            VI_LOGGER.error("missing sampleIds, exiting");
+            PV_LOGGER.error("missing sampleIds, exiting");
             System.exit(1);
         }
 
         if(mDbAccess == null && mReferenceVariantsFile == null)
         {
-            VI_LOGGER.error("neither DB nor ref variants file configured, exiting");
+            PV_LOGGER.error("neither DB nor ref variants file configured, exiting");
             System.exit(1);
         }
 
         if(!mGeneDataCache.loadCache(mOnlyCanonical, mOnlyDriverGenes))
         {
-            VI_LOGGER.error("Ensembl data cache loading failed, exiting");
+            PV_LOGGER.error("Ensembl data cache loading failed, exiting");
             System.exit(1);
         }
 
@@ -143,7 +143,7 @@ public class ImpactComparisons
 
                 if(i > 0 && (i % 100) == 0)
                 {
-                    VI_LOGGER.info("processing {} samples", i);
+                    PV_LOGGER.info("processing {} samples", i);
                 }
             }
         }
@@ -156,7 +156,7 @@ public class ImpactComparisons
 
         mPerfCounter.logStats();
 
-        VI_LOGGER.info("impact comparison complete");
+        PV_LOGGER.info("impact comparison complete");
     }
 
     private void loadSampleDatabaseRecords(final String sampleId)
@@ -178,7 +178,7 @@ public class ImpactComparisons
             processVariant(sampleId, RefVariantData.fromSomatic(variant));
         }
 
-        VI_LOGGER.debug("sample({}) processed {} variants and transcripts({})",
+        PV_LOGGER.debug("sample({}) processed {} variants and transcripts({})",
                 sampleId, mVariantCount, mTransVariantCount);
     }
 
@@ -227,7 +227,7 @@ public class ImpactComparisons
                     {
                         if(samplesProcessed == mSampleIds.size())
                         {
-                            VI_LOGGER.info("all samples processed");
+                            PV_LOGGER.info("all samples processed");
                             return;
                         }
                         else
@@ -241,7 +241,7 @@ public class ImpactComparisons
 
                     if(samplesProcessed > 0 && (samplesProcessed % 100) == 0)
                     {
-                        VI_LOGGER.info("processing {} samples", samplesProcessed);
+                        PV_LOGGER.info("processing {} samples", samplesProcessed);
                     }
                 }
 
@@ -258,7 +258,7 @@ public class ImpactComparisons
         }
         catch(IOException e)
         {
-            VI_LOGGER.error("failed to read ref variant data file: {}", e.toString());
+            PV_LOGGER.error("failed to read ref variant data file: {}", e.toString());
         }
     }
 
@@ -276,11 +276,11 @@ public class ImpactComparisons
 
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        if(VI_LOGGER.isDebugEnabled())
+        if(PV_LOGGER.isDebugEnabled())
         {
             if(hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect))
             {
-                VI_LOGGER.debug("sample({}) var({}) diff canonical coding: new({}) snpEff({})",
+                PV_LOGGER.debug("sample({}) var({}) diff canonical coding: new({}) snpEff({})",
                         sampleId, variant.toString(), variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
             }
         }
@@ -305,7 +305,7 @@ public class ImpactComparisons
         }
         catch(IOException e)
         {
-            VI_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
+            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
             return;
         }
     }
@@ -335,7 +335,7 @@ public class ImpactComparisons
         }
         catch(IOException e)
         {
-            VI_LOGGER.error("failed to write variant CSV file: {}", e.toString());
+            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
             return;
         }
     }

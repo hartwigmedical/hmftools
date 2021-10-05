@@ -8,21 +8,21 @@ import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.FIVE_PRIME_UTR_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.INTRON_VARIANT_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.SPLICE_REGION_EFFECT;
-import static com.hartwig.hmftools.common.variant.ConsequenceEffects.THREE_PRIME_UTR_EFFECT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.FRAMESHIFT_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.MISSENSE_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.NON_CODING_TRANSCRIPT_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.START_LOST;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_GAINED;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.STOP_LOST;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.SYNONYMOUS_VARIANT;
-import static com.hartwig.hmftools.common.variant.VariantConsequence.UPSTREAM_GENE_VARIANT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FIVE_PRIME_UTR;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INTRONIC;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.NON_CODING_TRANSCRIPT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
 
 import java.util.List;
@@ -30,9 +30,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public class ImpactClassifier
 {
@@ -64,7 +62,7 @@ public class ImpactClassifier
 
         if(transData.CodingStart == null)
         {
-            transImpact.addConsequence(NON_CODING_TRANSCRIPT_VARIANT);
+            transImpact.addEffect(NON_CODING_TRANSCRIPT);
             return transImpact;
         }
 
@@ -92,13 +90,13 @@ public class ImpactClassifier
             {
                 inSpliceRegion = true;
                 exonRank = exon.Rank;
-                transImpact.addConsequence(mSpliceClassifier.classifyVariant(variant, transData, exon));
+                transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, exon));
             }
             else if(!inSpliceRegion && nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
             {
                 inSpliceRegion = true;
                 exonRank = nextExon.Rank;
-                transImpact.addConsequence(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
+                transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
             if(positionsWithin(variant.Position, variant.EndPosition, exon.Start, exon.End))
@@ -110,23 +108,25 @@ public class ImpactClassifier
 
             if(nextExon != null && positionsWithin(variant.Position, variant.EndPosition, exon.End + 1, nextExon.Start - 1))
             {
-                transImpact.addConsequence(INTRON_VARIANT_EFFECT);
+                transImpact.addEffect(INTRONIC);
                 break;
             }
 
             // variant which full straddles the splice region
-            if(!inSpliceRegion && variant.Position < exon.Start && variant.EndPosition >= exon.Start)
+            if(!inSpliceRegion)
             {
-                // TO-DO - confirm that should be splice_donor_variant or splice_acceptor_variant
-                transImpact.addConsequence(SPLICE_REGION_EFFECT);
-                break;
+                VariantEffect effect = checkStraddlesSpliceRegion(variant, transData, exon);
+                if(effect != null)
+                {
+                    transImpact.addEffect(effect);
+                    break;
+                }
             }
         }
 
         if(inSpliceRegion)
         {
             transImpact.markSpliceRegion();
-            transImpact.addConsequence(SPLICE_REGION_EFFECT);
         }
 
         if(exonRank >= 1)
@@ -165,20 +165,20 @@ public class ImpactClassifier
             // check pre-gene region
             if(variant.Position >= transData.TransStart - GENE_UPSTREAM_DISTANCE && variant.EndPosition < transData.TransStart)
             {
-                transImpact.addConsequence(UPSTREAM_GENE_VARIANT);
+                transImpact.addEffect(UPSTREAM_GENE);
                 return true;
             }
 
             // check 5' and 3' UTR
             if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
             {
-                transImpact.addConsequence(FIVE_PRIME_UTR_EFFECT);
+                transImpact.addEffect(FIVE_PRIME_UTR);
                 return true;
             }
 
             if(variant.Position > transData.CodingEnd && variant.Position <= transData.TransEnd)
             {
-                transImpact.addConsequence(THREE_PRIME_UTR_EFFECT);
+                transImpact.addEffect(THREE_PRIME_UTR);
                 return true;
             }
         }
@@ -186,19 +186,19 @@ public class ImpactClassifier
         {
             if(variant.Position > transData.TransEnd && variant.EndPosition <= transData.TransEnd + GENE_UPSTREAM_DISTANCE)
             {
-                transImpact.addConsequence(UPSTREAM_GENE_VARIANT);
+                transImpact.addEffect(UPSTREAM_GENE);
                 return true;
             }
 
             if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
             {
-                transImpact.addConsequence(THREE_PRIME_UTR_EFFECT);
+                transImpact.addEffect(THREE_PRIME_UTR);
                 return true;
             }
 
             if(variant.Position > transData.CodingEnd && variant.EndPosition <= transData.TransEnd)
             {
-                transImpact.addConsequence(FIVE_PRIME_UTR_EFFECT);
+                transImpact.addEffect(FIVE_PRIME_UTR);
                 return true;
             }
         }
@@ -239,21 +239,21 @@ public class ImpactClassifier
                 // could use phasing info to set conservative vs disruptive type
 
                 if(variant.isDeletion())
-                    transImpact.addConsequence(INFRAME_DELETION);
+                    transImpact.addEffect(INFRAME_DELETION);
                 else
-                    transImpact.addConsequence(INFRAME_INSERTION);
+                    transImpact.addEffect(INFRAME_INSERTION);
             }
             else
             {
-                transImpact.addConsequence(FRAMESHIFT_VARIANT);
+                transImpact.addEffect(FRAMESHIFT);
             }
         }
         else
         {
-            if(transImpact.getProteinContext().hasProteinChange())
-                transImpact.addConsequence(MISSENSE_VARIANT);
+            if(transImpact.hasCodingData() && transImpact.getProteinContext().hasProteinChange())
+                transImpact.addEffect(MISSENSE);
             else
-                transImpact.addConsequence(SYNONYMOUS_VARIANT);
+                transImpact.addEffect(SYNONYMOUS);
         }
     }
 
@@ -262,16 +262,16 @@ public class ImpactClassifier
         if(!transImpact.hasCodingData())
             return;
 
-        VariantConsequence ssConsequence = checkStopStartCodons(
+        VariantEffect ssEffect = checkStopStartCodons(
                 transImpact.getProteinContext().WildtypeAA, transImpact.getProteinContext().NovelAA);
 
-        if(ssConsequence != null)
+        if(ssEffect != null)
         {
-            transImpact.addConsequence(ssConsequence.description());
+            transImpact.addEffect(ssEffect);
         }
     }
 
-    public static VariantConsequence checkStopStartCodons(final String refAminoAcids, final String altAminoAcids)
+    public static VariantEffect checkStopStartCodons(final String refAminoAcids, final String altAminoAcids)
     {
         if(refAminoAcids.isEmpty() || altAminoAcids.isEmpty())
             return null;

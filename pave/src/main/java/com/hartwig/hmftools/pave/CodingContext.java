@@ -158,7 +158,7 @@ public class CodingContext
                 final ExonData exon = transData.exons().get(i);
                 final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
 
-                if(posEnd < nextExon.Start)
+                if(posEnd < exon.Start)
                 {
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         preExonCodingBases += min(codingEnd, exon.Start) - max(codingStart, exon.End);
