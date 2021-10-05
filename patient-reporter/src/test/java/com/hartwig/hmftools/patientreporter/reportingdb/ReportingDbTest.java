@@ -59,6 +59,6 @@ public class ReportingDbTest {
         assertEquals(output.get("cohort"), "CPCT");
         assertEquals(output.get("report_type"), "dna_analysis_report");
         assertEquals(output.get("barcode"), "FR12345678");
-        assertEquals(output.get("report_date"), LocalDateTime.now().format(DateTimeFormatter.ofPattern("d-MMM-y")));
+        assertEquals(output.get("report_date"), LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MMM-y")));
     }
 }
