@@ -76,7 +76,7 @@ public class ReportingDb {
     private void writeApiUpdateJson(final String outputDirectory, final String tumorBarcode, final String sampleId,
             final LimsCohortConfig cohort, final String reportType, final String reportDate, final String purity,
             final Boolean hasReliableQuality, final Boolean hasReliablePurity) throws IOException {
-        File outputFile = new File(outputDirectory, format("%s_%s_api-update.json", sampleId, tumorBarcode));
+        File outputFile = new File(outputDirectory, format("%s_%s_%s_api-update.json", sampleId, tumorBarcode, reportType));
         Map<String, Object> payload = new HashMap<>();
         payload.put("barcode", tumorBarcode);
         payload.put("report_type", reportType);
