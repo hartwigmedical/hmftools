@@ -45,7 +45,7 @@ public class ReportingDbTest {
 
         ReportingDb reportingDb = new ReportingDb();
 
-        File expectedOutput = new File("/tmp/CPCT01_SUCCESS_FR12345678_api-update.json");
+        File expectedOutput = new File("/tmp/CPCT01_SUCCESS_FR12345678_dna_analysis_report_api-update.json");
         Files.deleteIfExists(expectedOutput.toPath());
         assertFalse(expectedOutput.exists());
         reportingDb.appendAnalysedReport(ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config), "/tmp");
