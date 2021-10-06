@@ -227,7 +227,7 @@ public class PaveApplication
 
             StringJoiner sj = new StringJoiner(DELIM);
             sj.add(VariantData.csvCommonHeader());
-            sj.add("GeneId,GeneName,");
+            sj.add("GeneId,GeneName");
             sj.add(VariantTransImpact.csvHeader());
             sj.add(CodingContext.csvHeader());
 

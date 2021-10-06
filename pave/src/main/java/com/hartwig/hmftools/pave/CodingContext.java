@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
-// consider moving to hmf-common
 public class CodingContext
 {
     public TranscriptRegionType[] RegionType;
@@ -49,6 +48,15 @@ public class CodingContext
         BasesToLastExonJunction = -1;
     }
 
+    public void copyStartValues()
+    {
+        RegionType[SE_END] = RegionType[SE_START];
+        CodingType[SE_END] = CodingType[SE_START];
+        ExonRank[SE_END] = ExonRank[SE_START];
+        CodingBase[SE_END] = CodingBase[SE_START];
+        NonCodingBase[SE_END] = NonCodingBase[SE_START];
+    }
+
     public boolean isCoding()
     {
         return (CodingType[SE_START] == CODING && RegionType[SE_START] == EXONIC)
@@ -56,34 +64,6 @@ public class CodingContext
     }
 
     public String hgvsStr() { return "tbc"; }
-
-    public static String csvHeader()
-    {
-        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBases,NonCodingBases";
-    }
-
-    public String toCsv()
-    {
-        StringJoiner sj = new StringJoiner(DELIM);
-
-        sj.add(hgvsStr());
-        sj.add(RegionType[SE_START] == RegionType[SE_END]
-                ? RegionType[SE_START].toString() : String.format("%s-%s", RegionType[SE_START], RegionType[SE_END]));
-
-        sj.add(CodingType[SE_START] == CodingType[SE_END]
-                ? CodingType[SE_START].toString() : String.format("%s-%s", CodingType[SE_START], CodingType[SE_END]));
-
-        sj.add(ExonRank[SE_START] == ExonRank[SE_END]
-                ? String.valueOf(ExonRank[SE_START]) : String.format("%d-%d", ExonRank[SE_START], RegionType[SE_END]));
-
-        sj.add(CodingBase[SE_START] == CodingBase[SE_END]
-                ? String.valueOf(CodingBase[SE_START]) : String.format("%d-%d", CodingBase[SE_START], CodingBase[SE_END]));
-
-        sj.add(NonCodingBase[SE_START] == NonCodingBase[SE_END]
-                ? String.valueOf(NonCodingBase[SE_START]) : String.format("%d-%d", NonCodingBase[SE_START], NonCodingBase[SE_END]));
-
-        return sj.toString();
-    }
 
     public static CodingContext determineContext(final VariantData variant, final TranscriptData transData)
     {
@@ -150,6 +130,12 @@ public class CodingContext
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
+                    if(se == SE_END && posStart == posEnd)
+                    {
+                        cc.copyStartValues();
+                        continue;
+                    }
+
                     int position = se == SE_START ? posStart : posEnd;
 
                     // accumulate coding base positions
@@ -166,6 +152,7 @@ public class CodingContext
                     else if(nextExon != null && position > exon.End && position < nextExon.Start)
                     {
                         cc.CodingPhase = transData.Strand == POS_STRAND ? exon.PhaseEnd : nextExon.PhaseEnd;
+                        cc.RegionType[se] = INTRONIC;
 
                         int distanceToPrev = position - exon.End;
                         int distanceToNext = nextExon.Start - position;
@@ -202,12 +189,16 @@ public class CodingContext
 
                     if(nextExon != null && posEnd <= nextExon.End)
                         continue;
-
-                    continue;
                 }
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
+                    if(se == SE_END && posStart == posEnd)
+                    {
+                        cc.copyStartValues();
+                        continue;
+                    }
+
                     int position = se == SE_START ? posStart : posEnd;
 
                     // accumulate coding base positions
@@ -223,6 +214,7 @@ public class CodingContext
                     }
                     else if(nextExon != null && position > nextExon.End && position < exon.Start)
                     {
+                        cc.RegionType[se] = INTRONIC;
                         cc.CodingPhase = transData.Strand == POS_STRAND ? exon.PhaseEnd : nextExon.PhaseEnd;
 
                         int distanceToPrev = exon.Start - position;
@@ -281,6 +273,12 @@ public class CodingContext
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
+                    if(se == SE_END && posStart == posEnd)
+                    {
+                        cc.copyStartValues();
+                        continue;
+                    }
+
                     int position = se == SE_START ? posStart : posEnd;
 
                     if(positionWithin(position, exon.Start, exon.End))
@@ -327,6 +325,12 @@ public class CodingContext
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
+                    if(se == SE_END && posStart == posEnd)
+                    {
+                        cc.copyStartValues();
+                        continue;
+                    }
+
                     int position = se == SE_START ? posStart : posEnd;
 
                     if(positionWithin(position, exon.Start, exon.End))
@@ -476,5 +480,33 @@ public class CodingContext
         }
 
         return cc;
+    }
+
+    public static String csvHeader()
+    {
+        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBases,NonCodingBases";
+    }
+
+    public String toCsv()
+    {
+        StringJoiner sj = new StringJoiner(DELIM);
+
+        sj.add(hgvsStr());
+        sj.add(RegionType[SE_START] == RegionType[SE_END]
+                ? RegionType[SE_START].toString() : String.format("%s-%s", RegionType[SE_START], RegionType[SE_END]));
+
+        sj.add(CodingType[SE_START] == CodingType[SE_END]
+                ? CodingType[SE_START].toString() : String.format("%s-%s", CodingType[SE_START], CodingType[SE_END]));
+
+        sj.add(ExonRank[SE_START] == ExonRank[SE_END]
+                ? String.valueOf(ExonRank[SE_START]) : String.format("%d-%d", ExonRank[SE_START], ExonRank[SE_END]));
+
+        sj.add(CodingBase[SE_START] == CodingBase[SE_END]
+                ? String.valueOf(CodingBase[SE_START]) : String.format("%d-%d", CodingBase[SE_START], CodingBase[SE_END]));
+
+        sj.add(NonCodingBase[SE_START] == NonCodingBase[SE_END]
+                ? String.valueOf(NonCodingBase[SE_START]) : String.format("%d-%d", NonCodingBase[SE_START], NonCodingBase[SE_END]));
+
+        return sj.toString();
     }
 }
