@@ -38,7 +38,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using CFReportWriterTest
-    //                public static final String VERSION = "7.23";
+    //                public static final String VERSION = "7.23.3";
 
     public static void main(@NotNull String[] args) throws IOException {
         LOGGER.info("Running patient reporter v{}", VERSION);
@@ -92,7 +92,7 @@ public class PatientReporterApplication {
 
             writeReportDataToJson(report);
 
-            new ReportingDb(config.reportingDbTsv()).appendAnalysedReport(report);
+            new ReportingDb().appendAnalysedReport(report, config.outputDirData());
         }
     }
 
@@ -115,7 +115,7 @@ public class PatientReporterApplication {
 
             writeReportDataToJson(report);
 
-            new ReportingDb(config.reportingDbTsv()).appendQCFailReport(report);
+            new ReportingDb().appendQCFailReport(report, config.outputDirReport());
         }
     }
 
