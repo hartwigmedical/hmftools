@@ -241,9 +241,14 @@ public class ImpactClassifier
         else
         {
             if(transImpact.hasCodingData() && transImpact.proteinContext().hasProteinChange())
-                transImpact.addEffect(MISSENSE);
+            {
+                if(!transImpact.proteinContext().NovelAA.equals(STOP_AMINO_ACID)) // stop-gained is a special case
+                    transImpact.addEffect(MISSENSE);
+            }
             else
+            {
                 transImpact.addEffect(SYNONYMOUS);
+            }
         }
     }
 
@@ -253,20 +258,21 @@ public class ImpactClassifier
             return;
 
         VariantEffect ssEffect = checkStopStartCodons(
-                transImpact.proteinContext().WildtypeAA, transImpact.proteinContext().NovelAA);
+                transImpact.proteinContext().StartPosition, transImpact.proteinContext().WildtypeAA, transImpact.proteinContext().NovelAA);
 
         if(ssEffect != null)
         {
+            transImpact.effects().remove(MISSENSE); // superceded if present so remove
             transImpact.addEffect(ssEffect);
         }
     }
 
-    public static VariantEffect checkStopStartCodons(final String refAminoAcids, final String altAminoAcids)
+    public static VariantEffect checkStopStartCodons(int aminoAcidStartPos, final String refAminoAcids, final String altAminoAcids)
     {
         if(refAminoAcids.isEmpty() || altAminoAcids.isEmpty())
             return null;
 
-        if(refAminoAcids.charAt(0) == START_AMINO_ACID && altAminoAcids.charAt(0) != START_AMINO_ACID)
+        if(aminoAcidStartPos == 1 && refAminoAcids.charAt(0) == START_AMINO_ACID && altAminoAcids.charAt(0) != START_AMINO_ACID)
             return START_LOST;
 
         if(refAminoAcids.charAt(refAminoAcids.length() - 1) != STOP_AMINO_ACID)

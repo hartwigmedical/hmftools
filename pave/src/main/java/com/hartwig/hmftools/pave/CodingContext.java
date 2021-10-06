@@ -106,9 +106,9 @@ public class CodingContext
                 {
                     // keep track of coding bases if this exon overlaps the coding region
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
-                        preExonCodingBases += min(codingEnd, exon.Start) - max(codingStart, exon.End);
+                        preExonCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start);
 
-                    if(nextExon != null && posStart > nextExon.End)
+                    if(nextExon != null && posStart >= nextExon.Start)
                         continue;
                 }
 
@@ -162,9 +162,9 @@ public class CodingContext
                 if(posEnd < exon.Start)
                 {
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
-                        preExonCodingBases += min(codingEnd, exon.Start) - max(codingStart, exon.End);
+                        preExonCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start);
 
-                    if(nextExon != null && posEnd < nextExon.Start)
+                    if(nextExon != null && posEnd <= nextExon.End)
                         continue;
 
                     continue;

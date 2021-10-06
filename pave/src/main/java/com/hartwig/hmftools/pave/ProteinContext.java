@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class ProteinContext
 {
+    public int StartPosition; // first amino acid affected
     public String UpstreamAA;
     public String WildtypeAA;
     public String NovelAA;
@@ -28,6 +29,7 @@ public class ProteinContext
 
     public ProteinContext()
     {
+        StartPosition = 1;
         UpstreamAA = "";
         WildtypeAA = "";
         NovelAA = "";
@@ -41,12 +43,13 @@ public class ProteinContext
     public static ProteinContext determineContext(
             final VariantData variant, final CodingContext codingContext, final TranscriptData transData, final RefGenomeInterface refGenome)
     {
+        ProteinContext pc = new ProteinContext();
+
         // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
         int varLength = variant.Ref.length();
         boolean posStrand = transData.posStrand();
 
-        // int upstreamStartPos = posStrand ? variant.Position : variant.Position + varLength - 1;
-        // final CodingBaseData cbData = calcCodingBases(transData, upstreamStartPos);
+        pc.StartPosition = (codingContext.CodingBase[SE_START] - 1) / 3 + 1;
 
         // this is 0 if the variant starts on the first base of a codon (phase=1), 1 if it starts on the 2nd, and 2 if on the 3rd/last
         int upstreamStartPos = posStrand ? variant.Position : variant.EndPosition;
@@ -75,8 +78,6 @@ public class ProteinContext
 
         // List<int[]> codingRanges = getCodingBaseRanges(transData, codonStartPos, posStrand, codingBaseLen);
         String refCodingBases = refGenome.getBaseString(variant.Chromosome, codingPosStart, codingPosEnd);
-
-        ProteinContext pc = new ProteinContext();
 
         String alt = variant.Alt;
         String altCodingBases;

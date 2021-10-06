@@ -359,19 +359,21 @@ public class VariantImpactTest
         String refAminoAcids = "SILFT";
         String altAminoAcids = "SI" + STOP_AMINO_ACID + "FT";
 
-        assertEquals(STOP_GAINED, checkStopStartCodons(refAminoAcids, altAminoAcids));
+        assertEquals(STOP_GAINED, checkStopStartCodons(10, refAminoAcids, altAminoAcids));
 
         // stop lost
         refAminoAcids = "SILF" + STOP_AMINO_ACID;
         altAminoAcids = "SILFTPW";
 
-        assertEquals(STOP_LOST, checkStopStartCodons(refAminoAcids, altAminoAcids));
+        assertEquals(STOP_LOST, checkStopStartCodons(10, refAminoAcids, altAminoAcids));
 
         // start lost
         refAminoAcids = START_AMINO_ACID + "SILFT";
         altAminoAcids = "WSILFT";
 
-        assertEquals(START_LOST, checkStopStartCodons(refAminoAcids, altAminoAcids));
+        assertEquals(START_LOST, checkStopStartCodons(1, refAminoAcids, altAminoAcids));
+
+        assertEquals(null, checkStopStartCodons(2, refAminoAcids, altAminoAcids));
 
     }
 }
