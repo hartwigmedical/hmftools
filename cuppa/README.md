@@ -394,4 +394,37 @@ In addition to the classifiers, the 20 nearest neighbour samples by pairwise cos
 
 Note that all samples are used for this analysis including rare cancer types that are not one of the CUPPA categorisations used in the classifiers.
 
+## Known potential biases or issues
+
+Bias | % of samples | Classifier | Description
+---|---|---|---
+AID_APOBEC | >2% | SNV_96 / GENOMIC_ POSITION  | Signature shared across 5-6 cohorts, but strongest in Urothelial / Breast. The genomic position signature for AID_APOBEC seems to be very different.  Lung and Eso/Stomach samples in particular get low GEN_POSITION. Other cancer types such as Anogenital & Head & neck perform ok on GEN_POS, but poorly on other classifiers.  
+Small cohort size | 2% | All | Rounding issues and noise dominate all classifiers where cohort size is small (<25 samples), prevents us from small cohorts such as Testis, and diminishes performance even > 25 samples. Also true for pairwise classifiers even though we adjust for it.
+TMBPerMb < .7 | 0.5% | ALL DNA | Generally low confidence.   Often mismatch to Pancreas:NET, likely due to ‘Low TMBPerMB’ feature
+High driver load | 1% | FEATURE | Samples with a high number of drivers tend to match Urothelial Tract cancers (these have the highest rate of drivers)
+MSI | 0.3% | GENOMIC_ POSITION | Samples with MSI typically have very low GENOMIC_POSITION scores to the correct cancer type.  Similar to AID_APOBEC effect 
+Pathognomonic events | 1% | FEATURE Rare pathognomonic events may not be found previously in our cohort or may not be weighed highly enough due to ‘min_prevalence’.  For some drivers the mechanism may be diagnostic whereas we only calculate features at a gene level, eg:
+SPOP amp (breast) vs mutation (prostate)
+KIT amp (lung) vs mutation (sarcoma)
+FOXA1 amp (lung) vs  mutation (breast/prostate)
+KRAS amp (esophagus) vs mutation (CRC/pancreas)
+Hypermutations n BCL2 & other genes (Lymphoid)
+Metastasis site | 0.2% | RNA |  Liver mets can be mistaken for liver primary particularly low purity samples
+Copy number | ? | GENOMIC_ POSITION | Adjusting for copy number may improve weightings
+Treatment signatures | 0.1% | SNV_96 | Samples with strong treatment signatures (eg SYD985) will match each other with high certainty
+Lung: Small-cell vs non small cell | 0.5% | GENOMIC_ POSITION | ‘Lung: non-small cell’ can strongly match the genomic position profile of Lung: small cell with high confidence.   Possibly due to timing of transformation to small cell?
+Bile Duct / Gallbladder | 1% | ALL | Can be mistaken for Liver or Pancreas with high confidence
+Non-smoking Lung | 0.2% | GENOMIC_ POSITION | Performance is weaker, but can mostly be explained by AID_APOBEC / pathognomonic events
+Esophagus / Stomach vs Colorectal | 0.5% | ALL RNA | Esophagus frequently presents as Colorectal on all RNA classifiers
+Anogenital vs Head & Neck: Other | 0.4% | All | Can often be mistaken for each other.
+Sarcoma | 1.5% | ALL | Frequent mismatches between Leiomyosarcoma, Liposarcoma, Osteosarcoma and ‘other’.  Multiple causes:
+Larger cohorts would help make clearer cohorts and could allow distinct groups for Rhabdomyosarcoma and others.
+Some samples marked as ‘Sarcoma’ and matched to Leiomyosarcoma are reported as match=F, but may be TP
+Spindle cell sarcoma appear to group better with Leioymyosarcoma but are marked as ‘other’
+
+
+
+
+
+
 
