@@ -9,9 +9,8 @@ import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_END_RANGE;
-import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_START_RANGE;
-import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_END_RANGE;
-import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_START_RANGE;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_POSITIONS;
+import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_POSITIONS;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_EXON_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_INTRON_RANGE;
 
@@ -115,7 +114,7 @@ public class SpliceClassifier
                 {
                     int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
-                    if(donorPos >= SPLICE_DONOR_START_RANGE && donorPos <= SPLICE_DONOR_END_RANGE)
+                    if(SPLICE_DONOR_POSITIONS.contains(donorPos))
                         return SPLICE_DONOR;
 
                     //if(donorPos == SPLICE_DONOR_END_RANGE)
@@ -146,16 +145,14 @@ public class SpliceClassifier
                 {
                     int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
-                    //if(donorPos == -1 || donorPos == 1 || donorPos == 2 || donorPos == 5)
-
-                    if(donorPos >= SPLICE_DONOR_START_RANGE && donorPos <= SPLICE_DONOR_END_RANGE)
+                    if(SPLICE_DONOR_POSITIONS.contains(donorPos))
                         return SPLICE_DONOR;
                 }
                 else
                 {
                     int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
 
-                    if(acceptorPos >= SPLICE_ACCEPTOR_START_RANGE && acceptorPos <= SPLICE_ACCEPTOR_END_RANGE)
+                    if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
                     {
                         if(acceptorPos == SPLICE_ACCEPTOR_END_RANGE)
                         {

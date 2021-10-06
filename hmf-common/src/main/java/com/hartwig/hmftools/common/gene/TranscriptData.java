@@ -47,6 +47,8 @@ public class TranscriptData
     public boolean posStrand() { return Strand == POS_STRAND; }
     public Strand strand() { return Strand == POS_STRAND ? FORWARD : REVERSE;  }
 
+    public boolean nonCoding() { return CodingStart == null; }
+
     public String toString()
     {
         return String.format("%d:%s pos(%d-%d) exons(%d) %s",

@@ -66,7 +66,7 @@ public class CodingContext
             return determineUpstreamContext(posStart, posEnd, transData);
         }
 
-        if(transData.CodingStart == null)
+        if(transData.nonCoding())
         {
             return determineNonCodingContext(posStart, posEnd, transData);
         }

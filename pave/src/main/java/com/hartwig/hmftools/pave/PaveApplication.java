@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
@@ -135,8 +136,8 @@ public class PaveApplication
 
         if(mConfig.CompareSnpEff)
         {
-            PV_LOGGER.info("sample({}) transcript comparison total({}) matched({})",
-                    sampleId, mTransTotalComparisons, mTransEffectMatched);
+            PV_LOGGER.info("sample({}) transcript comparison total({} matched={} diffs={})",
+                    sampleId, mTransTotalComparisons, mTransEffectMatched, mTransTotalComparisons - mTransEffectMatched);
         }
 
         mVcfWriter.close();
@@ -332,7 +333,7 @@ public class PaveApplication
         {
             List<String> transcriptLines = Lists.newArrayList();
 
-            List<SnpEffAnnotation> matchedAnnotations = Lists.newArrayList();
+            List<SnpEffAnnotation> processedAnnotations = Lists.newArrayList();
 
             List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
 
@@ -343,14 +344,12 @@ public class PaveApplication
                     if(impact.TransData == null)
                         continue;
 
-                    SnpEffAnnotation annotation = ComparisonUtils.findMatchingAnnotation(impact, annotations);
-
-                    if(annotation != null)
-                        matchedAnnotations.add(annotation);
+                    List<SnpEffAnnotation> matchedAnnotations = ComparisonUtils.findMatchingAnnotations(impact, annotations);
+                    processedAnnotations.addAll(matchedAnnotations);
 
                     ++mTransTotalComparisons;
 
-                    if(annotation != null && effectsMatch(impact, annotation))
+                    if(!matchedAnnotations.isEmpty() && matchedAnnotations.stream().anyMatch(x -> effectsMatch(impact, x)))
                     {
                         ++mTransEffectMatched;
 
@@ -367,9 +366,18 @@ public class PaveApplication
                     sj.add(impact.TransData.TransName);
                     sj.add(String.valueOf(impact.effectsToCsv()));
 
-                    if(annotation != null)
+                    if(!matchedAnnotations.isEmpty())
                     {
-                        sj.add(annotation.effects());
+                        if(matchedAnnotations.size() == 1)
+                        {
+                            sj.add(matchedAnnotations.get(0).effects());
+                        }
+                        else
+                        {
+                            StringJoiner maSj = new StringJoiner(VARIANT_CONSEQ_DELIM);
+                            matchedAnnotations.forEach(x -> maSj.add(x.effects()));
+                            sj.add(maSj.toString());
+                        }
                     }
                     else
                     {
@@ -382,7 +390,7 @@ public class PaveApplication
 
             for(SnpEffAnnotation annotation : annotations)
             {
-                if(matchedAnnotations.contains(annotation))
+                if(processedAnnotations.contains(annotation))
                     continue;
 
                 final TranscriptData transData = mGeneDataCache.getTranscriptData(annotation.geneID(), annotation.featureID());

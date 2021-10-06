@@ -26,12 +26,12 @@ import com.hartwig.hmftools.pave.VariantTransImpact;
 
 public final class ComparisonUtils
 {
-    public static SnpEffAnnotation findMatchingAnnotation(final VariantTransImpact transImpact, final List<SnpEffAnnotation> annotations)
+    public static List<SnpEffAnnotation> findMatchingAnnotations(final VariantTransImpact transImpact, final List<SnpEffAnnotation> annotations)
     {
         return annotations.stream()
                 .filter(x -> x.featureID() != null && x.featureID().equals(transImpact.TransData.TransName))
                 .filter(x -> !ignoreSnpEffAnnotation(x))
-                .findFirst().orElse(null);
+                .collect(Collectors.toList());
     }
 
     public static boolean ignoreSnpEffAnnotation(final SnpEffAnnotation annotation)

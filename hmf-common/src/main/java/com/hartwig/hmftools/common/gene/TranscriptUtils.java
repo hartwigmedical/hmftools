@@ -78,7 +78,7 @@ public class TranscriptUtils
 
     public static int codingBaseLength(final TranscriptData transData)
     {
-        if(transData.CodingStart == null)
+        if(transData.nonCoding())
             return 0;
 
         int codingBases = 0;
@@ -106,7 +106,7 @@ public class TranscriptUtils
 
         CodingBaseData cbData = new CodingBaseData();
 
-        if(transData.CodingStart == null)
+        if(transData.nonCoding())
             return cbData;
 
         int codingStart = transData.CodingStart;
@@ -221,7 +221,7 @@ public class TranscriptUtils
         // returns ranges of coding bases starting from a given position for a specified number of bases up or down from there
         final List<int[]> codingBaseRanges = Lists.newArrayList();
 
-        if(transData.CodingStart == null)
+        if(transData.nonCoding())
             return codingBaseRanges;
 
         if(startPosition < transData.CodingStart || startPosition > transData.CodingEnd)
