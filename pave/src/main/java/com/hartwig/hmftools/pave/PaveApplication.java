@@ -171,7 +171,9 @@ public class PaveApplication
         }
 
         // extract SnpEff data for comparison sake
-        List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext);
+        List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext).stream()
+                .filter(x -> !ignoreSnpEffAnnotation(x))
+                .collect(Collectors.toList());
 
         if(variant.getImpacts().isEmpty())
         {
@@ -348,7 +350,7 @@ public class PaveApplication
 
                     ++mTransTotalComparisons;
 
-                    if(effectsMatch(impact, annotation))
+                    if(annotation != null && effectsMatch(impact, annotation))
                     {
                         ++mTransEffectMatched;
 
@@ -386,9 +388,6 @@ public class PaveApplication
                 final TranscriptData transData = mGeneDataCache.getTranscriptData(annotation.geneID(), annotation.featureID());
 
                 if(transData == null)
-                    continue;
-
-                if(ignoreSnpEffAnnotation(annotation, transData))
                     continue;
 
                 ++mTransTotalComparisons;

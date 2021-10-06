@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
@@ -37,7 +38,8 @@ public class GeneDataCache
     private String mCurrentChromosome;
     private List<GeneData> mCurrentChromosomeGenes;
     private List<GeneData> mCurrentGenes; // in the current vacinity
-    private int mCurrentGeneIndex;
+    private int mCurrentPosStrandGeneIndex;
+    private int mCurrentNegStrandGeneIndex;
 
     public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenomeVersion, final String driverGenePanel)
     {
@@ -52,7 +54,8 @@ public class GeneDataCache
 
         mCurrentChromosome = null;
         mCurrentChromosomeGenes = null;
-        mCurrentGeneIndex = 0;
+        mCurrentPosStrandGeneIndex = 0;
+        mCurrentNegStrandGeneIndex = 0;
         mCurrentGenes = Lists.newArrayList();
     }
 
@@ -157,7 +160,8 @@ public class GeneDataCache
         {
             mCurrentChromosome = chromosome;
             mCurrentChromosomeGenes = mEnsemblDataCache.getChrGeneDataMap().get(chromosome);
-            mCurrentGeneIndex = 0;
+            mCurrentPosStrandGeneIndex = 0;
+            mCurrentNegStrandGeneIndex = 0;
             mCurrentGenes.clear();
         }
 
@@ -171,35 +175,55 @@ public class GeneDataCache
         int index = 0;
         while(index < mCurrentGenes.size())
         {
-            if(mCurrentGenes.get(index).GeneEnd < endPosition)
+            GeneData geneData = mCurrentGenes.get(index);
+
+            boolean isPastGene = (geneData.forwardStrand() && geneData.GeneEnd < endPosition)
+                    || (geneData.reverseStrand() && geneData.GeneEnd + GENE_UPSTREAM_DISTANCE < endPosition);
+
+            if(isPastGene)
                 mCurrentGenes.remove(index);
             else
                 ++index;
         }
 
         // otherwise search forward and add any additional genes which overlap the position
-        for(; mCurrentGeneIndex < mCurrentChromosomeGenes.size(); ++mCurrentGeneIndex)
+        // need to maintain 2 indices since the range checks can result in different current positions
+        for(int i = 0; i <= 1; ++i)
         {
-            GeneData geneData = mCurrentChromosomeGenes.get(mCurrentGeneIndex);
+            int currentStrand = (i == 0) ? POS_STRAND : NEG_STRAND;
+            int geneIndex = (i == 0) ? mCurrentPosStrandGeneIndex : mCurrentNegStrandGeneIndex;
 
-            if(isWithinGeneRange(geneData, startPosition, endPosition))
+            for(; geneIndex < mCurrentChromosomeGenes.size(); ++geneIndex)
             {
-                if(mCurrentGenes.contains(geneData))
+                GeneData geneData = mCurrentChromosomeGenes.get(geneIndex);
+
+                if(geneData.Strand != currentStrand)
+                    continue;
+
+                if(isWithinGeneRange(geneData, startPosition, endPosition))
                 {
-                    PV_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, mCurrentGeneIndex);
+                    if(mCurrentGenes.contains(geneData))
+                    {
+                        PV_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, geneIndex);
+                        break;
+                    }
+
+                    mCurrentGenes.add(geneData);
+                }
+                else if(startPosition > geneData.GeneEnd)
+                {
+                    continue;
+                }
+                else if(geneData.GeneStart > startPosition)
+                {
                     break;
                 }
+            }
 
-                mCurrentGenes.add(geneData);
-            }
-            else if(startPosition > geneData.GeneEnd)
-            {
-                continue;
-            }
-            else if(geneData.GeneStart > startPosition)
-            {
-                break;
-            }
+            if(i == 0)
+                mCurrentPosStrandGeneIndex = geneIndex;
+            else
+                mCurrentNegStrandGeneIndex = geneIndex;
         }
 
         return mCurrentGenes;

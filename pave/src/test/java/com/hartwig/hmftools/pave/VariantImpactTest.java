@@ -106,13 +106,14 @@ public class VariantImpactTest
         TranscriptData transDataNonCoding = createTransExons(
                 GENE_ID_2, TRANS_ID_2, NEG_STRAND, exonStarts, 50, null, null, false, "");
 
-        // intronic is nothing
+        // intronic
         pos = 160;
         var = createSnv(pos, refBases);
 
         impact = classifier.classifyVariant(var, transDataNonCoding);
-        assertEquals(null, impact);
+        assertEquals(INTRONIC, impact.topEffect());
 
+        // exonic has special classification
         pos = 220;
         var = createSnv(pos, refBases);
 

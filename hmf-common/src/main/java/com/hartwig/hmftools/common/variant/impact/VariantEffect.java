@@ -29,7 +29,7 @@ public enum VariantEffect
     FIVE_PRIME_UTR("5_prime_UTR_variant", 10),
     THREE_PRIME_UTR("3_prime_UTR_variant", 10),
     UPSTREAM_GENE("upstream_gene_variant", 10),
-    NON_CODING_TRANSCRIPT("non_coding_transcript_variant", 10),
+    NON_CODING_TRANSCRIPT("non_coding_transcript_exon_variant", 10),
 
     OTHER("other", 0);
 

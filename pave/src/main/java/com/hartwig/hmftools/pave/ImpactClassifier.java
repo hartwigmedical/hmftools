@@ -49,23 +49,16 @@ public class ImpactClassifier
         if(!withinTransRange(transData, variant.Position, variant.EndPosition))
             return null;
 
+        VariantTransImpact transImpact = new VariantTransImpact(transData);
+
         if(transData.CodingStart == null)
         {
-            // check if exonic otherwise ignore
-            if(transData.exons().stream().noneMatch(x -> positionsOverlap(variant.Position, variant.EndPosition, x.Start, x.End)))
-                return null;
+            classifyNonCoding(variant, transImpact);
+            return transImpact;
         }
-
-        VariantTransImpact transImpact = new VariantTransImpact(transData);
 
         CodingContext codingContext = CodingContext.determineContext(variant, transData);
         transImpact.setCodingContext(codingContext);
-
-        if(transData.CodingStart == null)
-        {
-            transImpact.addEffect(NON_CODING_TRANSCRIPT);
-            return transImpact;
-        }
 
         if(codingContext.isCoding())
         {
@@ -136,6 +129,24 @@ public class ImpactClassifier
         checkStopStartCodons(transImpact);
 
         return transImpact;
+    }
+
+    private void classifyNonCoding(final VariantData variant, final VariantTransImpact transImpact)
+    {
+        final TranscriptData transData = transImpact.TransData;
+
+        if((transData.posStrand() && variant.EndPosition < transData.TransStart) || (!transData.posStrand() && variant.Position > transData.TransEnd))
+        {
+            transImpact.addEffect(UPSTREAM_GENE);
+        }
+        else if(transData.exons().stream().anyMatch(x -> positionsOverlap(variant.Position, variant.EndPosition, x.Start, x.End)))
+        {
+            transImpact.addEffect(NON_CODING_TRANSCRIPT);
+        }
+        else
+        {
+            transImpact.addEffect(INTRONIC);
+        }
     }
 
     private boolean checPrePostCodingImpact(final VariantData variant, final VariantTransImpact transImpact)
