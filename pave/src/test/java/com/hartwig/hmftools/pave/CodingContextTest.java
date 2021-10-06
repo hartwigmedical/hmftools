@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -46,8 +45,8 @@ public class CodingContextTest
 
         CodingContext codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(UPSTREAM, codingContext.RegionTypes[SE_START]);
-        assertEquals(UNKNOWN, codingContext.CodingTypes[SE_START]);
+        assertEquals(UPSTREAM, codingContext.RegionType[SE_START]);
+        assertEquals(UNKNOWN, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(0, codingContext.ExonRank[SE_START]);
         assertEquals(0, codingContext.CodingBase[SE_END]);
@@ -58,8 +57,8 @@ public class CodingContextTest
         var = new VariantData(CHR_1, pos, "A", "C");
         codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(EXONIC, codingContext.RegionTypes[SE_START]);
-        assertEquals(UTR_5P, codingContext.CodingTypes[SE_START]);
+        assertEquals(EXONIC, codingContext.RegionType[SE_START]);
+        assertEquals(UTR_5P, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(1, codingContext.ExonRank[SE_START]);
         assertEquals(0, codingContext.CodingBase[SE_END]);
@@ -70,8 +69,8 @@ public class CodingContextTest
         var = new VariantData(CHR_1, pos, "A", "C");
         codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(INTRONIC, codingContext.RegionTypes[SE_START]);
-        assertEquals(UTR_5P, codingContext.CodingTypes[SE_START]);
+        assertEquals(INTRONIC, codingContext.RegionType[SE_START]);
+        assertEquals(UTR_5P, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(1, codingContext.ExonRank[SE_START]);
         assertEquals(0, codingContext.CodingBase[SE_END]);
@@ -82,8 +81,8 @@ public class CodingContextTest
         var = new VariantData(CHR_1, pos, "A", "C");
         codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(EXONIC, codingContext.RegionTypes[SE_START]);
-        assertEquals(UTR_5P, codingContext.CodingTypes[SE_START]);
+        assertEquals(EXONIC, codingContext.RegionType[SE_START]);
+        assertEquals(UTR_5P, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(3, codingContext.ExonRank[SE_START]);
         assertEquals(0, codingContext.CodingBase[SE_END]);
@@ -94,8 +93,8 @@ public class CodingContextTest
         var = new VariantData(CHR_1, pos, "A", "C");
         codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(EXONIC, codingContext.RegionTypes[SE_START]);
-        assertEquals(UTR_3P, codingContext.CodingTypes[SE_START]);
+        assertEquals(EXONIC, codingContext.RegionType[SE_START]);
+        assertEquals(UTR_3P, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(4, codingContext.ExonRank[SE_START]);
         assertEquals(27, codingContext.CodingBase[SE_END]);
@@ -106,8 +105,8 @@ public class CodingContextTest
         var = new VariantData(CHR_1, pos, "A", "C");
         codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(INTRONIC, codingContext.RegionTypes[SE_START]);
-        assertEquals(UTR_3P, codingContext.CodingTypes[SE_START]);
+        assertEquals(INTRONIC, codingContext.RegionType[SE_START]);
+        assertEquals(UTR_3P, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(5, codingContext.ExonRank[SE_START]);
         assertEquals(27, codingContext.CodingBase[SE_END]);
@@ -118,8 +117,8 @@ public class CodingContextTest
         var = new VariantData(CHR_1, pos, "A", "C");
         codingContext = CodingContext.determineContext(var, transDataPosStrand);
 
-        assertEquals(EXONIC, codingContext.RegionTypes[SE_START]);
-        assertEquals(UTR_3P, codingContext.CodingTypes[SE_START]);
+        assertEquals(EXONIC, codingContext.RegionType[SE_START]);
+        assertEquals(UTR_3P, codingContext.CodingType[SE_START]);
         assertEquals(PHASE_NONE, codingContext.CodingPhase);
         assertEquals(6, codingContext.ExonRank[SE_START]);
         assertEquals(27, codingContext.CodingBase[SE_END]);

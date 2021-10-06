@@ -4,13 +4,14 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
+import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public class VariantTransImpact
@@ -23,7 +24,6 @@ public class VariantTransImpact
     private ProteinContext mProteinContext;
 
     private boolean mInSpliceRegion;
-    private int mExonRank;
 
     private int mLocalPhaseSetId;
 
@@ -34,7 +34,6 @@ public class VariantTransImpact
         mEffects = Lists.newArrayList();
 
         mCodingContext = null;
-        mExonRank = 0;
         mLocalPhaseSetId = -1;
         mInSpliceRegion = false;
     }
@@ -71,27 +70,40 @@ public class VariantTransImpact
     public boolean isExonic()
     {
         return mCodingContext != null
-                && (mCodingContext.RegionTypes[SE_START] == EXONIC || mCodingContext.RegionTypes[SE_END] == EXONIC);
+                && (mCodingContext.RegionType[SE_START] == EXONIC || mCodingContext.RegionType[SE_END] == EXONIC);
     }
 
     public ProteinContext proteinContext() { return mProteinContext; }
     public void setProteinContext(final ProteinContext context) { mProteinContext = context; }
     public boolean hasCodingData() { return mProteinContext != null && mProteinContext.hasCodingBases(); }
 
-    public void setExonRank(int rank) { mExonRank = rank; }
-    public int exonRank() { return mExonRank; }
-
     public void markSpliceRegion() { mInSpliceRegion = true; }
     public boolean inSpliceRegion() { return mInSpliceRegion; }
 
-    public String hgvsCodingChange() { return ""; }
-    public String hgvsProteinChange() { return ""; }
+    public String hgvsCoding() { return mCodingContext.hgvsStr(); }
+    public String hgvsProtein() { return mProteinContext != null ? mProteinContext.hgvsStr() :  ""; }
 
     public String effectsStr()
     {
         return effectsToString(mEffects);
     }
     public String effectsToCsv() { return effectsToString(mEffects, ITEM_DELIM); }
+
+    public static String csvHeader()
+    {
+        return "TransId,SpliceRegion,Effects";
+    }
+
+    public String toCsv()
+    {
+        StringJoiner sj = new StringJoiner(DELIM);
+
+        sj.add(TransData.TransName);
+        sj.add(String.valueOf(mInSpliceRegion));
+        sj.add(effectsToCsv());
+
+        return sj.toString();
+    }
 
     public String toString()
     {

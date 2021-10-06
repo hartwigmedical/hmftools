@@ -5,16 +5,11 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.getCodingBaseRanges;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -39,6 +34,8 @@ public class ProteinContext
     public boolean hasCodingBases() { return !WildtypeAA.isEmpty(); }
 
     public boolean hasProteinChange() { return !WildtypeAA.equals(NovelAA); }
+
+    public String hgvsStr() { return "tbc"; }
 
     public static ProteinContext determineContext(
             final VariantData variant, final CodingContext codingContext, final TranscriptData transData, final RefGenomeInterface refGenome)

@@ -56,7 +56,7 @@ public class VcfWriter
                 transImpacts.add(new VariantTranscriptImpact(
                         transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
                         transImpact.effectsStr(), transImpact.inSpliceRegion(),
-                        transImpact.hgvsCodingChange(), transImpact.hgvsProteinChange()));
+                        transImpact.hgvsCoding(), transImpact.hgvsProtein()));
             }
         }
 

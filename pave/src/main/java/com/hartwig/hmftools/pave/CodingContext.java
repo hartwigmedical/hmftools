@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
@@ -14,15 +12,16 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBaseLength;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
-import com.hartwig.hmftools.common.gene.CodingBaseData;
+import java.util.StringJoiner;
+
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -31,8 +30,8 @@ import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 // consider moving to hmf-common
 public class CodingContext
 {
-    public TranscriptRegionType[] RegionTypes;
-    public TranscriptCodingType[] CodingTypes;
+    public TranscriptRegionType[] RegionType;
+    public TranscriptCodingType[] CodingType;
     public int[] ExonRank;
     public int[] CodingBase; // index of coding base from start of transcript
     public int[] NonCodingBase; // bases before or after the nearest coding base (ie 5P, 3P or intronic)
@@ -41,8 +40,8 @@ public class CodingContext
 
     public CodingContext()
     {
-        RegionTypes = new TranscriptRegionType[] { TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN };
-        CodingTypes = new TranscriptCodingType[] { TranscriptCodingType.UNKNOWN, TranscriptCodingType.UNKNOWN };
+        RegionType = new TranscriptRegionType[] { TranscriptRegionType.UNKNOWN, TranscriptRegionType.UNKNOWN };
+        CodingType = new TranscriptCodingType[] { TranscriptCodingType.UNKNOWN, TranscriptCodingType.UNKNOWN };
         ExonRank = new int[] {0, 0};
         CodingBase = new int[] {0, 0};
         NonCodingBase = new int[] {0, 0};
@@ -52,8 +51,38 @@ public class CodingContext
 
     public boolean isCoding()
     {
-        return (CodingTypes[SE_START] == CODING && RegionTypes[SE_START] == EXONIC)
-            || (CodingTypes[SE_END] == CODING && RegionTypes[SE_END] == EXONIC);
+        return (CodingType[SE_START] == CODING && RegionType[SE_START] == EXONIC)
+            || (CodingType[SE_END] == CODING && RegionType[SE_END] == EXONIC);
+    }
+
+    public String hgvsStr() { return "tbc"; }
+
+    public static String csvHeader()
+    {
+        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBases,NonCodingBases";
+    }
+
+    public String toCsv()
+    {
+        StringJoiner sj = new StringJoiner(DELIM);
+
+        sj.add(hgvsStr());
+        sj.add(RegionType[SE_START] == RegionType[SE_END]
+                ? RegionType[SE_START].toString() : String.format("%s-%s", RegionType[SE_START], RegionType[SE_END]));
+
+        sj.add(CodingType[SE_START] == CodingType[SE_END]
+                ? CodingType[SE_START].toString() : String.format("%s-%s", CodingType[SE_START], CodingType[SE_END]));
+
+        sj.add(ExonRank[SE_START] == ExonRank[SE_END]
+                ? String.valueOf(ExonRank[SE_START]) : String.format("%d-%d", ExonRank[SE_START], RegionType[SE_END]));
+
+        sj.add(CodingBase[SE_START] == CodingBase[SE_END]
+                ? String.valueOf(CodingBase[SE_START]) : String.format("%d-%d", CodingBase[SE_START], CodingBase[SE_END]));
+
+        sj.add(NonCodingBase[SE_START] == NonCodingBase[SE_END]
+                ? String.valueOf(NonCodingBase[SE_START]) : String.format("%d-%d", NonCodingBase[SE_START], NonCodingBase[SE_END]));
+
+        return sj.toString();
     }
 
     public static CodingContext determineContext(final VariantData variant, final TranscriptData transData)
@@ -61,7 +90,7 @@ public class CodingContext
         int posStart = variant.Position;
         int posEnd = variant.EndPosition;
 
-        if(posEnd < transData.TransStart || posStart > transData.TransEnd)
+        if(variant.altBasesBelow(transData.TransStart) || variant.altBasesAbove(transData.TransEnd))
         {
             return determineUpstreamContext(posStart, posEnd, transData);
         }
@@ -71,7 +100,7 @@ public class CodingContext
             return determineNonCodingContext(posStart, posEnd, transData);
         }
 
-        if(posStart < transData.CodingStart || posEnd > transData.CodingEnd)
+        if(variant.altBasesBelow(transData.CodingStart) || variant.altBasesAbove(transData.CodingEnd))
         {
             return determinePreOrPostCodingContext(posStart, posEnd, transData);
         }
@@ -100,7 +129,7 @@ public class CodingContext
         // calculate coding bases prior to this location and add any addition if within an exon
         // set region types
 
-        cc.CodingTypes[SE_START] = cc.CodingTypes[SE_END] = CODING;
+        cc.CodingType[SE_START] = cc.CodingType[SE_END] = CODING;
 
         if(transData.posStrand())
         {
@@ -126,7 +155,7 @@ public class CodingContext
                     // accumulate coding base positions
                     if(positionWithin(position, exon.Start, exon.End))
                     {
-                        cc.RegionTypes[se] = EXONIC;
+                        cc.RegionType[se] = EXONIC;
                         cc.ExonRank[se] = exon.Rank;
 
                         // add in any extra coding bases
@@ -184,7 +213,7 @@ public class CodingContext
                     // accumulate coding base positions
                     if(positionWithin(position, exon.Start, exon.End))
                     {
-                        cc.RegionTypes[se] = EXONIC;
+                        cc.RegionType[se] = EXONIC;
                         cc.ExonRank[se] = exon.Rank;
 
                         // add in any extra coding bases
@@ -231,11 +260,11 @@ public class CodingContext
             // post-coding
             int codingBases = codingBaseLength(transData);
             cc.CodingBase[SE_START] = cc.CodingBase[SE_END] = codingBases;
-            cc.CodingTypes[SE_START] = cc.CodingTypes[SE_END] = UTR_3P;
+            cc.CodingType[SE_START] = cc.CodingType[SE_END] = UTR_3P;
         }
         else
         {
-            cc.CodingTypes[SE_START] = cc.CodingTypes[SE_END] = UTR_5P;
+            cc.CodingType[SE_START] = cc.CodingType[SE_END] = UTR_5P;
         }
 
         if(posStart < transData.CodingStart)
@@ -257,7 +286,7 @@ public class CodingContext
                     if(positionWithin(position, exon.Start, exon.End))
                     {
                         cc.ExonRank[se] = exon.Rank;
-                        cc.RegionTypes[se] = EXONIC;
+                        cc.RegionType[se] = EXONIC;
 
                         if(positionWithin(codingStart, exon.Start, exon.End))
                             cc.NonCodingBase[se] += codingStart - position;
@@ -267,7 +296,7 @@ public class CodingContext
                     else if(nextExon != null && position > exon.End && position < nextExon.Start)
                     {
                         cc.ExonRank[se] = transData.posStrand() ? exon.Rank : nextExon.Rank; // could be set to closest but not used for anything
-                        cc.RegionTypes[se] = INTRONIC;
+                        cc.RegionType[se] = INTRONIC;
                     }
                     else if(exon.Start > position)
                     {
@@ -303,7 +332,7 @@ public class CodingContext
                     if(positionWithin(position, exon.Start, exon.End))
                     {
                         cc.ExonRank[se] = exon.Rank;
-                        cc.RegionTypes[se] = EXONIC;
+                        cc.RegionType[se] = EXONIC;
 
                         if(positionWithin(codingEnd, exon.Start, exon.End))
                             cc.NonCodingBase[se] += position - codingEnd;
@@ -313,7 +342,7 @@ public class CodingContext
                     else if(nextExon != null && position > nextExon.End && position < exon.Start)
                     {
                         cc.ExonRank[se] = transData.posStrand() ? nextExon.Rank : exon.Rank;
-                        cc.RegionTypes[se] = INTRONIC;
+                        cc.RegionType[se] = INTRONIC;
                     }
                     else if(exon.End < position)
                     {
@@ -330,7 +359,7 @@ public class CodingContext
         }
 
         // convention is to have negative values if 5'UTR
-        if(cc.CodingTypes[SE_START] == UTR_5P)
+        if(cc.CodingType[SE_START] == UTR_5P)
         {
             cc.NonCodingBase[SE_START] *= -1;
             cc.NonCodingBase[SE_END] *= -1;
@@ -344,8 +373,8 @@ public class CodingContext
         CodingContext cc = new CodingContext();
 
         // can set exon ranks and bases from start of transcript but that's it
-        cc.CodingTypes[SE_START] = NON_CODING;
-        cc.CodingTypes[SE_END] = NON_CODING;
+        cc.CodingType[SE_START] = NON_CODING;
+        cc.CodingType[SE_END] = NON_CODING;
 
         // how to define bases for HGVC coding if at all?
         if(transData.posStrand())
@@ -363,23 +392,23 @@ public class CodingContext
                 if(posStart < exon.Start)
                 {
                     cc.ExonRank[SE_START] = exon.Rank - 1;
-                    cc.RegionTypes[SE_START] = INTRONIC;
+                    cc.RegionType[SE_START] = INTRONIC;
                 }
                 else if(positionWithin(posStart, exon.Start, exon.End))
                 {
                     cc.ExonRank[SE_START] = exon.Rank;
-                    cc.RegionTypes[SE_START] = EXONIC;
+                    cc.RegionType[SE_START] = EXONIC;
                 }
 
                 if(posEnd < exon.Start)
                 {
                     cc.ExonRank[SE_END] = exon.Rank - 1;
-                    cc.RegionTypes[SE_END] = INTRONIC;
+                    cc.RegionType[SE_END] = INTRONIC;
                 }
                 else if(positionWithin(posEnd, exon.Start, exon.End))
                 {
                     cc.ExonRank[SE_END] = exon.Rank;
-                    cc.RegionTypes[SE_END] = EXONIC;
+                    cc.RegionType[SE_END] = EXONIC;
                 }
 
                 break;
@@ -400,23 +429,23 @@ public class CodingContext
                 if(posEnd > exon.End)
                 {
                     cc.ExonRank[SE_END] = exon.Rank - 1;
-                    cc.RegionTypes[SE_END] = INTRONIC;
+                    cc.RegionType[SE_END] = INTRONIC;
                 }
                 else if(positionWithin(posEnd, exon.Start, exon.End))
                 {
                     cc.ExonRank[SE_END] = exon.Rank;
-                    cc.RegionTypes[SE_END] = EXONIC;
+                    cc.RegionType[SE_END] = EXONIC;
                 }
 
                 if(posStart > exon.End)
                 {
                     cc.ExonRank[SE_START] = exon.Rank - 1;
-                    cc.RegionTypes[SE_START] = INTRONIC;
+                    cc.RegionType[SE_START] = INTRONIC;
                 }
                 else if(positionWithin(posStart, exon.Start, exon.End))
                 {
                     cc.ExonRank[SE_START] = exon.Rank;
-                    cc.RegionTypes[SE_START] = EXONIC;
+                    cc.RegionType[SE_START] = EXONIC;
                 }
 
                 break;
@@ -430,8 +459,8 @@ public class CodingContext
     {
         CodingContext cc = new CodingContext();
 
-        cc.RegionTypes[SE_START] = UPSTREAM;
-        cc.RegionTypes[SE_END] = UPSTREAM;
+        cc.RegionType[SE_START] = UPSTREAM;
+        cc.RegionType[SE_END] = UPSTREAM;
 
         // upstream (or downstream but not handled)
         if(transData.posStrand())

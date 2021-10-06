@@ -169,10 +169,113 @@ public class PaveApplication
                 final String geneName = entry.getKey();
                 writeVariantTranscriptData(variant, geneName);
             }
+        }
+        else
+        {
+            checkAndWriteTransDifferences(variantContext, variant);
+        }
+    }
 
+    public static void findVariantImpacts(
+            final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
+    {
+        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
+
+        if(geneCandidates.isEmpty())
+            return;
+
+        // analyse against each of the genes and their transcripts
+        for(GeneData geneData : geneCandidates)
+        {
+            List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+
+            // non-coding transcripts are skipped for now
+            if(transDataList.isEmpty())
+                continue;
+
+            for(TranscriptData transData : transDataList)
+            {
+                VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+
+                if(transImpact != null && !transImpact.effects().isEmpty())
+                    variant.addImpact(geneData.GeneName, transImpact);
+            }
+        }
+    }
+
+    private void initialiseVcfWriter()
+    {
+        final VersionInfo version = new VersionInfo("pave.version");
+
+        String vcfFilename = mConfig.OverwriteVcf ?
+                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleId + ".pave.annotated.vcf";
+
+        mVcfWriter = new VcfWriter(vcfFilename, mConfig.VcfFile);
+
+        // TO-DO
+        // mVcfWriter.writeHeader(version.version());
+        mVcfWriter.writeHeader("1.0");
+    }
+
+    private void initialiseTranscriptWriter()
+    {
+        try
+        {
+            String fileSuffix = mConfig.CompareSnpEff ? ".pave.transcript_compare.csv" : ".pave.transcript.csv";
+            String transFileName = mConfig.OutputDir + mConfig.SampleId + fileSuffix;
+            mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
+
+            StringJoiner sj = new StringJoiner(DELIM);
+            sj.add(VariantData.csvCommonHeader());
+            sj.add("GeneId,GeneName,");
+            sj.add(VariantTransImpact.csvHeader());
+            sj.add(CodingContext.csvHeader());
+
+            if(mConfig.CompareSnpEff)
+                sj.add("SnpEffEffects,SnpEffHgvsCoding,SnpEffHgvsProtein");
+
+            mCsvTranscriptWriter.write(sj.toString());
+            mCsvTranscriptWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
             return;
         }
+    }
 
+    private void writeVariantTranscriptData(final VariantData variant, final String geneName)
+    {
+        if(mCsvTranscriptWriter == null)
+            return;
+
+        List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
+
+        if(geneImpacts == null)
+            return;
+
+        try
+        {
+            for(VariantTransImpact impact : geneImpacts)
+            {
+                if(impact.TransData == null)
+                    continue;
+
+                mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
+                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s",
+                        impact.TransData.GeneId, geneName, impact.toCsv(), impact.codingContext().toCsv()));
+                mCsvTranscriptWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
+            return;
+        }
+    }
+
+    private void checkAndWriteTransDifferences(final VariantContext variantContext, final VariantData variant)
+    {
         // extract SnpEff data for comparison sake
         List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext).stream()
                 .filter(x -> !ignoreSnpEffAnnotation(x))
@@ -232,100 +335,6 @@ public class PaveApplication
         }
     }
 
-    public static void findVariantImpacts(
-            final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
-    {
-        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
-
-        if(geneCandidates.isEmpty())
-            return;
-
-        // analyse against each of the genes and their transcripts
-        for(GeneData geneData : geneCandidates)
-        {
-            List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
-
-            // non-coding transcripts are skipped for now
-            if(transDataList.isEmpty())
-                continue;
-
-            for(TranscriptData transData : transDataList)
-            {
-                VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
-
-                if(transImpact != null && !transImpact.effects().isEmpty())
-                    variant.addImpact(geneData.GeneName, transImpact);
-            }
-        }
-    }
-
-    private void initialiseVcfWriter()
-    {
-        final VersionInfo version = new VersionInfo("pave.version");
-
-        String vcfFilename = mConfig.OverwriteVcf ?
-                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleId + ".pave.annotated.vcf";
-
-        mVcfWriter = new VcfWriter(vcfFilename, mConfig.VcfFile);
-
-        // TO-DO
-        // mVcfWriter.writeHeader(version.version());
-        mVcfWriter.writeHeader("1.0");
-    }
-
-    private void initialiseTranscriptWriter()
-    {
-        try
-        {
-            String fileSuffix = mConfig.CompareSnpEff ? ".pave.transcript_compare.csv" : ".pave.transcript.csv";
-            String transFileName = mConfig.OutputDir + mConfig.SampleId + fileSuffix;
-            mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
-
-            mCsvTranscriptWriter.write(VariantData.csvCommonHeader());
-            mCsvTranscriptWriter.write(",GeneId,GeneName,TransId,Effects");
-
-            if(mConfig.CompareSnpEff)
-                mCsvTranscriptWriter.write(",SnpEffEffects,SnpEffHgvsCoding,SnpEffHgvsProtein");
-
-            mCsvTranscriptWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
-            return;
-        }
-    }
-
-    private void writeVariantTranscriptData(final VariantData variant, final String geneName)
-    {
-        if(mCsvTranscriptWriter == null)
-            return;
-
-        List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
-
-        if(geneImpacts == null)
-            return;
-
-        try
-        {
-            for(VariantTransImpact impact : geneImpacts)
-            {
-                if(impact.TransData == null)
-                    continue;
-
-                mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
-                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
-                        impact.TransData.GeneId, geneName, impact.TransData.TransName, impact.effectsToCsv()));
-                mCsvTranscriptWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
-            return;
-        }
-    }
-
     private void writeVariantTranscriptData(final VariantData variant, final String geneName, final List<SnpEffAnnotation> annotations)
     {
         if(mCsvTranscriptWriter == null)
@@ -365,25 +374,36 @@ public class PaveApplication
                     sj.add(impact.TransData.GeneId);
                     sj.add(geneName);
 
-                    sj.add(impact.TransData.TransName);
-                    sj.add(String.valueOf(impact.effectsToCsv()));
+
+                    sj.add(impact.toCsv());
+                    sj.add(impact.codingContext().toCsv());
 
                     if(!matchedAnnotations.isEmpty())
                     {
                         if(matchedAnnotations.size() == 1)
                         {
                             sj.add(matchedAnnotations.get(0).effects());
+                            sj.add(matchedAnnotations.get(0).hgvsCoding());
+                            sj.add(matchedAnnotations.get(0).hgvsProtein());
                         }
                         else
                         {
                             StringJoiner maSj = new StringJoiner(VARIANT_CONSEQ_DELIM);
                             matchedAnnotations.forEach(x -> maSj.add(x.effects()));
                             sj.add(maSj.toString());
+
+                            StringJoiner maC = new StringJoiner(VARIANT_CONSEQ_DELIM);
+                            matchedAnnotations.stream().filter(x -> !x.hgvsCoding().isEmpty()).forEach(x -> maC.add(x.hgvsCoding()));
+                            sj.add(maC.toString());
+
+                            StringJoiner maP = new StringJoiner(VARIANT_CONSEQ_DELIM);
+                            matchedAnnotations.stream().filter(x -> !x.hgvsProtein().isEmpty()).forEach(x -> maP.add(x.hgvsProtein()));
+                            sj.add(maP.toString());
                         }
                     }
                     else
                     {
-                        sj.add("UNMATCHED");
+                        sj.add("UNMATCHED,na,na");
                     }
 
                     transcriptLines.add(sj.toString());

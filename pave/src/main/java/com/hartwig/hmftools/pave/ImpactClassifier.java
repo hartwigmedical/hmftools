@@ -61,7 +61,6 @@ public class ImpactClassifier
             return transImpact;
 
         boolean inSpliceRegion = false;
-        int exonRank = 0;
 
         // loop through all exons checking if the variant falls in a splice region and is intronic or exonic
         int exonCount = transData.exons().size();
@@ -73,19 +72,16 @@ public class ImpactClassifier
             if(!inSpliceRegion && isWithinSpliceRegion(variant, transData, exon))
             {
                 inSpliceRegion = true;
-                exonRank = exon.Rank;
                 transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, exon));
             }
             else if(!inSpliceRegion && nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
             {
                 inSpliceRegion = true;
-                exonRank = nextExon.Rank;
                 transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
             if(variant.altPositionsOverlap(exon.Start, exon.End))
             {
-                exonRank = exon.Rank;
                 classifyExonicPosition(variant, transImpact, exon);
                 break;
             }
@@ -110,9 +106,6 @@ public class ImpactClassifier
 
         if(inSpliceRegion)
             transImpact.markSpliceRegion();
-
-        if(exonRank >= 1)
-            transImpact.setExonRank(exonRank);
 
         checkStopStartCodons(transImpact);
 

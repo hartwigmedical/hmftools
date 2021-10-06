@@ -94,7 +94,7 @@ public class VariantImpactBuilder
                         CodingEffect codingEffect = determineCodingEffect(variant, transImpact);
 
                         sj.add(toOtherReportableTransInfo(
-                                transImpact.TransData.TransName, transImpact.hgvsCodingChange(), transImpact.hgvsProteinChange(),
+                                transImpact.TransData.TransName, transImpact.hgvsCoding(), transImpact.hgvsProtein(),
                                 transImpact.effectsStr(), codingEffect));
                     }
                 }
@@ -122,8 +122,8 @@ public class VariantImpactBuilder
             canonicalGeneName = worstGeneName;
             canonicalEffect = worstCanonicalImpact.effectsStr();
             canonicalCodingEffect = determineCodingEffect(variant, worstCanonicalImpact);
-            canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCodingChange();
-            canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProteinChange();
+            canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCoding();
+            canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProtein();
             canonicalTranscript = worstCanonicalImpact.TransData.TransName;
             canonicalSpliceRegion = worstCanonicalImpact.inSpliceRegion();
         }
