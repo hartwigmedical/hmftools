@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
@@ -46,7 +47,7 @@ public class VariantData
     // for an insert, none
     // for a delete, the deleted positions, so starting after the first (ref) position
     // for SNVs and MNVs, all of them
-    private final List<Integer> mNonRefPositions;
+    private final List<Integer> mAltPositions;
 
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
 
@@ -65,29 +66,29 @@ public class VariantData
 
         if(isInsert())
         {
-            mNonRefPositions = Lists.newArrayListWithExpectedSize(0);
+            mAltPositions = Lists.newArrayListWithExpectedSize(0);
             EndPosition = Position + 1;
         }
         else if(isDeletion())
         {
             int count = abs(mIndelBaseDiff);
-            mNonRefPositions = Lists.newArrayListWithExpectedSize(count);
+            mAltPositions = Lists.newArrayListWithExpectedSize(count);
 
             for(int i = 1; i < Ref.length(); ++i)
             {
-                mNonRefPositions.add(Position + i);
+                mAltPositions.add(Position + i);
             }
 
-            EndPosition = Position + count; // the first based after the deleted section
+            EndPosition = Position + count + 1; // the first based after the deleted section
         }
         else
         {
             int count = Ref.length();
-            mNonRefPositions = Lists.newArrayListWithExpectedSize(count);
+            mAltPositions = Lists.newArrayListWithExpectedSize(count);
 
             for(int i = 0; i < Ref.length(); ++i)
             {
-                mNonRefPositions.add(Position + i);
+                mAltPositions.add(Position + i);
             }
 
             EndPosition = Position + count - 1;
@@ -121,9 +122,7 @@ public class VariantData
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
 
-    public int[] positions() { return new int[] { Position, EndPosition }; }
-
-    public List<Integer> nonRefPositions() { return mNonRefPositions; }
+    public List<Integer> altPositions() { return mAltPositions; }
 
     public boolean phasedInframeIndel() { return mPhasedInframeIndel; }
 
@@ -156,9 +155,50 @@ public class VariantData
         geneImpacts.add(impact);
     }
 
+    public boolean altBasesAbove(int position) { return altBasesOutsidePosition(position, true); }
+    public boolean altBasesBelow(int position) { return altBasesOutsidePosition(position, false); }
+
+    public boolean altPositionsWithin(int lowerPos, int upperPos)
+    {
+        if(isInsert())
+            return positionsWithin(Position, EndPosition, lowerPos, upperPos);
+
+        // test if all alt positions are at or inside the limits
+        return altBasesAbove(lowerPos - 1) && altBasesBelow(upperPos + 1);
+    }
+
+    public boolean altPositionsOverlap(int lowerPos, int upperPos)
+    {
+        // test if all alt positions are at or inside the limits
+        return !altBasesBelow(lowerPos) && !altBasesAbove(upperPos);
+    }
+
+    public boolean altBasesOutsidePosition(int position, boolean isHigher)
+    {
+        // rather than just testing variant position vs a genomic / transcript position, it is sometimes required to know if an altered
+        // bases is at or beyond a position
+        if(mIndelBaseDiff == 0)
+        {
+            return isHigher ? Position > position : EndPosition < position;
+        }
+
+        if(isInsert())
+        {
+            return isHigher ? EndPosition > position : Position < position;
+        }
+        else
+        {
+            // first base of DEL is the ref
+            return isHigher ? Position + 1 > position : EndPosition - 1 < position;
+        }
+    }
+
     public String toString()
     {
-        return String.format("pos(%s:%d) variant(%s>%s)", Chromosome, Position, Ref, Alt);
+        if(mIndelBaseDiff == 0 && Ref.length() == 1)
+            return String.format("pos(%s:%d) variant(%s>%s)", Chromosome, Position, Ref, Alt);
+        else
+            return String.format("pos(%s:%d-%d) variant(%s>%s)", Chromosome, Position, EndPosition, Ref, Alt);
     }
 
     public static String csvCommonHeader()

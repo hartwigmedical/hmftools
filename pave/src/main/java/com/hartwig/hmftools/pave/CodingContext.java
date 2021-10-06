@@ -76,11 +76,18 @@ public class CodingContext
             return determinePreOrPostCodingContext(posStart, posEnd, transData);
         }
 
+        return determineCodingContext(variant, transData);
+    }
+
+    private static CodingContext determineCodingContext(final VariantData variant, final TranscriptData transData)
+    {
         // now handle scenario where variant is within the coding region
         // find the coding base index and if the variant is intronic, then the bases into the intron (closest to the exon)
 
         CodingContext cc = new CodingContext();
 
+        int posStart = variant.Position;
+        int posEnd = variant.EndPosition;
         int codingStart = transData.CodingStart;
         int codingEnd = transData.CodingEnd;
         int upstreamStartPos = transData.posStrand() ? variant.Position : variant.EndPosition;

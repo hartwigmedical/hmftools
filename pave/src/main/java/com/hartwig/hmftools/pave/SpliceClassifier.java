@@ -35,7 +35,7 @@ public class SpliceClassifier
         boolean atTransStart = exon.Start == transData.TransStart;
         boolean atTransEnd = exon.End == transData.TransEnd;
 
-        List<Integer> nonRefPositions = variant.nonRefPositions();
+        List<Integer> nonRefPositions = variant.altPositions();
 
         /* doesn't handle INS correctly
         if(!atTransStart)
@@ -98,7 +98,7 @@ public class SpliceClassifier
 
         if(variant.isIndel())
         {
-            List<Integer> nonRefPositions = variant.nonRefPositions();
+            List<Integer> nonRefPositions = variant.altPositions();
 
             if(variant.isInsert())
             {

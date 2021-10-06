@@ -118,13 +118,15 @@ public class PaveApplication
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
                     mConfig.VcfFile, new VCFCodec(), false);
 
-            for (VariantContext variantContext : reader.iterator())
+            for(VariantContext variantContext : reader.iterator())
             {
-                // if (!filter.test(variantContext))
-                //    continue;
-
                 processVariant(variantContext);
                 ++variantCount;
+
+                if(variantCount > 0 && (variantCount % 10000) == 0)
+                {
+                    PV_LOGGER.debug("processed {} variants", variantCount);
+                }
             }
         }
         catch(IOException e)

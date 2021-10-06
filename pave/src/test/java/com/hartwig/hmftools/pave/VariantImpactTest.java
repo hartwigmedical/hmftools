@@ -33,7 +33,6 @@ import static junit.framework.TestCase.assertTrue;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 import org.junit.Test;
 

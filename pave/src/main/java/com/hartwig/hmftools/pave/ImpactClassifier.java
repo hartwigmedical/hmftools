@@ -43,7 +43,7 @@ public class ImpactClassifier
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)
     {
-        if(!withinTransRange(transData, variant.Position, variant.EndPosition))
+        if(!withinTransRange(transData, variant.Position, variant.EndPosition)) // a conservative check by 1 base for INDEL at boundary
             return null;
 
         VariantTransImpact transImpact = new VariantTransImpact(transData);
@@ -68,7 +68,6 @@ public class ImpactClassifier
         for(int i = 0; i < exonCount; ++i)
         {
             ExonData exon = transData.exons().get(i);
-
             ExonData nextExon = i < exonCount - 1 ? transData.exons().get(i + 1) : null;
 
             if(!inSpliceRegion && isWithinSpliceRegion(variant, transData, exon))
@@ -84,14 +83,14 @@ public class ImpactClassifier
                 transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
-            if(positionsOverlap(variant.Position, variant.EndPosition, exon.Start, exon.End))
+            if(variant.altPositionsOverlap(exon.Start, exon.End))
             {
                 exonRank = exon.Rank;
                 classifyExonicPosition(variant, transImpact, exon);
                 break;
             }
 
-            if(nextExon != null && positionsWithin(variant.Position, variant.EndPosition, exon.End + 1, nextExon.Start - 1))
+            if(nextExon != null && variant.altPositionsWithin(exon.End + 1, nextExon.Start - 1))
             {
                 transImpact.addEffect(INTRONIC);
                 break;
@@ -125,7 +124,8 @@ public class ImpactClassifier
         final TranscriptData transData = transImpact.TransData;
 
         // check pre-gene region
-        if((transData.posStrand() && variant.EndPosition < transData.TransStart) || (!transData.posStrand() && variant.Position > transData.TransEnd))
+        if((transData.posStrand() && variant.altBasesBelow(transData.TransStart))
+        || (!transData.posStrand() && variant.altBasesAbove(transData.TransEnd)))
         {
             transImpact.addEffect(UPSTREAM_GENE);
             return true;
@@ -137,13 +137,13 @@ public class ImpactClassifier
         if(transData.posStrand())
         {
             // check 5' and 3' UTR
-            if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
+            if(variant.altBasesBelow(transData.CodingStart))
             {
                 transImpact.addEffect(FIVE_PRIME_UTR);
                 return true;
             }
 
-            if(variant.Position > transData.CodingEnd && variant.Position <= transData.TransEnd)
+            if(variant.altBasesAbove(transData.CodingEnd))
             {
                 transImpact.addEffect(THREE_PRIME_UTR);
                 return true;
@@ -151,13 +151,13 @@ public class ImpactClassifier
         }
         else
         {
-            if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
+            if(variant.altBasesBelow(transData.CodingStart))
             {
                 transImpact.addEffect(THREE_PRIME_UTR);
                 return true;
             }
 
-            if(variant.Position > transData.CodingEnd && variant.EndPosition <= transData.TransEnd)
+            if(variant.altBasesAbove(transData.CodingEnd))
             {
                 transImpact.addEffect(FIVE_PRIME_UTR);
                 return true;
@@ -188,8 +188,8 @@ public class ImpactClassifier
 
             if(variant.isDeletion())
             {
-                int firstDelBase = variant.nonRefPositions().get(0);
-                int lastDelBase = variant.nonRefPositions().get(variant.nonRefPositions().size() - 1);
+                int firstDelBase = variant.altPositions().get(0);
+                int lastDelBase = variant.altPositions().get(variant.altPositions().size() - 1);
 
                 if(abs(exon.Start - variant.Position) < abs(exon.End - variant.Position))
                     exonicBases = lastDelBase - max(firstDelBase, exon.Start) + 1;
