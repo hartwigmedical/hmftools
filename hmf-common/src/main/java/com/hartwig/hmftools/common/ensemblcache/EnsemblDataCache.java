@@ -47,8 +47,8 @@ public class EnsemblDataCache
     private final Map<String,List<GeneData>> mChrGeneDataMap; // genes keyed by chromosome
     private final Map<Integer,List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private final Map<Integer,Integer> mTransSpliceAcceptorPosDataMap;
-    private final Map<String, GeneData> mGeneDataMap; // keyed by geneId
-    private final Map<String, GeneData> mGeneNameIdMap; // for faster look-up by name
+    private final Map<String,GeneData> mGeneDataMap; // keyed by geneId
+    private final Map<String,GeneData> mGeneNameIdMap; // for faster look-up by name
 
     private GeneNameMapping mGeneNameMapping;
 
@@ -335,7 +335,7 @@ public class EnsemblDataCache
     {
         final List<TranscriptData> transDataList = mTranscriptDataMap.get(geneId);
 
-        if (transDataList == null || transDataList.isEmpty())
+        if(transDataList == null || transDataList.isEmpty())
             return null;
 
         for(final TranscriptData transData : transDataList)

@@ -6,8 +6,10 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FIVE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
@@ -22,10 +24,9 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOU
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
-
-import java.util.List;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -45,7 +46,7 @@ public class ImpactClassifier
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)
     {
-        if(isOutsideTransRange(variant, transData))
+        if(!withinTransRange(transData, variant.Position, variant.EndPosition))
             return null;
 
         if(transData.CodingStart == null)
@@ -99,7 +100,7 @@ public class ImpactClassifier
                 transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
             }
 
-            if(positionsWithin(variant.Position, variant.EndPosition, exon.Start, exon.End))
+            if(positionsOverlap(variant.Position, variant.EndPosition, exon.Start, exon.End))
             {
                 exonRank = exon.Rank;
                 classifyExonicPosition(variant, transImpact, exon);
@@ -137,38 +138,22 @@ public class ImpactClassifier
         return transImpact;
     }
 
-    private static void addConsequenceEffect(final List<String> consequenceEffects, final String consequenceEffect)
-    {
-        if(consequenceEffect == null)
-            return;
-
-        if(consequenceEffects.contains(consequenceEffect))
-            return;
-
-        consequenceEffects.add(consequenceEffect);
-    }
-
-    private boolean isOutsideTransRange(final VariantData variant, final TranscriptData transData)
-    {
-        if(transData.posStrand())
-            return variant.EndPosition < transData.TransStart - GENE_UPSTREAM_DISTANCE || variant.Position > transData.TransEnd;
-        else
-            return variant.EndPosition < transData.TransStart || variant.Position > transData.TransEnd + GENE_UPSTREAM_DISTANCE;
-    }
-
     private boolean checPrePostCodingImpact(final VariantData variant, final VariantTransImpact transImpact)
     {
         final TranscriptData transData = transImpact.TransData;
 
+        // check pre-gene region
+        if((transData.posStrand() && variant.EndPosition < transData.TransStart) || (!transData.posStrand() && variant.Position > transData.TransEnd))
+        {
+            transImpact.addEffect(UPSTREAM_GENE);
+            return true;
+        }
+
+        if(!transImpact.isExonic())
+            return false;
+
         if(transData.posStrand())
         {
-            // check pre-gene region
-            if(variant.Position >= transData.TransStart - GENE_UPSTREAM_DISTANCE && variant.EndPosition < transData.TransStart)
-            {
-                transImpact.addEffect(UPSTREAM_GENE);
-                return true;
-            }
-
             // check 5' and 3' UTR
             if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
             {
@@ -184,12 +169,6 @@ public class ImpactClassifier
         }
         else
         {
-            if(variant.Position > transData.TransEnd && variant.EndPosition <= transData.TransEnd + GENE_UPSTREAM_DISTANCE)
-            {
-                transImpact.addEffect(UPSTREAM_GENE);
-                return true;
-            }
-
             if(variant.Position >= transData.TransStart && variant.EndPosition < transData.CodingStart)
             {
                 transImpact.addEffect(THREE_PRIME_UTR);
@@ -250,7 +229,7 @@ public class ImpactClassifier
         }
         else
         {
-            if(transImpact.hasCodingData() && transImpact.getProteinContext().hasProteinChange())
+            if(transImpact.hasCodingData() && transImpact.proteinContext().hasProteinChange())
                 transImpact.addEffect(MISSENSE);
             else
                 transImpact.addEffect(SYNONYMOUS);
@@ -263,7 +242,7 @@ public class ImpactClassifier
             return;
 
         VariantEffect ssEffect = checkStopStartCodons(
-                transImpact.getProteinContext().WildtypeAA, transImpact.getProteinContext().NovelAA);
+                transImpact.proteinContext().WildtypeAA, transImpact.proteinContext().NovelAA);
 
         if(ssEffect != null)
         {

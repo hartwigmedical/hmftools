@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
@@ -7,6 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public class VariantTransImpact
@@ -61,10 +65,16 @@ public class VariantTransImpact
     public VariantEffect topEffect() { return mEffects.get(0); };
     public int topRank() { return mEffects.stream().mapToInt(x -> x.rank()).max().orElse(-1); }
 
-    public CodingContext getCodingContext() { return mCodingContext; }
+    public CodingContext codingContext() { return mCodingContext; }
     public void setCodingContext(final CodingContext context) { mCodingContext = context; }
 
-    public ProteinContext getProteinContext() { return mProteinContext; }
+    public boolean isExonic()
+    {
+        return mCodingContext != null
+                && (mCodingContext.RegionTypes[SE_START] == EXONIC || mCodingContext.RegionTypes[SE_END] == EXONIC);
+    }
+
+    public ProteinContext proteinContext() { return mProteinContext; }
     public void setProteinContext(final ProteinContext context) { mProteinContext = context; }
     public boolean hasCodingData() { return mProteinContext != null && mProteinContext.hasCodingBases(); }
 

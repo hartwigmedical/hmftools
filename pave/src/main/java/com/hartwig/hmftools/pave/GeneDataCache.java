@@ -5,14 +5,18 @@ import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFi
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
+import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -20,14 +24,15 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-import org.apache.commons.compress.utils.Lists;
-
 public class GeneDataCache
 {
     private final EnsemblDataCache mEnsemblDataCache;
 
     private final List<String> mDriverGenes;
     private final Map<String,List<String>> mOtherReportableTranscripts;
+
+    private final Set<String> mMissingTranscripts; // no longer in Ensembl
+    private final Map<String,TranscriptData> mTranscriptDataMap; // transcripts keyed by trans name, built on demand
 
     private String mCurrentChromosome;
     private List<GeneData> mCurrentChromosomeGenes;
@@ -41,6 +46,9 @@ public class GeneDataCache
         mDriverGenes = Lists.newArrayList();
         mOtherReportableTranscripts = Maps.newHashMap();
         loadDriverGenes(driverGenePanel);
+
+        mTranscriptDataMap = Maps.newHashMap();
+        mMissingTranscripts = Sets.newHashSet();
 
         mCurrentChromosome = null;
         mCurrentChromosomeGenes = null;
@@ -117,9 +125,30 @@ public class GeneDataCache
         List<TranscriptData> transDataList = mEnsemblDataCache.getTranscripts(geneId);
 
         return transDataList.stream()
-                .filter(x -> positionsOverlap(startPosition, endPosition, x.TransStart, x.TransEnd))
-                .filter(x -> x.CodingStart != null)
+                .filter(x -> withinTransRange(x, startPosition, endPosition))
                 .collect(Collectors.toList());
+    }
+
+    public TranscriptData getTranscriptData(final String geneId, final String transName)
+    {
+        if(mMissingTranscripts.contains(transName))
+            return null;
+
+        TranscriptData transData = mTranscriptDataMap.get(transName);
+
+        if(transData != null)
+            return transData;
+
+        transData = mEnsemblDataCache.getTranscriptData(geneId, transName);
+
+        if(transData == null)
+        {
+            mMissingTranscripts.add(transName);
+            return null;
+        }
+
+        mTranscriptDataMap.put(transName, transData);
+        return transData;
     }
 
     public List<GeneData> findGenes(final String chromosome, int startPosition, int endPosition)

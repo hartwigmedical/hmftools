@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
+import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
+import static com.hartwig.hmftools.pave.compare.ComparisonUtils.ignoreSnpEffAnnotation;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -50,6 +52,10 @@ public class PaveApplication
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
+
+    // for comparison with SnpEff
+    private int mTransEffectMatched;
+    private int mTransTotalComparisons;
     private final GeneNameMapping mGeneNameMapping;
 
     private VcfWriter mVcfWriter;
@@ -75,6 +81,8 @@ public class PaveApplication
             initialiseTranscriptWriter();
 
         mGeneNameMapping = mConfig.CompareSnpEff ? new GeneNameMapping() : null;
+        mTransEffectMatched = 0;
+        mTransTotalComparisons = 0;
     }
 
     public void run()
@@ -125,6 +133,12 @@ public class PaveApplication
 
         PV_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
 
+        if(mConfig.CompareSnpEff)
+        {
+            PV_LOGGER.info("sample({}) transcript comparison total({}) matched({})",
+                    sampleId, mTransTotalComparisons, mTransEffectMatched);
+        }
+
         mVcfWriter.close();
     }
 
@@ -161,9 +175,6 @@ public class PaveApplication
 
         if(variant.getImpacts().isEmpty())
         {
-            // could skip these if sure that valid genes aren't being incorrectly missed
-            // variant.addImpact("NONE", new VariantTransImpact(null, INTRAGENIC_VARIANT));
-
             if(snpEffAnnotations != null && !snpEffAnnotations.isEmpty())
             {
                 for(SnpEffAnnotation annotation : snpEffAnnotations)
@@ -332,6 +343,19 @@ public class PaveApplication
 
                     SnpEffAnnotation annotation = ComparisonUtils.findMatchingAnnotation(impact, annotations);
 
+                    if(annotation != null)
+                        matchedAnnotations.add(annotation);
+
+                    ++mTransTotalComparisons;
+
+                    if(effectsMatch(impact, annotation))
+                    {
+                        ++mTransEffectMatched;
+
+                        if(mConfig.WriteDiffs)
+                            continue;
+                    }
+
                     StringJoiner sj = new StringJoiner(DELIM);
                     sj.add(variant.toCsv());
 
@@ -343,9 +367,7 @@ public class PaveApplication
 
                     if(annotation != null)
                     {
-                        // sj.add(consequencesToString(annotation.consequences()));
                         sj.add(annotation.effects());
-                        matchedAnnotations.add(annotation);
                     }
                     else
                     {
@@ -360,6 +382,16 @@ public class PaveApplication
             {
                 if(matchedAnnotations.contains(annotation))
                     continue;
+
+                final TranscriptData transData = mGeneDataCache.getTranscriptData(annotation.geneID(), annotation.featureID());
+
+                if(transData == null)
+                    continue;
+
+                if(ignoreSnpEffAnnotation(annotation, transData))
+                    continue;
+
+                ++mTransTotalComparisons;
 
                 StringJoiner sj = new StringJoiner(DELIM);
                 sj.add(variant.toCsv());

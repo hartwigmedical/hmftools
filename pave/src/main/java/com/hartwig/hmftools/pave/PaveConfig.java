@@ -31,11 +31,13 @@ public class PaveConfig
     public final boolean OverwriteVcf;
     public final boolean WriteTranscriptCsv;
     public final boolean CompareSnpEff;
+    public final boolean WriteDiffs;
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String OVERWRITE_VCF = "overwrite_vcf";
     private static final String COMPARE_SNPEFF = "compare_snpeff";
+    private static final String WRITE_DIFFS = "write_diffs";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
@@ -50,6 +52,7 @@ public class PaveConfig
         OverwriteVcf = cmd.hasOption(OVERWRITE_VCF);
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
         CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
+        WriteDiffs = cmd.hasOption(WRITE_DIFFS);
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -70,6 +73,7 @@ public class PaveConfig
         options.addOption(VCF_FILE, true, "VCF input file");
         options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
         options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
+        options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
 
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");

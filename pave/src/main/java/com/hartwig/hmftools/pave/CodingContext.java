@@ -108,7 +108,8 @@ public class CodingContext
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         preExonCodingBases += min(codingEnd, exon.Start) - max(codingStart, exon.End);
 
-                    continue;
+                    if(nextExon != null && posStart > nextExon.End)
+                        continue;
                 }
 
                 for(int se = SE_START; se <= SE_END; ++se)
@@ -162,6 +163,9 @@ public class CodingContext
                 {
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         preExonCodingBases += min(codingEnd, exon.Start) - max(codingStart, exon.End);
+
+                    if(nextExon != null && posEnd < nextExon.Start)
+                        continue;
 
                     continue;
                 }
@@ -220,11 +224,11 @@ public class CodingContext
             // post-coding
             int codingBases = codingBaseLength(transData);
             cc.CodingBase[SE_START] = cc.CodingBase[SE_END] = codingBases;
-            cc.CodingTypes[SE_START] = cc.CodingTypes[SE_START] = UTR_3P;
+            cc.CodingTypes[SE_START] = cc.CodingTypes[SE_END] = UTR_3P;
         }
         else
         {
-            cc.CodingTypes[SE_START] = cc.CodingTypes[SE_START] = UTR_5P;
+            cc.CodingTypes[SE_START] = cc.CodingTypes[SE_END] = UTR_5P;
         }
 
         if(posStart < transData.CodingStart)
@@ -418,9 +422,6 @@ public class CodingContext
     public static CodingContext determineUpstreamContext(final int posStart, final int posEnd, final TranscriptData transData)
     {
         CodingContext cc = new CodingContext();
-
-        // cc.CodingTypes[SE_START] = NON_CODING;
-        // cc.CodingTypes[SE_END] = NON_CODING;
 
         cc.RegionTypes[SE_START] = UPSTREAM;
         cc.RegionTypes[SE_END] = UPSTREAM;
