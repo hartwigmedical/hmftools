@@ -76,7 +76,7 @@
         <ckb-importer.version>1.1</ckb-importer.version>
         <serve.version>1.4</serve.version>
         <protect.version>1.3</protect.version>
-        <patient-reporter.version>7.23.3</patient-reporter.version>
+        <patient-reporter.version>7.23.4</patient-reporter.version>
         <orange.version>0.1</orange.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
