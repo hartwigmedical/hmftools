@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FIVE_PRIME_UTR;
@@ -19,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
+import static com.hartwig.hmftools.pave.CodingUtils.determineContext;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
@@ -46,12 +43,12 @@ public class ImpactClassifier
 
         VariantTransImpact transImpact = new VariantTransImpact(transData);
 
-        CodingContext codingContext = CodingContext.determineContext(variant, transData);
+        CodingContext codingContext = CodingUtils.determineContext(variant, transData);
         transImpact.setCodingContext(codingContext);
 
         if(codingContext.isCoding())
         {
-            ProteinContext proteinContext = ProteinContext.determineContext(variant, codingContext, transData, mRefGenome);
+            ProteinContext proteinContext = ProteinUtils.determineContext(variant, codingContext, transData, mRefGenome);
             transImpact.setProteinContext(proteinContext);
         }
 

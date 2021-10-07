@@ -230,6 +230,7 @@ public class PaveApplication
             sj.add("GeneId,GeneName");
             sj.add(VariantTransImpact.csvHeader());
             sj.add(CodingContext.csvHeader());
+            sj.add(ProteinContext.csvHeader());
 
             if(mConfig.CompareSnpEff)
                 sj.add("SnpEffEffects,SnpEffHgvsCoding,SnpEffHgvsProtein");
@@ -262,8 +263,9 @@ public class PaveApplication
                     continue;
 
                 mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
-                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s",
-                        impact.TransData.GeneId, geneName, impact.toCsv(), impact.codingContext().toCsv()));
+                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
+                        impact.TransData.GeneId, geneName, impact.toCsv(), impact.codingContext().toCsv(),
+                        impact.proteinContext() != null ? impact.proteinContext().toCsv() : ProteinContext.empty()));
                 mCsvTranscriptWriter.newLine();
             }
         }

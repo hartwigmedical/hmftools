@@ -8,10 +8,12 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.pave.NonCodingContext.determineNonCodingContext;
+import static com.hartwig.hmftools.pave.NonCodingContext.determinePreOrPostCodingContext;
+import static com.hartwig.hmftools.pave.NonCodingContext.determineUpstreamContext;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -19,6 +21,29 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public final class CodingUtils
 {
+    public static CodingContext determineContext(final VariantData variant, final TranscriptData transData)
+    {
+        int posStart = variant.Position;
+        int posEnd = variant.EndPosition;
+
+        if(variant.altBasesBelow(transData.TransStart) || variant.altBasesAbove(transData.TransEnd))
+        {
+            return determineUpstreamContext(posStart, posEnd, transData);
+        }
+
+        if(transData.nonCoding())
+        {
+            return determineNonCodingContext(posStart, posEnd, transData);
+        }
+
+        if(variant.altBasesBelow(transData.CodingStart) || variant.altBasesAbove(transData.CodingEnd))
+        {
+            return determinePreOrPostCodingContext(variant, transData);
+        }
+
+        return determineCodingContext(variant, transData);
+    }
+
     public static CodingContext determineCodingContext(final VariantData variant, final TranscriptData transData)
     {
         // initially set the region for this variant and the coding base range and phase if any

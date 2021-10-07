@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.pave.CodingUtils.determineContext;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -44,7 +45,7 @@ public class CodingContextTest
         int pos = 50;
         VariantData var = new VariantData(CHR_1, pos, "A", "C");
 
-        CodingContext codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        CodingContext codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(UPSTREAM, codingContext.RegionType);
         assertEquals(UNKNOWN, codingContext.CodingType);
@@ -56,7 +57,7 @@ public class CodingContextTest
         // 5' UTR exonic
         pos = 125;
         var = new VariantData(CHR_1, pos, "A", "C");
-        codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
@@ -68,7 +69,7 @@ public class CodingContextTest
         // 5' UTR intronic
         pos = 175;
         var = new VariantData(CHR_1, pos, "A", "C");
-        codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
@@ -80,7 +81,7 @@ public class CodingContextTest
         // 5' UTR exonic in same exon as coding begins
         pos = 325;
         var = new VariantData(CHR_1, pos, "A", "C");
-        codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
@@ -92,7 +93,7 @@ public class CodingContextTest
         // 3'UTR exonic in same exon as coding ends
         pos = 430;
         var = new VariantData(CHR_1, pos, "A", "C");
-        codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_3P, codingContext.CodingType);
@@ -104,7 +105,7 @@ public class CodingContextTest
         // 3'UTR intronic
         pos = 555;
         var = new VariantData(CHR_1, pos, "A", "C");
-        codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(UTR_3P, codingContext.CodingType);
@@ -116,7 +117,7 @@ public class CodingContextTest
         // 3'UTR exonic
         pos = 625;
         var = new VariantData(CHR_1, pos, "A", "C");
-        codingContext = CodingContext.determineContext(var, transDataPosStrand);
+        codingContext = determineContext(var, transDataPosStrand);
 
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_3P, codingContext.CodingType);
