@@ -60,8 +60,6 @@ public abstract class NeoEpitope
     public int[][] ExtPositions; // coding base up and down position
     public final Cigar[] ExtCigars;
 
-    public static final int UPSTREAM_WILDTYPE_AA_LENGTH = 10;
-
     public NeoEpitope()
     {
         TransData = new TranscriptData[] {null, null};

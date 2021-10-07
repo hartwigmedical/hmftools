@@ -69,8 +69,7 @@ public class VariantTransImpact
 
     public boolean isExonic()
     {
-        return mCodingContext != null
-                && (mCodingContext.RegionType[SE_START] == EXONIC || mCodingContext.RegionType[SE_END] == EXONIC);
+        return mCodingContext != null && mCodingContext.RegionType == EXONIC;
     }
 
     public ProteinContext proteinContext() { return mProteinContext; }

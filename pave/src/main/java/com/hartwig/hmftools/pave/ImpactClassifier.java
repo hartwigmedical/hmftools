@@ -6,8 +6,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FIVE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
@@ -177,22 +175,7 @@ public class ImpactClassifier
                 return;
 
             // if the variant crosses the exon boundary then only check the bases which are exonic to decide between frameshift or inframe
-            int exonicBases = 0;
-
-            if(variant.isDeletion())
-            {
-                int firstDelBase = variant.altPositions().get(0);
-                int lastDelBase = variant.altPositions().get(variant.altPositions().size() - 1);
-
-                if(abs(exon.Start - variant.Position) < abs(exon.End - variant.Position))
-                    exonicBases = lastDelBase - max(firstDelBase, exon.Start) + 1;
-                else
-                    exonicBases = min(lastDelBase, exon.End) - firstDelBase + 1;
-            }
-            else
-            {
-                exonicBases = variant.baseDiff();
-            }
+            int exonicBases = variant.isDeletion() ? transImpact.codingContext().DeletedCodingBases : variant.baseDiff();
 
             if((exonicBases % 3) == 0)
             {
@@ -212,7 +195,7 @@ public class ImpactClassifier
         {
             if(transImpact.hasCodingData() && transImpact.proteinContext().hasProteinChange())
             {
-                if(!transImpact.proteinContext().NovelAA.equals(STOP_AMINO_ACID)) // stop-gained is a special case
+                if(!transImpact.proteinContext().AltAminoAcids.equals(STOP_AMINO_ACID)) // stop-gained is a special case
                     transImpact.addEffect(MISSENSE);
             }
             else
@@ -228,7 +211,7 @@ public class ImpactClassifier
             return;
 
         VariantEffect ssEffect = checkStopStartCodons(
-                transImpact.proteinContext().StartPosition, transImpact.proteinContext().WildtypeAA, transImpact.proteinContext().NovelAA);
+                transImpact.proteinContext().StartPosition, transImpact.proteinContext().RefAminoAcids, transImpact.proteinContext().AltAminoAcids);
 
         if(ssEffect != null)
         {

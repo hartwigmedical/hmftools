@@ -19,8 +19,8 @@ public class RefVariantData
 
     public final String CanonicalEffect;
     public final CodingEffect CanonicalCodingEffect;
-    public final String CanonicalHgvsCodingImpact;
-    public final String CanonicalHgvsProteinImpact;
+    public final String HgvsCodingImpact;
+    public final String HgvsProteinImpact;
 
     public final CodingEffect WorstCodingEffect;
     public final int GenesAffected;
@@ -28,15 +28,16 @@ public class RefVariantData
     public final String Microhomology;
     public final String RepeatSequence;
     public final boolean PhasedInframeIndel;
+    public final boolean Reported;
 
-    // canonicalHgvsProteinImpact, , repeatCount, localPhaseSet, localRealignmentSet, phasedInframeIndel, reported
+    // repeatCount, localPhaseSet, localRealignmentSet, phasedInframeIndel, reported
 
     public RefVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
             final CodingEffect worstCodingEffect, final int genesAffected,
-            final String canonicalHgvsCodingImpact, final String canonicalHgvsProteinImpact,
-            final String microhomology, final String repeatSequence, boolean phasedInframeIndel)
+            final String hgvsCodingImpact, final String hgvsProteinImpact,
+            final String microhomology, final String repeatSequence, boolean phasedInframeIndel, boolean reported)
     {
         Chromosome = chromosome;
         Position = position;
@@ -50,11 +51,12 @@ public class RefVariantData
         WorstCodingEffect = worstCodingEffect;
         GenesAffected = genesAffected;
 
-        CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
-        CanonicalHgvsProteinImpact = canonicalHgvsProteinImpact;
+        HgvsCodingImpact = hgvsCodingImpact;
+        HgvsProteinImpact = hgvsProteinImpact;
         Microhomology = microhomology;
         RepeatSequence = repeatSequence;
         PhasedInframeIndel = phasedInframeIndel;
+        Reported = reported;
     }
 
     public static RefVariantData fromSomatic(final SomaticVariant variant)
@@ -63,7 +65,8 @@ public class RefVariantData
                 variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(), variant.type(), variant.gene(),
                 variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
                 variant.genesAffected(),  variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
-                variant.microhomology(), variant.repeatSequence(), variant.phasedInframeIndelIdentifier() > 0);
+                variant.microhomology(), variant.repeatSequence(), variant.phasedInframeIndelIdentifier() > 0,
+                variant.reported());
     }
 
     public String toString()

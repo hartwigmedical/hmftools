@@ -209,6 +209,7 @@ public class ImpactComparisons
             int microhomologyIndex = fieldsIndexMap.get("microhomology");
             int repeatSequenceIndex = fieldsIndexMap.get("repeatSequence");
             int phasedInframeIndelIndex = fieldsIndexMap.get("phasedInframeIndel");
+            int reportedIndex = fieldsIndexMap.get("reported");
 
             String currentSample = "";
             int samplesProcessed = 0;
@@ -241,7 +242,7 @@ public class ImpactComparisons
 
                     if(samplesProcessed > 0 && (samplesProcessed % 100) == 0)
                     {
-                        PV_LOGGER.info("processing {} samples", samplesProcessed);
+                        PV_LOGGER.info("processed {} samples", samplesProcessed);
                     }
                 }
 
@@ -251,7 +252,8 @@ public class ImpactComparisons
                         items[canonicalCodingEffectIndex].isEmpty() ? NONE : CodingEffect.valueOf(items[canonicalCodingEffectIndex]),
                         CodingEffect.valueOf(items[worstCodingEffectIndex]), Integer.parseInt(items[genesAffectedIndex]),
                         items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
-                        items[microhomologyIndex], items[repeatSequenceIndex], Boolean.parseBoolean(items[phasedInframeIndelIndex]));
+                        items[microhomologyIndex], items[repeatSequenceIndex], Boolean.parseBoolean(items[phasedInframeIndelIndex]),
+                        Boolean.parseBoolean(items[reportedIndex]));
 
                 processVariant(sampleId, variant);
             }
@@ -280,7 +282,7 @@ public class ImpactComparisons
         {
             if(hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect))
             {
-                PV_LOGGER.debug("sample({}) var({}) diff canonical coding: new({}) snpEff({})",
+                PV_LOGGER.debug("sample({}) var({}) diff canonical coding: pave({}) snpEff({})",
                         sampleId, variant.toString(), variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
             }
         }
@@ -292,15 +294,15 @@ public class ImpactComparisons
     {
         try
         {
-            String fileName = mConfig.OutputDir + "VARIANT_IMPACT_COMPARE.csv";
+            String fileName = mConfig.OutputDir + "PAVE_IMPACT_COMPARE.csv";
             mCsvWriter = createBufferedWriter(fileName, false);
 
             mCsvWriter.write("SampleId,");
             mCsvWriter.write(VariantData.csvCommonHeader());
-            mCsvWriter.write(",GeneName,IsDriver,CanonEffect,CanonCodingEffect");
+            mCsvWriter.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect");
             mCsvWriter.write(",WorstCodingEffect,GenesAffected");
-            mCsvWriter.write(",SnpEffGeneName,SnpEffCanonEffect,SnpEffCanonCodingEffect");
-            mCsvWriter.write(",SnpEffWorstCodingEffect,SnpEffGenesAffected");
+            mCsvWriter.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
+            mCsvWriter.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffGenesAffected");
             mCsvWriter.newLine();
         }
         catch(IOException e)
@@ -327,9 +329,9 @@ public class ImpactComparisons
                     isDriver, variantImpact.CanonicalEffect, variantImpact.CanonicalCodingEffect,
                     variantImpact.WorstCodingEffect, variantImpact.GenesAffected));
 
-            mCsvWriter.write(String.format(",%s,%s,%s,%s,%d",
-                    refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect,
-                    refVariant.WorstCodingEffect, refVariant.GenesAffected));
+            mCsvWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
+                    refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect, refVariant.WorstCodingEffect,
+                    refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.GenesAffected));
 
             mCsvWriter.newLine();
         }
