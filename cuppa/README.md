@@ -413,7 +413,7 @@ Non-smoking Lung | 0.2% | GENOMIC_ POSITION | Performance is weaker, but can mos
 Esophagus / Stomach vs Colorectal | 0.5% | ALL RNA | Esophagus frequently presents as Colorectal on all RNA classifiers
 Anogenital vs Head & Neck: Other | 0.4% | All | Can often be mistaken for each other.
 Sarcoma | 1.5% | ALL | Frequent mismatches between Leiomyosarcoma, Liposarcoma, Osteosarcoma and ‘other’.  Multiple causes.  Larger cohorts would help make clearer cohorts and could allow distinct groups for Rhabdomyosarcoma and others.  Some samples are marked as ‘Sarcoma’ and matched to Leiomyosarcoma are reported as match=F, but may be TP. Spindle cell sarcoma appear to group better with Leioymyosarcoma but are marked as ‘other’
-Liposarcoma | ? | GENOMIC_ POSITION | MDM2+CDK4 coamplified liposarcoma (well-differentiated/dedifferentiated liposarcoma) resolve better to the Liposarcoma cohort compared to liposarcomas with diagnostic fusions (e.g. myxoid liposarcoma)
+Liposarcoma | ? | GENOMIC_ POSITION | MDM2+CDK4 coamplified liposarcomas (well-differentiated/dedifferentiated liposarcoma) resolve better to the Liposarcoma cohort compared to liposarcomas with diagnostic fusions (e.g. myxoid liposarcoma)
 
 
 
