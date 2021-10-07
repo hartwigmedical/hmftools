@@ -5,16 +5,11 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.pave.CodingUtils.determineCodingContext;
-import static com.hartwig.hmftools.pave.NonCodingContext.determineNonCodingContext;
-import static com.hartwig.hmftools.pave.NonCodingContext.determinePreOrPostCodingContext;
-import static com.hartwig.hmftools.pave.NonCodingContext.determineUpstreamContext;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 public class CodingContext

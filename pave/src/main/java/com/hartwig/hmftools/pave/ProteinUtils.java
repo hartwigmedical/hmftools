@@ -38,6 +38,12 @@ public final class ProteinUtils
             return pc;
         }
 
+        /*
+        int codingPosStart = cc.CodingPositionRange[SE_START];
+        int codingPosEnd = variant.isBaseChange() ? cc.CodingPositionRange[SE_END] : variant.Position - 1;
+        pc.RefCodonBases = refGenome.getBaseString(variant.Chromosome, codingPosStart, codingPosEnd);
+        */
+
         pc.RefCodonBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
 
         int upstreamOpenCodonBases = getOpenCodonBases(cc.UpstreamPhase);
@@ -54,7 +60,13 @@ public final class ProteinUtils
                 pc.RefCodonBases += upstreamBases;
         }
 
-        int downstreamOpenCodonBases = getDownstreamOpenCodonBases(cc.UpstreamPhase, transData.Strand, variant.baseDiff(), variant.Alt);
+        /*
+        int altLength = variant.isBaseChange() ? variant.Alt.length() : variant.Alt.length() + 1; // since the coding region appends a ref base
+        int downstreamOpenCodonBases = getDownstreamOpenCodonBases(cc.UpstreamPhase, transData.Strand, variant.baseDiff(), altLength);
+        */
+
+        int downstreamMod = pc.RefCodonBases.length() % 3;
+        int downstreamOpenCodonBases = downstreamMod == 0 ? 0 : 3 - downstreamMod;
         int downstreamStartPos = posStrand ? variant.EndPosition : variant.Position;
 
         if(downstreamOpenCodonBases > 0)
@@ -73,11 +85,11 @@ public final class ProteinUtils
         // (and may gone on until the end of the transcript)
         if(variant.isIndel())
         {
-            if(variant.isInsert() && (variant.baseDiff() % 3) != 3)
+            if(variant.isInsert() && (variant.baseDiff() % 3) != 0)
                 return pc;
 
             // usually would be just a check of whether deleted bases % 3, but need to consider some being beyond the coding region
-            if(variant.isDeletion() && (cc.DeletedCodingBases % 3) != 3)
+            if(variant.isDeletion() && (cc.DeletedCodingBases % 3) != 0)
                 return pc;
         }
 
@@ -134,22 +146,22 @@ public final class ProteinUtils
             return 2;
     }
 
-    private static int getDownstreamOpenCodonBases(int startPhase, int strand, int baseChange, final String alt)
+    private static int getDownstreamOpenCodonBases(int startPhase, int strand, int baseChange, final int altLength)
     {
         // determine the phase at the base after the mutation - last base of an MNV/SNV, and next base for an INS or DEL
         int mutationTicks;
 
         if(strand == POS_STRAND)
         {
-            mutationTicks = baseChange < 0 ? 1 : alt.length();
+            mutationTicks = baseChange < 0 ? 1 : altLength;
         }
         else
         {
             // need to go to the phase (prior to?) the ALT
             if(baseChange == 0)
-                mutationTicks = alt.length();
+                mutationTicks = altLength;
             else if(baseChange > 0)
-                mutationTicks = alt.length() + 1;
+                mutationTicks = altLength + 1;
             else
                 mutationTicks = 2;
         }

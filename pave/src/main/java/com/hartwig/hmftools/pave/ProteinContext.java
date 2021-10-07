@@ -49,5 +49,5 @@ public class ProteinContext
         return sj.toString();
     }
 
-    public static String empty() { return ",,,,,"; }
+    public static String empty() { return ",,,0,,"; }
 }

@@ -379,6 +379,7 @@ public class PaveApplication
 
                     sj.add(impact.toCsv());
                     sj.add(impact.codingContext().toCsv());
+                    sj.add(impact.proteinContext() != null ? impact.proteinContext().toCsv() : ProteinContext.empty());
 
                     if(!matchedAnnotations.isEmpty())
                     {
