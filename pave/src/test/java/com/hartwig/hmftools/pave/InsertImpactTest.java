@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
@@ -11,10 +12,12 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.createNegTranscript;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createPosTranscript;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -45,6 +48,19 @@ public class InsertImpactTest
         assertEquals(INTRONIC, impact.codingContext().RegionType);
         assertEquals(6, impact.codingContext().CodingBase);
 
+        // frameshift
+        pos = 19;
+        ref = refBases.substring(19, 20);
+        alt = ref + "AAAA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(5, impact.codingContext().CodingBase);
+        assertEquals(19, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(19, impact.codingContext().CodingPositionRange[SE_END]);
+        assertTrue(impact.codingContext().IsFrameShift);
+
         // inframe insert
         pos = 19;
         ref = refBases.substring(19, 20);
@@ -68,5 +84,116 @@ public class InsertImpactTest
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
+        // inframe insert at exon start
+        pos = 50;
+        ref = refBases.substring(50, 51);
+        alt = ref + "AAA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(18, impact.codingContext().CodingBase);
+        assertEquals(50, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(50, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(3, impact.codingContext().ExonRank);
+
+        assertFalse(impact.codingContext().IsFrameShift);
+        assertEquals(refBases.substring(39, 41) + refBases.substring(50, 51), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(39, 41) + alt;
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        // repeat for negative strand
+        TranscriptData transDataNeg = createNegTranscript();
+
+        // at exon boundary
+        pos = 80;
+        ref = refBases.substring(80, 81);
+        alt = ref + "AAA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(7, impact.codingContext().CodingBase);
+
+        // frameshift
+        pos = 91;
+        ref = refBases.substring(91, 92);
+        alt = ref + "AAAA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(4, impact.codingContext().CodingBase);
+        assertEquals(92, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(92, impact.codingContext().CodingPositionRange[SE_END]);
+        assertTrue(impact.codingContext().IsFrameShift);
+
+        // inframe insert
+        pos = 91;
+        ref = refBases.substring(91, 92);
+        alt = ref + "GGG";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(4, impact.codingContext().CodingBase);
+        assertEquals(92, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(92, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_1, impact.codingContext().UpstreamPhase);
+        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(EXONIC, impact.codingContext().RegionType);
+
+        assertFalse(impact.codingContext().IsFrameShift);
+        assertEquals(refBases.substring(90, 93), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(90, 91) + alt + refBases.substring(92, 93);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        // inframe insert at exon end
+        pos = 70;
+        ref = refBases.substring(70, 71);
+        alt = ref + "AAA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(16, impact.codingContext().CodingBase);
+        assertEquals(71, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(71, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(2, impact.codingContext().ExonRank);
+
+        assertFalse(impact.codingContext().IsFrameShift);
+        assertEquals(refBases.substring(60, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(60, 61) + alt + refBases.substring(71, 72);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        // test at phase 0
+        pos = 92;
+        ref = refBases.substring(92, 93);
+        alt = ref + "GGG";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(3, impact.codingContext().CodingBase);
+        assertEquals(93, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(93, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
+        assertEquals(1, impact.codingContext().ExonRank);
+
+        assertFalse(impact.codingContext().IsFrameShift);
+        assertEquals(refBases.substring(93, 96), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = alt.substring(1) + refBases.substring(93, 96);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
     }
 }

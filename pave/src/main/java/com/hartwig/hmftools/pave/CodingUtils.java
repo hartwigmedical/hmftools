@@ -156,9 +156,17 @@ public final class CodingUtils
 
                     cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, min(upstreamStartPos, exon.End));
 
-                    cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
-                    cc.CodingPositionRange[SE_END] = !variant.isInsert() ?
-                            min(min(exon.End, codingEnd), variant.EndPosition) : cc.CodingPositionRange[SE_START];
+                    if(!variant.isInsert())
+                    {
+                        cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
+                        cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
+
+                    }
+                    else
+                    {
+                        cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
+                        cc.CodingPositionRange[SE_START] = cc.CodingPositionRange[SE_END];
+                    }
 
                     // add in any extra coding bases
                     cc.CodingBase = preExonCodingBases + min(codingEnd, exon.End) - cc.CodingPositionRange[SE_END] + 1;

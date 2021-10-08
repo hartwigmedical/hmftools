@@ -37,7 +37,8 @@ public final class ProteinUtils
             return pc;
         }
 
-        pc.RefCodonBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
+        String refCodingBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
+        pc.RefCodonBases = refCodingBases;
 
         int upstreamOpenCodonBases = getOpenCodonBases(cc.UpstreamPhase);
 
@@ -109,6 +110,12 @@ public final class ProteinUtils
         else
         {
             int codonBaseLength = pc.RefCodonBases.length();
+
+            // adjustments for inserts since they have the ref stuck on the upper side
+            if(variant.isInsert())
+            {
+                alt = alt.substring(1) + refCodingBases;
+            }
 
             if(upstreamOpenCodonBases > 0)
             {
