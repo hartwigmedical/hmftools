@@ -16,16 +16,27 @@ public class ConsentConfigFactoryTest {
 
     @Test
     public void canReadConsentConfigFile() throws IOException {
-        ConsentConfig consentConfig = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("1");
+        ConsentConfig consentConfig1 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("1");
 
-        assertEquals("1", consentConfig.pifVersion());
-        assertEquals("",consentConfig.pif222());
-        assertNull(consentConfig.pif222Values());
-        assertEquals("",consentConfig.pif221());
-        assertNull(consentConfig.pif221Values());
-        assertEquals("Ja",consentConfig.pif26HMF());
-        assertEquals(Lists.newArrayList("Ja", "Nee"), consentConfig.pif26HMFValues());
-        assertEquals("Ja",consentConfig.pif26BUG());
-        assertEquals(Lists.newArrayList("Ja", "Nee"), consentConfig.pif26BUGValues());
+        assertEquals("1", consentConfig1.pifVersion());
+        assertEquals("",consentConfig1.pif222());
+        assertNull(consentConfig1.pif222Values());
+        assertEquals("",consentConfig1.pif221());
+        assertNull(consentConfig1.pif221Values());
+        assertEquals("Ja",consentConfig1.pif26HMF());
+        assertEquals(Lists.newArrayList("Ja", "Nee"), consentConfig1.pif26HMFValues());
+        assertEquals("Ja",consentConfig1.pif26BUG());
+        assertEquals(Lists.newArrayList("Ja", "Nee"), consentConfig1.pif26BUGValues());
+
+        ConsentConfig consentConfig2 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("2");
+        assertEquals("2", consentConfig2.pifVersion());
+        assertEquals("Yes",consentConfig2.pif222());
+        assertEquals(Lists.newArrayList("Yes", "No"), consentConfig2.pif222Values());
+        assertEquals("Yes",consentConfig2.pif221());
+        assertEquals(Lists.newArrayList("Yes", "No"), consentConfig2.pif221Values());
+        assertNull(consentConfig2.pif26HMF());
+        assertNull(consentConfig2.pif26HMFValues());
+        assertNull(consentConfig2.pif26BUG());
+        assertNull(consentConfig2.pif26BUGValues());
     }
 }

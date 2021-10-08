@@ -49,7 +49,22 @@ public class ConsentConfigFactory {
                         .build();
 
                 consentConfigMap.put(parts[0], consentConfig);
-            } else {
+            } else if(parts.length == 5) {
+                ConsentConfig consentConfig = ImmutableConsentConfig.builder()
+                        .pifVersion(parts[0])
+                        .pif222(parts[1])
+                        .pif222Values(parts[2].isEmpty() ? null : Lists.newArrayList(parts[2].split("/")))
+                        .pif221(parts[3])
+                        .pif221Values(parts[4].isEmpty() ? null : Lists.newArrayList(parts[4].split("/")))
+                        .pif26HMF(null)
+                        .pif26HMFValues(null)
+                        .pif26BUG(null)
+                        .pif26BUGValues(null)
+                        .build();
+
+                consentConfigMap.put(parts[0], consentConfig);
+
+            }else {
                 LOGGER.warn("Could not properly parse line in consent config tsv '{}' with length '{}'", line, parts.length);
             }
         }
