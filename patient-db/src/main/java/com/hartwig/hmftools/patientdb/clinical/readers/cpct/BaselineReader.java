@@ -237,29 +237,29 @@ class BaselineReader {
                     String pif26HMF = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26HMF);
                     String pif26Bug = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26BUG);
 
-                    if (pif222Values.isEmpty() && pif221Values.isEmpty() && pif26HMFValues.isEmpty() && pif26BUGValues.isEmpty()) {
+                    if (pif222Values == null && pif221Values == null && pif26HMFValues == null && pif26BUGValues == null) {
                         inDatabase = true;
                         outsideEU = true;
                     } else {
-                        if (pif222Values.contains(pif222)) {
+                        if (pif222Values != null && pif222Values.contains(pif222)) {
                             if (pif222 != null && pif222.equals(extractConsentConfigInfo.pif222())) {
                                 inDatabase = true;
                             }
                         }
 
-                        if (pif221Values.contains(pif221)) {
+                        if (pif221Values != null && pif221Values.contains(pif221)) {
                             if (pif221 != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
                                 outsideEU = true;
                             }
                         }
 
-                        if (pif26HMFValues.contains(pif26HMF)) {
+                        if (pif26HMFValues != null && pif26HMFValues.contains(pif26HMF)) {
                             if (pif26HMF != null && pif26HMF.equals(extractConsentConfigInfo.pif26HMF())) {
                                 inDatabase = true;
                             }
                         }
 
-                        if (pif26BUGValues.contains(pif26Bug) && inDatabase) {
+                        if (pif26BUGValues != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
                             if (pif26Bug != null && pif26Bug.equals(extractConsentConfigInfo.pif26BUG())) {
                                 outsideEU = true;
                             }
