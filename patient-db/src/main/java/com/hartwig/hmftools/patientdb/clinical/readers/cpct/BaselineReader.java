@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.cpct;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBaselineData;
@@ -54,6 +58,12 @@ class BaselineReader {
 
     private static final String FIELD_DEATH_DATE = "FLD.DEATH.DDEATHDTC";
 
+    private static final String FIELD_PIF_VERSION = "FLD.INFORMEDCONSENT.AMCONS";
+    private static final String FIELD_INFORMED_CONSENT_PIF222 = "FLD.INFORMEDCONSENT.PIF222";
+    private static final String FIELD_INFORMED_CONSENT_PIF221 = "FLD.INFORMEDCONSENT.PIF221";
+    private static final String FIELD_INFORMED_CONSENT_PIF26HMF = "FLD.INFORMEDCONSENT.PIF26HMF";
+    private static final String FIELD_INFORMED_CONSENT_PIF26BUG = "FLD.INFORMEDCONSENT.PIF26BUG";
+
     @NotNull
     private final PrimaryTumorCurator primaryTumorCurator;
     @NotNull
@@ -65,7 +75,10 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull EcrfPatient patient) {
+    BaselineData read(@NotNull EcrfPatient patient, @NotNull String consentConfigTsv) throws IOException {
+
+        Map<String, ConsentConfig> consentConfigMap = ConsentConfigFactory.read(consentConfigTsv);
+
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
@@ -80,7 +93,7 @@ class BaselineReader {
             setDemographyData(baselineBuilder, studyEvent);
             setPrimaryTumorData(patient.patientId(), baselineBuilder, studyEvent);
             setRegistrationAndBirthData(baselineBuilder, studyEvent);
-            setInformedConsent(baselineBuilder, studyEvent);
+            setInformedConsents(baselineBuilder, studyEvent, consentConfigMap);
         }
 
         setDeathData(baselineBuilder, patient);
@@ -202,11 +215,63 @@ class BaselineReader {
         return null;
     }
 
-    private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+    private void setInformedConsents(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
+            @NotNull Map<String, ConsentConfig> consentConfigMap) {
         for (EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
+            boolean inDatabase = false;
+            boolean outsideEU = false;
             for (EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT)) {
                 builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
+
+                String pifVersion = informedConsentItemGroup.readItemString(FIELD_PIF_VERSION);
+                if (pifVersion != null) {
+                    ConsentConfig extractConsentConfigInfo = consentConfigMap.get(pifVersion);
+
+                    List<String> pif222Values = extractConsentConfigInfo.pif222Values();
+                    List<String> pif221Values = extractConsentConfigInfo.pif221Values();
+                    List<String> pif26HMFValues = extractConsentConfigInfo.pif26HMFValues();
+                    List<String> pif26BUGValues = extractConsentConfigInfo.pif26BUGValues();
+
+                    String pif222 = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF222);
+                    String pif221 = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF221);
+                    String pif26HMF = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26HMF);
+                    String pif26Bug = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26BUG);
+
+                    if (pif222Values.isEmpty() && pif221Values.isEmpty() && pif26HMFValues.isEmpty() && pif26BUGValues.isEmpty()) {
+                        inDatabase = true;
+                        outsideEU = true;
+                    } else {
+                        if (pif222Values.contains(pif222)) {
+                            if (pif222 != null && pif222.equals(extractConsentConfigInfo.pif222())) {
+                                inDatabase = true;
+                            }
+                        }
+
+                        if (pif221Values.contains(pif221)) {
+                            if (pif221 != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
+                                outsideEU = true;
+                            }
+                        }
+
+                        if (pif26HMFValues.contains(pif26HMF)) {
+                            if (pif26HMF != null && pif26HMF.equals(extractConsentConfigInfo.pif26HMF())) {
+                                inDatabase = true;
+                            }
+                        }
+
+                        if (pif26BUGValues.contains(pif26Bug) && inDatabase) {
+                            if (pif26Bug != null && pif26Bug.equals(extractConsentConfigInfo.pif26BUG())) {
+                                outsideEU = true;
+                            }
+                        }
+                    }
+                }
+
+
                 builder.informedConsentStatus(informedConsentForm.status());
+                builder.pifVersion(pifVersion);
+                builder.inDatabase(inDatabase);
+                builder.outsideEU(outsideEU);
             }
         }
     }

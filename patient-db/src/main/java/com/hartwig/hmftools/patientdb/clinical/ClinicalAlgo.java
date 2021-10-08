@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -62,20 +63,21 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Lims lims) {
+    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Lims lims,
+            @NotNull String consentConfigTsv) throws IOException {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader =
                 new CpctPatientReader(primaryTumorCurator, CpctUtil.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
-        List<Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
+        List<Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient, consentConfigTsv);
         LOGGER.info(" Finished curation of {} CPCT patients", cpctPatients.size());
 
         EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info("Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
         EcrfPatientReader drupPatientReader = new DrupPatientReader(primaryTumorCurator, biopsySiteCurator);
 
-        List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
+        List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient, consentConfigTsv);
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
@@ -102,11 +104,11 @@ public class ClinicalAlgo {
 
     @NotNull
     private static List<Patient> readEcrfPatients(@NotNull EcrfPatientReader reader, @NotNull Iterable<EcrfPatient> ecrfPatients,
-            @NotNull Map<String, List<SampleData>> samplesPerPatient) {
+            @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String consentConfigTsv) throws IOException {
         List<Patient> patients = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            patients.add(reader.read(ecrfPatient, sequencedSamples));
+            patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigTsv));
         }
         return patients;
     }

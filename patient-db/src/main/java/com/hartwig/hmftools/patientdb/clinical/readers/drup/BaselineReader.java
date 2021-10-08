@@ -173,6 +173,9 @@ class BaselineReader {
 
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());
+                builder.pifVersion(null);
+                builder.inDatabase(null);
+                builder.outsideEU(null);
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.readers;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
@@ -11,5 +12,5 @@ import org.jetbrains.annotations.NotNull;
 public interface EcrfPatientReader {
 
     @NotNull
-    Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples);
+    Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples, @NotNull String consentConfigTsv) throws IOException;
 }

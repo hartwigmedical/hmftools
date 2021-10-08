@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.cpct;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -47,8 +48,8 @@ public class CpctPatientReader implements EcrfPatientReader {
 
     @NotNull
     @Override
-    public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples) {
-        BaselineData baselineData = baselineReader.read(ecrfPatient);
+    public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples, @NotNull String consentConfigTsv) throws IOException {
+        BaselineData baselineData = baselineReader.read(ecrfPatient, consentConfigTsv);
         PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
         List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedPrimaryTumor());
         List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
