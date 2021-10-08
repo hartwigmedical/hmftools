@@ -36,7 +36,7 @@ import org.junit.Test;
 public class SnvMnvImpactTest
 {
     @Test
-    public void testMnvScenarios()
+    public void testMnvBasic()
     {
         MockRefGenome refGenome = createMockGenome();
         String refBases = refGenome.RefGenomeMap.get(CHR_1);
@@ -66,7 +66,7 @@ public class SnvMnvImpactTest
 
         // then the protein context
         assertTrue(impact.proteinContext() != null);
-        assertEquals(3, impact.proteinContext().StartPosition);
+        assertEquals(3, impact.proteinContext().CodonIndex);
 
         String altCodonBases = alt + refCodonBases.substring(4, 6);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
@@ -82,7 +82,7 @@ public class SnvMnvImpactTest
         assertEquals(31, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(34, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_2, impact.codingContext().UpstreamPhase);
-        assertEquals(3, impact.proteinContext().StartPosition);
+        assertEquals(3, impact.proteinContext().CodonIndex);
 
         altCodonBases = refCodonBases.substring(0, 1) + alt + refCodonBases.substring(5, 6);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
@@ -97,7 +97,7 @@ public class SnvMnvImpactTest
         assertEquals(32, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(35, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
-        assertEquals(3, impact.proteinContext().StartPosition);
+        assertEquals(3, impact.proteinContext().CodonIndex);
 
         altCodonBases = refCodonBases.substring(0, 2) + alt;
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
@@ -126,7 +126,7 @@ public class SnvMnvImpactTest
 
         // then the protein context
         assertTrue(impact.proteinContext() != null);
-        assertEquals(3, impact.proteinContext().StartPosition);
+        assertEquals(3, impact.proteinContext().CodonIndex);
 
         altCodonBases = refCodonBases.substring(0, 2) + alt;
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
@@ -143,7 +143,7 @@ public class SnvMnvImpactTest
         assertEquals(76, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(79, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_2, impact.codingContext().UpstreamPhase);
-        assertEquals(3, impact.proteinContext().StartPosition);
+        assertEquals(3, impact.proteinContext().CodonIndex);
 
         altCodonBases = refCodonBases.substring(0, 1) + alt + refCodonBases.substring(5, 6);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
@@ -160,15 +160,174 @@ public class SnvMnvImpactTest
         assertEquals(75, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(78, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
-        assertEquals(3, impact.proteinContext().StartPosition);
+        assertEquals(3, impact.proteinContext().CodonIndex);
 
         altCodonBases = alt + refCodonBases.substring(4, 6);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
     }
 
-    // MNV spanning exon boundary - shortens the effect
+    @Test
+    public void testMnvAcrossSplice()
+    {
+        MockRefGenome refGenome = createMockGenome();
 
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
 
+        // MNV spanning exon boundary - shortens the effect
+        String refBases = refGenome.RefGenomeMap.get(CHR_1);
+
+        TranscriptData transDataPos = createPosTranscript();
+
+        // firstly a 2-lots across the exon
+        String refCodonBases = refBases.substring(15, 21);
+
+        int pos = 20;
+        String ref = refBases.substring(pos, pos + 2);
+        String alt = generateAlt(ref);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, transDataPos);
+
+        // first check general coding context fields
+        assertEquals(6, impact.codingContext().CodingBase);
+        assertEquals(20, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(20, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
+        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertTrue(impact.codingContext().SpansSpiceJunction);
+        assertEquals(EXONIC, impact.codingContext().RegionType);
+
+        assertTrue(impact.proteinContext() != null);
+        assertEquals(2, impact.proteinContext().CodonIndex);
+        assertEquals(refCodonBases.substring(3, 6), impact.proteinContext().RefCodonBases);
+
+        String altCodonBases = refCodonBases.substring(3, 5) + alt.substring(0, 1);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        // same again but spanning 2 exons with the codons: 36-38, 39-50, 51-53
+        refCodonBases = refBases.substring(36, 41) + refBases.substring(50, 54);
+
+        pos = 38;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        // first check general coding context fields
+        assertEquals(15, impact.codingContext().CodingBase);
+        assertEquals(38, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(40, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
+        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(EXONIC, impact.codingContext().RegionType);
+        assertTrue(impact.proteinContext() != null);
+        assertEquals(5, impact.proteinContext().CodonIndex);
+        assertEquals(refBases.substring(36, 41) + refBases.substring(50, 51), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(36, 38) + alt.substring(0, 3) + refBases.substring(50, 51);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        // and starting before the next exon
+        pos = 48;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        // first check general coding context fields
+        assertEquals(18, impact.codingContext().CodingBase);
+        assertEquals(50, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(51, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
+        assertEquals(3, impact.codingContext().ExonRank);
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(EXONIC, impact.codingContext().RegionType);
+
+        assertTrue(impact.proteinContext() != null);
+        assertEquals(6, impact.proteinContext().CodonIndex);
+        assertEquals(refBases.substring(39, 41) + refBases.substring(50, 54), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(39, 41) + alt.substring(2, 4) + refBases.substring(52, 54);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        // for negative strand, is the phase set correctly even though the variant starts in the upstream intron?
+
+        TranscriptData transDataNeg = createNegTranscript();
+
+        // and starting at the end of the last exon
+        pos = 88;
+        ref = refBases.substring(pos, pos + 3);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        // first check general coding context fields
+        assertEquals(6, impact.codingContext().CodingBase);
+        assertEquals(90, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(90, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
+        assertEquals(1, impact.codingContext().ExonRank);
+        assertTrue(impact.codingContext().SpansSpiceJunction);
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(EXONIC, impact.codingContext().RegionType);
+
+        assertTrue(impact.proteinContext() != null);
+        assertEquals(2, impact.proteinContext().CodonIndex);
+        assertEquals(refBases.substring(90, 93), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = alt.substring(2, 3) + refBases.substring(91, 93);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        // spanning exons 2 and 3 codons: 74-72, 71-60, 59-57
+        pos = 68;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        // first check general coding context fields
+        assertEquals(16, impact.codingContext().CodingBase);
+        assertEquals(70, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(71, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_1, impact.codingContext().UpstreamPhase);
+        assertEquals(2, impact.codingContext().ExonRank);
+        assertTrue(impact.codingContext().SpansSpiceJunction);
+
+        assertTrue(impact.proteinContext() != null);
+        assertEquals(6, impact.proteinContext().CodonIndex);
+        assertEquals(refBases.substring(60, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(60, 61) + alt.substring(2, 4);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        pos = 59;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        // first check general coding context fields
+        assertEquals(18, impact.codingContext().CodingBase);
+        assertEquals(59, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(60, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
+        assertEquals(3, impact.codingContext().ExonRank);
+        assertTrue(impact.codingContext().SpansSpiceJunction);
+
+        assertTrue(impact.proteinContext() != null);
+        assertEquals(6, impact.proteinContext().CodonIndex);
+        assertEquals(refBases.substring(57, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
+
+        altCodonBases = refBases.substring(57, 59) + alt.substring(0, 2) + refBases.substring(70, 72);
+        assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+    }
 
     @Test
     public void testSynonymousMissenseImpacts()

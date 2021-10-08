@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.pave.CodingUtils.getExtraBases;
+import static com.hartwig.hmftools.pave.ProteinUtils.getExtraBases;
 
 import static junit.framework.TestCase.assertTrue;
 

@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
-import static com.hartwig.hmftools.pave.CodingUtils.determineContext;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
@@ -77,7 +76,7 @@ public class ImpactClassifier
 
             if(variant.altPositionsOverlap(exon.Start, exon.End))
             {
-                classifyExonicPosition(variant, transImpact, exon);
+                classifyExonicPosition(variant, transImpact);
                 break;
             }
 
@@ -155,7 +154,7 @@ public class ImpactClassifier
         return false;
     }
 
-    private void classifyExonicPosition(final VariantData variant, final VariantTransImpact transImpact, final ExonData exon)
+    private void classifyExonicPosition(final VariantData variant, final VariantTransImpact transImpact)
     {
         final TranscriptData transData = transImpact.TransData;
 
@@ -167,25 +166,17 @@ public class ImpactClassifier
 
         if(variant.isIndel())
         {
-            // if only the end of an exon is affected (either strand) then this doesn't change the coding bases
-            if(variant.EndPosition == exon.Start || variant.Position == exon.End)
-                return;
-
-            // if the variant crosses the exon boundary then only check the bases which are exonic to decide between frameshift or inframe
-            int exonicBases = variant.isDeletion() ? transImpact.codingContext().DeletedCodingBases : variant.baseDiff();
-
-            if((exonicBases % 3) == 0)
+            if(transImpact.codingContext().IsFrameShift)
             {
                 // could use phasing info to set conservative vs disruptive type
-
+                transImpact.addEffect(FRAMESHIFT);
+            }
+            else
+            {
                 if(variant.isDeletion())
                     transImpact.addEffect(INFRAME_DELETION);
                 else
                     transImpact.addEffect(INFRAME_INSERTION);
-            }
-            else
-            {
-                transImpact.addEffect(FRAMESHIFT);
             }
         }
         else
@@ -208,7 +199,7 @@ public class ImpactClassifier
             return;
 
         VariantEffect ssEffect = checkStopStartCodons(
-                transImpact.proteinContext().StartPosition, transImpact.proteinContext().RefAminoAcids, transImpact.proteinContext().AltAminoAcids);
+                transImpact.proteinContext().CodonIndex, transImpact.proteinContext().RefAminoAcids, transImpact.proteinContext().AltAminoAcids);
 
         if(ssEffect != null)
         {

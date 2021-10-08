@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.StringJoiner;
@@ -11,7 +9,7 @@ public class ProteinContext
     public String RefCodonBases; // coding bases rounded expanded to cover whole codons
     public String AltCodonBases; // as above but with ref swapped for alt
 
-    public int StartPosition; // first amino acid affected
+    public int CodonIndex; // first amino acid affected
     public String RefAminoAcids;
     public String AltAminoAcids;
 
@@ -20,7 +18,7 @@ public class ProteinContext
         RefCodonBases = "";
         AltCodonBases = "";
 
-        StartPosition = 0;
+        CodonIndex = 0;
         RefAminoAcids = "";
         AltAminoAcids = "";
     }
@@ -43,7 +41,7 @@ public class ProteinContext
         sj.add(hgvsStr());
         sj.add(RefCodonBases);
         sj.add(AltCodonBases);
-        sj.add(String.valueOf(StartPosition));
+        sj.add(String.valueOf(CodonIndex));
         sj.add(RefAminoAcids);
         sj.add(AltAminoAcids);
         return sj.toString();

@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
-import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.pave.CodingUtils.getExtraBases;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import com.hartwig.hmftools.common.codon.Codons;
@@ -25,10 +23,11 @@ public final class ProteinUtils
 
         // both coding base and amino acid position start at 1
         // coding base of 1-3 = amino acid 1, 4-6 = 2 etc
-        pc.StartPosition = (cc.CodingBase - 1) / 3 + 1;
+        pc.CodonIndex = (cc.CodingBase - 1) / 3 + 1;
 
         boolean posStrand = transData.posStrand();
-        int upstreamStartPos = posStrand ? variant.Position : variant.EndPosition;
+
+        int upstreamStartPos = posStrand ? cc.CodingPositionRange[SE_START] : cc.CodingPositionRange[SE_END];
 
         ExonData exon = transData.exons().stream().filter(x -> x.Rank == cc.ExonRank).findFirst().orElse(null);
 
@@ -37,12 +36,6 @@ public final class ProteinUtils
             PV_LOGGER.error("var({}) trans({}) invalid coding exonRank({})", variant, transData.TransName, cc.ExonRank);
             return pc;
         }
-
-        /*
-        int codingPosStart = cc.CodingPositionRange[SE_START];
-        int codingPosEnd = variant.isBaseChange() ? cc.CodingPositionRange[SE_END] : variant.Position - 1;
-        pc.RefCodonBases = refGenome.getBaseString(variant.Chromosome, codingPosStart, codingPosEnd);
-        */
 
         pc.RefCodonBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
 
@@ -60,17 +53,14 @@ public final class ProteinUtils
                 pc.RefCodonBases += upstreamBases;
         }
 
-        /*
-        int altLength = variant.isBaseChange() ? variant.Alt.length() : variant.Alt.length() + 1; // since the coding region appends a ref base
-        int downstreamOpenCodonBases = getDownstreamOpenCodonBases(cc.UpstreamPhase, transData.Strand, variant.baseDiff(), altLength);
-        */
-
         int downstreamMod = pc.RefCodonBases.length() % 3;
         int downstreamOpenCodonBases = downstreamMod == 0 ? 0 : 3 - downstreamMod;
-        int downstreamStartPos = posStrand ? variant.EndPosition : variant.Position;
 
         if(downstreamOpenCodonBases > 0)
         {
+            //int downstreamStartPos = posStrand ? variant.EndPosition : variant.Position;
+            int downstreamStartPos = posStrand ? cc.CodingPositionRange[SE_END] : cc.CodingPositionRange[SE_START];
+
             // get bases upstream to complete the upstream part of the codon
             boolean searchUp = posStrand;
             String downstreamBases = getExtraBases(transData, refGenome, variant.Chromosome, exon, downstreamStartPos, downstreamOpenCodonBases, searchUp);
@@ -81,21 +71,25 @@ public final class ProteinUtils
                 pc.RefCodonBases = downstreamBases + pc.RefCodonBases;
         }
 
+        // only factor in coding bases in the mutation
+        String ref = cc.codingRef(variant);
+        String alt = cc.codingAlt(variant);
+        int varLength = ref.length();
+
         // an INDEL causing a frameshift can exit at this point since the novel AAs do not need to be recorded
         // (and may gone on until the end of the transcript)
         if(variant.isIndel())
         {
-            if(variant.isInsert() && (variant.baseDiff() % 3) != 0)
-                return pc;
+            int adjustedCodingBases = variant.isInsert() ? variant.baseDiff() : ref.length() - alt.length();
 
-            // usually would be just a check of whether deleted bases % 3, but need to consider some being beyond the coding region
-            if(variant.isDeletion() && (cc.DeletedCodingBases % 3) != 0)
+            if((adjustedCodingBases % 3) != 0)
+            {
+                cc.IsFrameShift = true;
                 return pc;
+            }
         }
 
         // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
-        String alt = variant.Alt;
-        int varLength = variant.Ref.length();
 
         if(posStrand)
         {
@@ -114,8 +108,6 @@ public final class ProteinUtils
         }
         else
         {
-            // TODO
-            // int codingBaseLen = (int)(Math.ceil((upstreamOpenCodonBases + varLength) / 3.0)) * 3;
             int codonBaseLength = pc.RefCodonBases.length();
 
             if(upstreamOpenCodonBases > 0)
@@ -146,34 +138,54 @@ public final class ProteinUtils
             return 2;
     }
 
-    private static int getDownstreamOpenCodonBases(int startPhase, int strand, int baseChange, final int altLength)
+    public static String getExtraBases(
+            final TranscriptData transData, final RefGenomeInterface refGenome, final String chromosome,
+            final ExonData currentExon, int startPos, int requiredBases, boolean searchUp)
     {
-        // determine the phase at the base after the mutation - last base of an MNV/SNV, and next base for an INS or DEL
-        int mutationTicks;
+        String extraBases = "";
 
-        if(strand == POS_STRAND)
+        if(searchUp)
         {
-            mutationTicks = baseChange < 0 ? 1 : altLength;
+            int currentExonBases = min(requiredBases, currentExon.End - startPos);
+
+            if(currentExonBases > 0)
+            {
+                extraBases = refGenome.getBaseString(chromosome, startPos + 1, startPos + 1 + (currentExonBases - 1));
+                requiredBases -= currentExonBases;
+            }
+
+            if(requiredBases > 0)
+            {
+                int nextExonRank = transData.posStrand() ? currentExon.Rank + 1 : currentExon.Rank - 1;
+
+                ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
+
+                String nextExonBases = refGenome.getBaseString(chromosome, nextExon.Start, nextExon.Start + (requiredBases - 1));
+                extraBases += nextExonBases;
+            }
         }
         else
         {
-            // need to go to the phase (prior to?) the ALT
-            if(baseChange == 0)
-                mutationTicks = altLength;
-            else if(baseChange > 0)
-                mutationTicks = altLength + 1;
-            else
-                mutationTicks = 2;
+            // search in lower positions
+            int currentExonBases = min(requiredBases, startPos - currentExon.Start);
+
+            if(currentExonBases > 0)
+            {
+                extraBases = refGenome.getBaseString(chromosome, startPos - currentExonBases, startPos - 1);
+                requiredBases -= currentExonBases;
+            }
+
+            if(requiredBases > 0)
+            {
+                int nextExonRank = transData.posStrand() ? currentExon.Rank - 1 : currentExon.Rank + 1;
+
+                ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
+
+                String nextExonBases = refGenome.getBaseString(chromosome, nextExon.End - (requiredBases - 1), nextExon.End);
+                extraBases = nextExonBases + extraBases;
+            }
         }
 
-        int postMutationPhase = tickPhaseForward(startPhase, mutationTicks);
-
-        if(postMutationPhase == PHASE_0)
-            return 1;
-        else if(postMutationPhase == PHASE_1)
-            return 0;
-        else
-            return 2;
+        return extraBases;
     }
-
 }

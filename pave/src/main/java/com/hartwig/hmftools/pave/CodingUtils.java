@@ -64,6 +64,9 @@ public final class CodingUtils
 
         int upstreamStartPos = posStrand ? variant.Position : variant.EndPosition;
 
+        // INDELs don't affect the last base of an exon so need diff criteria to skip it
+        int skipExonPos = (!variant.isIndel() == posStrand) ? variant.Position : variant.EndPosition;
+
         if(transData.posStrand())
         {
             for(int i = 0; i < transData.exons().size(); ++i)
@@ -71,7 +74,7 @@ public final class CodingUtils
                 final ExonData exon = transData.exons().get(i);
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
-                if(upstreamStartPos > exon.End)
+                if(skipExonPos > exon.End)
                 {
                     // keep track of coding bases if this exon overlaps the coding region but is before the variant
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
@@ -89,24 +92,19 @@ public final class CodingUtils
                     cc.ExonRank = exon.Rank;
                     cc.SpansSpiceJunction = !withinExon;
 
-                    cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, upstreamStartPos);
-
-                    // add in any extra coding bases
-                    cc.CodingBase = preExonCodingBases + upstreamStartPos - max(codingStart, exon.Start) + 1;
+                    cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, max(upstreamStartPos, exon.Start));
 
                     cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
-                    cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
 
-                    // record deleted coding bases since harder to reconstruct later on
-                    if(variant.isDeletion())
-                    {
-                        int firstDelBase = variant.Position + 1;
-                        int lastDelBase = variant.EndPosition - 1;
-                        int delCodingBaseStart = max(max(exon.Start, codingStart), firstDelBase);
-                        int delCodingBaseEnd = min(min(exon.End, codingEnd), lastDelBase);
+                    cc.CodingPositionRange[SE_END] = !variant.isInsert() ?
+                            min(min(exon.End, codingEnd), variant.EndPosition) : cc.CodingPositionRange[SE_START];
 
-                        cc.DeletedCodingBases = delCodingBaseEnd - delCodingBaseStart + 1;
-                    }
+                    // add in any extra coding bases
+                    cc.CodingBase = preExonCodingBases + cc.CodingPositionRange[SE_START] - max(codingStart, exon.Start) + 1;
+                }
+                else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
+                {
+                    continue;
                 }
                 else
                 {
@@ -140,7 +138,7 @@ public final class CodingUtils
                 final ExonData exon = transData.exons().get(i);
                 final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
 
-                if(upstreamStartPos < exon.Start)
+                if(skipExonPos < exon.Start)
                 {
                     if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         preExonCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
@@ -156,24 +154,18 @@ public final class CodingUtils
                     cc.ExonRank = exon.Rank;
                     cc.SpansSpiceJunction = !withinExon;
 
-                    cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, upstreamStartPos);
-
-                    // add in any extra coding bases
-                    cc.CodingBase = preExonCodingBases + min(codingEnd, exon.End) - upstreamStartPos + 1;
+                    cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, min(upstreamStartPos, exon.End));
 
                     cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
-                    cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
+                    cc.CodingPositionRange[SE_END] = !variant.isInsert() ?
+                            min(min(exon.End, codingEnd), variant.EndPosition) : cc.CodingPositionRange[SE_START];
 
-                    // record deleted coding bases since harder to reconstruct later on
-                    if(variant.isDeletion())
-                    {
-                        int firstDelBase = variant.Position + 1;
-                        int lastDelBase = variant.EndPosition - 1;
-                        int delCodingBaseStart = max(max(exon.Start, codingStart), firstDelBase);
-                        int delCodingBaseEnd = min(min(exon.End, codingEnd), lastDelBase);
-
-                        cc.DeletedCodingBases = delCodingBaseEnd - delCodingBaseStart + 1;
-                    }
+                    // add in any extra coding bases
+                    cc.CodingBase = preExonCodingBases + min(codingEnd, exon.End) - cc.CodingPositionRange[SE_END] + 1;
+                }
+                else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
+                {
+                    continue;
                 }
                 else
                 {
@@ -201,60 +193,28 @@ public final class CodingUtils
             }
         }
 
+        if(variant.isIndel() && cc.CodingType == CODING && cc.RegionType == EXONIC)
+        {
+            // now coding bases have been clarified, mark any frameshift INDELs
+            int adjustedCodingBases;
+
+            if(variant.isInsert())
+            {
+                adjustedCodingBases = variant.baseDiff();
+            }
+            else
+            {
+                String ref = cc.codingRef(variant);
+                String alt = cc.codingAlt(variant);
+
+                adjustedCodingBases = variant.isInsert() ? variant.baseDiff() : ref.length() - alt.length();
+            }
+
+            if((adjustedCodingBases % 3) != 0)
+                cc.IsFrameShift = true;
+        }
+
         return cc;
-    }
-
-    public static String getExtraBases(
-            final TranscriptData transData, final RefGenomeInterface refGenome, final String chromosome,
-            final ExonData currentExon, int startPos, int requiredBases, boolean searchUp)
-    {
-        String extraBases = "";
-
-        if(searchUp)
-        {
-            int currentExonBases = min(requiredBases, currentExon.End - startPos);
-
-            if(currentExonBases > 0)
-            {
-                extraBases = refGenome.getBaseString(chromosome, startPos + 1, startPos + 1 + (currentExonBases - 1));
-            }
-
-            requiredBases -= currentExonBases;
-
-            if(requiredBases > 0)
-            {
-                int nextExonRank = transData.posStrand() ? currentExon.Rank + 1 : currentExon.Rank - 1;
-
-                ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
-
-                String nextExonBases = refGenome.getBaseString(chromosome, nextExon.Start, nextExon.Start + (requiredBases - 1));
-                extraBases += nextExonBases;
-            }
-        }
-        else
-        {
-            // search in lower positions
-            int currentExonBases = min(requiredBases, startPos - currentExon.Start);
-
-            if(currentExonBases > 0)
-            {
-                extraBases = refGenome.getBaseString(chromosome, startPos - currentExonBases, startPos - 1);
-            }
-
-            requiredBases -= currentExonBases;
-
-            if(requiredBases > 0)
-            {
-                int nextExonRank = transData.posStrand() ? currentExon.Rank - 1 : currentExon.Rank + 1;
-
-                ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
-
-                String nextExonBases = refGenome.getBaseString(chromosome, nextExon.End - (requiredBases - 1), nextExon.End);
-                extraBases = nextExonBases + extraBases;
-            }
-        }
-
-        return extraBases;
     }
 
     public static CodingContext determinePreOrPostCodingContext(final VariantData variant, final TranscriptData transData)

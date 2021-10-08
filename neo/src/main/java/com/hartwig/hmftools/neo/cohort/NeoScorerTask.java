@@ -61,8 +61,6 @@ public class NeoScorerTask implements Callable
 
         List<AlleleCoverage> alleleCoverages = loadAlleleCoverage(mSampleId, mConfig.LilacDataDir);
 
-        // List<Boolean> geneLostStatus = getGeneStatus(alleleCoverages);
-
         List<RnaNeoEpitope> rnaNeoDataList = loadRnaNeoData(mSampleId, mConfig.IsofoxDataDir);
 
         Map<Integer,NeoPredictionData> neoPredictionsMap = Maps.newHashMap();

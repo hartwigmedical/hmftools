@@ -27,7 +27,6 @@ public class NeoDataWriter
 
         mPeptideWriter = initPeptideWriter();
         mNeoWriter = null;
-        // mNeoWriter = initNeoepitopeWriter();
     }
 
     public void close()
@@ -81,7 +80,6 @@ public class NeoDataWriter
         {
             for(BindData bindData : predData.getPeptidePredictions(alleleCoverage.Allele))
             {
-
                 if(!logPeptide(bindData))
                     continue;
 
