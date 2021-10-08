@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -249,9 +250,7 @@ public class TreatmentCurator implements CleanableCurator {
             }
             tokenStream.end();
             tokenStream.close();
-            return searchTokens.stream()
-                    .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
-                    .collect(Collectors.toList());
+            return Lists.newArrayList(searchTokens);
         } catch (IOException exception) {
             LOGGER.warn("Caught IOException in treatment curation: {}", exception.getMessage());
             return Lists.newArrayList();
