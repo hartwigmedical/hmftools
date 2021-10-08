@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 public class GenerateEnsemblDataCache
 {
     public static final String HGNC_GENE_DATA_FILE = "hgnc_gene_data_file";
-    public static final String CANONICAL_TRANS_DIR = "canonical_trans_dir";
+    public static final String REF_ENSEMBL_DIR = "ref_ensembl_dir";
 
     public static void writeEnsemblDataFiles(final CommandLine cmd)
     {
@@ -224,7 +224,7 @@ public class GenerateEnsemblDataCache
         addLoggingOptions(options);
         addOutputDir(options);
         options.addOption(HGNC_GENE_DATA_FILE, true, "HGNC gene data file");
-        options.addOption(CANONICAL_TRANS_DIR, true, "Ensembl data dir for canonical trans to use");
+        options.addOption(REF_ENSEMBL_DIR, true, "Ensembl data dir for canonical trans to use");
         EnsemblDAO.addCmdLineArgs(options);
 
         return options;

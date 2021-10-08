@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
-import static com.hartwig.hmftools.geneutils.ensembl.GenerateEnsemblDataCache.CANONICAL_TRANS_DIR;
+import static com.hartwig.hmftools.geneutils.ensembl.GenerateEnsemblDataCache.REF_ENSEMBL_DIR;
 import static com.hartwig.hmftools.geneutils.ensembl.GenerateEnsemblDataCache.HGNC_GENE_DATA_FILE;
 
 import java.io.BufferedWriter;
@@ -95,9 +95,9 @@ public class EnsemblDAO
         mReferenceGeneDataById = Maps.newHashMap();
         mReferenceGeneDataByName = Maps.newHashMap();
 
-        if(cmd.hasOption(CANONICAL_TRANS_DIR))
+        if(cmd.hasOption(REF_ENSEMBL_DIR))
         {
-            String ensemblDataDir = cmd.getOptionValue(CANONICAL_TRANS_DIR);
+            String ensemblDataDir = cmd.getOptionValue(REF_ENSEMBL_DIR);
 
             Map<String, List<GeneData>> chrGeneDataMap = Maps.newHashMap();
             List<String> restrictedGeneIds = Lists.newArrayList();
@@ -227,7 +227,7 @@ public class EnsemblDAO
             GU_LOGGER.debug("gene query return {} records", results.size());
 
             final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
-            Set<String> uniqueGeneNames = Sets.newHashSet();
+            Map<String,GeneData> geneNameMap = Maps.newHashMap();
 
             for(final Record record : results)
             {
@@ -275,11 +275,28 @@ public class EnsemblDAO
                 if(mGeneIdDataMap.containsKey(geneId))
                     continue;
 
-                // remove duplicates - there are about 18 for v38
-                if(uniqueGeneNames.contains(geneName))
-                    continue;
+                // check for duplicates by name
+                GeneData existingGeneData = geneNameMap.get(geneName);
 
-                uniqueGeneNames.add(geneName);
+                if(existingGeneData != null)
+                {
+                    if(mRefGenomeVersion == V38 || existingGeneData.GeneId.equals(geneId))
+                        continue;
+
+                    // some v37 genes use an older geneId and in this case favour any which are used in v38
+                    if(mReferenceGeneDataById.containsKey(geneId))
+                    {
+                        // replace and carry on
+                        geneNameMap.remove(geneName);
+                        mGeneIdDataMap.remove(existingGeneData.GeneId);
+                        chrGeneMap.get(existingGeneData.Chromosome).remove(existingGeneData);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                }
 
                 String chromosome = (String)record.get("Chromosome");
                 UInteger geneStart = (UInteger) record.get("GeneStart");
@@ -291,6 +308,7 @@ public class EnsemblDAO
                         geneId, geneName, chromosome, strand, geneStart.intValue(), geneEnd.intValue(), karyotypeBand);
 
                 mGeneIdDataMap.put(geneId, geneData);
+                geneNameMap.put(geneName, geneData);
 
                 geneData.setSynonyms(synonyms);
 
