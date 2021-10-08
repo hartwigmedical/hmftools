@@ -31,7 +31,6 @@ public interface PatientReporterConfig {
     String OUTPUT_DIRECTORY_REPORT = "output_dir_report";
     String OUTPUT_DIRECTORY_DATA = "output_dir_data";
 
-    String REPORTING_DB_TSV = "reporting_db_tsv";
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
 
@@ -90,7 +89,6 @@ public interface PatientReporterConfig {
         options.addOption(OUTPUT_DIRECTORY_REPORT, true, "Path to where the PDF report will be written to.");
         options.addOption(OUTPUT_DIRECTORY_DATA, true, "Path to where the data of the report will be written to.");
 
-        options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
 
@@ -156,9 +154,6 @@ public interface PatientReporterConfig {
 
     @NotNull
     String outputDirData();
-
-    @NotNull
-    String reportingDbTsv();
 
     @NotNull
     String primaryTumorTsv();
@@ -328,7 +323,6 @@ public interface PatientReporterConfig {
                 .tumorSampleBarcode(nonOptionalValue(cmd, TUMOR_SAMPLE_BARCODE))
                 .outputDirReport(nonOptionalDir(cmd, OUTPUT_DIRECTORY_REPORT))
                 .outputDirData(nonOptionalDir(cmd, OUTPUT_DIRECTORY_DATA))
-                .reportingDbTsv(nonOptionalFile(cmd, REPORTING_DB_TSV))
                 .primaryTumorTsv(nonOptionalFile(cmd, PRIMARY_TUMOR_TSV))
                 .limsDir(nonOptionalDir(cmd, LIMS_DIRECTORY))
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
