@@ -72,6 +72,10 @@ public final class ProteinUtils
                 pc.RefCodonBases = downstreamBases + pc.RefCodonBases;
         }
 
+        // if codon(s) are incomplete then either a bug or an issue with the transcript definition
+        if(!pc.validRefCodon())
+            return pc;
+
         // only factor in coding bases in the mutation
         String ref = cc.codingRef(variant);
         String alt = cc.codingAlt(variant);
@@ -167,6 +171,9 @@ public final class ProteinUtils
 
                 ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
 
+                if(nextExon == null)
+                    return extraBases;
+
                 String nextExonBases = refGenome.getBaseString(chromosome, nextExon.Start, nextExon.Start + (requiredBases - 1));
                 extraBases += nextExonBases;
             }
@@ -187,6 +194,9 @@ public final class ProteinUtils
                 int nextExonRank = transData.posStrand() ? currentExon.Rank - 1 : currentExon.Rank + 1;
 
                 ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
+
+                if(nextExon == null)
+                    return extraBases;
 
                 String nextExonBases = refGenome.getBaseString(chromosome, nextExon.End - (requiredBases - 1), nextExon.End);
                 extraBases = nextExonBases + extraBases;

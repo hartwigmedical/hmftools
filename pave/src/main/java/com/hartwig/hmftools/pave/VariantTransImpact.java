@@ -90,7 +90,7 @@ public class VariantTransImpact
 
     public static String csvHeader()
     {
-        return "TransId,Canonical,IsCoding,SpliceRegion,Effects";
+        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,Effects";
     }
 
     public String toCsv()
@@ -100,6 +100,7 @@ public class VariantTransImpact
         sj.add(TransData.TransName);
         sj.add(String.valueOf(TransData.IsCanonical));
         sj.add(String.valueOf(!TransData.nonCoding()));
+        sj.add(String.valueOf(TransData.Strand));
         sj.add(String.valueOf(mInSpliceRegion));
         sj.add(effectsToCsv());
 

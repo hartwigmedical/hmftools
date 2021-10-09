@@ -12,7 +12,6 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
-import com.hartwig.hmftools.common.variant.Variant;
 
 public class CodingContext
 {
@@ -25,6 +24,8 @@ public class CodingContext
     public boolean SpansSpiceJunction;
     public boolean IsFrameShift;
 
+    public String SpliceDonorAcceptorBases;
+
     public int NonCodingBaseDistance;
     public int UpstreamPhase;
     public int BasesToLastExonJunction;
@@ -36,6 +37,7 @@ public class CodingContext
         ExonRank = 0;
         SpansSpiceJunction = false;
         IsFrameShift = false;
+        SpliceDonorAcceptorBases = "";
         CodingPositionRange = new int[] {0, 0};
         NonCodingBaseDistance = 0;
         UpstreamPhase = PHASE_NONE;
@@ -87,7 +89,7 @@ public class CodingContext
 
     public static String csvHeader()
     {
-        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBase,CodingPosRange,UpstreamPhase,SpansSplice,NonCodingBaseDist";
+        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBase,CodingPosRange,UpstreamPhase,SpansSplice,SpliceDonorAcceptorBases,NonCodingBaseDist";
     }
 
     public String toCsv()
@@ -103,6 +105,7 @@ public class CodingContext
                 : String.format("%d-%d", CodingPositionRange[SE_START], CodingPositionRange[SE_END]));
         sj.add(String.valueOf(UpstreamPhase));
         sj.add(String.valueOf(SpansSpiceJunction));
+        sj.add(SpliceDonorAcceptorBases);
         sj.add(String.valueOf(NonCodingBaseDistance));
 
         return sj.toString();

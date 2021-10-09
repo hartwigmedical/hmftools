@@ -4,10 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
@@ -16,16 +13,13 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.compare.RefVariantData.hasCodingEffectDiff;
+import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -36,7 +30,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
-import com.hartwig.hmftools.pave.PaveConfig;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 
@@ -51,40 +44,26 @@ import org.jooq.Result;
 
 public class ImpactComparisons
 {
-    private final PaveConfig mConfig;
+    private final ComparisonConfig mConfig;
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
 
-    private final List<String> mSampleIds;
-    private final String mReferenceVariantsFile;
     private final DatabaseAccess mDbAccess;
 
-    private final boolean mOnlyDriverGenes;
-    private final boolean mOnlyCanonical;
-
-    private BufferedWriter mCsvWriter;
+    private final ComparisonWriter mWriter;
 
     // counters
-    private int mVariantCount;
-    private int mTransVariantCount;
+    private int mTotalComparisons;
+    private int mMatchedCount;
     private final PerformanceCounter mPerfCounter;
-
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
-    private static final String REF_VARIANTS_FILE = "ref_variants_file";
-    private static final String ONLY_DRIVER_GENES = "only_driver_genes";
-    private static final String ONLY_CANONCIAL = "only_canonical";
 
     public ImpactComparisons(final CommandLine cmd)
     {
-        mConfig = new PaveConfig(cmd);
-
-        mSampleIds = Lists.newArrayList();
-
-        mSampleIds.addAll(loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+        mConfig = new ComparisonConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), true);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -92,50 +71,39 @@ public class ImpactComparisons
         mImpactClassifier = new ImpactClassifier(refGenome);
 
         mDbAccess = createDatabaseAccess(cmd);
-        mReferenceVariantsFile = cmd.getOptionValue(REF_VARIANTS_FILE);
 
-        mOnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
-        mOnlyDriverGenes = cmd.hasOption(ONLY_DRIVER_GENES);
-
-        mCsvWriter = null;
+        mWriter = new ComparisonWriter(mGeneDataCache, mConfig);
 
         mPerfCounter = new PerformanceCounter("ClassifyVariant");
-        mVariantCount = 0;
-        mTransVariantCount = 0;
-    }
-
-    public void close()
-    {
-        closeBufferedWriter(mCsvWriter);
+        mTotalComparisons = 0;
+        mMatchedCount = 0;
     }
 
     public void run()
     {
-        if(mSampleIds.isEmpty())
+        if(mConfig.SampleIds.isEmpty() && mConfig.ReferenceVariantsFile == null)
         {
             PV_LOGGER.error("missing sampleIds, exiting");
             System.exit(1);
         }
 
-        if(mDbAccess == null && mReferenceVariantsFile == null)
+        if(mDbAccess == null && mConfig.ReferenceVariantsFile == null)
         {
             PV_LOGGER.error("neither DB nor ref variants file configured, exiting");
             System.exit(1);
         }
 
-        if(!mGeneDataCache.loadCache(mOnlyCanonical, mOnlyDriverGenes))
+        if(!mGeneDataCache.loadCache(mConfig.OnlyCanonical, mConfig.OnlyDriverGenes))
         {
             PV_LOGGER.error("Ensembl data cache loading failed, exiting");
             System.exit(1);
         }
 
-        initialiseImpactWriter();
-
         if(mDbAccess != null)
         {
-            for(int i = 0; i < mSampleIds.size(); ++i)
+            for(int i = 0; i < mConfig.SampleIds.size(); ++i)
             {
-                String sampleId = mSampleIds.get(i);
+                String sampleId = mConfig.SampleIds.get(i);
 
                 mPerfCounter.start();
                 loadSampleDatabaseRecords(sampleId);
@@ -149,20 +117,74 @@ public class ImpactComparisons
         }
         else
         {
-            processRefVariantFile(mReferenceVariantsFile);
+            processRefVariantFile(mConfig.ReferenceVariantsFile);
         }
 
-        close();
+        mWriter.close();
+
+        PV_LOGGER.info("total comparisons({}) matched({}) diffs({})",
+                mTotalComparisons, mMatchedCount, mTotalComparisons - mMatchedCount);
 
         mPerfCounter.logStats();
 
         PV_LOGGER.info("impact comparison complete");
     }
 
+    private void processVariant(final String sampleId, final RefVariantData refVariant)
+    {
+        ++mTotalComparisons;
+
+        // generate variant impact data and then write comparison results to CSV file
+        VariantData variant = new VariantData(
+                refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
+
+        variant.setVariantDetails(refVariant.PhasedInframeIndel, refVariant.Microhomology, refVariant.RepeatSequence);
+
+        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
+
+        VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
+
+        if(!hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect))
+        {
+            ++mMatchedCount;
+            return;
+        }
+
+        logComparison(sampleId, refVariant, variant, variantImpact);
+
+        mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant);
+    }
+
+    private void logComparison(
+            final String sampleId, final RefVariantData refVariant, final VariantData variant, final VariantImpact variantImpact)
+    {
+        if(!PV_LOGGER.isDebugEnabled())
+            return;
+
+        if(variant.getImpacts().isEmpty())
+        {
+            PV_LOGGER.debug("sample({}) var({}) no gene impacts found vs snpEff({} : {})",
+                    sampleId, variant.toString(), refVariant.Gene, refVariant.CanonicalCodingEffect);
+            return;
+        }
+
+        if(!variant.getImpacts().containsKey(refVariant.Gene))
+        {
+            PV_LOGGER.debug("sample({}) var({}) diff gene and canonical coding: pave({} : {}) snpEff({} : {})",
+                    sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
+                    refVariant.Gene, refVariant.CanonicalCodingEffect);
+            return;
+        }
+
+        PV_LOGGER.debug("sample({}) var({}) diff canonical coding: pave({} : {}) snpEff({} : {})",
+                sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
+                refVariant.Gene, refVariant.CanonicalCodingEffect);
+    }
+
     private void loadSampleDatabaseRecords(final String sampleId)
     {
-        mVariantCount = 0;
-        mTransVariantCount = 0;
+        mTotalComparisons = 0;
+        mMatchedCount = 0;
 
         Result<Record> result = mDbAccess.context().select()
                 .from(SOMATICVARIANT)
@@ -179,7 +201,7 @@ public class ImpactComparisons
         }
 
         PV_LOGGER.debug("sample({}) processed {} variants and transcripts({})",
-                sampleId, mVariantCount, mTransVariantCount);
+                sampleId, mTotalComparisons, mMatchedCount);
     }
 
     private void processRefVariantFile(final String filename)
@@ -224,9 +246,9 @@ public class ImpactComparisons
 
                 if(!currentSample.equals(sampleId))
                 {
-                    if(!mSampleIds.contains(sampleId))
+                    if(!mConfig.SampleIds.isEmpty() && !mConfig.SampleIds.contains(sampleId))
                     {
-                        if(samplesProcessed == mSampleIds.size())
+                        if(samplesProcessed == mConfig.SampleIds.size())
                         {
                             PV_LOGGER.info("all samples processed");
                             return;
@@ -264,93 +286,10 @@ public class ImpactComparisons
         }
     }
 
-    private void processVariant(final String sampleId, final RefVariantData refVariant)
-    {
-        ++mVariantCount;
-
-        // generate variant impact data and then write comparison results to CSV file
-        VariantData variant = new VariantData(
-                refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
-
-        variant.setVariantDetails(refVariant.PhasedInframeIndel, refVariant.Microhomology, refVariant.RepeatSequence);
-
-        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
-
-        VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
-
-        if(PV_LOGGER.isDebugEnabled())
-        {
-            if(hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect))
-            {
-                PV_LOGGER.debug("sample({}) var({}) diff canonical coding: pave({}) snpEff({})",
-                        sampleId, variant.toString(), variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
-            }
-        }
-
-        writeVariantData(sampleId, variant, variantImpact, refVariant);
-    }
-
-    private void initialiseImpactWriter()
-    {
-        try
-        {
-            String fileName = mConfig.OutputDir + "PAVE_IMPACT_COMPARE.csv";
-            mCsvWriter = createBufferedWriter(fileName, false);
-
-            mCsvWriter.write("SampleId,");
-            mCsvWriter.write(VariantData.csvCommonHeader());
-            mCsvWriter.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect");
-            mCsvWriter.write(",WorstCodingEffect,GenesAffected");
-            mCsvWriter.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
-            mCsvWriter.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffGenesAffected");
-            mCsvWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
-            return;
-        }
-    }
-
-    private void writeVariantData(
-            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
-    {
-        try
-        {
-            mCsvWriter.write(String.format("%s,%s,%s",
-                    sampleId, variant.toCsv(), variantImpact.CanonicalGeneName));
-
-            boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(variantImpact.CanonicalGeneName);
-
-            if(!isDriver && !variantImpact.CanonicalGeneName.equals(refVariant.Gene))
-                isDriver = mGeneDataCache.getDriverPanelGenes().contains(refVariant.Gene);
-
-            mCsvWriter.write(String.format(",%s,%s,%s,%s,%d",
-                    isDriver, variantImpact.CanonicalEffect, variantImpact.CanonicalCodingEffect,
-                    variantImpact.WorstCodingEffect, variantImpact.GenesAffected));
-
-            mCsvWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
-                    refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect, refVariant.WorstCodingEffect,
-                    refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.GenesAffected));
-
-            mCsvWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to write variant CSV file: {}", e.toString());
-            return;
-        }
-    }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = PaveConfig.createOptions();
-
-        addDatabaseCmdLineArgs(options);
-        options.addOption(SAMPLE_ID_FILE, true, "Sample ID file");
-        options.addOption(REF_VARIANTS_FILE, true, "File with variants to test against");
-        options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
-        options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");
+        final Options options = ComparisonConfig.createOptions();
 
         final CommandLine cmd = createCommandLine(args, options);
 

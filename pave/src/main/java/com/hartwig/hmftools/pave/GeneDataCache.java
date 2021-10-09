@@ -21,6 +21,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.GeneMappingData;
+import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -35,19 +37,21 @@ public class GeneDataCache
     private final Set<String> mMissingTranscripts; // no longer in Ensembl
     private final Map<String,TranscriptData> mTranscriptDataMap; // transcripts keyed by trans name, built on demand
 
+    private final GeneNameMapping mGeneNameMapping; // only relevant when converting from or checking SnpEff names
+
     private String mCurrentChromosome;
     private List<GeneData> mCurrentChromosomeGenes;
     private List<GeneData> mCurrentGenes; // in the current vacinity
     private int mCurrentPosStrandGeneIndex;
     private int mCurrentNegStrandGeneIndex;
 
-    public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenomeVersion, final String driverGenePanel)
+    public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile, boolean requireMapping)
     {
-        mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
+        mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenVersion);
 
         mDriverGenes = Lists.newArrayList();
         mOtherReportableTranscripts = Maps.newHashMap();
-        loadDriverGenes(driverGenePanel);
+        loadDriverGenes(driverGeneFile);
 
         mTranscriptDataMap = Maps.newHashMap();
         mMissingTranscripts = Sets.newHashSet();
@@ -57,6 +61,8 @@ public class GeneDataCache
         mCurrentPosStrandGeneIndex = 0;
         mCurrentNegStrandGeneIndex = 0;
         mCurrentGenes = Lists.newArrayList();
+
+        mGeneNameMapping = requireMapping ? new GeneNameMapping() : null;
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
@@ -240,5 +246,33 @@ public class GeneDataCache
             geneRangeEnd += GENE_UPSTREAM_DISTANCE;
 
         return positionsOverlap(startPosition, endPosition, geneRangeStart, geneRangeEnd);
+    }
+
+    public GeneData findSnpEffGeneData(final String geneId, final String geneName)
+    {
+        if(geneId.isEmpty())
+            return null;
+
+        GeneData geneData = mEnsemblDataCache.getGeneDataById(geneId);
+
+        if(geneData != null)
+            return geneData;
+
+        GeneMappingData mappingData = mGeneNameMapping.getMappingDataByOld(geneName);
+
+        if(mappingData == null)
+            return null;
+
+        return mEnsemblDataCache.getGeneDataById(mappingData.GeneId);
+    }
+
+    public String getSnpEffGeneName(final String geneName)
+    {
+        return mGeneNameMapping.isUnchanged(geneName) ? geneName : mGeneNameMapping.getOldName(geneName);
+    }
+
+    public String getGeneNameFromSnpEff(final String snpEffGeneName)
+    {
+        return mGeneNameMapping.getNewName(snpEffGeneName);
     }
 }

@@ -57,7 +57,6 @@ public class PaveApplication
     // for comparison with SnpEff
     private int mTransEffectMatched;
     private int mTransTotalComparisons;
-    private final GeneNameMapping mGeneNameMapping;
 
     private VcfWriter mVcfWriter;
     private BufferedWriter mCsvTranscriptWriter;
@@ -67,7 +66,8 @@ public class PaveApplication
         mConfig = new PaveConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
+                cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), mConfig.CompareSnpEff);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -81,7 +81,6 @@ public class PaveApplication
         if(mConfig.WriteTranscriptCsv)
             initialiseTranscriptWriter();
 
-        mGeneNameMapping = mConfig.CompareSnpEff ? new GeneNameMapping() : null;
         mTransEffectMatched = 0;
         mTransTotalComparisons = 0;
     }
@@ -289,22 +288,7 @@ public class PaveApplication
             {
                 for(SnpEffAnnotation annotation : snpEffAnnotations)
                 {
-                    String geneId = annotation.geneID();
-
-                    if(geneId.isEmpty())
-                        continue;
-
-                    GeneData geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(geneId);
-
-                    if(geneData == null)
-                    {
-                        GeneMappingData mappingData = mGeneNameMapping.getMappingDataByOld(annotation.gene());
-
-                        if(mappingData != null)
-                        {
-                            geneData = mGeneDataCache.getEnsemblCache().getGeneDataById(mappingData.GeneId);
-                        }
-                    }
+                    GeneData geneData = mGeneDataCache.findSnpEffGeneData(annotation.geneID(), annotation.gene());
 
                     if(geneData == null)
                     {
@@ -327,9 +311,7 @@ public class PaveApplication
         for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
         {
             final String geneName = entry.getKey();
-
-            final String snpEffGeneName = mGeneNameMapping.isUnchanged(geneName) ?
-                    geneName : mGeneNameMapping.getOldName(geneName);
+            final String snpEffGeneName = mGeneDataCache.getSnpEffGeneName(geneName);
 
             writeVariantTranscriptData(
                     variant, geneName,

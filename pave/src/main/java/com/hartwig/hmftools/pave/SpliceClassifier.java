@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPositio
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
+import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_END_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_POSITIONS;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_POSITIONS;
@@ -15,15 +16,14 @@ import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_EXON_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_INTRON_RANGE;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
-public class SpliceClassifier
+public final class SpliceClassifier
 {
-    public SpliceClassifier() {}
-
     public static boolean isWithinSpliceRegion(final VariantData variant, final TranscriptData transData, final ExonData exon)
     {
         int exonStartSpliceRegionStart = exon.Start - SPLICE_REGION_INTRON_RANGE;
@@ -35,31 +35,15 @@ public class SpliceClassifier
         boolean atTransStart = exon.Start == transData.TransStart;
         boolean atTransEnd = exon.End == transData.TransEnd;
 
-        List<Integer> nonRefPositions = variant.altPositions();
-
-        /* doesn't handle INS correctly
         if(!atTransStart)
         {
-            if(nonRefPositions.stream().anyMatch(x -> positionWithin(x, exonStartSpliceRegionStart, exonStartSpliceRegionEnd)))
+            if(variant.altPositionsOverlap(exonStartSpliceRegionStart, exonStartSpliceRegionEnd))
                 return true;
         }
 
         if(!atTransEnd)
         {
-            if(nonRefPositions.stream().anyMatch(x -> positionWithin(x, exonEndSpliceRegionStart, exonEndSpliceRegionEnd)))
-                return true;
-        }
-        */
-
-        if(!atTransStart)
-        {
-            if(positionsOverlap(variant.Position, variant.EndPosition, exonStartSpliceRegionStart, exonStartSpliceRegionEnd))
-                return true;
-        }
-
-        if(!atTransEnd)
-        {
-            if(positionsOverlap(variant.Position, variant.EndPosition, exonEndSpliceRegionStart, exonEndSpliceRegionEnd))
+            if(variant.altPositionsOverlap(exonEndSpliceRegionStart, exonEndSpliceRegionEnd))
                 return true;
         }
 
@@ -68,6 +52,9 @@ public class SpliceClassifier
 
     public static VariantEffect checkStraddlesSpliceRegion(final VariantData variant, final TranscriptData transData, final ExonData exon)
     {
+        if(!variant.isDeletion())
+            return null;
+
         if(positionWithin(exon.Start, variant.Position, variant.EndPosition))
         {
             return transData.posStrand() ? SPLICE_ACCEPTOR : SPLICE_DONOR;
@@ -80,7 +67,8 @@ public class SpliceClassifier
         return null;
     }
 
-    public VariantEffect classifyVariant(final VariantData variant, final TranscriptData transData, final ExonData exon)
+    public static VariantEffect classifyVariant(
+            final VariantData variant, final VariantTransImpact transImpact, final ExonData exon)
     {
         /* Rules:
             - mark any variant hitting splice donor sites (D-1,D+1,D+2,D+5) as splice_donor_variant
@@ -92,36 +80,45 @@ public class SpliceClassifier
             - SNV may also be synonymous, missense or nonsense if at D-1 (ranked by NONSENSE,SPLICE,MISSENSE,SYNONYMOUS)
         */
 
+        final TranscriptData transData = transImpact.TransData;
+
         int donorExonPos = transData.posStrand() ? exon.End : exon.Start;
         int acceptorExonPos = transData.posStrand() ? exon.Start : exon.End;
         boolean isDonorCandidate = abs(variant.Position - donorExonPos) < abs(variant.Position - acceptorExonPos);
 
+        VariantEffect spliceEffect = null;
+        StringJoiner baseInfo = new StringJoiner(ITEM_DELIM);
+
         if(variant.isIndel())
         {
-            List<Integer> nonRefPositions = variant.altPositions();
-
             if(variant.isInsert())
             {
                 // TODO - for INDELs check repeat sequence vs microhomology condition described above
 
+
+
             }
             else
             {
-                // if deletes any coding bases then handle in normal logic
-                //boolean deletesD5 = false;
-
-                for(Integer position : nonRefPositions)
+                for(Integer position : variant.altPositions())
                 {
                     int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
                     if(SPLICE_DONOR_POSITIONS.contains(donorPos))
-                        return SPLICE_DONOR;
-
-                    //if(donorPos == SPLICE_DONOR_END_RANGE)
-                    //    deletesD5 = true;
+                    {
+                        spliceEffect = SPLICE_DONOR;
+                        baseInfo.add(String.format("D%d", donorPos));
+                    }
                 }
 
-                /*
+                /* from Purple:
+
+                //if(donorPos == SPLICE_DONOR_END_RANGE)
+                //    deletesD5 = true;
+
+                // if deletes any coding bases then handle in normal logic
+                //boolean deletesD5 = false;
+
                 if(!transData.posStrand() && deletesD5)
                 {
                     int exonDistanceStart = abs(variant.Position + 1 - donorExonPos);
@@ -146,7 +143,10 @@ public class SpliceClassifier
                     int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
                     if(SPLICE_DONOR_POSITIONS.contains(donorPos))
-                        return SPLICE_DONOR;
+                    {
+                        spliceEffect = SPLICE_DONOR;
+                        baseInfo.add(String.format("D%d", donorPos));
+                    }
                 }
                 else
                 {
@@ -159,15 +159,25 @@ public class SpliceClassifier
                             final char requiredBase = transData.posStrand() ? 'G' : 'C';
 
                             if(altBase == requiredBase)
-                                return SPLICE_ACCEPTOR;
+                            {
+                                spliceEffect = SPLICE_ACCEPTOR;
+                                baseInfo.add(String.format("A%d", acceptorPos));
+                            }
                         }
                         else
                         {
-                            return SPLICE_ACCEPTOR;
+                            spliceEffect = SPLICE_ACCEPTOR;
+                            baseInfo.add(String.format("A%d", acceptorPos));
                         }
                     }
                 }
             }
+        }
+
+        if(spliceEffect != null)
+        {
+            transImpact.addEffect(spliceEffect);
+            transImpact.codingContext().SpliceDonorAcceptorBases = baseInfo.toString();
         }
 
         return null;

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.compare;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.EXON_LOSS_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.FUSION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INITIATOR_CODON_VARIANT;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -85,5 +88,19 @@ public final class ComparisonUtils
     {
         return consequence.isParentTypeOf(effect.effect());
     }
+
+    public static boolean hasCodingEffect(final CodingEffect effect)
+    {
+        return effect != UNDEFINED && effect != NONE;
+    }
+
+    public static boolean hasCodingEffectDiff(final CodingEffect effect1, final CodingEffect effect2)
+    {
+        if(!hasCodingEffect(effect1) && !hasCodingEffect(effect2))
+            return false;
+
+        return effect1 != effect2;
+    }
+
 
 }

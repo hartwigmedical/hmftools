@@ -75,12 +75,4 @@ public class RefVariantData
                 Chromosome, Position, Type, Ref, Alt, CanonicalCodingEffect, CanonicalEffect,
                 WorstCodingEffect);
     }
-
-    public static boolean hasCodingEffectDiff(final CodingEffect effect1, final CodingEffect effect2)
-    {
-        if((effect1 == UNDEFINED || effect1 == NONE) && (effect2 == UNDEFINED || effect2 == NONE))
-            return false;
-
-        return effect1 != effect2;
-    }
 }

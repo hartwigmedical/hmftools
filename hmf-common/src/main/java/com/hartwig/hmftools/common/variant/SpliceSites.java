@@ -9,7 +9,7 @@ public final class SpliceSites
 {
     public static int getDonorPosition(int position, int exonEnd, Strand strand)
     {
-        // D-1 refs to the last base of the exon, D+1 the first base after, ie first of the intron, and there is no D-zerp
+        // D-1 refs to the last base of the exon, D+1 the first base after, ie first of the intron, and there is no D-zero
         if(strand == FORWARD)
             return position > exonEnd ? position - exonEnd : position - exonEnd - 1;
         else

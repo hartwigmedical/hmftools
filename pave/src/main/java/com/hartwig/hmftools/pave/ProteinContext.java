@@ -27,11 +27,13 @@ public class ProteinContext
 
     public boolean hasProteinChange() { return !RefAminoAcids.equals(AltAminoAcids); }
 
+    public boolean validRefCodon() { return (RefCodonBases.length() % 3) == 0; }
+
     public String hgvsStr() { return "tbc"; }
 
     public static String csvHeader()
     {
-        return "HgvsProtein,RefCodonBases,AltCodonBases,StartPosition,RefAA,AltAA";
+        return "HgvsProtein,RefCodonBases,AltCodonBases,CodonIndex,RefAA,AltAA";
     }
 
     public String toCsv()

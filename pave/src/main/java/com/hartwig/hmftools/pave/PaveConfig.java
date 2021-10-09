@@ -72,14 +72,14 @@ public class PaveConfig
         options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(VCF_FILE, true, "VCF input file");
         options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
-        options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
-        options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
 
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         addEnsemblDir(options);
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 
+        options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
+        options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");

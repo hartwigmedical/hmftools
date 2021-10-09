@@ -27,12 +27,10 @@ import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 public class ImpactClassifier
 {
     private final RefGenomeInterface mRefGenome;
-    private final SpliceClassifier mSpliceClassifier;
 
     public ImpactClassifier(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
-        mSpliceClassifier = new SpliceClassifier();
     }
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)
@@ -66,12 +64,12 @@ public class ImpactClassifier
             if(!inSpliceRegion && isWithinSpliceRegion(variant, transData, exon))
             {
                 inSpliceRegion = true;
-                transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, exon));
+                SpliceClassifier.classifyVariant(variant, transImpact, exon);
             }
             else if(!inSpliceRegion && nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
             {
                 inSpliceRegion = true;
-                transImpact.addEffect(mSpliceClassifier.classifyVariant(variant, transData, nextExon));
+                SpliceClassifier.classifyVariant(variant, transImpact, nextExon);
             }
 
             if(variant.altPositionsOverlap(exon.Start, exon.End))
