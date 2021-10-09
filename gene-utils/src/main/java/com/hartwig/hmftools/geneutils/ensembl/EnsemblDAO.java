@@ -69,6 +69,9 @@ public class EnsemblDAO
             new GeneData("ENSG00000258414", "AL121790.1","14", POS_STRAND,
                     37564047,37579125, "q21.1"));
 
+    // ENSG00000124693 HIST1H3B -> ENSG00000286522 H3C2 - must be manually mapped
+    private static final List<String> GENE_ID_EXCEPTIONS_V37 = Lists.newArrayList("ENSG00000124693");
+
     // GOPC processed transcript which matches a ROS1 splice site - only in v38
     private static final List<String> TRANSCRIPT_EXCLUSIONS = Lists.newArrayList("ENST00000467125");
 
@@ -255,14 +258,19 @@ public class EnsemblDAO
                         // rely on the v38 genes to find and check gene details, so v37 will limited to those genes in v38
                         GeneData refGeneData = findReferenceGeneData(geneId, geneName);
 
-                        if(refGeneData == null)
-                            continue;
+                        if(refGeneData != null)
+                        {
+                            geneName = refGeneData.GeneName;
+                            synonyms = (String)record.get("Synonyms");
 
-                        geneName = refGeneData.GeneName;
-                        synonyms = (String)record.get("Synonyms");
-
-                        if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
-                            synonyms = refGeneData.getSynonyms() + ";" + synonyms;
+                            if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
+                                synonyms = refGeneData.getSynonyms() + ";" + synonyms;
+                        }
+                        else
+                        {
+                            if(!GENE_ID_EXCEPTIONS_V37.contains(geneId))
+                                continue;
+                        }
                     }
                 }
                 else
@@ -295,7 +303,6 @@ public class EnsemblDAO
                     {
                         continue;
                     }
-
                 }
 
                 String chromosome = (String)record.get("Chromosome");
