@@ -67,7 +67,7 @@ public class PaveApplication
 
         mGeneDataCache = new GeneDataCache(
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
-                cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), mConfig.CompareSnpEff);
+                cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), mConfig.CompareSnpEff, true);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 

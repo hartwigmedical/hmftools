@@ -67,7 +67,7 @@ public final class SpliceClassifier
         return null;
     }
 
-    public static VariantEffect classifyVariant(
+    public static void classifyVariant(
             final VariantData variant, final VariantTransImpact transImpact, final ExonData exon)
     {
         /* Rules:
@@ -89,18 +89,42 @@ public final class SpliceClassifier
         VariantEffect spliceEffect = null;
         StringJoiner baseInfo = new StringJoiner(ITEM_DELIM);
 
-        if(variant.isIndel())
+        if(transImpact.codingContext().IsFrameShift) // CHECK: unless can be realigned to be frameshift
+            return;
+
+        // CHECK - for INDELs check repeat sequence vs microhomology condition described above
+
+        if(variant.isInsert())
         {
-            if(variant.isInsert())
+            // to be confirmed which ought to have any effect, probably needs to take into effect the impact on the actual bases
+            int position = transData.posStrand() ? variant.Position : variant.EndPosition;
+
+            if(isDonorCandidate)
             {
-                // TODO - for INDELs check repeat sequence vs microhomology condition described above
+                int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
-
-
+                if(SPLICE_DONOR_POSITIONS.contains(donorPos))
+                {
+                    spliceEffect = SPLICE_DONOR;
+                    baseInfo.add(String.format("D%d", donorPos));
+                }
             }
             else
             {
-                for(Integer position : variant.altPositions())
+                int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
+
+                if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
+                {
+                    spliceEffect = SPLICE_ACCEPTOR;
+                    baseInfo.add(String.format("A%d", acceptorPos));
+                }
+            }
+        }
+        else if(variant.isDeletion())
+        {
+            for(Integer position : variant.altPositions())
+            {
+                if(isDonorCandidate)
                 {
                     int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
 
@@ -110,25 +134,16 @@ public final class SpliceClassifier
                         baseInfo.add(String.format("D%d", donorPos));
                     }
                 }
-
-                /* from Purple:
-
-                //if(donorPos == SPLICE_DONOR_END_RANGE)
-                //    deletesD5 = true;
-
-                // if deletes any coding bases then handle in normal logic
-                //boolean deletesD5 = false;
-
-                if(!transData.posStrand() && deletesD5)
+                else
                 {
-                    int exonDistanceStart = abs(variant.Position + 1 - donorExonPos);
-                    int exonDistanceEnd = abs(variant.Position + variant.Ref.length() - 11 - donorExonPos);
-                    int exonDistance = min(exonDistanceStart, exonDistanceEnd);
+                    int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
 
-                    if(exonDistance - variant.Ref.length() <= SPLICE_DONOR_END_RANGE)
-                        return new VariantTransImpact(transData, SPLICE_DONOR_EFFECT);
+                    if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
+                    {
+                        spliceEffect = SPLICE_ACCEPTOR;
+                        baseInfo.add(String.format("A%d", acceptorPos));
+                    }
                 }
-                */
             }
         }
         else
@@ -179,7 +194,25 @@ public final class SpliceClassifier
             transImpact.addEffect(spliceEffect);
             transImpact.codingContext().SpliceDonorAcceptorBases = baseInfo.toString();
         }
-
-        return null;
     }
+
+        /* from Purple:
+
+        //if(donorPos == SPLICE_DONOR_END_RANGE)
+        //    deletesD5 = true;
+
+        // if deletes any coding bases then handle in normal logic
+        //boolean deletesD5 = false;
+
+        if(!transData.posStrand() && deletesD5)
+        {
+            int exonDistanceStart = abs(variant.Position + 1 - donorExonPos);
+            int exonDistanceEnd = abs(variant.Position + variant.Ref.length() - 11 - donorExonPos);
+            int exonDistance = min(exonDistanceStart, exonDistanceEnd);
+
+            if(exonDistance - variant.Ref.length() <= SPLICE_DONOR_END_RANGE)
+                return new VariantTransImpact(transData, SPLICE_DONOR_EFFECT);
+        }
+        */
+
 }

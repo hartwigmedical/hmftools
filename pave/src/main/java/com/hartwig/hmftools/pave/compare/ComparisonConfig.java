@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ComparisonConfig
@@ -42,8 +40,6 @@ public class ComparisonConfig
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String OUTPUT_ID = "output_id";
     private static final String WRITE_TRANS_DATA = "write_trans_data";
-
-    public static final Logger PV_LOGGER = LogManager.getLogger(ComparisonConfig.class);
 
     public ComparisonConfig(final CommandLine cmd)
     {

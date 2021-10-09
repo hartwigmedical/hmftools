@@ -63,7 +63,8 @@ public class ImpactComparisons
         mConfig = new ComparisonConfig(cmd);
 
         mGeneDataCache = new GeneDataCache(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), true);
+                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION),
+                true, false);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -250,7 +251,7 @@ public class ImpactComparisons
                     {
                         if(samplesProcessed == mConfig.SampleIds.size())
                         {
-                            PV_LOGGER.info("all samples processed");
+                            PV_LOGGER.info("all {} samples processed", samplesProcessed);
                             return;
                         }
                         else

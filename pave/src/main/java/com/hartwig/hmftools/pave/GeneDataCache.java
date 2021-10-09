@@ -39,13 +39,16 @@ public class GeneDataCache
 
     private final GeneNameMapping mGeneNameMapping; // only relevant when converting from or checking SnpEff names
 
+    private final boolean mUseIndexing;
     private String mCurrentChromosome;
     private List<GeneData> mCurrentChromosomeGenes;
     private List<GeneData> mCurrentGenes; // in the current vacinity
     private int mCurrentPosStrandGeneIndex;
     private int mCurrentNegStrandGeneIndex;
 
-    public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile, boolean requireMapping)
+    public GeneDataCache(
+            final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile,
+            boolean requireMapping, boolean useIndexing)
     {
         mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenVersion);
 
@@ -56,6 +59,7 @@ public class GeneDataCache
         mTranscriptDataMap = Maps.newHashMap();
         mMissingTranscripts = Sets.newHashSet();
 
+        mUseIndexing = useIndexing;
         mCurrentChromosome = null;
         mCurrentChromosomeGenes = null;
         mCurrentPosStrandGeneIndex = 0;
@@ -162,6 +166,26 @@ public class GeneDataCache
 
     public List<GeneData> findGenes(final String chromosome, int startPosition, int endPosition)
     {
+        if(!mUseIndexing)
+        {
+            List<GeneData> genes = Lists.newArrayList();
+
+            List<GeneData> geneDataList = mEnsemblDataCache.getChrGeneDataMap().get(chromosome);
+
+            if(geneDataList == null)
+                return genes;
+
+            for(GeneData geneData : geneDataList)
+            {
+                if(isWithinGeneRange(geneData, startPosition, endPosition))
+                    genes.add(geneData);
+                else if(geneData.GeneStart > endPosition + GENE_UPSTREAM_DISTANCE)
+                    break;
+            }
+
+            return genes;
+        }
+
         if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
         {
             mCurrentChromosome = chromosome;
