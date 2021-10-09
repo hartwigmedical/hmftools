@@ -139,7 +139,8 @@ public class VariantImpactBuilder
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
         {
-            if(variant.phasedInframeIndel())
+            // TODO - remove if classified earlier?
+            if(transImpact.phasedFrameshift())
                 return MISSENSE;
 
             return NONSENSE_OR_FRAMESHIFT;

@@ -13,11 +13,13 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -30,6 +32,8 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
+import com.hartwig.hmftools.pave.PhasedVariantClassifier;
+import com.hartwig.hmftools.pave.PhasedVariants;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 
@@ -133,15 +137,39 @@ public class ImpactComparisons
 
     private void processVariant(final String sampleId, final RefVariantData refVariant)
     {
-        ++mTotalComparisons;
-
         // generate variant impact data and then write comparison results to CSV file
         VariantData variant = new VariantData(
                 refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
 
-        variant.setVariantDetails(refVariant.PhasedInframeIndel, refVariant.Microhomology, refVariant.RepeatSequence);
+        variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatSequence);
+        variant.setSampleId(sampleId);
+        variant.setRefData(refVariant);
 
         findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
+
+        processPhasedVariants(variant.localPhaseSet());
+
+        if(!variant.hasLocalPhaseSet())
+            processVariant(sampleId, variant, refVariant);
+    }
+
+    private void processPhasedVariants(int currentLocalPhaseSet)
+    {
+        if(!mImpactClassifier.phasedVariants().hasCompleteVariants(currentLocalPhaseSet))
+            return;
+
+        List<PhasedVariants> phasedVariantList = mImpactClassifier.phasedVariants().popCompletePhasedVariants(currentLocalPhaseSet);
+
+        for(PhasedVariants phasedVariants : phasedVariantList)
+        {
+            PhasedVariantClassifier.reclassifyPhasedVariants(phasedVariants);
+            phasedVariants.Variants.forEach(x -> processVariant(x.sampleId(), x, x.refData()));
+        }
+    }
+
+    private void processVariant(final String sampleId, final VariantData variant, final RefVariantData refVariant)
+    {
+        ++mTotalComparisons;
 
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
@@ -195,11 +223,13 @@ public class ImpactComparisons
                 .orderBy(SOMATICVARIANT.CHROMOSOME,SOMATICVARIANT.POSITION)
                 .fetch();
 
-        for (Record record : result)
+        for(Record record : result)
         {
             final SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
             processVariant(sampleId, RefVariantData.fromSomatic(variant));
         }
+
+        processPhasedVariants(NO_LOCAL_PHASE_SET);
 
         PV_LOGGER.debug("sample({}) processed {} variants and transcripts({})",
                 sampleId, mTotalComparisons, mMatchedCount);
@@ -232,6 +262,7 @@ public class ImpactComparisons
             int microhomologyIndex = fieldsIndexMap.get("microhomology");
             int repeatSequenceIndex = fieldsIndexMap.get("repeatSequence");
             int phasedInframeIndelIndex = fieldsIndexMap.get("phasedInframeIndel");
+            int localPhaseSetIndex = fieldsIndexMap.get("localPhaseSet");
             int reportedIndex = fieldsIndexMap.get("reported");
 
             String currentSample = "";
@@ -269,6 +300,8 @@ public class ImpactComparisons
                     }
                 }
 
+                int localPhaseSet = !items[localPhaseSetIndex].equals("NULL") ? Integer.parseInt(items[localPhaseSetIndex]) : NO_LOCAL_PHASE_SET;
+
                 RefVariantData variant = new RefVariantData(
                         items[chrIndex], Integer.parseInt(items[posIndex]), items[refIndex], items[altIndex],
                         VariantType.valueOf(items[typeIndex]), items[geneIndex], items[canonicalEffectIndex],
@@ -276,17 +309,18 @@ public class ImpactComparisons
                         CodingEffect.valueOf(items[worstCodingEffectIndex]), Integer.parseInt(items[genesAffectedIndex]),
                         items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
                         items[microhomologyIndex], items[repeatSequenceIndex], Boolean.parseBoolean(items[phasedInframeIndelIndex]),
-                        Boolean.parseBoolean(items[reportedIndex]));
+                        localPhaseSet, Boolean.parseBoolean(items[reportedIndex]));
 
                 processVariant(sampleId, variant);
             }
+
+            processPhasedVariants(NO_LOCAL_PHASE_SET);
         }
         catch(IOException e)
         {
             PV_LOGGER.error("failed to read ref variant data file: {}", e.toString());
         }
     }
-
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

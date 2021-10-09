@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
+import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.ignoreSnpEffAnnotation;
 
@@ -23,12 +24,9 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.GeneMappingData;
-import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -127,6 +125,8 @@ public class PaveApplication
                     PV_LOGGER.debug("processed {} variants", variantCount);
                 }
             }
+
+            processPhasedVariants(NO_LOCAL_PHASE_SET);
         }
         catch(IOException e)
         {
@@ -148,15 +148,33 @@ public class PaveApplication
     {
         VariantData variant = VariantData.fromContext(variantContext);
 
-        boolean phasedInframeIndel = variantContext.isIndel() && variantContext.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
-
-        variant.setVariantDetails(phasedInframeIndel, "", "");
-
         findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
+        processPhasedVariants(variant.localPhaseSet());
+
+        if(!variant.hasLocalPhaseSet())
+            processVariant(variant);
+    }
+
+    private void processPhasedVariants(int currentLocalPhaseSet)
+    {
+        if(!mImpactClassifier.phasedVariants().hasCompleteVariants(currentLocalPhaseSet))
+            return;
+
+        List<PhasedVariants> phasedVariantList = mImpactClassifier.phasedVariants().popCompletePhasedVariants(currentLocalPhaseSet);
+
+        for(PhasedVariants phasedVariants : phasedVariantList)
+        {
+            PhasedVariantClassifier.reclassifyPhasedVariants(phasedVariants);
+            phasedVariants.Variants.forEach(x -> processVariant(x));
+        }
+    }
+
+    private void processVariant(final VariantData variant)
+    {
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        mVcfWriter.writeVariant(variantContext, variant, variantImpact);
+        mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 
         if(!mConfig.WriteTranscriptCsv)
             return;
@@ -171,7 +189,7 @@ public class PaveApplication
         }
         else
         {
-            checkAndWriteTransDifferences(variantContext, variant);
+            checkAndWriteTransDifferences(variant);
         }
     }
 
@@ -275,9 +293,11 @@ public class PaveApplication
         }
     }
 
-    private void checkAndWriteTransDifferences(final VariantContext variantContext, final VariantData variant)
+    private void checkAndWriteTransDifferences(final VariantData variant)
     {
         // extract SnpEff data for comparison sake
+        final VariantContext variantContext = variant.context();
+
         List<SnpEffAnnotation> snpEffAnnotations = SnpEffAnnotationParser.fromContext(variantContext).stream()
                 .filter(x -> !ignoreSnpEffAnnotation(x))
                 .collect(Collectors.toList());

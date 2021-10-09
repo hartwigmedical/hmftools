@@ -27,14 +27,20 @@ import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 public class ImpactClassifier
 {
     private final RefGenomeInterface mRefGenome;
+    private final PhasedVariantClassifier mPhasedVariants;
 
     public ImpactClassifier(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
+        mPhasedVariants = new PhasedVariantClassifier();
     }
+
+    public PhasedVariantClassifier phasedVariants() { return mPhasedVariants; }
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)
     {
+        mPhasedVariants.checkAddVariant(variant);
+
         if(!withinTransRange(transData, variant.Position, variant.EndPosition)) // a conservative check by 1 base for INDEL at boundary
             return null;
 

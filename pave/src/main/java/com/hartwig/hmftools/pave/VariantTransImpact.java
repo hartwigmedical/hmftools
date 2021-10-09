@@ -25,7 +25,7 @@ public class VariantTransImpact
 
     private boolean mInSpliceRegion;
 
-    private int mLocalPhaseSetId;
+    public boolean mPhasedFrameshift;
 
     public VariantTransImpact(final TranscriptData transData)
     {
@@ -34,8 +34,8 @@ public class VariantTransImpact
         mEffects = Lists.newArrayList();
 
         mCodingContext = null;
-        mLocalPhaseSetId = -1;
         mInSpliceRegion = false;
+        mPhasedFrameshift = false;
     }
 
     public void addEffect(final VariantEffect effect)
@@ -78,6 +78,9 @@ public class VariantTransImpact
 
     public void markSpliceRegion() { mInSpliceRegion = true; }
     public boolean inSpliceRegion() { return mInSpliceRegion; }
+
+    public void markPhasedFrameshift() { mPhasedFrameshift = true; }
+    public boolean phasedFrameshift() { return mPhasedFrameshift; }
 
     public String hgvsCoding() { return mCodingContext.hgvsStr(); }
     public String hgvsProtein() { return mProteinContext != null ? mProteinContext.hgvsStr() :  ""; }

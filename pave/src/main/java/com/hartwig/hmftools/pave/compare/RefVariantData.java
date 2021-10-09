@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
-import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -25,6 +22,7 @@ public class RefVariantData
     public final CodingEffect WorstCodingEffect;
     public final int GenesAffected;
 
+    public final int LocalPhaseSet;
     public final String Microhomology;
     public final String RepeatSequence;
     public final boolean PhasedInframeIndel;
@@ -37,7 +35,7 @@ public class RefVariantData
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
             final CodingEffect worstCodingEffect, final int genesAffected,
             final String hgvsCodingImpact, final String hgvsProteinImpact,
-            final String microhomology, final String repeatSequence, boolean phasedInframeIndel, boolean reported)
+            final String microhomology, final String repeatSequence, boolean phasedInframeIndel, int localPhaseSet, boolean reported)
     {
         Chromosome = chromosome;
         Position = position;
@@ -51,6 +49,7 @@ public class RefVariantData
         WorstCodingEffect = worstCodingEffect;
         GenesAffected = genesAffected;
 
+        LocalPhaseSet = localPhaseSet;
         HgvsCodingImpact = hgvsCodingImpact;
         HgvsProteinImpact = hgvsProteinImpact;
         Microhomology = microhomology;
@@ -66,7 +65,7 @@ public class RefVariantData
                 variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
                 variant.genesAffected(),  variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.phasedInframeIndelIdentifier() > 0,
-                variant.reported());
+                variant.localPhaseSet(), variant.reported());
     }
 
     public String toString()

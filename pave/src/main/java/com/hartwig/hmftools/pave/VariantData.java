@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.pave.compare.RefVariantData;
+
+import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -34,10 +39,11 @@ public class VariantData
     public final int EndPosition;
 
     public final String Ref;
+
     public final String Alt;
 
     // other key data
-    public boolean mPhasedInframeIndel;
+    private int mLocalPhaseSetId;
     public String mMicrohomology;
     public String mRepeatSequence;
 
@@ -51,6 +57,13 @@ public class VariantData
 
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
 
+    // associated data
+    private VariantContext mVariantContext;
+    private String mSampleId;
+    private RefVariantData mRefVariantData;
+
+    public static final int NO_LOCAL_PHASE_SET = -1;
+
     public VariantData(final String chromosome, final int position, final String ref, final String alt)
     {
         Chromosome = chromosome;
@@ -58,7 +71,9 @@ public class VariantData
         Ref = ref;
         Alt = alt;
 
-        mPhasedInframeIndel = false;
+        mVariantContext = null;
+
+        mLocalPhaseSetId = -1;
         mMicrohomology = "";
         mRepeatSequence = "";
 
@@ -105,7 +120,17 @@ public class VariantData
         String ref = variantContext.getReference().getBaseString();
         String alt = variantContext.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
 
-        return new VariantData(chromosome, variantPosition, ref, alt);
+        VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
+        variant.setContext(variantContext);
+
+        // boolean phasedInframeIndel = variantContext.isIndel() && variantContext.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
+        // context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0)
+
+        variant.setVariantDetails(
+                variantContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET),
+                variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY), "");
+
+        return variant;
     }
 
     public VariantType type()
@@ -124,15 +149,24 @@ public class VariantData
 
     public List<Integer> altPositions() { return mAltPositions; }
 
-    public boolean phasedInframeIndel() { return mPhasedInframeIndel; }
+    public VariantContext context() { return mVariantContext; }
+    public void setContext(final VariantContext context) { mVariantContext = context; }
 
-    public void setVariantDetails(boolean piIndel, final String mh, final String reqSeq)
+    public String sampleId() { return mSampleId; }
+    public void setSampleId(final String sampleId) { mSampleId = sampleId; }
+
+    public RefVariantData refData() { return mRefVariantData; }
+    public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
+
+    public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequence)
     {
-        mPhasedInframeIndel = piIndel;
-        mMicrohomology = mh;
-        mRepeatSequence = reqSeq;
+        mLocalPhaseSetId = localPhaseSet;
+        mMicrohomology = microHomology;
+        mRepeatSequence = repeatSequence;
     }
 
+    public boolean hasLocalPhaseSet() { return mLocalPhaseSetId != NO_LOCAL_PHASE_SET; }
+    public int localPhaseSet() { return mLocalPhaseSetId; }
     public String microhomology() { return mMicrohomology; }
     public String repeatSequence() { return mRepeatSequence; }
 
