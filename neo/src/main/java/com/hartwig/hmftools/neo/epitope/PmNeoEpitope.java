@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.epitope;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
@@ -54,7 +55,7 @@ public class PmNeoEpitope extends NeoEpitope
         {
             mType = NeoEpitopeType.MISSENSE;
         }
-        else if((mIndelBaseDiff % 3) == 0)
+        else if(isCodonMultiple(mIndelBaseDiff))
         {
             if(isInsert())
                 mType = INFRAME_INSERTION;
@@ -119,7 +120,7 @@ public class PmNeoEpitope extends NeoEpitope
 
     public boolean phaseMatched()
     {
-        return (abs(mIndelBaseDiff) % 3) == 0 && mType != STOP_LOST;
+        return isCodonMultiple(abs(mIndelBaseDiff)) && mType != STOP_LOST;
     }
 
     private boolean posStrand() { return TransData[FS_UP].Strand == POS_STRAND; }

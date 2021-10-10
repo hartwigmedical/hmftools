@@ -17,6 +17,8 @@ public final class Codons
 
     public static final char UNKNOWN = '.';
 
+    public static boolean isCodonMultiple(int bases) { return (bases % 3) == 0; }
+
     public static boolean isStopCodon(final String codon)
     {
         return codon.equals(STOP_CODON_1) || codon.equals(STOP_CODON_2) || codon.equals(STOP_CODON_3);

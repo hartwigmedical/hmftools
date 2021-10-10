@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.hotspot;
 
+import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.immutables.value.Value;
@@ -39,11 +41,11 @@ public interface VariantHotspot extends GenomePosition {
     }
 
     default boolean isFrameshiftIndel() {
-        return isIndel() && indelLength() % 3 != 0;
+        return isIndel() && !isCodonMultiple(indelLength());
     }
 
     default boolean isInframeIndel() {
-        return isIndel() && indelLength() % 3 == 0;
+        return isIndel() && isCodonMultiple(indelLength());
     }
 
 }

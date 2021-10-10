@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +58,8 @@ public class PhasedInframeIndel extends BufferedPostProcessor
 
                 int otherLength = other.variant().indelLength();
                 int combinedLength = newLength + otherLength;
-                if(combinedLength % 3 == 0)
+
+                if(isCodonMultiple(combinedLength))
                 {
                     if(other.phasedInframeIndel() != 0)
                     {

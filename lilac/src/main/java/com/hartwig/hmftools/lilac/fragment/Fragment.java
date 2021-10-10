@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
@@ -219,7 +220,7 @@ public class Fragment
         {
             int locus = mNucleotideLoci.get(i);
 
-            if((locus % 3) != 0)
+            if(!isCodonMultiple(locus))
                 continue;
 
             // since loci are ordered, can just check the next 2 expected do exist
