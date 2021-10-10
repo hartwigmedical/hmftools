@@ -19,6 +19,9 @@ import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -185,7 +188,7 @@ public class ImpactClassifier
         }
         else
         {
-            if(transImpact.hasCodingData() && transImpact.proteinContext().hasProteinChange())
+            if(transImpact.hasAminoAcids() && transImpact.proteinContext().hasProteinChange())
             {
                 if(!transImpact.proteinContext().AltAminoAcids.equals(STOP_AMINO_ACID)) // stop-gained is a special case
                     transImpact.addEffect(MISSENSE);
@@ -199,7 +202,7 @@ public class ImpactClassifier
 
     private void checkStopStartCodons(final VariantTransImpact transImpact)
     {
-        if(!transImpact.hasCodingData())
+        if(!transImpact.hasAminoAcids())
             return;
 
         VariantEffect ssEffect = checkStopStartCodons(
@@ -247,4 +250,22 @@ public class ImpactClassifier
 
         return null;
     }
+
+    public List<VariantData> processPhasedVariants(int currentLocalPhaseSet)
+    {
+        if(!mPhasedVariants.hasCompleteVariants(currentLocalPhaseSet))
+            return null;
+
+        List<PhasedVariants> phasedVariantList = mPhasedVariants.popCompletePhasedVariants(currentLocalPhaseSet);
+        List<VariantData> variants = Lists.newArrayList();
+
+        for(PhasedVariants phasedVariants : phasedVariantList)
+        {
+            PhasedVariantClassifier.reclassifyPhasedVariants(phasedVariants, mRefGenome);
+            variants.addAll(phasedVariants.variants());
+        }
+
+        return variants;
+    }
+
 }

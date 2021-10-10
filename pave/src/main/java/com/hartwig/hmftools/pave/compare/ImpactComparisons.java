@@ -155,16 +155,10 @@ public class ImpactComparisons
 
     private void processPhasedVariants(int currentLocalPhaseSet)
     {
-        if(!mImpactClassifier.phasedVariants().hasCompleteVariants(currentLocalPhaseSet))
-            return;
+        List<VariantData> variants = mImpactClassifier.processPhasedVariants(currentLocalPhaseSet);
 
-        List<PhasedVariants> phasedVariantList = mImpactClassifier.phasedVariants().popCompletePhasedVariants(currentLocalPhaseSet);
-
-        for(PhasedVariants phasedVariants : phasedVariantList)
-        {
-            PhasedVariantClassifier.reclassifyPhasedVariants(phasedVariants);
-            phasedVariants.Variants.forEach(x -> processVariant(x.sampleId(), x, x.refData()));
-        }
+        if(variants != null)
+            variants.forEach(x -> processVariant(x.sampleId(), x, x.refData()));
     }
 
     private void processVariant(final String sampleId, final VariantData variant, final RefVariantData refVariant)
@@ -230,6 +224,7 @@ public class ImpactComparisons
         }
 
         processPhasedVariants(NO_LOCAL_PHASE_SET);
+        mImpactClassifier.phasedVariants().clear();
 
         PV_LOGGER.debug("sample({}) processed {} variants and transcripts({})",
                 sampleId, mTotalComparisons, mMatchedCount);

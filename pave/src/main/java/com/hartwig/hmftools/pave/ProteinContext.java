@@ -8,6 +8,7 @@ public class ProteinContext
 {
     public String RefCodonBases; // coding bases rounded expanded to cover whole codons
     public String AltCodonBases; // as above but with ref swapped for alt
+    public int[] RefCodonsRange; // as above but with ref swapped for alt
 
     public int CodonIndex; // first amino acid affected
     public String RefAminoAcids;
@@ -17,6 +18,7 @@ public class ProteinContext
     {
         RefCodonBases = "";
         AltCodonBases = "";
+        RefCodonsRange = new int[] {0, 0};
 
         CodonIndex = 0;
         RefAminoAcids = "";

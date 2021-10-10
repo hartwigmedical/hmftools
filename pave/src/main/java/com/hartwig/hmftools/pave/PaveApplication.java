@@ -158,16 +158,10 @@ public class PaveApplication
 
     private void processPhasedVariants(int currentLocalPhaseSet)
     {
-        if(!mImpactClassifier.phasedVariants().hasCompleteVariants(currentLocalPhaseSet))
-            return;
+        List<VariantData> variants = mImpactClassifier.processPhasedVariants(currentLocalPhaseSet);
 
-        List<PhasedVariants> phasedVariantList = mImpactClassifier.phasedVariants().popCompletePhasedVariants(currentLocalPhaseSet);
-
-        for(PhasedVariants phasedVariants : phasedVariantList)
-        {
-            PhasedVariantClassifier.reclassifyPhasedVariants(phasedVariants);
-            phasedVariants.Variants.forEach(x -> processVariant(x));
-        }
+        if(variants != null)
+            variants.forEach(x -> processVariant(x));
     }
 
     private void processVariant(final VariantData variant)

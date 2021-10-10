@@ -40,6 +40,9 @@ public final class ProteinUtils
         String refCodingBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
         pc.RefCodonBases = refCodingBases;
 
+        pc.RefCodonsRange[SE_START] = cc.CodingPositionRange[SE_START];
+        pc.RefCodonsRange[SE_END] = cc.CodingPositionRange[SE_END];
+
         int upstreamOpenCodonBases = getOpenCodonBases(cc.UpstreamPhase);
 
         if(upstreamOpenCodonBases > 0)
@@ -49,9 +52,15 @@ public final class ProteinUtils
             String upstreamBases = getExtraBases(transData, refGenome, variant.Chromosome, exon, upstreamStartPos, upstreamOpenCodonBases, searchUp);
 
             if(posStrand)
+            {
                 pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
+                pc.RefCodonsRange[SE_START] -= upstreamOpenCodonBases;
+            }
             else
+            {
                 pc.RefCodonBases += upstreamBases;
+                pc.RefCodonsRange[SE_END] += upstreamOpenCodonBases;
+            }
         }
 
         int downstreamMod = pc.RefCodonBases.length() % 3;
@@ -67,9 +76,15 @@ public final class ProteinUtils
             String downstreamBases = getExtraBases(transData, refGenome, variant.Chromosome, exon, downstreamStartPos, downstreamOpenCodonBases, searchUp);
 
             if(posStrand)
+            {
                 pc.RefCodonBases += downstreamBases;
+                pc.RefCodonsRange[SE_END] += downstreamOpenCodonBases;
+            }
             else
+            {
                 pc.RefCodonBases = downstreamBases + pc.RefCodonBases;
+                pc.RefCodonsRange[SE_START] -= downstreamOpenCodonBases;
+            }
         }
 
         // if codon(s) are incomplete then either a bug or an issue with the transcript definition
@@ -80,19 +95,6 @@ public final class ProteinUtils
         String ref = cc.codingRef(variant);
         String alt = cc.codingAlt(variant);
         int varLength = ref.length();
-
-        // an INDEL causing a frameshift can exit at this point since the novel AAs do not need to be recorded
-        // (and may gone on until the end of the transcript)
-        if(variant.isIndel())
-        {
-            int adjustedCodingBases = variant.isInsert() ? variant.baseDiff() : ref.length() - alt.length();
-
-            if((adjustedCodingBases % 3) != 0)
-            {
-                cc.IsFrameShift = true;
-                return pc;
-            }
-        }
 
         // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
 
@@ -107,9 +109,6 @@ public final class ProteinUtils
             {
                 pc.AltCodonBases = alt + pc.RefCodonBases.substring(varLength);
             }
-
-            pc.RefAminoAcids = Codons.aminoAcidFromBases(pc.RefCodonBases);
-            pc.AltAminoAcids = Codons.aminoAcidFromBases(pc.AltCodonBases);
         }
         else
         {
@@ -130,7 +129,28 @@ public final class ProteinUtils
             {
                 pc.AltCodonBases = pc.RefCodonBases.substring(0, codonBaseLength - varLength) + alt;
             }
+        }
 
+        // an INDEL causing a frameshift can exit at this point since the novel AAs do not need to be recorded
+        // (and may gone on until the end of the transcript)
+        if(variant.isIndel())
+        {
+            int adjustedCodingBases = variant.isInsert() ? variant.baseDiff() : ref.length() - alt.length();
+
+            if((adjustedCodingBases % 3) != 0)
+            {
+                cc.IsFrameShift = true;
+                return pc;
+            }
+        }
+
+        if(posStrand)
+        {
+            pc.RefAminoAcids = Codons.aminoAcidFromBases(pc.RefCodonBases);
+            pc.AltAminoAcids = Codons.aminoAcidFromBases(pc.AltCodonBases);
+        }
+        else
+        {
             pc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.RefCodonBases));
             pc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.AltCodonBases));
         }

@@ -74,7 +74,9 @@ public class VariantTransImpact
 
     public ProteinContext proteinContext() { return mProteinContext; }
     public void setProteinContext(final ProteinContext context) { mProteinContext = context; }
-    public boolean hasCodingData() { return mProteinContext != null && mProteinContext.hasCodingBases(); }
+
+    public boolean hasAminoAcids() { return mProteinContext != null && mProteinContext.hasCodingBases(); }
+    public boolean hasProteinContext() { return mProteinContext != null; }
 
     public void markSpliceRegion() { mInSpliceRegion = true; }
     public boolean inSpliceRegion() { return mInSpliceRegion; }
@@ -112,7 +114,7 @@ public class VariantTransImpact
 
     public String toString()
     {
-        return String.format("trans(%s) effects(%s) inSplice(%s)",
-                TransData.TransName, effectsStr(), mInSpliceRegion);
+        return String.format("trans(%s) region(%s - %s) effects(%s) inSplice(%s)",
+                TransData.TransName, mCodingContext.RegionType, mCodingContext.CodingType, effectsStr(), mInSpliceRegion);
     }
 }

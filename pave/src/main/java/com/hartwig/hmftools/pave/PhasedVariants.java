@@ -1,19 +1,26 @@
 package com.hartwig.hmftools.pave;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class PhasedVariants
 {
     public final int LocalPhaseId;
-    public final Set<VariantData> Variants;
+
+    private final List<VariantData> mVariants;
 
     public PhasedVariants(final int localPhaseId)
     {
         LocalPhaseId = localPhaseId;
-        Variants = Sets.newHashSet();
+        mVariants = Lists.newArrayList();
+    }
+
+    public List<VariantData> variants() { return mVariants; }
+
+    public void addVariant(final VariantData variant)
+    {
+        if(!mVariants.contains(variant))
+            mVariants.add(variant);
     }
 }
