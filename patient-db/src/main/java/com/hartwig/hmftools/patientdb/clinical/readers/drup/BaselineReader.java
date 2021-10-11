@@ -86,7 +86,7 @@ class BaselineReader {
 
         String baselinePrimaryTumor = null;
         for (EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            setInformedConsent(baselineBuilder, baselineEvent, consentConfigMap);
+            setInformedConsent(baselineBuilder, baselineEvent, consentConfigMap, patient.patientId());
             if (baselinePrimaryTumor == null) {
                 baselinePrimaryTumor = getBaselinePrimaryTumor(baselineEvent, baselineBuilder);
             }
@@ -170,7 +170,7 @@ class BaselineReader {
     }
 
     private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) {
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String patientId) {
         for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
                 builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
@@ -178,9 +178,15 @@ class BaselineReader {
 
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());
-                builder.pifVersion(extractConsentConfigInfo != null ? extractConsentConfigInfo.pifVersion() : null);
-                builder.inDatabase(extractConsentConfigInfo != null ? extractConsentConfigInfo.inHMF(): null);
-                builder.outsideEU(extractConsentConfigInfo != null ? extractConsentConfigInfo.outsideEU(): null);
+                builder.pifVersion(extractConsentConfigInfo != null && patientId.startsWith(extractConsentConfigInfo.cohort())
+                        ? extractConsentConfigInfo.pifVersion()
+                        : null);
+                builder.inDatabase(extractConsentConfigInfo != null && patientId.startsWith(extractConsentConfigInfo.cohort())
+                        ? extractConsentConfigInfo.inHMF()
+                        : null);
+                builder.outsideEU(extractConsentConfigInfo != null && patientId.startsWith(extractConsentConfigInfo.cohort())
+                        ? extractConsentConfigInfo.outsideEU()
+                        : null);
             }
         }
     }

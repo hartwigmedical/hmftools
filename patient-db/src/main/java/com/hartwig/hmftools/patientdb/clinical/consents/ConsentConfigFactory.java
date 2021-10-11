@@ -36,11 +36,12 @@ public class ConsentConfigFactory {
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(DELIMITER);
 
-            if (parts.length == 3) {
+            if (parts.length == 4) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
-                        .inHMF(parts[1].equals("Yes"))
-                        .outsideEU(parts[2].equals("Yes"))
+                        .cohort(parts[1])
+                        .inHMF(parts[2].equals("Yes"))
+                        .outsideEU(parts[3].equals("Yes"))
                         .pif222(null)
                         .pif222Values(null)
                         .pif221(null)
@@ -51,15 +52,16 @@ public class ConsentConfigFactory {
                         .pif26BUGValues(null)
                         .build();
                 consentConfigMap.put(parts[0], consentConfig);
-            } else if (parts.length == 7) {
+            } else if (parts.length == 8) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
+                        .cohort(parts[1])
                         .inHMF(null)
                         .outsideEU(null)
-                        .pif222(parts[3])
-                        .pif222Values(parts[4].isEmpty() ? null : Lists.newArrayList(parts[4].split("/")))
-                        .pif221(parts[5])
-                        .pif221Values(parts[6].isEmpty() ? null : Lists.newArrayList(parts[6].split("/")))
+                        .pif222(parts[4])
+                        .pif222Values(parts[5].isEmpty() ? null : Lists.newArrayList(parts[5].split("/")))
+                        .pif221(parts[6])
+                        .pif221Values(parts[7].isEmpty() ? null : Lists.newArrayList(parts[7].split("/")))
                         .pif26HMF(null)
                         .pif26HMFValues(null)
                         .pif26BUG(null)
@@ -67,19 +69,20 @@ public class ConsentConfigFactory {
                         .build();
 
                 consentConfigMap.put(parts[0], consentConfig);
-            } else if (parts.length == 11) {
+            } else if (parts.length == 12) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
+                        .cohort(parts[1])
                         .inHMF(null)
                         .outsideEU(null)
-                        .pif222(parts[3])
-                        .pif222Values(parts[4].isEmpty() ? null : Lists.newArrayList(parts[4].split("/")))
-                        .pif221(parts[5])
-                        .pif221Values(parts[6].isEmpty() ? null : Lists.newArrayList(parts[6].split("/")))
-                        .pif26HMF(parts[7])
-                        .pif26HMFValues(parts[8].isEmpty() ? null : Lists.newArrayList(parts[8].split("/")))
-                        .pif26BUG(parts[9])
-                        .pif26BUGValues(parts[10].isEmpty() ? null : Lists.newArrayList(parts[10].split("/")))
+                        .pif222(parts[4])
+                        .pif222Values(parts[5].isEmpty() ? null : Lists.newArrayList(parts[5].split("/")))
+                        .pif221(parts[6])
+                        .pif221Values(parts[7].isEmpty() ? null : Lists.newArrayList(parts[7].split("/")))
+                        .pif26HMF(parts[8])
+                        .pif26HMFValues(parts[9].isEmpty() ? null : Lists.newArrayList(parts[9].split("/")))
+                        .pif26BUG(parts[10])
+                        .pif26BUGValues(parts[11].isEmpty() ? null : Lists.newArrayList(parts[11].split("/")))
                         .build();
 
                 consentConfigMap.put(parts[0], consentConfig);

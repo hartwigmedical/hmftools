@@ -20,6 +20,7 @@ public class ConsentConfigFactoryTest {
         ConsentConfig consentConfig1 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("1");
 
         assertEquals("1", consentConfig1.pifVersion());
+        assertEquals("CPCT", consentConfig1.cohort());
         assertNull(consentConfig1.inHMF());
         assertNull(consentConfig1.outsideEU());
         assertEquals("",consentConfig1.pif222());
@@ -33,6 +34,7 @@ public class ConsentConfigFactoryTest {
 
         ConsentConfig consentConfig2 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("2");
         assertEquals("2", consentConfig2.pifVersion());
+        assertEquals("CPCT", consentConfig2.cohort());
         assertNull(consentConfig2.inHMF());
         assertNull(consentConfig2.outsideEU());
         assertEquals("Yes",consentConfig2.pif222());
@@ -46,6 +48,7 @@ public class ConsentConfigFactoryTest {
 
         ConsentConfig consentConfig3 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("3");
         assertEquals("3", consentConfig3.pifVersion());
+        assertEquals("WIDE", consentConfig3.cohort());
         assertTrue(consentConfig3.inHMF());
         assertTrue(consentConfig3.outsideEU());
         assertNull(consentConfig3.pif222());

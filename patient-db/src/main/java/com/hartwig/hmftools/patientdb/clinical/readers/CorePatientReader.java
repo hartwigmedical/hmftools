@@ -34,7 +34,7 @@ public class CorePatientReader {
         ConsentConfig extractConsentConfigInfo = consentConfigMap.get(cohort);
 
         return new Patient(patientIdentifier,
-                toBaselineData(curatedPrimaryTumor, extractConsentConfigInfo),
+                toBaselineData(curatedPrimaryTumor, extractConsentConfigInfo, patientIdentifier),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -46,15 +46,21 @@ public class CorePatientReader {
     }
 
     @NotNull
-    private BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor,
-            @Nullable ConsentConfig extractConsentConfigInfo) {
+    private BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor, @Nullable ConsentConfig extractConsentConfigInfo,
+            @NotNull String patientIdentifier) {
 
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)
-                .pifVersion(extractConsentConfigInfo != null ? extractConsentConfigInfo.pifVersion() : null)
-                .inDatabase(extractConsentConfigInfo != null ? extractConsentConfigInfo.inHMF() : null)
-                .outsideEU(extractConsentConfigInfo != null ? extractConsentConfigInfo.outsideEU() : null)
+                .pifVersion(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                        ? extractConsentConfigInfo.pifVersion()
+                        : null)
+                .inDatabase(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                        ? extractConsentConfigInfo.inHMF()
+                        : null)
+                .outsideEU(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                        ? extractConsentConfigInfo.outsideEU()
+                        : null)
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)

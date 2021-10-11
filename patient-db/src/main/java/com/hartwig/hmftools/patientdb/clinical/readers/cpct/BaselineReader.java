@@ -91,7 +91,7 @@ class BaselineReader {
             setDemographyData(baselineBuilder, studyEvent);
             setPrimaryTumorData(patient.patientId(), baselineBuilder, studyEvent);
             setRegistrationAndBirthData(baselineBuilder, studyEvent);
-            setInformedConsents(baselineBuilder, studyEvent, consentConfigMap);
+            setInformedConsents(baselineBuilder, studyEvent, consentConfigMap, patient.patientId());
         }
 
         setDeathData(baselineBuilder, patient);
@@ -214,7 +214,7 @@ class BaselineReader {
     }
 
     private void setInformedConsents(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) {
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String patientId) {
         for (EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
             boolean inDatabase = false;
             boolean outsideEU = false;
@@ -225,46 +225,47 @@ class BaselineReader {
                 if (pifVersion != null) {
                     ConsentConfig extractConsentConfigInfo = consentConfigMap.get(pifVersion);
 
-                    List<String> pif222Values = extractConsentConfigInfo.pif222Values();
-                    List<String> pif221Values = extractConsentConfigInfo.pif221Values();
-                    List<String> pif26HMFValues = extractConsentConfigInfo.pif26HMFValues();
-                    List<String> pif26BUGValues = extractConsentConfigInfo.pif26BUGValues();
+                    if (patientId.startsWith(extractConsentConfigInfo.cohort())) {
+                        List<String> pif222Values = extractConsentConfigInfo.pif222Values();
+                        List<String> pif221Values = extractConsentConfigInfo.pif221Values();
+                        List<String> pif26HMFValues = extractConsentConfigInfo.pif26HMFValues();
+                        List<String> pif26BUGValues = extractConsentConfigInfo.pif26BUGValues();
 
-                    String pif222 = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF222);
-                    String pif221 = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF221);
-                    String pif26HMF = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26HMF);
-                    String pif26Bug = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26BUG);
+                        String pif222 = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF222);
+                        String pif221 = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF221);
+                        String pif26HMF = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26HMF);
+                        String pif26Bug = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26BUG);
 
-                    if (pif222Values == null && pif221Values == null && pif26HMFValues == null && pif26BUGValues == null) {
-                        inDatabase = true;
-                        outsideEU = true;
-                    } else {
-                        if (pif222Values != null && pif222Values.contains(pif222)) {
-                            if (pif222 != null && pif222.equals(extractConsentConfigInfo.pif222())) {
-                                inDatabase = true;
+                        if (pif222Values == null && pif221Values == null && pif26HMFValues == null && pif26BUGValues == null) {
+                            inDatabase = true;
+                            outsideEU = true;
+                        } else {
+                            if (pif222Values != null && pif222Values.contains(pif222)) {
+                                if (pif222 != null && pif222.equals(extractConsentConfigInfo.pif222())) {
+                                    inDatabase = true;
+                                }
                             }
-                        }
 
-                        if (pif221Values != null && pif221Values.contains(pif221)) {
-                            if (pif221 != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
-                                outsideEU = true;
+                            if (pif221Values != null && pif221Values.contains(pif221)) {
+                                if (pif221 != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
+                                    outsideEU = true;
+                                }
                             }
-                        }
 
-                        if (pif26HMFValues != null && pif26HMFValues.contains(pif26HMF)) {
-                            if (pif26HMF != null && pif26HMF.equals(extractConsentConfigInfo.pif26HMF())) {
-                                inDatabase = true;
+                            if (pif26HMFValues != null && pif26HMFValues.contains(pif26HMF)) {
+                                if (pif26HMF != null && pif26HMF.equals(extractConsentConfigInfo.pif26HMF())) {
+                                    inDatabase = true;
+                                }
                             }
-                        }
 
-                        if (pif26BUGValues != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
-                            if (pif26Bug != null && pif26Bug.equals(extractConsentConfigInfo.pif26BUG())) {
-                                outsideEU = true;
+                            if (pif26BUGValues != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
+                                if (pif26Bug != null && pif26Bug.equals(extractConsentConfigInfo.pif26BUG())) {
+                                    outsideEU = true;
+                                }
                             }
                         }
                     }
                 }
-
                 builder.informedConsentStatus(informedConsentForm.status());
                 builder.pifVersion(pifVersion);
                 builder.inDatabase(inDatabase);
