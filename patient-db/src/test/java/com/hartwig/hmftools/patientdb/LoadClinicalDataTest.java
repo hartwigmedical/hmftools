@@ -61,7 +61,7 @@ public class LoadClinicalDataTest {
 
         List<ValidationFinding> allFindings = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : cpctEcrfModel.patients()) {
-            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV));
+            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
             assertPatient(patient);
             allFindings.addAll(PatientValidator.validatePatient(patient));
         }

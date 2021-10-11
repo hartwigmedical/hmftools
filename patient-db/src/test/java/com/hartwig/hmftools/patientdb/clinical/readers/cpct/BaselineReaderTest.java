@@ -26,7 +26,7 @@ public class BaselineReaderTest {
                 new BaselineReader(TestCuratorFactory.primaryTumorCurator(), hospitals);
 
         EcrfPatient cpctPatient = new EcrfPatient("patient", Maps.newHashMap(), Lists.newArrayList());
-        BaselineData baselineData = baselineReader.read(cpctPatient, ConsentConfigFactory.read(INFORMED_CONSENTS_TSV));
+        BaselineData baselineData = baselineReader.read(cpctPatient, ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
         assertNotNull(baselineData);
     }
 }

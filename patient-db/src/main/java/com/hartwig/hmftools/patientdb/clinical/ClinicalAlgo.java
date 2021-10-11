@@ -116,7 +116,7 @@ public class ClinicalAlgo {
 
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap));
+            patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, sequencedSamples.get(0).cohortId()));
         }
         return patients;
     }
@@ -133,7 +133,11 @@ public class ClinicalAlgo {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
-                patients.add(widePatientReader.read(patientId, primaryTumor, sequencedSamplesOnly(tumorSamples), consentConfigMap));
+                patients.add(widePatientReader.read(patientId,
+                        primaryTumor,
+                        sequencedSamplesOnly(tumorSamples),
+                        consentConfigMap,
+                        tumorSamples.get(0).cohortId()));
             }
         }
         return patients;
@@ -151,7 +155,11 @@ public class ClinicalAlgo {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
-                patients.add(corePatientReader.read(patientId, primaryTumor, sequencedSamplesOnly(tumorSamples), consentConfigMap, cohort));
+                patients.add(corePatientReader.read(patientId,
+                        primaryTumor,
+                        sequencedSamplesOnly(tumorSamples),
+                        consentConfigMap,
+                        tumorSamples.get(0).cohortId()));
             }
         }
 

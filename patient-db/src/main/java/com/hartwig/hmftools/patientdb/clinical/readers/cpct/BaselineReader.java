@@ -75,7 +75,7 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull EcrfPatient patient, @NotNull Map<String, ConsentConfig> consentConfigMap) throws IOException {
+    BaselineData read(@NotNull EcrfPatient patient, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) throws IOException {
 
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
@@ -91,7 +91,7 @@ class BaselineReader {
             setDemographyData(baselineBuilder, studyEvent);
             setPrimaryTumorData(patient.patientId(), baselineBuilder, studyEvent);
             setRegistrationAndBirthData(baselineBuilder, studyEvent);
-            setInformedConsents(baselineBuilder, studyEvent, consentConfigMap, patient.patientId());
+            setInformedConsents(baselineBuilder, studyEvent, consentConfigMap, cohortId);
         }
 
         setDeathData(baselineBuilder, patient);
@@ -214,7 +214,7 @@ class BaselineReader {
     }
 
     private void setInformedConsents(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
-            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String patientId) {
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
         for (EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
             boolean inDatabase = false;
             boolean outsideEU = false;
@@ -225,7 +225,7 @@ class BaselineReader {
                 if (pifVersion != null) {
                     ConsentConfig extractConsentConfigInfo = consentConfigMap.get(pifVersion);
 
-                    if (patientId.startsWith(extractConsentConfigInfo.cohort())) {
+                    if ((extractConsentConfigInfo.cohort().contains(cohortId))) {
                         List<String> pif222Values = extractConsentConfigInfo.pif222Values();
                         List<String> pif221Values = extractConsentConfigInfo.pif221Values();
                         List<String> pif26HMFValues = extractConsentConfigInfo.pif26HMFValues();

@@ -15,7 +15,7 @@ public abstract class ConsentConfig {
     public abstract String pifVersion();
 
     @NotNull
-    public abstract String cohort();
+    public abstract List<String> cohort();
 
     @Nullable
     public abstract Boolean inHMF();

@@ -33,7 +33,7 @@ public class CpctPatientReaderTest {
         EcrfPatient ecrfPatient = new EcrfPatient("empty", Maps.newHashMap(), Lists.newArrayList());
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read(ecrfPatient, Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV));
+        Patient patient = patientReader.read(ecrfPatient, Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
 
         assertNotNull(patient);
     }

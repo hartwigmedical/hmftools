@@ -61,8 +61,8 @@ public class WidePatientReader {
 
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
-            @NotNull List<SampleData> sequencedSamples, @NotNull Map<String, ConsentConfig> consentConfigMap) {
-        BaselineData baseline = buildBaselineData(patientIdentifier, limsPrimaryTumorLocation, consentConfigMap);
+            @NotNull List<SampleData> sequencedSamples, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
+        BaselineData baseline = buildBaselineData(patientIdentifier, limsPrimaryTumorLocation, consentConfigMap, cohortId);
         MatchResult<BiopsyData> matchedBiopsies = buildMatchedBiopsies(patientIdentifier, sequencedSamples);
         List<BiopsyTreatmentData> treatments = buildBiopsyTreatmentData(patientIdentifier);
         List<BiopsyTreatmentResponseData> responses = buildBiopsyTreatmentResponseData(patientIdentifier);
@@ -81,7 +81,7 @@ public class WidePatientReader {
 
     @NotNull
     private BaselineData buildBaselineData(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) {
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
         List<WideFiveDays> fiveDays = dataForPatient(wideEcrfModel.fiveDays(), patientIdentifier);
 
         // There is one entry per biopsy but we assume they all share the same baseline information
@@ -91,18 +91,18 @@ public class WidePatientReader {
 
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(patientIdentifier, limsPrimaryTumorLocation);
 
-        ConsentConfig extractConsentConfigInfo = consentConfigMap.get("WIDE");
+        ConsentConfig extractConsentConfigInfo = consentConfigMap.get(cohortId);
 
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(informedConsentDate)
-                .pifVersion(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                .pifVersion(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
                         ? extractConsentConfigInfo.pifVersion()
                         : null)
-                .inDatabase(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                .inDatabase(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
                         ? extractConsentConfigInfo.inHMF()
                         : null)
-                .outsideEU(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                .outsideEU(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
                         ? extractConsentConfigInfo.outsideEU()
                         : null)
                 .gender(gender)

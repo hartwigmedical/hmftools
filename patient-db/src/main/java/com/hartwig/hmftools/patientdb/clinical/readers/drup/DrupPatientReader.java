@@ -36,8 +36,8 @@ public class DrupPatientReader implements EcrfPatientReader {
     @NotNull
     @Override
     public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) {
-        BaselineData baselineData = baselineReader.read(ecrfPatient, consentConfigMap);
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
+        BaselineData baselineData = baselineReader.read(ecrfPatient, consentConfigMap, cohortId);
         PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
         List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedPrimaryTumor());
 

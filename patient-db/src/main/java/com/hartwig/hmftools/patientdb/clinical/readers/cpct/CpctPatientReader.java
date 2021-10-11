@@ -50,8 +50,8 @@ public class CpctPatientReader implements EcrfPatientReader {
     @NotNull
     @Override
     public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) throws IOException {
-        BaselineData baselineData = baselineReader.read(ecrfPatient, consentConfigMap);
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) throws IOException {
+        BaselineData baselineData = baselineReader.read(ecrfPatient, consentConfigMap, cohortId);
         PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
         List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedPrimaryTumor());
         List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);

@@ -89,7 +89,7 @@ public class WidePatientReaderTest {
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV));
+        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "WIDE");
 
         assertNotNull(patient);
     }

@@ -15,5 +15,5 @@ public interface EcrfPatientReader {
 
     @NotNull
     Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) throws IOException;
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) throws IOException;
 }

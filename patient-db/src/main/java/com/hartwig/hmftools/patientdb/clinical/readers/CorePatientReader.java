@@ -34,7 +34,7 @@ public class CorePatientReader {
         ConsentConfig extractConsentConfigInfo = consentConfigMap.get(cohort);
 
         return new Patient(patientIdentifier,
-                toBaselineData(curatedPrimaryTumor, extractConsentConfigInfo, patientIdentifier),
+                toBaselineData(curatedPrimaryTumor, extractConsentConfigInfo, cohort),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -47,18 +47,18 @@ public class CorePatientReader {
 
     @NotNull
     private BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor, @Nullable ConsentConfig extractConsentConfigInfo,
-            @NotNull String patientIdentifier) {
+            @NotNull String cohortId) {
 
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)
-                .pifVersion(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                .pifVersion(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
                         ? extractConsentConfigInfo.pifVersion()
                         : null)
-                .inDatabase(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                .inDatabase(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
                         ? extractConsentConfigInfo.inHMF()
                         : null)
-                .outsideEU(extractConsentConfigInfo != null && patientIdentifier.startsWith(extractConsentConfigInfo.cohort())
+                .outsideEU(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
                         ? extractConsentConfigInfo.outsideEU()
                         : null)
                 .gender(null)
