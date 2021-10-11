@@ -25,6 +25,7 @@ import com.hartwig.hmftools.patientdb.clinical.readers.drup.DrupPatientReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -113,10 +114,13 @@ public class ClinicalAlgo {
             @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Map<String, ConsentConfig> consentConfigMap)
             throws IOException {
         List<Patient> patients = Lists.newArrayList();
-
+        String cohortId = Strings.EMPTY;
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, sequencedSamples.get(0).cohortId()));
+            if (!sequencedSamples.isEmpty()) {
+                cohortId = sequencedSamples.get(0).cohortId();
+            }
+            patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, cohortId));
         }
         return patients;
     }
