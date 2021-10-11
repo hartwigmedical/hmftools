@@ -114,12 +114,10 @@ public class ClinicalAlgo {
             @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Map<String, ConsentConfig> consentConfigMap)
             throws IOException {
         List<Patient> patients = Lists.newArrayList();
-        String cohortId = Strings.EMPTY;
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            if (!sequencedSamples.isEmpty()) {
-                cohortId = sequencedSamples.get(0).cohortId();
-            }
+            String cohortId = !sequencedSamples.isEmpty() ? sequencedSamples.get(0).cohortId() : Strings.EMPTY;
+
             patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, cohortId));
         }
         return patients;
