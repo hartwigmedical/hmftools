@@ -33,7 +33,7 @@ public class ConsentConfigFactory {
             if (parts.length == 2) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
-                        .cohort(Lists.newArrayList(parts[1].split(", ")))
+                        .cohort(Lists.newArrayList(parts[1].split(",")))
                         .inHMF(null)
                         .outsideEU(null)
                         .pif222(null)
@@ -49,7 +49,7 @@ public class ConsentConfigFactory {
             } else if (parts.length == 4) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
-                        .cohort(Lists.newArrayList(parts[1].split(", ")))
+                        .cohort(Lists.newArrayList(parts[1].split(",")))
                         .inHMF(parts[2].equals("Yes"))
                         .outsideEU(parts[3].equals("Yes"))
                         .pif222(null)
@@ -65,7 +65,7 @@ public class ConsentConfigFactory {
             } else if (parts.length == 8) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
-                        .cohort(Lists.newArrayList(parts[1].split(", ")))
+                        .cohort(Lists.newArrayList(parts[1].split(",")))
                         .inHMF(null)
                         .outsideEU(null)
                         .pif222(parts[4])
@@ -82,7 +82,7 @@ public class ConsentConfigFactory {
             } else if (parts.length == 12) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
-                        .cohort(Lists.newArrayList(parts[1].split(", ")))
+                        .cohort(Lists.newArrayList(parts[1].split(",")))
                         .inHMF(null)
                         .outsideEU(null)
                         .pif222(parts[4])
