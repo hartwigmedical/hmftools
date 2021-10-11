@@ -15,6 +15,12 @@ public abstract class ConsentConfig {
     public abstract String pifVersion();
 
     @Nullable
+    public abstract Boolean inHMF();
+
+    @Nullable
+    public abstract Boolean outsideEU();
+
+    @Nullable
     public abstract String pif222();
 
     @Nullable

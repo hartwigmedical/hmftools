@@ -14,6 +14,7 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
@@ -60,7 +61,7 @@ public class LoadClinicalDataTest {
 
         List<ValidationFinding> allFindings = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : cpctEcrfModel.patients()) {
-            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), INFORMED_CONSENTS_TSV);
+            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV));
             assertPatient(patient);
             allFindings.addAll(PatientValidator.validatePatient(patient));
         }

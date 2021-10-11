@@ -75,9 +75,7 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull EcrfPatient patient, @NotNull String consentConfigTsv) throws IOException {
-
-        Map<String, ConsentConfig> consentConfigMap = ConsentConfigFactory.read(consentConfigTsv);
+    BaselineData read(@NotNull EcrfPatient patient, @NotNull Map<String, ConsentConfig> consentConfigMap) throws IOException {
 
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
@@ -266,7 +264,6 @@ class BaselineReader {
                         }
                     }
                 }
-
 
                 builder.informedConsentStatus(informedConsentForm.status());
                 builder.pifVersion(pifVersion);

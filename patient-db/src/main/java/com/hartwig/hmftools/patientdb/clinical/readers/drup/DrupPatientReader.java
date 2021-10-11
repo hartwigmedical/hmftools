@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.drup;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
@@ -33,8 +35,9 @@ public class DrupPatientReader implements EcrfPatientReader {
 
     @NotNull
     @Override
-    public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples, @NotNull String consentConfigTsv) {
-        BaselineData baselineData = baselineReader.read(ecrfPatient);
+    public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples,
+            @NotNull Map<String, ConsentConfig> consentConfigMap) {
+        BaselineData baselineData = baselineReader.read(ecrfPatient, consentConfigMap);
         PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
         List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedPrimaryTumor());
 

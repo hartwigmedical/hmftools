@@ -7,9 +7,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.time.LocalDate;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
@@ -22,6 +25,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class WidePatientReaderTest {
+
+    private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     @Test
     public void canInterpretPathologySampleId() {
@@ -70,7 +75,7 @@ public class WidePatientReaderTest {
     }
 
     @Test
-    public void canLoadEmptyPatient() {
+    public void canLoadEmptyPatient() throws IOException {
         WideEcrfModel wideEcrfModel = ImmutableWideEcrfModel.builder()
                 .preAvlTreatments(Lists.newArrayList())
                 .biopsies(Lists.newArrayList())
@@ -84,7 +89,7 @@ public class WidePatientReaderTest {
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample));
+        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV));
 
         assertNotNull(patient);
     }

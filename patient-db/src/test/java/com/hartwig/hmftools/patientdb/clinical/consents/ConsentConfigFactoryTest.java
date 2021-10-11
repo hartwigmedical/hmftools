@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.clinical.consents;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -19,6 +20,8 @@ public class ConsentConfigFactoryTest {
         ConsentConfig consentConfig1 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("1");
 
         assertEquals("1", consentConfig1.pifVersion());
+        assertNull(consentConfig1.inHMF());
+        assertNull(consentConfig1.outsideEU());
         assertEquals("",consentConfig1.pif222());
         assertNull(consentConfig1.pif222Values());
         assertEquals("",consentConfig1.pif221());
@@ -30,6 +33,8 @@ public class ConsentConfigFactoryTest {
 
         ConsentConfig consentConfig2 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("2");
         assertEquals("2", consentConfig2.pifVersion());
+        assertNull(consentConfig2.inHMF());
+        assertNull(consentConfig2.outsideEU());
         assertEquals("Yes",consentConfig2.pif222());
         assertEquals(Lists.newArrayList("Yes", "No"), consentConfig2.pif222Values());
         assertEquals("Yes",consentConfig2.pif221());
@@ -38,5 +43,18 @@ public class ConsentConfigFactoryTest {
         assertNull(consentConfig2.pif26HMFValues());
         assertNull(consentConfig2.pif26BUG());
         assertNull(consentConfig2.pif26BUGValues());
+
+        ConsentConfig consentConfig3 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("3");
+        assertEquals("3", consentConfig3.pifVersion());
+        assertTrue(consentConfig3.inHMF());
+        assertTrue(consentConfig3.outsideEU());
+        assertNull(consentConfig3.pif222());
+        assertNull(consentConfig3.pif222Values());
+        assertNull(consentConfig3.pif221());
+        assertNull(consentConfig3.pif221Values());
+        assertNull(consentConfig3.pif26HMF());
+        assertNull(consentConfig3.pif26HMFValues());
+        assertNull(consentConfig3.pif26BUG());
+        assertNull(consentConfig3.pif26BUGValues());
     }
 }
