@@ -83,7 +83,7 @@ public class PhasedVariantClassifier
         if(phasedVariants.variants().stream().noneMatch(x -> x.isIndel()))
             return;
 
-        // PV_LOGGER.debug("processing {} phased variant variants with localPhaseId({})", variants.Variants.size(), variants.LocalPhaseId);
+        // PV_LOGGER.trace("processing {} phased variant variants with localPhaseId({})", variants.Variants.size(), variants.LocalPhaseId);
 
         // assume that variants are ordered  by ascending position
         VariantData variant = phasedVariants.variants().get(0);
@@ -149,7 +149,7 @@ public class PhasedVariantClassifier
 
         if(!isCodonMultiple(indelBaseTotal))
         {
-            PV_LOGGER.debug("lps({}) varCount({}) out-of-frame with indel base count({})",
+            PV_LOGGER.trace("lps({}) varCount({}) out-of-frame with indel base count({})",
                     localPhaseSet, variants.size(), indelBaseTotal);
             return;
         }
@@ -185,14 +185,14 @@ public class PhasedVariantClassifier
 
             if(variant.isBaseChange() && !overlapsOnStart && !overlapsOnEnd)
             {
-                PV_LOGGER.debug("lps({}) var({}) skip no overlap range({} -> {}) vs last({}) and next({})",
+                PV_LOGGER.trace("lps({}) var({}) skip no overlap range({} -> {}) vs last({}) and next({})",
                         localPhaseSet, variant, refCodonStart, refCodonEnd, lastRefCodonEnd, nextRefCodonStart);
                 continue;
             }
 
             combinedRefCodons += transImpact.proteinContext().RefCodonBases;
 
-            PV_LOGGER.debug("lps({}) var({}) codons({} -> {}) range({} - {}) overlaps(start={} end={})",
+            PV_LOGGER.trace("lps({}) var({}) codons({} -> {}) range({} - {}) overlaps(start={} end={})",
                     localPhaseSet, variant, transImpact.proteinContext().RefCodonBases, transImpact.proteinContext().AltCodonBases,
                     refCodonStart, refCodonEnd, overlapsOnStart, overlapsOnEnd);
 
@@ -239,7 +239,7 @@ public class PhasedVariantClassifier
             combinedEffect = indelBaseTotal > 0 ? INFRAME_INSERTION : INFRAME_DELETION;
         }
 
-        PV_LOGGER.debug("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
+        PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
                 localPhaseSet, variants.size(), combinedEffect, refAminoAcids, altAminoAcids);
 
         for(VariantTransImpact transImpact : transImpacts)

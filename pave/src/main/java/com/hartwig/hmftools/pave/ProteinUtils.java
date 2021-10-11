@@ -114,10 +114,22 @@ public final class ProteinUtils
         {
             int codonBaseLength = pc.RefCodonBases.length();
 
+            // MNV example: var GCT > AAT, with ref: ACG-CTA and alt: ACA-ATA
+            // var length = 3, open codon bases = 1 (ie A), ref codon length = 6
+            // working: alt = post-var (6 - 3 - 1) AC + alt AAT + upstream pre-var (6 - 1) A
+
+            // DEL example: var TACA > T, with ref: CGT-ACA-ACA and alt: CGT-...-ACA
+            // var length = 4, open codon bases = 2 (ie AC), ref codon length = 9
+            // working: alt = post-var (9 - 4 - 2) CGT + alt A (modified as above) + upstream pre-var (9 - 2) CA
+
             // adjustments for inserts since they have the ref stuck on the upper side
             if(variant.isInsert())
             {
                 alt = alt.substring(1) + refCodingBases;
+            }
+            else if(variant.isDeletion())
+            {
+                alt = refCodingBases.substring(refCodingBases.length() - 1);
             }
 
             if(upstreamOpenCodonBases > 0)
