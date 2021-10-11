@@ -59,5 +59,19 @@ public class ConsentConfigFactoryTest {
         assertNull(consentConfig3.pif26HMFValues());
         assertNull(consentConfig3.pif26BUG());
         assertNull(consentConfig3.pif26BUGValues());
+
+        ConsentConfig consentConfig4 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("4");
+        assertEquals("4", consentConfig4.pifVersion());
+        assertEquals("CPCT", consentConfig4.cohort());
+        assertNull(consentConfig4.inHMF());
+        assertNull(consentConfig4.outsideEU());
+        assertNull(consentConfig4.pif222());
+        assertNull(consentConfig4.pif222Values());
+        assertNull(consentConfig4.pif221());
+        assertNull(consentConfig4.pif221Values());
+        assertNull(consentConfig4.pif26HMF());
+        assertNull(consentConfig4.pif26HMFValues());
+        assertNull(consentConfig4.pif26BUG());
+        assertNull(consentConfig4.pif26BUGValues());
     }
 }

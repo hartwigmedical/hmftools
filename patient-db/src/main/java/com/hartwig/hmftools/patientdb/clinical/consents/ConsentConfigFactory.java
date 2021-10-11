@@ -9,11 +9,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortConfig;
-import com.hartwig.hmftools.common.lims.cohort.ImmutableLimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModel;
-import com.hartwig.hmftools.common.lims.cohort.LimsCohortModelFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +31,23 @@ public class ConsentConfigFactory {
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(DELIMITER);
 
-            if (parts.length == 4) {
+            if (parts.length == 2) {
+                ConsentConfig consentConfig = ImmutableConsentConfig.builder()
+                        .pifVersion(parts[0])
+                        .cohort(parts[1])
+                        .inHMF(null)
+                        .outsideEU(null)
+                        .pif222(null)
+                        .pif222Values(null)
+                        .pif221(null)
+                        .pif221Values(null)
+                        .pif26HMF(null)
+                        .pif26HMFValues(null)
+                        .pif26BUG(null)
+                        .pif26BUGValues(null)
+                        .build();
+                consentConfigMap.put(parts[0], consentConfig);
+            } else if (parts.length == 4) {
                 ConsentConfig consentConfig = ImmutableConsentConfig.builder()
                         .pifVersion(parts[0])
                         .cohort(parts[1])
