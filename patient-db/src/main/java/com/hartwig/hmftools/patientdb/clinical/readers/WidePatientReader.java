@@ -93,7 +93,6 @@ public class WidePatientReader {
 
         ConsentConfig extractConsentConfigInfo = consentConfigMap.get("WIDE");
 
-        LOGGER.info(extractConsentConfigInfo);
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(informedConsentDate)
