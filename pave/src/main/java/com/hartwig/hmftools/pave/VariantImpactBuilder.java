@@ -91,7 +91,7 @@ public class VariantImpactBuilder
                 {
                     if(otherReportableTrans.contains(transImpact.TransData.TransName))
                     {
-                        CodingEffect codingEffect = determineCodingEffect(variant, transImpact);
+                        CodingEffect codingEffect = determineCodingEffect(transImpact);
 
                         sj.add(toOtherReportableTransInfo(
                                 transImpact.TransData.TransName, transImpact.hgvsCoding(), transImpact.hgvsProtein(),
@@ -114,14 +114,14 @@ public class VariantImpactBuilder
 
         if(worstImpact != null)
         {
-            worstCodingEffect = determineCodingEffect(variant, worstImpact);
+            worstCodingEffect = determineCodingEffect(worstImpact);
         }
 
         if(worstCanonicalImpact != null)
         {
             canonicalGeneName = worstGeneName;
             canonicalEffect = worstCanonicalImpact.effectsStr();
-            canonicalCodingEffect = determineCodingEffect(variant, worstCanonicalImpact);
+            canonicalCodingEffect = determineCodingEffect(worstCanonicalImpact);
             canonicalHgvsCodingImpact = worstCanonicalImpact.hgvsCoding();
             canonicalHgvsProteinImpact = worstCanonicalImpact.hgvsProtein();
             canonicalTranscript = worstCanonicalImpact.TransData.TransName;
@@ -133,18 +133,12 @@ public class VariantImpactBuilder
                 canonicalHgvsProteinImpact, canonicalSpliceRegion, otherReportableTransData, worstCodingEffect, variant.getImpacts().size());
     }
 
-    private CodingEffect determineCodingEffect(final VariantData variant, final VariantTransImpact transImpact)
+    private CodingEffect determineCodingEffect(final VariantTransImpact transImpact)
     {
         final List<CodingEffect> simplifiedEffects = transImpact.effects().stream().map(CodingEffect::effect).collect(Collectors.toList());
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
-        {
-            // TODO - remove if classified earlier?
-            if(transImpact.phasedFrameshift())
-                return MISSENSE;
-
             return NONSENSE_OR_FRAMESHIFT;
-        }
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE)))
             return SPLICE;

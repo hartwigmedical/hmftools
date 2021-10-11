@@ -216,39 +216,42 @@ public class PhasedVariantClassifier
             combinedAltCodons += transImpact.proteinContext().AltCodonBases;
         }
 
-        if(hasOverlaps)
-            return;
-
         // check synonymous vs missense from combined bases
         final TranscriptData transData = transImpacts.get(0).TransData;
 
-        String refAminoAcids = "";
-        String altAminoAcids = "";
-
-        if(transData.posStrand())
-        {
-            refAminoAcids = Codons.aminoAcidFromBases(combinedRefCodons);
-            altAminoAcids = Codons.aminoAcidFromBases(combinedAltCodons);
-        }
-        else
-        {
-            refAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedRefCodons));
-            altAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedAltCodons));
-        }
-
         VariantEffect combinedEffect;
+
+        String combinedRefAminoAcids = "";
+        String combinedAltAminoAcids = "";
 
         if(indelBaseTotal == 0)
         {
-            combinedEffect = refAminoAcids.equals(altAminoAcids) ? SYNONYMOUS : MISSENSE;
+            if(hasOverlaps)
+                return;
+
+            if(transData.posStrand())
+            {
+                combinedRefAminoAcids = Codons.aminoAcidFromBases(combinedRefCodons);
+                combinedAltAminoAcids = Codons.aminoAcidFromBases(combinedAltCodons);
+            }
+            else
+            {
+                combinedRefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedRefCodons));
+                combinedAltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedAltCodons));
+            }
+
+            combinedEffect = combinedRefAminoAcids.equals(combinedAltAminoAcids) ? SYNONYMOUS : MISSENSE;
+
+            PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
+                    localPhaseSet, variants.size(), combinedEffect, combinedRefAminoAcids, combinedAltAminoAcids);
         }
         else
         {
             combinedEffect = indelBaseTotal > 0 ? PHASED_INFRAME_INSERTION : PHASED_INFRAME_DELETION;
-        }
 
-        PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
-                localPhaseSet, variants.size(), combinedEffect, refAminoAcids, altAminoAcids);
+            PV_LOGGER.trace("lps({}) varCount({}) indelBaseTotal({})",
+                    localPhaseSet, variants.size(), indelBaseTotal);
+        }
 
         for(VariantTransImpact transImpact : transImpacts)
         {
@@ -256,8 +259,13 @@ public class PhasedVariantClassifier
                 continue;
 
             transImpact.markPhasedFrameshift();
-            transImpact.proteinContext().RefAminoAcids = refAminoAcids;
-            transImpact.proteinContext().AltAminoAcids = altAminoAcids;
+
+            if(indelBaseTotal == 0)
+            {
+                transImpact.proteinContext().RefAminoAcids = combinedRefAminoAcids;
+                transImpact.proteinContext().AltAminoAcids = combinedAltAminoAcids;
+            }
+
             transImpact.codingContext().IsFrameShift = false;
             transImpact.effects().remove(FRAMESHIFT);
             transImpact.addEffect(combinedEffect);
