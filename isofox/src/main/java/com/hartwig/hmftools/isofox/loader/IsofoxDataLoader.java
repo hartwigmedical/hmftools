@@ -72,13 +72,11 @@ import org.jooq.Result;
 public class IsofoxDataLoader
 {
     private final DataLoaderConfig mConfig;
-    private final CohortGenePercentiles mGeneDistribution;
     private final Map<String,Integer> mAltSjCohortFrequency;
 
     public IsofoxDataLoader(final CommandLine cmd)
     {
         mConfig = new DataLoaderConfig(cmd);
-        mGeneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
 
         mAltSjCohortFrequency = Maps.newHashMap();
         loadAltSjCohortFile();
@@ -183,6 +181,8 @@ public class IsofoxDataLoader
         if(!mConfig.loadDataType(DataLoadType.GENE_EXPRESSION))
             return;
 
+        CohortGenePercentiles geneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
+
         final List<GeneExpression> geneExpressions = Lists.newArrayList();
 
         final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
@@ -208,10 +208,10 @@ public class IsofoxDataLoader
 
                 double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_TPM)]);
 
-                double medianCancer = mGeneDistribution.getTpmMedian(geneId, cancerType);
-                double percentileCancer = mGeneDistribution.getTpmPercentile(geneId, cancerType, tpm);
-                double medianCohort = mGeneDistribution.getTpmMedian(geneId, PAN_CANCER);
-                double percentileCohort = mGeneDistribution.getTpmPercentile(geneId, PAN_CANCER, tpm);
+                double medianCancer = geneDistribution.getTpmMedian(geneId, cancerType);
+                double percentileCancer = geneDistribution.getTpmPercentile(geneId, cancerType, tpm);
+                double medianCohort = geneDistribution.getTpmMedian(geneId, PAN_CANCER);
+                double percentileCohort = geneDistribution.getTpmPercentile(geneId, PAN_CANCER, tpm);
 
                 geneExpressions.add(ImmutableGeneExpression.builder()
                         .geneName(items[fieldsIndexMap.get(FLD_GENE_NAME)])
