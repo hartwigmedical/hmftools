@@ -199,7 +199,7 @@ public class PhasedVariantClassifier
             // fill in any missing gaps in the codons
             if(lastRefCodonEnd > 0 && !overlapsOnStart && refCodonStart > lastRefCodonEnd + 1)
             {
-                String gapCodonBases = refGenome.getBaseString(chromosome, lastRefCodonEnd, refCodonStart);
+                String gapCodonBases = refGenome.getBaseString(chromosome, lastRefCodonEnd + 1, refCodonStart - 1);
                 combinedRefCodons += gapCodonBases;
                 combinedAltCodons += gapCodonBases;
             }

@@ -62,6 +62,7 @@ public class VariantTransImpact
     public List<VariantEffect> effects() { return mEffects; }
 
     public VariantEffect topEffect() { return mEffects.get(0); };
+    public boolean hasEffect(final VariantEffect effect) { return mEffects.contains(effect); };
     public int topRank() { return mEffects.stream().mapToInt(x -> x.rank()).max().orElse(-1); }
 
     public CodingContext codingContext() { return mCodingContext; }
