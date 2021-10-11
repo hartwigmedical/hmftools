@@ -133,16 +133,8 @@ public final class ProteinUtils
 
         // an INDEL causing a frameshift can exit at this point since the novel AAs do not need to be recorded
         // (and may gone on until the end of the transcript)
-        if(variant.isIndel())
-        {
-            int adjustedCodingBases = variant.isInsert() ? variant.baseDiff() : ref.length() - alt.length();
-
-            if((adjustedCodingBases % 3) != 0)
-            {
-                cc.IsFrameShift = true;
-                return pc;
-            }
-        }
+        if(cc.IsFrameShift)
+            return pc;
 
         if(posStrand)
         {

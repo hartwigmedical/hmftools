@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -215,10 +216,11 @@ public final class CodingUtils
                 String ref = cc.codingRef(variant);
                 String alt = cc.codingAlt(variant);
 
-                adjustedCodingBases = variant.isInsert() ? variant.baseDiff() : ref.length() - alt.length();
+                cc.DeletedCodingBases = ref.length() - alt.length();
+                adjustedCodingBases = cc.DeletedCodingBases;
             }
 
-            if((adjustedCodingBases % 3) != 0)
+            if(!isCodonMultiple(adjustedCodingBases))
                 cc.IsFrameShift = true;
         }
 

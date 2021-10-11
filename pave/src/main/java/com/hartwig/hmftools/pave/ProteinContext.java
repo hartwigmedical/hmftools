@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.StringJoiner;
@@ -29,7 +30,7 @@ public class ProteinContext
 
     public boolean hasProteinChange() { return !RefAminoAcids.equals(AltAminoAcids); }
 
-    public boolean validRefCodon() { return (RefCodonBases.length() % 3) == 0; }
+    public boolean validRefCodon() { return isCodonMultiple(RefCodonBases.length()); }
 
     public String hgvsStr() { return "tbc"; }
 

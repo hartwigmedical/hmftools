@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
 public class CodingContext
 {
-    public TranscriptRegionType RegionType; // favours more impactful type
+    public TranscriptRegionType RegionType; // favours more impactful type if it spans
     public TranscriptCodingType CodingType;
     public int ExonRank;
 
@@ -23,6 +23,7 @@ public class CodingContext
     public int[] CodingPositionRange;
     public boolean SpansSpiceJunction;
     public boolean IsFrameShift;
+    public int DeletedCodingBases;
 
     public String SpliceDonorAcceptorBases;
 
@@ -35,10 +36,14 @@ public class CodingContext
         RegionType = TranscriptRegionType.UNKNOWN;
         CodingType = TranscriptCodingType.UNKNOWN;
         ExonRank = 0;
+
+        CodingBase = 0;
+        CodingPositionRange = new int[] {0, 0};
         SpansSpiceJunction = false;
         IsFrameShift = false;
         SpliceDonorAcceptorBases = "";
-        CodingPositionRange = new int[] {0, 0};
+        DeletedCodingBases = 0;
+
         NonCodingBaseDistance = 0;
         UpstreamPhase = PHASE_NONE;
         BasesToLastExonJunction = -1;
