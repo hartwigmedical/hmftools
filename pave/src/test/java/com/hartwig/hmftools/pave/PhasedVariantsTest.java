@@ -8,14 +8,13 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
-import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
@@ -68,12 +67,13 @@ public class PhasedVariantsTest
 
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
+        assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(INFRAME_DELETION));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(INFRAME_DELETION));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
 
         // as before but with an extra base so remaining out of frame
         var1.getImpacts().clear();
@@ -131,12 +131,13 @@ public class PhasedVariantsTest
 
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
+        assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(INFRAME_INSERTION));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_INSERTION));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(INFRAME_INSERTION));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_INSERTION));
 
         // again but remaining out-of-frame
         var1.getImpacts().clear();
@@ -191,6 +192,7 @@ public class PhasedVariantsTest
 
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
+        assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
         assertTrue(impact1.hasEffect(MISSENSE));
@@ -221,6 +223,7 @@ public class PhasedVariantsTest
 
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
+        assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
         assertTrue(impact1.hasEffect(SYNONYMOUS));
@@ -271,9 +274,10 @@ public class PhasedVariantsTest
 
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(INFRAME_DELETION));
-        assertTrue(impact2.hasEffect(INFRAME_DELETION));
-        assertTrue(impact3.hasEffect(INFRAME_DELETION));
+        assertTrue(impact1.phasedFrameshift());
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
+        assertTrue(impact3.hasEffect(PHASED_INFRAME_DELETION));
     }
 
     private VariantTransImpact classifyVariant(final VariantData var, final TranscriptData transData)

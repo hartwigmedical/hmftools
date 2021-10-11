@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPositio
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_END_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_POSITIONS;
@@ -20,6 +21,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 public final class SpliceClassifier
@@ -68,7 +70,7 @@ public final class SpliceClassifier
     }
 
     public static void classifyVariant(
-            final VariantData variant, final VariantTransImpact transImpact, final ExonData exon)
+            final VariantData variant, final VariantTransImpact transImpact, final ExonData exon, final RefGenomeInterface refGenome)
     {
         /* Rules:
             - mark any variant hitting splice donor sites (D-1,D+1,D+2,D+5) as splice_donor_variant
@@ -81,43 +83,51 @@ public final class SpliceClassifier
         */
 
         final TranscriptData transData = transImpact.TransData;
+        boolean posStrand = transData.posStrand();
 
-        int donorExonPos = transData.posStrand() ? exon.End : exon.Start;
-        int acceptorExonPos = transData.posStrand() ? exon.Start : exon.End;
+        int donorExonPos = posStrand ? exon.End : exon.Start;
+        int acceptorExonPos = posStrand ? exon.Start : exon.End;
         boolean isDonorCandidate = abs(variant.Position - donorExonPos) < abs(variant.Position - acceptorExonPos);
 
         VariantEffect spliceEffect = null;
         StringJoiner baseInfo = new StringJoiner(ITEM_DELIM);
 
-        if(transImpact.codingContext().IsFrameShift) // CHECK: unless can be realigned to be frameshift
-            return;
+        // if(transImpact.codingContext().IsFrameShift) // CHECK: unless can be realigned to be frameshift
+        //    return;
 
         // CHECK - for INDELs check repeat sequence vs microhomology condition described above
 
-        if(variant.isInsert())
+        if(variant.isIndel())
         {
-            // to be confirmed which ought to have any effect, probably needs to take into effect the impact on the actual bases
-            int position = transData.posStrand() ? variant.Position : variant.EndPosition;
+            if(refAltSpliceBasesMatch(variant, refGenome, exon, posStrand))
+                return;
 
-            if(isDonorCandidate)
+            spliceEffect = isDonorCandidate ? SPLICE_DONOR : SPLICE_ACCEPTOR;
+
+            // gather up affected bases purely for annotation
+            if(variant.isDeletion())
             {
-                int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
-
-                if(SPLICE_DONOR_POSITIONS.contains(donorPos))
+                for(Integer position : variant.altPositions())
                 {
-                    spliceEffect = SPLICE_DONOR;
-                    baseInfo.add(String.format("D%d", donorPos));
+                    if(isDonorCandidate)
+                    {
+                        int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
+
+                        if(SPLICE_DONOR_POSITIONS.contains(donorPos))
+                            baseInfo.add(String.format("D%d", donorPos));
+                    }
+                    else
+                    {
+                        int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
+
+                        if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
+                            baseInfo.add(String.format("A%d", acceptorPos));
+                    }
                 }
             }
             else
             {
-                int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
-
-                if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
-                {
-                    spliceEffect = SPLICE_ACCEPTOR;
-                    baseInfo.add(String.format("A%d", acceptorPos));
-                }
+                // TO-DO impact bases for inserts
             }
         }
         else if(variant.isDeletion())
@@ -171,9 +181,9 @@ public final class SpliceClassifier
                     {
                         if(acceptorPos == SPLICE_ACCEPTOR_END_RANGE)
                         {
-                            final char requiredBase = transData.posStrand() ? 'G' : 'C';
+                            char requiredA3Base = posStrand ? 'G' : 'C';
 
-                            if(altBase == requiredBase)
+                            if(altBase == requiredA3Base)
                             {
                                 spliceEffect = SPLICE_ACCEPTOR;
                                 baseInfo.add(String.format("A%d", acceptorPos));
@@ -196,23 +206,153 @@ public final class SpliceClassifier
         }
     }
 
-        /* from Purple:
+    public static boolean refAltSpliceBasesMatch(
+            final VariantData variant, final RefGenomeInterface refGenome, final ExonData exon, boolean posStrand)
+    {
+        if(variant.isBaseChange())
+            return false;
 
-        //if(donorPos == SPLICE_DONOR_END_RANGE)
-        //    deletesD5 = true;
+        int donorExonPos = posStrand ? exon.End : exon.Start;
+        int acceptorExonPos = posStrand ? exon.Start : exon.End;
+        boolean isDonorCandidate = abs(variant.Position - donorExonPos) < abs(variant.Position - acceptorExonPos);
+        int exonBoundary = (isDonorCandidate == posStrand) ? exon.End : exon.Start;
 
-        // if deletes any coding bases then handle in normal logic
-        //boolean deletesD5 = false;
+        // work out offset for A1-3 and D-1 to D5 relative to the exon boundary
+        // in this check 0 = last base of exon, -1 the first of the intron and 5 is the 5th intronic base
+        int rangeStart;
+        int rangeEnd;
 
-        if(!transData.posStrand() && deletesD5)
+        if(posStrand)
         {
-            int exonDistanceStart = abs(variant.Position + 1 - donorExonPos);
-            int exonDistanceEnd = abs(variant.Position + variant.Ref.length() - 11 - donorExonPos);
-            int exonDistance = min(exonDistanceStart, exonDistanceEnd);
-
-            if(exonDistance - variant.Ref.length() <= SPLICE_DONOR_END_RANGE)
-                return new VariantTransImpact(transData, SPLICE_DONOR_EFFECT);
+            rangeStart = isDonorCandidate ? 0 : -3;
+            rangeEnd = isDonorCandidate ? 5 : -1;
         }
-        */
+        else
+        {
+            rangeStart = isDonorCandidate ? -5 : 1;
+            rangeEnd = isDonorCandidate ? 0 : 3;
+        }
 
+        int posRangeStart = exonBoundary + rangeStart;
+        int posRangeEnd = exonBoundary + rangeEnd;
+
+        String refSpliceBases = refGenome.getBaseString(variant.Chromosome, posRangeStart, posRangeEnd);
+
+        // form the alt bases for this same splice region
+        String altSpliceBases = "";
+
+        if(variant.isInsert())
+        {
+            // should have been checked already that the variant does impact the splice regions but check again
+            if(posStrand)
+            {
+                // +ve strand: exon end / splice donor is 30, D-1 to D5 is 30-35, insert must be 30-34 to impact
+                // -ve strand: exon end / splice donor is 20, D-1 to D5 is 15-20, insert must be 15-19 to impact
+                if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
+                    return true;
+            }
+            else
+            {
+                if(isDonorCandidate)
+                {
+                    // -ve strand: exon end / splice donor is 20, D-1 to D5 is 15-20, insert must be 15-19 to impact
+                    if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
+                        return true;
+                }
+                else
+                {
+                    // -ve strand: exon start / splice acceptor is 30, A3-A1 is 31-33, insert must be 30 or more to impact
+                    if(variant.Position >= posRangeEnd || variant.EndPosition < posRangeStart) // one base earlier
+                        return true;
+
+                }
+            }
+
+            int preInsertBases = variant.Position - posRangeStart;
+
+            if(preInsertBases > 0)
+                altSpliceBases = refGenome.getBaseString(variant.Chromosome, posRangeStart, posRangeStart + preInsertBases - 1);
+
+            // special case of last exon base before acceptor on neg strand
+            if(!posStrand && variant.Position == exonBoundary && !isDonorCandidate)
+                altSpliceBases += variant.Alt.substring(1);
+            else
+                altSpliceBases += variant.Alt;
+
+            // eg say insert ref is at 0 (ie last exon base) and inserts 2 bases then need the next 3 ref bases
+            int nextRefBase = variant.Position + variant.baseDiff() + 1;
+            int postInsertBases = posRangeEnd - nextRefBase;
+
+            if(postInsertBases >= 0)
+                altSpliceBases += refGenome.getBaseString(variant.Chromosome, variant.EndPosition, variant.EndPosition + postInsertBases);
+
+            // if too many bases have been retrieved, take the last X to match the length of the ref
+            if(altSpliceBases.length() > refSpliceBases.length())
+            {
+                if(isDonorCandidate == posStrand)
+                    altSpliceBases = altSpliceBases.substring(0, refSpliceBases.length());
+                else
+                    altSpliceBases = altSpliceBases.substring(altSpliceBases.length() - refSpliceBases.length());
+            }
+        }
+        else
+        {
+            // check for no impact
+            if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
+                return true;
+
+            // check for the entire region being deleted
+            if(variant.Position < posRangeStart && variant.EndPosition > posRangeEnd)
+                return false;
+
+            // otherwise the DEL partially overlaps the splice region and so ref bases need only be pulled from one side or the other
+            if(variant.Position >= posRangeStart)
+            {
+                // start of region is preserved, so take the ref portion up to the first deleted base
+                int preDelBases = variant.Position - posRangeStart;
+
+                if(preDelBases >= 0)
+                    altSpliceBases = refGenome.getBaseString(variant.Chromosome, variant.Position - preDelBases, variant.Position);
+
+                int postDelBases = posRangeEnd - variant.Position;
+
+                if(postDelBases > 0)
+                    altSpliceBases += refGenome.getBaseString(variant.Chromosome, variant.EndPosition, variant.EndPosition + postDelBases - 1);
+            }
+            else
+            {
+                // the DEL starts before the splice range and ends in it, so the comparison alt bases are all pulled from lower positions only
+                int preDelBases = variant.EndPosition - posRangeStart;
+                altSpliceBases = refGenome.getBaseString(variant.Chromosome, variant.Position - (preDelBases - 1), variant.Position);
+
+                int postDelBases = posRangeEnd - variant.EndPosition;
+
+                if(postDelBases >= 0)
+                    altSpliceBases += refGenome.getBaseString(variant.Chromosome, variant.EndPosition, variant.EndPosition + postDelBases);
+            }
+        }
+
+        if(altSpliceBases.length() != refSpliceBases.length())
+        {
+            PV_LOGGER.error("splice base mismatch: ref({}) vs alt({})", refSpliceBases, altSpliceBases);
+            return false;
+        }
+
+        if(!isDonorCandidate)
+        {
+            // the A3 base of the acceptor region is only check if it becomes a G (or C on -ve strand)
+            char refA3Base = posStrand ? refSpliceBases.charAt(0) : refSpliceBases.charAt(2);
+            char altA3Base = posStrand ? altSpliceBases.charAt(0) : altSpliceBases.charAt(2);
+            char requiredA3Base = posStrand ? 'G' : 'C';
+
+            if(refA3Base == altA3Base || altA3Base != requiredA3Base)
+            {
+                // exclude this base from comparison
+                refSpliceBases = posStrand ? refSpliceBases.substring(1, 3) : refSpliceBases.substring(0, 2);
+                altSpliceBases = posStrand ? altSpliceBases.substring(1, 3) : altSpliceBases.substring(0, 2);
+            }
+        }
+
+        return refSpliceBases.equals(altSpliceBases);
+    }
 }

@@ -73,12 +73,12 @@ public class ImpactClassifier
             if(!inSpliceRegion && isWithinSpliceRegion(variant, transData, exon))
             {
                 inSpliceRegion = true;
-                SpliceClassifier.classifyVariant(variant, transImpact, exon);
+                SpliceClassifier.classifyVariant(variant, transImpact, exon, mRefGenome);
             }
             else if(!inSpliceRegion && nextExon != null && isWithinSpliceRegion(variant, transData, nextExon))
             {
                 inSpliceRegion = true;
-                SpliceClassifier.classifyVariant(variant, transImpact, nextExon);
+                SpliceClassifier.classifyVariant(variant, transImpact, nextExon, mRefGenome);
             }
 
             if(variant.altPositionsOverlap(exon.Start, exon.End))
@@ -210,7 +210,12 @@ public class ImpactClassifier
 
         if(ssEffect != null)
         {
-            transImpact.effects().remove(MISSENSE); // superceded if present so remove
+            if(ssEffect == STOP_LOST || ssEffect == START_LOST)
+            {
+                transImpact.effects().remove(MISSENSE); // superceded if present so remove
+                transImpact.effects().remove(FRAMESHIFT); // superceded if present so remove
+            }
+
             transImpact.addEffect(ssEffect);
         }
     }

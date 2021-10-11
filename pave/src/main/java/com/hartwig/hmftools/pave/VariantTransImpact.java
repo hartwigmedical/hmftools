@@ -96,7 +96,7 @@ public class VariantTransImpact
 
     public static String csvHeader()
     {
-        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,Effects";
+        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,Effects,PhasedInframe";
     }
 
     public String toCsv()
@@ -108,6 +108,7 @@ public class VariantTransImpact
         sj.add(String.valueOf(!TransData.nonCoding()));
         sj.add(String.valueOf(TransData.Strand));
         sj.add(String.valueOf(mInSpliceRegion));
+        sj.add(String.valueOf(mPhasedFrameshift));
         sj.add(effectsToCsv());
 
         return sj.toString();

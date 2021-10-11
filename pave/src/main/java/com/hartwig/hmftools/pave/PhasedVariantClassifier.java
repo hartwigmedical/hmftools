@@ -7,6 +7,11 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIF
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
@@ -133,6 +138,9 @@ public class PhasedVariantClassifier
         if(transImpacts.stream().filter(x -> x.hasProteinContext()).count() < 2)
             return;
 
+        if(transImpacts.stream().anyMatch(x -> x.hasEffect(STOP_LOST) || x.hasEffect(START_LOST)))
+            return;
+
         // ignore if not phased anyway
         int indelBaseTotal = 0;
 
@@ -236,7 +244,7 @@ public class PhasedVariantClassifier
         }
         else
         {
-            combinedEffect = indelBaseTotal > 0 ? INFRAME_INSERTION : INFRAME_DELETION;
+            combinedEffect = indelBaseTotal > 0 ? PHASED_INFRAME_INSERTION : PHASED_INFRAME_DELETION;
         }
 
         PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
@@ -247,6 +255,7 @@ public class PhasedVariantClassifier
             if(!transImpact.hasProteinContext())
                 continue;
 
+            transImpact.markPhasedFrameshift();
             transImpact.proteinContext().RefAminoAcids = refAminoAcids;
             transImpact.proteinContext().AltAminoAcids = altAminoAcids;
             transImpact.codingContext().IsFrameShift = false;
