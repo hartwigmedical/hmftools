@@ -96,7 +96,7 @@ public class VariantTransImpact
 
     public static String csvHeader()
     {
-        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,Effects,PhasedInframe";
+        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,PhasedInframe,Effects";
     }
 
     public String toCsv()

@@ -238,7 +238,12 @@ public class VariantData
     public static String csvCommonHeader()
     {
         StringJoiner sj = new StringJoiner(DELIM);
-        sj.add("Chromosome").add("Position").add("Type").add("Ref").add("Alt");
+        sj.add("Chromosome");
+        sj.add("Position");
+        sj.add("Type");
+        sj.add("Ref");
+        sj.add("Alt");
+        sj.add("LPS");
         return sj.toString();
     }
 
@@ -250,6 +255,7 @@ public class VariantData
         sj.add(String.valueOf(type()));
         sj.add(Ref);
         sj.add(Alt);
+        sj.add(String.valueOf(mLocalPhaseSetId));
 
         return sj.toString();
     }

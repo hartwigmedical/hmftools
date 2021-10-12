@@ -8,8 +8,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
@@ -31,6 +33,7 @@ public class ComparisonConfig
     public final boolean OnlyDriverGenes;
     public final boolean OnlyCanonical;
     public final boolean WriteTransData;
+    public final boolean WriteMatches;
     public final String OutputDir;
     public final String OutputId;
 
@@ -40,6 +43,7 @@ public class ComparisonConfig
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String OUTPUT_ID = "output_id";
     private static final String WRITE_TRANS_DATA = "write_trans_data";
+    private static final String WRITE_MATCHES = "write_matches";
 
     public ComparisonConfig(final CommandLine cmd)
     {
@@ -58,6 +62,7 @@ public class ComparisonConfig
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
+        WriteMatches = cmd.hasOption(WRITE_MATCHES);
     }
 
     @NotNull
@@ -69,15 +74,15 @@ public class ComparisonConfig
         options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
         options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");
         options.addOption(WRITE_TRANS_DATA, false, "Write detailed transcript impact data");
+        options.addOption(WRITE_MATCHES, false, "Write matches as well");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         addEnsemblDir(options);
         addDatabaseCmdLineArgs(options);
-
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        addLoggingOptions(options);
+        addOutputDir(options);
         options.addOption(OUTPUT_ID, true, "Output file identifier");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
 
         return options;
     }

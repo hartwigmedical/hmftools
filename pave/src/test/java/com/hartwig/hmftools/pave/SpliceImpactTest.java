@@ -282,15 +282,15 @@ public class SpliceImpactTest
         // starting at A2, inserting matching bases
         pos = 18;
         ref = mRefBases.substring(pos, pos + 1);
-        alt = ref + mRefBases.substring(17, 20);
+        alt = mRefBases.substring(17, 20);
         var = new VariantData(CHR_1, pos, ref, alt);
 
         assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
 
-        // starting at A1, inserting matching bases
+        // starting at A1 - makes no difference since inserts into exon
         pos = 19;
         ref = mRefBases.substring(pos, pos + 1);
-        alt = ref + mRefBases.substring(17, 20);
+        alt = "AAAA";
         var = new VariantData(CHR_1, pos, ref, alt);
 
         assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
@@ -374,14 +374,14 @@ public class SpliceImpactTest
 
         pos = 14;
         ref = mRefBases.substring(pos, pos + 1);
-        alt = alt = ref + "AAAA";
+        alt = ref + "AAAA";
         var = new VariantData(CHR_1, pos, ref, alt);
 
         assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
 
         pos = 20;
         ref = mRefBases.substring(pos, pos + 1);
-        alt = alt = ref + "AAAA";
+        alt = ref + "AAAA";
         var = new VariantData(CHR_1, pos, ref, alt);
 
         assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));

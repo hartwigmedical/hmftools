@@ -24,6 +24,8 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
+import org.apache.commons.compress.utils.Lists;
+
 public final class SpliceClassifier
 {
     public static boolean isWithinSpliceRegion(final VariantData variant, final TranscriptData transData, final ExonData exon)
@@ -90,70 +92,27 @@ public final class SpliceClassifier
         boolean isDonorCandidate = abs(variant.Position - donorExonPos) < abs(variant.Position - acceptorExonPos);
 
         VariantEffect spliceEffect = null;
-        StringJoiner baseInfo = new StringJoiner(ITEM_DELIM);
 
-        // if(transImpact.codingContext().IsFrameShift) // CHECK: unless can be realigned to be frameshift
-        //    return;
-
-        // CHECK - for INDELs check repeat sequence vs microhomology condition described above
+        List<Integer> altPositions = Lists.newArrayList();
 
         if(variant.isIndel())
         {
-            if(refAltSpliceBasesMatch(variant, refGenome, exon, posStrand))
-                return;
-
-            spliceEffect = isDonorCandidate ? SPLICE_DONOR : SPLICE_ACCEPTOR;
+            // CHECK - for INDELs check repeat sequence vs microhomology?
+            if(!refAltSpliceBasesMatch(variant, refGenome, exon, posStrand))
+            {
+                spliceEffect = isDonorCandidate ? SPLICE_DONOR : SPLICE_ACCEPTOR;
+            }
 
             // gather up affected bases purely for annotation
             if(variant.isDeletion())
             {
-                for(Integer position : variant.altPositions())
-                {
-                    if(isDonorCandidate)
-                    {
-                        int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
-
-                        if(SPLICE_DONOR_POSITIONS.contains(donorPos))
-                            baseInfo.add(String.format("D%d", donorPos));
-                    }
-                    else
-                    {
-                        int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
-
-                        if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
-                            baseInfo.add(String.format("A%d", acceptorPos));
-                    }
-                }
+                altPositions.addAll(variant.altPositions());
             }
             else
             {
-                // TO-DO impact bases for inserts
-            }
-        }
-        else if(variant.isDeletion())
-        {
-            for(Integer position : variant.altPositions())
-            {
-                if(isDonorCandidate)
-                {
-                    int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
+                altPositions.add(variant.Position);
 
-                    if(SPLICE_DONOR_POSITIONS.contains(donorPos))
-                    {
-                        spliceEffect = SPLICE_DONOR;
-                        baseInfo.add(String.format("D%d", donorPos));
-                    }
-                }
-                else
-                {
-                    int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
-
-                    if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
-                    {
-                        spliceEffect = SPLICE_ACCEPTOR;
-                        baseInfo.add(String.format("A%d", acceptorPos));
-                    }
-                }
+                // won't capture the actual bases affected from the inserted bases
             }
         }
         else
@@ -170,7 +129,7 @@ public final class SpliceClassifier
                     if(SPLICE_DONOR_POSITIONS.contains(donorPos))
                     {
                         spliceEffect = SPLICE_DONOR;
-                        baseInfo.add(String.format("D%d", donorPos));
+                        altPositions.add(position);
                     }
                 }
                 else
@@ -186,13 +145,13 @@ public final class SpliceClassifier
                             if(altBase == requiredA3Base)
                             {
                                 spliceEffect = SPLICE_ACCEPTOR;
-                                baseInfo.add(String.format("A%d", acceptorPos));
+                                altPositions.add(position);
                             }
                         }
                         else
                         {
                             spliceEffect = SPLICE_ACCEPTOR;
-                            baseInfo.add(String.format("A%d", acceptorPos));
+                            altPositions.add(position);
                         }
                     }
                 }
@@ -202,6 +161,28 @@ public final class SpliceClassifier
         if(spliceEffect != null)
         {
             transImpact.addEffect(spliceEffect);
+
+            // record the splice bases affected by this variant
+            StringJoiner baseInfo = new StringJoiner(ITEM_DELIM);
+
+            for(Integer position : altPositions)
+            {
+                if(isDonorCandidate)
+                {
+                    int donorPos = getDonorPosition(position, donorExonPos, transData.strand());
+
+                    if(SPLICE_DONOR_POSITIONS.contains(donorPos))
+                        baseInfo.add(String.format("D%d", donorPos));
+                }
+                else
+                {
+                    int acceptorPos = getAcceptorPosition(position, acceptorExonPos, transData.strand());
+
+                    if(SPLICE_ACCEPTOR_POSITIONS.contains(acceptorPos))
+                        baseInfo.add(String.format("A%d", acceptorPos));
+                }
+            }
+
             transImpact.codingContext().SpliceDonorAcceptorBases = baseInfo.toString();
         }
     }
@@ -247,7 +228,7 @@ public final class SpliceClassifier
             if(posStrand)
             {
                 // +ve strand: exon end / splice donor is 30, D-1 to D5 is 30-35, insert must be 30-34 to impact
-                // -ve strand: exon end / splice donor is 20, D-1 to D5 is 15-20, insert must be 15-19 to impact
+                // +ve strand: exon start / splice acceptor is 20, A3-A1 is 17-19, insert must be 17-18 to impact
                 if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
                     return true;
             }

@@ -167,15 +167,19 @@ public class ImpactComparisons
 
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        if(!hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect))
+        boolean diffCodingEffect = hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
+
+        if(!diffCodingEffect)
         {
             ++mMatchedCount;
-            return;
+        }
+        else
+        {
+            logComparison(sampleId, refVariant, variant, variantImpact);
         }
 
-        logComparison(sampleId, refVariant, variant, variantImpact);
-
-        mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant);
+        if(diffCodingEffect || mConfig.WriteMatches)
+            mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant);
     }
 
     private void logComparison(
@@ -278,7 +282,7 @@ public class ImpactComparisons
                         if(samplesProcessed == mConfig.SampleIds.size())
                         {
                             PV_LOGGER.info("all {} samples processed", samplesProcessed);
-                            return;
+                            break;
                         }
                         else
                         {
