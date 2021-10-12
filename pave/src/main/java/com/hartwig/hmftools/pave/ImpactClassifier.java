@@ -9,14 +9,13 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_I
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INTRONIC;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.NON_CODING_TRANSCRIPT;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isSplice;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
@@ -52,12 +51,12 @@ public class ImpactClassifier
 
         VariantTransImpact transImpact = new VariantTransImpact(transData);
 
-        CodingContext codingContext = CodingUtils.determineContext(variant, transData);
-        transImpact.setCodingContext(codingContext);
+        CodingUtils.determineContext(variant, transData, transImpact.codingContext());
+        HgvsCoding.set(variant, transImpact.codingContext());
 
-        if(codingContext.isCoding())
+        if(transImpact.codingContext().isCoding())
         {
-            ProteinContext proteinContext = ProteinUtils.determineContext(variant, codingContext, transData, mRefGenome);
+            ProteinContext proteinContext = ProteinUtils.determineContext(variant, transImpact.codingContext(), transData, mRefGenome);
             transImpact.setProteinContext(proteinContext);
         }
 
@@ -111,6 +110,9 @@ public class ImpactClassifier
             transImpact.markSpliceRegion();
 
         checkStopStartCodons(transImpact);
+
+        if(transImpact.hasProteinContext())
+            transImpact.proteinContext().Hgvs = HgvsProtein.generate(variant, transImpact.proteinContext(), transImpact.topEffect());
 
         return transImpact;
     }
@@ -267,8 +269,8 @@ public class ImpactClassifier
             return transImpact;
 
         // take the least impact effect but favour non-splice over splice
-        boolean nonRaHasSplice = transImpact.hasEffect(SPLICE_ACCEPTOR) || transImpact.hasEffect(SPLICE_DONOR);
-        boolean raHasSplice = raTransImpact.hasEffect(SPLICE_ACCEPTOR) || raTransImpact.hasEffect(SPLICE_DONOR);
+        boolean nonRaHasSplice = transImpact.effects().stream().anyMatch(x -> isSplice(x));
+        boolean raHasSplice = raTransImpact.effects().stream().anyMatch(x -> isSplice(x));
 
         if(raHasSplice && !nonRaHasSplice || transImpact.topRank() <= raTransImpact.topRank())
         {

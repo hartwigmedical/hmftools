@@ -195,7 +195,7 @@ public class SnvMnvImpactTest
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
         assertEquals(1, impact.codingContext().ExonRank);
         assertEquals(CODING, impact.codingContext().CodingType);
-        assertTrue(impact.codingContext().SpansSpiceJunction);
+        assertTrue(impact.codingContext().SpansSpliceJunction);
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
         assertTrue(impact.proteinContext() != null);
@@ -272,7 +272,7 @@ public class SnvMnvImpactTest
         assertEquals(90, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
         assertEquals(1, impact.codingContext().ExonRank);
-        assertTrue(impact.codingContext().SpansSpiceJunction);
+        assertTrue(impact.codingContext().SpansSpliceJunction);
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
@@ -297,7 +297,7 @@ public class SnvMnvImpactTest
         assertEquals(71, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_1, impact.codingContext().UpstreamPhase);
         assertEquals(2, impact.codingContext().ExonRank);
-        assertTrue(impact.codingContext().SpansSpiceJunction);
+        assertTrue(impact.codingContext().SpansSpliceJunction);
 
         assertTrue(impact.proteinContext() != null);
         assertEquals(6, impact.proteinContext().CodonIndex);
@@ -319,7 +319,7 @@ public class SnvMnvImpactTest
         assertEquals(60, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
         assertEquals(3, impact.codingContext().ExonRank);
-        assertTrue(impact.codingContext().SpansSpiceJunction);
+        assertTrue(impact.codingContext().SpansSpliceJunction);
 
         assertTrue(impact.proteinContext() != null);
         assertEquals(6, impact.proteinContext().CodonIndex);

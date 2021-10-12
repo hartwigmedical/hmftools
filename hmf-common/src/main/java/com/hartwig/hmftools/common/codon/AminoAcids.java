@@ -30,7 +30,7 @@ public final class AminoAcids
     public static final Map<String, Set<String>> AMINO_ACID_TO_CODON_MAP = Maps.newHashMap();
 
     // long amino-acid name to single letter
-    private static final Map<String, String> TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER = Maps.newHashMap();
+    public static final Map<String, String> TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER = Maps.newHashMap();
 
     static
     {

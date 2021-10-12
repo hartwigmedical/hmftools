@@ -49,6 +49,17 @@ public enum VariantEffect
 
     public boolean isEffectOf(@NotNull final String name) { return name.equals(mEffect); }
 
+    public static boolean isSplice(final VariantEffect effect)
+    {
+        return effect == SPLICE_ACCEPTOR || effect == SPLICE_DONOR;
+    }
+
+    public static boolean isInframe(final VariantEffect effect)
+    {
+        return effect == INFRAME_DELETION || effect == INFRAME_INSERTION
+                || effect == PHASED_INFRAME_DELETION || effect == PHASED_INFRAME_INSERTION;
+    }
+
     public static List<VariantEffect> convertFromEffects(@NotNull final List<String> effects)
     {
         final List<VariantEffect> variantEffects = Lists.newArrayList();

@@ -15,6 +15,8 @@ public class ProteinContext
     public String RefAminoAcids;
     public String AltAminoAcids;
 
+    public String Hgvs;
+
     public ProteinContext()
     {
         RefCodonBases = "";
@@ -24,6 +26,7 @@ public class ProteinContext
         CodonIndex = 0;
         RefAminoAcids = "";
         AltAminoAcids = "";
+        Hgvs = "";
     }
 
     public boolean hasCodingBases() { return !RefAminoAcids.isEmpty(); }
@@ -31,8 +34,6 @@ public class ProteinContext
     public boolean hasProteinChange() { return !RefAminoAcids.equals(AltAminoAcids); }
 
     public boolean validRefCodon() { return isCodonMultiple(RefCodonBases.length()); }
-
-    public String hgvsStr() { return "tbc"; }
 
     public static String csvHeader()
     {
@@ -43,7 +44,7 @@ public class ProteinContext
     {
         StringJoiner sj = new StringJoiner(DELIM);
 
-        sj.add(hgvsStr());
+        sj.add(Hgvs);
         sj.add(RefCodonBases);
         sj.add(AltCodonBases);
         sj.add(String.valueOf(CodonIndex));

@@ -18,35 +18,39 @@ public class CodingContext
     public TranscriptRegionType RegionType; // favours more impactful type if it spans
     public TranscriptCodingType CodingType;
     public int ExonRank;
+    public byte Strand; // for convenience
+    public int NearestExonDistance;
 
-    public int CodingBase; // indexed at 1, coding base from start of transcript's coding region
+    // coding base from start of transcript's coding region, or exonic bases to coding if UTR, or exonic index if non-coding
+    public int CodingBase; // indexed at 1
+
     public int[] CodingPositionRange;
-    public boolean SpansSpiceJunction;
+    public boolean SpansSpliceJunction;
     public boolean IsFrameShift;
     public int DeletedCodingBases;
+    public int UpstreamPhase;
 
     public String SpliceDonorAcceptorBases;
 
-    public int NonCodingBaseDistance;
-    public int UpstreamPhase;
-    public int BasesToLastExonJunction;
+    public String Hgvs;
 
     public CodingContext()
     {
         RegionType = TranscriptRegionType.UNKNOWN;
         CodingType = TranscriptCodingType.UNKNOWN;
         ExonRank = 0;
+        Strand = 0;
 
         CodingBase = 0;
         CodingPositionRange = new int[] {0, 0};
-        SpansSpiceJunction = false;
+        SpansSpliceJunction = false;
         IsFrameShift = false;
         SpliceDonorAcceptorBases = "";
         DeletedCodingBases = 0;
 
-        NonCodingBaseDistance = 0;
+        NearestExonDistance = 0;
         UpstreamPhase = PHASE_NONE;
-        BasesToLastExonJunction = -1;
+        Hgvs = "";
     }
 
     public boolean isCoding() { return CodingType == CODING && RegionType == EXONIC; }
@@ -80,35 +84,19 @@ public class CodingContext
     {
         int startDiff = CodingPositionRange[SE_START] > posStart ? CodingPositionRange[SE_START] - posStart : 0;
         int endDiff = CodingPositionRange[SE_END] > 0 && CodingPositionRange[SE_END] < posEnd ? posEnd - CodingPositionRange[SE_END] : 0;
-
         return bases.substring(startDiff, bases.length() - endDiff);
-
-        /*
-        if(CodingPositionRange[SE_START] > posStart)
-            return bases.substring(CodingPositionRange[SE_START] - posStart);
-
-        if(CodingPositionRange[SE_END] > 0 && CodingPositionRange[SE_END] < posEnd)
-        {
-            int diff = posEnd - CodingPositionRange[SE_END];
-            return bases.substring(0, bases.length() - diff);
-        }
-
-        return bases;
-        */
     }
-
-    public String hgvsStr() { return "tbc"; }
 
     public static String csvHeader()
     {
-        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBase,CodingPosRange,UpstreamPhase,SpansSplice,SpliceDonorAcceptorBases,NonCodingBaseDist";
+        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBase,CodingPosRange,UpstreamPhase,SpansSplice,SpliceDonorAcceptorBases,NearestExonDistance";
     }
 
     public String toCsv()
     {
         StringJoiner sj = new StringJoiner(DELIM);
 
-        sj.add(hgvsStr());
+        sj.add(Hgvs);
         sj.add(RegionType.toString());
         sj.add(CodingType.toString());
         sj.add(String.valueOf(ExonRank));
@@ -116,9 +104,9 @@ public class CodingContext
         sj.add(CodingPositionRange[SE_START] == CodingPositionRange[SE_END] ? String.valueOf(CodingPositionRange[SE_START])
                 : String.format("%d-%d", CodingPositionRange[SE_START], CodingPositionRange[SE_END]));
         sj.add(String.valueOf(UpstreamPhase));
-        sj.add(String.valueOf(SpansSpiceJunction));
+        sj.add(String.valueOf(SpansSpliceJunction));
         sj.add(SpliceDonorAcceptorBases);
-        sj.add(String.valueOf(NonCodingBaseDistance));
+        sj.add(String.valueOf(NearestExonDistance));
 
         return sj.toString();
     }

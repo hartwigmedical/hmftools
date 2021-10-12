@@ -34,7 +34,8 @@ public class VariantTransImpact
 
         mEffects = Lists.newArrayList();
 
-        mCodingContext = null;
+        mCodingContext = new CodingContext();
+        mProteinContext = null;
         mInSpliceRegion = false;
         mPhasedFrameshift = false;
         mRealigned = false;
@@ -69,7 +70,6 @@ public class VariantTransImpact
     public int topRank() { return mEffects.stream().mapToInt(x -> x.rank()).max().orElse(-1); }
 
     public CodingContext codingContext() { return mCodingContext; }
-    public void setCodingContext(final CodingContext context) { mCodingContext = context; }
 
     public boolean isExonic()
     {
@@ -94,8 +94,8 @@ public class VariantTransImpact
     public void setSpliceImpactType(SpliceImpactType type) { mSpliceImpactType = type; }
     public SpliceImpactType spliceImpactType() { return mSpliceImpactType; }
 
-    public String hgvsCoding() { return mCodingContext.hgvsStr(); }
-    public String hgvsProtein() { return mProteinContext != null ? mProteinContext.hgvsStr() :  ""; }
+    public String hgvsCoding() { return mCodingContext.Hgvs; }
+    public String hgvsProtein() { return mProteinContext != null ? mProteinContext.Hgvs  :  ""; }
 
     public String effectsStr()
     {
