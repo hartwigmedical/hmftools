@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.patientdb.clinical.readers;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
@@ -27,11 +29,12 @@ public class CorePatientReader {
 
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
-            @NotNull List<SampleData> sequencedSamples) {
+            @NotNull List<SampleData> sequencedSamples, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohort) {
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(patientIdentifier, limsPrimaryTumorLocation);
+        ConsentConfig extractConsentConfigInfo = consentConfigMap.get(cohort);
 
         return new Patient(patientIdentifier,
-                toBaselineData(curatedPrimaryTumor),
+                toBaselineData(curatedPrimaryTumor, extractConsentConfigInfo, cohort),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
@@ -43,10 +46,21 @@ public class CorePatientReader {
     }
 
     @NotNull
-    private BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor) {
+    private BaselineData toBaselineData(@NotNull CuratedPrimaryTumor curatedPrimaryTumor, @Nullable ConsentConfig extractConsentConfigInfo,
+            @NotNull String cohortId) {
+
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(null)
+                .pifVersion(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.pifVersion()
+                        : null)
+                .inDatabase(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.inHMF()
+                        : null)
+                .outsideEU(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.outsideEU()
+                        : null)
                 .gender(null)
                 .hospital(null)
                 .birthYear(null)

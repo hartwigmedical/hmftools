@@ -60,7 +60,7 @@ public class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = new SampleLoader(lims).loadSamplesPerPatient(config);
 
         LOGGER.info("Running clinical patient db algo on {} patients", samplesPerPatient.size());
-        List<Patient> patients = algo.interpret(samplesPerPatient, lims);
+        List<Patient> patients = algo.interpret(samplesPerPatient, lims, config.consentConfigTsv());
 
         LOGGER.info("Writing primary tumor data for {} patients", samplesPerPatient.size());
         PrimaryTumorDataWriter.write(config, samplesPerPatient, patients);

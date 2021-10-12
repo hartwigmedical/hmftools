@@ -24,6 +24,8 @@ public interface ClinicalAlgoConfig {
     String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     String DRUP_ECRF_FILE = "drup_ecrf";
 
+    String CONSENT_CONFIG_TSV = "consent_config_tsv";
+
     String DO_LOAD_CLINICAL_DATA = "do_load_clinical_data";
     String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
@@ -58,6 +60,8 @@ public interface ClinicalAlgoConfig {
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the CPCT ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the CPCT form status csv file.");
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the DRUP ecrf file.");
+
+        options.addOption(CONSENT_CONFIG_TSV, true, "Path towards the informed consent config TSV file.");
 
         options.addOption(DO_LOAD_CLINICAL_DATA, false, "If set, clinical data will be loaded into the database.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "If set, writes raw ecrf data to database.");
@@ -104,6 +108,9 @@ public interface ClinicalAlgoConfig {
 
     @NotNull
     String drupEcrfFile();
+
+    @NotNull
+    String consentConfigTsv();
 
     boolean doLoadClinicalData();
 
@@ -170,6 +177,7 @@ public interface ClinicalAlgoConfig {
                 .cpctEcrfFile(nonOptionalFile(cmd, CPCT_ECRF_FILE))
                 .cpctFormStatusCsv(nonOptionalFile(cmd, CPCT_FORM_STATUS_CSV))
                 .drupEcrfFile(nonOptionalFile(cmd, DRUP_ECRF_FILE))
+                .consentConfigTsv(nonOptionalFile(cmd, CONSENT_CONFIG_TSV))
                 .doLoadClinicalData(cmd.hasOption(DO_LOAD_CLINICAL_DATA))
                 .doLoadRawEcrf(cmd.hasOption(DO_LOAD_RAW_ECRF))
                 .doProcessWideClinicalData(doProcessWideClinicalData)

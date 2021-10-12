@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.drup;
 
+import java.util.Map;
+
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.ImmutableBaselineData;
@@ -52,7 +55,7 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull EcrfPatient patient) {
+    BaselineData read(@NotNull EcrfPatient patient, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build())
                 .demographyStatus(FormStatus.undefined())
@@ -83,7 +86,7 @@ class BaselineReader {
 
         String baselinePrimaryTumor = null;
         for (EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            setInformedConsent(baselineBuilder, baselineEvent);
+            setInformedConsent(baselineBuilder, baselineEvent, consentConfigMap, patient.patientId());
             if (baselinePrimaryTumor == null) {
                 baselinePrimaryTumor = getBaselinePrimaryTumor(baselineEvent, baselineBuilder);
             }
@@ -166,13 +169,24 @@ class BaselineReader {
         return finalPrimaryTumor;
     }
 
-    private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+    private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
         for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
             for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
                 builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
+                ConsentConfig extractConsentConfigInfo = consentConfigMap.get(cohortId);
 
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.informedConsentStatus(baselineForm.status());
+                builder.pifVersion(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.pifVersion()
+                        : null);
+                builder.inDatabase(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.inHMF()
+                        : null);
+                builder.outsideEU(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.outsideEU()
+                        : null);
             }
         }
     }

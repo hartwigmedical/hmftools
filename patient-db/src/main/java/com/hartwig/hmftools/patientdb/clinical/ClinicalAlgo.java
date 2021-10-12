@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.patientdb.clinical;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
@@ -22,6 +25,7 @@ import com.hartwig.hmftools.patientdb.clinical.readers.drup.DrupPatientReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,32 +66,37 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Lims lims) {
+    public List<Patient> interpret(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Lims lims,
+            @NotNull String consentConfigTsv) throws IOException {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
+
+        LOGGER.info("Reading the informed consent configuration file");
+        Map<String, ConsentConfig> consentConfigMap = ConsentConfigFactory.read(consentConfigTsv);
+
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader =
                 new CpctPatientReader(primaryTumorCurator, CpctUtil.extractHospitalMap(cpctEcrfModel), biopsySiteCurator, treatmentCurator);
 
-        List<Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient);
+        List<Patient> cpctPatients = readEcrfPatients(cpctPatientReader, cpctEcrfModel.patients(), samplesPerPatient, consentConfigMap);
         LOGGER.info(" Finished curation of {} CPCT patients", cpctPatients.size());
 
         EcrfModel drupEcrfModel = ecrfModels.drupModel();
         LOGGER.info("Interpreting and curating data for {} DRUP patients", drupEcrfModel.patientCount());
         EcrfPatientReader drupPatientReader = new DrupPatientReader(primaryTumorCurator, biopsySiteCurator);
 
-        List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient);
+        List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient, consentConfigMap);
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
-        List<Patient> widePatients = readWidePatients(samplesPerPatient);
+        List<Patient> widePatients = readWidePatients(samplesPerPatient, consentConfigMap);
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
-        List<Patient> corePatients = readCoreAndActinPatients(samplesPerPatient, "CORE");
+        List<Patient> corePatients = readCoreAndActinPatients(samplesPerPatient, "CORE", consentConfigMap);
         LOGGER.info(" Finished curation of {} CORE patients", corePatients.size());
 
         LOGGER.info("Interpreting and curating data for ACTIN patients");
-        List<Patient> actinPatients = readCoreAndActinPatients(samplesPerPatient, "ACTIN");
+        List<Patient> actinPatients = readCoreAndActinPatients(samplesPerPatient, "ACTIN", consentConfigMap);
         LOGGER.info(" Finished curation of {} ACTIN patients", actinPatients.size());
 
         List<Patient> mergedPatients = Lists.newArrayList();
@@ -102,17 +111,21 @@ public class ClinicalAlgo {
 
     @NotNull
     private static List<Patient> readEcrfPatients(@NotNull EcrfPatientReader reader, @NotNull Iterable<EcrfPatient> ecrfPatients,
-            @NotNull Map<String, List<SampleData>> samplesPerPatient) {
+            @NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull Map<String, ConsentConfig> consentConfigMap)
+            throws IOException {
         List<Patient> patients = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            patients.add(reader.read(ecrfPatient, sequencedSamples));
+            String cohortId = !sequencedSamples.isEmpty() ? sequencedSamples.get(0).cohortId() : Strings.EMPTY;
+
+            patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, cohortId));
         }
         return patients;
     }
 
     @NotNull
-    private List<Patient> readWidePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient) {
+    private List<Patient> readWidePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
+            @NotNull Map<String, ConsentConfig> consentConfigMap) {
         List<Patient> patients = Lists.newArrayList();
 
         WidePatientReader widePatientReader = new WidePatientReader(ecrfModels.wideModel(), primaryTumorCurator, treatmentCurator);
@@ -122,14 +135,19 @@ public class ClinicalAlgo {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
-                patients.add(widePatientReader.read(patientId, primaryTumor, sequencedSamplesOnly(tumorSamples)));
+                patients.add(widePatientReader.read(patientId,
+                        primaryTumor,
+                        sequencedSamplesOnly(tumorSamples),
+                        consentConfigMap,
+                        tumorSamples.get(0).cohortId()));
             }
         }
         return patients;
     }
 
     @NotNull
-    private List<Patient> readCoreAndActinPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String cohort) {
+    private List<Patient> readCoreAndActinPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient, @NotNull String cohort,
+            Map<String, ConsentConfig> consentConfigMap) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
 
@@ -139,7 +157,11 @@ public class ClinicalAlgo {
                 String patientId = entry.getKey();
                 // We assume every sample for a single patient has the same primary tumor.
                 String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
-                patients.add(corePatientReader.read(patientId, primaryTumor, sequencedSamplesOnly(tumorSamples)));
+                patients.add(corePatientReader.read(patientId,
+                        primaryTumor,
+                        sequencedSamplesOnly(tumorSamples),
+                        consentConfigMap,
+                        tumorSamples.get(0).cohortId()));
             }
         }
 

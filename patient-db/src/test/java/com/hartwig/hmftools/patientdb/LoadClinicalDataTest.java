@@ -14,6 +14,7 @@ import javax.xml.stream.XMLStreamException;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TestCuratorFactory;
@@ -39,6 +40,7 @@ import org.junit.Test;
 public class LoadClinicalDataTest {
 
     private static final String TEST_ECRF = Resources.getResource("ecrf/test_cpct_ecrf.xml").getPath();
+    private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -59,7 +61,7 @@ public class LoadClinicalDataTest {
 
         List<ValidationFinding> allFindings = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : cpctEcrfModel.patients()) {
-            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList());
+            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
             assertPatient(patient);
             allFindings.addAll(PatientValidator.validatePatient(patient));
         }

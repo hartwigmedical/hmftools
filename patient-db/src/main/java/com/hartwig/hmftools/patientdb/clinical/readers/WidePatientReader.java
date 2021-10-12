@@ -2,9 +2,11 @@ package com.hartwig.hmftools.patientdb.clinical.readers;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.BaselineData;
@@ -59,8 +61,8 @@ public class WidePatientReader {
 
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
-            @NotNull List<SampleData> sequencedSamples) {
-        BaselineData baseline = buildBaselineData(patientIdentifier, limsPrimaryTumorLocation);
+            @NotNull List<SampleData> sequencedSamples, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
+        BaselineData baseline = buildBaselineData(patientIdentifier, limsPrimaryTumorLocation, consentConfigMap, cohortId);
         MatchResult<BiopsyData> matchedBiopsies = buildMatchedBiopsies(patientIdentifier, sequencedSamples);
         List<BiopsyTreatmentData> treatments = buildBiopsyTreatmentData(patientIdentifier);
         List<BiopsyTreatmentResponseData> responses = buildBiopsyTreatmentResponseData(patientIdentifier);
@@ -78,7 +80,8 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private BaselineData buildBaselineData(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation) {
+    private BaselineData buildBaselineData(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
+            @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
         List<WideFiveDays> fiveDays = dataForPatient(wideEcrfModel.fiveDays(), patientIdentifier);
 
         // There is one entry per biopsy but we assume they all share the same baseline information
@@ -88,9 +91,20 @@ public class WidePatientReader {
 
         CuratedPrimaryTumor curatedPrimaryTumor = primaryTumorCurator.search(patientIdentifier, limsPrimaryTumorLocation);
 
+        ConsentConfig extractConsentConfigInfo = consentConfigMap.get(cohortId);
+
         return ImmutableBaselineData.builder()
                 .registrationDate(null)
                 .informedConsentDate(informedConsentDate)
+                .pifVersion(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.pifVersion()
+                        : null)
+                .inDatabase(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.inHMF()
+                        : null)
+                .outsideEU(extractConsentConfigInfo != null && extractConsentConfigInfo.cohort().contains(cohortId)
+                        ? extractConsentConfigInfo.outsideEU()
+                        : null)
                 .gender(gender)
                 .hospital(null)
                 .birthYear(birthYear)

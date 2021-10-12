@@ -20,6 +20,15 @@ public abstract class BaselineData {
     public abstract LocalDate informedConsentDate();
 
     @Nullable
+    public abstract String pifVersion();
+
+    @Nullable
+    public abstract Boolean inDatabase();
+
+    @Nullable
+    public abstract Boolean outsideEU();
+
+    @Nullable
     public abstract String gender();
 
     @Nullable

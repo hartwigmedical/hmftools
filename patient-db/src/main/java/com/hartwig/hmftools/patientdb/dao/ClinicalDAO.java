@@ -32,6 +32,7 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 
 class ClinicalDAO {
@@ -89,15 +90,15 @@ class ClinicalDAO {
 
     private void writeSampleData(int patientId, @NotNull SampleData sample) {
         context.insertInto(SAMPLE,
-                SAMPLE.SAMPLEID,
-                SAMPLE.PATIENTID,
-                SAMPLE.SETNAME,
-                SAMPLE.ARRIVALDATE,
-                SAMPLE.SAMPLINGDATE,
-                SAMPLE.REPORTEDDATE,
-                SAMPLE.DNANANOGRAMS,
-                SAMPLE.LIMSPRIMARYTUMOR,
-                SAMPLE.PATHOLOGYTUMORPERCENTAGE)
+                        SAMPLE.SAMPLEID,
+                        SAMPLE.PATIENTID,
+                        SAMPLE.SETNAME,
+                        SAMPLE.ARRIVALDATE,
+                        SAMPLE.SAMPLINGDATE,
+                        SAMPLE.REPORTEDDATE,
+                        SAMPLE.DNANANOGRAMS,
+                        SAMPLE.LIMSPRIMARYTUMOR,
+                        SAMPLE.PATHOLOGYTUMORPERCENTAGE)
                 .values(sample.sampleId(),
                         patientId,
                         sample.setName(),
@@ -125,27 +126,33 @@ class ClinicalDAO {
         }
 
         context.insertInto(BASELINE,
-                BASELINE.PATIENTID,
-                BASELINE.REGISTRATIONDATE,
-                BASELINE.INFORMEDCONSENTDATE,
-                BASELINE.GENDER,
-                BASELINE.HOSPITAL,
-                BASELINE.BIRTHYEAR,
-                BASELINE.PRIMARYTUMORLOCATION,
-                BASELINE.PRIMARYTUMORSUBLOCATION,
-                BASELINE.PRIMARYTUMORTYPE,
-                BASELINE.PRIMARYTUMORSUBTYPE,
-                BASELINE.PRIMARYTUMOREXTRADETAILS,
-                BASELINE.PRIMARYTUMOROVERRIDDEN,
-                BASELINE.DEATHDATE,
-                BASELINE.HASSYSTEMICPRETREATMENT,
-                BASELINE.HASRADIOTHERAPYPRETREATMENT,
-                BASELINE.PRETREATMENTS,
-                BASELINE.PRETREATMENTSTYPE,
-                BASELINE.PRETREATMENTSMECHANISM)
+                        BASELINE.PATIENTID,
+                        BASELINE.REGISTRATIONDATE,
+                        BASELINE.INFORMEDCONSENTDATE,
+                        BASELINE.PIFVERSION,
+                        BASELINE.INHMFDATABASE,
+                        BASELINE.OUTSIDEEU,
+                        BASELINE.GENDER,
+                        BASELINE.HOSPITAL,
+                        BASELINE.BIRTHYEAR,
+                        BASELINE.PRIMARYTUMORLOCATION,
+                        BASELINE.PRIMARYTUMORSUBLOCATION,
+                        BASELINE.PRIMARYTUMORTYPE,
+                        BASELINE.PRIMARYTUMORSUBTYPE,
+                        BASELINE.PRIMARYTUMOREXTRADETAILS,
+                        BASELINE.PRIMARYTUMOROVERRIDDEN,
+                        BASELINE.DEATHDATE,
+                        BASELINE.HASSYSTEMICPRETREATMENT,
+                        BASELINE.HASRADIOTHERAPYPRETREATMENT,
+                        BASELINE.PRETREATMENTS,
+                        BASELINE.PRETREATMENTSTYPE,
+                        BASELINE.PRETREATMENTSMECHANISM)
                 .values(patientId,
                         DatabaseUtil.sqlDate(patient.registrationDate()),
                         DatabaseUtil.sqlDate(patient.informedConsentDate()),
+                        patient.pifVersion(),
+                        toByte(patient.inDatabase()),
+                        toByte(patient.outsideEU()),
                         patient.gender(),
                         patient.hospital(),
                         patient.birthYear(),
@@ -190,6 +197,11 @@ class ClinicalDAO {
         writeBaselineFormStatus(patientId, "pretreatment", preTreatmentData.formStatus());
     }
 
+    @Nullable
+    public static Byte toByte(@Nullable Boolean bool) {
+        return bool != null ? (byte) (bool ? 1 : 0) : null;
+    }
+
     private void writeBaselineFormStatus(int patientId, @NotNull String form, @NotNull FormStatus formStatus) {
         writeFormStatus(patientId, BASELINE.getName(), form, formStatus);
     }
@@ -207,13 +219,13 @@ class ClinicalDAO {
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
         drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
             int id = context.insertInto(PRETREATMENTDRUG,
-                    PRETREATMENTDRUG.PATIENTID,
-                    PRETREATMENTDRUG.STARTDATE,
-                    PRETREATMENTDRUG.ENDDATE,
-                    PRETREATMENTDRUG.NAME,
-                    PRETREATMENTDRUG.TYPE,
-                    PRETREATMENTDRUG.MECHANISM,
-                    PRETREATMENTDRUG.BESTRESPONSE)
+                            PRETREATMENTDRUG.PATIENTID,
+                            PRETREATMENTDRUG.STARTDATE,
+                            PRETREATMENTDRUG.ENDDATE,
+                            PRETREATMENTDRUG.NAME,
+                            PRETREATMENTDRUG.TYPE,
+                            PRETREATMENTDRUG.MECHANISM,
+                            PRETREATMENTDRUG.BESTRESPONSE)
                     .values(patientId,
                             DatabaseUtil.sqlDate(drug.startDate()),
                             DatabaseUtil.sqlDate(drug.endDate()),
@@ -231,15 +243,15 @@ class ClinicalDAO {
 
     private void writeBiopsyData(int patientId, @NotNull BiopsyData biopsy) {
         context.insertInto(BIOPSY,
-                BIOPSY.ID,
-                BIOPSY.SAMPLEID,
-                BIOPSY.PATIENTID,
-                BIOPSY.BIOPSYTAKEN,
-                BIOPSY.BIOPSYEVALUABLE,
-                BIOPSY.BIOPSYTYPE,
-                BIOPSY.BIOPSYSITE,
-                BIOPSY.BIOPSYLOCATION,
-                BIOPSY.BIOPSYDATE)
+                        BIOPSY.ID,
+                        BIOPSY.SAMPLEID,
+                        BIOPSY.PATIENTID,
+                        BIOPSY.BIOPSYTAKEN,
+                        BIOPSY.BIOPSYEVALUABLE,
+                        BIOPSY.BIOPSYTYPE,
+                        BIOPSY.BIOPSYSITE,
+                        BIOPSY.BIOPSYLOCATION,
+                        BIOPSY.BIOPSYDATE)
                 .values(biopsy.id(),
                         biopsy.sampleId(),
                         patientId,
@@ -255,16 +267,16 @@ class ClinicalDAO {
 
     private void writeTreatmentData(int patientId, @NotNull BiopsyTreatmentData treatment) {
         context.insertInto(TREATMENT,
-                TREATMENT.ID,
-                TREATMENT.BIOPSYID,
-                TREATMENT.PATIENTID,
-                TREATMENT.TREATMENTGIVEN,
-                TREATMENT.RADIOTHERAPYGIVEN,
-                TREATMENT.STARTDATE,
-                TREATMENT.ENDDATE,
-                TREATMENT.NAME,
-                TREATMENT.TYPE,
-                TREATMENT.MECHANISM)
+                        TREATMENT.ID,
+                        TREATMENT.BIOPSYID,
+                        TREATMENT.PATIENTID,
+                        TREATMENT.TREATMENTGIVEN,
+                        TREATMENT.RADIOTHERAPYGIVEN,
+                        TREATMENT.STARTDATE,
+                        TREATMENT.ENDDATE,
+                        TREATMENT.NAME,
+                        TREATMENT.TYPE,
+                        TREATMENT.MECHANISM)
                 .values(treatment.id(),
                         treatment.biopsyId(),
                         patientId,
@@ -283,13 +295,13 @@ class ClinicalDAO {
     private void writeDrugData(int patientId, int treatmentId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
         drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
             int id = context.insertInto(DRUG,
-                    DRUG.TREATMENTID,
-                    DRUG.PATIENTID,
-                    DRUG.STARTDATE,
-                    DRUG.ENDDATE,
-                    DRUG.NAME,
-                    DRUG.TYPE,
-                    DRUG.MECHANISM)
+                            DRUG.TREATMENTID,
+                            DRUG.PATIENTID,
+                            DRUG.STARTDATE,
+                            DRUG.ENDDATE,
+                            DRUG.NAME,
+                            DRUG.TYPE,
+                            DRUG.MECHANISM)
                     .values(treatmentId,
                             patientId,
                             DatabaseUtil.sqlDate(drug.startDate()),
@@ -306,12 +318,12 @@ class ClinicalDAO {
 
     private void writeTreatmentResponseData(int patientId, @NotNull BiopsyTreatmentResponseData treatmentResponse) {
         int id = context.insertInto(TREATMENTRESPONSE,
-                TREATMENTRESPONSE.TREATMENTID,
-                TREATMENTRESPONSE.PATIENTID,
-                TREATMENTRESPONSE.RESPONSEDATE,
-                TREATMENTRESPONSE.RESPONSE,
-                TREATMENTRESPONSE.MEASUREMENTDONE,
-                TREATMENTRESPONSE.BONEONLYDISEASE)
+                        TREATMENTRESPONSE.TREATMENTID,
+                        TREATMENTRESPONSE.PATIENTID,
+                        TREATMENTRESPONSE.RESPONSEDATE,
+                        TREATMENTRESPONSE.RESPONSE,
+                        TREATMENTRESPONSE.MEASUREMENTDONE,
+                        TREATMENTRESPONSE.BONEONLYDISEASE)
                 .values(treatmentResponse.treatmentId(),
                         patientId,
                         DatabaseUtil.sqlDate(treatmentResponse.date()),
@@ -327,11 +339,11 @@ class ClinicalDAO {
 
     private void writeTumorMarkerData(int patientId, @NotNull TumorMarkerData tumorMarker) {
         int id = context.insertInto(TUMORMARKER,
-                TUMORMARKER.PATIENTID,
-                TUMORMARKER.DATE,
-                TUMORMARKER.MARKER,
-                TUMORMARKER.MEASUREMENT,
-                TUMORMARKER.UNIT)
+                        TUMORMARKER.PATIENTID,
+                        TUMORMARKER.DATE,
+                        TUMORMARKER.MARKER,
+                        TUMORMARKER.MEASUREMENT,
+                        TUMORMARKER.UNIT)
                 .values(patientId,
                         DatabaseUtil.sqlDate(tumorMarker.date()),
                         tumorMarker.marker(),
@@ -346,12 +358,12 @@ class ClinicalDAO {
 
     private void writeRanoMeasurementData(int patientId, @NotNull RanoMeasurementData RanoMeasurement) {
         int id = context.insertInto(RANOMEASUREMENT,
-                RANOMEASUREMENT.PATIENTID,
-                RANOMEASUREMENT.RESPONSEDATE,
-                RANOMEASUREMENT.THERAPYGIVEN,
-                RANOMEASUREMENT.TARGETLESIONRESPONSE,
-                RANOMEASUREMENT.NOTARGETLESIONRESPONSE,
-                RANOMEASUREMENT.OVERALLRESPONSE)
+                        RANOMEASUREMENT.PATIENTID,
+                        RANOMEASUREMENT.RESPONSEDATE,
+                        RANOMEASUREMENT.THERAPYGIVEN,
+                        RANOMEASUREMENT.TARGETLESIONRESPONSE,
+                        RANOMEASUREMENT.NOTARGETLESIONRESPONSE,
+                        RANOMEASUREMENT.OVERALLRESPONSE)
                 .values(patientId,
                         DatabaseUtil.sqlDate(RanoMeasurement.responseDate()),
                         RanoMeasurement.therapyGiven(),
