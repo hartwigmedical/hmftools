@@ -24,7 +24,7 @@ public class TreatmentDataTest {
 
         TreatmentData data = withDrugs(drugs);
 
-        assertEquals("DrugA/DrugB/DrugC", data.treatmentName());
+        assertEquals("DrugB/DrugC/DrugA", data.treatmentName());
     }
 
     @Test

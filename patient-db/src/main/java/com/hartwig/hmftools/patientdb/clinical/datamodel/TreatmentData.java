@@ -45,7 +45,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @Nullable
     @Value.Derived
     default String treatmentName() {
-        List<CuratedDrug> drugs = sortedDrugs();
+        List<CuratedDrug> drugs = curatedDrugs();
 
         String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(concatenatedTreatmentName);
@@ -54,7 +54,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @Nullable
     @Value.Derived
     default String concatenatedType() {
-        List<CuratedDrug> drugs = sortedDrugs();
+        List<CuratedDrug> drugs = curatedDrugs();
 
         String value = drugs.stream().map(CuratedDrug::type).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(value);
@@ -63,18 +63,10 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @Nullable
     @Value.Derived
     default String concatenatedMechanism() {
-        List<CuratedDrug> drugs = sortedDrugs();
+        List<CuratedDrug> drugs = curatedDrugs();
 
         String value = drugs.stream().map(CuratedDrug::mechanism).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(value);
-    }
-
-    @NotNull
-    @Value.Derived
-    default List<CuratedDrug> sortedDrugs() {
-        List<CuratedDrug> drugs = curatedDrugs();
-        Collections.sort(drugs);
-        return drugs;
     }
 
     @Nullable
