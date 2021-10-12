@@ -227,6 +227,8 @@ class BaselineReader {
 
                     if (extractConsentConfigInfo == null) {
                         LOGGER.warn("The pif version '{}' isn't configured", pifVersion);
+                        inDatabase = null;
+                        outsideEU = null;
                     }
 
                     if ((extractConsentConfigInfo.cohort().contains(cohortId))) {
