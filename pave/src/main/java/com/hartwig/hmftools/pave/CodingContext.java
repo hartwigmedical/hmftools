@@ -78,6 +78,12 @@ public class CodingContext
 
     private String trimToCoding(final String bases, int posStart, int posEnd)
     {
+        int startDiff = CodingPositionRange[SE_START] > posStart ? CodingPositionRange[SE_START] - posStart : 0;
+        int endDiff = CodingPositionRange[SE_END] > 0 && CodingPositionRange[SE_END] < posEnd ? posEnd - CodingPositionRange[SE_END] : 0;
+
+        return bases.substring(startDiff, bases.length() - endDiff);
+
+        /*
         if(CodingPositionRange[SE_START] > posStart)
             return bases.substring(CodingPositionRange[SE_START] - posStart);
 
@@ -88,6 +94,7 @@ public class CodingContext
         }
 
         return bases;
+        */
     }
 
     public String hgvsStr() { return "tbc"; }

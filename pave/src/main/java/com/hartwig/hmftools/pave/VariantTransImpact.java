@@ -25,7 +25,7 @@ public class VariantTransImpact
 
     private boolean mInSpliceRegion;
     private boolean mRealigned;
-
+    private SpliceImpactType mSpliceImpactType;
     public boolean mPhasedFrameshift;
 
     public VariantTransImpact(final TranscriptData transData)
@@ -38,6 +38,7 @@ public class VariantTransImpact
         mInSpliceRegion = false;
         mPhasedFrameshift = false;
         mRealigned = false;
+        mSpliceImpactType = SpliceImpactType.UNKNOWN;
     }
 
     public void addEffect(final VariantEffect effect)
@@ -90,6 +91,9 @@ public class VariantTransImpact
     public void markRealigned() { mRealigned = true; }
     public boolean realigned() { return mRealigned; }
 
+    public void setSpliceImpactType(SpliceImpactType type) { mSpliceImpactType = type; }
+    public SpliceImpactType spliceImpactType() { return mSpliceImpactType; }
+
     public String hgvsCoding() { return mCodingContext.hgvsStr(); }
     public String hgvsProtein() { return mProteinContext != null ? mProteinContext.hgvsStr() :  ""; }
 
@@ -101,7 +105,7 @@ public class VariantTransImpact
 
     public static String csvHeader()
     {
-        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,PhasedInframe,Realigned,Effects";
+        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,SpliceImpact,PhasedInframe,Realigned,Effects";
     }
 
     public String toCsv()
@@ -113,6 +117,7 @@ public class VariantTransImpact
         sj.add(String.valueOf(!TransData.nonCoding()));
         sj.add(String.valueOf(TransData.Strand));
         sj.add(String.valueOf(mInSpliceRegion));
+        sj.add(String.valueOf(mSpliceImpactType));
         sj.add(String.valueOf(mPhasedFrameshift));
         sj.add(String.valueOf(mRealigned));
         sj.add(effectsToCsv());

@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_I
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INTRONIC;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.NON_CODING_TRANSCRIPT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
@@ -264,14 +266,21 @@ public class ImpactClassifier
         if(raTransImpact == null)
             return transImpact;
 
-        // take the least impact effect
-        if(transImpact.topRank() <= raTransImpact.topRank())
+        // take the least impact effect but favour non-splice over splice
+        boolean nonRaHasSplice = transImpact.hasEffect(SPLICE_ACCEPTOR) || transImpact.hasEffect(SPLICE_DONOR);
+        boolean raHasSplice = raTransImpact.hasEffect(SPLICE_ACCEPTOR) || raTransImpact.hasEffect(SPLICE_DONOR);
+
+        if(raHasSplice && !nonRaHasSplice || transImpact.topRank() <= raTransImpact.topRank())
         {
             return transImpact;
         }
         else
         {
             raTransImpact.markRealigned();
+
+            if(transImpact.spliceImpactType() != SpliceImpactType.UNKNOWN && raTransImpact.spliceImpactType() == SpliceImpactType.UNKNOWN)
+                raTransImpact.setSpliceImpactType(transImpact.spliceImpactType());
+
             return raTransImpact;
         }
     }

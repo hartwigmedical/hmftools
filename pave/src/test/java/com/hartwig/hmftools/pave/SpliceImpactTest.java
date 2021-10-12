@@ -8,13 +8,17 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
-import static com.hartwig.hmftools.pave.SpliceClassifier.refAltSpliceBasesMatch;
+import static com.hartwig.hmftools.pave.SpliceClassifier.determineIndelSpliceImpact;
+import static com.hartwig.hmftools.pave.SpliceImpactType.BASE_SHIFT;
+import static com.hartwig.hmftools.pave.SpliceImpactType.REGION_DELETED;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Test;
@@ -24,6 +28,13 @@ public class SpliceImpactTest
     private MockRefGenome mRefGenome = createMockGenome(41);
     private String mRefBases = mRefGenome.RefGenomeMap.get(CHR_1);
     private ImpactClassifier mClassifier = new ImpactClassifier(mRefGenome);
+
+    private boolean refAltSpliceBasesMatch(
+            final VariantData variant, final RefGenomeInterface refGenome, final ExonData exon, boolean posStrand)
+    {
+        SpliceImpactType type = determineIndelSpliceImpact(variant, refGenome, exon, posStrand);
+        return type != BASE_SHIFT;
+    }
 
     @Test
     public void testDeleteSpliceBasesPosStrand()
@@ -39,7 +50,7 @@ public class SpliceImpactTest
         String alt = ref.substring(0, 1);
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
+        assertEquals(REGION_DELETED, determineIndelSpliceImpact(var, mRefGenome, exon, transDataPos.posStrand()));
 
         // and on the donor side
         pos = 29;
@@ -47,7 +58,7 @@ public class SpliceImpactTest
         alt = ref.substring(0, 1);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
+        assertEquals(REGION_DELETED, determineIndelSpliceImpact(var, mRefGenome, exon, transDataPos.posStrand()));
 
         // deletes outside region are non-disruptive
         pos = 15;
@@ -261,7 +272,7 @@ public class SpliceImpactTest
 
         int pos = 17;
         String ref = mRefBases.substring(pos, pos + 1);
-        String alt = ref + generateAlt(mRefBases.substring(pos + 1, pos + 1));
+        String alt = ref + generateAlt(mRefBases.substring(pos + 1, pos + 2));
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
         assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));

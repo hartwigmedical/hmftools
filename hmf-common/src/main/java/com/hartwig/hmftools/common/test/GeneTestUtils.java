@@ -53,6 +53,7 @@ public final class GeneTestUtils
     {
         return new EnsemblDataCache("", RefGenomeVersion.V37);
     }
+
     public static GeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, int geneStart, int geneEnd)
     {
         return new GeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd,  "");

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.pave;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getAcceptorPosition;
 import static com.hartwig.hmftools.common.variant.SpliceSites.getDonorPosition;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
@@ -15,6 +14,12 @@ import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_POSITIONS;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_POSITIONS;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_EXON_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_INTRON_RANGE;
+import static com.hartwig.hmftools.pave.SpliceImpactType.BASE_CHANGE;
+import static com.hartwig.hmftools.pave.SpliceImpactType.BASE_SHIFT;
+import static com.hartwig.hmftools.pave.SpliceImpactType.HOMOLOGY_SHIFT;
+import static com.hartwig.hmftools.pave.SpliceImpactType.OUTSIDE_RANGE;
+import static com.hartwig.hmftools.pave.SpliceImpactType.REGION_DELETED;
+import static com.hartwig.hmftools.pave.SpliceImpactType.UNKNOWN;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -92,16 +97,16 @@ public final class SpliceClassifier
         boolean isDonorCandidate = abs(variant.Position - donorExonPos) < abs(variant.Position - acceptorExonPos);
 
         VariantEffect spliceEffect = null;
-
+        SpliceImpactType impactType = UNKNOWN;
         List<Integer> altPositions = Lists.newArrayList();
 
         if(variant.isIndel())
         {
             // CHECK - for INDELs check repeat sequence vs microhomology?
-            if(!refAltSpliceBasesMatch(variant, refGenome, exon, posStrand))
-            {
+            impactType = determineIndelSpliceImpact(variant, refGenome, exon, posStrand);
+
+            if(impactType.isDisruptive() || impactType == HOMOLOGY_SHIFT)
                 spliceEffect = isDonorCandidate ? SPLICE_DONOR : SPLICE_ACCEPTOR;
-            }
 
             // gather up affected bases purely for annotation
             if(variant.isDeletion())
@@ -110,9 +115,8 @@ public final class SpliceClassifier
             }
             else
             {
-                altPositions.add(variant.Position);
-
                 // won't capture the actual bases affected from the inserted bases
+                altPositions.add(variant.Position);
             }
         }
         else
@@ -156,11 +160,15 @@ public final class SpliceClassifier
                     }
                 }
             }
+
+            if(spliceEffect != null)
+                impactType = BASE_CHANGE;
         }
 
         if(spliceEffect != null)
         {
             transImpact.addEffect(spliceEffect);
+            transImpact.setSpliceImpactType(impactType);
 
             // record the splice bases affected by this variant
             StringJoiner baseInfo = new StringJoiner(ITEM_DELIM);
@@ -187,11 +195,11 @@ public final class SpliceClassifier
         }
     }
 
-    public static boolean refAltSpliceBasesMatch(
+    public static SpliceImpactType determineIndelSpliceImpact(
             final VariantData variant, final RefGenomeInterface refGenome, final ExonData exon, boolean posStrand)
     {
         if(variant.isBaseChange())
-            return false;
+            return BASE_CHANGE;
 
         int donorExonPos = posStrand ? exon.End : exon.Start;
         int acceptorExonPos = posStrand ? exon.Start : exon.End;
@@ -230,7 +238,7 @@ public final class SpliceClassifier
                 // +ve strand: exon end / splice donor is 30, D-1 to D5 is 30-35, insert must be 30-34 to impact
                 // +ve strand: exon start / splice acceptor is 20, A3-A1 is 17-19, insert must be 17-18 to impact
                 if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
-                    return true;
+                    return OUTSIDE_RANGE;
             }
             else
             {
@@ -238,14 +246,13 @@ public final class SpliceClassifier
                 {
                     // -ve strand: exon end / splice donor is 20, D-1 to D5 is 15-20, insert must be 15-19 to impact
                     if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
-                        return true;
+                        return OUTSIDE_RANGE;
                 }
                 else
                 {
                     // -ve strand: exon start / splice acceptor is 30, A3-A1 is 31-33, insert must be 30 or more to impact
                     if(variant.Position >= posRangeEnd || variant.EndPosition < posRangeStart) // one base earlier
-                        return true;
-
+                        return OUTSIDE_RANGE;
                 }
             }
 
@@ -280,11 +287,11 @@ public final class SpliceClassifier
         {
             // check for no impact
             if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
-                return true;
+                return OUTSIDE_RANGE;
 
             // check for the entire region being deleted
             if(variant.Position < posRangeStart && variant.EndPosition > posRangeEnd)
-                return false;
+                return REGION_DELETED;
 
             // otherwise the DEL partially overlaps the splice region and so ref bases need only be pulled from one side or the other
             if(variant.Position >= posRangeStart)
@@ -316,7 +323,7 @@ public final class SpliceClassifier
         if(altSpliceBases.length() != refSpliceBases.length())
         {
             PV_LOGGER.error("splice base mismatch: ref({}) vs alt({})", refSpliceBases, altSpliceBases);
-            return false;
+            return UNKNOWN;
         }
 
         if(!isDonorCandidate)
@@ -334,6 +341,6 @@ public final class SpliceClassifier
             }
         }
 
-        return refSpliceBases.equals(altSpliceBases);
+        return refSpliceBases.equals(altSpliceBases) ? HOMOLOGY_SHIFT : BASE_SHIFT;
     }
 }
