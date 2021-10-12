@@ -24,6 +24,7 @@ public class VariantTransImpact
     private ProteinContext mProteinContext;
 
     private boolean mInSpliceRegion;
+    private boolean mRealigned;
 
     public boolean mPhasedFrameshift;
 
@@ -36,6 +37,7 @@ public class VariantTransImpact
         mCodingContext = null;
         mInSpliceRegion = false;
         mPhasedFrameshift = false;
+        mRealigned = false;
     }
 
     public void addEffect(final VariantEffect effect)
@@ -85,6 +87,9 @@ public class VariantTransImpact
     public void markPhasedFrameshift() { mPhasedFrameshift = true; }
     public boolean phasedFrameshift() { return mPhasedFrameshift; }
 
+    public void markRealigned() { mRealigned = true; }
+    public boolean realigned() { return mRealigned; }
+
     public String hgvsCoding() { return mCodingContext.hgvsStr(); }
     public String hgvsProtein() { return mProteinContext != null ? mProteinContext.hgvsStr() :  ""; }
 
@@ -96,7 +101,7 @@ public class VariantTransImpact
 
     public static String csvHeader()
     {
-        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,PhasedInframe,Effects";
+        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,PhasedInframe,Realigned,Effects";
     }
 
     public String toCsv()
@@ -109,6 +114,7 @@ public class VariantTransImpact
         sj.add(String.valueOf(TransData.Strand));
         sj.add(String.valueOf(mInSpliceRegion));
         sj.add(String.valueOf(mPhasedFrameshift));
+        sj.add(String.valueOf(mRealigned));
         sj.add(effectsToCsv());
 
         return sj.toString();
@@ -117,6 +123,9 @@ public class VariantTransImpact
     public String toString()
     {
         return String.format("trans(%s) region(%s - %s) effects(%s) inSplice(%s)",
-                TransData.TransName, mCodingContext.RegionType, mCodingContext.CodingType, effectsStr(), mInSpliceRegion);
+                TransData.TransName,
+                mCodingContext != null ? mCodingContext.RegionType : "",
+                mCodingContext != null ? mCodingContext.CodingType : "",
+                effectsStr(), mInSpliceRegion);
     }
 }

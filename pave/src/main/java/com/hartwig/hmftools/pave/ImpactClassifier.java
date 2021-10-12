@@ -39,6 +39,7 @@ public class ImpactClassifier
     }
 
     public PhasedVariantClassifier phasedVariants() { return mPhasedVariants; }
+    public RefGenomeInterface refGenome() { return mRefGenome; }
 
     public VariantTransImpact classifyVariant(final VariantData variant, final TranscriptData transData)
     {
@@ -58,8 +59,7 @@ public class ImpactClassifier
             transImpact.setProteinContext(proteinContext);
         }
 
-        if(checPrePostCodingImpact(variant, transImpact))
-            return transImpact;
+        checPrePostCodingImpact(variant, transImpact); // was previously a return but need to check for other effects
 
         boolean inSpliceRegion = false;
 
@@ -171,6 +171,9 @@ public class ImpactClassifier
             return;
         }
 
+        if(transImpact.hasEffect(FIVE_PRIME_UTR) || transImpact.hasEffect(THREE_PRIME_UTR))
+            return;
+
         if(variant.isIndel())
         {
             if(transImpact.codingContext().IsFrameShift)
@@ -254,6 +257,23 @@ public class ImpactClassifier
         }
 
         return null;
+    }
+
+    public static VariantTransImpact selectAlignedImpacts(final VariantTransImpact transImpact, final VariantTransImpact raTransImpact)
+    {
+        if(raTransImpact == null)
+            return transImpact;
+
+        // take the least impact effect
+        if(transImpact.topRank() <= raTransImpact.topRank())
+        {
+            return transImpact;
+        }
+        else
+        {
+            raTransImpact.markRealigned();
+            return raTransImpact;
+        }
     }
 
     public List<VariantData> processPhasedVariants(int currentLocalPhaseSet)

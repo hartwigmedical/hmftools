@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public class VariantData
     // other key data
     private int mLocalPhaseSetId;
     public String mMicrohomology;
-    public String mRepeatSequence;
+    public int mRepeatCount;
 
     private final int mIndelBaseDiff;
 
@@ -56,6 +57,8 @@ public class VariantData
     private final List<Integer> mAltPositions;
 
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
+
+    private VariantData mRealignedVariant;
 
     // associated data
     private VariantContext mVariantContext;
@@ -75,7 +78,7 @@ public class VariantData
 
         mLocalPhaseSetId = -1;
         mMicrohomology = "";
-        mRepeatSequence = "";
+        mRepeatCount = 0;
 
         mIndelBaseDiff = Alt.length() - Ref.length();
 
@@ -109,6 +112,7 @@ public class VariantData
             EndPosition = Position + count - 1;
         }
 
+        mRealignedVariant = null;
         mGeneImpacts = Maps.newHashMap();
     }
 
@@ -123,12 +127,10 @@ public class VariantData
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
 
-        // boolean phasedInframeIndel = variantContext.isIndel() && variantContext.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0) > 0;
-        // context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0)
-
         variant.setVariantDetails(
                 variantContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET),
-                variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY), "");
+                variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY),
+                variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));
 
         return variant;
     }
@@ -149,6 +151,9 @@ public class VariantData
 
     public List<Integer> altPositions() { return mAltPositions; }
 
+    public VariantData realignedVariant() { return mRealignedVariant; }
+    public void setRealignedVariant(final VariantData variant) { mRealignedVariant = variant; }
+
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }
 
@@ -158,22 +163,25 @@ public class VariantData
     public RefVariantData refData() { return mRefVariantData; }
     public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
 
-    public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequence)
+    public void setVariantDetails(int localPhaseSet, final String microHomology, final int repeatCount)
     {
         mLocalPhaseSetId = localPhaseSet;
         mMicrohomology = microHomology;
-        mRepeatSequence = repeatSequence;
+        mRepeatCount = repeatCount;
     }
 
     public boolean hasLocalPhaseSet() { return mLocalPhaseSetId != NO_LOCAL_PHASE_SET; }
     public int localPhaseSet() { return mLocalPhaseSetId; }
     public String microhomology() { return mMicrohomology; }
-    public String repeatSequence() { return mRepeatSequence; }
+    public int repeatCount() { return mRepeatCount; }
 
     public Map<String,List<VariantTransImpact>> getImpacts() { return mGeneImpacts; }
 
     public void addImpact(final String geneName, final VariantTransImpact impact)
     {
+        if(impact.effects().isEmpty())
+            return;
+
         List<VariantTransImpact> geneImpacts = mGeneImpacts.get(geneName);
 
         if(geneImpacts == null)

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAc
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
 
@@ -32,8 +33,6 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.SomaticVariantDAO;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
-import com.hartwig.hmftools.pave.PhasedVariantClassifier;
-import com.hartwig.hmftools.pave.PhasedVariants;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 
@@ -141,9 +140,11 @@ public class ImpactComparisons
         VariantData variant = new VariantData(
                 refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
 
-        variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatSequence);
+        variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatCount);
         variant.setSampleId(sampleId);
         variant.setRefData(refVariant);
+
+        variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
 
         findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
@@ -260,6 +261,7 @@ public class ImpactComparisons
             int canonicalHgvsProteinImpactIndex = fieldsIndexMap.get("canonicalHgvsProteinImpact");
             int microhomologyIndex = fieldsIndexMap.get("microhomology");
             int repeatSequenceIndex = fieldsIndexMap.get("repeatSequence");
+            int repeatCountIndex = fieldsIndexMap.get("repeatCount");
             int phasedInframeIndelIndex = fieldsIndexMap.get("phasedInframeIndel");
             int localPhaseSetIndex = fieldsIndexMap.get("localPhaseSet");
             int reportedIndex = fieldsIndexMap.get("reported");
@@ -307,7 +309,8 @@ public class ImpactComparisons
                         items[canonicalCodingEffectIndex].isEmpty() ? NONE : CodingEffect.valueOf(items[canonicalCodingEffectIndex]),
                         CodingEffect.valueOf(items[worstCodingEffectIndex]), Integer.parseInt(items[genesAffectedIndex]),
                         items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
-                        items[microhomologyIndex], items[repeatSequenceIndex], Boolean.parseBoolean(items[phasedInframeIndelIndex]),
+                        items[microhomologyIndex], items[repeatSequenceIndex], Integer.parseInt(items[repeatCountIndex]),
+                        Boolean.parseBoolean(items[phasedInframeIndelIndex]),
                         localPhaseSet, Boolean.parseBoolean(items[reportedIndex]));
 
                 processVariant(sampleId, variant);

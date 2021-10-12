@@ -52,7 +52,7 @@ public class PhasedVariantsTest
         String ref = mRefBases.substring(pos, pos + 3);
         String alt = mRefBases.substring(pos, pos + 1);
         VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
-        var1.setVariantDetails(1, "", "");
+        var1.setVariantDetails(1, "", 0);
         VariantTransImpact impact1 = classifyVariant(var1, transDataPos);
 
         assertTrue(impact1.codingContext().IsFrameShift);
@@ -62,7 +62,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 2);
         alt = mRefBases.substring(pos, pos + 1);
         VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         VariantTransImpact impact2 = classifyVariant(var2, transDataPos);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -89,7 +89,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 3);
         alt = mRefBases.substring(pos, pos + 1);
         var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         impact2 = classifyVariant(var2, transDataPos);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -109,7 +109,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 3);
         alt = mRefBases.substring(pos, pos + 1); // deletes 17 & 18;
         var1 = new VariantData(CHR_1, pos, ref, alt);
-        var1.setVariantDetails(1, "", "");
+        var1.setVariantDetails(1, "", 0);
         impact1 = classifyVariant(var1, transDataPos);
         assertEquals(16, impact1.proteinContext().RefCodonsRange[SE_START]);
         assertEquals(21, impact1.proteinContext().RefCodonsRange[SE_END]);
@@ -121,7 +121,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 2);
         alt = mRefBases.substring(pos, pos + 1); // deletes 21 being the 3rd codon base which they share
         var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         impact2 = classifyVariant(var2, transDataPos);
         assertEquals(19, impact2.proteinContext().RefCodonsRange[SE_START]);
         assertEquals(24, impact2.proteinContext().RefCodonsRange[SE_END]);
@@ -152,7 +152,7 @@ public class PhasedVariantsTest
         String ref = mRefBases.substring(pos, pos + 3);
         String alt = mRefBases.substring(pos, pos + 1);
         VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
-        var1.setVariantDetails(1, "", "");
+        var1.setVariantDetails(1, "", 0);
         VariantTransImpact impact1 = classifyVariant(var1, transDataNeg);
 
         assertTrue(impact1.codingContext().IsFrameShift);
@@ -162,7 +162,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos);
         alt = ref + "AAAAAAAA";
         VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         VariantTransImpact impact2 = classifyVariant(var2, transDataNeg);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -187,7 +187,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos);
         alt = ref + "AAAAAAA";
         var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         impact2 = classifyVariant(var2, transDataNeg);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -213,7 +213,7 @@ public class PhasedVariantsTest
         String ref = mRefBases.substring(pos, pos + 1);
         String alt = ref + "AGCT";
         VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
-        var1.setVariantDetails(1, "", "");
+        var1.setVariantDetails(1, "", 0);
         VariantTransImpact impact1 = classifyVariant(var1, transDataNeg);
 
         assertTrue(impact1.codingContext().IsFrameShift);
@@ -223,7 +223,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 5);
         alt = mRefBases.substring(pos, pos + 1);
         VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         VariantTransImpact impact2 = classifyVariant(var2, transDataNeg);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -244,7 +244,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 5);
         alt = mRefBases.substring(pos, pos + 1);
         var1 = new VariantData(CHR_1, pos, ref, alt);
-        var1.setVariantDetails(2, "", "");
+        var1.setVariantDetails(2, "", 0);
         impact1 = classifyVariant(var1, transDataNeg);
 
         assertTrue(impact1.codingContext().IsFrameShift);
@@ -254,7 +254,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 1);
         alt = ref + "ATCG";
         var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(2, "", "");
+        var2.setVariantDetails(2, "", 0);
         impact2 = classifyVariant(var2, transDataNeg);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -283,7 +283,7 @@ public class PhasedVariantsTest
         String ref = mRefBases.substring(pos, pos + 1);
         String alt = ref + "AG";
         VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
-        var1.setVariantDetails(1, "", "");
+        var1.setVariantDetails(1, "", 0);
         VariantTransImpact impact1 = classifyVariant(var1, transDataNeg);
 
         assertTrue(impact1.codingContext().IsFrameShift);
@@ -293,7 +293,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 8);
         alt = mRefBases.substring(pos, pos + 1);
         VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
-        var2.setVariantDetails(1, "", "");
+        var2.setVariantDetails(1, "", 0);
         VariantTransImpact impact2 = classifyVariant(var2, transDataNeg);
 
         assertTrue(impact2.codingContext().IsFrameShift);
@@ -303,7 +303,7 @@ public class PhasedVariantsTest
         ref = mRefBases.substring(pos, pos + 1);
         alt = ref + "GG";
         VariantData var3 = new VariantData(CHR_1, pos, ref, alt);
-        var3.setVariantDetails(1, "", "");
+        var3.setVariantDetails(1, "", 0);
         VariantTransImpact impact3 = classifyVariant(var3, transDataNeg);
 
         assertTrue(impact3.codingContext().IsFrameShift);

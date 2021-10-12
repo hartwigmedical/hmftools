@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
+import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.effectsMatch;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.ignoreSnpEffAnnotation;
@@ -148,6 +149,8 @@ public class PaveApplication
     {
         VariantData variant = VariantData.fromContext(variantContext);
 
+        variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
+
         findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
         processPhasedVariants(variant.localPhaseSet());
@@ -208,7 +211,14 @@ public class PaveApplication
             {
                 VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
 
-                if(transImpact != null && !transImpact.effects().isEmpty())
+                // check right-alignment if the variant has microhomology
+                if(variant.realignedVariant() != null)
+                {
+                    VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
+                    transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                }
+
+                if(transImpact != null)
                     variant.addImpact(geneData.GeneName, transImpact);
             }
         }

@@ -25,6 +25,7 @@ public class RefVariantData
     public final int LocalPhaseSet;
     public final String Microhomology;
     public final String RepeatSequence;
+    public final int RepeatCount;
     public final boolean PhasedInframeIndel;
     public final boolean Reported;
 
@@ -33,9 +34,9 @@ public class RefVariantData
     public RefVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
-            final CodingEffect worstCodingEffect, final int genesAffected,
-            final String hgvsCodingImpact, final String hgvsProteinImpact,
-            final String microhomology, final String repeatSequence, boolean phasedInframeIndel, int localPhaseSet, boolean reported)
+            final CodingEffect worstCodingEffect, final int genesAffected, final String hgvsCodingImpact, final String hgvsProteinImpact,
+            final String microhomology, final String repeatSequence, int repeatCount, boolean phasedInframeIndel, int localPhaseSet,
+            boolean reported)
     {
         Chromosome = chromosome;
         Position = position;
@@ -54,6 +55,7 @@ public class RefVariantData
         HgvsProteinImpact = hgvsProteinImpact;
         Microhomology = microhomology;
         RepeatSequence = repeatSequence;
+        RepeatCount = repeatCount;
         PhasedInframeIndel = phasedInframeIndel;
         Reported = reported;
     }
@@ -64,8 +66,8 @@ public class RefVariantData
                 variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(), variant.type(), variant.gene(),
                 variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
                 variant.genesAffected(),  variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
-                variant.microhomology(), variant.repeatSequence(), variant.phasedInframeIndelIdentifier() > 0,
-                variant.localPhaseSet(), variant.reported());
+                variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
+                variant.phasedInframeIndelIdentifier() > 0, variant.localPhaseSet(), variant.reported());
     }
 
     public String toString()
