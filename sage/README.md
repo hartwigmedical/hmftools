@@ -165,12 +165,14 @@ The optional [base quality recalibration](#optional-base-quality-recalibration-a
 Minimum set of arguments:
 
 ```
-java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.apps.SageAppendApplication \
+java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication \
     -reference COLO829v003RNA -reference_bam /path/to/COLO829v003RNA.bam \
     -ref_genome /path/to/refGenome.fasta \
     -input_vcf /path/to/COLO829v003.sage.vcf.gz
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
+
+Do note that from SAGE v2.9+ the package of the SageAppendApplication will become `com.hartwig.hmftools.sage.apps`
 
  # Read context 
  The read context of a variant is the region surrounding it in the read where it was found.
