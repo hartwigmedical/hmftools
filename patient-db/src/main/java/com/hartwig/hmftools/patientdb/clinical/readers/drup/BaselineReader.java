@@ -86,7 +86,7 @@ class BaselineReader {
 
         String baselinePrimaryTumor = null;
         for (EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            setInformedConsent(baselineBuilder, baselineEvent, consentConfigMap, patient.patientId());
+            setInformedConsent(baselineBuilder, baselineEvent, consentConfigMap, cohortId);
             if (baselinePrimaryTumor == null) {
                 baselinePrimaryTumor = getBaselinePrimaryTumor(baselineEvent, baselineBuilder);
             }
