@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.Strings.reverseString;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -29,7 +27,6 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
@@ -731,116 +728,4 @@ public class FusionReadData
                 totalFragments, splitFragments, realignedFragments, discordantFragments, coverage, anchorDistance,
                 transData, relatedFusionIds, getInitialFragment().readId());
     }
-
-    /*
-    public static String csvHeader()
-    {
-        return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
-                + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
-                + ",SVType,NonSupp,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,CoverageUp,CoverageDown"
-                + ",MaxAnchorLengthUp,MaxAnchorLengthDown,TransDataUp,TransDataDown"
-                + ",RelatedSplicedIds,RelatedProxIds,InitReadId,HomologyOffset";
-    }
-
-    public String toCsv()
-    {
-        StringJoiner csvData = new StringJoiner(DELIMITER);
-
-        csvData.add(fusionId(mId));
-        csvData.add(String.valueOf(hasViableGenes() && !hasIncompleteData()));
-
-        final FusionFragment sampleFragment = getInitialFragment();
-
-        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
-        {
-            final GeneData geneData = mFusionGenes[fs];
-
-            csvData.add(geneData != null ? geneData.GeneId : "");
-            csvData.add(geneData != null ? geneData.GeneName : "");
-
-            csvData.add(mChromosomes[mStreamIndices[fs]]);
-            csvData.add(String.valueOf(mJunctionPositions[mStreamIndices[fs]]));
-            csvData.add(String.valueOf(mJunctionOrientations[mStreamIndices[fs]]));
-
-            csvData.add(geneData != null ? String.valueOf(geneData.Strand) : "0");
-            csvData.add(sampleFragment.junctionTypes()[mStreamIndices[fs]].toString());
-        }
-
-        csvData.add(getImpliedSvType().toString());
-        csvData.add(String.valueOf(!sampleFragment.hasSuppAlignment()));
-
-        int splitFragments = 0;
-        int realignedFragments = 0;
-        int discordantFragments = 0;
-
-        for(Map.Entry<FusionFragmentType,Integer> entry : mFragmentCounts.entrySet())
-        {
-            if(entry.getKey() == MATCHED_JUNCTION)
-                splitFragments = entry.getValue();
-            else if(entry.getKey() == DISCORDANT)
-                discordantFragments = entry.getValue();
-            else if(entry.getKey() == REALIGNED)
-                realignedFragments = entry.getValue();
-        }
-
-        int totalFragments = splitFragments + realignedFragments + discordantFragments;
-
-        csvData.add(String.valueOf(totalFragments));
-        csvData.add(String.valueOf(splitFragments));
-        csvData.add(String.valueOf(realignedFragments));
-        csvData.add(String.valueOf(discordantFragments));
-
-        // since depth of 1 may have been discarded from the BaseDepth, correct for this
-        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_UP]], splitFragments)));
-        csvData.add(String.valueOf(max(mReadDepth[mStreamIndices[FS_DOWN]], splitFragments)));
-
-        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_UP]]));
-        csvData.add(String.valueOf(mMaxSplitLengths[mStreamIndices[FS_DOWN]]));
-
-        for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
-        {
-            final List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
-            if(transExonRefs.isEmpty())
-            {
-                csvData.add(FUSION_NONE);
-                continue;
-            }
-
-            String transData = "";
-            for(final TransExonRef transExonRef : transExonRefs)
-            {
-                transData = appendStr(transData, String.format("%s-%d", transExonRef.TransName, transExonRef.ExonRank), ';');
-            }
-
-            csvData.add(transData);
-        }
-
-        if(!mRelatedSplicedFusions.isEmpty())
-        {
-            List<String> relatedFusions = mRelatedSplicedFusions.stream().map(x -> fusionId(x)).collect(Collectors.toList());
-            csvData.add(appendStrList(relatedFusions, ';'));
-        }
-        else
-        {
-            csvData.add(FUSION_NONE);
-        }
-
-        if(!mRelatedProximateFusions.isEmpty())
-        {
-            List<String> relatedFusions = mRelatedProximateFusions.stream().map(x -> fusionId(x)).collect(Collectors.toList());
-            csvData.add(appendStrList(relatedFusions, ';'));
-        }
-        else
-        {
-            csvData.add(FUSION_NONE);
-        }
-
-        // csvData.add(ISF_LOGGER.isDebugEnabled() ? getInitialFragment().readId() : "-");
-        csvData.add(getInitialFragment().readId()); // very handy for now
-        csvData.add(String.format("%d-%d", mJunctionHomology[SE_START], mJunctionHomology[SE_END]));
-
-        return csvData.toString();
-    }
-    */
-
 }
