@@ -216,14 +216,20 @@ class BaselineReader {
     private void setInformedConsents(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent,
             @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) {
         for (EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
-            boolean inDatabase = false;
-            boolean outsideEU = false;
+            Boolean inDatabase = false;
+            Boolean outsideEU = false;
             for (EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT)) {
                 builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
 
                 String pifVersion = informedConsentItemGroup.readItemString(FIELD_PIF_VERSION);
                 if (pifVersion != null) {
                     ConsentConfig extractConsentConfigInfo = consentConfigMap.get(pifVersion);
+
+                    if (extractConsentConfigInfo == null) {
+                        LOGGER.warn("The pif version '{}' isn't configured", pifVersion);
+                        inDatabase = null;
+                        outsideEU = null;
+                    }
 
                     if ((extractConsentConfigInfo.cohort().contains(cohortId))) {
                         List<String> pif222Values = extractConsentConfigInfo.pif222Values();
@@ -247,7 +253,7 @@ class BaselineReader {
                             }
 
                             if (pif221Values != null && pif221Values.contains(pif221)) {
-                                if (pif221 != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
+                                if (pif221 != null && inDatabase != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
                                     outsideEU = true;
                                 }
                             }
@@ -258,13 +264,16 @@ class BaselineReader {
                                 }
                             }
 
-                            if (pif26BUGValues != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
+                            if (pif26BUGValues != null && inDatabase != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
                                 if (pif26Bug != null && pif26Bug.equals(extractConsentConfigInfo.pif26BUG())) {
                                     outsideEU = true;
                                 }
                             }
                         }
                     }
+                } else {
+                    inDatabase = null;
+                    outsideEU = null;
                 }
                 builder.informedConsentStatus(informedConsentForm.status());
                 builder.pifVersion(pifVersion);

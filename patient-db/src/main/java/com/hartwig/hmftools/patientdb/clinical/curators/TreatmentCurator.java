@@ -250,7 +250,9 @@ public class TreatmentCurator implements CleanableCurator {
             }
             tokenStream.end();
             tokenStream.close();
-            return Lists.newArrayList(searchTokens);
+            return searchTokens.stream()
+                    .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
+                    .collect(Collectors.toList());
         } catch (IOException exception) {
             LOGGER.warn("Caught IOException in treatment curation: {}", exception.getMessage());
             return Lists.newArrayList();
