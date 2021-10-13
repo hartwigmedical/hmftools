@@ -56,6 +56,9 @@ public final class HgvsCoding
 
     public static String generate(final VariantData variant, final CodingContext codingContext)
     {
+        if(codingContext.RegionType == UPSTREAM) // undefined by the standard
+            return "";
+
         StringBuilder sb = new StringBuilder();
 
         if(codingContext.CodingType == NON_CODING)
@@ -154,24 +157,30 @@ public final class HgvsCoding
         // coding: c.76A>C
         // post exon intronic: c.88+1G>T
         // pre exon intronic: c.89-2A>C
-        int nonCodingDistance = codingContext.NearestExonDistance;
+        int nearestDistance = codingContext.NearestExonDistance;
+        int codingBase = codingContext.RegionType == UPSTREAM ? codingContext.NearestExonDistance : codingContext.CodingBase;
 
-        if(codingContext.CodingType == CODING)
+        if(codingContext.CodingType == UTR_5P || codingContext.CodingType == UTR_3P)
         {
-            sb.append(codingContext.CodingBase);
-
-            if(codingContext.RegionType == INTRONIC)
+            if(codingContext.CodingType == UTR_5P && codingContext.CodingBase == 0)
             {
-                char prePostSign = nonCodingDistance < 0 ? '-' : '+';
+                // -0 is converted to 1 for some reason
+                codingBase = 1;
+            }
+            else
+            {
+                char prePostSign = codingContext.CodingType == UTR_5P ? '-' : '*';
                 sb.append(prePostSign);
-                sb.append(abs(nonCodingDistance));
             }
         }
-        else
+
+        sb.append(codingBase);
+
+        if(codingContext.RegionType == INTRONIC)
         {
-            char prePostSign = (codingContext.CodingType == UTR_5P || codingContext.RegionType == UPSTREAM) ? '-' : '*';
+            char prePostSign = nearestDistance < 0 ? '-' : '+';
             sb.append(prePostSign);
-            sb.append(abs(nonCodingDistance));
+            sb.append(abs(nearestDistance));
         }
 
         String ref = codingContext.Strand == POS_STRAND ? variant.Ref : reverseStrandBases(variant.Ref);

@@ -25,22 +25,20 @@ public class HgvsCodingTest
 
         CodingContext codingContext = new CodingContext();
         codingContext.Strand = POS_STRAND;
-        codingContext.RegionType = UPSTREAM;
-        codingContext.NearestExonDistance = -50;
-
-        assertEquals("c.-50A>C", HgvsCoding.generate(var, codingContext));
 
         codingContext.RegionType = INTRONIC;
         codingContext.CodingType = UTR_5P;
+        codingContext.CodingBase = 10;
         codingContext.NearestExonDistance = -50;
 
-        assertEquals("c.-50A>C", HgvsCoding.generate(var, codingContext));
+        assertEquals("c.-10-50A>C", HgvsCoding.generate(var, codingContext));
 
         codingContext.RegionType = INTRONIC;
         codingContext.CodingType = UTR_3P;
-        codingContext.NearestExonDistance = -50;
+        codingContext.CodingBase = 20;
+        codingContext.NearestExonDistance = 10;
 
-        assertEquals("c.*50A>C", HgvsCoding.generate(var, codingContext));
+        assertEquals("c.*20+10A>C", HgvsCoding.generate(var, codingContext));
 
         codingContext.RegionType = INTRONIC;
         codingContext.CodingType = CODING;

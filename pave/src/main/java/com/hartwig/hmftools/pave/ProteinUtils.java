@@ -43,7 +43,7 @@ public final class ProteinUtils
         pc.RefCodonsRange[SE_START] = cc.CodingPositionRange[SE_START];
         pc.RefCodonsRange[SE_END] = cc.CodingPositionRange[SE_END];
 
-        int upstreamOpenCodonBases = getOpenCodonBases(cc.UpstreamPhase);
+        int upstreamOpenCodonBases = cc.CodingBase > 1 ? getOpenCodonBases(cc.UpstreamPhase) : 0;
 
         if(upstreamOpenCodonBases > 0)
         {
@@ -162,7 +162,7 @@ public final class ProteinUtils
         return pc;
     }
 
-    private static int getOpenCodonBases(int phase)
+    public static int getOpenCodonBases(int phase)
     {
         // determine the number of bases upstream to make a codon
         if(phase == PHASE_1)

@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.pave.ProteinUtils.getOpenCodonBases;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -30,8 +32,8 @@ public final class CodingUtils
         setCodingContext(variant, transData, cc);
 
         // set pre-coding exonic bases separately since doesn't fit with way exons are iterated through
-        if(cc.CodingType == UTR_5P)
-            setPreCodingExonicDistance(variant, transData, cc);
+        if(cc.CodingType == UTR_5P || cc.CodingType == UTR_3P)
+            setUtrCodingExonicDistance(variant, transData, cc);
 
         /*
         if(variant.altBasesBelow(transData.TransStart) || variant.altBasesAbove(transData.TransEnd))
@@ -68,19 +70,18 @@ public final class CodingUtils
         Integer codingStart = transData.CodingStart;
         Integer codingEnd = transData.CodingEnd;
 
+        if(transData.nonCoding())
+            cc.CodingType = NON_CODING;
+
         if(variant.altBasesBelow(transData.TransStart) || variant.altBasesAbove(transData.TransEnd))
         {
-            setUpstreamContext(variant, transData, cc);
+            cc.RegionType = UPSTREAM;
             return;
         }
 
         boolean posStrand = transData.posStrand();
 
-        if(transData.nonCoding())
-        {
-            cc.CodingType = NON_CODING;
-        }
-        else
+        if(isCodingTrans)
         {
             boolean belowCodingStart = variant.altBasesBelow(codingStart);
             boolean aboveCodingEnd = variant.altBasesAbove(codingEnd);
@@ -101,7 +102,6 @@ public final class CodingUtils
         }
 
         int prePosExonicBaseCount = 0; // will be used for non-coding transcripts only
-        int postCodingExonicBases = 0; // exonic bases from the end of coding to the position for 3'UTR
         int codingBaseCount = 0; // accumulated since start of coding region prior to exon closest to variant
 
         int upstreamStartPos = posStrand ? variant.Position : variant.EndPosition;
@@ -114,6 +114,15 @@ public final class CodingUtils
             for(int i = 0; i < transData.exons().size(); ++i)
             {
                 final ExonData exon = transData.exons().get(i);
+
+                if(i == 0 && isCodingTrans && codingStart == exon.Start)
+                {
+                    // for rare incomplete transcript where coding start phase is not 1, typically at first base of exon 1
+                    int startPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, exon.Start);
+                    if(startPhase != PHASE_1)
+                        codingBaseCount -= 3 - getOpenCodonBases(startPhase);
+                }
+
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
                 if(skipExonPos > exon.End)
@@ -123,9 +132,6 @@ public final class CodingUtils
                         codingBaseCount += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
                     prePosExonicBaseCount += exon.baseLength();
-
-                    if(isCodingTrans && exon.End >= codingEnd)
-                        postCodingExonicBases += exon.End - max(codingEnd + 1, exon.Start) + 1;
 
                     if(nextExon != null && upstreamStartPos >= nextExon.Start)
                         continue;
@@ -141,10 +147,6 @@ public final class CodingUtils
                     cc.SpansSpliceJunction = !withinExon;
 
                     prePosExonicBaseCount += upstreamStartPos - exon.Start + 1;
-
-                    // bases from end of coding to the position
-                    if(isCodingTrans && exon.End >= codingEnd)
-                        postCodingExonicBases += upstreamStartPos - max(codingEnd + 1, exon.Start) + 1;
 
                     if(inCoding)
                     {
@@ -202,6 +204,14 @@ public final class CodingUtils
             for(int i = transData.exons().size() - 1; i >= 0; --i)
             {
                 final ExonData exon = transData.exons().get(i);
+
+                if(exon.Rank == 1 && isCodingTrans && codingEnd == exon.End)
+                {
+                    int startPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, exon.End);
+                    if(startPhase != PHASE_1)
+                        codingBaseCount -= 3 - getOpenCodonBases(startPhase);
+                }
+
                 final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
 
                 if(skipExonPos < exon.Start)
@@ -210,9 +220,6 @@ public final class CodingUtils
                         codingBaseCount += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
                     prePosExonicBaseCount += exon.baseLength();
-
-                    if(isCodingTrans && exon.Start <= codingStart)
-                        postCodingExonicBases += min(codingStart - 1, exon.End) - exon.Start + 1;
 
                     if(nextExon != null && upstreamStartPos <= nextExon.End)
                         continue;
@@ -227,16 +234,10 @@ public final class CodingUtils
 
                     prePosExonicBaseCount += exon.End - upstreamStartPos + 1;
 
-                    // bases from end of coding to the position
-                    if(isCodingTrans && exon.Start <= codingStart)
-                        postCodingExonicBases += min(codingStart - 1, exon.End) - upstreamStartPos + 1;
-
                     if(inCoding)
                     {
                         cc.UpstreamPhase =
                                 calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, min(upstreamStartPos, exon.End));
-
-                        prePosExonicBaseCount += exon.End - upstreamStartPos + 1;
 
                         if(!variant.isInsert())
                         {
@@ -298,10 +299,9 @@ public final class CodingUtils
         if(cc.CodingType == NON_CODING)
         {
             cc.CodingBase = prePosExonicBaseCount;
-        }
-        else if(cc.CodingType == UTR_3P)
-        {
-            cc.CodingBase = postCodingExonicBases;
+
+            if(cc.NearestExonDistance < 0)
+                cc.CodingBase += 1; // to the next exonic base
         }
 
         if(variant.isIndel() && cc.CodingType == CODING && cc.RegionType == EXONIC)
@@ -327,438 +327,73 @@ public final class CodingUtils
         }
     }
 
-    public static void setPreCodingExonicDistance(final VariantData variant, final TranscriptData transData, final CodingContext cc)
+    public static void setUtrCodingExonicDistance(final VariantData variant, final TranscriptData transData, final CodingContext cc)
     {
-        if(variant.altBasesBelow(transData.CodingStart))
-        {
-            int codingStart = transData.CodingStart;
-            int position = variant.Position; // which ought to be used?
-
-            for(int i = 0; i < transData.exons().size(); ++i)
-            {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
-
-                if(nextExon != null && variant.altBasesAbove(nextExon.Start - 1))
-                    continue;
-
-                if(variant.altPositionsOverlap(exon.Start, exon.End))
-                {
-                    if(positionWithin(codingStart, exon.Start, exon.End))
-                        cc.CodingBase += codingStart - position;
-                    else
-                        cc.CodingBase += exon.End - position + 1;
-                }
-                else if(exon.Start > position)
-                {
-                    if(positionWithin(codingStart, exon.Start, exon.End))
-                        cc.CodingBase += codingStart - exon.Start;
-                    else
-                        cc.CodingBase += exon.baseLength();
-                }
-
-                if(positionWithin(codingStart, exon.Start, exon.End))
-                    break;
-            }
-        }
-        else
-        {
-            // similar for position after coding end
-            int codingEnd = transData.CodingEnd;
-            int position = variant.Position;
-
-            for(int i = transData.exons().size() - 1; i >= 0; --i)
-            {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
-
-                if(nextExon != null && variant.altBasesBelow(nextExon.End + 1))
-                    continue;
-
-                if(variant.altPositionsOverlap(exon.Start, exon.End))
-                {
-                    if(positionWithin(codingEnd, exon.Start, exon.End))
-                        cc.CodingBase += position - codingEnd;
-                    else
-                        cc.CodingBase += position - exon.Start + 1;
-                }
-                else if(exon.End < position)
-                {
-                    if(positionWithin(codingEnd, exon.Start, exon.End))
-                        cc.CodingBase += exon.End - codingEnd;
-                    else
-                        cc.CodingBase += exon.baseLength();
-                }
-
-                if(positionWithin(codingEnd, exon.Start, exon.End))
-                    break;
-            }
-        }
-
-        cc.CodingBase *= -1;
-    }
-
-
-    private static void setCodingContextOld(final VariantData variant, final TranscriptData transData, final CodingContext cc)
-    {
-        // initially set the region for this variant and the coding base range and phase if any
-        // calculate coding bases prior to the upstream position and add any addition if within an exon
-        cc.CodingType = CODING;
+        boolean posStrand = transData.posStrand();
+        boolean posBeforeCodingStart = (posStrand == (cc.CodingType == UTR_5P));
 
         int codingStart = transData.CodingStart;
         int codingEnd = transData.CodingEnd;
+        int position = variant.Position; // which ought to be used?
 
-        boolean posStrand = transData.posStrand();
-        int preExonCodingBases = 0; // accumulated since start of coding region prior to exon closest to variant
-
-        int upstreamStartPos = posStrand ? variant.Position : variant.EndPosition;
-
-        // INDELs don't affect the last base of an exon so need diff criteria to skip it
-        int skipExonPos = (!variant.isIndel() == posStrand) ? variant.Position : variant.EndPosition;
-
-        if(transData.posStrand())
+        for(int i = 0; i < transData.exons().size(); ++i)
         {
-            for(int i = 0; i < transData.exons().size(); ++i)
+            final ExonData exon = transData.exons().get(i);
+
+            if(posBeforeCodingStart)
             {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
-
-                if(skipExonPos > exon.End)
-                {
-                    // keep track of coding bases if this exon overlaps the coding region but is before the variant
-                    if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
-                        preExonCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
-
-                    if(nextExon != null && upstreamStartPos >= nextExon.Start)
-                        continue;
-                }
-
-                // check for fully intronic, fully exonic or spanning
-                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
-                if(withinExon || variant.altPositionsOverlap(exon.Start, exon.End))
-                {
-                    cc.RegionType = EXONIC;
-                    cc.ExonRank = exon.Rank;
-                    cc.SpansSpliceJunction = !withinExon;
-
-                    cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, max(upstreamStartPos, exon.Start));
-
-                    cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
-
-                    cc.CodingPositionRange[SE_END] = !variant.isInsert() ?
-                            min(min(exon.End, codingEnd), variant.EndPosition) : cc.CodingPositionRange[SE_START];
-
-                    // add in any extra coding bases
-                    cc.CodingBase = preExonCodingBases + cc.CodingPositionRange[SE_START] - max(codingStart, exon.Start) + 1;
-                }
-                else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
-                {
+                // exons before the position
+                if(position > exon.End)
                     continue;
-                }
-                else
-                {
-                    cc.UpstreamPhase = posStrand ? exon.PhaseEnd : nextExon.PhaseEnd;
-                    cc.RegionType = INTRONIC;
 
-                    int distanceToPrev = upstreamStartPos - exon.End;
-                    int distanceToNext = nextExon.Start - upstreamStartPos;
-
-                    if(distanceToPrev < distanceToNext)
-                    {
-                        cc.ExonRank = exon.Rank;
-                        cc.CodingBase = preExonCodingBases;
-                        cc.NearestExonDistance = upstreamStartPos - exon.End;
-                    }
-                    else
-                    {
-                        cc.ExonRank = nextExon.Rank;
-                        cc.CodingBase = preExonCodingBases + 1; // first base of next exon
-                        cc.NearestExonDistance = upstreamStartPos - nextExon.Start; // -ve for back into previous intron
-                    }
-                }
-
-                break;
-            }
-        }
-        else
-        {
-            for(int i = transData.exons().size() - 1; i >= 0; --i)
-            {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
-
-                if(skipExonPos < exon.Start)
-                {
-                    if(positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
-                        preExonCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
-
-                    if(nextExon != null && upstreamStartPos <= nextExon.End)
-                        continue;
-                }
-
-                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
-                if(withinExon || variant.altPositionsOverlap(exon.Start, exon.End))
-                {
-                    cc.RegionType = EXONIC;
-                    cc.ExonRank = exon.Rank;
-                    cc.SpansSpliceJunction = !withinExon;
-
-                    cc.UpstreamPhase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, min(upstreamStartPos, exon.End));
-
-                    if(!variant.isInsert())
-                    {
-                        cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
-                        cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
-
-                    }
-                    else
-                    {
-                        cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
-                        cc.CodingPositionRange[SE_START] = cc.CodingPositionRange[SE_END];
-                    }
-
-                    // add in any extra coding bases
-                    cc.CodingBase = preExonCodingBases + min(codingEnd, exon.End) - cc.CodingPositionRange[SE_END] + 1;
-                }
-                else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
-                {
-                    continue;
-                }
-                else
-                {
-                    cc.UpstreamPhase = posStrand ? exon.PhaseEnd : nextExon.PhaseEnd;
-                    cc.RegionType = INTRONIC;
-
-                    int distanceToPrev = exon.Start - upstreamStartPos;
-                    int distanceToNext = upstreamStartPos - nextExon.End;
-
-                    if(distanceToPrev < distanceToNext)
-                    {
-                        cc.ExonRank = exon.Rank;
-                        cc.CodingBase = preExonCodingBases;
-                        cc.NearestExonDistance = exon.Start - upstreamStartPos;
-                    }
-                    else
-                    {
-                        cc.ExonRank = nextExon.Rank;
-                        cc.CodingBase = preExonCodingBases + 1; // first base of next exon
-                        cc.NearestExonDistance = nextExon.End - upstreamStartPos; // negative
-                    }
-                }
-
-                break;
-            }
-        }
-
-        if(variant.isIndel() && cc.CodingType == CODING && cc.RegionType == EXONIC)
-        {
-            // now coding bases have been clarified, mark any frameshift INDELs
-            int adjustedCodingBases;
-
-            if(variant.isInsert())
-            {
-                adjustedCodingBases = variant.baseDiff();
+                if(exon.Start > codingStart)
+                    break;
             }
             else
             {
-                String ref = cc.codingRef(variant);
-                String alt = cc.codingAlt(variant);
-
-                cc.DeletedCodingBases = ref.length() - alt.length();
-                adjustedCodingBases = cc.DeletedCodingBases;
-            }
-
-            if(!isCodonMultiple(adjustedCodingBases))
-                cc.IsFrameShift = true;
-        }
-    }
-
-    public static CodingContext setPreOrPostCodingContext(final VariantData variant, final TranscriptData transData)
-    {
-        CodingContext cc = new CodingContext();
-
-        // record exonic bases from the position to the start of coding for 5'UTR, or end of coding to the position for 3'UTR
-        if((transData.posStrand() && variant.altBasesAbove(transData.CodingEnd))
-                || (!transData.posStrand() && variant.altBasesBelow(transData.CodingStart)))
-        {
-            // post-coding
-            cc.CodingBase = codingBaseLength(transData);
-            cc.CodingType = UTR_3P;
-        }
-        else
-        {
-            cc.CodingType = UTR_5P;
-        }
-
-        if(variant.altBasesBelow(transData.CodingStart))
-        {
-            int codingStart = transData.CodingStart;
-            int position = variant.EndPosition; // TO-DO - use alt methods where possible
-
-            for(int i = 0; i < transData.exons().size(); ++i)
-            {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
-
-                if(nextExon != null && variant.altBasesAbove(nextExon.Start - 1))
+                if(codingEnd > exon.End)
                     continue;
 
-                if(variant.altPositionsOverlap(exon.Start, exon.End))
-                {
-                    cc.ExonRank = exon.Rank;
-                    cc.RegionType = EXONIC;
+                if(exon.Start > position)
+                    break;
+            }
 
-                    if(positionWithin(codingStart, exon.Start, exon.End))
-                        cc.NearestExonDistance += codingStart - position;
-                    else
-                        cc.NearestExonDistance += exon.End - position;
-                }
-                else if(nextExon != null && position > exon.End && position < nextExon.Start)
-                {
-                    cc.ExonRank = transData.posStrand() ? exon.Rank : nextExon.Rank; // could be set to closest but not used for anything
-                    cc.RegionType = INTRONIC;
-                }
-                else if(exon.Start > position)
-                {
-                    // past where the position is so now just about tracking the exonic bases before coding starts
-                    if(positionWithin(codingStart, exon.Start, exon.End))
-                        cc.NearestExonDistance += codingStart - exon.Start;
-                    else
-                        cc.NearestExonDistance += exon.baseLength();
-                }
-
+            if(posBeforeCodingStart)
+            {
+                // take any portion of exonic bases between the position and coding
                 if(positionWithin(codingStart, exon.Start, exon.End))
-                    break;
+                    cc.CodingBase += codingStart - max(position, exon.Start);
+                else
+                    cc.CodingBase += exon.End - max(position, exon.Start) + 1;
             }
-        }
-        else
-        {
-            // similar for position after coding end
-            int codingEnd = transData.CodingEnd;
-            int position = variant.Position; // TO-DO - use alt methods where possible
-
-            for(int i = transData.exons().size() - 1; i >= 0; --i)
+            else
             {
-                final ExonData exon = transData.exons().get(i);
-                final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
-
-                if(nextExon != null && variant.altBasesBelow(nextExon.End + 1))
-                    continue;
-
-                if(variant.altPositionsOverlap(exon.Start, exon.End))
-                {
-                    cc.ExonRank = exon.Rank;
-                    cc.RegionType = EXONIC;
-
-                    if(positionWithin(codingEnd, exon.Start, exon.End))
-                        cc.NearestExonDistance += position - codingEnd;
-                    else
-                        cc.NearestExonDistance += position - exon.Start;
-                }
-                else if(nextExon != null && position > nextExon.End && position < exon.Start)
-                {
-                    cc.ExonRank = transData.posStrand() ? nextExon.Rank : exon.Rank;
-                    cc.RegionType = INTRONIC;
-                }
-                else if(exon.End < position)
-                {
-                    if(positionWithin(codingEnd, exon.Start, exon.End))
-                        cc.NearestExonDistance += exon.End - codingEnd;
-                    else
-                        cc.NearestExonDistance += exon.baseLength();
-                }
-
                 if(positionWithin(codingEnd, exon.Start, exon.End))
-                    break;
+                    cc.CodingBase += min(position, exon.End) - codingEnd;
+                else
+                    cc.CodingBase += min(position, exon.End) - exon.Start + 1;
             }
         }
 
-        // convention is to have negative values if 5'UTR
-        if(cc.CodingType == UTR_5P)
+        // push base by 1 if intronic and closest to the next exon
+        if(cc.RegionType == INTRONIC)
         {
-            cc.NearestExonDistance *= -1;
-        }
-
-        return cc;
-    }
-
-    public static CodingContext setNonCodingContext(final int posStart, final int posEnd, final TranscriptData transData)
-    {
-        CodingContext cc = new CodingContext();
-
-        // can set exon ranks and bases from start of transcript but that's it
-        cc.CodingType = NON_CODING;
-
-        // how to define bases for HGVC coding if at all?
-        if(transData.posStrand())
-        {
-            for(int i = 0; i < transData.exons().size(); ++i)
+            // if closer to an exon away from coding start or end, then add a base
+            if(posStrand)
             {
-                final ExonData exon = transData.exons().get(i);
-
-                if(posStart > exon.End)
-                    continue;
-
-                if(posStart < exon.Start)
-                {
-                    cc.ExonRank = exon.Rank - 1;
-                    cc.RegionType = INTRONIC;
-
-                    cc.NearestExonDistance = posStart - transData.TransStart;
-
-                }
-                else if(positionWithin(posStart, exon.Start, exon.End))
-                {
-                    cc.ExonRank = exon.Rank;
-                    cc.RegionType = EXONIC;
-                }
-
-                break;
+                if(cc.CodingType == UTR_5P && cc.NearestExonDistance > 0) // back one base upstream
+                    ++cc.CodingBase;
+                else if(cc.CodingType == UTR_3P && cc.NearestExonDistance < 0) // one base downstream
+                    ++cc.CodingBase;
             }
-        }
-        else
-        {
-            cc.NearestExonDistance = transData.TransEnd - posEnd;
-
-            for(int i = transData.exons().size() - 1; i >= 0; --i)
+            else
             {
-                final ExonData exon = transData.exons().get(i);
-
-                if(posEnd < exon.Start)
-                    continue;
-
-                if(posEnd > exon.End)
-                {
-                    cc.ExonRank = exon.Rank - 1;
-                    cc.RegionType = INTRONIC;
-                }
-                else if(positionWithin(posEnd, exon.Start, exon.End))
-                {
-                    cc.ExonRank = exon.Rank;
-                    cc.RegionType = EXONIC;
-                }
-
-                break;
+                // currently the same to match SnpEff but think the reverse would make more sense
+                if(cc.CodingType == UTR_5P && cc.NearestExonDistance > 0)
+                    ++cc.CodingBase;
+                else if(cc.CodingType == UTR_3P && cc.NearestExonDistance < 0)
+                    ++cc.CodingBase;
             }
         }
-
-        return cc;
     }
-
-    public static void setUpstreamContext(final VariantData variant, final TranscriptData transData, final CodingContext cc)
-    {
-        cc.RegionType = UPSTREAM;
-
-        // upstream (or downstream but not handled)
-        if(transData.posStrand())
-        {
-            // will be negative
-            cc.NearestExonDistance = variant.Position - transData.TransStart;
-        }
-        else
-        {
-            cc.NearestExonDistance = transData.TransEnd - variant.Position;
-        }
-    }
-
 }

@@ -63,7 +63,7 @@ public class CodingContextTest
         assertEquals(NON_CODING, codingContext.CodingType);
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(3, codingContext.ExonRank);
-        assertEquals(22, codingContext.CodingBase); // exonic bases since start
+        assertEquals(23, codingContext.CodingBase); // exonic bases since start
         assertEquals(-3, codingContext.NearestExonDistance); // 2 bases into next intron
 
         // exonic
@@ -102,7 +102,7 @@ public class CodingContextTest
         assertEquals(NON_CODING, codingContext.CodingType);
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(3, codingContext.ExonRank);
-        assertEquals(22, codingContext.CodingBase); // exonic bases since start
+        assertEquals(23, codingContext.CodingBase); // exonic bases since start
         assertEquals(-3, codingContext.NearestExonDistance); // 2 bases into next intron
 
         // exonic
@@ -137,9 +137,6 @@ public class CodingContextTest
 
         assertEquals(UPSTREAM, codingContext.RegionType);
         assertEquals(UNKNOWN, codingContext.CodingType);
-        assertEquals(0, codingContext.ExonRank);
-        assertEquals(0, codingContext.CodingBase);
-        assertEquals(-5, codingContext.NearestExonDistance);
 
         // 5' UTR exonic
         pos = 15;
@@ -149,7 +146,7 @@ public class CodingContextTest
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
         assertEquals(1, codingContext.ExonRank);
-        assertEquals(-11, codingContext.CodingBase);
+        assertEquals(11, codingContext.CodingBase);
         assertEquals(0, codingContext.NearestExonDistance);
 
         // 5' UTR intronic
@@ -160,7 +157,7 @@ public class CodingContextTest
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
         assertEquals(1, codingContext.ExonRank);
-        assertEquals(-5, codingContext.CodingBase);
+        assertEquals(6, codingContext.CodingBase);
         assertEquals(2, codingContext.NearestExonDistance);
 
         // 5' UTR exonic in same exon as coding begins
@@ -171,7 +168,7 @@ public class CodingContextTest
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
         assertEquals(2, codingContext.ExonRank);
-        assertEquals(-3, codingContext.CodingBase);
+        assertEquals(3, codingContext.CodingBase);
         assertEquals(0, codingContext.NearestExonDistance);
 
         // 3'UTR exonic in same exon as coding ends
@@ -227,9 +224,6 @@ public class CodingContextTest
 
         assertEquals(UPSTREAM, codingContext.RegionType);
         assertEquals(UNKNOWN, codingContext.CodingType);
-        assertEquals(0, codingContext.ExonRank);
-        assertEquals(0, codingContext.CodingBase);
-        assertEquals(-5, codingContext.NearestExonDistance);
 
         // 5' UTR exonic
         pos = 95;
@@ -239,7 +233,7 @@ public class CodingContextTest
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
         assertEquals(1, codingContext.ExonRank);
-        assertEquals(-22, codingContext.CodingBase);
+        assertEquals(22, codingContext.CodingBase);
         assertEquals(0, codingContext.NearestExonDistance);
 
         // 5' UTR intronic
@@ -250,7 +244,7 @@ public class CodingContextTest
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
         assertEquals(1, codingContext.ExonRank);
-        assertEquals(-16, codingContext.CodingBase);
+        assertEquals(17, codingContext.CodingBase);
         assertEquals(2, codingContext.NearestExonDistance);
 
         // 5' UTR exonic in same exon as coding begins
@@ -261,7 +255,7 @@ public class CodingContextTest
         assertEquals(EXONIC, codingContext.RegionType);
         assertEquals(UTR_5P, codingContext.CodingType);
         assertEquals(3, codingContext.ExonRank);
-        assertEquals(-3, codingContext.CodingBase);
+        assertEquals(3, codingContext.CodingBase);
         assertEquals(0, codingContext.NearestExonDistance);
 
         // 3'UTR exonic in same exon as coding ends
@@ -283,7 +277,7 @@ public class CodingContextTest
         assertEquals(INTRONIC, codingContext.RegionType);
         assertEquals(UTR_3P, codingContext.CodingType);
         assertEquals(5, codingContext.ExonRank);
-        assertEquals(5, codingContext.CodingBase);
+        assertEquals(6, codingContext.CodingBase);
         assertEquals(-2, codingContext.NearestExonDistance);
 
         // 3'UTR exonic
