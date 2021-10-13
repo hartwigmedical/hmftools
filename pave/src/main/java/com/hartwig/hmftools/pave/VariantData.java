@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class VariantData
     private int mLocalPhaseSetId;
     public String mMicrohomology;
     public int mRepeatCount;
+    public String mRepeatSequence;
 
     private final int mIndelBaseDiff;
 
@@ -78,6 +80,7 @@ public class VariantData
 
         mLocalPhaseSetId = -1;
         mMicrohomology = "";
+        mRepeatSequence = "";
         mRepeatCount = 0;
 
         mIndelBaseDiff = Alt.length() - Ref.length();
@@ -130,6 +133,7 @@ public class VariantData
         variant.setVariantDetails(
                 variantContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, NO_LOCAL_PHASE_SET),
                 variantContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY),
+                variantContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY),
                 variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));
 
         return variant;
@@ -163,16 +167,18 @@ public class VariantData
     public RefVariantData refData() { return mRefVariantData; }
     public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
 
-    public void setVariantDetails(int localPhaseSet, final String microHomology, final int repeatCount)
+    public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequece, final int repeatCount)
     {
         mLocalPhaseSetId = localPhaseSet;
         mMicrohomology = microHomology;
+        mRepeatSequence = repeatSequece;
         mRepeatCount = repeatCount;
     }
 
     public boolean hasLocalPhaseSet() { return mLocalPhaseSetId != NO_LOCAL_PHASE_SET; }
     public int localPhaseSet() { return mLocalPhaseSetId; }
     public String microhomology() { return mMicrohomology; }
+    public String repeatSequence() { return mRepeatSequence; }
     public int repeatCount() { return mRepeatCount; }
 
     public Map<String,List<VariantTransImpact>> getImpacts() { return mGeneImpacts; }

@@ -140,7 +140,7 @@ public class ImpactComparisons
         VariantData variant = new VariantData(
                 refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
 
-        variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatCount);
+        variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatSequence, refVariant.RepeatCount);
         variant.setSampleId(sampleId);
         variant.setRefData(refVariant);
 

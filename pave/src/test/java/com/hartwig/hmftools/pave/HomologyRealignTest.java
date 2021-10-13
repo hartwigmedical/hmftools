@@ -52,7 +52,8 @@ public class HomologyRealignTest
         String alt = mRefBases.substring(pos, pos + 1);
 
         VariantData var = new VariantData(CHR_1, pos, ref, alt);
-        var.setVariantDetails(NO_LOCAL_PHASE_SET, "A", 9);
+        String altBases = ref.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 9);
 
         var.setRealignedVariant(createRightAlignedVariant(var, mRefGenome));
         assertTrue(var.realignedVariant() != null);
@@ -72,7 +73,8 @@ public class HomologyRealignTest
         alt = mRefBases.substring(pos, pos + 1);
 
         var = new VariantData(CHR_1, pos, ref, alt);
-        var.setVariantDetails(NO_LOCAL_PHASE_SET, "A", 9);
+        altBases = ref.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 9);
 
         var.setRealignedVariant(createRightAlignedVariant(var, mRefGenome));
         assertTrue(var.realignedVariant() != null);
@@ -86,13 +88,14 @@ public class HomologyRealignTest
         assertTrue(impact.realigned());
         assertEquals(INTRONIC, impact.topEffect());
 
-        // now splice to exonic inframe DEL
-        pos = 48; // intronic DEL
+        // now splice to exonic inframe INS
+        pos = 48;
         ref = mRefBases.substring(pos, pos + 1);
-        alt = ref + "AAA";
+        altBases = "AAA";
+        alt = ref + altBases;
 
         var = new VariantData(CHR_1, pos, ref, alt);
-        var.setVariantDetails(NO_LOCAL_PHASE_SET, "A", 5);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 2);
 
         var.setRealignedVariant(createRightAlignedVariant(var, mRefGenome));
         assertTrue(var.realignedVariant() != null);

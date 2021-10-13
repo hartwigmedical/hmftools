@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
@@ -29,6 +30,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
@@ -214,8 +216,16 @@ public class PaveApplication
                 // check right-alignment if the variant has microhomology
                 if(variant.realignedVariant() != null)
                 {
-                    VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
-                    transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+
+                    if(transImpact.topEffect() == STOP_GAINED && transData.posStrand())
+                    {
+                        // special exceptions - cannot attempt right realignment if a stop-codon was created
+                    }
+                    else
+                    {
+                        VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
+                        transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                    }
                 }
 
                 if(transImpact != null)

@@ -18,11 +18,30 @@ public final class PaveUtils
 
     public static VariantData createRightAlignedVariant(final VariantData variant, final RefGenomeInterface refGenome)
     {
+        if(variant.isBaseChange()) // to be confirmed
+            return null;
+
         if(variant.microhomology().isEmpty() || variant.microhomology().equals(".") || variant.repeatCount() == 0)
             return null;
 
+        // repeat count can only be used where the alt bases match the microhomology and repeat sequence
+        // otherwise shift by the microhomology
+        String altBases = variant.isDeletion() ? variant.Ref.substring(1) : variant.Alt.substring(1);
+
         int mcLength = variant.microhomology().length();
-        int shiftLength = mcLength * (variant.repeatCount() - 1);
+
+        int shiftCount;
+
+        if(variant.microhomology().equals(altBases) && variant.repeatSequence().equals(altBases))
+        {
+            shiftCount = variant.isInsert() ? variant.repeatCount() : variant.repeatCount() - 1;
+        }
+        else
+        {
+            shiftCount = 1;
+        }
+
+        int shiftLength = mcLength * shiftCount;
 
         // eg pos 100 AG>A with G repeated 5 times
         int newPosition = variant.Position + shiftLength;
@@ -36,7 +55,8 @@ public final class PaveUtils
         raVariant.setContext(variant.context());
 
         // due to complexity, skip trying to phase realigned variants
-        raVariant.setVariantDetails(VariantData.NO_LOCAL_PHASE_SET, variant.microhomology(), variant.repeatCount());
+        raVariant.setVariantDetails(VariantData.NO_LOCAL_PHASE_SET, variant.microhomology(), variant.repeatSequence(), variant.repeatCount());
+
         return raVariant;
     }
 

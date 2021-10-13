@@ -272,11 +272,19 @@ public class ImpactClassifier
         boolean nonRaHasSplice = transImpact.effects().stream().anyMatch(x -> isSplice(x));
         boolean raHasSplice = raTransImpact.effects().stream().anyMatch(x -> isSplice(x));
 
-        if(raHasSplice && !nonRaHasSplice || transImpact.topRank() <= raTransImpact.topRank())
+        boolean useRealigned = false;
+
+        if(raHasSplice || nonRaHasSplice)
         {
-            return transImpact;
+            if(nonRaHasSplice && !raHasSplice)
+                useRealigned = true;
         }
         else
+        {
+            useRealigned = raTransImpact.topRank() < transImpact.topRank();
+        }
+
+        if(useRealigned)
         {
             raTransImpact.markRealigned();
 
@@ -284,6 +292,10 @@ public class ImpactClassifier
                 raTransImpact.setSpliceImpactType(transImpact.spliceImpactType());
 
             return raTransImpact;
+        }
+        else
+        {
+            return transImpact;
         }
     }
 

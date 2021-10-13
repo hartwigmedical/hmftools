@@ -46,7 +46,8 @@ public final class HgvsCoding
     public static final String HGVS_TYPE_DEL = "del";
     public static final String HGVS_TYPE_DUP = "dup";
     public static final String HGVS_TYPE_INS = "ins";
-    public static final String HGVS_UNKNOWN = "unknown";
+
+    public static final String HGVS_UNKNOWN = "unknown"; // misclassified or malformed string
 
     public static void set(final VariantData variant, final CodingContext codingContext)
     {
