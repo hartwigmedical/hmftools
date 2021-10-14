@@ -241,6 +241,19 @@ public class VariantData
         }
     }
 
+    public VariantTransImpact getRealignedImpact(final String geneName, final VariantTransImpact transImpact)
+    {
+        if(mRealignedVariant == null)
+            return null;
+
+        List<VariantTransImpact> raImpacts = mRealignedVariant.getImpacts().get(geneName);
+
+        if(raImpacts == null)
+            return null;
+
+        return raImpacts.stream().filter(x -> x.TransData.TransName.equals(transImpact.TransData.TransName)).findFirst().orElse(null);
+    }
+
     public String toString()
     {
         if(mIndelBaseDiff == 0 && Ref.length() == 1)

@@ -7,7 +7,10 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
+import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_2;
@@ -35,6 +38,183 @@ import org.junit.Test;
 
 public class SnvMnvImpactTest
 {
+    @Test
+    public void testNonExonicPositions()
+    {
+        MockRefGenome refGenome = createMockGenome();
+        String refBases = refGenome.RefGenomeMap.get(CHR_1);
+
+        int[] exonStarts = { 0, 30, 60, 90 };
+
+        TranscriptData transDataPos = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, 35, 65, false, "");
+
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        // test 5'UTR
+        int pos = 22;
+        String ref = refBases.substring(pos, pos + 4);
+        String alt = generateAlt(ref);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, transDataPos);
+
+        // first check general coding context fields
+        assertEquals(5, impact.codingContext().CodingBase); // since closer
+        assertEquals(UTR_5P, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(-8, impact.codingContext().NearestExonDistance);
+
+        pos = 15;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        // first check general coding context fields
+        assertEquals(6, impact.codingContext().CodingBase); // since closer
+        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(5, impact.codingContext().NearestExonDistance);
+
+        // coding
+        pos = 45;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(6, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(5, impact.codingContext().NearestExonDistance);
+
+        pos = 51;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(7, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(3, impact.codingContext().ExonRank);
+        assertEquals(-9, impact.codingContext().NearestExonDistance);
+
+        // 3'UTR
+        pos = 72;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(5, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(UTR_3P, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(3, impact.codingContext().ExonRank);
+        assertEquals(2, impact.codingContext().NearestExonDistance);
+
+        pos = 81;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(6, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(4, impact.codingContext().ExonRank);
+        assertEquals(-9, impact.codingContext().NearestExonDistance);
+
+
+        // repeat for negative strand
+        TranscriptData transDataNeg = createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, 35, 65, false, "");
+
+        // test 5'UTR
+        pos = 85;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        // first check general coding context fields
+        assertEquals(6, impact.codingContext().CodingBase); // since closert to upstream exon
+        assertEquals(UTR_5P, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(2, impact.codingContext().NearestExonDistance);
+
+        pos = 73;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        // first check general coding context fields
+        assertEquals(5, impact.codingContext().CodingBase);
+        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(-6, impact.codingContext().NearestExonDistance);
+
+        // coding
+        pos = 51;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(6, impact.codingContext().CodingBase);
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(6, impact.codingContext().NearestExonDistance);
+
+        pos = 45;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(7, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(CODING, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(3, impact.codingContext().ExonRank);
+        assertEquals(-8, impact.codingContext().NearestExonDistance);
+
+        // 3'UTR
+        pos = 22;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(5, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(UTR_3P, impact.codingContext().CodingType);
+        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(3, impact.codingContext().ExonRank);
+        assertEquals(5, impact.codingContext().NearestExonDistance);
+
+        pos = 15;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(6, impact.codingContext().CodingBase); // since closer to previous
+        assertEquals(4, impact.codingContext().ExonRank);
+        assertEquals(-8, impact.codingContext().NearestExonDistance);
+    }
+
     @Test
     public void testMnvBasic()
     {

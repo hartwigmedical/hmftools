@@ -234,7 +234,6 @@ public class FusionDisruptionAnalyser
     }
 
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
-    public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
     public final List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
     public final Map<GeneFusion,String> getInvalidFusions() { return mInvalidFusions; }

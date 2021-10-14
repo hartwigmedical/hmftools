@@ -145,19 +145,28 @@ public final class ProteinUtils
 
         // an INDEL causing a frameshift can exit at this point since the novel AAs do not need to be recorded
         // (and may gone on until the end of the transcript)
+        if(posStrand)
+        {
+            pc.RefAminoAcids = Codons.aminoAcidFromBases(pc.RefCodonBases);
+        }
+        else
+        {
+            pc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.RefCodonBases));
+        }
+
         if(cc.IsFrameShift)
             return pc;
 
         if(posStrand)
         {
-            pc.RefAminoAcids = Codons.aminoAcidFromBases(pc.RefCodonBases);
             pc.AltAminoAcids = Codons.aminoAcidFromBases(pc.AltCodonBases);
         }
         else
         {
-            pc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.RefCodonBases));
             pc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.AltCodonBases));
         }
+
+        // finally remove any amino acids which are the
 
         return pc;
     }

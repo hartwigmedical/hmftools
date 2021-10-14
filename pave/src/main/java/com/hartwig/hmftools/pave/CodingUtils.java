@@ -334,7 +334,7 @@ public final class CodingUtils
 
         int codingStart = transData.CodingStart;
         int codingEnd = transData.CodingEnd;
-        int position = variant.Position; // which ought to be used?
+        int position = posStrand ? variant.Position : variant.EndPosition; // which ought to be used?
 
         for(int i = 0; i < transData.exons().size(); ++i)
         {
@@ -379,21 +379,13 @@ public final class CodingUtils
         if(cc.RegionType == INTRONIC)
         {
             // if closer to an exon away from coding start or end, then add a base
-            if(posStrand)
-            {
-                if(cc.CodingType == UTR_5P && cc.NearestExonDistance > 0) // back one base upstream
-                    ++cc.CodingBase;
-                else if(cc.CodingType == UTR_3P && cc.NearestExonDistance < 0) // one base downstream
-                    ++cc.CodingBase;
-            }
-            else
-            {
-                // currently the same to match SnpEff but think the reverse would make more sense
-                if(cc.CodingType == UTR_5P && cc.NearestExonDistance > 0)
-                    ++cc.CodingBase;
-                else if(cc.CodingType == UTR_3P && cc.NearestExonDistance < 0)
-                    ++cc.CodingBase;
-            }
+            if(cc.CodingType == UTR_5P && cc.NearestExonDistance > 0) // back one base upstream
+                ++cc.CodingBase;
+            else if(cc.CodingType == UTR_3P && cc.NearestExonDistance < 0) // one base downstream
+                ++cc.CodingBase;
         }
+
+        if(cc.CodingBase == 0)
+            cc.CodingBase = 1; // since zero-based
     }
 }

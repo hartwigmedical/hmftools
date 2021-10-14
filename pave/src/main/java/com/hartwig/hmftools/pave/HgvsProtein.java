@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
@@ -11,6 +9,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOU
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DEL;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
+import static com.hartwig.hmftools.pave.HgvsCoding.isDuplication;
 
 import java.util.Map;
 
@@ -43,51 +42,54 @@ public final class HgvsProtein
         StringBuilder sb = new StringBuilder();
         sb.append(PROTEIN_ID);
 
-        String refAminoAcids = convertToTriLetters(proteinContext.RefAminoAcids);
-        String altAminoAcids = !proteinContext.AltAminoAcids.isEmpty() ? convertToTriLetters(proteinContext.AltAminoAcids) : "";
-        int aaIndex = proteinContext.CodonIndex;
-
-        sb.append(refAminoAcids);
-        sb.append(aaIndex);
-
-        if(effect == SYNONYMOUS)
-        {
-            sb.append("=");
-
-            // no Stop retained
-        }
-        else if(effect == MISSENSE)
-        {
-            sb.append(altAminoAcids);
-        }
-        else if(effect == STOP_GAINED)
-        {
-            sb.append("*");
-        }
-        else if(effect == FRAMESHIFT)
-        {
-            sb.append("fs");
-        }
-        else if(effect == START_LOST)
-        {
-            sb.append("?");
-        }
-        else if(effect == STOP_LOST)
-        {
-            sb.append(altAminoAcids);
-            sb.append("ext*?");
-        }
-        else if(effect == FRAMESHIFT)
-        {
-            sb.append("fs");
-        }
-        else if(isInframe(effect))
+        if(isInframe(effect))
         {
             formInframe(variant, proteinContext, sb);
         }
         else
         {
-            sb.append(HGVS_UNKNOWN);
+            String refAminoAcids = convertToTriLetters(proteinContext.RefAminoAcids);
+            String altAminoAcids = !proteinContext.AltAminoAcids.isEmpty() ? convertToTriLetters(proteinContext.AltAminoAcids) : "";
+            int aaIndex = proteinContext.CodonIndex;
+
+            sb.append(refAminoAcids);
+            sb.append(aaIndex);
+
+            if(effect == SYNONYMOUS)
+            {
+                sb.append("=");
+
+                // no Stop retained
+            }
+            else if(effect == MISSENSE)
+            {
+                sb.append(altAminoAcids);
+            }
+            else if(effect == STOP_GAINED)
+            {
+                sb.append("*");
+            }
+            else if(effect == START_LOST)
+            {
+                sb.append("?");
+            }
+            else if(effect == STOP_LOST)
+            {
+                sb.append(altAminoAcids);
+                sb.append("ext*?");
+            }
+            else if(effect == FRAMESHIFT)
+            {
+                sb.append("fs");
+            }
+            else if(isInframe(effect))
+            {
+                formInframe(variant, proteinContext, sb);
+            }
+            else
+            {
+                sb.append(HGVS_UNKNOWN);
+            }
         }
 
         return sb.toString();
@@ -96,6 +98,47 @@ public final class HgvsProtein
     private static void formInframe(
             final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
     {
+        int aaIndex = proteinContext.CodonIndex;
+        String refAminoAcids = proteinContext.RefAminoAcids;
+        String altAminoAcids = proteinContext.AltAminoAcids;
+
+        // strip out any matching AA from the start if the ref has more than 1
+        if(!refAminoAcids.isEmpty() && !altAminoAcids.isEmpty() && refAminoAcids.charAt(0) == altAminoAcids.charAt(0))
+        {
+            refAminoAcids = refAminoAcids.substring(1);
+            altAminoAcids = altAminoAcids.substring(1);
+            aaIndex++;
+        }
+
+        String refTriAAs = convertToTriLetters(refAminoAcids);
+        String altTriAAs = !altAminoAcids.isEmpty() ? convertToTriLetters(altAminoAcids) : "";
+
+        sb.append(refTriAAs);
+        sb.append(aaIndex);
+
+        if(variant.isDeletion())
+        {
+            int delLength = refAminoAcids.length() - altAminoAcids.length();
+
+            if(delLength == 1)
+            {
+                sb.append(HGVS_TYPE_DEL);
+            }
+            else
+            {
+                sb.append("_");
+            }
+        }
+        else if(variant.isBaseChange())
+        {
+
+        }
+        else if(isDuplication(variant))
+        {
+
+        }
+
+        /*
         if(variant.isDeletion())
         {
             formDeletion(variant, proteinContext, sb);
@@ -108,6 +151,7 @@ public final class HgvsProtein
         {
             formInsertion(variant, proteinContext, sb);
         }
+        */
     }
 
     private static void formInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
@@ -115,14 +159,6 @@ public final class HgvsProtein
         // Insertion: p.Lys2_Leu3insGlnSer
         // Insertion (non conservative): p.Cys28delinsTrpVal
 
-    }
-
-    public static boolean isDuplication(final VariantData variant)
-    {
-        if(variant.repeatCount() < 2)
-            return false;
-
-        return variant.microhomology().contains(variant.Alt) || variant.Alt.contains(variant.microhomology());
     }
 
     private static void formDuplication(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
@@ -169,5 +205,4 @@ public final class HgvsProtein
 
         return sb.toString();
     }
-
 }

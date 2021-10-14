@@ -216,14 +216,11 @@ public class PaveApplication
                 // check right-alignment if the variant has microhomology
                 if(variant.realignedVariant() != null)
                 {
+                    VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
 
-                    if(transImpact.topEffect() == STOP_GAINED && transData.posStrand())
+                    if(raTransImpact != null)
                     {
-                        // special exceptions - cannot attempt right realignment if a stop-codon was created
-                    }
-                    else
-                    {
-                        VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
+                        variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
                         transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
                     }
                 }
@@ -261,6 +258,10 @@ public class PaveApplication
             sj.add("GeneId,GeneName");
             sj.add(VariantTransImpact.csvHeader());
             sj.add(CodingContext.csvHeader());
+
+            if(mConfig.CompareSnpEff)
+                sj.add("RealignHgvsCoding");
+
             sj.add(ProteinContext.csvHeader());
 
             if(mConfig.CompareSnpEff)
@@ -294,9 +295,11 @@ public class PaveApplication
                     continue;
 
                 mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
-                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
+
+                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s,%s",
                         impact.TransData.GeneId, geneName, impact.toCsv(), impact.codingContext().toCsv(),
                         impact.proteinContext() != null ? impact.proteinContext().toCsv() : ProteinContext.empty()));
+
                 mCsvTranscriptWriter.newLine();
             }
         }
@@ -395,6 +398,10 @@ public class PaveApplication
 
                     sj.add(impact.toCsv());
                     sj.add(impact.codingContext().toCsv());
+
+                    VariantTransImpact raImpact = variant.getRealignedImpact(geneName, impact);
+                    sj.add(raImpact != null ? raImpact.codingContext().Hgvs : "N/A");
+
                     sj.add(impact.proteinContext() != null ? impact.proteinContext().toCsv() : ProteinContext.empty());
 
                     if(!matchedAnnotations.isEmpty())
