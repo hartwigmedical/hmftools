@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
@@ -24,77 +25,192 @@ import static com.hartwig.hmftools.pave.ProteinUtils.getExtraBases;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.fusion.FusionCommon;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 import org.junit.Test;
 
 public class ProteinImpactTest
 {
-    @Test
-    public void testExtraCodingBases()
+    private final MockRefGenome mRefGenome;
+    private final String mRefBases;
+    private final ImpactClassifier mClassifier;
+    private final TranscriptData mPosTrans;
+    private final TranscriptData mNegTrans;
+
+    public ProteinImpactTest()
     {
-        final MockRefGenome refGenome = new MockRefGenome();
+        mRefGenome = new MockRefGenome();
 
-        String chr1Bases = generateRandomBases(100);
-        refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
+        // construct an exon with specific amino acids
+        int preGene = 10;
+        int prePostCoding = 10;
+        String refBases = generateRandomBases(preGene);
 
-        int[] exonStarts = { 10, 30, 50, 70};
+        // pos codons: M 20-22, A 23-25, C 26-28, D 29-31, L 32-34, L 35-37, G 38-40, H 41-43, E 44-46, stopX 47-49
+        // M  A  C  D  L  L  G  H  E  X
+        // ATGGCTTGTGACTTATTAGGACACGAGTAA
+        // 20
 
-        // codons start on at 10, 13, 16 etc
-        Integer codingStart = new Integer(15);
-        Integer codingEnd = new Integer(75);
+        refBases += generateRandomBases(prePostCoding);
+        String codingBases = getAminoAcidCodon(START_AMINO_ACID);
+        codingBases += getAminoAcidsCodons("ACDLLGHE", false);
+        codingBases += STOP_CODON_1;
 
-        TranscriptData transDataPosStrand = createTransExons(
-                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+        refBases += codingBases;
+        refBases += generateRandomBases(preGene);
 
-        ExonData exon = transDataPosStrand.exons().get(1);
+        int transStart = preGene;
+        int codingStart = transStart + prePostCoding;
+        int codingEnd = codingStart + codingBases.length() - 1;
+        int transEnd = codingEnd + prePostCoding;
 
-        String bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 32, 1, false);
-        String refBases = chr1Bases.substring(31, 32);
-        assertTrue(refBases.equals(bases));
+        mPosTrans =  createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {transStart}, transEnd - transStart,
+                codingStart, codingEnd, false, "");
 
-        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 32, 2, false);
-        refBases = chr1Bases.substring(30, 32);
-        assertTrue(refBases.equals(bases));
+        int nextRand = 100 - transEnd;
+        refBases += generateRandomBases(nextRand - 1);
 
-        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 32, 3, false);
-        refBases = chr1Bases.substring(20, 21) + chr1Bases.substring(30, 32);
-        assertTrue(refBases.equals(bases));
+        refBases += generateRandomBases(preGene);
+        refBases += reverseStrandBases(codingBases);
+        refBases += generateRandomBases(preGene);
 
-        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 38, 4, true);
-        refBases = chr1Bases.substring(39, 41) + chr1Bases.substring(50, 52);
-        assertTrue(refBases.equals(bases));
+        transStart = transEnd + nextRand;
+        codingStart = transStart + prePostCoding;
+        codingEnd = codingStart + codingBases.length() - 1;
+        transEnd = codingEnd + prePostCoding;
 
-        TranscriptData transDataNegStrand = createTransExons(
-                GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+        // neg codons: M 139-37, A 136-134, C 133-131, D 130-128, L 127-125, L 124-122, G 121-119, H 118-116, E 115-113, stopX 112-110
+        //   X  E  H  G  L  L  D  C  A  M
+        // TTACTCGTGTCCTAATAAGTCACAAGCCAT GATCGATCGA
+        // 110                            140
+        mNegTrans =  createTransExons(
+                GENE_ID_2, TRANS_ID_2, NEG_STRAND, new int[] {transStart}, transEnd - transStart,
+                codingStart, codingEnd, false, "");
 
-        exon = transDataPosStrand.exons().get(2);
+        mRefBases = refBases;
+        mRefGenome.RefGenomeMap.put(CHR_1, refBases);
 
-        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 52, 4, false);
-        refBases = chr1Bases.substring(39, 41) + chr1Bases.substring(50, 52);
-        assertTrue(refBases.equals(bases));
-
-        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 58, 6, true);
-        refBases = chr1Bases.substring(59, 61) + chr1Bases.substring(70, 74);
-        assertTrue(refBases.equals(bases));
-
+        mClassifier = new ImpactClassifier(mRefGenome);
     }
 
     @Test
-    public void testSynonymous()
+    public void testSynonymousMissense()
     {
+        // SNV - synonymous on first A, 3rd codon base
+        int pos = 25;
+        String ref = mRefBases.substring(pos, pos + 1);
+        String alt = "C";
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
 
+        VariantTransImpact impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(SYNONYMOUS, impact.topEffect());
 
+        assertEquals("c.6T>C", impact.codingContext().Hgvs);
+        assertEquals("p.Ala2=", impact.proteinContext().Hgvs);
 
+        checkHgvsStrings(pos, 1, alt, SYNONYMOUS, "c.6T>C", "p.Ala2=");
+
+        // same codon but missense
+        pos = 24;
+        alt = "G";
+        checkHgvsStrings(pos, 1, alt, MISSENSE, "c.5C>G", "p.Ala2Gly");
+
+        // MNV same codon synonymous: L=TTA -> CTG
+        pos = 32;
+        alt = "CTG";
+
+        checkHgvsStrings(pos, 3, alt, SYNONYMOUS, "c.13_15delTTAinsCTG", "p.Leu5=");
+
+        // now missense
+        alt = "GGC";
+        checkHgvsStrings(pos, 3, alt, MISSENSE, "c.13_15delTTAinsGGC", "p.Leu5Gly");
+
+        // MNV synonymous spanning 2 codons: L L, TTA TTA -> TTG -> CTG
+        pos = 34;
+        alt = "GC";
+        checkHgvsStrings(pos, 2, alt, SYNONYMOUS, "c.15_16delATinsGC", "p.Leu5_Leu6=");
+
+        // now missense: L L, TTA TTA -> TCG -> GTA
+        pos = 33;
+        alt = "CGG";
+        checkHgvsStrings(pos, 3, alt, MISSENSE, "c.14_16delTATinsCGG", "p.Leu5_Leu6delinsSerVal");
+    }
+
+    private void checkHgvsStrings(
+            int pos, int refLen, final String alt, final VariantEffect effect,
+            final String codingStr, final String proteinStr)
+    {
+        // check positive then negative strand
+        String ref = mRefBases.substring(pos, pos + refLen);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(effect, impact.topEffect());
+
+        assertEquals(codingStr, impact.codingContext().Hgvs);
+        assertEquals(proteinStr, impact.proteinContext().Hgvs);
+
+        int negPos = mNegTrans.CodingEnd - (pos - mPosTrans.CodingStart) - (refLen - 1);
+        String negRef = mRefBases.substring(negPos, negPos + refLen);
+        String negAlt = reverseStrandBases(alt);
+        VariantData varNeg = new VariantData(CHR_1, negPos, negRef, negAlt);
+
+        VariantTransImpact impactNeg = mClassifier.classifyVariant(varNeg, mNegTrans);
+        assertEquals(effect, impactNeg.topEffect());
+
+        assertEquals(codingStr, impactNeg.codingContext().Hgvs);
+        assertEquals(proteinStr, impactNeg.proteinContext().Hgvs);
+    }
+
+    private static String getAminoAcidsCodons(final String aminoAcids, boolean reverseStrand)
+    {
+        String codonBases = "";
+
+        // A E F on reverse becomes rev(F) rev(E) rev(A)
+        for(int i = 0; i < aminoAcids.length(); ++i)
+        {
+            if(reverseStrand)
+                codonBases = reverseStrandBases(getAminoAcidCodon(aminoAcids.charAt(i))) + codonBases;
+            else
+                codonBases += getAminoAcidCodon(aminoAcids.charAt(i));
+        }
+
+        return codonBases;
+    }
+
+    private static String getAminoAcidCodon(final char aminoAcid) { return getAminoAcidCodon(aminoAcid, 0); }
+
+    private static String getAminoAcidCodon(final char aminoAcid, int index)
+    {
+        Set<String> codons = AMINO_ACID_TO_CODON_MAP.get(String.valueOf(aminoAcid));
+
+        if(codons == null)
+            return "err";
+
+        int counter = 0;
+        for(String codon : codons)
+        {
+            if(counter == index)
+                return codon;
+
+            ++counter;
+        }
+
+        return "err";
     }
 
     @Test
-    public void testSynonymousMissenseImpacts()
+    public void testSynonymousMissenseImpactsOld()
     {
+        // inferior version of the above, remove once new tests are complete
         final MockRefGenome refGenome = new MockRefGenome();
 
         int[] exonStarts = { 0, 100, 200 };
@@ -233,7 +349,7 @@ public class ProteinImpactTest
 
 
     @Test
-    public void testNonsenseImpacts()
+    public void testNonsenseImpactsOld()
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
@@ -261,7 +377,7 @@ public class ProteinImpactTest
     }
 
     @Test
-    public void testStopStartLostGained()
+    public void testStopStartLostGainedOld()
     {
         // stop gained
         String refAminoAcids = "SILFT";
@@ -285,55 +401,54 @@ public class ProteinImpactTest
 
     }
 
-
     @Test
-    public void testBaseMutations()
+    public void testExtraCodingBases()
     {
-        // SNVs and MNVs
         final MockRefGenome refGenome = new MockRefGenome();
 
-        int[] exonStarts = { 0, 100, 200 };
-
-        // codons start on at 10, 13, 16 etc
-        Integer codingStart = new Integer(10);
-        Integer codingEnd = new Integer(250);
-
-        TranscriptData transDataPosStrand = createTransExons(
-                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 80, codingStart, codingEnd, false, "");
-
-        String chr1Bases = generateRandomBases(300);
-
-        // set the specific AAs for a region of this mock ref genome
-        // S: TCA -> TCG - so last base of codon can change
-        // I: ATC -> ATT
-        // L: TTA -> CTA - first base changes
-
-        //                     40      43      46
-        String aminoAcidSeq = "TCA" + "ATC" + "TTA";
-        chr1Bases = chr1Bases.substring(0, 40) + aminoAcidSeq + chr1Bases.substring(49);
+        String chr1Bases = generateRandomBases(100);
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
-        // test SNVs at the 1st and 3rd codon bases
+        int[] exonStarts = { 10, 30, 50, 70};
 
-        // last base of a codon changes
-        int codonPos = 40;
-        String codon = chr1Bases.substring(codonPos, codonPos + 3);
-        String aminoAcid = AminoAcids.findAminoAcidForCodon(codon);
+        // codons start on at 10, 13, 16 etc
+        Integer codingStart = new Integer(15);
+        Integer codingEnd = new Integer(75);
 
-        String alt = "G";
-        String synCodon = chr1Bases.substring(codonPos, codonPos + 2) + alt;
-        assertTrue(aminoAcid.equals(AminoAcids.findAminoAcidForCodon(synCodon)));
+        TranscriptData transDataPosStrand = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
 
-        int pos = 42;
-        String ref = chr1Bases.substring(pos, pos + 1);
-        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+        ExonData exon = transDataPosStrand.exons().get(1);
 
-        /*
-        ProteinContext proteinContext = ProteinContext.determineContext(var, transDataPosStrand, refGenome);
-        assertTrue(proteinContext.hasCodingBases());
-        assertEquals("S", proteinContext.WildtypeAA);
-        assertEquals("S", proteinContext.NovelAA);
-         */
+        String bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 32, 1, false);
+        String refBases = chr1Bases.substring(31, 32);
+        assertTrue(refBases.equals(bases));
+
+        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 32, 2, false);
+        refBases = chr1Bases.substring(30, 32);
+        assertTrue(refBases.equals(bases));
+
+        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 32, 3, false);
+        refBases = chr1Bases.substring(20, 21) + chr1Bases.substring(30, 32);
+        assertTrue(refBases.equals(bases));
+
+        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 38, 4, true);
+        refBases = chr1Bases.substring(39, 41) + chr1Bases.substring(50, 52);
+        assertTrue(refBases.equals(bases));
+
+        TranscriptData transDataNegStrand = createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
+
+        exon = transDataPosStrand.exons().get(2);
+
+        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 52, 4, false);
+        refBases = chr1Bases.substring(39, 41) + chr1Bases.substring(50, 52);
+        assertTrue(refBases.equals(bases));
+
+        bases = getExtraBases(transDataPosStrand, refGenome, CHR_1, exon, 58, 6, true);
+        refBases = chr1Bases.substring(59, 61) + chr1Bases.substring(70, 74);
+        assertTrue(refBases.equals(bases));
+
     }
 
 }

@@ -100,6 +100,7 @@ public final class HgvsProtein
 
         if(proteinContext.RefAminoAcids.length() > 1)
         {
+            sb.append('_');
             sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(1)));
             sb.append(proteinContext.CodonIndex + 1);
         }
