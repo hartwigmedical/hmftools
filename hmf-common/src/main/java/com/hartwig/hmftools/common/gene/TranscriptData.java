@@ -51,7 +51,8 @@ public class TranscriptData
 
     public String toString()
     {
-        return String.format("%d:%s pos(%d-%d) exons(%d) %s",
-            TransId, TransName, TransStart, TransEnd, mExons.size(), IsCanonical ? "canonical" : "");
+        return String.format("%d:%s pos(%d-%d) exons(%d) coding(%d-%d) strand(%s) %s",
+            TransId, TransName, TransStart, TransEnd, mExons.size(),
+            CodingStart != null ? CodingStart : 0, CodingEnd != null ? CodingEnd : 0, strand(), IsCanonical ? "canonical" : "");
     }
 }

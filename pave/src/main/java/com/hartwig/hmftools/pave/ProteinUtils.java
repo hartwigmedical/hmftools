@@ -68,12 +68,16 @@ public final class ProteinUtils
 
         if(downstreamOpenCodonBases > 0)
         {
-            //int downstreamStartPos = posStrand ? variant.EndPosition : variant.Position;
             int downstreamStartPos = posStrand ? cc.CodingPositionRange[SE_END] : cc.CodingPositionRange[SE_START];
+
+            //if(variant.isInsert())
+            //    downstreamOpenCodonBases += 3; // get the ref codon past the insert as well
 
             // get bases upstream to complete the upstream part of the codon
             boolean searchUp = posStrand;
-            String downstreamBases = getExtraBases(transData, refGenome, variant.Chromosome, exon, downstreamStartPos, downstreamOpenCodonBases, searchUp);
+
+            String downstreamBases = getExtraBases(
+                    transData, refGenome, variant.Chromosome, exon, downstreamStartPos, downstreamOpenCodonBases, searchUp);
 
             if(posStrand)
             {
@@ -143,8 +147,9 @@ public final class ProteinUtils
             }
         }
 
-        // an INDEL causing a frameshift can exit at this point since the novel AAs do not need to be recorded
-        // (and may gone on until the end of the transcript)
+        if(!pc.validRefCodon())
+            return pc;
+
         if(posStrand)
         {
             pc.RefAminoAcids = Codons.aminoAcidFromBases(pc.RefCodonBases);
@@ -154,7 +159,34 @@ public final class ProteinUtils
             pc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.RefCodonBases));
         }
 
+        // fill in any incomplete alt AAs due to a frameshift
         if(cc.IsFrameShift)
+            return pc;
+
+        int downstreamAltMod = pc.AltCodonBases.length() % 3;
+        int downstreamAltOpenCodonBases = downstreamAltMod == 0 ? 0 : 3 - downstreamAltMod;
+
+        if(downstreamAltOpenCodonBases > 0)
+        {
+            int downstreamStartPos = posStrand ? pc.RefCodonsRange[SE_END] : pc.RefCodonsRange[SE_START];
+
+            // get bases upstream to complete the upstream part of the codon
+            boolean searchUp = posStrand;
+
+            String downstreamBases = getExtraBases(
+                    transData, refGenome, variant.Chromosome, exon, downstreamStartPos, downstreamAltOpenCodonBases, searchUp);
+
+            if(posStrand)
+            {
+                pc.AltCodonBases += downstreamBases;
+            }
+            else
+            {
+                pc.AltCodonBases = downstreamBases + pc.AltCodonBases;
+            }
+        }
+
+        if(!pc.validAltCodon())
             return pc;
 
         if(posStrand)

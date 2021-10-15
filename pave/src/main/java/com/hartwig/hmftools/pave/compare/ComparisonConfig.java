@@ -14,7 +14,11 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
+import static com.hartwig.hmftools.pave.compare.ImpactDiffType.ANY;
+import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,6 +36,7 @@ public class ComparisonConfig
     public final String ReferenceVariantsFile;
     public final boolean OnlyDriverGenes;
     public final boolean OnlyCanonical;
+    public final List<ImpactDiffType> ImpactDiffTypes;
     public final boolean WriteTransData;
     public final boolean WriteMatches;
     public final String OutputDir;
@@ -44,6 +49,7 @@ public class ComparisonConfig
     private static final String OUTPUT_ID = "output_id";
     private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_MATCHES = "write_matches";
+    private static final String DIFF_TYPES = "diff_types";
 
     public ComparisonConfig(final CommandLine cmd)
     {
@@ -56,6 +62,17 @@ public class ComparisonConfig
 
         ReferenceVariantsFile = cmd.getOptionValue(REF_VARIANTS_FILE);
 
+        ImpactDiffTypes = Lists.newArrayList();
+
+        if(cmd.hasOption(DIFF_TYPES))
+        {
+            Arrays.stream(cmd.getOptionValue(DIFF_TYPES).split(ITEM_DELIM)).forEach(x -> ImpactDiffTypes.add(ImpactDiffType.valueOf(x)));
+        }
+        else
+        {
+            ImpactDiffTypes.add(CODING_EFFECT);
+        }
+
         OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
         OnlyDriverGenes = cmd.hasOption(ONLY_DRIVER_GENES);
 
@@ -65,6 +82,8 @@ public class ComparisonConfig
         WriteMatches = cmd.hasOption(WRITE_MATCHES);
     }
 
+    public boolean checkDiffType(ImpactDiffType type) { return ImpactDiffTypes.contains(type) || ImpactDiffTypes.contains(ANY); }
+
     @NotNull
     public static Options createOptions()
     {
@@ -73,6 +92,10 @@ public class ComparisonConfig
         options.addOption(REF_VARIANTS_FILE, true, "File with variants to test against");
         options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
         options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");
+
+        options.addOption(
+                DIFF_TYPES, true, "Types of diffs to write to file: CODING_EFFECT, EFFECTS, HGVS_CODING, HGVS_PROTEIN, ANY");
+
         options.addOption(WRITE_TRANS_DATA, false, "Write detailed transcript impact data");
         options.addOption(WRITE_MATCHES, false, "Write matches as well");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);

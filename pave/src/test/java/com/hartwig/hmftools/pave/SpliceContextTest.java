@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Test;
 
-public class SpliceImpactTest
+public class SpliceContextTest
 {
     private MockRefGenome mRefGenome = createMockGenome(41);
     private String mRefBases = mRefGenome.RefGenomeMap.get(CHR_1);

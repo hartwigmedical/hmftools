@@ -335,6 +335,8 @@ public final class CodingUtils
         int codingStart = transData.CodingStart;
         int codingEnd = transData.CodingEnd;
         int position = posStrand ? variant.Position : variant.EndPosition; // which ought to be used?
+        int totalCodingBases = 0;
+        boolean codingEndsOnExonBoundary = false;
 
         for(int i = 0; i < transData.exons().size(); ++i)
         {
@@ -373,6 +375,14 @@ public final class CodingUtils
                 else
                     cc.CodingBase += min(position, exon.End) - exon.Start + 1;
             }
+
+            if(positionsOverlap(codingStart, codingEnd, exon.Start, exon.End))
+                totalCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
+
+            if(posStrand && codingEnd == exon.End)
+                codingEndsOnExonBoundary = true;
+            else if(!posStrand && codingStart == exon.Start)
+                codingEndsOnExonBoundary = true;
         }
 
         // push base by 1 if intronic and closest to the next exon
@@ -386,6 +396,11 @@ public final class CodingUtils
         }
 
         if(cc.CodingBase == 0)
-            cc.CodingBase = 1; // since zero-based
+        {
+            if(codingEndsOnExonBoundary)
+                cc.CodingBase = totalCodingBases;
+            else
+                cc.CodingBase = 1; // since zero-based
+        }
     }
 }

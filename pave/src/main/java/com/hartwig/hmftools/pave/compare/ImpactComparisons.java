@@ -16,6 +16,9 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
+import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
+import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_CODING;
+import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_PROTEIN;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -35,6 +38,7 @@ import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
+import com.hartwig.hmftools.pave.VariantTransImpact;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -166,11 +170,54 @@ public class ImpactComparisons
     {
         ++mTotalComparisons;
 
+        if(refVariant.Gene.isEmpty() && variant.getImpacts().isEmpty())
+        {
+            ++mMatchedCount;
+            return;
+        }
+
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        boolean diffCodingEffect = hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
+        boolean hasDiff = false;
 
-        if(!diffCodingEffect)
+        if(refVariant.Gene.isEmpty() != variant.getImpacts().isEmpty())
+        {
+            hasDiff = true;
+        }
+        else
+        {
+            if(mConfig.checkDiffType(CODING_EFFECT))
+            {
+                hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
+            }
+
+            VariantTransImpact transImpact = variant.getCanonicalTransImpacts(refVariant.Gene);
+
+            if(transImpact != null)
+            {
+                VariantTransImpact raTransImpact = variant.getRealignedImpact(refVariant.Gene, transImpact);
+
+                if(mConfig.checkDiffType(HGVS_CODING))
+                {
+                    if(!transImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)
+                    && (raTransImpact != null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
+                    {
+                        hasDiff = true;
+                    }
+                }
+
+                if(mConfig.checkDiffType(HGVS_PROTEIN))
+                {
+                    if(!transImpact.hgvsCoding().equals(refVariant.HgvsProteinImpact)
+                            && (raTransImpact != null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsProteinImpact)))
+                    {
+                        hasDiff = true;
+                    }
+                }
+            }
+        }
+
+        if(!hasDiff)
         {
             ++mMatchedCount;
         }
@@ -179,7 +226,7 @@ public class ImpactComparisons
             logComparison(sampleId, refVariant, variant, variantImpact);
         }
 
-        if(diffCodingEffect || mConfig.WriteMatches)
+        if(hasDiff || mConfig.WriteMatches)
             mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant);
     }
 

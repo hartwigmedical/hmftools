@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Test;
 
-public class DelImpactTest
+public class DelCodingContextTest
 {
     @Test
     public void testInframeDels()

@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOU
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isSplice;
+import static com.hartwig.hmftools.pave.HgvsProtein.reportProteinImpact;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
@@ -112,7 +113,12 @@ public class ImpactClassifier
         checkStopStartCodons(transImpact);
 
         if(transImpact.hasProteinContext())
-            transImpact.proteinContext().Hgvs = HgvsProtein.generate(variant, transImpact.proteinContext(), transImpact.topEffect());
+        {
+            VariantEffect proteinEffect = transImpact.effects().stream().filter(x -> reportProteinImpact(x)).findFirst().orElse(null);
+
+            if(proteinEffect != null)
+                transImpact.proteinContext().Hgvs = HgvsProtein.generate(variant, transImpact.proteinContext(), proteinEffect);
+        }
 
         return transImpact;
     }

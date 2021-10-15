@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Test;
 
-public class InsertImpactTest
+public class InsertCodingContextTest
 {
     @Test
     public void testInserts()

@@ -282,7 +282,7 @@ public class PaveApplication
         if(mCsvTranscriptWriter == null)
             return;
 
-        List<VariantTransImpact> geneImpacts = variant.getImpacts().get(geneName);
+        List<VariantTransImpact> geneImpacts = variant.getGeneImpacts(geneName);
 
         if(geneImpacts == null)
             return;

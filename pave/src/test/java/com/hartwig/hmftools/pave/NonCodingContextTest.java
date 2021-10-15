@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 import org.junit.Test;
 
-public class CodingContextTest
+public class NonCodingContextTest
 {
     private static CodingContext determineContext(final VariantData variant, final TranscriptData transData)
     {

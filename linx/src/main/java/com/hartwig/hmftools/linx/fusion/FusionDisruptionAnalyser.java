@@ -149,7 +149,7 @@ public class FusionDisruptionAnalyser
         if(cmdLineArgs == null)
             return;
 
-        if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
+        if(cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
         {
             int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
             PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
@@ -165,7 +165,7 @@ public class FusionDisruptionAnalyser
             mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
         }
 
-        if (cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
+        if(cmdLineArgs.hasOption(RNA_FUSIONS_FILE))
         {
             if(mConfig.Threads > 1 && mConfig.hasMultipleSamples())
             {
@@ -248,18 +248,18 @@ public class FusionDisruptionAnalyser
         for(final SvVarData var : svList)
         {
             // now that transcripts have been marked as disruptive it is safe to purge any which cannot make viable fusions
-            if (purgeInvalidTranscripts)
+            if(purgeInvalidTranscripts)
             {
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
-                    if (be == SE_END && var.isSglBreakend())
+                    if(be == SE_END && var.isSglBreakend())
                         continue;
 
                     boolean isStart = isStart(be);
 
                     List<BreakendGeneData> genesList = var.getGenesList(isStart);
 
-                    for (BreakendGeneData gene : genesList)
+                    for(BreakendGeneData gene : genesList)
                     {
                         int transIndex = 0;
                         while (transIndex < gene.transcripts().size())
@@ -267,7 +267,7 @@ public class FusionDisruptionAnalyser
                             BreakendTransData transcript = gene.transcripts().get(transIndex);
 
                             // only retain transcript which are potential fusion candidates (with exception for canonical)
-                            if (!transcript.isDisruptive() && !validFusionTranscript(transcript) && !transcript.isCanonical())
+                            if(!transcript.isDisruptive() && !validFusionTranscript(transcript) && !transcript.isCanonical())
                             {
                                 gene.transcripts().remove(transIndex);
                             }
@@ -391,9 +391,9 @@ public class FusionDisruptionAnalyser
     private void finalSingleSVFusions(final List<SvVarData> svList)
     {
         // always report SVs by themselves
-        for (final SvVarData var : svList)
+        for(final SvVarData var : svList)
         {
-            if (var.isSglBreakend() && var.getSglMappings().isEmpty())
+            if(var.isSglBreakend() && var.getSglMappings().isEmpty())
                 continue;
 
             // skip SVs which have been chained unless they are in an IG region
@@ -421,7 +421,7 @@ public class FusionDisruptionAnalyser
                         genesListStart, genesListEnd, null, null, null, null);
             }
 
-            if (fusions.isEmpty())
+            if(fusions.isEmpty())
                 continue;
 
             if(mLogReportableOnly)
@@ -432,7 +432,7 @@ public class FusionDisruptionAnalyser
             final SvCluster cluster = var.getCluster();
 
             // check transcript disruptions
-            for (final GeneFusion fusion : fusions)
+            for(final GeneFusion fusion : fusions)
             {
                 FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
                         .clusterId(cluster.id())
@@ -452,18 +452,18 @@ public class FusionDisruptionAnalyser
     private void findChainedFusions(final List<SvCluster> clusters)
     {
         // for now only consider simple SVs and resolved small clusters
-        for (final SvCluster cluster : clusters)
+        for(final SvCluster cluster : clusters)
         {
-            if (cluster.getSvCount() == 1) // simple clusters already checked
+            if(cluster.getSvCount() == 1) // simple clusters already checked
                 continue;
 
-            if (cluster.getChains().isEmpty())
+            if(cluster.getChains().isEmpty())
                 continue;
 
             final List<GeneFusion> chainFusions = Lists.newArrayList();
             final List<ValidTraversalData> validPairs = Lists.newArrayList();
 
-            for (final SvChain chain : cluster.getChains())
+            for(final SvChain chain : cluster.getChains())
             {
                 findChainedFusions(cluster, chain, chainFusions, validPairs);
             }
@@ -509,7 +509,7 @@ public class FusionDisruptionAnalyser
         // whenever a linked pair is traversed by a fusion, it cannot touch or traverse genic regions without disrupting the fusion
         final List<LinkedPair> linkedPairs = chain.getLinkedPairs();
 
-        for (int lpIndex1 = 0; lpIndex1 <= linkedPairs.size(); ++lpIndex1)
+        for(int lpIndex1 = 0; lpIndex1 <= linkedPairs.size(); ++lpIndex1)
         {
             SvVarData lowerSV = null;
             SvBreakend lowerBreakend = null;
@@ -530,7 +530,7 @@ public class FusionDisruptionAnalyser
                 lowerBreakend = prevPair.secondBreakend();
             }
 
-            if (lowerSV.isSglBreakend() && lowerSV.getSglMappings().isEmpty())
+            if(lowerSV.isSglBreakend() && lowerSV.getSglMappings().isEmpty())
                 continue;
 
             // handle breakends from a SGL's mapping to known pair genes
@@ -546,18 +546,18 @@ public class FusionDisruptionAnalyser
             {
                 genesListLower = getBreakendGeneList(lowerSV, false);
 
-                if (genesListLower.isEmpty())
+                if(genesListLower.isEmpty())
                     continue;
 
                 lowerBreakendPos = genesListLower.get(0).position();
             }
 
-            if (genesListLower.isEmpty())
+            if(genesListLower.isEmpty())
                 continue;
 
             final List<LinkedPair> traversedPairs = Lists.newArrayList();
 
-            for (int lpIndex2 = lpIndex1; lpIndex2 <= linkedPairs.size(); ++lpIndex2)
+            for(int lpIndex2 = lpIndex1; lpIndex2 <= linkedPairs.size(); ++lpIndex2)
             {
                 SvVarData upperSV = null;
                 SvBreakend upperBreakend = null;
@@ -621,7 +621,7 @@ public class FusionDisruptionAnalyser
                 if(fusions.isEmpty())
                     continue;
 
-                if (lpIndex2 > lpIndex1)
+                if(lpIndex2 > lpIndex1)
                 {
                     // a chain cannot be an exon-exon fusion, so cull any of these
                     fusions = fusions.stream().filter(x -> !x.isExonic()).collect(Collectors.toList());
@@ -637,7 +637,7 @@ public class FusionDisruptionAnalyser
 
                 int validTraversalFusionCount = 0; // between these 2 SVs
 
-                for (GeneFusion fusion : fusions)
+                for(GeneFusion fusion : fusions)
                 {
                     // if the fusion from the upstream gene is on the positive strand, then it will have a fusion direction of +1
                     // whenever it goes through a subsequent linked pair by joining to the first (lower) breakend in the pair
@@ -700,7 +700,7 @@ public class FusionDisruptionAnalyser
                     boolean[] transTerminated = { false, false};
 
                     // check that the chain does not disrupt (ie terminate) the rest of the gene, checking up then downstream in turn
-                    for (int fs = FS_UP; fs <= FS_DOWN; ++fs)
+                    for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
                     {
                         BreakendTransData transcript = fs == FS_UP ? fusion.upstreamTrans() : fusion.downstreamTrans();
                         BreakendGeneData gene = fs == FS_UP ? fusion.upstreamTrans().gene() : fusion.downstreamTrans().gene();
@@ -709,7 +709,7 @@ public class FusionDisruptionAnalyser
 
                         boolean isChainEnd = (isLowerBreakend && lpIndex1 == 0) || (!isLowerBreakend && lpIndex2 == linkedPairs.size());
 
-                        if (isChainEnd)
+                        if(isChainEnd)
                         {
                             transTerminated[fs] = false;
                         }
@@ -998,15 +998,15 @@ public class FusionDisruptionAnalyser
         // add all canonical transcript and then add any additional transcripts from the fusions
         List<BreakendTransData> transcripts = Lists.newArrayList();
 
-        for (SvVarData var : svList)
+        for(SvVarData var : svList)
         {
-            for (int be = SE_START; be <= SE_END; ++be)
+            for(int be = SE_START; be <= SE_END; ++be)
             {
                 // by default don't include SGL alt-mappings - they'll be added if in a fusion
                 if(var.isSglBreakend() && be == SE_END)
                     continue;
 
-                for (BreakendGeneData geneAnnotation : var.getGenesList(isStart(be)))
+                for(BreakendGeneData geneAnnotation : var.getGenesList(isStart(be)))
                 {
                     transcripts.addAll(geneAnnotation.transcripts().stream()
                             .filter(x -> x.isCanonical())

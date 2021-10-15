@@ -183,6 +183,14 @@ public class VariantData
 
     public Map<String,List<VariantTransImpact>> getImpacts() { return mGeneImpacts; }
 
+    public List<VariantTransImpact> getGeneImpacts(final String geneName) { return mGeneImpacts.get(geneName); }
+
+    public VariantTransImpact getCanonicalTransImpacts(final String geneName)
+    {
+        List<VariantTransImpact> transImpacts = mGeneImpacts.get(geneName);
+        return transImpacts != null ? transImpacts.stream().filter(x -> x.TransData.IsCanonical).findFirst().orElse(null) : null;
+    }
+
     public void addImpact(final String geneName, final VariantTransImpact impact)
     {
         if(impact.effects().isEmpty())

@@ -57,7 +57,12 @@ public enum VariantEffect
     public static boolean isInframe(final VariantEffect effect)
     {
         return effect == INFRAME_DELETION || effect == INFRAME_INSERTION
-                || effect == PHASED_INFRAME_DELETION || effect == PHASED_INFRAME_INSERTION;
+            || effect == PHASED_INFRAME_DELETION || effect == PHASED_INFRAME_INSERTION;
+    }
+
+    public static boolean isNonsenseOrFrameshift(final VariantEffect effect)
+    {
+        return effect == FRAMESHIFT || effect == STOP_GAINED || effect == STOP_LOST || effect == START_LOST;
     }
 
     public static List<VariantEffect> convertFromEffects(@NotNull final List<String> effects)
