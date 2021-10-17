@@ -214,7 +214,7 @@ public final class HgvsProtein
     private static void formInframeInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
     {
         int aaIndexStart = proteinContext.CodonIndex;
-        int aaIndexEnd = aaIndexStart + 1;
+        // int aaIndexEnd = aaIndexStart + 1;
         String refAminoAcids = proteinContext.RefAminoAcids;
         String altAminoAcids = proteinContext.NetAltAminoAcids;
 
@@ -266,6 +266,14 @@ public final class HgvsProtein
 
     private static void formFrameshift(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
     {
+        // report first changed AA (ie the ref) downstream and its index
+        String refAminoAcids = proteinContext.NetRefAminoAcids;
+        int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
+        sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+        sb.append(aaIndexStart);
+        sb.append("fs");
+
+        /*
         if(variant.isDeletion())
         {
             formInframeDeletion(proteinContext, sb);
@@ -276,6 +284,7 @@ public final class HgvsProtein
         }
 
         sb.append("fs");
+        */
     }
 
     private static void formStopGained(final ProteinContext proteinContext, final StringBuilder sb)

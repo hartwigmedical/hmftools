@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
@@ -27,6 +28,7 @@ import static com.hartwig.hmftools.pave.ProteinUtils.getExtraBases;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
@@ -208,7 +210,32 @@ public class ProteinImpactTest
         ref = mRefBases.substring(pos, pos + 1);
         alt = ref + getAminoAcidsCodons("RV", false);
         checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.11_12insAGGGTG", "p.Asp4delinsGluGlyCys");
-        // GTAGGGTGCTTA
+
+        // duplications
+    }
+
+    @Test
+    public void testFrameshifts()
+    {
+        int pos = 26;
+        String ref = mRefBases.substring(pos, pos + 2);
+        String alt = ref.substring(0, 1);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
+        assertEquals("c.8delG", impact.codingContext().Hgvs);
+        assertEquals("p.Cys3fs", impact.proteinContext().Hgvs);
+
+        checkHgvsStrings(pos, 2, alt, FRAMESHIFT, "c.8delG", "p.Cys3fs");
+
+        // longer DEL still uses first ref codon
+        checkHgvsStrings(pos, 12, alt, FRAMESHIFT, "c.8_18delGTGACTTATTA", "p.Cys3fs");
+
+        // from an insert
+        alt = "ACC";
+        checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.7_8insCC", "p.Cys3fs");
     }
 
     private void checkHgvsStrings(
@@ -257,21 +284,12 @@ public class ProteinImpactTest
 
     private static String getAminoAcidCodon(final char aminoAcid, int index)
     {
-        Set<String> codons = AMINO_ACID_TO_CODON_MAP.get(String.valueOf(aminoAcid));
+        List<String> codons = AMINO_ACID_TO_CODON_MAP.get(String.valueOf(aminoAcid));
 
-        if(codons == null)
+        if(codons == null || index >= codons.size())
             return "err";
 
-        int counter = 0;
-        for(String codon : codons)
-        {
-            if(counter == index)
-                return codon;
-
-            ++counter;
-        }
-
-        return "err";
+        return codons.get(index);
     }
 
     @Test

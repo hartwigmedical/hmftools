@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 public final class AminoAcids
 {
     // allow amino acids back to possible codons
-        public static final Map<String, Set<String>> AMINO_ACID_TO_CODON_MAP = Maps.newHashMap();
+    public static final Map<String,List<String>> AMINO_ACID_TO_CODON_MAP = Maps.newHashMap();
 
     // long amino-acid name to single letter
     public static final Map<String, String> TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER = Maps.newHashMap();
@@ -40,11 +40,11 @@ public final class AminoAcids
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Glu", "E"); // Glutamic Acid
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Phe", "F"); // Phenylalanine
 
-        AMINO_ACID_TO_CODON_MAP.put("A", Sets.newHashSet("GCA", "GCC", "GCG", "GCT")); // Ala
-        AMINO_ACID_TO_CODON_MAP.put("C", Sets.newHashSet("TGC", "TGT")); // Cys
-        AMINO_ACID_TO_CODON_MAP.put("D", Sets.newHashSet("GAC", "GAT")); // Asp
-        AMINO_ACID_TO_CODON_MAP.put("E", Sets.newHashSet("GAA", "GAG")); // Glu
-        AMINO_ACID_TO_CODON_MAP.put("F", Sets.newHashSet("TTC", "TTT")); // Phe
+        AMINO_ACID_TO_CODON_MAP.put("A", Lists.newArrayList("GCT", "GCA", "GCC", "GCG")); // Ala
+        AMINO_ACID_TO_CODON_MAP.put("C", Lists.newArrayList("TGT", "TGC")); // Cys
+        AMINO_ACID_TO_CODON_MAP.put("D", Lists.newArrayList("GAC", "GAT")); // Asp
+        AMINO_ACID_TO_CODON_MAP.put("E", Lists.newArrayList("GAG", "GAA")); // Glu
+        AMINO_ACID_TO_CODON_MAP.put("F", Lists.newArrayList("TTC", "TTT")); // Phe
 
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Gly", "G"); // Glycine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("His", "H"); // Histidine
@@ -52,11 +52,11 @@ public final class AminoAcids
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Lys", "K"); // Lysine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Leu", "L"); // Leucine
 
-        AMINO_ACID_TO_CODON_MAP.put("G", Sets.newHashSet("GGA", "GGC", "GGG", "GGT")); // Gly
-        AMINO_ACID_TO_CODON_MAP.put("H", Sets.newHashSet("CAC", "CAT")); // His
-        AMINO_ACID_TO_CODON_MAP.put("I", Sets.newHashSet("ATA", "ATC", "ATT")); // Ile
-        AMINO_ACID_TO_CODON_MAP.put("K", Sets.newHashSet("AAA", "AAG")); // Lys
-        AMINO_ACID_TO_CODON_MAP.put("L", Sets.newHashSet("TTA", "TTG", "CTA", "CTC", "CTG", "CTT")); // Leu
+        AMINO_ACID_TO_CODON_MAP.put("G", Lists.newArrayList("GGA", "GGC", "GGG", "GGT")); // Gly
+        AMINO_ACID_TO_CODON_MAP.put("H", Lists.newArrayList("CAC", "CAT")); // His
+        AMINO_ACID_TO_CODON_MAP.put("I", Lists.newArrayList("ATA", "ATC", "ATT")); // Ile
+        AMINO_ACID_TO_CODON_MAP.put("K", Lists.newArrayList("AAA", "AAG")); // Lys
+        AMINO_ACID_TO_CODON_MAP.put("L", Lists.newArrayList("TTA", "TTG", "CTA", "CTC", "CTG", "CTT")); // Leu
 
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Met", "M"); // Methionine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Asn", "N"); // Asparagine
@@ -64,11 +64,11 @@ public final class AminoAcids
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Gln", "Q"); // Glutamine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Arg", "R"); // Arginine
 
-        AMINO_ACID_TO_CODON_MAP.put("M", Sets.newHashSet(START_CODON)); // Met
-        AMINO_ACID_TO_CODON_MAP.put("N", Sets.newHashSet("AAC", "AAT")); // Asn
-        AMINO_ACID_TO_CODON_MAP.put("P", Sets.newHashSet("CCA", "CCC", "CCG", "CCT")); // Pro
-        AMINO_ACID_TO_CODON_MAP.put("Q", Sets.newHashSet("CAA", "CAG")); // Gln
-        AMINO_ACID_TO_CODON_MAP.put("R", Sets.newHashSet("AGA", "AGG", "CGA", "CGC", "CGG", "CGT")); // Arg
+        AMINO_ACID_TO_CODON_MAP.put("M", Lists.newArrayList(START_CODON)); // Met
+        AMINO_ACID_TO_CODON_MAP.put("N", Lists.newArrayList("AAC", "AAT")); // Asn
+        AMINO_ACID_TO_CODON_MAP.put("P", Lists.newArrayList("CCA", "CCC", "CCG", "CCT")); // Pro
+        AMINO_ACID_TO_CODON_MAP.put("Q", Lists.newArrayList("CAA", "CAG")); // Gln
+        AMINO_ACID_TO_CODON_MAP.put("R", Lists.newArrayList("AGG", "AGA", "CGA", "CGC", "CGG", "CGT")); // Arg
 
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Ser", "S"); // Serine
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Thr", "T"); // Threonine
@@ -76,13 +76,13 @@ public final class AminoAcids
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Trp", "W"); // Tryptophan
         TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.put("Tyr", "Y"); // Tyrosine
 
-        AMINO_ACID_TO_CODON_MAP.put("S", Sets.newHashSet("AGC", "AGT", "TCA", "TCC", "TCG", "TCT")); // Ser
-        AMINO_ACID_TO_CODON_MAP.put("T", Sets.newHashSet("ACA", "ACC", "ACG", "ACT")); // Thr
-        AMINO_ACID_TO_CODON_MAP.put("V", Sets.newHashSet("GTA", "GTC", "GTG", "GTT")); // Val
-        AMINO_ACID_TO_CODON_MAP.put("W", Sets.newHashSet("TGG")); // Trp
-        AMINO_ACID_TO_CODON_MAP.put("Y", Sets.newHashSet("TAC", "TAT")); // Tyr
+        AMINO_ACID_TO_CODON_MAP.put("S", Lists.newArrayList("TCA", "AGC", "AGT", "TCC", "TCG", "TCT")); // Ser
+        AMINO_ACID_TO_CODON_MAP.put("T", Lists.newArrayList("ACA", "ACC", "ACG", "ACT")); // Thr
+        AMINO_ACID_TO_CODON_MAP.put("V", Lists.newArrayList("GTG", "GTA", "GTC", "GTT")); // Val
+        AMINO_ACID_TO_CODON_MAP.put("W", Lists.newArrayList("TGG")); // Trp
+        AMINO_ACID_TO_CODON_MAP.put("Y", Lists.newArrayList("TAC", "TAT")); // Tyr
 
-        AMINO_ACID_TO_CODON_MAP.put("X", Sets.newHashSet(STOP_CODON_1, STOP_CODON_2, STOP_CODON_3)); // Tyr
+        AMINO_ACID_TO_CODON_MAP.put("X", Lists.newArrayList(STOP_CODON_1, STOP_CODON_2, STOP_CODON_3)); // Tyr
     }
 
     private static final Logger LOGGER = LogManager.getLogger(AminoAcids.class);
@@ -118,7 +118,7 @@ public final class AminoAcids
 
     @NotNull
     @VisibleForTesting
-    static Map<String, Set<String>> aminoAcidToTrinucleotidesMap()
+    static Map<String,List<String>> aminoAcidToTrinucleotidesMap()
     {
         return AMINO_ACID_TO_CODON_MAP;
     }

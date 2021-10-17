@@ -197,9 +197,9 @@ public class TransvarInterpreterTest {
         assertEquals(4, reverseHotspots.size());
 
         assertHotspot(baseHotspot().position(5).ref("G").alt("GAGC").build(), reverseHotspots.get(0));
-        assertHotspot(baseHotspot().position(5).ref("G").alt("GCGC").build(), reverseHotspots.get(1));
-        assertHotspot(baseHotspot().position(5).ref("G").alt("GTGC").build(), reverseHotspots.get(2));
-        assertHotspot(baseHotspot().position(5).ref("G").alt("GGGC").build(), reverseHotspots.get(3));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GTGC").build(), reverseHotspots.get(1));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GGGC").build(), reverseHotspots.get(2));
+        assertHotspot(baseHotspot().position(5).ref("G").alt("GCGC").build(), reverseHotspots.get(3));
     }
 
     @Test

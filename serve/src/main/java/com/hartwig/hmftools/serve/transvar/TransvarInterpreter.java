@@ -221,7 +221,7 @@ class TransvarInterpreter {
         String aminoAcid = findAminoAcidForCodon(trinucleotideBases);
 
         List<String> allTrinucleotides = Lists.newArrayList();
-        Set<String> trinucleotides = AminoAcids.AMINO_ACID_TO_CODON_MAP.get(aminoAcid);
+        List<String> trinucleotides = AminoAcids.AMINO_ACID_TO_CODON_MAP.get(aminoAcid);
         if(trinucleotides != null)
         {
             for(String trinucleotide : trinucleotides)

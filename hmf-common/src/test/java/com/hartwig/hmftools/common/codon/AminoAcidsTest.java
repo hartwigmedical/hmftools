@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_LIST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ public class AminoAcidsTest
     @Test
     public void allAminoAcidsAreFoundAndAreUnique()
     {
-        Map<String, Set<String>> aminoAcidToTrinucleotideMap = AminoAcids.aminoAcidToTrinucleotidesMap();
+        Map<String, List<String>> aminoAcidToTrinucleotideMap = AminoAcids.aminoAcidToTrinucleotidesMap();
 
         for(String base1 : DNA_BASE_LIST)
         {
@@ -42,9 +43,9 @@ public class AminoAcidsTest
         }
     }
 
-    private static boolean aminoAcidExists(@NotNull Map<String, Set<String>> aminoAcidToTrinucleotideMap, @NotNull String trinucleotide)
+    private static boolean aminoAcidExists(@NotNull Map<String,List<String>> aminoAcidToTrinucleotideMap, @NotNull String trinucleotide)
     {
-        for(Map.Entry<String, Set<String>> entry : aminoAcidToTrinucleotideMap.entrySet())
+        for(Map.Entry<String,List<String>> entry : aminoAcidToTrinucleotideMap.entrySet())
         {
             if(entry.getValue().contains(trinucleotide))
             {
