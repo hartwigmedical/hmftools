@@ -78,9 +78,9 @@ public class InsertCodingContextTest
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(18, 21), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(18, 21) + refBases.substring(30, 33), impact.proteinContext().RefCodonBases);
 
-        String altCodonBases = refBases.substring(18, 19) + alt + refBases.substring(20, 21);
+        String altCodonBases = refBases.substring(18, 19) + alt + refBases.substring(20, 21) + refBases.substring(30, 33);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
@@ -98,9 +98,9 @@ public class InsertCodingContextTest
         assertEquals(3, impact.codingContext().ExonRank);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(39, 41) + refBases.substring(50, 51), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(39, 41) + refBases.substring(50, 54), impact.proteinContext().RefCodonBases);
 
-        altCodonBases = refBases.substring(39, 41) + alt;
+        altCodonBases = refBases.substring(39, 41) + alt + refBases.substring(51, 54);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
@@ -149,9 +149,9 @@ public class InsertCodingContextTest
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(90, 93), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(78, 81) + refBases.substring(90, 93), impact.proteinContext().RefCodonBases);
 
-        altCodonBases = refBases.substring(90, 91) + alt + refBases.substring(92, 93);
+        altCodonBases = refBases.substring(78, 81) + refBases.substring(90, 91) + alt + refBases.substring(92, 93);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
@@ -169,9 +169,9 @@ public class InsertCodingContextTest
         assertEquals(2, impact.codingContext().ExonRank);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(60, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(57, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
 
-        altCodonBases = refBases.substring(60, 61) + alt + refBases.substring(71, 72);
+        altCodonBases = refBases.substring(57, 61) + alt + refBases.substring(71, 72);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
@@ -190,9 +190,9 @@ public class InsertCodingContextTest
         assertEquals(1, impact.codingContext().ExonRank);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(93, 96), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(90, 96), impact.proteinContext().RefCodonBases);
 
-        altCodonBases = alt.substring(1) + refBases.substring(93, 96);
+        altCodonBases = refBases.substring(90, 93) + alt.substring(1) + refBases.substring(93, 96);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
     }

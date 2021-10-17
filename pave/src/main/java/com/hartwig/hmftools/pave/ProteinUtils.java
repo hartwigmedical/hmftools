@@ -66,12 +66,12 @@ public final class ProteinUtils
         int downstreamMod = pc.RefCodonBases.length() % 3;
         int downstreamOpenCodonBases = downstreamMod == 0 ? 0 : 3 - downstreamMod;
 
+        if(variant.isInsert())
+            downstreamOpenCodonBases += 3; // get the ref codon past the insert as well
+
         if(downstreamOpenCodonBases > 0)
         {
             int downstreamStartPos = posStrand ? cc.CodingPositionRange[SE_END] : cc.CodingPositionRange[SE_START];
-
-            //if(variant.isInsert())
-            //    downstreamOpenCodonBases += 3; // get the ref codon past the insert as well
 
             // get bases upstream to complete the upstream part of the codon
             boolean searchUp = posStrand;
@@ -160,8 +160,10 @@ public final class ProteinUtils
         }
 
         // fill in any incomplete alt AAs due to a frameshift
-        if(cc.IsFrameShift)
-            return pc;
+        // if(cc.IsFrameShift)
+        //    return pc;
+
+        pc.AltCodonBasesComplete = pc.AltCodonBases;
 
         int downstreamAltMod = pc.AltCodonBases.length() % 3;
         int downstreamAltOpenCodonBases = downstreamAltMod == 0 ? 0 : 3 - downstreamAltMod;
@@ -178,11 +180,11 @@ public final class ProteinUtils
 
             if(posStrand)
             {
-                pc.AltCodonBases += downstreamBases;
+                pc.AltCodonBasesComplete += downstreamBases;
             }
             else
             {
-                pc.AltCodonBases = downstreamBases + pc.AltCodonBases;
+                pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBasesComplete;
             }
         }
 
@@ -191,16 +193,47 @@ public final class ProteinUtils
 
         if(posStrand)
         {
-            pc.AltAminoAcids = Codons.aminoAcidFromBases(pc.AltCodonBases);
+            pc.AltAminoAcids = Codons.aminoAcidFromBases(pc.AltCodonBasesComplete);
         }
         else
         {
-            pc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.AltCodonBases));
+            pc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.AltCodonBasesComplete));
         }
 
-        // finally remove any amino acids which are the
+        // strip off any matching AAs from the start and end for use in in HGVS strings
 
         return pc;
+    }
+
+    public static void trimAminoAcids(final ProteinContext proteinContext)
+    {
+        int aaIndex = proteinContext.CodonIndex;
+        String refAminoAcids = proteinContext.RefAminoAcids;
+        String altAminoAcids = proteinContext.AltAminoAcids;
+
+        if(!refAminoAcids.equals(altAminoAcids))
+        {
+            // strip out any matching AA from the start if the ref has more than 1
+            if(refAminoAcids.length() > 1 && !refAminoAcids.isEmpty() && !altAminoAcids.isEmpty()
+            && refAminoAcids.charAt(0) == altAminoAcids.charAt(0))
+            {
+                refAminoAcids = refAminoAcids.substring(1);
+                altAminoAcids = altAminoAcids.substring(1);
+                aaIndex++;
+            }
+
+            if(!refAminoAcids.isEmpty() && !altAminoAcids.isEmpty()
+            && refAminoAcids.charAt(refAminoAcids.length() - 1) == altAminoAcids.charAt(altAminoAcids.length() - 1))
+            {
+                refAminoAcids = refAminoAcids.substring(0, refAminoAcids.length() - 1);
+                altAminoAcids = altAminoAcids.substring(0, altAminoAcids.length() - 1);
+            }
+        }
+
+        proteinContext.NetRefAminoAcids = refAminoAcids;
+        proteinContext.NetAltAminoAcids = altAminoAcids;
+        proteinContext.NetCodonIndexRange[SE_START] = aaIndex;
+        proteinContext.NetCodonIndexRange[SE_END] = aaIndex + refAminoAcids.length() - 1;
     }
 
     public static int getOpenCodonBases(int phase)

@@ -1,15 +1,23 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isNonsenseOrFrameshift;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DEL;
+import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
 import static com.hartwig.hmftools.pave.HgvsCoding.isDuplication;
+import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -39,10 +47,41 @@ public final class HgvsProtein
         return isInframe(effect) || isNonsenseOrFrameshift(effect) || effect == SYNONYMOUS || effect == MISSENSE;
     }
 
+    public static String generate(final VariantData variant, final ProteinContext proteinContext, final List<VariantEffect> effects)
+    {
+        if(effects.size() == 1)
+            return generate(variant, proteinContext, effects.get(0));
+
+        boolean hasStopLost = false;
+        boolean hasStopGained = false;
+        VariantEffect topEffect = null;
+
+        for(VariantEffect effect : effects)
+        {
+            if(effect == STOP_GAINED)
+                hasStopGained = true;
+            else if(effect == STOP_LOST)
+                hasStopLost = true;
+            else if(topEffect == null)
+                topEffect = effect;
+        }
+
+        String hgvs = generate(variant, proteinContext, topEffect);
+
+        if(hasStopGained)
+            hgvs += "*";
+        else if(hasStopLost)
+            hgvs += "ext*?";
+
+        return hgvs;
+    }
+
     public static String generate(final VariantData variant, final ProteinContext proteinContext, final VariantEffect effect)
     {
         if(!proteinContext.validRefCodon() || !proteinContext.validAltCodon())
             return HGVS_UNKNOWN;
+
+        trimAminoAcids(proteinContext);
 
         StringBuilder sb = new StringBuilder();
         sb.append(PROTEIN_ID);
@@ -57,21 +96,13 @@ public final class HgvsProtein
                 formMissense(proteinContext, sb);
                 break;
 
-            case STOP_LOST:
-                formStopLost(variant, proteinContext, sb);
-                break;
-
-            case STOP_GAINED:
-                formStopGained(proteinContext, sb);
-                break;
-
             case START_LOST:
                 formStartLost(proteinContext, sb);
                 break;
 
             case INFRAME_DELETION:
             case PHASED_INFRAME_DELETION:
-                formInframeDeletion(variant, proteinContext, sb);
+                formInframeDeletion(proteinContext, sb);
                 break;
 
             case INFRAME_INSERTION:
@@ -82,6 +113,16 @@ public final class HgvsProtein
             case FRAMESHIFT:
                 formFrameshift(variant, proteinContext, sb);
                 break;
+
+            /*
+            case STOP_LOST:
+                formStopLost(variant, proteinContext, sb);
+                break;
+
+            case STOP_GAINED:
+                formStopGained(proteinContext, sb);
+                break;
+            */
 
             default:
                 sb.append(HGVS_UNKNOWN);
@@ -134,6 +175,109 @@ public final class HgvsProtein
         }
     }
 
+    private static void formInframeDeletion(final ProteinContext proteinContext, final StringBuilder sb)
+    {
+        // conservative means only whole codons are deleted, eg p.Gly4_Gln6del
+        // conservative single AA: p.Lys2del
+        // conservative multi: p.Gly4_Gln6del
+        // non-con: p.Cys28_Lys29delinsTrp
+        // only show the straddling bases (ie first and last) - but check that the alt and ref aren't including the same one at start or end
+        int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
+        int aaIndexEnd = proteinContext.NetCodonIndexRange[SE_END];
+        String refAminoAcids = proteinContext.NetRefAminoAcids;
+        String altAminoAcids = proteinContext.NetAltAminoAcids;
+
+        if(refAminoAcids.length() == 1)
+        {
+            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+            sb.append(aaIndexStart);
+            sb.append(HGVS_TYPE_DEL);
+        }
+        else
+        {
+            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+            sb.append(aaIndexStart);
+
+            sb.append('_');
+            sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
+            sb.append(aaIndexEnd);
+            sb.append(HGVS_TYPE_DEL);
+
+            if(!altAminoAcids.isEmpty())
+            {
+                sb.append(HGVS_TYPE_INS);
+                sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
+            }
+        }
+    }
+
+    private static void formInframeInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
+    {
+        int aaIndexStart = proteinContext.CodonIndex;
+        int aaIndexEnd = aaIndexStart + 1;
+        String refAminoAcids = proteinContext.RefAminoAcids;
+        String altAminoAcids = proteinContext.NetAltAminoAcids;
+
+        if(isDuplication(variant))
+        {
+            // duplication (single AA) p.Gln8dup
+            // duplication (range) p.Gly4_Gln6dup
+            String insertedBases = variant.Alt.substring(1);
+            int insertLength = insertedBases.length();
+            int dupCount = insertLength / 3;
+
+            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+            sb.append(aaIndexStart);
+
+            if(dupCount > 1)
+            {
+                sb.append('_');
+                sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
+                sb.append(aaIndexStart + 1);
+            }
+
+            sb.append(HGVS_TYPE_DUP);
+        }
+        else
+        {
+            // insertion p.Lys2_Leu3insGlnSer
+            // insertion (conservative stop) p.Ser81_Val82ins*
+            // insertion (non conservative) p.Cys28delinsTrpVal
+            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+            sb.append(aaIndexStart);
+
+            if(proteinContext.RefAminoAcids.charAt(0) == proteinContext.AltAminoAcids.charAt(0))
+            {
+                // conservative
+                sb.append('_');
+                sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
+                sb.append(aaIndexStart + 1);
+                sb.append(HGVS_TYPE_INS);
+                sb.append(convertToTriLetters(altAminoAcids));
+            }
+            else
+            {
+                sb.append(HGVS_TYPE_DEL);
+                sb.append(HGVS_TYPE_INS);
+                sb.append(convertToTriLetters(altAminoAcids));
+            }
+        }
+    }
+
+    private static void formFrameshift(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
+    {
+        if(variant.isDeletion())
+        {
+            formInframeDeletion(proteinContext, sb);
+        }
+        else
+        {
+            formInframeInsertion(variant, proteinContext, sb);
+        }
+
+        sb.append("fs");
+    }
+
     private static void formStopGained(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // might just be better to add a '*' onto the end
@@ -165,158 +309,6 @@ public final class HgvsProtein
         // no other details are required
         sb.append("p.Met1?");
     }
-
-    private static void formInframeDeletion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
-    {
-    }
-
-    private static void formInframeInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
-    {
-    }
-
-    private static void formFrameshift(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
-    {
-        sb.append("fs");
-    }
-
-/*
-    int aaIndex = proteinContext.CodonIndex;
-        String refAminoAcids = proteinContext.RefAminoAcids;
-        String altAminoAcids = proteinContext.AltAminoAcids;
-
-        // strip out any matching AA from the start if the ref has more than 1
-        if(!refAminoAcids.isEmpty() && !altAminoAcids.isEmpty() && refAminoAcids.charAt(0) == altAminoAcids.charAt(0))
-        {
-            refAminoAcids = refAminoAcids.substring(1);
-            altAminoAcids = altAminoAcids.substring(1);
-            aaIndex++;
-        }
-
-        String refTriAAs = convertToTriLetters(refAminoAcids);
-        String altTriAAs = !altAminoAcids.isEmpty() ? convertToTriLetters(altAminoAcids) : "";
-
-        if(isInframe(effect))
-        {
-            formInframe(variant, proteinContext, sb);
-        }
-        else
-        {
-            sb.append(refTriAAs);
-            sb.append(aaIndex);
-
-            if(effect == SYNONYMOUS)
-            {
-                sb.append("=");
-
-                // no Stop retained
-            }
-            else if(effect == MISSENSE)
-            {
-                sb.append(altAminoAcids);
-            }
-            else if(effect == STOP_GAINED)
-            {
-                sb.append("*");
-            }
-            else if(effect == START_LOST)
-            {
-                sb.append("?");
-            }
-            else if(effect == STOP_LOST)
-            {
-                sb.append(altTriAAs);
-                sb.append("ext*?");
-            }
-            else if(effect == FRAMESHIFT)
-            {
-                sb.append("fs");
-            }
-            else
-            {
-                sb.append(HGVS_UNKNOWN);
-            }
-        }
-
-        return sb.toString();
-    }
-
-    private static void formInframe(
-            final VariantData variant, final ProteinContext proteinContext,
-            final String refTriAAs, final String altTriAAs, int aaIndex, final StringBuilder sb)
-    {
-        if(variant.isDeletion())
-        {
-            sb.append(refTriAAs);
-            sb.append(aaIndex);
-            sb.append(altTriAAs);
-
-            int delLength = refTriAAs.length() - altTriAAs.length();
-
-            if(delLength == 1)
-            {
-                sb.append(HGVS_TYPE_DEL);
-            }
-            else
-            {
-                sb.append("_");
-            }
-        }
-        else
-        {
-            // p.Glu290_Glu291insAla
-            // p.Leu631_Ala632insGlyLeu
-            // p.Ser941_Asn942insThr
-            // if(isDuplication(variant))
-
-            if()
-
-            sb.append(refTriAAs);
-            sb.append(aaIndex);
-            sb.append(altTriAAs);
-
-
-        }
-    }
-
-    private static void formInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
-    {
-        // Insertion: p.Lys2_Leu3insGlnSer
-        // Insertion (non conservative): p.Cys28delinsTrpVal
-
-    }
-
-    private static void formDuplication(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
-    {
-        // Duplication (single AA): p.Gln8dup
-        // Duplication (range): p.Gly4_Gln6dup
-
-    }
-
-    private static void formDeletion(
-            final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
-    {
-        // shows first and last AA that are preserved ??
-        // Deletion (single AA): p.Lys2del
-        // Deletion (range): p.Gly4_Gln6del
-        // Deletion (non conservative): p.Cys28_Lys29delinsTrp
-        if(variant.isDeletion())
-        {
-            int delLength = proteinContext.RefAminoAcids.length() - proteinContext.AltAminoAcids.length();
-
-            if(delLength == 1)
-            {
-                sb.append(HGVS_TYPE_DEL);
-            }
-            else
-            {
-                sb.append("_");
-            }
-
-            return;
-        }
-
-    }
-    */
 
     private static String convertToTriLetters(final char aminoAcid)
     {

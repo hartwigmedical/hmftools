@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceReg
 import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -114,10 +115,10 @@ public class ImpactClassifier
 
         if(transImpact.hasProteinContext())
         {
-            VariantEffect proteinEffect = transImpact.effects().stream().filter(x -> reportProteinImpact(x)).findFirst().orElse(null);
+            List<VariantEffect> proteinEffects = transImpact.effects().stream().filter(x -> reportProteinImpact(x)).collect(Collectors.toList());
 
-            if(proteinEffect != null)
-                transImpact.proteinContext().Hgvs = HgvsProtein.generate(variant, transImpact.proteinContext(), proteinEffect);
+            if(!proteinEffects.isEmpty())
+                transImpact.proteinContext().Hgvs = HgvsProtein.generate(variant, transImpact.proteinContext(), proteinEffects);
         }
 
         return transImpact;

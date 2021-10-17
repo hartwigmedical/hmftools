@@ -216,6 +216,8 @@ public class PhasedVariantClassifier
             combinedAltCodons += transImpact.proteinContext().AltCodonBases;
         }
 
+        // TODO: get any additional downstream bases to complete the alt codon(s)
+
         // check synonymous vs missense from combined bases
         final TranscriptData transData = transImpacts.get(0).TransData;
 

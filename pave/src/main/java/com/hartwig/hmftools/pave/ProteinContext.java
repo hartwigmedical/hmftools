@@ -9,11 +9,18 @@ public class ProteinContext
 {
     public String RefCodonBases; // coding bases rounded expanded to cover whole codons
     public String AltCodonBases; // as above but with ref swapped for alt
-    public int[] RefCodonsRange; // as above but with ref swapped for alt
+    public String AltCodonBasesComplete; // alt codons plus any subsequent downstream refs to make complete codon(s)
+    public int[] RefCodonsRange; // the range of the ref codon bases, use for phasing variants
 
-    public int CodonIndex; // first amino acid affected, corresponds to the coding context CodingBase
+    public int CodonIndex; // amino acid index of ref codon, corresponds to the coding context CodingBase
     public String RefAminoAcids;
     public String AltAminoAcids;
+
+    // strips off any ref codon present in both
+    public int[] NetCodonIndexRange;
+    public String NetRefAminoAcids;
+    public String NetAltAminoAcids;
+
 
     public String Hgvs;
 
@@ -21,11 +28,16 @@ public class ProteinContext
     {
         RefCodonBases = "";
         AltCodonBases = "";
+        AltCodonBasesComplete = "";
         RefCodonsRange = new int[] {0, 0};
 
         CodonIndex = 0;
         RefAminoAcids = "";
         AltAminoAcids = "";
+
+        NetCodonIndexRange = new int[] {0, 0};
+        NetRefAminoAcids = "";
+        NetAltAminoAcids = "";
         Hgvs = "";
     }
 
@@ -34,7 +46,7 @@ public class ProteinContext
     public boolean hasProteinChange() { return !RefAminoAcids.equals(AltAminoAcids); }
 
     public boolean validRefCodon() { return !RefCodonBases.isEmpty() && isCodonMultiple(RefCodonBases.length()); }
-    public boolean validAltCodon() { return isCodonMultiple(AltCodonBases.length()); }
+    public boolean validAltCodon() { return isCodonMultiple(AltCodonBasesComplete.length()); }
 
     public static String csvHeader()
     {

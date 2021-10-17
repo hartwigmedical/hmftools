@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
@@ -144,9 +146,73 @@ public class ProteinImpactTest
         checkHgvsStrings(pos, 3, alt, MISSENSE, "c.14_16delTATinsCGG", "p.Leu5_Leu6delinsSerVal");
     }
 
+    @Test
+    public void testInframeDeletion()
+    {
+        // p.Lys2del
+        // conservative DEL: codon 2 = A
+        int pos = 22;
+        String ref = mRefBases.substring(pos, pos + 4);
+        String alt = ref.substring(0, 1);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_DELETION, impact.topEffect());
+
+        assertEquals("c.4_6delGCT", impact.codingContext().Hgvs);
+        assertEquals("p.Ala2del", impact.proteinContext().Hgvs);
+
+        checkHgvsStrings(pos, 4, alt, INFRAME_DELETION, "c.4_6delGCT", "p.Ala2del");
+
+        // 3 codons conservative
+        checkHgvsStrings(pos, 10, alt, INFRAME_DELETION, "c.4_12delGCTTGTGAC", "p.Ala2_Asp4del");
+
+        // 2 codons non-conservative: deletes part of A and C and makes a G
+        pos = 23;
+        alt = mRefBases.substring(pos, pos + 1);
+
+        checkHgvsStrings(pos, 4, alt, INFRAME_DELETION, "c.5_7delCTT", "p.Ala2_Cys3delinsGly");
+
+        // causing a stop gained or stop lost, similar format except for the new AA
+    }
+
+    @Test
+    public void testInframeInsertion()
+    {
+        // duplication (single AA) p.Gln8dup
+        // duplication (range) p.Gly4_Gln6dup
+        // insertion p.Lys2_Leu3insGlnSer
+        // insertion (conservative stop) p.Ser81_Val82ins*
+        // insertion (non conservative) p.Cys28delinsTrpVal
+
+        // insert a codon in between A1 and C2
+        int pos = 25;
+        String ref = mRefBases.substring(pos, pos + 1);
+        String alt = ref + getAminoAcidCodon('R');
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.6_7insAGG", impact.codingContext().Hgvs);
+        assertEquals("p.Ala2_Cys3insArg", impact.proteinContext().Hgvs);
+
+        checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.6_7insAGG", "p.Ala2_Cys3insArg");
+
+        // insert multiple codons
+        alt = ref + getAminoAcidsCodons("RVS", false);
+        checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.6_7insAGGGTGTCA", "p.Ala2_Cys3insArgValSer");
+
+        // non-conservative insert D(GAC) + L(TTA) -> E(GAA) (G)GGG (C)TGT
+        pos = 30;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + getAminoAcidsCodons("RV", false);
+        checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.11_12insAGGGTG", "p.Asp4delinsGluGlyCys");
+        // GTAGGGTGCTTA
+    }
+
     private void checkHgvsStrings(
-            int pos, int refLen, final String alt, final VariantEffect effect,
-            final String codingStr, final String proteinStr)
+        int pos, int refLen, final String alt, final VariantEffect effect, final String codingStr, final String proteinStr)
     {
         // check positive then negative strand
         String ref = mRefBases.substring(pos, pos + refLen);
@@ -158,9 +224,10 @@ public class ProteinImpactTest
         assertEquals(codingStr, impact.codingContext().Hgvs);
         assertEquals(proteinStr, impact.proteinContext().Hgvs);
 
-        int negPos = mNegTrans.CodingEnd - (pos - mPosTrans.CodingStart) - (refLen - 1);
+        int negPosEquiv = mNegTrans.CodingEnd - (pos - mPosTrans.CodingStart);
+        int negPos = refLen == alt.length() ? negPosEquiv - (refLen - 1) : negPosEquiv - refLen;
         String negRef = mRefBases.substring(negPos, negPos + refLen);
-        String negAlt = reverseStrandBases(alt);
+        String negAlt = var.isInsert() ? negRef + reverseStrandBases(alt.substring(1)) : reverseStrandBases(alt);
         VariantData varNeg = new VariantData(CHR_1, negPos, negRef, negAlt);
 
         VariantTransImpact impactNeg = mClassifier.classifyVariant(varNeg, mNegTrans);
