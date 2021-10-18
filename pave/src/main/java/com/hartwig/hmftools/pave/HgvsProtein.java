@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
@@ -30,6 +31,10 @@ public final class HgvsProtein
      */
 
     private static final String PROTEIN_ID = "p.";
+    private static final String HGVS_FRAMESHIFT = "fs";
+    private static final String HGVS_STOP_LOST = "ext?*";
+    private static final String HGVS_STOP_GAINED = "*";
+    private static final String HGVS_STOP_TRI_CODE = "Ter";
 
     private static final Map<Character,String> AMINO_ACID_SINGLE_TO_TRI_MAP = Maps.newHashMap();
 
@@ -38,7 +43,7 @@ public final class HgvsProtein
         for(Map.Entry<String,String> entry : AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.entrySet())
         {
             AMINO_ACID_SINGLE_TO_TRI_MAP.put(entry.getValue().charAt(0), entry.getKey());
-            AMINO_ACID_SINGLE_TO_TRI_MAP.put(STOP_AMINO_ACID, "Ter");
+            AMINO_ACID_SINGLE_TO_TRI_MAP.put(STOP_AMINO_ACID, HGVS_STOP_TRI_CODE);
         }
     }
 
@@ -52,7 +57,6 @@ public final class HgvsProtein
         if(effects.size() == 1)
             return generate(variant, proteinContext, effects.get(0));
 
-        boolean hasStopLost = false;
         boolean hasStopGained = false;
         VariantEffect topEffect = null;
 
@@ -60,8 +64,6 @@ public final class HgvsProtein
         {
             if(effect == STOP_GAINED)
                 hasStopGained = true;
-            else if(effect == STOP_LOST)
-                hasStopLost = true;
             else if(topEffect == null)
                 topEffect = effect;
         }
@@ -69,9 +71,12 @@ public final class HgvsProtein
         String hgvs = generate(variant, proteinContext, topEffect);
 
         if(hasStopGained)
-            hgvs += "*";
-        else if(hasStopLost)
-            hgvs += "ext*?";
+        {
+            if(hgvs.endsWith(HGVS_STOP_TRI_CODE))
+                hgvs = hgvs.replace(HGVS_STOP_TRI_CODE, HGVS_STOP_GAINED);
+            else if(topEffect != FRAMESHIFT)
+                hgvs += HGVS_STOP_GAINED;
+        }
 
         return hgvs;
     }
@@ -80,8 +85,6 @@ public final class HgvsProtein
     {
         if(!proteinContext.validRefCodon() || !proteinContext.validAltCodon())
             return HGVS_UNKNOWN;
-
-        trimAminoAcids(proteinContext);
 
         StringBuilder sb = new StringBuilder();
         sb.append(PROTEIN_ID);
@@ -100,6 +103,10 @@ public final class HgvsProtein
                 formStartLost(proteinContext, sb);
                 break;
 
+            case STOP_LOST:
+                formStopLost(proteinContext, sb);
+                break;
+
             case INFRAME_DELETION:
             case PHASED_INFRAME_DELETION:
                 formInframeDeletion(proteinContext, sb);
@@ -113,16 +120,6 @@ public final class HgvsProtein
             case FRAMESHIFT:
                 formFrameshift(variant, proteinContext, sb);
                 break;
-
-            /*
-            case STOP_LOST:
-                formStopLost(variant, proteinContext, sb);
-                break;
-
-            case STOP_GAINED:
-                formStopGained(proteinContext, sb);
-                break;
-            */
 
             default:
                 sb.append(HGVS_UNKNOWN);
@@ -154,24 +151,29 @@ public final class HgvsProtein
         // from SNV or MNV, 1 codon p.Arg64Lys or 2 p.Ala100_Val101delinsArgTrp
         // expect to have to matching number of ref and alt codons, typically 1 or 2, possible 3 for a longer MNV (none in prod)
         // current codon index will be the most upstream position since based on most upstream codon (open or already complete)
-        if(proteinContext.RefAminoAcids.length() == 1)
+        int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
+        int aaIndexEnd = proteinContext.NetCodonIndexRange[SE_END];
+        String refAminoAcids = proteinContext.NetRefAminoAcids;
+        String altAminoAcids = proteinContext.NetAltAminoAcids;
+
+        if(proteinContext.NetRefAminoAcids.length() == 1)
         {
-            sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(0)));
-            sb.append(proteinContext.CodonIndex);
-            sb.append(convertToTriLetters(proteinContext.AltAminoAcids.charAt(0)));
+            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+            sb.append(aaIndexStart);
+            sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
         }
         else
         {
-            sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(0)));
-            sb.append(proteinContext.CodonIndex);
+            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+            sb.append(aaIndexStart);
 
             sb.append('_');
-            sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(1)));
-            sb.append(proteinContext.CodonIndex + 1);
+            sb.append(convertToTriLetters(refAminoAcids.charAt(1)));
+            sb.append(aaIndexEnd);
             sb.append(HGVS_TYPE_DEL);
             sb.append(HGVS_TYPE_INS);
-            sb.append(convertToTriLetters(proteinContext.AltAminoAcids.charAt(0)));
-            sb.append(convertToTriLetters(proteinContext.AltAminoAcids.charAt(1)));
+            sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
+            sb.append(convertToTriLetters(altAminoAcids.charAt(1)));
         }
     }
 
@@ -213,27 +215,26 @@ public final class HgvsProtein
 
     private static void formInframeInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
     {
-        int aaIndexStart = proteinContext.CodonIndex;
-        // int aaIndexEnd = aaIndexStart + 1;
         String refAminoAcids = proteinContext.RefAminoAcids;
         String altAminoAcids = proteinContext.NetAltAminoAcids;
 
-        if(isDuplication(variant))
+        if(proteinContext.IsDuplication)
         {
             // duplication (single AA) p.Gln8dup
-            // duplication (range) p.Gly4_Gln6dup
-            String insertedBases = variant.Alt.substring(1);
-            int insertLength = insertedBases.length();
-            int dupCount = insertLength / 3;
-
-            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
-            sb.append(aaIndexStart);
-
-            if(dupCount > 1)
+            // duplication (range) p.Gly4_Gln6dup - variety of AAs
+            // dup range, single AA repeated: c.1014_1019dupTGCTGC	p.Ala339_Ala340dup
+            if(proteinContext.NetCodonIndexRange[SE_END] > proteinContext.NetCodonIndexRange[SE_START])
             {
+                sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
+                sb.append(proteinContext.NetCodonIndexRange[SE_START]);
                 sb.append('_');
-                sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
-                sb.append(aaIndexStart + 1);
+                sb.append(convertToTriLetters(altAminoAcids.charAt(altAminoAcids.length() - 1)));
+                sb.append(proteinContext.NetCodonIndexRange[SE_END]);
+            }
+            else
+            {
+                sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
+                sb.append(proteinContext.NetCodonIndexRange[SE_START]);
             }
 
             sb.append(HGVS_TYPE_DUP);
@@ -243,6 +244,8 @@ public final class HgvsProtein
             // insertion p.Lys2_Leu3insGlnSer
             // insertion (conservative stop) p.Ser81_Val82ins*
             // insertion (non conservative) p.Cys28delinsTrpVal
+            int aaIndexStart = proteinContext.CodonIndex;
+
             sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
             sb.append(aaIndexStart);
 
@@ -271,52 +274,21 @@ public final class HgvsProtein
         int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
         sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
         sb.append(aaIndexStart);
-        sb.append("fs");
-
-        /*
-        if(variant.isDeletion())
-        {
-            formInframeDeletion(proteinContext, sb);
-        }
-        else
-        {
-            formInframeInsertion(variant, proteinContext, sb);
-        }
-
-        sb.append("fs");
-        */
+        sb.append(HGVS_FRAMESHIFT);
     }
 
-    private static void formStopGained(final ProteinContext proteinContext, final StringBuilder sb)
-    {
-        // might just be better to add a '*' onto the end
-        // SNV p.Cys495*
-        // MNV a) first codon becomes stop, as per SNV b) first changes and second becomes stop: p.Cys495_Val496delinsArg*
-        // any INS: a) insert of stop codon by itself
-        // any INS: b) insert of other new AAs then stop codon
-        // any INS: c) change of first codon, insert of other new AAs then stop codon
-        // any DEL: c) change of first codon, insert of other new AAs then stop codon
-        //
-        // single codon
-        // p.Cys495_Val496delins*
-        // p.CysVal495*, looks like the changed (ie Ref) AAs then *
-        // may use
-        sb.append("*");
-    }
-
-    private static void formStopLost(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
+    private static void formStopLost(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // - stop_lost - p.Ter494ext*? - don't show any new AAs after the stop since considered irrelevant
         sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(0)));
         sb.append(proteinContext.CodonIndex);
-        sb.append(convertToTriLetters(proteinContext.AltAminoAcids.charAt(0)));
-        sb.append("ext*?");
+        sb.append(HGVS_STOP_LOST);
     }
 
     private static void formStartLost(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // no other details are required
-        sb.append("p.Met1?");
+        sb.append("Met1?");
     }
 
     private static String convertToTriLetters(final char aminoAcid)

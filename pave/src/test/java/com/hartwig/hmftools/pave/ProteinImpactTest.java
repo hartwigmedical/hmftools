@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
@@ -146,6 +147,22 @@ public class ProteinImpactTest
         pos = 33;
         alt = "CGG";
         checkHgvsStrings(pos, 3, alt, MISSENSE, "c.14_16delTATinsCGG", "p.Leu5_Leu6delinsSerVal");
+
+        // causing stop gained, across 2 codons, L(TTA) L(TTA) -> (C)TGT (X)TAA
+        // eg p.Cys495_Val496delinsArg*
+        pos = 33;
+        alt = "GTTA";
+        checkHgvsStrings(pos, 4, alt, STOP_GAINED, "c.14_17delTATTinsGTTA", "p.Leu5_Leu6delinsCys*");
+
+        // start lost
+        pos = 21;
+        alt = "GT";
+        checkHgvsStrings(pos, 2, alt, START_LOST, "c.2_3delTGinsGT", "p.Met1?");
+
+        // stop lost
+        pos = 48;
+        alt = "C";
+        checkHgvsStrings(pos, 1, alt, STOP_LOST, "c.29A>C", "p.Ter10ext?*");
     }
 
     @Test
@@ -175,7 +192,20 @@ public class ProteinImpactTest
 
         checkHgvsStrings(pos, 4, alt, INFRAME_DELETION, "c.5_7delCTT", "p.Ala2_Cys3delinsGly");
 
-        // causing a stop gained or stop lost, similar format except for the new AA
+        // causing a stop gained: L(TTA) G(GGA) -> TGA
+        pos = 35;
+        alt = mRefBases.substring(pos, pos + 1);
+        checkHgvsStrings(pos, 4, alt, STOP_GAINED, "c.17_19delTAG", "p.Leu6_Gly7delins*");
+
+        // causing a stop lost H(CAC) E(GAG) X(TAA)
+        pos = 41;
+        alt = mRefBases.substring(pos, pos + 1);
+        checkHgvsStrings(pos, 7, alt, STOP_LOST, "c.23_28delACGAGT", "p.His8ext?*");
+
+        // causing a stop lost E(GAG) X(TAA) but the inframe DEL makes a synonymous E
+        pos = 44;
+        alt = mRefBases.substring(pos, pos + 1);
+        checkHgvsStrings(pos, 4, alt, STOP_LOST, "c.26_28delAGT", "p.Glu9ext?*");
     }
 
     @Test
@@ -212,6 +242,32 @@ public class ProteinImpactTest
         checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.11_12insAGGGTG", "p.Asp4delinsGluGlyCys");
 
         // duplications
+
+        // single G repeated
+        pos = 37;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "GGAGGAGGA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.18_19insGGAGGAGGA", impact.codingContext().Hgvs);
+        assertEquals("p.Gly7dup", impact.proteinContext().Hgvs);
+
+        // range of AAs: L(TTA) G(GGA) H(CAC) E(GAG), T>TAGGACACGA - duplicating GHE
+        pos = 36;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "AGGACACGA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("c.17_18insAGGACACGA", impact.codingContext().Hgvs);
+        assertEquals("p.Gly7_Glu9dup", impact.proteinContext().Hgvs);
+
+
     }
 
     @Test
@@ -236,6 +292,69 @@ public class ProteinImpactTest
         // from an insert
         alt = "ACC";
         checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.7_8insCC", "p.Cys3fs");
+
+        // causing a stop gained: L(TTA) -> TGA, and no stop-gained identifier even if one is added
+        pos = 35;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "GA";
+        checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.16_17insGA", "p.Leu6fs");
+    }
+
+    @Test
+    public void testSpecificScenarios()
+    {
+        int preGene = 10;
+        int prePostCoding = 10;
+        String refBases = generateRandomBases(preGene);
+
+        // codons: M 20-22, G 23-25, P 26-28, P 29-31, H 32-34, L 35-37, stopX
+        // M  G  P  H  L  X
+        // ATGGGACCCCACTTATAA
+        // 20
+
+        refBases += generateRandomBases(prePostCoding);
+        String codingBases = getAminoAcidCodon(START_AMINO_ACID);
+        // codingBases += getAminoAcidsCodons("GPR", false);
+        codingBases += "GGACCCCCCCACTTA"; // G, P, P, H, L
+        codingBases += STOP_CODON_1;
+
+        refBases += codingBases;
+        refBases += generateRandomBases(preGene);
+
+        mRefGenome.RefGenomeMap.put(CHR_2, refBases);
+
+        int transStart = preGene;
+        int codingStart = transStart + prePostCoding;
+        int codingEnd = codingStart + codingBases.length() - 1;
+        int transEnd = codingEnd + prePostCoding;
+
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {transStart}, transEnd - transStart,
+                codingStart, codingEnd, false, "");
+
+        int pos = 25;
+        String ref = refBases.substring(pos, pos + 2);
+        String alt = ref.substring(0, 1);
+        VariantData var = new VariantData(CHR_2, pos, ref, alt);
+
+
+        VariantTransImpact impact = mClassifier.classifyVariant(var, transData);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
+        assertEquals("c.7delC", impact.codingContext().Hgvs);
+        assertEquals("p.His5fs", impact.proteinContext().Hgvs);
+
+        // conservative inframe deletion with homology - deletes a P, but can be shifted further
+        pos = 25;
+        ref = refBases.substring(pos, pos + 4);
+        alt = ref.substring(0, 1);
+        var = new VariantData(CHR_2, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, transData);
+        assertEquals(INFRAME_DELETION, impact.topEffect());
+
+        assertEquals("c.7_9delCCC", impact.codingContext().Hgvs);
+        assertEquals("p.Pro4del", impact.proteinContext().Hgvs);
     }
 
     private void checkHgvsStrings(

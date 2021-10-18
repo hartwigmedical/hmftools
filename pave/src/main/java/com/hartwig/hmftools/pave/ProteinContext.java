@@ -20,7 +20,7 @@ public class ProteinContext
     public int[] NetCodonIndexRange;
     public String NetRefAminoAcids;
     public String NetAltAminoAcids;
-
+    public boolean IsDuplication;
 
     public String Hgvs;
 
@@ -38,6 +38,7 @@ public class ProteinContext
         NetCodonIndexRange = new int[] {0, 0};
         NetRefAminoAcids = "";
         NetAltAminoAcids = "";
+        IsDuplication = false;
         Hgvs = "";
     }
 
