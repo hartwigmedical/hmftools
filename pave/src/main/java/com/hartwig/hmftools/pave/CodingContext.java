@@ -31,6 +31,7 @@ public class CodingContext
     public int UpstreamPhase;
 
     public String SpliceDonorAcceptorBases;
+    public boolean CodingEndsOnExonBoundary; // applicable for UTR if position is in the intron immediate before or after
 
     public String Hgvs;
 
@@ -50,6 +51,7 @@ public class CodingContext
 
         NearestExonDistance = 0;
         UpstreamPhase = PHASE_NONE;
+        CodingEndsOnExonBoundary = false;
         Hgvs = "";
     }
 

@@ -383,6 +383,24 @@ public class NonCodingContextTest
 
         impact = classifier.classifyVariant(var, transDataNonCoding);
         assertEquals(NON_CODING_TRANSCRIPT, impact.topEffect());
+
+        // non-coding spanning exonic boundaries
+
+        pos = 298;
+        String ref = refBases.substring(pos, pos + 4);
+        String alt = ref.substring(0, 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNonCoding);
+        assertEquals(100, impact.codingContext().CodingBase);
+
+        pos = 248;
+        ref = refBases.substring(pos, pos + 4);
+        alt = ref.substring(0, 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNonCoding);
+        assertEquals(101, impact.codingContext().CodingBase);
     }
 
 }

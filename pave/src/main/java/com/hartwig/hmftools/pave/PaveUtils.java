@@ -26,15 +26,53 @@ public final class PaveUtils
 
         // repeat count can only be used where the alt bases match the microhomology and repeat sequence
         // otherwise shift by the microhomology
+
+        /*
+        if the microhomology == ins/del sequence and the MH==repeatSeq, then you can extend to the end of the repeat (-1 repeat sequences for the del case)
+
+        instead:
+        if the microhomology == ins/del sequence   and the MH==N*repeatSeq, then you can extend to the end of the repeat ( -N repeat sequences for the del case)
+        where N = any multiple of the repeat sequence (in this example N=2)
+        */
+
         String altBases = variant.isDeletion() ? variant.Ref.substring(1) : variant.Alt.substring(1);
 
         int mcLength = variant.microhomology().length();
 
         int shiftCount;
 
-        if(variant.microhomology().equals(altBases) && variant.repeatSequence().equals(altBases))
+        if(variant.microhomology().equals(altBases))
         {
-            shiftCount = variant.isInsert() ? variant.repeatCount() : variant.repeatCount() - 1;
+            int repeatCount = 0;
+
+            if(variant.repeatSequence().equals(altBases))
+            {
+                repeatCount = variant.repeatCount();
+            }
+            else
+            {
+                // test whether MH = N * repeatSequence
+                int repeatSeqLen = variant.repeatSequence().length();
+
+                int nCount = mcLength / repeatSeqLen;
+
+                String testMH = "";
+
+                for(int i = 0; i < nCount; ++i)
+                {
+                    testMH += variant.repeatSequence();
+                }
+
+                if(testMH.equals(variant.microhomology()))
+                {
+                    repeatCount = variant.repeatCount() / nCount;
+                }
+            }
+
+            if(repeatCount >= 1)
+                shiftCount = variant.isInsert() ? repeatCount : repeatCount - 1;
+            else
+                shiftCount = 1;
         }
         else
         {

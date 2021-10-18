@@ -131,7 +131,8 @@ public final class CodingUtils
                     if(inCoding && positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         codingBaseCount += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
-                    prePosExonicBaseCount += exon.baseLength();
+                    if(variant.Position > exon.End)
+                        prePosExonicBaseCount += exon.baseLength();
 
                     if(nextExon != null && upstreamStartPos >= nextExon.Start)
                         continue;
@@ -219,7 +220,8 @@ public final class CodingUtils
                     if(inCoding && positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         codingBaseCount += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
-                    prePosExonicBaseCount += exon.baseLength();
+                    if(variant.EndPosition < exon.Start)
+                        prePosExonicBaseCount += exon.baseLength();
 
                     if(nextExon != null && upstreamStartPos <= nextExon.End)
                         continue;
@@ -329,6 +331,11 @@ public final class CodingUtils
 
     public static void setUtrCodingExonicDistance(final VariantData variant, final TranscriptData transData, final CodingContext cc)
     {
+        // for positions in the UTR, determine the exonic distance between the position and the start or end of the coding region
+        // 5'UTR position +ve strand transcript,distance from position to coding start
+        // 3'UTR position +ve strand, distance from coding end to position
+        // 5'UTR position -ve strand, distance from coding end to position
+        // 3'UTR position -ve strand, distance from positon to coding start
         boolean posStrand = transData.posStrand();
         boolean posBeforeCodingStart = (posStrand == (cc.CodingType == UTR_5P));
 
@@ -336,7 +343,7 @@ public final class CodingUtils
         int codingEnd = transData.CodingEnd;
         int position = posStrand ? variant.Position : variant.EndPosition; // which ought to be used?
         int totalCodingBases = 0;
-        boolean codingEndsOnExonBoundary = false;
+        boolean codingStartsEndsOnExonBoundary = false;
 
         for(int i = 0; i < transData.exons().size(); ++i)
         {
@@ -344,45 +351,37 @@ public final class CodingUtils
 
             if(posBeforeCodingStart)
             {
-                // exons before the position
-                if(position > exon.End)
-                    continue;
-
                 if(exon.Start > codingStart)
                     break;
+
+                if(position <= exon.End)
+                {
+                    // take any portion of exonic bases between the position and coding
+                    if(positionWithin(codingStart, exon.Start, exon.End))
+                        cc.CodingBase += codingStart - max(position, exon.Start);
+                    else
+                        cc.CodingBase += exon.End - max(position, exon.Start) + 1;
+                }
             }
             else
             {
-                if(codingEnd > exon.End)
-                    continue;
-
                 if(exon.Start > position)
                     break;
-            }
 
-            if(posBeforeCodingStart)
-            {
-                // take any portion of exonic bases between the position and coding
-                if(positionWithin(codingStart, exon.Start, exon.End))
-                    cc.CodingBase += codingStart - max(position, exon.Start);
-                else
-                    cc.CodingBase += exon.End - max(position, exon.Start) + 1;
-            }
-            else
-            {
-                if(positionWithin(codingEnd, exon.Start, exon.End))
-                    cc.CodingBase += min(position, exon.End) - codingEnd;
-                else
-                    cc.CodingBase += min(position, exon.End) - exon.Start + 1;
+                if(codingEnd <= exon.End)
+                {
+                    if(positionWithin(codingEnd, exon.Start, exon.End))
+                        cc.CodingBase += min(position, exon.End) - codingEnd;
+                    else
+                        cc.CodingBase += min(position, exon.End) - exon.Start + 1;
+                }
             }
 
             if(positionsOverlap(codingStart, codingEnd, exon.Start, exon.End))
                 totalCodingBases += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
-            if(posStrand && codingEnd == exon.End)
-                codingEndsOnExonBoundary = true;
-            else if(!posStrand && codingStart == exon.Start)
-                codingEndsOnExonBoundary = true;
+            if(codingEnd == exon.End || codingStart == exon.Start)
+                codingStartsEndsOnExonBoundary = true;
         }
 
         // push base by 1 if intronic and closest to the next exon
@@ -397,10 +396,13 @@ public final class CodingUtils
 
         if(cc.CodingBase == 0)
         {
-            if(codingEndsOnExonBoundary)
-                cc.CodingBase = totalCodingBases;
-            else
+            if(codingStartsEndsOnExonBoundary)
+                cc.CodingEndsOnExonBoundary = true;
+
+            if(cc.CodingType == UTR_5P)
                 cc.CodingBase = 1; // since zero-based
+            else
+                cc.CodingBase = totalCodingBases;
         }
     }
 }

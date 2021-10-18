@@ -83,7 +83,10 @@ public final class HgvsCoding
 
     private static void addUtr(final CodingContext codingContext, final StringBuilder sb)
     {
-        if(codingContext.CodingType == UTR_5P && codingContext.CodingBase > 1)
+        if(codingContext.CodingEndsOnExonBoundary)
+            return;
+
+        if(codingContext.CodingType == UTR_5P) // codingContext.CodingBase > 1
             sb.append('-');
         else if(codingContext.CodingType == UTR_3P)
             sb.append('*');
@@ -96,8 +99,11 @@ public final class HgvsCoding
 
         addUtr(codingContext, sb);
 
-        if((codingContext.CodingType == UTR_5P || codingContext.CodingType == UTR_3P) && codingContext.CodingBase == 0)
+        if(codingContext.CodingBase == 0)
+        {
+            sb.append('-');
             codingBase = 1;
+        }
 
         sb.append(codingBase);
     }
@@ -135,7 +141,12 @@ public final class HgvsCoding
 
         // move past ref base
         if(codingContext.RegionType == EXONIC)
-            ++codingBase;
+        {
+            if(codingContext.CodingType == UTR_5P)
+                --codingBase;
+            else
+                ++codingBase;
+        }
 
         ++nearestExon;
 
