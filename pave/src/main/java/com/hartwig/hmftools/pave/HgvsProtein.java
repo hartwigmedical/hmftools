@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
 import static com.hartwig.hmftools.pave.HgvsCoding.isDuplication;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
 
 import java.util.List;
@@ -54,31 +55,40 @@ public final class HgvsProtein
 
     public static String generate(final VariantData variant, final ProteinContext proteinContext, final List<VariantEffect> effects)
     {
-        if(effects.size() == 1)
-            return generate(variant, proteinContext, effects.get(0));
-
-        boolean hasStopGained = false;
-        VariantEffect topEffect = null;
-
-        for(VariantEffect effect : effects)
+        try
         {
-            if(effect == STOP_GAINED)
-                hasStopGained = true;
-            else if(topEffect == null)
-                topEffect = effect;
+            if(effects.size() == 1)
+                return generate(variant, proteinContext, effects.get(0));
+
+            boolean hasStopGained = false;
+            VariantEffect topEffect = null;
+
+            for(VariantEffect effect : effects)
+            {
+                if(effect == STOP_GAINED)
+                    hasStopGained = true;
+                else if(topEffect == null)
+                    topEffect = effect;
+            }
+
+            String hgvs = generate(variant, proteinContext, topEffect);
+
+            if(hasStopGained)
+            {
+                if(hgvs.endsWith(HGVS_STOP_TRI_CODE))
+                    hgvs = hgvs.replace(HGVS_STOP_TRI_CODE, HGVS_STOP_GAINED);
+                else if(topEffect != FRAMESHIFT)
+                    hgvs += HGVS_STOP_GAINED;
+            }
+
+            return hgvs;
         }
-
-        String hgvs = generate(variant, proteinContext, topEffect);
-
-        if(hasStopGained)
+        catch(Exception e)
         {
-            if(hgvs.endsWith(HGVS_STOP_TRI_CODE))
-                hgvs = hgvs.replace(HGVS_STOP_TRI_CODE, HGVS_STOP_GAINED);
-            else if(topEffect != FRAMESHIFT)
-                hgvs += HGVS_STOP_GAINED;
+            PV_LOGGER.error("var({}) error forming HGVS protein string", variant);
+            e.printStackTrace();
+            return "";
         }
-
-        return hgvs;
     }
 
     public static String generate(final VariantData variant, final ProteinContext proteinContext, final VariantEffect effect)
@@ -118,7 +128,7 @@ public final class HgvsProtein
                 break;
 
             case FRAMESHIFT:
-                formFrameshift(variant, proteinContext, sb);
+                formFrameshift(proteinContext, sb);
                 break;
 
             default:
@@ -267,10 +277,10 @@ public final class HgvsProtein
         }
     }
 
-    private static void formFrameshift(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
+    private static void formFrameshift(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // report first changed AA (ie the ref) downstream and its index
-        String refAminoAcids = proteinContext.NetRefAminoAcids;
+        String refAminoAcids = !proteinContext.NetRefAminoAcids.isEmpty() ? proteinContext.NetRefAminoAcids : proteinContext.RefAminoAcids;
         int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
         sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
         sb.append(aaIndexStart);

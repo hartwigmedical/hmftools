@@ -86,7 +86,8 @@ public final class PaveUtils
 
         String newRef = refGenome.getBaseString(variant.Chromosome, newPosition, newPosition + variant.Ref.length() - 1);
 
-        String newAlt = variant.isInsert() ? variant.Alt : newRef.substring(0, 1);
+        String newAlt = variant.isInsert() ?
+                newRef.substring(0, 1) + variant.Alt.substring(1) : newRef.substring(0, 1);
 
         VariantData raVariant = new VariantData(variant.Chromosome, newPosition, newRef, newAlt);
         raVariant.setRefData(raVariant.refData());

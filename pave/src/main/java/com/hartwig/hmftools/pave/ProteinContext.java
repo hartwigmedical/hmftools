@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.StringJoiner;
@@ -51,7 +53,7 @@ public class ProteinContext
 
     public static String csvHeader()
     {
-        return "HgvsProtein,RefCodonBases,AltCodonBases,CodonIndex,RefAA,AltAA";
+        return "HgvsProtein,RefCodonBases,AltCodonBases,CodonIndex,RefAA,AltAA,NetAARange,NetRefAA,NegAltAA,IsDup";
     }
 
     public String toCsv()
@@ -64,8 +66,12 @@ public class ProteinContext
         sj.add(String.valueOf(CodonIndex));
         sj.add(RefAminoAcids);
         sj.add(AltAminoAcids);
+        sj.add(String.format("%d-%d", NetCodonIndexRange[SE_START], NetCodonIndexRange[SE_END]));
+        sj.add(NetRefAminoAcids);
+        sj.add(NetAltAminoAcids);
+        sj.add(String.valueOf(IsDuplication));
         return sj.toString();
     }
 
-    public static String empty() { return ",,,0,,"; }
+    public static String empty() { return ",,,0,,,0-0,,,"; }
 }

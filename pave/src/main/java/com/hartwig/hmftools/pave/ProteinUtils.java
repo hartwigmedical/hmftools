@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
@@ -239,7 +240,7 @@ public final class ProteinUtils
             }
         }
 
-        trimAminoAcids(pc);
+        trimAminoAcids(variant, pc);
 
         if(!cc.IsFrameShift && variant.isInsert() && !pc.NetAltAminoAcids.isEmpty() && pc.RefAminoAcids.length() >= 2)
         {
@@ -292,7 +293,7 @@ public final class ProteinUtils
         return pc;
     }
 
-    public static void trimAminoAcids(final ProteinContext proteinContext)
+    public static void trimAminoAcids(final VariantData variant, final ProteinContext proteinContext)
     {
         int aaIndex = proteinContext.CodonIndex;
         String refAminoAcids = proteinContext.RefAminoAcids;
@@ -316,18 +317,30 @@ public final class ProteinUtils
                 }
             }
 
+            // and strip off a matching AA from the end if there is one
             if(!refAminoAcids.isEmpty() && !altAminoAcids.isEmpty()
             && refAminoAcids.charAt(refAminoAcids.length() - 1) == altAminoAcids.charAt(altAminoAcids.length() - 1))
             {
                 refAminoAcids = refAminoAcids.substring(0, refAminoAcids.length() - 1);
                 altAminoAcids = altAminoAcids.substring(0, altAminoAcids.length() - 1);
+
+                /*
+                // preserve any insert with a repeat
+                boolean isRepeatInsert = variant.isInsert() && refAminoAcids.length() == 1;
+
+                if(!isRepeatInsert)
+                {
+                    refAminoAcids = refAminoAcids.substring(0, refAminoAcids.length() - 1);
+                    altAminoAcids = altAminoAcids.substring(0, altAminoAcids.length() - 1);
+                }
+                */
             }
         }
 
         proteinContext.NetRefAminoAcids = refAminoAcids;
         proteinContext.NetAltAminoAcids = altAminoAcids;
         proteinContext.NetCodonIndexRange[SE_START] = aaIndex;
-        proteinContext.NetCodonIndexRange[SE_END] = aaIndex + refAminoAcids.length() - 1;
+        proteinContext.NetCodonIndexRange[SE_END] = aaIndex + max(refAminoAcids.length() - 1, 0);
     }
 
     public static int getOpenCodonBases(int phase)

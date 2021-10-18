@@ -266,8 +266,6 @@ public class ProteinImpactTest
 
         assertEquals("c.17_18insAGGACACGA", impact.codingContext().Hgvs);
         assertEquals("p.Gly7_Glu9dup", impact.proteinContext().Hgvs);
-
-
     }
 
     @Test
@@ -314,7 +312,6 @@ public class ProteinImpactTest
 
         refBases += generateRandomBases(prePostCoding);
         String codingBases = getAminoAcidCodon(START_AMINO_ACID);
-        // codingBases += getAminoAcidsCodons("GPR", false);
         codingBases += "GGACCCCCCCACTTA"; // G, P, P, H, L
         codingBases += STOP_CODON_1;
 
@@ -332,11 +329,11 @@ public class ProteinImpactTest
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {transStart}, transEnd - transStart,
                 codingStart, codingEnd, false, "");
 
+        // frameshift DEL
         int pos = 25;
         String ref = refBases.substring(pos, pos + 2);
         String alt = ref.substring(0, 1);
         VariantData var = new VariantData(CHR_2, pos, ref, alt);
-
 
         VariantTransImpact impact = mClassifier.classifyVariant(var, transData);
         assertEquals(FRAMESHIFT, impact.topEffect());
@@ -355,6 +352,46 @@ public class ProteinImpactTest
 
         assertEquals("c.7_9delCCC", impact.codingContext().Hgvs);
         assertEquals("p.Pro4del", impact.proteinContext().Hgvs);
+    }
+
+    @Test
+    public void testSpecificScenarios2()
+    {
+        int preGene = 10;
+        int prePostCoding = 10;
+        String refBases = generateRandomBases(preGene);
+
+        // codons: X 20-22, K 23-25, K 26-28, K 29-31, M 32-34
+        // ATT TTTTTTTGC CAT
+        // 20
+
+        refBases += generateRandomBases(prePostCoding);
+        String codingBases = "ATTTTTTTTTGCCAT"; // M, A, K, K, X
+
+        refBases += codingBases;
+        refBases += generateRandomBases(preGene);
+
+        mRefGenome.RefGenomeMap.put(CHR_2, refBases);
+
+        int transStart = preGene;
+        int codingStart = transStart + prePostCoding;
+        int codingEnd = codingStart + codingBases.length() - 1;
+        int transEnd = codingEnd + prePostCoding;
+
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] {transStart}, transEnd - transStart,
+                codingStart, codingEnd, false, "");
+
+        int pos = 28;
+        String ref = refBases.substring(pos, pos + 1);
+        String alt = ref.substring(0, 1) + "T";
+        VariantData var = new VariantData(CHR_2, pos, ref, alt);
+
+        VariantTransImpact impact = mClassifier.classifyVariant(var, transData);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
+        assertEquals("c.6_7insA", impact.codingContext().Hgvs);
+        // assertEquals("p.Ala5fs", impact.proteinContext().Hgvs);
     }
 
     private void checkHgvsStrings(
