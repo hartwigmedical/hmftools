@@ -23,16 +23,20 @@ public class SampleData
     {
         final String[] items = data.split(DELIMITER, -1);
 
-        if(items.length != 8)
+        if(items.length < 2)
             return null;
 
         String sampleId = items[0];
         String cancerType = items[1];
 
         final List<String> hlaTypes = Lists.newArrayList();
-        for(int i = 2; i < 8; ++i)
+
+        if(items.length == 8)
         {
-            hlaTypes.add(items[i]);
+            for(int i = 2; i < 8; ++i)
+            {
+                hlaTypes.add(items[i]);
+            }
         }
 
         return new SampleData(sampleId, cancerType, hlaTypes);

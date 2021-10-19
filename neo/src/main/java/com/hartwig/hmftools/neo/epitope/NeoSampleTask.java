@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialiseNeo
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.initialisePeptideWriter;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.writeNeoepitopes;
 import static com.hartwig.hmftools.neo.epitope.NeoEpitopeAnnotator.writePeptideHlaData;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -44,6 +45,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.jooq.Record;
+import org.jooq.Record8;
 import org.jooq.Result;
 
 public class NeoSampleTask implements Callable
@@ -83,7 +85,9 @@ public class NeoSampleTask implements Callable
         else
         {
             mNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, mSampleData.Id);
-            mPeptideWriter = initialisePeptideWriter(mConfig.OutputDir, mSampleData.Id);
+
+            if(mConfig.WritePeptides)
+                mPeptideWriter = initialisePeptideWriter(mConfig.OutputDir, mSampleData.Id);
         }
     }
 
@@ -115,7 +119,10 @@ public class NeoSampleTask implements Callable
 
         List<String> validCodingEffects = Lists.newArrayList(NONSENSE_OR_FRAMESHIFT.toString(), MISSENSE.toString());
 
-        final Result<Record> result = mDbAccess.context().select().from(Tables.SOMATICVARIANT)
+        final Result<Record8<String,String,String,Integer,String,String,Double,Integer>> result = mDbAccess.context()
+                .select(SOMATICVARIANT.GENE, SOMATICVARIANT.WORSTCODINGEFFECT, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
+                        SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.VARIANTCOPYNUMBER, SOMATICVARIANT.LOCALPHASESET)
+                .from(Tables.SOMATICVARIANT)
                 .where(Tables.SOMATICVARIANT.SAMPLEID.eq(mSampleData.Id))
                 .and(Tables.SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(Tables.SOMATICVARIANT.GENE.notEqual(""))
