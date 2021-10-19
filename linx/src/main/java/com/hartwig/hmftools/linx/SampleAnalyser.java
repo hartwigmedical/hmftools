@@ -600,6 +600,9 @@ public class SampleAnalyser implements Callable
 
     public void close()
     {
+        mAnalyser.close();
+        mFusionAnalyser.close();
+
         /* TODO
         if(mConfig.hasMultipleSamples() || LNX_LOGGER.isDebugEnabled())
         {
@@ -611,7 +614,5 @@ public class SampleAnalyser implements Callable
             mPcWrite.logStats();
         }
         */
-
-        mAnalyser.close();
     }
 }
