@@ -22,9 +22,10 @@ public class CodingContext
     public int NearestExonDistance;
 
     // coding base from start of transcript's coding region, or exonic bases to coding if UTR, or exonic index if non-coding
+    //
     public int CodingBase; // indexed at 1
 
-    public int[] CodingPositionRange;
+    public int[] CodingPositionRange; // the alt bases for an MNV, otherwise the start and end ref bases (ie enclosing the del or insert)
     public boolean SpansSpliceJunction;
     public boolean IsFrameShift;
     public int DeletedCodingBases;

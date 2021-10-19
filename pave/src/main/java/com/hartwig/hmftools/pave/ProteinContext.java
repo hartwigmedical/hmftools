@@ -18,6 +18,7 @@ public class ProteinContext
     public List<int[]> RefCodonsRanges; // the range of the ref codon bases, use for phasing variants
 
     public int CodonIndex; // amino acid index of ref codon, corresponds to the coding context CodingBase
+
     public String RefAminoAcids;
     public String AltAminoAcids;
 

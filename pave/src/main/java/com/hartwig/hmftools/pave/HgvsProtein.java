@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIF
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isNonsenseOrFrameshift;
@@ -15,9 +14,7 @@ import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DEL;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
-import static com.hartwig.hmftools.pave.HgvsCoding.isDuplication;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
 
 import java.util.List;
 import java.util.Map;
@@ -226,10 +223,11 @@ public final class HgvsProtein
     private static void formInframeInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
     {
         String refAminoAcids = proteinContext.RefAminoAcids;
-        String altAminoAcids = proteinContext.NetAltAminoAcids;
 
         if(proteinContext.IsDuplication)
         {
+            String altAminoAcids = proteinContext.NetAltAminoAcids;
+
             // duplication (single AA) p.Gln8dup
             // duplication (range) p.Gly4_Gln6dup - variety of AAs
             // dup range, single AA repeated: c.1014_1019dupTGCTGC	p.Ala339_Ala340dup
@@ -266,13 +264,13 @@ public final class HgvsProtein
                 sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
                 sb.append(aaIndexStart + 1);
                 sb.append(HGVS_TYPE_INS);
-                sb.append(convertToTriLetters(altAminoAcids));
+                sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
             }
             else
             {
                 sb.append(HGVS_TYPE_DEL);
                 sb.append(HGVS_TYPE_INS);
-                sb.append(convertToTriLetters(altAminoAcids));
+                sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
             }
         }
     }
