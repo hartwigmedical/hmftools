@@ -112,6 +112,7 @@ public class ComparisonWriter
             writer.write(String.format("SampleId,%s,GeneId,GeneName,%s,%s,%s",
                     VariantData.csvCommonHeader(), VariantTransImpact.csvHeader(), CodingContext.csvHeader(), ProteinContext.csvHeader()));
 
+            writer.write(",RealignHgvsCoding,RealignHgvsProtein");
             writer.write(",SnpEffCanonEffects,SnpEffHgvsCoding,SnpEffHgvsProtein,SagePhasedInframeIndel");
 
             writer.newLine();
@@ -150,10 +151,22 @@ public class ComparisonWriter
 
         try
         {
+            VariantTransImpact raImpact = variant.getRealignedImpact(geneName, transImpact);
+
             mTransImpactWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s",
                     sampleId, variant.toCsv(), transImpact.TransData.GeneId, geneName,
                     transImpact.toCsv(), transImpact.codingContext().toCsv(),
                     transImpact.proteinContext() != null ? transImpact.proteinContext().toCsv() : ProteinContext.empty()));
+
+            if(raImpact != null)
+            {
+                mTransImpactWriter.write(String.format(",%s,%s",
+                        raImpact.codingContext().Hgvs, raImpact.proteinContext() != null ? raImpact.proteinContext().Hgvs : "N/A"));
+            }
+            else
+            {
+                mTransImpactWriter.write(",N/A,N/A");
+            }
 
             mTransImpactWriter.write(String.format(",%s,%s,%s,%s",
                     refVariant.CanonicalEffect, refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.PhasedInframeIndel));

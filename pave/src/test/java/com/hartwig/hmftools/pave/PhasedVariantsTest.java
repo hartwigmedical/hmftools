@@ -111,8 +111,8 @@ public class PhasedVariantsTest
         var1 = new VariantData(CHR_1, pos, ref, alt);
         var1.setVariantDetails(1, "", "", 0);
         impact1 = classifyVariant(var1, transDataPos);
-        assertEquals(16, impact1.proteinContext().RefCodonsRange[SE_START]);
-        assertEquals(21, impact1.proteinContext().RefCodonsRange[SE_END]);
+        assertEquals(16, impact1.proteinContext().refCodingBaseStart());
+        assertEquals(21, impact1.proteinContext().refCodingBaseEnd());
 
         assertTrue(impact1.codingContext().IsFrameShift);
         assertTrue(impact1.hasEffect(FRAMESHIFT));
@@ -123,8 +123,8 @@ public class PhasedVariantsTest
         var2 = new VariantData(CHR_1, pos, ref, alt);
         var2.setVariantDetails(1, "", "", 0);
         impact2 = classifyVariant(var2, transDataPos);
-        assertEquals(19, impact2.proteinContext().RefCodonsRange[SE_START]);
-        assertEquals(24, impact2.proteinContext().RefCodonsRange[SE_END]);
+        assertEquals(19, impact2.proteinContext().refCodingBaseStart());
+        assertEquals(24, impact2.proteinContext().refCodingBaseEnd());
 
         assertTrue(impact2.codingContext().IsFrameShift);
         assertTrue(impact2.hasEffect(FRAMESHIFT));

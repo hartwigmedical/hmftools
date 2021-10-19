@@ -5,14 +5,17 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
+import java.util.List;
 import java.util.StringJoiner;
+
+import org.apache.commons.compress.utils.Lists;
 
 public class ProteinContext
 {
     public String RefCodonBases; // coding bases rounded expanded to cover whole codons
     public String AltCodonBases; // as above but with ref swapped for alt
     public String AltCodonBasesComplete; // alt codons plus any subsequent downstream refs to make complete codon(s)
-    public int[] RefCodonsRange; // the range of the ref codon bases, use for phasing variants
+    public List<int[]> RefCodonsRanges; // the range of the ref codon bases, use for phasing variants
 
     public int CodonIndex; // amino acid index of ref codon, corresponds to the coding context CodingBase
     public String RefAminoAcids;
@@ -31,7 +34,7 @@ public class ProteinContext
         RefCodonBases = "";
         AltCodonBases = "";
         AltCodonBasesComplete = "";
-        RefCodonsRange = new int[] {0, 0};
+        RefCodonsRanges = Lists.newArrayList();
 
         CodonIndex = 0;
         RefAminoAcids = "";
@@ -51,9 +54,23 @@ public class ProteinContext
     public boolean validRefCodon() { return !RefCodonBases.isEmpty() && isCodonMultiple(RefCodonBases.length()); }
     public boolean validAltCodon() { return isCodonMultiple(AltCodonBasesComplete.length()); }
 
+    public int refCodingBaseStart() { return refCodingBasePosition(SE_START); }
+    public int refCodingBaseEnd() { return refCodingBasePosition(SE_END); }
+
+    public int refCodingBasePosition(int seIndex)
+    {
+        if(RefCodonsRanges.isEmpty())
+            return -1;
+
+        if(seIndex == SE_START)
+            return RefCodonsRanges.get(0)[SE_START];
+        else
+            return RefCodonsRanges.get(RefCodonsRanges.size() - 1)[SE_END];
+    }
+
     public static String csvHeader()
     {
-        return "HgvsProtein,RefCodonBases,AltCodonBases,CodonIndex,RefAA,AltAA,NetAARange,NetRefAA,NegAltAA,IsDup";
+        return "HgvsProtein,RefCodonBases,AltCodonBases,CodonIndex,RefAA,AltAA,NetAARange,NetRefAA,NetAltAA,IsDup";
     }
 
     public String toCsv()

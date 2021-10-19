@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -28,8 +31,6 @@ public final class ProteinUtils
 
         boolean posStrand = transData.posStrand();
 
-        int upstreamStartPos = posStrand ? cc.CodingPositionRange[SE_START] : cc.CodingPositionRange[SE_END];
-
         ExonData exon = transData.exons().stream().filter(x -> x.Rank == cc.ExonRank).findFirst().orElse(null);
 
         if(exon == null)
@@ -41,8 +42,7 @@ public final class ProteinUtils
         String refCodingBases = refGenome.getBaseString(variant.Chromosome, cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END]);
         pc.RefCodonBases = refCodingBases;
 
-        pc.RefCodonsRange[SE_START] = cc.CodingPositionRange[SE_START];
-        pc.RefCodonsRange[SE_END] = cc.CodingPositionRange[SE_END];
+        pc.RefCodonsRanges.add(new int[] { cc.CodingPositionRange[SE_START], cc.CodingPositionRange[SE_END] });
 
         int upstreamOpenCodonBases = cc.CodingBase > 1 ? getOpenCodonBases(cc.UpstreamPhase) : 0;
 
@@ -50,17 +50,17 @@ public final class ProteinUtils
         {
             // get bases upstream to complete the upstream part of the codon
             boolean searchUp = !posStrand;
-            String upstreamBases = getExtraBases(transData, refGenome, variant.Chromosome, exon, upstreamStartPos, upstreamOpenCodonBases, searchUp);
+
+            String upstreamBases = getExtraBases(
+                    transData, refGenome, variant.Chromosome, exon, upstreamOpenCodonBases, searchUp, pc.RefCodonsRanges);
 
             if(posStrand)
             {
                 pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
-                pc.RefCodonsRange[SE_START] -= upstreamOpenCodonBases;
             }
             else
             {
                 pc.RefCodonBases += upstreamBases;
-                pc.RefCodonsRange[SE_END] += upstreamOpenCodonBases;
             }
         }
 
@@ -72,23 +72,19 @@ public final class ProteinUtils
 
         if(downstreamOpenCodonBases > 0)
         {
-            int downstreamStartPos = posStrand ? cc.CodingPositionRange[SE_END] : cc.CodingPositionRange[SE_START];
-
             // get bases upstream to complete the upstream part of the codon
             boolean searchUp = posStrand;
 
             String downstreamBases = getExtraBases(
-                    transData, refGenome, variant.Chromosome, exon, downstreamStartPos, downstreamOpenCodonBases, searchUp);
+                    transData, refGenome, variant.Chromosome, exon, downstreamOpenCodonBases, searchUp, pc.RefCodonsRanges);
 
             if(posStrand)
             {
                 pc.RefCodonBases += downstreamBases;
-                pc.RefCodonsRange[SE_END] += downstreamOpenCodonBases;
             }
             else
             {
                 pc.RefCodonBases = downstreamBases + pc.RefCodonBases;
-                pc.RefCodonsRange[SE_START] -= downstreamOpenCodonBases;
             }
         }
 
@@ -102,7 +98,6 @@ public final class ProteinUtils
         int varLength = ref.length();
 
         // find the start of the codon in which the first base of the variant is in, and likewise the end of the last codon
-
         if(posStrand)
         {
             if(upstreamOpenCodonBases > 0)
@@ -124,12 +119,37 @@ public final class ProteinUtils
             // working: alt = post-var (6 - 3 - 1) AC + alt AAT + upstream pre-var (6 - 1) A
 
             // DEL example: var TACA > T, with ref: CGT-ACA-ACA and alt: CGT-...-ACA
-            // var length = 4, open codon bases = 2 (ie AC), ref codon length = 9
-            // working: alt = post-var (9 - 4 - 2) CGT + alt A (modified as above) + upstream pre-var (9 - 2) CA
+            // var length = 4, open codon bases = 2 (ie CA), ref codon length = 9, override upstream bases = 3
+            // working: alt = post-var (9 - 4 - 3) CG + alt T (1st ref base) + upstream pre-var (9 - 3) ACA
 
-            // adjustments for inserts since they have the ref stuck on the upper side
+            // INS example:
+
+            int upstreamRefBases = variant.isDeletion() ? upstreamOpenCodonBases + 1 : upstreamOpenCodonBases;
+
             if(variant.isInsert())
             {
+                // adjustments for inserts since they have the ref stuck on the upper side
+                alt = alt.substring(1) + refCodingBases;
+            }
+            else if(variant.isDeletion())
+            {
+                alt = !alt.isEmpty() ? alt.substring(0, 1) : "";
+            }
+
+            if(upstreamRefBases > 0 && codonBaseLength >= varLength + upstreamRefBases)
+            {
+                pc.AltCodonBases = pc.RefCodonBases.substring(0, codonBaseLength - varLength - upstreamRefBases) + alt
+                        + pc.RefCodonBases.substring(codonBaseLength - upstreamRefBases);
+            }
+            else
+            {
+                pc.AltCodonBases = pc.RefCodonBases.substring(0, codonBaseLength - varLength) + alt;
+            }
+
+            /*
+            if(variant.isInsert())
+            {
+                // adjustments for inserts since they have the ref stuck on the upper side
                 alt = alt.substring(1) + refCodingBases;
             }
             else if(variant.isDeletion())
@@ -146,6 +166,7 @@ public final class ProteinUtils
             {
                 pc.AltCodonBases = pc.RefCodonBases.substring(0, codonBaseLength - varLength) + alt;
             }
+            */
         }
 
         if(!pc.validRefCodon())
@@ -168,7 +189,7 @@ public final class ProteinUtils
 
         if(downstreamAltOpenCodonBases > 0)
         {
-            int downstreamStartPos = posStrand ? pc.RefCodonsRange[SE_END] : pc.RefCodonsRange[SE_START];
+            int downstreamStartPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
 
             // get bases upstream to complete the upstream part of the codon
             boolean searchUp = posStrand;
@@ -203,7 +224,7 @@ public final class ProteinUtils
         {
             // from last ref codon base get 3 more each time
             boolean searchUp = posStrand;
-            int currentPos = posStrand ? pc.RefCodonsRange[SE_END] : pc.RefCodonsRange[SE_START];
+            int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
             int extraBases = 3 + downstreamAltOpenCodonBases;
 
             String refCodonBases = pc.RefCodonBases;
@@ -216,10 +237,10 @@ public final class ProteinUtils
                 if(downstreamBases == null)
                     break;
 
-                String refDownstreamBases = downstreamBases.substring(0, downstreamBases.length() - downstreamAltOpenCodonBases);
-
                 if(posStrand)
                 {
+                    // trim of the extra base(s) that the frame-shifted alt needs
+                    String refDownstreamBases = downstreamBases.substring(0, downstreamBases.length() - downstreamAltOpenCodonBases);
                     String newRefCodonBases = refCodonBases + refDownstreamBases;
                     pc.AltCodonBasesComplete = pc.AltCodonBases + downstreamBases;
                     pc.RefAminoAcids = Codons.aminoAcidFromBases(newRefCodonBases);
@@ -227,7 +248,8 @@ public final class ProteinUtils
                 }
                 else
                 {
-                    String newRefCodonBases = refDownstreamBases = refCodonBases;
+                    String refDownstreamBases = downstreamBases.substring(1);
+                    String newRefCodonBases = refDownstreamBases + refCodonBases;
                     pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBases;
                     pc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(newRefCodonBases));
                     pc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(pc.AltCodonBasesComplete));
@@ -270,7 +292,7 @@ public final class ProteinUtils
                 {
                     int extraBases = (netAminoAcids.length() - 1) * 3;
                     boolean searchUp = posStrand;
-                    int currentPos = posStrand ? pc.RefCodonsRange[SE_END] : pc.RefCodonsRange[SE_START];
+                    int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
 
                     String downstreamBases = getExtraBases(
                             transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
@@ -323,17 +345,6 @@ public final class ProteinUtils
             {
                 refAminoAcids = refAminoAcids.substring(0, refAminoAcids.length() - 1);
                 altAminoAcids = altAminoAcids.substring(0, altAminoAcids.length() - 1);
-
-                /*
-                // preserve any insert with a repeat
-                boolean isRepeatInsert = variant.isInsert() && refAminoAcids.length() == 1;
-
-                if(!isRepeatInsert)
-                {
-                    refAminoAcids = refAminoAcids.substring(0, refAminoAcids.length() - 1);
-                    altAminoAcids = altAminoAcids.substring(0, altAminoAcids.length() - 1);
-                }
-                */
             }
         }
 
@@ -358,7 +369,23 @@ public final class ProteinUtils
             final TranscriptData transData, final RefGenomeInterface refGenome, final String chromosome,
             final ExonData currentExon, int startPos, int requiredBases, boolean searchUp)
     {
+        // convenience method which doesn't require a list of coding base ranges, nor updates them
+        final List<int[]> codingBaseRanges = Lists.newArrayList(new int[] {startPos, startPos});
+        return getExtraBases(transData, refGenome, chromosome, currentExon, requiredBases, searchUp, codingBaseRanges);
+    }
+
+    public static String getExtraBases(
+            final TranscriptData transData, final RefGenomeInterface refGenome, final String chromosome,
+            final ExonData currentExon, int requiredBases, boolean searchUp, final List<int[]> codingBaseRanges)
+    {
+        if(codingBaseRanges.isEmpty())
+            return null;
+
         String extraBases = "";
+
+        int[] currentRange = searchUp ? codingBaseRanges.get(codingBaseRanges.size() - 1) : codingBaseRanges.get(0);
+
+        int startPos = searchUp ? currentRange[SE_END] : currentRange[SE_START];
 
         if(searchUp)
         {
@@ -366,7 +393,10 @@ public final class ProteinUtils
 
             if(currentExonBases > 0)
             {
-                extraBases = refGenome.getBaseString(chromosome, startPos + 1, startPos + 1 + (currentExonBases - 1));
+                int upperPos = startPos + 1 + (currentExonBases - 1);
+                currentRange[SE_END] = upperPos;
+
+                extraBases = refGenome.getBaseString(chromosome, startPos + 1, upperPos);
                 requiredBases -= currentExonBases;
             }
 
@@ -379,7 +409,12 @@ public final class ProteinUtils
                 if(nextExon == null)
                     return extraBases;
 
-                String nextExonBases = refGenome.getBaseString(chromosome, nextExon.Start, nextExon.Start + (requiredBases - 1));
+                int lowerPos = nextExon.Start;
+                int upperPos = nextExon.Start + (requiredBases - 1);
+                int[] newRange = { lowerPos, upperPos };
+                codingBaseRanges.add(newRange);
+
+                String nextExonBases = refGenome.getBaseString(chromosome, lowerPos, upperPos);
                 extraBases += nextExonBases;
             }
         }
@@ -390,7 +425,10 @@ public final class ProteinUtils
 
             if(currentExonBases > 0)
             {
-                extraBases = refGenome.getBaseString(chromosome, startPos - currentExonBases, startPos - 1);
+                int lowerPos = startPos - currentExonBases;
+                currentRange[SE_START] = lowerPos;
+
+                extraBases = refGenome.getBaseString(chromosome, lowerPos, startPos - 1);
                 requiredBases -= currentExonBases;
             }
 
@@ -403,7 +441,12 @@ public final class ProteinUtils
                 if(nextExon == null)
                     return extraBases;
 
-                String nextExonBases = refGenome.getBaseString(chromosome, nextExon.End - (requiredBases - 1), nextExon.End);
+                int lowerPos = nextExon.End - (requiredBases - 1);
+                int upperPos = nextExon.End;
+                int[] newRange = { lowerPos, upperPos };
+                codingBaseRanges.add(0, newRange);
+
+                String nextExonBases = refGenome.getBaseString(chromosome, lowerPos, upperPos);
                 extraBases = nextExonBases + extraBases;
             }
         }

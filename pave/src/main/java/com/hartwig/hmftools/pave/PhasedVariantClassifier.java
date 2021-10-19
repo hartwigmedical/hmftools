@@ -4,13 +4,10 @@ import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
@@ -178,13 +175,13 @@ public class PhasedVariantClassifier
                 continue;
 
             // ignore SNVs/MNVs if they don't overlap the same codons as any of the INDELs
-            int refCodonStart = transImpact.proteinContext().RefCodonsRange[SE_START];
-            int refCodonEnd = transImpact.proteinContext().RefCodonsRange[SE_END];
+            int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
+            int refCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
 
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
             int nextRefCodonStart = nextTransImpact != null && nextTransImpact.hasProteinContext()
-                    ? nextTransImpact.proteinContext().RefCodonsRange[SE_START] : 0;
+                    ? nextTransImpact.proteinContext().refCodingBaseStart() : 0;
 
             boolean overlapsOnStart = lastRefCodonEnd > 0 && refCodonStart <= lastRefCodonEnd;
             boolean overlapsOnEnd = nextRefCodonStart > 0 && refCodonStart >= nextRefCodonStart;
@@ -212,7 +209,7 @@ public class PhasedVariantClassifier
                 combinedAltCodons += gapCodonBases;
             }
 
-            lastRefCodonEnd = transImpact.proteinContext().RefCodonsRange[SE_END];
+            lastRefCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
             combinedAltCodons += transImpact.proteinContext().AltCodonBases;
         }
 

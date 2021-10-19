@@ -410,7 +410,16 @@ public class ProteinImpactTest
         int negPosEquiv = mNegTrans.CodingEnd - (pos - mPosTrans.CodingStart);
         int negPos = refLen == alt.length() ? negPosEquiv - (refLen - 1) : negPosEquiv - refLen;
         String negRef = mRefBases.substring(negPos, negPos + refLen);
-        String negAlt = var.isInsert() ? negRef + reverseStrandBases(alt.substring(1)) : reverseStrandBases(alt);
+
+        String negAlt;
+
+        if(var.isInsert())
+            negAlt = negRef + reverseStrandBases(alt.substring(1));
+        else if(var.isDeletion())
+            negAlt = negRef.substring(0, 1);
+        else
+            negAlt = reverseStrandBases(alt);
+
         VariantData varNeg = new VariantData(CHR_1, negPos, negRef, negAlt);
 
         VariantTransImpact impactNeg = mClassifier.classifyVariant(varNeg, mNegTrans);
