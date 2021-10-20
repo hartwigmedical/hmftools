@@ -3,12 +3,16 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
@@ -17,7 +21,7 @@ public class AltSjCohortData
     public final AltSpliceJunctionFile AltSJ;
 
     // cohort data
-    private final List<String> mSampleIds;
+    private final Set<String> mSampleIds;
 
     private List<String> mSampleIdsCohortA;
     private List<String> mSampleIdsCohortB;
@@ -35,7 +39,7 @@ public class AltSjCohortData
     public AltSjCohortData(final AltSpliceJunctionFile altSJ)
     {
         AltSJ = altSJ;
-        mSampleIds = Lists.newArrayList();
+        mSampleIds = Sets.newHashSet();
         mSampleIdsCohortA = null;
         mSampleIdsCohortB = null;
         mCancerSampleIds = null;
@@ -52,6 +56,9 @@ public class AltSjCohortData
 
     public void addSampleCount(final String sampleId, int fragCount, final String cancerType)
     {
+        if(mSampleIds.contains(sampleId))
+            return;
+
         mSampleIds.add(sampleId);
         mTotalFragmentCount += fragCount;
         mMaxFragmentCount = max(mMaxFragmentCount, fragCount);
@@ -68,7 +75,6 @@ public class AltSjCohortData
             else
                 samples.add(sampleId);
         }
-
     }
 
     public void addSampleCount(final String sampleId, int fragCount, boolean isCohortA)
@@ -93,7 +99,7 @@ public class AltSjCohortData
         }
     }
 
-    public final List<String> getSampleIds() { return mSampleIds; }
+    public final Set<String> getSampleIds() { return mSampleIds; }
     public final List<String> getCohortSampleIds(boolean isCohortA) { return isCohortA ? mSampleIdsCohortA : mSampleIdsCohortB; }
     public final Map<String,List<String>> cancerSampleIds() { return mCancerSampleIds; }
 
@@ -112,6 +118,12 @@ public class AltSjCohortData
     public int getPositionCount(int seIndex) { return mPositionCounts[seIndex]; }
     public void addPositionCount(int seIndex, int count) { mPositionCounts[seIndex] += count; }
 
+    public String sampleIdsStr()
+    {
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        mSampleIds.forEach(x -> sj.add(x));
+        return sj.toString();
+    }
 
 
 }
