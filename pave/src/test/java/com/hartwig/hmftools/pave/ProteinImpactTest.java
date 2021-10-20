@@ -162,7 +162,7 @@ public class ProteinImpactTest
         // stop lost
         pos = 48;
         alt = "C";
-        checkHgvsStrings(pos, 1, alt, STOP_LOST, "c.29A>C", "p.Ter10ext?*");
+        checkHgvsStrings(pos, 1, alt, STOP_LOST, "c.29A>C", "p.Ter10Serext*?");
     }
 
     @Test
@@ -197,15 +197,15 @@ public class ProteinImpactTest
         alt = mRefBases.substring(pos, pos + 1);
         checkHgvsStrings(pos, 4, alt, STOP_GAINED, "c.17_19delTAG", "p.Leu6_Gly7delins*");
 
-        // causing a stop lost H(CAC) E(GAG) X(TAA)
+        // causing a stop lost H(CAC) E(GAG) X(TAA) but report as frameshift since the first AA to change is not a stop
         pos = 41;
         alt = mRefBases.substring(pos, pos + 1);
-        checkHgvsStrings(pos, 7, alt, STOP_LOST, "c.23_28delACGAGT", "p.His8ext?*");
+        checkHgvsStrings(pos, 7, alt, STOP_LOST, "c.23_28delACGAGT", "p.His8fs");
 
         // causing a stop lost E(GAG) X(TAA) but the inframe DEL makes a synonymous E
         pos = 44;
         alt = mRefBases.substring(pos, pos + 1);
-        checkHgvsStrings(pos, 4, alt, STOP_LOST, "c.26_28delAGT", "p.Glu9ext?*");
+        checkHgvsStrings(pos, 4, alt, STOP_LOST, "c.26_28delAGT", "p.Glu9ext*?");
     }
 
     @Test

@@ -267,32 +267,6 @@ public final class ProteinUtils
                     break;
                 }
             }
-
-            /*
-            String refCodons = posStrand ? proteinContext.RefCodonBases : reverseStrandBases(proteinContext.RefCodonBases);
-            String altCodons = posStrand ? proteinContext.AltCodonBasesComplete : reverseStrandBases(proteinContext.AltCodonBasesComplete);
-            int codonIndex = 0;
-
-            while(true)
-            {
-                if(codonIndex + 3 <= refCodons.length() && codonIndex + 3 <= altCodons.length()
-                && !refAminoAcids.isEmpty() && !altAminoAcids.isEmpty()
-                && refCodons.substring(codonIndex, codonIndex + 3).equals(altCodons.substring(codonIndex, codonIndex + 3)))
-                {
-                    refAminoAcids = refAminoAcids.substring(1);
-                    altAminoAcids = altAminoAcids.substring(1);
-                    aaIndex++;
-                    codonIndex += 3;
-
-                    if(!repeatRemoval) // only the first
-                        break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            */
         }
 
         // and strip off a matching AA from the end if there is one
@@ -413,7 +387,7 @@ public final class ProteinUtils
             }
             else
             {
-                String refDownstreamBases = downstreamBases.substring(1);
+                String refDownstreamBases = downstreamBases.substring(downstreamAltOpenCodonBases);
                 pc.RefCodonBases = refDownstreamBases + refCodonBases;
                 pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBases;
                 pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));

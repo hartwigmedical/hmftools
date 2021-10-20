@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -30,7 +32,7 @@ public final class HgvsProtein
 
     private static final String PROTEIN_ID = "p.";
     private static final String HGVS_FRAMESHIFT = "fs";
-    private static final String HGVS_STOP_LOST = "ext?*";
+    private static final String HGVS_STOP_LOST = "ext*?";
     private static final String HGVS_STOP_GAINED = "*";
     private static final String HGVS_STOP_TRI_CODE = "Ter";
 
@@ -84,7 +86,7 @@ public final class HgvsProtein
         {
             PV_LOGGER.error("var({}) error forming HGVS protein string", variant);
             e.printStackTrace();
-            return "";
+            return HGVS_UNKNOWN;
         }
     }
 
@@ -290,6 +292,28 @@ public final class HgvsProtein
         // - stop_lost - p.Ter494ext*? - don't show any new AAs after the stop since considered irrelevant
         sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(0)));
         sb.append(proteinContext.CodonIndex);
+
+        if(proteinContext.RefAminoAcids.length() == proteinContext.AltAminoAcids.length())
+        {
+            int lastAaIndex = proteinContext.AltAminoAcids.length() - 1;
+            sb.append(convertToTriLetters(proteinContext.AltAminoAcids.charAt(lastAaIndex)));
+        }
+        else
+        {
+            // use frameshift if the first different AA is not the stop
+            for(int i = 0; i < min(proteinContext.RefAminoAcids.length(), proteinContext.AltAminoAcids.length()); ++i)
+            {
+                if(proteinContext.RefAminoAcids.charAt(i) != proteinContext.AltAminoAcids.charAt(i))
+                {
+                    if(proteinContext.AltAminoAcids.charAt(i) != proteinContext.AltAminoAcids.charAt(0))
+                        sb.append(convertToTriLetters(proteinContext.AltAminoAcids.charAt(i)));
+
+                    sb.append(HGVS_FRAMESHIFT);
+                    return;
+                }
+            }
+        }
+
         sb.append(HGVS_STOP_LOST);
     }
 
