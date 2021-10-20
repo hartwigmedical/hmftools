@@ -14,8 +14,10 @@ public class ProteinContext
 {
     public String RefCodonBases; // coding bases rounded expanded to cover whole codons
     public String AltCodonBases; // as above but with ref swapped for alt
-    public String AltCodonBasesComplete; // alt codons plus any subsequent downstream refs to make complete codon(s)
     public List<int[]> RefCodonsRanges; // the range of the ref codon bases, use for phasing variants
+
+    public String AltCodonBasesComplete; // alt codons plus any downstream refs to make a complete codon, also extended for inframe
+    public String RefCodonBasesExtended; // ref codon bases extended for inframe variants until diff AA is found
 
     public int CodonIndex; // amino acid index of ref codon, corresponds to the coding context CodingBase
 
@@ -27,6 +29,7 @@ public class ProteinContext
     public String NetRefAminoAcids;
     public String NetAltAminoAcids;
     public boolean IsDuplication;
+    public boolean IsPhased;
 
     public String Hgvs;
 
@@ -35,6 +38,7 @@ public class ProteinContext
         RefCodonBases = "";
         AltCodonBases = "";
         AltCodonBasesComplete = "";
+        RefCodonBasesExtended = "";
         RefCodonsRanges = Lists.newArrayList();
 
         CodonIndex = 0;
@@ -45,6 +49,7 @@ public class ProteinContext
         NetRefAminoAcids = "";
         NetAltAminoAcids = "";
         IsDuplication = false;
+        IsPhased = false;
         Hgvs = "";
     }
 

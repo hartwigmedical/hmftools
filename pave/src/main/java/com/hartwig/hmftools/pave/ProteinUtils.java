@@ -129,8 +129,6 @@ public final class ProteinUtils
             // var length = 4, open codon bases = 2 (ie CA), ref codon length = 9, override upstream bases = 3
             // working: alt = post-var (9 - 4 - 3) CG + alt T (1st ref base) + upstream pre-var (9 - 3) ACA
 
-            // INS example:
-
             int upstreamRefBases = variant.isDeletion() ? upstreamOpenCodonBases + 1 : upstreamOpenCodonBases;
 
             if(variant.isInsert())
@@ -366,8 +364,6 @@ public final class ProteinUtils
         int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
         int extraBases = 3 + downstreamAltOpenCodonBases;
 
-        String refCodonBases = pc.RefCodonBases;
-
         while(true)
         {
             String downstreamBases = getExtraBases(
@@ -380,17 +376,17 @@ public final class ProteinUtils
             {
                 // trim of the extra base(s) that the frame-shifted alt needs
                 String refDownstreamBases = downstreamBases.substring(0, downstreamBases.length() - downstreamAltOpenCodonBases);
-                pc.RefCodonBases = refCodonBases + refDownstreamBases;
+                pc.RefCodonBasesExtended = pc.RefCodonBases + refDownstreamBases;
                 pc.AltCodonBasesComplete = pc.AltCodonBases + downstreamBases;
-                pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBases);
+                pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBasesExtended);
                 pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
             }
             else
             {
                 String refDownstreamBases = downstreamBases.substring(downstreamAltOpenCodonBases);
-                pc.RefCodonBases = refDownstreamBases + refCodonBases;
+                pc.RefCodonBasesExtended = refDownstreamBases + pc.RefCodonBases;
                 pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBases;
-                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
+                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBasesExtended));
                 pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
             }
 

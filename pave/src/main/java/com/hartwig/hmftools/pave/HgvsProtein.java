@@ -188,6 +188,12 @@ public final class HgvsProtein
 
     private static void formInframeDeletion(final ProteinContext proteinContext, final StringBuilder sb)
     {
+        if(proteinContext.IsPhased && proteinContext.NetRefAminoAcids.length() > 1 && proteinContext.NetAltAminoAcids.length() > 1)
+        {
+            formPhasedInframe(proteinContext, sb);
+            return;
+        }
+
         // conservative means only whole codons are deleted, eg p.Gly4_Gln6del
         // conservative single AA: p.Lys2del
         // conservative multi: p.Gly4_Gln6del
@@ -224,6 +230,12 @@ public final class HgvsProtein
 
     private static void formInframeInsertion(final ProteinContext proteinContext, final StringBuilder sb)
     {
+        if(proteinContext.IsPhased && proteinContext.NetRefAminoAcids.length() > 1 && proteinContext.NetAltAminoAcids.length() > 1)
+        {
+            formPhasedInframe(proteinContext, sb);
+            return;
+        }
+
         String refAminoAcids = proteinContext.RefAminoAcids;
 
         if(proteinContext.IsDuplication)
@@ -275,6 +287,24 @@ public final class HgvsProtein
                 sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
             }
         }
+    }
+
+    private static void formPhasedInframe(final ProteinContext proteinContext, final StringBuilder sb)
+    {
+        // multiple AAs deleted and changed/inserted
+        int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
+        int aaIndexEnd = proteinContext.NetCodonIndexRange[SE_END];
+        String refAminoAcids = proteinContext.NetRefAminoAcids;
+        String altAminoAcids = proteinContext.NetAltAminoAcids;
+
+        sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+        sb.append(aaIndexStart);
+        sb.append('_');
+        sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
+        sb.append(aaIndexEnd);
+        sb.append(HGVS_TYPE_DEL);
+        sb.append(HGVS_TYPE_INS);
+        sb.append(convertToTriLetters(altAminoAcids));
     }
 
     private static void formFrameshift(final ProteinContext proteinContext, final StringBuilder sb)
