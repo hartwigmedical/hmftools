@@ -105,7 +105,7 @@ public class AltSjCohortAnalyser
                     if(altSJFile == null)
                         continue;
 
-                    final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
+                    final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, null, mAltSjFilter);
                     ++sampleCount;
 
                     ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", sampleCount, sampleId, altSJs.size());
@@ -122,7 +122,7 @@ public class AltSjCohortAnalyser
         else
         {
             int totalProcessed = 0;
-            int nextLog = 10000;
+            int nextLog = 100000;
 
             // load each sample's alt SJs and consolidate into a single list
             for(int i = 0; i < mConfig.SampleData.SampleIds.size(); ++i)
@@ -130,7 +130,7 @@ public class AltSjCohortAnalyser
                 final String sampleId = mConfig.SampleData.SampleIds.get(i);
                 final Path altSJFile = filenames.get(i);
 
-                final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, mFieldsMap, mAltSjFilter);
+                final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, null, mAltSjFilter);
 
                 ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
                 totalProcessed += altSJs.size();
@@ -139,12 +139,12 @@ public class AltSjCohortAnalyser
 
                 altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
 
-                int totalAltSJs = mAltSpliceJunctions.values().stream().mapToInt(x -> x.values().size()).sum();
+                int totalAltSJs = mAltSpliceJunctions.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
 
                 if(totalAltSJs >= nextLog)
                 {
                     ISF_LOGGER.debug("cached alt-SJ count({})", totalAltSJs);
-                    nextLog += 10000;
+                    nextLog += 100000;
                 }
 
                 altSJs.forEach(x -> mWriter.writeCombinedSampleData(sampleId, x, mMinFragments));
@@ -165,14 +165,13 @@ public class AltSjCohortAnalyser
         mWriter.close();
     }
 
-    public static List<AltSpliceJunctionFile> loadFile(final Path filename, final Map<String,Integer> fieldsIndexMap, final AltSjFilter filter)
+    public static List<AltSpliceJunctionFile> loadFile(final Path filename, final Map<String,Integer> refFieldsIndexMap, final AltSjFilter filter)
     {
         try
         {
             final List<String> lines = Files.readAllLines(filename);
 
-            if(fieldsIndexMap.isEmpty())
-                fieldsIndexMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), DELIMITER);
 
             lines.remove(0);
 
@@ -201,8 +200,15 @@ public class AltSjCohortAnalyser
                 if(!filter.passesFilter(items[geneId], Integer.parseInt(items[fragCount])))
                     continue;
 
-                altSJs.add(AltSpliceJunctionFile.fromCsv(items, geneId, geneName, chr, posStart, posEnd, type,
-                        fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
+                try
+                {
+                    altSJs.add(AltSpliceJunctionFile.fromCsv(items, geneId, geneName, chr, posStart, posEnd, type,
+                            fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
+                }
+                catch(Exception e)
+                {
+                    ISF_LOGGER.error(" invalid line {}: {}", altSJs.size(), data);
+                }
             }
 
             return altSJs;

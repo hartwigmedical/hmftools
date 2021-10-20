@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_F
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
@@ -33,6 +32,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
 import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
+import static com.hartwig.hmftools.isofox.loader.DataLoaderConfig.ALT_SJ_COHORT_FILE;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -58,6 +58,7 @@ import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
+import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
 import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 
 import org.apache.commons.cli.CommandLine;
@@ -72,14 +73,16 @@ import org.jooq.Result;
 public class IsofoxDataLoader
 {
     private final DataLoaderConfig mConfig;
-    private final Map<String,Integer> mAltSjCohortFrequency;
+    private final AltSjCohortCache mAltSjCohortCache;
 
     public IsofoxDataLoader(final CommandLine cmd)
     {
         mConfig = new DataLoaderConfig(cmd);
 
-        mAltSjCohortFrequency = Maps.newHashMap();
-        loadAltSjCohortFile();
+        if(mConfig.loadDataType(NOVEL_JUNCTION) && cmd.hasOption(ALT_SJ_COHORT_FILE))
+            mAltSjCohortCache = new AltSjCohortCache(cmd.getOptionValue(ALT_SJ_COHORT_FILE));
+        else
+            mAltSjCohortCache = null;
     }
 
     public boolean load()
@@ -283,7 +286,7 @@ public class IsofoxDataLoader
                         items, geneIdIndex, geneName, chr, posStart, posEnd, type,
                         fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd);
 
-                Integer cohortFrequency = mAltSjCohortFrequency.get(altSJ.key());
+                int cohortFrequency = mAltSjCohortCache.getCohortFrequency(altSJ.key());
 
                 novelJunctions.add(ImmutableNovelSpliceJunction.builder()
                         .geneName(items[fieldsIndexMap.get(FLD_GENE_NAME)])
@@ -298,7 +301,7 @@ public class IsofoxDataLoader
                         .regionEnd(altSJ.RegionContexts[SE_END].toString())
                         .basesStart(altSJ.BaseContexts[SE_START])
                         .basesEnd(altSJ.BaseContexts[SE_END])
-                        .cohortFrequency(cohortFrequency != null ? cohortFrequency : 0)
+                        .cohortFrequency(cohortFrequency)
                         .build());
             }
         }
@@ -368,57 +371,6 @@ public class IsofoxDataLoader
 
         ISF_LOGGER.debug("sample({}) writing {} fusion records to DB", sampleId, fusions.size());
         rnaDAO.writeRnaFusions(sampleId, fusions);
-    }
-
-    private void loadAltSjCohortFile()
-    {
-        if(!mConfig.loadDataType(NOVEL_JUNCTION))
-            return;
-
-        // isofox.driver_fusion_2212.alt_sj_cohort.csv
-        // GeneId,SampleCount,Chromosome,Type,SjStart,SjEnd,
-
-        if(mConfig.AltSjCohortFile == null || !Files.exists(Paths.get(mConfig.AltSjCohortFile)))
-        {
-            ISF_LOGGER.error("missing alt-SJ cohort file");
-            return;
-        }
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.AltSjCohortFile));
-
-            String line = fileReader.readLine();
-            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
-
-            int geneIndex = fieldsIndexMap.get(FLD_GENE_ID);
-            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
-            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-            int sampleCountIndex = fieldsIndexMap.get("SampleCount");
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                final String geneId = items[geneIndex];
-
-                if(!mConfig.processGeneId(geneId))
-                    continue;
-
-                int sampleCount = Integer.parseInt(items[sampleCountIndex]);
-                final String asjKey = formKey(items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
-
-                mAltSjCohortFrequency.put(asjKey, sampleCount);
-            }
-
-            ISF_LOGGER.info("loaded alt-SJ cohort file({}) with {} sites", mConfig.AltSjCohortFile, mAltSjCohortFrequency.size());
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load alt-SJ cohort file({}): {}", mConfig.AltSjCohortFile, e.toString());
-            return;
-        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
