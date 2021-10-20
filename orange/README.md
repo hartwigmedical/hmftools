@@ -1,6 +1,6 @@
 # Oncogenic Results of Analyzing the Genome
 
-ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF:
+ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file:
  1. The algo depends exclusively on config and data produced by the [Hartwig platinum pipeline](https://github.com/hartwigmedical/platinum) 
  and hence can always be run as final step without any additional local data or config required. 
  1. The algo intends to combine RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample. 
