@@ -55,7 +55,7 @@ public final class HgvsProtein
         try
         {
             if(effects.size() == 1)
-                return generate(variant, proteinContext, effects.get(0));
+                return generate(proteinContext, effects.get(0));
 
             boolean hasStopGained = false;
             VariantEffect topEffect = null;
@@ -68,7 +68,7 @@ public final class HgvsProtein
                     topEffect = effect;
             }
 
-            String hgvs = generate(variant, proteinContext, topEffect);
+            String hgvs = generate(proteinContext, topEffect);
 
             if(hasStopGained)
             {
@@ -88,7 +88,7 @@ public final class HgvsProtein
         }
     }
 
-    public static String generate(final VariantData variant, final ProteinContext proteinContext, final VariantEffect effect)
+    public static String generate(final ProteinContext proteinContext, final VariantEffect effect)
     {
         if(!proteinContext.validRefCodon() || !proteinContext.validAltCodon())
             return HGVS_UNKNOWN;
@@ -121,7 +121,7 @@ public final class HgvsProtein
 
             case INFRAME_INSERTION:
             case PHASED_INFRAME_INSERTION:
-                formInframeInsertion(variant, proteinContext, sb);
+                formInframeInsertion(proteinContext, sb);
                 break;
 
             case FRAMESHIFT:
@@ -220,7 +220,7 @@ public final class HgvsProtein
         }
     }
 
-    private static void formInframeInsertion(final VariantData variant, final ProteinContext proteinContext, final StringBuilder sb)
+    private static void formInframeInsertion(final ProteinContext proteinContext, final StringBuilder sb)
     {
         String refAminoAcids = proteinContext.RefAminoAcids;
 

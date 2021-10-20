@@ -8,8 +8,8 @@ public class VariantImpact
     public final String CanonicalEffect;
     public final String CanonicalTranscript;
     public final CodingEffect CanonicalCodingEffect;
-    public final String CanonicalHgvsCodingImpact;
-    public final String CanonicalHgvsProteinImpact;
+    public final String CanonicalHgvsCoding;
+    public final String CanonicalHgvsProtein;
     public final boolean CanonicalSpliceRegion;
 
     public final String OtherReportableEffects;
@@ -18,7 +18,7 @@ public class VariantImpact
 
     public VariantImpact(
             final String canonicalGeneName, final String canonicalTranscript, final String canonicalEffect,
-            final CodingEffect canonicalCodingEffect, final String canonicalHgvsCodingImpact, final String canonicalHgvsProteinImpact,
+            final CodingEffect canonicalCodingEffect, final String canonicalHgvsCoding, final String canonicalHgvsProtein,
             boolean canonicalSpliceRegion, final String otherReportableEffects, final CodingEffect worstCodingEffect, int genesAffected)
     {
         CanonicalGeneName = canonicalGeneName;
@@ -26,8 +26,8 @@ public class VariantImpact
         CanonicalEffect = canonicalEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
         CanonicalSpliceRegion = canonicalSpliceRegion;
-        CanonicalHgvsCodingImpact = canonicalHgvsCodingImpact;
-        CanonicalHgvsProteinImpact = canonicalHgvsProteinImpact;
+        CanonicalHgvsCoding = canonicalHgvsCoding;
+        CanonicalHgvsProtein = canonicalHgvsProtein;
         OtherReportableEffects = otherReportableEffects;
         WorstCodingEffect = worstCodingEffect;
         GenesAffected = genesAffected;
@@ -44,8 +44,8 @@ public class VariantImpact
                 CanonicalTranscript.equals(other.CanonicalTranscript) &&
                 CanonicalEffect.equals(other.CanonicalEffect) &&
                 CanonicalCodingEffect == other.CanonicalCodingEffect &&
-                CanonicalHgvsCodingImpact.equals(other.CanonicalHgvsCodingImpact) &&
-                CanonicalHgvsProteinImpact.equals(other.CanonicalHgvsProteinImpact) &&
+                CanonicalHgvsCoding.equals(other.CanonicalHgvsCoding) &&
+                CanonicalHgvsProtein.equals(other.CanonicalHgvsProtein) &&
                 CanonicalSpliceRegion == other.CanonicalSpliceRegion &&
                 OtherReportableEffects.equals(other.OtherReportableEffects) &&
                 WorstCodingEffect == other.WorstCodingEffect &&

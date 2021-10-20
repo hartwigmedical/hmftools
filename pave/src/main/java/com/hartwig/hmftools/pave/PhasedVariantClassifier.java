@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
@@ -10,10 +13,13 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
+import static com.hartwig.hmftools.pave.HgvsProtein.reportProteinImpact;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Codons;
@@ -163,6 +169,7 @@ public class PhasedVariantClassifier
 
         String combinedRefCodons = "";
         String combinedAltCodons = "";
+        int minCodonIndex = -1;
         int lastRefCodonEnd = 0;
         boolean hasOverlaps = false;
 
@@ -184,7 +191,7 @@ public class PhasedVariantClassifier
                     ? nextTransImpact.proteinContext().refCodingBaseStart() : 0;
 
             boolean overlapsOnStart = lastRefCodonEnd > 0 && refCodonStart <= lastRefCodonEnd;
-            boolean overlapsOnEnd = nextRefCodonStart > 0 && refCodonStart >= nextRefCodonStart;
+            boolean overlapsOnEnd = nextRefCodonStart > 0 && refCodonEnd >= nextRefCodonStart;
 
             hasOverlaps = overlapsOnStart || overlapsOnEnd;
 
@@ -195,54 +202,95 @@ public class PhasedVariantClassifier
                 continue;
             }
 
-            combinedRefCodons += transImpact.proteinContext().RefCodonBases;
-
             PV_LOGGER.trace("lps({}) var({}) codons({} -> {}) range({} - {}) overlaps(start={} end={})",
                     localPhaseSet, variant, transImpact.proteinContext().RefCodonBases, transImpact.proteinContext().AltCodonBases,
                     refCodonStart, refCodonEnd, overlapsOnStart, overlapsOnEnd);
 
-            // fill in any missing gaps in the codons
-            if(lastRefCodonEnd > 0 && !overlapsOnStart && refCodonStart > lastRefCodonEnd + 1)
+            VariantData prevVariant = i > 0 ? variants.get(i - 1) : null;
+
+            minCodonIndex = i == 0 ?
+                    transImpact.proteinContext().CodonIndex : min(transImpact.proteinContext().CodonIndex, minCodonIndex);
+
+            if(overlapsOnStart && lastRefCodonEnd == refCodonEnd && variant.isBaseChange() && !prevVariant.isBaseChange()
+            && transImpact.proteinContext().RefCodonBases.length() == 3) // at most one codon for now
             {
-                String gapCodonBases = refGenome.getBaseString(chromosome, lastRefCodonEnd + 1, refCodonStart - 1);
-                combinedRefCodons += gapCodonBases;
-                combinedAltCodons += gapCodonBases;
+                // no need to re-add the ref bases
+                // take an modified bases that are after the end of the previous variant
+                int posPhase = transImpact.codingContext().UpstreamPhase;
+                if(posPhase == PHASE_0)
+                    posPhase = 3;
+
+                // phase now goes 1, 2, 3
+                String lastAltCodon = combinedAltCodons.substring(combinedAltCodons.length() - 3);
+                String altCodon = transImpact.proteinContext().AltCodonBases;
+                String mixedAltCodon = "";
+
+                for(int j = 0; j < 3; ++j)
+                {
+                    if(j + 1 < posPhase)
+                        mixedAltCodon += lastAltCodon.charAt(j);
+                    else
+                        mixedAltCodon += altCodon.charAt(j);
+                }
+
+                combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - 3) + mixedAltCodon;
+                hasOverlaps = false;
+            }
+            else
+            {
+                combinedRefCodons += transImpact.proteinContext().RefCodonBases;
+
+                // fill in any missing gaps in the codons
+                if(lastRefCodonEnd > 0 && !overlapsOnStart && refCodonStart > lastRefCodonEnd + 1)
+                {
+                    String gapCodonBases = refGenome.getBaseString(chromosome, lastRefCodonEnd + 1, refCodonStart - 1);
+                    combinedRefCodons += gapCodonBases;
+                    combinedAltCodons += gapCodonBases;
+                }
+
+                combinedAltCodons += transImpact.proteinContext().AltCodonBases;
             }
 
             lastRefCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
-            combinedAltCodons += transImpact.proteinContext().AltCodonBases;
         }
 
-        // TODO: get any additional downstream bases to complete the alt codon(s)
+        if(hasOverlaps && indelBaseTotal == 0)
+            return;
+
+        if(!isCodonMultiple(combinedRefCodons.length()) || !isCodonMultiple(combinedAltCodons.length()))
+            return;
+
+        ProteinContext combinedPc = new ProteinContext();
+        combinedPc.CodonIndex = minCodonIndex;
+        combinedPc.RefCodonBases = combinedRefCodons;
+        combinedPc.AltCodonBases = combinedAltCodons;
+
+        // get any additional downstream bases to complete the alt codon(s)?
 
         // check synonymous vs missense from combined bases
         final TranscriptData transData = transImpacts.get(0).TransData;
 
         VariantEffect combinedEffect;
 
-        String combinedRefAminoAcids = "";
-        String combinedAltAminoAcids = "";
+        if(transData.posStrand())
+        {
+            combinedPc.RefAminoAcids = Codons.aminoAcidFromBases(combinedRefCodons);
+            combinedPc.AltAminoAcids = Codons.aminoAcidFromBases(combinedAltCodons);
+        }
+        else
+        {
+            combinedPc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedRefCodons));
+            combinedPc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedAltCodons));
+        }
+
+        trimAminoAcids(combinedPc, true, true, true);
 
         if(indelBaseTotal == 0)
         {
-            if(hasOverlaps)
-                return;
-
-            if(transData.posStrand())
-            {
-                combinedRefAminoAcids = Codons.aminoAcidFromBases(combinedRefCodons);
-                combinedAltAminoAcids = Codons.aminoAcidFromBases(combinedAltCodons);
-            }
-            else
-            {
-                combinedRefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedRefCodons));
-                combinedAltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedAltCodons));
-            }
-
-            combinedEffect = combinedRefAminoAcids.equals(combinedAltAminoAcids) ? SYNONYMOUS : MISSENSE;
+            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? SYNONYMOUS : MISSENSE;
 
             PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
-                    localPhaseSet, variants.size(), combinedEffect, combinedRefAminoAcids, combinedAltAminoAcids);
+                    localPhaseSet, variants.size(), combinedEffect, combinedPc.RefAminoAcids, combinedPc.AltAminoAcids);
         }
         else
         {
@@ -252,18 +300,16 @@ public class PhasedVariantClassifier
                     localPhaseSet, variants.size(), indelBaseTotal);
         }
 
+        combinedPc.Hgvs = HgvsProtein.generate(combinedPc, combinedEffect);
+
+
         for(VariantTransImpact transImpact : transImpacts)
         {
             if(!transImpact.hasProteinContext())
                 continue;
 
             transImpact.markPhasedFrameshift();
-
-            if(indelBaseTotal == 0)
-            {
-                transImpact.proteinContext().RefAminoAcids = combinedRefAminoAcids;
-                transImpact.proteinContext().AltAminoAcids = combinedAltAminoAcids;
-            }
+            transImpact.setProteinContext(combinedPc);
 
             transImpact.codingContext().IsFrameShift = false;
             transImpact.effects().remove(FRAMESHIFT);

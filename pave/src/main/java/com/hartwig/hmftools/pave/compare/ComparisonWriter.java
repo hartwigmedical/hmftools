@@ -57,7 +57,7 @@ public class ComparisonWriter
 
             writer.write("SampleId,");
             writer.write(VariantData.csvCommonHeader());
-            writer.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect");
+            writer.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect,HgvsCoding,HgvsProtein");
             writer.write(",WorstCodingEffect,GenesAffected");
             writer.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
             writer.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffGenesAffected");
@@ -85,8 +85,9 @@ public class ComparisonWriter
 
             boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(variantImpact.CanonicalGeneName);
 
-            mImpactWriter.write(String.format(",%s,%s,%s,%s,%d",
+            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
                     isDriver, variantImpact.CanonicalEffect, variantImpact.CanonicalCodingEffect,
+                    variantImpact.CanonicalHgvsCoding, variantImpact.CanonicalHgvsProtein,
                     variantImpact.WorstCodingEffect, variantImpact.GenesAffected));
 
             mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",

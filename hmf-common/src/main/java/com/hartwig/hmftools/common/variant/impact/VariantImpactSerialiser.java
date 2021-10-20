@@ -57,8 +57,8 @@ public final class VariantImpactSerialiser
                 impact.CanonicalEffect,
                 String.valueOf(impact.CanonicalCodingEffect),
                 String.valueOf(impact.CanonicalSpliceRegion),
-                impact.CanonicalHgvsCodingImpact,
-                impact.CanonicalHgvsProteinImpact,
+                impact.CanonicalHgvsCoding,
+                impact.CanonicalHgvsProtein,
                 impact.OtherReportableEffects,
                 String.valueOf(impact.WorstCodingEffect),
                 String.valueOf(impact.GenesAffected));

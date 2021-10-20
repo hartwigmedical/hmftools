@@ -10,11 +10,13 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
 import static junit.framework.TestCase.assertEquals;
@@ -199,6 +201,46 @@ public class PhasedVariantsTest
         assertTrue(impact1.hasEffect(FRAMESHIFT));
         assertTrue(impact2.codingContext().IsFrameShift);
         assertTrue(impact2.hasEffect(FRAMESHIFT));
+    }
+
+    @Test
+    public void testDelSnvOverlapPair()
+    {
+        TranscriptData transDataPos = createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] { 0, 100 }, 80, 10, 190, false, "");
+
+        // DEL and SNV, overlapping in the same codon (ala EGFR)
+        int pos = 26;
+
+        String ref = mRefBases.substring(pos, pos + 10);
+        String alt = mRefBases.substring(pos, pos + 1);
+
+        VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
+        var1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact1 = classifyVariant(var1, transDataPos);
+
+        assertTrue(impact1.hasEffect(INFRAME_DELETION));
+        assertEquals("IDRS", impact1.proteinContext().RefAminoAcids);
+        assertEquals("M", impact1.proteinContext().AltAminoAcids);
+        pos = 36;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt =  "T";
+
+        VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
+        var2.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact2 = classifyVariant(var2, transDataPos);
+
+        assertTrue(impact2.hasEffect(SYNONYMOUS));
+        assertEquals("S", impact2.proteinContext().AltAminoAcids);
+
+        mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
+
+        assertTrue(impact1.phasedFrameshift());
+        // assertFalse(impact1.hasEffect(FRAMESHIFT));
+        //assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        //assertFalse(impact2.codingContext().IsFrameShift);
+        //assertFalse(impact2.hasEffect(FRAMESHIFT));
+        //assertTrue(impact2.hasEffect(PHASED_INFRAME_INSERTION));
     }
 
     @Test

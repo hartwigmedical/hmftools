@@ -207,7 +207,7 @@ public final class ProteinUtils
         // for frameshifts with equivalent AAs, continue extracting ref bases until a difference arises
         extendInframe(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
 
-        trimAminoAcids(variant, cc, pc, posStrand);
+        trimAminoAcids(variant, cc, pc);
 
         // check for a duplication of AAs
         checkInsertDuplication(variant, cc, pc, transData, exon, refGenome);
@@ -216,7 +216,7 @@ public final class ProteinUtils
     }
 
     private static void trimAminoAcids(
-            final VariantData variant, final CodingContext codingContext, final ProteinContext proteinContext, boolean posStrand)
+            final VariantData variant, final CodingContext codingContext, final ProteinContext proteinContext)
     {
         if(proteinContext.RefAminoAcids.equals(proteinContext.AltAminoAcids))
             return; // ignore synonymous
@@ -225,23 +225,30 @@ public final class ProteinUtils
         // MNVs: strip off any synonymous AAs from either end
         // DEL: strip off the initial AA if it doesn't overlap a deleted base
         // INS:
-        int aaIndex = proteinContext.CodonIndex;
-        String refAminoAcids = proteinContext.RefAminoAcids;
-        String altAminoAcids = proteinContext.AltAminoAcids;
-
         boolean canTrimStart = variant.isBaseChange()
                 // || (variant.isDeletion() && (codingContext.UpstreamPhase == PHASE_0 || codingContext.IsFrameShift))
                 || variant.isDeletion()
                 || variant.isInsert();
 
+        boolean repeatStartRemoval = canTrimStart && (codingContext.IsFrameShift || variant.isDeletion());
+
         boolean canTrimEnd = true;
+
+        trimAminoAcids(proteinContext, canTrimStart, repeatStartRemoval, canTrimEnd);
+    }
+
+    public static void trimAminoAcids(
+            final ProteinContext proteinContext, boolean canTrimStart, boolean repeatStartRemoval, boolean canTrimEnd)
+    {
+        int aaIndex = proteinContext.CodonIndex;
+        String refAminoAcids = proteinContext.RefAminoAcids;
+        String altAminoAcids = proteinContext.AltAminoAcids;
 
         // strip off the initial AA if it doesn't relate to any of the altered bases, as is the case for a DEL with the reference
         // is the last base of a codon
         if(canTrimStart)
         {
             // strip out any matching AA from the start if the ref has more than 1
-            boolean repeatRemoval = codingContext.IsFrameShift || variant.isDeletion();
 
             while(true)
             {
@@ -252,7 +259,7 @@ public final class ProteinUtils
                     altAminoAcids = altAminoAcids.substring(1);
                     aaIndex++;
 
-                    if(!repeatRemoval) // only the first
+                    if(!repeatStartRemoval) // only the first
                         break;
                 }
                 else
