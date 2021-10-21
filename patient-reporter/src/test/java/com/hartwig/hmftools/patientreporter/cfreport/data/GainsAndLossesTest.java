@@ -92,7 +92,8 @@ public class GainsAndLossesTest {
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)
                 .gene(Strings.EMPTY)
-                .copies(0)
+                .minCopies(0)
+                .maxCopies(0)
                 .interpretation(CopyNumberInterpretation.FULL_GAIN)
                 .build();
     }

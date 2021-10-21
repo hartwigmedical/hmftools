@@ -22,7 +22,8 @@ public final class PurpleTestFactory {
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
                 .interpretation(interpretation)
-                .copies(1)
+                .minCopies(1)
+                .maxCopies(1)
                 .build();
     }
 

@@ -27,5 +27,7 @@ public abstract class ReportableGainLoss {
     @NotNull
     public abstract String gene();
 
-    public abstract long copies();
+    public abstract long minCopies();
+
+    public abstract long maxCopies();
 }

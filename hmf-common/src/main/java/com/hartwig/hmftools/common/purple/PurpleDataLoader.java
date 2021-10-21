@@ -214,7 +214,8 @@ public final class PurpleDataLoader {
                 .chromosomeBand(driver.chromosomeBand())
                 .gene(driver.gene())
                 .interpretation(CopyNumberInterpretation.fromCNADriver(driver))
-                .copies(Math.round(Math.max(0, driver.minCopyNumber())))
+                .minCopies(Math.round(Math.max(0, driver.minCopyNumber())))
+                .maxCopies(Math.round(Math.max(0, driver.maxCopyNumber())))
                 .build();
     }
 }

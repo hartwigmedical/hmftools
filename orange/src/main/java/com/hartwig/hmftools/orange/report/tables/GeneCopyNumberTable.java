@@ -32,7 +32,7 @@ public final class GeneCopyNumberTable {
             table.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
             table.addCell(TableUtil.createContentCell(gainLoss.gene()));
             table.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
-            table.addCell(TableUtil.createContentCell(String.valueOf(gainLoss.copies())));
+            table.addCell(TableUtil.createContentCell(String.valueOf(gainLoss.minCopies())));
         }
 
         return TableUtil.createWrappingReportTable(table, title);

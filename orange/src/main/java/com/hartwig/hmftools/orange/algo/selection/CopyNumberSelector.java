@@ -27,12 +27,12 @@ public final class CopyNumberSelector {
         for (ReportableGainLoss gain : unreportedFullGains) {
             CopyNumberKey key = new CopyNumberKey(gain.chromosome(), gain.chromosomeBand());
             ReportableGainLoss maxGain = maxGainPerLocation.get(key);
-            if (maxGain == null || gain.copies() > maxGain.copies()) {
+            if (maxGain == null || gain.minCopies() > maxGain.minCopies()) {
                 maxGainPerLocation.put(key, gain);
             }
         }
 
-        return maxGainPerLocation.values().stream().sorted((o1, o2) -> (int) (o2.copies() - o1.copies())).collect(Collectors.toList());
+        return maxGainPerLocation.values().stream().sorted((o1, o2) -> (int) (o2.minCopies() - o1.minCopies())).collect(Collectors.toList());
     }
 
     @NotNull

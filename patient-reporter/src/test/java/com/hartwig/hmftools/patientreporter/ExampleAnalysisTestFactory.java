@@ -931,7 +931,8 @@ public final class ExampleAnalysisTestFactory {
                 .chromosome("10")
                 .chromosomeBand("q23.31")
                 .gene("PTEN")
-                .copies(0)
+                .minCopies(0)
+                .maxCopies(1)
                 .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
                 .build();
 

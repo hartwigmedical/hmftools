@@ -216,11 +216,11 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80, 45, 120, 50 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80, 60, 60, 150 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Copies"),
-                        TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER),
-                        TableUtil.createHeaderCell("") });
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("min copies"),
+                        TableUtil.createHeaderCell("max copies"),
+                        TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER)});
 
         List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
         for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
@@ -228,11 +228,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.minCopies()) : DataUtil.NA_STRING)
+                    .setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.maxCopies()) : DataUtil.NA_STRING)
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(GainsAndLosses.chromosomeArmCopyNumber(cnPerChromosome, gainLoss))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(""));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
@@ -365,8 +366,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
                     contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
                     contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
-                    contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo()))
-                            .addStyle(ReportResources.dataHighlightLinksStyle()))
+                    contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+                                    ReportResources.dataHighlightLinksStyle()))
                             .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
                             .setTextAlignment(TextAlignment.CENTER));
                 }
