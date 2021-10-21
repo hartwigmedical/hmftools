@@ -4,7 +4,6 @@ import java.io.File;
 import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;

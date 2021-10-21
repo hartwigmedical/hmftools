@@ -50,6 +50,8 @@ public final class PatientReporterTestFactory {
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
 
+    private static final String UDI_DI = "5.22";
+
     private PatientReporterTestFactory() {
     }
 
@@ -65,6 +67,7 @@ public final class PatientReporterTestFactory {
                 .rvaLogo(RVA_LOGO_PATH)
                 .companyLogo(COMPANY_LOGO_PATH)
                 .signature(SIGNATURE_PATH)
+                .udiDi(UDI_DI)
                 .qcFail(false)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
@@ -91,7 +94,6 @@ public final class PatientReporterTestFactory {
                 .onlyCreatePDF(false)
                 .expectedPipelineVersion("5.22")
                 .overridePipelineVersion(false)
-                .refGenomeVersion(RefGenomeVersion.V37)
                 .build();
     }
 
@@ -106,6 +108,7 @@ public final class PatientReporterTestFactory {
                 .signaturePath(SIGNATURE_PATH)
                 .logoRVAPath(RVA_LOGO_PATH)
                 .logoCompanyPath(COMPANY_LOGO_PATH)
+                .udiDi(UDI_DI)
                 .build();
     }
 

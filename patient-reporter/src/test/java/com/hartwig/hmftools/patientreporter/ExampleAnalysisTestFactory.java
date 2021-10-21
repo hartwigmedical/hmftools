@@ -68,6 +68,8 @@ public final class ExampleAnalysisTestFactory {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
     private static final PatientReporterConfig REPORTER_CONFIG = PatientReporterTestFactory.createTestReporterConfig();
 
+    private static final String UDI_DI = "5.22";
+
     private ExampleAnalysisTestFactory() {
     }
 
@@ -167,6 +169,7 @@ public final class ExampleAnalysisTestFactory {
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
                 .signaturePath(reportData.signaturePath())
+                .udiDi(UDI_DI)
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion(pipelineVersion)

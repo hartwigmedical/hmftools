@@ -60,4 +60,7 @@ public interface PatientReport {
 
     @NotNull
     String logoCompanyPath();
+
+    @NotNull
+    String udiDi();
 }

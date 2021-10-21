@@ -46,5 +46,9 @@ public abstract class QCFailReport implements PatientReport {
     @Override
     @NotNull
     public abstract String logoCompanyPath();
+
+    @Override
+    @NotNull
+    public abstract String udiDi();
 }
 

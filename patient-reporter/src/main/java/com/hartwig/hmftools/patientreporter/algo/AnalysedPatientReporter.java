@@ -91,6 +91,7 @@ public class AnalysedPatientReporter {
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
+                .udiDi(reportData.udiDi())
                 .build();
 
         printReportState(report);

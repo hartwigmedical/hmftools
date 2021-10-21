@@ -48,6 +48,8 @@ public class CFReportWriterTest {
     private static final String COMMENT_STRING_QC_FAIL = "This is a test QC fail report";
     private static final String COMMENT_STRING_QC_FAIL_CORRECTED = "This is a corrected test QC fail report";
 
+    private static final String UDI_DI = "5.22";
+
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
@@ -344,6 +346,7 @@ public class CFReportWriterTest {
                 .signaturePath(testReportData.signaturePath())
                 .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())
+                .udiDi(UDI_DI)
                 .build();
 
         String filename = testReportFilePath(patientReport);

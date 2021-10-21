@@ -280,7 +280,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph testsArePerformedUnderUNI() {
-        return createContentParagraph("UDI-DI: ", ReportResources.UDI_DI + ".");
+        return createContentParagraph("UDI-DI: ",  failReport.udiDi() + ".");
     }
 
     @NotNull
