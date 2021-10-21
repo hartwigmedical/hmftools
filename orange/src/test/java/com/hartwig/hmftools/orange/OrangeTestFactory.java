@@ -31,6 +31,7 @@ public final class OrangeTestFactory {
     private static final String PURPLE_SOMATIC_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = RUN_DIRECTORY + "/purple/tumor_sample.purple.germline.vcf";
     private static final String PURPLE_GENE_COPY_NUMBER_TSV = RUN_DIRECTORY + "/purple/tumor_sample.purple.cnv.gene.tsv";
+    private static final String PURPLE_SOMATIC_CHROMOSOME_ARM_TSV = RUN_DIRECTORY + "/purple/tumor_sample.cnv.chromosomearm.somatic.tsv";
     private static final String PURPLE_PLOT_DIRECTORY = RUN_DIRECTORY + "/purple/plot";
     private static final String LINX_FUSION_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.breakend.tsv";
@@ -76,6 +77,7 @@ public final class OrangeTestFactory {
                 .purpleGermlineDriverCatalogTsv(PURPLE_GERMLINE_DRIVER_CATALOG_TSV)
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
+                .purpleSomaticChromsomeArmTsv(PURPLE_SOMATIC_CHROMOSOME_ARM_TSV)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)

@@ -59,8 +59,7 @@ public class AnalysedPatientReporter {
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 sampleMetadata.refSampleId(),
                 config,
-                sampleReport.germlineReportingLevel(),
-                config.refGenomeVersion());
+                sampleReport.germlineReportingLevel());
 
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),

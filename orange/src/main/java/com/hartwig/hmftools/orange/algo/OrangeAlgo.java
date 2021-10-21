@@ -161,9 +161,7 @@ public class OrangeAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv(),
-                null,
-                RefGenomeVersion.V37); // The ref genome version doesn't matter if you don't calc CN per chr arm.
+                config.purpleGeneCopyNumberTsv(), config.purpleSomaticChromsomeArmTsv());
     }
 
     @NotNull
