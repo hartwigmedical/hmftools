@@ -103,7 +103,9 @@ public class PatientReporterApplication {
                 config.purplePurityTsv(),
                 config.purpleQcFile(),
                 config.comments(),
-                config.isCorrectedReport());
+                config.isCorrectedReport(),
+                config.expectedPipelineVersion(),
+                config.overridePipelineVersion(), config.pipelineVersionFile());
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
