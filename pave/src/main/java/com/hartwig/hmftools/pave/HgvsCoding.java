@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 public final class HgvsCoding
 {
@@ -110,7 +112,14 @@ public final class HgvsCoding
 
     private static void addIntronicPosition(int position, final StringBuilder sb)
     {
-        if(position > 0)
+        addIntronicPosition(position, false, sb);
+
+    }
+    private static void addIntronicPosition(int position, boolean spansStopCodon, final StringBuilder sb)
+    {
+        if(spansStopCodon)  // MNVs or DELs which delete the stop codon
+            sb.append('*');
+        else if(position > 0)
             sb.append('+');
         else
             sb.append('-');
@@ -134,17 +143,24 @@ public final class HgvsCoding
         // c.1208_1210delAGA - shows the 3 deleted bases and their coding positions
         // c.60+5601_60+5610delTTTTTTTTTT - 10 bases from intron (CTTTTTTTTTT>C)
         // c.123-7190_123-7175delTGTGTGTGTGTGTGTG (+ve strand) neg distance drops the intronic position
+        // overlap of a splice region: donor c.10_12+3delAGTCCC or acceptor c.7_9-2delGATCC
 
         int delLength = abs(variant.baseDiff());
+        int codingBasesDeleted = codingContext.DeletedCodingBases;
         int codingBase = codingContext.CodingBase;
         int nearestExon = codingContext.NearestExonDistance;
+
+        // handle the variant spanning into the intron
+        boolean spansSplice = codingContext.RegionType == EXONIC && delLength > codingBasesDeleted && nearestExon != 0;
+        boolean spansUpstreamSplice = spansSplice && (nearestExon < 0);
+        boolean spansDownstreamSplice = spansSplice && !spansUpstreamSplice;
 
         // move past ref base
         if(codingContext.RegionType == EXONIC)
         {
             if(codingContext.CodingType == UTR_5P)
                 --codingBase;
-            else
+            else if(!spansUpstreamSplice)
                 ++codingBase;
         }
 
@@ -152,20 +168,24 @@ public final class HgvsCoding
 
         addCodingBase(codingContext, codingBase, sb, false);
 
-        if(codingContext.RegionType == INTRONIC)
+        if(codingContext.RegionType == INTRONIC || spansUpstreamSplice)
             addIntronicPosition(nearestExon, sb);
 
         if(delLength > 1)
         {
             if(codingContext.RegionType == EXONIC)
-                codingBase += delLength - 1;
+                codingBase += codingBasesDeleted - 1;
 
             addCodingBase(codingContext, codingBase, sb, true);
 
-            if(codingContext.RegionType == INTRONIC)
+            if(codingContext.RegionType == INTRONIC || spansDownstreamSplice)
             {
-                nearestExon += delLength - 1;
-                addIntronicPosition(nearestExon, sb);
+                if(spansDownstreamSplice)
+                    nearestExon = codingContext.NearestExonDistance - 1;
+                else
+                    nearestExon += delLength - 1;
+
+                addIntronicPosition(nearestExon, codingContext.SpansStopCodon, sb);
             }
         }
 
@@ -313,8 +333,13 @@ public final class HgvsCoding
         }
         else
         {
+            boolean spansSplice = codingContext.RegionType == EXONIC && nearestExon != 0;
+            boolean spansUpstreamSplice = spansSplice && (nearestExon < 0);
+            boolean spansDownstreamSplice = spansSplice && !spansUpstreamSplice;
+
             int codingBaseStart = codingBase;
-            int codingBaseEnd = codingContext.RegionType == EXONIC ? codingBase + varLength - 1 : codingBase;
+            int codingBaseLen = codingContext.CodingPositionRange[SE_END] - codingContext.CodingPositionRange[SE_START] + 1;
+            int codingBaseEnd = codingContext.RegionType == EXONIC ? codingBase + codingBaseLen - 1 : codingBase;
 
             if(codingContext.CodingType == UTR_5P && codingContext.RegionType == EXONIC)
             {
@@ -325,15 +350,19 @@ public final class HgvsCoding
 
             addCodingBase(codingContext, codingBaseStart, sb, false);
 
-            if(codingContext.RegionType == INTRONIC)
+            if(codingContext.RegionType == INTRONIC || spansUpstreamSplice)
                 addIntronicPosition(nearestExon, sb);
 
             addCodingBase(codingContext, codingBaseEnd, sb, true);
 
-            if(codingContext.RegionType == INTRONIC)
+            if(codingContext.RegionType == INTRONIC || spansDownstreamSplice)
             {
-                nearestExon += varLength - 1;
-                addIntronicPosition(nearestExon, sb);
+                if(spansDownstreamSplice)
+                    nearestExon = codingContext.NearestExonDistance;
+                else
+                    nearestExon += varLength - 1;
+
+                addIntronicPosition(nearestExon, codingContext.SpansStopCodon, sb);
             }
 
             sb.append(HGVS_TYPE_DEL);

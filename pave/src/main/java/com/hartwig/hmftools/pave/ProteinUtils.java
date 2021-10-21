@@ -5,10 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.aminoAcidFromBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
@@ -16,8 +14,6 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.codon.Codons;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -432,7 +428,7 @@ public final class ProteinUtils
 
         if(searchUp)
         {
-            int currentExonBases = min(requiredBases, currentExon.End - startPos);
+            int currentExonBases = min(requiredBases, min(currentExon.End, transData.CodingEnd) - startPos);
 
             if(currentExonBases > 0)
             {
@@ -449,7 +445,7 @@ public final class ProteinUtils
 
                 ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
 
-                if(nextExon == null)
+                if(nextExon == null || nextExon.Start > transData.CodingEnd)
                     return extraBases;
 
                 int lowerPos = nextExon.Start;
@@ -464,7 +460,7 @@ public final class ProteinUtils
         else
         {
             // search in lower positions
-            int currentExonBases = min(requiredBases, startPos - currentExon.Start);
+            int currentExonBases = min(requiredBases, startPos - max(currentExon.Start, transData.CodingStart));
 
             if(currentExonBases > 0)
             {
@@ -481,7 +477,7 @@ public final class ProteinUtils
 
                 ExonData nextExon = transData.exons().stream().filter(x -> x.Rank == nextExonRank).findFirst().orElse(null);
 
-                if(nextExon == null)
+                if(nextExon == null || nextExon.End < transData.CodingStart)
                     return extraBases;
 
                 int lowerPos = nextExon.End - (requiredBases - 1);

@@ -130,7 +130,6 @@ public class MnvCodingContextTest
         assertEquals(4, impact.codingContext().ExonRank);
         assertEquals(-9, impact.codingContext().NearestExonDistance);
 
-
         // repeat for negative strand
         TranscriptData transDataNeg = createTransExons(
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, 35, 65, false, "");
@@ -403,6 +402,7 @@ public class MnvCodingContextTest
         assertEquals(2, impact.codingContext().ExonRank);
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(EXONIC, impact.codingContext().RegionType);
+        assertEquals("c.15_17+1delTCGAinsCGAT", impact.codingContext().Hgvs);
         assertTrue(impact.proteinContext() != null);
         assertEquals(5, impact.proteinContext().CodonIndex);
         assertEquals(refBases.substring(36, 41) + refBases.substring(50, 51), impact.proteinContext().RefCodonBases);
@@ -426,6 +426,7 @@ public class MnvCodingContextTest
         assertEquals(3, impact.codingContext().ExonRank);
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(EXONIC, impact.codingContext().RegionType);
+        assertEquals("c.18-2_19delGATCinsATCG", impact.codingContext().Hgvs);
 
         assertTrue(impact.proteinContext() != null);
         assertEquals(6, impact.proteinContext().CodonIndex);

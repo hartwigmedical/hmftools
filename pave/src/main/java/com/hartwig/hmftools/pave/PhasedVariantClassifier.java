@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
@@ -14,6 +15,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOS
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.HgvsProtein.reportProteinImpact;
+import static com.hartwig.hmftools.pave.ImpactClassifier.checkStopStartCodons;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
 
@@ -207,7 +209,9 @@ public class PhasedVariantClassifier
 
                 // first build the ref codons
                 int refOverlap = lastRefCodonEnd - refCodonStart + 1;
-                combinedRefCodons += transImpact.proteinContext().RefCodonBases.substring(refOverlap);
+
+                if(refOverlap <= transImpact.proteinContext().RefCodonBases.length())
+                    combinedRefCodons += transImpact.proteinContext().RefCodonBases.substring(refOverlap);
 
                 // add the alt codons, which do not extend any further position-wise than the ref codons and also end at a codon boundary
                 // take the alt bases from the current since they will contain the change
@@ -246,7 +250,7 @@ public class PhasedVariantClassifier
                 combinedAltCodons += transImpact.proteinContext().AltCodonBases;
             }
 
-            lastRefCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
+            lastRefCodonEnd = max(transImpact.proteinContext().refCodingBaseEnd(), lastRefCodonEnd);
         }
 
         if(!isCodonMultiple(combinedRefCodons.length()) || !isCodonMultiple(combinedAltCodons.length()))
@@ -288,8 +292,23 @@ public class PhasedVariantClassifier
                     localPhaseSet, variants.size(), indelBaseTotal);
         }
 
+        List<VariantEffect> combinedEffects = Lists.newArrayList(combinedEffect);
+
+        VariantEffect ssEffect = checkStopStartCodons(minCodonIndex, combinedPc.RefAminoAcids, combinedPc.AltAminoAcids);
+
+        if(ssEffect != null)
+        {
+            if(ssEffect == STOP_LOST || ssEffect == START_LOST)
+            {
+                combinedEffects.remove(MISSENSE); // superceded if present so remove
+                combinedEffects.remove(FRAMESHIFT); // superceded if present so remove
+            }
+
+            combinedEffects.add(ssEffect);
+        }
+
         combinedPc.IsPhased = true;
-        combinedPc.Hgvs = HgvsProtein.generate(combinedPc, combinedEffect);
+        combinedPc.Hgvs = HgvsProtein.generate(variants.get(0), combinedPc, combinedEffects);
 
         for(VariantTransImpact transImpact : transImpacts)
         {
@@ -300,8 +319,9 @@ public class PhasedVariantClassifier
             transImpact.setProteinContext(combinedPc);
 
             transImpact.codingContext().IsFrameShift = false;
-            transImpact.effects().remove(FRAMESHIFT);
-            transImpact.addEffect(combinedEffect);
+
+            transImpact.effects().clear();
+            combinedEffects.forEach(x -> transImpact.addEffect(x));
         }
     }
 }

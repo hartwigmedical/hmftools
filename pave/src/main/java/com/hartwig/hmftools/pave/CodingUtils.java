@@ -34,25 +34,6 @@ public final class CodingUtils
         // set pre-coding exonic bases separately since doesn't fit with way exons are iterated through
         if(cc.CodingType == UTR_5P || cc.CodingType == UTR_3P)
             setUtrCodingExonicDistance(variant, transData, cc);
-
-        /*
-        if(variant.altBasesBelow(transData.TransStart) || variant.altBasesAbove(transData.TransEnd))
-        {
-            setUpstreamContext(posStart, posEnd, transData, cc);
-        }
-        else if(transData.nonCoding())
-        {
-            return setNonCodingContext(posStart, posEnd, transData, cc);
-        }
-        else if(variant.altBasesBelow(transData.CodingStart) || variant.altBasesAbove(transData.CodingEnd))
-        {
-            return setPreOrPostCodingContext(variant, transData, cc);
-        }
-        else
-        {
-            setCodingContext(variant, transData, cc);
-        }
-        */
     }
 
     private static void setCodingContext(final VariantData variant, final TranscriptData transData, final CodingContext cc)
@@ -62,8 +43,6 @@ public final class CodingUtils
         // coding type
         // distance to nearest exon (or upstream of transcript start)
         // coding base if within coding or number of exonic bases to coding start or end if 5' or 3' UTR
-        //
-        // other coding fields
 
         boolean inCoding = false;
         boolean isCodingTrans = !transData.nonCoding();
@@ -125,10 +104,13 @@ public final class CodingUtils
 
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
+                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
+                boolean overlapsExon = variant.altPositionsOverlap(exon.Start, exon.End);
+
                 if(skipExonPos > exon.End)
                 {
                     // keep track of coding bases if this exon overlaps the coding region but is before the variant
-                    if(inCoding && positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
+                    if(inCoding && !withinExon && !overlapsExon && positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         codingBaseCount += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
                     if(variant.Position > exon.End)
@@ -139,9 +121,8 @@ public final class CodingUtils
                 }
 
                 // check for fully intronic, fully exonic or spanning
-                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
 
-                if(withinExon || variant.altPositionsOverlap(exon.Start, exon.End))
+                if(withinExon || overlapsExon)
                 {
                     cc.RegionType = EXONIC;
                     cc.ExonRank = exon.Rank;
@@ -161,6 +142,18 @@ public final class CodingUtils
 
                         // add in any extra coding bases
                         cc.CodingBase = codingBaseCount + cc.CodingPositionRange[SE_START] - max(codingStart, exon.Start) + 1;
+
+                        // measure distance of a variant into the intron if applicable
+                        if(!variant.isInsert())
+                        {
+                            int exonCodingStart = max(exon.Start, codingStart);
+                            int exonCodingEnd = min(exon.End, codingEnd);
+
+                            if(variant.EndPosition > exonCodingEnd)
+                                cc.NearestExonDistance = variant.EndPosition - exonCodingEnd;
+                            else if(variant.Position < exonCodingStart)
+                                cc.NearestExonDistance = variant.Position - exonCodingStart; // -ve back into previous intron
+                        }
                     }
                 }
                 else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
@@ -215,9 +208,12 @@ public final class CodingUtils
 
                 final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
 
+                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
+                boolean overlapsExon = variant.altPositionsOverlap(exon.Start, exon.End);
+
                 if(skipExonPos < exon.Start)
                 {
-                    if(inCoding && positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
+                    if(inCoding && !withinExon && !overlapsExon && positionsOverlap(exon.Start, exon.End, codingStart, codingEnd))
                         codingBaseCount += min(codingEnd, exon.End) - max(codingStart, exon.Start) + 1;
 
                     if(variant.EndPosition < exon.Start)
@@ -227,8 +223,7 @@ public final class CodingUtils
                         continue;
                 }
 
-                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
-                if(withinExon || variant.altPositionsOverlap(exon.Start, exon.End))
+                if(withinExon || overlapsExon)
                 {
                     cc.RegionType = EXONIC;
                     cc.ExonRank = exon.Rank;
@@ -255,6 +250,17 @@ public final class CodingUtils
 
                         // add in any extra coding bases
                         cc.CodingBase = codingBaseCount + min(codingEnd, exon.End) - cc.CodingPositionRange[SE_END] + 1;
+
+                        if(!variant.isInsert())
+                        {
+                            int exonCodingStart = max(exon.Start, codingStart);
+                            int exonCodingEnd = min(exon.End, codingEnd);
+
+                            if(variant.EndPosition > exonCodingEnd)
+                                cc.NearestExonDistance = exonCodingEnd - variant.EndPosition; // -ve back into previous intron
+                            else if(variant.Position < exonCodingStart)
+                                cc.NearestExonDistance = exonCodingStart - variant.Position;
+                        }
                     }
                 }
                 else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
@@ -322,10 +328,19 @@ public final class CodingUtils
 
                 cc.DeletedCodingBases = ref.length() - alt.length();
                 adjustedCodingBases = cc.DeletedCodingBases;
+
+                if(cc.NearestExonDistance != 0)
+                {
+                    if(posStrand && variant.altPositions().contains(codingEnd))
+                        cc.SpansStopCodon = true;
+                    else if(!posStrand && variant.altPositions().contains(codingStart))
+                        cc.SpansStopCodon = true;
+                }
             }
 
             if(!isCodonMultiple(adjustedCodingBases))
                 cc.IsFrameShift = true;
+
         }
     }
 

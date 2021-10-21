@@ -28,6 +28,7 @@ public class CodingContext
     public int[] CodingPositionRange; // the alt bases for an MNV, otherwise the start and end ref bases (ie enclosing the del or insert)
     public boolean SpansSpliceJunction;
     public boolean IsFrameShift;
+    public boolean SpansStopCodon;
     public int DeletedCodingBases;
     public int UpstreamPhase;
 
@@ -53,6 +54,7 @@ public class CodingContext
         NearestExonDistance = 0;
         UpstreamPhase = PHASE_NONE;
         CodingEndsOnExonBoundary = false;
+        SpansStopCodon = false;
         Hgvs = "";
     }
 
