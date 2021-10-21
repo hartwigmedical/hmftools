@@ -128,9 +128,6 @@ public class ReferenceData
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        //TranscriptRegions = RefGeCoordinates == RefGenomeCoordinates.COORDS_38 ?
-        //        HmfGenePanelSupplier.allGeneList38() : HmfGenePanelSupplier.allGeneList37();
-
         ChromosomeLengths = toPosition(RefGeCoordinates.lengths(), chromosomeNames);
         Centromeres = toPosition(RefGeCoordinates.centromeres(), chromosomeNames);
 
@@ -210,7 +207,6 @@ public class ReferenceData
         {
             mIsValid = false;
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
-
         }
     }
 
@@ -219,7 +215,6 @@ public class ReferenceData
         if(cmd.hasOption(ENSEMBL_DATA_DIR))
         {
             // load transcripts with any alts from the driver gene panel in mind
-
             for(DriverGene driverGene : DriverGenes.driverGenes())
             {
                 if(!driverGene.additionalReportedTranscripts().isEmpty())

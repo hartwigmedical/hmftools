@@ -369,14 +369,6 @@ public class PurpleApplication
         GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
 
-        /* this file isn't used by any component in the system
-        PPL_LOGGER.info("Calculating chromosome copy number arm");
-        List<CnPerChromosomeArmData> cnPerChromosome = GenerateCnPerChromosome.extractCnPerChromosomeArm(
-                copyNumbers, mReferenceData.RefGeCoordinates);
-
-        CnPerChromosomeArmFile.write(CnPerChromosomeArmFile.generateFilename(mConfig.OutputDir, tumorSample), cnPerChromosome);
-        */
-
         if(mDbAccess != null)
         {
             PPL_LOGGER.info("Writing purple data to database: {}", mCmdLineArgs.getOptionValue(DB_URL));
@@ -410,11 +402,11 @@ public class PurpleApplication
 
         String somaticVcf = purpleDataPath + tumorSample + PURPLE_SOMATIC_VCF_SUFFIX;
 
-        // the counts passed in here are only for down-sampling for charting, which is not an applicable task
+        // the counts passed in here are only for down-sampling for charting, which is not relevant for drivers
         final SomaticStream somaticStream = new SomaticStream(
                 mConfig, mReferenceData, 0, 0, null, somaticVcf);
 
-        int somaticVariantCount = somaticStream.loadVariantsForDriver(somaticVcf);
+        int somaticVariantCount = somaticStream.loadVariantsForDrivers(somaticVcf);
         PPL_LOGGER.info("loaded {} somatic variants", somaticVariantCount);
 
         final String germlineVcf = purpleDataPath + tumorSample + PURPLE_GERMLINE_VCF_SUFFIX;

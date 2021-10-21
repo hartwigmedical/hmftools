@@ -150,7 +150,7 @@ public class SomaticStream implements Consumer<VariantContext>
                     .build();
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    mConfig.RunDrivers, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
+                    mConfig.RunDrivers, !mConfig.UsePaveImpacts, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
                     mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions,
                     mReferenceData.SomaticHotspots, mPeakModel, this::accept);
 
@@ -204,7 +204,7 @@ public class SomaticStream implements Consumer<VariantContext>
         }
     }
 
-    public int loadVariantsForDriver(final String somaticVcf)
+    public int loadVariantsForDrivers(final String somaticVcf)
     {
         if(somaticVcf.isEmpty())
             return 0;

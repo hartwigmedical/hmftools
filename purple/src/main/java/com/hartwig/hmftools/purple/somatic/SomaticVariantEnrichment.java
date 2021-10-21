@@ -39,7 +39,8 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
     private final VariantContextEnrichment mSnpEffEnrichment;
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
-    public SomaticVariantEnrichment(boolean hotspotEnabled, double clonalityBinWidth, final String purpleVersion,
+    public SomaticVariantEnrichment(
+            boolean hotspotEnabled, boolean snpEffEnrichmentEnabled, double clonalityBinWidth, final String purpleVersion,
             final String referenceId, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<FittedRegion> fittedRegions,
             final Multimap<Chromosome, VariantHotspot> hotspots, final List<PeakModel> peakModel, final Consumer<VariantContext> consumer)
@@ -58,8 +59,15 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
         final Set<String> somaticGenes = refData.DriverGenes.driverGenes().stream()
                 .filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
 
-        mSnpEffEnrichment = new SnpEffEnrichment(
-                somaticGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mSomaticRefContextEnrichment);
+        if(snpEffEnrichmentEnabled)
+        {
+            mSnpEffEnrichment = new SnpEffEnrichment(
+                    somaticGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mSomaticRefContextEnrichment);
+        }
+        else
+        {
+            mSnpEffEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(mSomaticRefContextEnrichment);
+        }
 
         if(hotspotEnabled)
         {

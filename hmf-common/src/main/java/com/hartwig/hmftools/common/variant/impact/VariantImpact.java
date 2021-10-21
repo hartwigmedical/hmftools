@@ -52,4 +52,10 @@ public class VariantImpact
                 GenesAffected == other.GenesAffected;
     }
 
+    public String toString()
+    {
+        return String.format("%s canonical(%s: %s) worst(%s) hgvs(%s %s)",
+                CanonicalGeneName, CanonicalCodingEffect, CanonicalEffect, WorstCodingEffect, CanonicalHgvsCoding, CanonicalHgvsProtein);
+    }
+
 }

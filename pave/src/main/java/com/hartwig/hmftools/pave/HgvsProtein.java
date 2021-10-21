@@ -35,6 +35,7 @@ public final class HgvsProtein
     private static final String HGVS_STOP_LOST = "ext*?";
     private static final String HGVS_STOP_GAINED = "*";
     private static final String HGVS_STOP_TRI_CODE = "Ter";
+    private static final String HGVS_SYNONYMOUS = "=";
 
     private static final Map<Character,String> AMINO_ACID_SINGLE_TO_TRI_MAP = Maps.newHashMap();
 
@@ -152,7 +153,7 @@ public final class HgvsProtein
             sb.append(proteinContext.CodonIndex + 1);
         }
 
-        sb.append('=');
+        sb.append(HGVS_SYNONYMOUS);
     }
 
     private static void formMissense(final ProteinContext proteinContext, final StringBuilder sb)

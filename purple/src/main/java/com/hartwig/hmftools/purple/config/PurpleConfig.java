@@ -23,6 +23,7 @@ public class PurpleConfig
 
     public final boolean TumorOnlyMode;
     public final boolean RunDrivers;
+    public final boolean UsePaveImpacts;
     public final boolean DriversOnly;
 
     public final FittingConfig Fitting;
@@ -43,6 +44,7 @@ public class PurpleConfig
     public static String RUN_DRIVERS = "run_drivers";
     public static String DRIVER_ENABLED = "driver_catalog";
     public static String DRIVERS_ONLY = "drivers_only";
+    public static String USE_PAVE_IMPACTS = "use_pave_impacts";
 
     public PurpleConfig(final String version, final CommandLine cmd)
     {
@@ -75,6 +77,7 @@ public class PurpleConfig
         TumorOnlyMode = cmd.hasOption(TUMOR_ONLY);
         RunDrivers = cmd.hasOption(RUN_DRIVERS) || cmd.hasOption(DRIVER_ENABLED);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
+        UsePaveImpacts = cmd.hasOption(USE_PAVE_IMPACTS);
 
         TumorId = parameter(cmd, TUMOR_SAMPLE, missingJoiner);
         ReferenceId = refSample;
@@ -150,6 +153,7 @@ public class PurpleConfig
         options.addOption(RUN_DRIVERS, false, "Run driver routine");
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
         options.addOption(DRIVER_ENABLED, false, "Deprecated, use 'run_drivers' instead");
+        options.addOption(USE_PAVE_IMPACTS, false, "Skip SnpEff enrichment, rely on Pave annotations and impact");
 
         addDatabaseCmdLineArgs(options);
         FittingConfig.addOptions(options);
