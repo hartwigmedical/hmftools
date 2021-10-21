@@ -38,6 +38,8 @@ public interface PatientReporterConfig {
     String COMPANY_LOGO = "company_logo";
     String SIGNATURE = "signature";
 
+    String UDI_DI = "udi_di";
+
     // General params needed for every report but for QC fail it can be optional in some cases
     String REF_SAMPLE_ID = "ref_sample_id";
     String REF_SAMPLE_BARCODE = "ref_sample_barcode";
@@ -97,6 +99,8 @@ public interface PatientReporterConfig {
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
         options.addOption(SIGNATURE, true, "Path towards an image file containing the signature to be appended at the end of the report.");
 
+        options.addOption(UDI_DI, true, "Code of the UDI DI code");
+
         options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the tumor sample for which a report is generated.");
         options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the tumor sample for which a report is generated.");
 
@@ -133,9 +137,6 @@ public interface PatientReporterConfig {
 
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
         options.addOption(OVERRIDE_PIPELINE_VERSION, false, "if set, the check for pipeline version is overridden");
-
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
-
         return options;
     }
 
@@ -171,6 +172,9 @@ public interface PatientReporterConfig {
 
     @NotNull
     String signature();
+
+    @NotNull
+    String udiDi();
 
     boolean qcFail();
 
@@ -332,6 +336,7 @@ public interface PatientReporterConfig {
                 .rvaLogo(nonOptionalFile(cmd, RVA_LOGO))
                 .companyLogo(nonOptionalFile(cmd, COMPANY_LOGO))
                 .signature(nonOptionalFile(cmd, SIGNATURE))
+                .udiDi(nonOptionalValue(cmd, UDI_DI))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
                 .pipelineVersionFile(pipelineVersion)

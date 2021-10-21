@@ -22,8 +22,12 @@ public interface PatientReport {
         } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn")) {
             userName = "Korneel Duyvesteyn";
             combinedUserName = userName + trainedEmployee;
-        } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek")) {
+        } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek") || systemUser.equals("sandravdbroek")
+                || systemUser.equals("s_vandenbroek")) {
             userName = "Sandra van den Broek";
+            combinedUserName = userName + trainedEmployee;
+        } else if (systemUser.equals("daphne") || systemUser.equals("d_vanbeek") || systemUser.equals("daphnevanbeek")) {
+            userName = "Daphne van Beek";
             combinedUserName = userName + trainedEmployee;
         } else if (systemUser.equals("root")) {
             combinedUserName = "automatically";
