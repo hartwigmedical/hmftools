@@ -253,9 +253,6 @@ public interface PatientReporterConfig {
     boolean overridePipelineVersion();
 
     @NotNull
-    RefGenomeVersion refGenomeVersion();
-
-    @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -363,7 +360,6 @@ public interface PatientReporterConfig {
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
                 .overridePipelineVersion(cmd.hasOption(OVERRIDE_PIPELINE_VERSION))
-                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .build();
     }
 
