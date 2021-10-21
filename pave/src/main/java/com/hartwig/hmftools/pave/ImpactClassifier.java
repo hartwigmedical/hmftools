@@ -276,7 +276,7 @@ public class ImpactClassifier
             return transImpact;
 
         // special exceptions - cannot attempt right realignment if a stop-codon was created
-        if(transImpact.topEffect() == STOP_GAINED && transImpact.TransData.posStrand())
+        if(transImpact.hasEffect(STOP_GAINED) && transImpact.TransData.posStrand())
             return transImpact;
 
         // take the least impact effect but favour non-splice over splice

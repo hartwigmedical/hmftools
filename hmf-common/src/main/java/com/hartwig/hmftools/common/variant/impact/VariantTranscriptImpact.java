@@ -32,7 +32,7 @@ public class VariantTranscriptImpact
     }
 
     // serialisation
-    public static final String VAR_TRANS_IMPACT_ANNOATATION = "VAR_TI";
+    public static final String VAR_TRANS_IMPACT_ANNOATATION = "PAVE_TI";
 
     // the in the VCF, transcript impacts are separated by ',', the components by ',' and the effects by '&"
     public static final String VAR_TRANS_IMPACT_DELIM = ",";

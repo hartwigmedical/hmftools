@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sage.SageMetaData;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.pave.compare.RefVariantData;
 
@@ -270,7 +272,7 @@ public class VariantData
             return String.format("pos(%s:%d-%d) variant(%s>%s)", Chromosome, Position, EndPosition, Ref, Alt);
     }
 
-    public static String csvCommonHeader()
+    public static String csvHeader()
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add("Chromosome");
@@ -282,7 +284,7 @@ public class VariantData
         return sj.toString();
     }
 
-    public String toCsv()
+    public String csvData()
     {
         StringJoiner sj = new StringJoiner(DELIM);
         sj.add(Chromosome);
@@ -295,5 +297,39 @@ public class VariantData
         return sj.toString();
     }
 
+    public static String extraDataCsvHeader()
+    {
+        StringJoiner sj = new StringJoiner(DELIM);
+        sj.add("Microhomology");
+        sj.add("RepeatSequence");
+        sj.add("RepeatCount");
+        sj.add("LocalPhaseSetId");
+        sj.add("Filter");
+        sj.add("Tier");
+        sj.add("Qual");
+        sj.add("AlleleReadCount");
+        sj.add("TotalReadCount");
+        return sj.toString();
+    }
+
+    public String extraDataCsv(final String sampleId)
+    {
+        StringJoiner sj = new StringJoiner(DELIM);
+        sj.add(mMicrohomology);
+        sj.add(mRepeatSequence);
+        sj.add(String.valueOf(mRepeatCount));
+        sj.add(String.valueOf(mLocalPhaseSetId));
+
+        VariantContextDecorator varDetails = new VariantContextDecorator(mVariantContext);
+        AllelicDepth allelicDepth = varDetails.allelicDepth(sampleId);
+
+        sj.add(varDetails.filter());
+        sj.add(varDetails.tier().toString());
+        sj.add(String.valueOf(varDetails.qual()));
+        sj.add(String.valueOf(allelicDepth.alleleReadCount()));
+        sj.add(String.valueOf(allelicDepth.totalReadCount()));
+
+        return sj.toString();
+    }
 
 }

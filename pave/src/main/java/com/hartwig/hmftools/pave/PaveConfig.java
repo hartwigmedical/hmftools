@@ -32,11 +32,15 @@ public class PaveConfig
     public final boolean WriteTranscriptCsv;
     public final boolean CompareSnpEff;
     public final boolean WriteDiffs;
+    public final boolean OnlyCanonical;
+    public final boolean FilterPass;
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String OVERWRITE_VCF = "overwrite_vcf";
     private static final String COMPARE_SNPEFF = "compare_snpeff";
+    private static final String ONLY_CANONCIAL = "only_canonical";
+    private static final String FILTER_PASS = "filter_pass";
     private static final String WRITE_DIFFS = "write_diffs";
     private static final String WRITE_TRANSCRIPT_CSV = "write_transcript_csv";
 
@@ -53,6 +57,8 @@ public class PaveConfig
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
         CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
         WriteDiffs = cmd.hasOption(WRITE_DIFFS);
+        OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
+        FilterPass = cmd.hasOption(FILTER_PASS);
 
         OutputDir = parseOutputDir(cmd);
     }
@@ -81,6 +87,8 @@ public class PaveConfig
         options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
+        options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
+        options.addOption(FILTER_PASS, false, "Only annotate passing variants");
 
         options.addOption(OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");

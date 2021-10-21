@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.OTHER;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
@@ -65,7 +66,7 @@ public class VariantTransImpact
 
     public List<VariantEffect> effects() { return mEffects; }
 
-    public VariantEffect topEffect() { return mEffects.get(0); };
+    public VariantEffect topEffect() { return !mEffects.isEmpty() ? mEffects.get(0) : null; }; // now only used in testing
     public boolean hasEffect(final VariantEffect effect) { return mEffects.contains(effect); };
     public int topRank() { return mEffects.stream().mapToInt(x -> x.rank()).max().orElse(-1); }
 

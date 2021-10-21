@@ -56,7 +56,7 @@ public class ComparisonWriter
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             writer.write("SampleId,");
-            writer.write(VariantData.csvCommonHeader());
+            writer.write(VariantData.csvHeader());
             writer.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect,HgvsCoding,HgvsProtein");
             writer.write(",WorstCodingEffect,GenesAffected");
             writer.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
@@ -81,7 +81,7 @@ public class ComparisonWriter
         try
         {
             mImpactWriter.write(String.format("%s,%s,%s",
-                    sampleId, variant.toCsv(), variantImpact.CanonicalGeneName));
+                    sampleId, variant.csvData(), variantImpact.CanonicalGeneName));
 
             boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(variantImpact.CanonicalGeneName);
 
@@ -111,7 +111,7 @@ public class ComparisonWriter
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             writer.write(String.format("SampleId,%s,GeneId,GeneName,%s,%s,%s",
-                    VariantData.csvCommonHeader(), VariantTransImpact.csvHeader(), CodingContext.csvHeader(), ProteinContext.csvHeader()));
+                    VariantData.csvHeader(), VariantTransImpact.csvHeader(), CodingContext.csvHeader(), ProteinContext.csvHeader()));
 
             writer.write(",RealignHgvsCoding,RealignHgvsProtein");
             writer.write(",SnpEffCanonEffects,SnpEffHgvsCoding,SnpEffHgvsProtein,SagePhasedInframeIndel");
@@ -155,7 +155,7 @@ public class ComparisonWriter
             VariantTransImpact raImpact = variant.getRealignedImpact(geneName, transImpact);
 
             mTransImpactWriter.write(String.format("%s,%s,%s,%s,%s,%s,%s",
-                    sampleId, variant.toCsv(), transImpact.TransData.GeneId, geneName,
+                    sampleId, variant.csvData(), transImpact.TransData.GeneId, geneName,
                     transImpact.toCsv(), transImpact.codingContext().toCsv(),
                     transImpact.proteinContext() != null ? transImpact.proteinContext().toCsv() : ProteinContext.empty()));
 

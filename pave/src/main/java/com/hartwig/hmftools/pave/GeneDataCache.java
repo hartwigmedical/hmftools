@@ -73,8 +73,6 @@ public class GeneDataCache
     public List<String> getDriverPanelGenes() { return mDriverGenes; }
     public Map<String,List<String>> getOtherReportableTranscripts() { return mOtherReportableTranscripts; }
 
-    public boolean loadCache() { return loadCache(false, false); }
-
     public boolean loadCache(boolean canonicalOnly, boolean onlyDriverGenes)
     {
         mEnsemblDataCache.setRequiredData(true, false, false, canonicalOnly);
@@ -136,6 +134,9 @@ public class GeneDataCache
     public List<TranscriptData> findTranscripts(final String geneId, int startPosition, int endPosition)
     {
         List<TranscriptData> transDataList = mEnsemblDataCache.getTranscripts(geneId);
+
+        if(transDataList == null)
+            return Lists.newArrayList();
 
         return transDataList.stream()
                 .filter(x -> withinTransRange(x, startPosition, endPosition))

@@ -38,34 +38,35 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class VariantContextDecorator implements GenomePosition {
-
+public class VariantContextDecorator implements GenomePosition
+{
     private static final Set<CodingEffect> PATHOGENIC_EFFECT = EnumSet.of(CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.SPLICE);
 
-    private final VariantContext context;
-    private final VariantType type;
-    private final String filter;
-    private final String ref;
-    private final String alt;
-    private final VariantTier tier;
+    private final VariantContext mContext;
+    private final VariantType mType;
+    private final String mFilter;
+    private final String mRef;
+    private final String mAlt;
+    private final VariantTier mTier;
 
     @Nullable
-    private VariantImpact variantImpact;
+    private VariantImpact mVariantImpact;
     @Nullable
-    private DriverImpact impact;
+    private DriverImpact mDriverImpact;
     @Nullable
-    private PathogenicSummary clinvarPathogenicSummary;
+    private PathogenicSummary mClinvarPathogenicSummary;
 
-    public VariantContextDecorator(final VariantContext context) {
-        this.context = context;
-        this.filter = displayFilter(context);
-        this.type = VariantType.type(context);
-        this.ref = getRef(context);
-        this.alt = getAlt(context);
-        this.tier = VariantTier.fromContext(context);
-        this.variantImpact = null;
-        this.impact = null;
-        this.clinvarPathogenicSummary = null;
+    public VariantContextDecorator(final VariantContext context)
+    {
+        mContext = context;
+        mFilter = displayFilter(context);
+        mType = VariantType.type(context);
+        mRef = getRef(context);
+        mAlt = getAlt(context);
+        mTier = VariantTier.fromContext(context);
+        mVariantImpact = null;
+        mDriverImpact = null;
+        mClinvarPathogenicSummary = null;
     }
 
     public static String getRef(final VariantContext context)
@@ -78,176 +79,214 @@ public class VariantContextDecorator implements GenomePosition {
         return context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
     }
 
-    public boolean isPass() {
-        return filter.equals(SomaticVariantFactory.PASS_FILTER);
+    public boolean isPass()
+    {
+        return mFilter.equals(SomaticVariantFactory.PASS_FILTER);
     }
 
     @NotNull
-    public PathogenicSummary clinvarPathogenicSummary() {
-        if (clinvarPathogenicSummary == null) {
-            clinvarPathogenicSummary = PathogenicSummaryFactory.fromContext(context);
+    public PathogenicSummary clinvarPathogenicSummary()
+    {
+        if(mClinvarPathogenicSummary == null)
+        {
+            mClinvarPathogenicSummary = PathogenicSummaryFactory.fromContext(mContext);
         }
 
-        return clinvarPathogenicSummary;
+        return mClinvarPathogenicSummary;
     }
 
     @NotNull
-    public VariantContext context() {
-        return context;
+    public VariantContext context()
+    {
+        return mContext;
     }
 
     @NotNull
-    public String filter() {
-        return filter;
+    public String filter()
+    {
+        return mFilter;
     }
 
     @NotNull
     @Override
-    public String chromosome() {
-        return context.getContig();
+    public String chromosome()
+    {
+        return mContext.getContig();
     }
 
     @Override
-    public long position() {
-        return context.getStart();
+    public long position()
+    {
+        return mContext.getStart();
     }
 
     @NotNull
-    public VariantType type() {
-        return type;
+    public VariantType type()
+    {
+        return mType;
     }
 
     @NotNull
-    public String ref() {
-        return ref;
+    public String ref()
+    {
+        return mRef;
     }
 
     @NotNull
-    public String alt() {
-        return alt;
+    public String alt()
+    {
+        return mAlt;
     }
 
     @NotNull
-    public VariantImpact variantImpact() {
-        if (variantImpact == null) {
-            this.variantImpact = VariantImpactSerialiser.fromVariantContext(context);
+    public VariantImpact variantImpact()
+    {
+        if(mVariantImpact == null)
+        {
+            mVariantImpact = VariantImpactSerialiser.fromVariantContext(mContext);
         }
 
-        return variantImpact;
+        return mVariantImpact;
     }
 
     @NotNull
-    public String gene() {
+    public String gene()
+    {
         return variantImpact().gene();
     }
 
     @NotNull
-    public DriverImpact impact() {
-        if (impact == null) {
-            this.impact = DriverImpact.select(type, variantImpact().CanonicalCodingEffect);
+    public DriverImpact impact()
+    {
+        if(mDriverImpact == null)
+        {
+            mDriverImpact = DriverImpact.select(mType, variantImpact().CanonicalCodingEffect);
         }
 
-        return impact;
+        return mDriverImpact;
     }
 
     @NotNull
-    public CodingEffect canonicalCodingEffect() {
+    public CodingEffect canonicalCodingEffect()
+    {
         return variantImpact().CanonicalCodingEffect;
     }
 
-    public double qual() {
-        return context.getPhredScaledQual();
+    public double qual()
+    {
+        return mContext.getPhredScaledQual();
     }
 
-    public double adjustedCopyNumber() {
-        return context.getAttributeAsDouble(PURPLE_CN_INFO, 0);
+    public double adjustedCopyNumber()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_CN_INFO, 0);
     }
 
-    public double adjustedVaf() {
-        return context.getAttributeAsDouble(PURPLE_AF_INFO, 0);
+    public double adjustedVaf()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_AF_INFO, 0);
     }
 
-    public boolean biallelic() {
-        return context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+    public boolean biallelic()
+    {
+        return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
     }
 
-    public double minorAlleleCopyNumber() {
-        return context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, context.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0));
+    public double minorAlleleCopyNumber()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_CN_INFO, mContext.getAttributeAsDouble(PURPLE_MINOR_ALLELE_PLOIDY_INFO, 0));
     }
 
-    public double variantCopyNumber() {
-        return context.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, context.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
+    public double variantCopyNumber()
+    {
+        return mContext.getAttributeAsDouble(PURPLE_VARIANT_CN_INFO, mContext.getAttributeAsDouble(PURPLE_VARIANT_PLOIDY_INFO, 0));
     }
 
     @Nullable
-    public Integer localPhaseSet() {
-        return context.hasAttribute(SageMetaData.LOCAL_PHASE_SET) ? context.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0) : null;
+    public Integer localPhaseSet()
+    {
+        return mContext.hasAttribute(SageMetaData.LOCAL_PHASE_SET) ? mContext.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0) : null;
     }
 
     @NotNull
-    public AllelicDepth allelicDepth(@NotNull final String sample) {
-        final Genotype genotype = context.getGenotype(sample);
+    public AllelicDepth allelicDepth(@NotNull final String sample)
+    {
+        final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? AllelicDepth.fromGenotype(genotype) : NO_DEPTH;
     }
 
     @NotNull
-    public GenotypeStatus genotypeStatus(@NotNull final String sample) {
-        final Genotype genotype = context.getGenotype(sample);
+    public GenotypeStatus genotypeStatus(@NotNull final String sample)
+    {
+        final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
     }
 
     @NotNull
-    public VariantTier tier() {
-        return tier;
+    public VariantTier tier()
+    {
+        return mTier;
     }
 
     @NotNull
-    public PathogenicSummary pathogenicSummary() {
-        return PathogenicSummaryFactory.fromContext(context);
+    public PathogenicSummary pathogenicSummary()
+    {
+        return PathogenicSummaryFactory.fromContext(mContext);
     }
 
-    public int repeatCount() {
-        return context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
-    }
-
-    @NotNull
-    public String repeatSequence() {
-        return context.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY);
+    public int repeatCount()
+    {
+        return mContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0);
     }
 
     @NotNull
-    public Hotspot hotspot() {
-        return HotspotEnrichment.fromVariant(context);
+    public String repeatSequence()
+    {
+        return mContext.getAttributeAsString(REPEAT_SEQUENCE_FLAG, Strings.EMPTY);
     }
 
-    public boolean isHotspot() {
+    @NotNull
+    public Hotspot hotspot()
+    {
+        return HotspotEnrichment.fromVariant(mContext);
+    }
+
+    public boolean isHotspot()
+    {
         return hotspot() == Hotspot.HOTSPOT;
     }
 
     @NotNull
-    public String trinucleotideContext() {
-        return context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
+    public String trinucleotideContext()
+    {
+        return mContext.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
     }
 
-    public double mappability() {
-        return context.getAttributeAsDouble(MAPPABILITY_TAG, 0);
+    public double mappability()
+    {
+        return mContext.getAttributeAsDouble(MAPPABILITY_TAG, 0);
     }
 
-    public boolean reported() {
-        return context.getAttributeAsBoolean(REPORTED_FLAG, false);
+    public boolean reported()
+    {
+        return mContext.getAttributeAsBoolean(REPORTED_FLAG, false);
     }
 
     @NotNull
-    public String microhomology() {
-        return context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);
+    public String microhomology()
+    {
+        return mContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);
     }
 
-    public boolean isPathogenic() {
-        if (clinvarPathogenicSummary().pathogenicity() == Pathogenicity.BENIGN_BLACKLIST) {
+    public boolean isPathogenic()
+    {
+        if(clinvarPathogenicSummary().pathogenicity() == Pathogenicity.BENIGN_BLACKLIST)
+        {
             return false;
         }
 
-        if (isHotspot() || clinvarPathogenicSummary().pathogenicity().isPathogenic()) {
+        if(isHotspot() || clinvarPathogenicSummary().pathogenicity().isPathogenic())
+        {
             return true;
         }
 
@@ -256,30 +295,38 @@ public class VariantContextDecorator implements GenomePosition {
     }
 
     @NotNull
-    private static String displayFilter(@NotNull final VariantContext context) {
-        if (context.isFiltered()) {
+    private static String displayFilter(@NotNull final VariantContext context)
+    {
+        if(context.isFiltered())
+        {
             StringJoiner joiner = new StringJoiner(";");
             context.getFilters().forEach(joiner::add);
             return joiner.toString();
-        } else {
+        }
+        else
+        {
             return SomaticVariantFactory.PASS_FILTER;
         }
     }
 
-    private static final AllelicDepth NO_DEPTH = new AllelicDepth() {
+    private static final AllelicDepth NO_DEPTH = new AllelicDepth()
+    {
         @Override
-        public int totalReadCount() {
+        public int totalReadCount()
+        {
             return 0;
         }
 
         @Override
-        public int alleleReadCount() {
+        public int alleleReadCount()
+        {
             return 0;
         }
     };
 
     @Override
-    public String toString() {
-        return chromosome() + ":" + position() + " " + ref + '>' + alt ;
+    public String toString()
+    {
+        return chromosome() + ":" + position() + " " + mRef + '>' + mAlt;
     }
 }

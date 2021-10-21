@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
@@ -30,7 +30,6 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
@@ -94,7 +93,7 @@ public class PaveApplication
             System.exit(1);
         }
 
-        if(!mGeneDataCache.loadCache())
+        if(!mGeneDataCache.loadCache(mConfig.OnlyCanonical, false))
         {
             PV_LOGGER.error("Ensembl data cache loading failed, exiting");
             System.exit(1);
@@ -150,6 +149,12 @@ public class PaveApplication
     private void processVariant(final VariantContext variantContext)
     {
         VariantData variant = VariantData.fromContext(variantContext);
+
+        if(mConfig.FilterPass)
+        {
+            if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
+                return;
+        }
 
         variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
 
@@ -254,7 +259,11 @@ public class PaveApplication
             mCsvTranscriptWriter = createBufferedWriter(transFileName, false);
 
             StringJoiner sj = new StringJoiner(DELIM);
-            sj.add(VariantData.csvCommonHeader());
+            sj.add(VariantData.csvHeader());
+
+            if(!mConfig.CompareSnpEff)
+                sj.add(VariantData.extraDataCsvHeader());
+
             sj.add("GeneId,GeneName");
             sj.add(VariantTransImpact.csvHeader());
             sj.add(CodingContext.csvHeader());
@@ -294,9 +303,9 @@ public class PaveApplication
                 if(impact.TransData == null)
                     continue;
 
-                mCsvTranscriptWriter.write(String.format("%s", variant.toCsv()));
+                mCsvTranscriptWriter.write(String.format("%s,%s", variant.csvData(), variant.extraDataCsv(mConfig.SampleId)));
 
-                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s,%s",
+                mCsvTranscriptWriter.write(String.format(",%s,%s,%s,%s,%s",
                         impact.TransData.GeneId, geneName, impact.toCsv(), impact.codingContext().toCsv(),
                         impact.proteinContext() != null ? impact.proteinContext().toCsv() : ProteinContext.empty()));
 
@@ -390,7 +399,7 @@ public class PaveApplication
                     }
 
                     StringJoiner sj = new StringJoiner(DELIM);
-                    sj.add(variant.toCsv());
+                    sj.add(variant.csvData());
 
                     sj.add(impact.TransData.GeneId);
                     sj.add(geneName);
@@ -449,7 +458,7 @@ public class PaveApplication
                 ++mTransTotalComparisons;
 
                 StringJoiner sj = new StringJoiner(DELIM);
-                sj.add(variant.toCsv());
+                sj.add(variant.csvData());
                 sj.add(annotation.geneID());
                 sj.add(annotation.gene());
                 sj.add(annotation.featureID());

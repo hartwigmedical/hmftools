@@ -44,24 +44,29 @@ public class VcfWriter
 
     public final void writeVariant(final VariantContext context, final VariantData variant, final VariantImpact variantImpact)
     {
-        List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
-
-        for(Map.Entry<String,List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
+        if(!variant.getImpacts().isEmpty())
         {
-            final String geneName = entry.getKey();
-            final List<VariantTransImpact> geneImpacts = entry.getValue();
+            List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
 
-            for(VariantTransImpact transImpact : geneImpacts)
+            for(Map.Entry<String, List<VariantTransImpact>> entry : variant.getImpacts().entrySet())
             {
-                transImpacts.add(new VariantTranscriptImpact(
-                        transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
-                        transImpact.effectsStr(), transImpact.inSpliceRegion(),
-                        transImpact.hgvsCoding(), transImpact.hgvsProtein()));
-            }
-        }
+                final String geneName = entry.getKey();
+                final List<VariantTransImpact> geneImpacts = entry.getValue();
 
-        VariantTranscriptImpact.writeVcfData(context, transImpacts);
-        VariantImpactSerialiser.writeImpactDetails(context, variantImpact);
+                for(VariantTransImpact transImpact : geneImpacts)
+                {
+                    transImpacts.add(new VariantTranscriptImpact(
+                            transImpact.TransData.GeneId, geneName, transImpact.TransData.TransName,
+                            transImpact.effectsStr(), transImpact.inSpliceRegion(),
+                            transImpact.hgvsCoding(), transImpact.hgvsProtein()));
+                }
+            }
+
+            VariantTranscriptImpact.writeVcfData(context, transImpacts);
+
+            if(variantImpact != null)
+                VariantImpactSerialiser.writeImpactDetails(context, variantImpact);
+        }
 
         mWriter.add(context);
     }
