@@ -240,14 +240,21 @@ public class PaveApplication
     {
         final VersionInfo version = new VersionInfo("pave.version");
 
-        String vcfFilename = mConfig.OverwriteVcf ?
-                mConfig.VcfFile : mConfig.OutputDir + mConfig.SampleId + ".pave.annotated.vcf";
+        // append 'pave' to the input vcf file name if not specified
+        String outputVcfFilename;
 
-        mVcfWriter = new VcfWriter(vcfFilename, mConfig.VcfFile);
+        if(mConfig.OutputVcfFile != null)
+        {
+            outputVcfFilename = mConfig.OutputVcfFile; // assumes includes path
+        }
+        else
+        {
+            int extensionIndex = mConfig.VcfFile.indexOf(".vcf");
+            outputVcfFilename = mConfig.VcfFile.substring(0, extensionIndex) + ".pave" + mConfig.VcfFile.substring(extensionIndex);
+        }
 
-        // TO-DO
-        // mVcfWriter.writeHeader(version.version());
-        mVcfWriter.writeHeader("1.0");
+        mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
+        mVcfWriter.writeHeader(version.version());
     }
 
     private void initialiseTranscriptWriter()

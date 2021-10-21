@@ -16,7 +16,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 // methods for reading from and writing to VCFs
 public final class VariantImpactSerialiser
 {
-    public static final String VAR_IMPACT = "PAVE";
+    public static final String VAR_IMPACT = "IMPACT";
 
     // in the VCF, the components of the variant impact are separated by ',' and effects are separated by '&'
     // other reportable effects are separated by '-' and their sub-details by '|'
@@ -39,7 +39,7 @@ public final class VariantImpactSerialiser
         fields.add("GenesAffected");
 
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                VAR_IMPACT, fields.length(), VCFHeaderLineType.String, String.format("PAVE Variant Impact [%s]", fields.toString())));
+                VAR_IMPACT, fields.length(), VCFHeaderLineType.String, String.format("Variant Impact [%s]", fields.toString())));
         return header;
     }
 

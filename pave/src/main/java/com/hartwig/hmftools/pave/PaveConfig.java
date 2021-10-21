@@ -28,7 +28,7 @@ public class PaveConfig
     public final RefGenomeVersion RefGenVersion;
 
     public final String OutputDir;
-    public final boolean OverwriteVcf;
+    public final String OutputVcfFile;
     public final boolean WriteTranscriptCsv;
     public final boolean CompareSnpEff;
     public final boolean WriteDiffs;
@@ -37,7 +37,7 @@ public class PaveConfig
 
     private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
-    private static final String OVERWRITE_VCF = "overwrite_vcf";
+    private static final String OUTPUT_VCF_FILE = "output_vcf_file";
     private static final String COMPARE_SNPEFF = "compare_snpeff";
     private static final String ONLY_CANONCIAL = "only_canonical";
     private static final String FILTER_PASS = "filter_pass";
@@ -53,7 +53,7 @@ public class PaveConfig
 
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
 
-        OverwriteVcf = cmd.hasOption(OVERWRITE_VCF);
+        OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
         CompareSnpEff = cmd.hasOption(COMPARE_SNPEFF);
         WriteDiffs = cmd.hasOption(WRITE_DIFFS);
@@ -77,7 +77,7 @@ public class PaveConfig
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(VCF_FILE, true, "VCF input file");
-        options.addOption(OVERWRITE_VCF, false, "Update the input VCF with new annotations");
+        options.addOption(OUTPUT_VCF_FILE, false, "VCF output file");
 
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");

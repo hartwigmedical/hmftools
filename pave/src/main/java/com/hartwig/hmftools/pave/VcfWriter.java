@@ -28,6 +28,7 @@ public class VcfWriter
         mWriter = new VariantContextWriterBuilder()
                 .setReferenceDictionary(mHeader.getFileHeader().getSequenceDictionary())
                 .setOutputFile(outputVCF)
+                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
     }
 
