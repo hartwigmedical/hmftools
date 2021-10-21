@@ -176,6 +176,7 @@ public class PaveApplication
 
     private void processVariant(final VariantData variant)
     {
+        // can be null if no impacts exist for any transcript
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);

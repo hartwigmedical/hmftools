@@ -28,6 +28,10 @@ public class VariantImpactBuilder
 
     public VariantImpact createVariantImpact(final VariantData variant)
     {
+        // if no impacts were found against any transcripts, then return null and no entry will be written to the VCF
+        if(variant.getImpacts().isEmpty())
+            return null;
+
         // find the canonical and worst transcript and their effects
         // favour driver genes over others, otherwise take the gene with the highest impact
 
@@ -106,11 +110,11 @@ public class VariantImpactBuilder
         String canonicalGeneName = "";
         String canonicalEffect = "";
         String canonicalTranscript = "";
-        CodingEffect canonicalCodingEffect = UNDEFINED;
+        CodingEffect canonicalCodingEffect = NONE;
         String canonicalHgvsCodingImpact = "";
         String canonicalHgvsProteinImpact = "";
         boolean canonicalSpliceRegion = false;
-        CodingEffect worstCodingEffect = UNDEFINED;
+        CodingEffect worstCodingEffect = NONE;
 
         if(worstImpact != null)
         {
