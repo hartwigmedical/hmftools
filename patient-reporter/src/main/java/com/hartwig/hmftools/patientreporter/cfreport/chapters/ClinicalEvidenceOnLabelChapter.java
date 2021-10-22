@@ -54,7 +54,4 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
                 ClinicalEvidenceFunctions.buildTreatmentMap(evidences, true, true);
         document.add(ClinicalEvidenceFunctions.createTrialTable(header, onLabelTreatments, contentWidth()));
     }
-
-
-
 }

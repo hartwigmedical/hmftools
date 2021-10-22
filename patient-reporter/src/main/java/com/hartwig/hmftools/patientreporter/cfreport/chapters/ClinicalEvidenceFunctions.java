@@ -109,7 +109,7 @@ public class ClinicalEvidenceFunctions {
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
                 new float[] { 20, 180, 180 },
-                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility") });
+                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility", 2) });
 
         boolean hasEvidence = false;
         for (EvidenceLevel level : EvidenceLevel.values()) {
@@ -136,13 +136,14 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
-                Table responsiveTable = new Table(1);
+                Table responsiveTable = new Table(new float[] { 1,1 });
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(responsive));
                     String url = url(responsive);
                     if (!url.isEmpty()) {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
+                    responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
                     responsiveTable.addCell(cell);
                 }
                 table.addCell(TableUtil.createContentCell(responsiveTable));
@@ -163,24 +164,26 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
-                Table responsiveTable = new Table(1);
+                Table responsiveTable = new Table(new float[] { 1,1 });
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(responsive));
                     String url = url(responsive);
                     if (!url.isEmpty()) {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
+                    responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
                     responsiveTable.addCell(cell);
                 }
                 table.addCell(TableUtil.createContentCell(responsiveTable));
 
-                Table resistantTable = new Table(1);
+                Table resistantTable = new Table(new float[] { 1,1 });
                 for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(resistant));
                     String url = url(resistant);
                     if (!url.isEmpty()) {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
+                    resistantTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
                     resistantTable.addCell(cell);
                 }
                 table.addCell(TableUtil.createContentCell(resistantTable));
@@ -213,7 +216,8 @@ public class ClinicalEvidenceFunctions {
         for (Knowledgebase source : evidence.sources()) {
             sources.add(source.reportDisplay());
         }
-        return event + " (" + evidence.level().toString() + " - " + sources.toString() + ")";
+
+        return event + " (" + sources + ")";
     }
 
     @NotNull
