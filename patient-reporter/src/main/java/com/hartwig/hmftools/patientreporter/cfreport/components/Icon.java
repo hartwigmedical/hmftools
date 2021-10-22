@@ -61,8 +61,7 @@ public class Icon {
     }
 
     private static final DeviceRgb[] TREATMENT_PALETTE =
-            { new DeviceRgb(110, 197, 213), new DeviceRgb(237, 139, 0), new DeviceRgb(254, 208, 0), new DeviceRgb(0, 146, 188),
-                    new DeviceRgb(120, 190, 32) };
+            { new DeviceRgb(110, 197, 213)};
 
     @NotNull
     public static Text createLevelIcon(@NotNull String level) {
