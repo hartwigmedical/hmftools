@@ -112,11 +112,7 @@ public class GeneDataCache
                 driverGenes.forEach(x -> mDriverGenes.add(x.gene()));
 
                 if(!driverGene.additionalReportedTranscripts().isEmpty())
-                {
-                    mOtherReportableTranscripts.put(
-                            driverGene.gene(),
-                            Arrays.stream(driverGene.additionalReportedTranscripts().split(ITEM_DELIM)).collect(Collectors.toList()));
-                }
+                    mOtherReportableTranscripts.put(driverGene.gene(), driverGene.additionalReportedTranscripts());
             }
 
             if(!mOtherReportableTranscripts.isEmpty())
