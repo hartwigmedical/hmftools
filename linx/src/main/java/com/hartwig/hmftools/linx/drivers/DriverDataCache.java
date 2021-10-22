@@ -150,22 +150,22 @@ public class DriverDataCache
 
         if(mDbAccess != null)
         {
-            final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.GeneName));
+            final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.geneName()));
             gcnData = !geneCopyNumbers.isEmpty() ? geneCopyNumbers.get(0) : null;
         }
         else
         {
-            gcnData = findGeneCopyNumber(gene.GeneName);
+            gcnData = findGeneCopyNumber(gene.geneName());
         }
 
         final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
                 .driver(DriverType.HOM_DISRUPTION)
                 .category(TSG)
-                .gene(gene.GeneName)
+                .gene(gene.geneName())
                 .transcript(transData.TransName)
                 .isCanonical(transData.IsCanonical)
                 .chromosome(gene.chromosome())
-                .chromosomeBand(gene.karyotypeBand())
+                .chromosomeBand(gene.GeneData.KaryotypeBand)
                 .likelihoodMethod(DEL)
                 .driverLikelihood(1.0)
                 .missense(0)
@@ -180,11 +180,11 @@ public class DriverDataCache
 
         mDriverCatalog.add(driverRecord);
 
-        final GeneData geneData = GeneTransCache.getGeneDataByName(gene.GeneName);
+        final GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
 
         if (geneData == null)
         {
-            LNX_LOGGER.warn("gene({}) no Ensembl gene data found", gene.GeneName);
+            LNX_LOGGER.warn("gene({}) no Ensembl gene data found", gene.geneName());
             return null;
         }
 
@@ -192,7 +192,7 @@ public class DriverDataCache
 
         if(canonicalTrans == null)
         {
-            LNX_LOGGER.warn("gene({}:{}) no canonical transcript found", geneData.GeneId, gene.GeneName);
+            LNX_LOGGER.warn("gene({}:{}) no canonical transcript found", geneData.GeneId, gene.geneName());
             return null;
         }
 

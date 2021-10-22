@@ -59,7 +59,8 @@ public class BreakendTransData
     private static final int STOP_CODON_LENGTH = 3;
     public static final int NO_NEXT_SPLICE_ACCEPTOR = -1;
 
-    public BreakendTransData(@NotNull final BreakendGeneData gene, final TranscriptData transData,
+    public BreakendTransData(
+            final BreakendGeneData gene, final TranscriptData transData,
             final int exonUpstream, final int exonDownstream, int phase, int exonicBasePhase, int codingBases, int totalCodingBases)
     {
         TransData = transData;
@@ -130,7 +131,7 @@ public class BreakendTransData
     public BreakendGeneData gene() { return mGene; }
 
     public int svPosition() { return mGene.position(); }
-    public String geneName() { return mGene.GeneName; }
+    public String geneName() { return mGene.geneName(); }
     public boolean isUpstream() { return mGene.isUpstream(); }
 
     // convenience
@@ -161,7 +162,7 @@ public class BreakendTransData
 
     public boolean isPostTranscript()
     {
-        if(mGene.Strand == POS_STRAND)
+        if(mGene.strand() == POS_STRAND)
             return svPosition() > TransData.TransEnd;
         else
             return svPosition() < TransData.TransStart;
@@ -172,7 +173,7 @@ public class BreakendTransData
         if(!isPromoter())
             return 0;
 
-        if(mGene.Strand == POS_STRAND)
+        if(mGene.strand() == POS_STRAND)
             return TransData.TransStart - svPosition();
         else
             return svPosition() - TransData.TransEnd;
@@ -296,7 +297,7 @@ public class BreakendTransData
 
     public final String toString()
     {
-        return mGene.GeneName + " " + TransData.TransName;
+        return mGene.geneName() + " " + TransData.TransName;
     }
 
     public void addProteinFeature(final String feature, boolean isPreserved)

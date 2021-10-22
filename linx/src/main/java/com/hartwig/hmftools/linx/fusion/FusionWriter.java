@@ -72,8 +72,8 @@ public class FusionWriter implements CohortFileInterface
                     .totalExonCount(transcript.TransData.exons().size())
                     .chromosome(gene.chromosome())
                     .orientation(gene.orientation())
-                    .strand(gene.Strand)
-                    .chrBand(gene.karyotypeBand())
+                    .strand(gene.strand())
+                    .chrBand(gene.GeneData.KaryotypeBand)
                     .exonUp(transcript.ExonUpstream)
                     .exonDown(transcript.ExonDownstream)
                     .build());
@@ -223,8 +223,8 @@ public class FusionWriter implements CohortFileInterface
                     gene.type(), gene.jcn()));
 
             sb.append(String.format(",%s,%s,%s,%d,%s,%s",
-                    gene.StableId, fusion.geneName(fs), trans.transName(),
-                    gene.Strand, trans.regionType(), trans.codingType()));
+                    gene.geneId(), fusion.geneName(fs), trans.transName(),
+                    gene.strand(), trans.regionType(), trans.codingType()));
 
             sb.append(String.format(",%d,%d,%d,%d,%d,%s",
                     isUpstream ? trans.ExonUpstream : trans.ExonDownstream,

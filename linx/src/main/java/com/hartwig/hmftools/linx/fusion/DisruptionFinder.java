@@ -245,7 +245,7 @@ public class DisruptionFinder implements CohortFileInterface
         for(final BreakendGeneData geneStart : genesStart)
         {
             final BreakendGeneData geneEnd = genesEnd.stream()
-                    .filter(x -> x.StableId.equals(geneStart.StableId)).findFirst().orElse(null);
+                    .filter(x -> x.geneId().equals(geneStart.geneId())).findFirst().orElse(null);
 
             if(geneEnd == null)
                 continue;
@@ -305,7 +305,7 @@ public class DisruptionFinder implements CohortFileInterface
             for(BreakendGeneData gene : genesList)
             {
                 BreakendGeneData otherGene = otherGenesList.stream()
-                        .filter(x -> x.StableId.equals(gene.StableId)).findFirst().orElse(null);
+                        .filter(x -> x.geneId().equals(gene.geneId())).findFirst().orElse(null);
 
                 if(otherGene == null)
                 {
@@ -374,7 +374,7 @@ public class DisruptionFinder implements CohortFileInterface
         if(mRemovedDisruptions.containsKey(transcript))
             return;
 
-        if(!matchesDisruptionTranscript(transcript.gene().StableId, transcript.TransData))
+        if(!matchesDisruptionTranscript(transcript.gene().geneId(), transcript.TransData))
             return;
 
         LNX_LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.gene().id(), context);
@@ -429,14 +429,14 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
 
             // neither breakend can be in a deletion bridge with a breakend in the same cluster and gene
-            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend1, x.GeneName)))
+            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend1, x.geneName())))
                 continue;
-            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend2, x.GeneName)))
+            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend2, x.geneName())))
                 continue;
 
             for(BreakendGeneData gene1 : genes1)
             {
-                BreakendGeneData gene2 = genes2.stream().filter(x -> x.StableId.equals(gene1.StableId)).findFirst().orElse(null);
+                BreakendGeneData gene2 = genes2.stream().filter(x -> x.geneId().equals(gene1.geneId())).findFirst().orElse(null);
 
                 if(gene2 == null)
                     continue;
@@ -535,7 +535,7 @@ public class DisruptionFinder implements CohortFileInterface
 
                 List<BreakendGeneData> otherGenes = nextBreakend.getGenesList();
 
-                if(otherGenes.isEmpty() || otherGenes.stream().noneMatch(x -> genes.stream().anyMatch(y -> x.GeneName.equals(y.GeneName))))
+                if(otherGenes.isEmpty() || otherGenes.stream().noneMatch(x -> genes.stream().anyMatch(y -> x.geneName().equals(y.geneName()))))
                     continue;
 
                 List<BreakendTransData> otherTransList = getDisruptedTranscripts(otherGenes);
@@ -593,7 +593,7 @@ public class DisruptionFinder implements CohortFileInterface
             return false;
 
         return otherBreakend.getGenesList().stream()
-                .filter(x -> x.GeneName.equals(geneName))
+                .filter(x -> x.geneName().equals(geneName))
                 .anyMatch(x -> x.transcripts().stream().anyMatch(y -> y.isDisruptive()));
     }
 
@@ -621,9 +621,9 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
 
             // neither breakend can be in a deletion bridge with a breakend in the same cluster and gene
-            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend1, x.GeneName)))
+            if(genes1.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend1, x.geneName())))
                 continue;
-            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend2, x.GeneName)))
+            else if(genes2.stream().anyMatch(x -> inDeletionBridgeWithinGene(chain, breakend2, x.geneName())))
                 continue;
 
             SvBreakend otherBreakend1 = breakend1.getOtherBreakend();
@@ -718,7 +718,7 @@ public class DisruptionFinder implements CohortFileInterface
                     continue;
 
                 final List<BreakendGeneData> tsgGenesList = var.getGenesList(isStart(be)).stream()
-                        .filter(x -> matchesDisruptionGene(x.StableId)).collect(Collectors.toList());
+                        .filter(x -> matchesDisruptionGene(x.geneId())).collect(Collectors.toList());
 
                 if(tsgGenesList.isEmpty())
                     continue;
@@ -731,17 +731,17 @@ public class DisruptionFinder implements CohortFileInterface
 
                     for(BreakendTransData transcript : reportableDisruptions)
                     {
-                        if(!matchesDisruptionTranscript(gene.StableId, transcript.TransData))
+                        if(!matchesDisruptionTranscript(gene.geneId(), transcript.TransData))
                             continue;
 
                         LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
-                                var.id(), var.getBreakend(be), gene.GeneName, transcript.transName(),
+                                var.id(), var.getBreakend(be), gene.geneName(), transcript.transName(),
                                 formatJcn(transcript.undisruptedCopyNumber()));
 
                         transcript.setReportableDisruption(true);
 
                         SvDisruptionData disruptionData = new SvDisruptionData(
-                                var,  gene.isStart(), gene.getGeneData(), transcript.TransData,
+                                var,  gene.isStart(), gene.GeneData, transcript.TransData,
                                 new int[] { transcript.ExonUpstream, transcript.ExonDownstream },
                                 transcript.codingType(), transcript.regionType(), transcript.undisruptedCopyNumber());
 
@@ -752,7 +752,7 @@ public class DisruptionFinder implements CohortFileInterface
                         if(mVisSampleData != null)
                         {
                             mVisSampleData.addGeneExonData(
-                                    var.getCluster().id(), gene.StableId, gene.GeneName,
+                                    var.getCluster().id(), gene.geneId(), gene.geneName(),
                                     "", 0, gene.chromosome(), DISRUPTION);
                         }
                     }
@@ -787,7 +787,7 @@ public class DisruptionFinder implements CohortFileInterface
         for(int se = SE_START; se <= SE_END; ++se)
         {
             BreakendTransData matchingTrans = var.getGenesList(isStart(se)).stream()
-                    .filter(x -> x.StableId.equals(transcript.GeneId))
+                    .filter(x -> x.geneId().equals(transcript.GeneId))
                     .map(x -> x.transcripts().stream().filter(y -> y.transId() == transcript.TransId).findFirst().orElse(null))
                     .filter(x -> x != null).findFirst().orElse(null);
 
@@ -805,7 +805,7 @@ public class DisruptionFinder implements CohortFileInterface
 
         // check whether these breakends may belong to the same non-disrupted segment in any upstream transcript
         final BreakendGeneData downGene = downGenesList.stream()
-                .filter(x -> x.StableId.equals(upTrans.gene().StableId)).findFirst().orElse(null);
+                .filter(x -> x.geneId().equals(upTrans.gene().geneId())).findFirst().orElse(null);
 
         if(downGene == null)
             return false;
@@ -915,7 +915,7 @@ public class DisruptionFinder implements CohortFileInterface
             }
 
             sb.append(String.format(",%s,%s,%d,%s,%d,%d,%s,%s,%d,%s,%d",
-                    gene.StableId, gene.GeneName, gene.Strand, transcript.transName(),
+                    gene.geneId(), gene.geneName(), gene.strand(), transcript.transName(),
                     transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType(),
                     cluster.id(), cluster.getResolvedType(), cluster.getSvCount()));
 

@@ -18,7 +18,8 @@ public class GeneData
     public static final String SYNONYM_DELIM = ";";
 
     public GeneData(
-            String geneId, String geneName, String chromosome, byte strand, int geneStart, int geneEnd, String karyotypeBand)
+            final String geneId, final String geneName, final String chromosome, final byte strand,
+            final int geneStart, final int geneEnd, final String karyotypeBand)
     {
         GeneId = geneId;
         GeneName = geneName;

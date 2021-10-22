@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -7,26 +9,18 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // class linking an SV breakend to a potentially impacted gene
 public class BreakendGeneData
 {
-    public final String GeneName;
-    public final String StableId;
-    public final byte Strand;
+    public final GeneData GeneData;
 
     private final int mVarId;
     private final boolean mIsStart;
     private boolean mUpstream;
 
-    private GeneData mGeneData;
-
     private final List<BreakendTransData> mTranscripts;
-
-    @NotNull
-    private final String mKaryotypeBand;
 
     private StructuralVariantType mSvType;
     private String mChromosome;
@@ -35,30 +29,25 @@ public class BreakendGeneData
     private double mJunctionCopyNumber;
     private String mInsertSequence;
 
-    public BreakendGeneData(int varId, final boolean isStart, final String geneName, final String stableId,
-            final byte strand, @NotNull String karyotypeBand)
+    public BreakendGeneData(int varId, final boolean isStart, final GeneData geneData)
     {
-        GeneName = geneName;
-        StableId = stableId;
-        Strand = strand;
+        GeneData = geneData;
 
         mTranscripts = Lists.newArrayList();
 
         mVarId = varId;
         mIsStart = isStart;
-        mGeneData = null;
 
         mChromosome = "";
         mOrientation = 0;
         mPosition = -1;
         mJunctionCopyNumber = 0;
         mInsertSequence = "";
-
-        mKaryotypeBand = karyotypeBand;
     }
 
-    public void setGeneData(final GeneData geneData) { mGeneData = geneData; }
-    public final GeneData getGeneData() { return mGeneData; }
+    public String geneName() { return GeneData.GeneName; }
+    public String geneId() { return GeneData.GeneId; }
+    public byte strand() { return GeneData.Strand; }
 
     public void setPositionalData(final String chromosome, int position, byte orientation)
     {
@@ -105,11 +94,9 @@ public class BreakendGeneData
          return mTranscripts.stream().filter(BreakendTransData::isCanonical).findFirst().orElse(null);
     }
 
-    public String karyotypeBand() { return mKaryotypeBand; }
-
     public static boolean isUpstream(final BreakendGeneData gene)
     {
-        return gene.Strand * gene.orientation() > 0;
+        return gene.strand() * gene.orientation() > 0;
     }
 
     public static boolean isDownstream(final BreakendGeneData gene)
@@ -119,10 +106,10 @@ public class BreakendGeneData
 
     public boolean breakendWithinGene(int preGeneDistance)
     {
-        if(mGeneData == null)
+        if(GeneData == null)
             return false;
 
-        if(mPosition >= mGeneData.GeneStart && mPosition <= mGeneData.GeneEnd)
+        if(mPosition >= GeneData.GeneStart && mPosition <= GeneData.GeneEnd)
             return true;
 
         if(preGeneDistance <= 0)
@@ -135,7 +122,7 @@ public class BreakendGeneData
             if(!trans.isUpstream() && trans.hasNegativePrevSpliceAcceptorDistance())
                 continue;
 
-            int distance = Strand == 1 ? trans.TransData.TransStart - mPosition : mPosition - trans.TransData.TransEnd;
+            int distance = GeneData.Strand == POS_STRAND ? trans.TransData.TransStart - mPosition : mPosition - trans.TransData.TransEnd;
 
             if(distance > 0 && distance <= preGeneDistance)
                 return true;
@@ -147,7 +134,7 @@ public class BreakendGeneData
     public String toString()
     {
         return String.format("gene(%s:%s strand=%d) breakend(sv=%d pos=%s:%d:%d) trans(%d)",
-                mGeneData.GeneId, mGeneData.GeneName, mGeneData.Strand, mVarId, mChromosome, mPosition, mOrientation, mTranscripts.size());
+                GeneData.GeneId, GeneData.GeneName, GeneData.Strand, mVarId, mChromosome, mPosition, mOrientation, mTranscripts.size());
     }
 
 }

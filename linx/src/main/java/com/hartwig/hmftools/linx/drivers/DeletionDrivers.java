@@ -227,8 +227,8 @@ public class DeletionDrivers
                     continue;
 
                 final List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
-                        .filter(x -> !delDriverGeneIds.contains(x.StableId))
-                        .filter(x -> mHomDisAllGenes || mReportableDisruptionGeneTranscripts.containsKey(x.StableId))
+                        .filter(x -> !delDriverGeneIds.contains(x.geneId()))
+                        .filter(x -> mHomDisAllGenes || mReportableDisruptionGeneTranscripts.containsKey(x.geneId()))
                         .collect(Collectors.toList());
 
                 if(genesList.isEmpty())
@@ -244,7 +244,7 @@ public class DeletionDrivers
 
                         if(!transcript.isCanonical())
                         {
-                            if(!mReportableDisruptionGeneTranscripts.get(gene.StableId).contains(transcript.transName()))
+                            if(!mReportableDisruptionGeneTranscripts.get(gene.geneId()).contains(transcript.transName()))
                                 continue;
                         }
 
@@ -283,12 +283,12 @@ public class DeletionDrivers
             return;
 
         // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
-        final String geneId = transcript.gene().StableId;
+        final String geneId = transcript.gene().geneId();
 
         final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
 
         final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
-                .filter(x -> x.StableId.equals(geneId))
+                .filter(x -> x.geneId().equals(geneId))
                 .findFirst().orElse(null);
 
         if(matchingGene == null)
@@ -320,16 +320,16 @@ public class DeletionDrivers
             final SvBreakend breakend, final BreakendTransData transcript,
             final List<String> delDriverGeneIds, final List<DriverGeneData> disDelDrivers)
     {
-        final String geneId = transcript.gene().StableId;
+        final String geneId = transcript.gene().geneId();
 
         // DUP must be wholly contained within the same gene
-        if(breakend.getSV().getGenesList(!breakend.usesStart()).stream().noneMatch(x -> x.StableId.equals(geneId)))
+        if(breakend.getSV().getGenesList(!breakend.usesStart()).stream().noneMatch(x -> x.geneId().equals(geneId)))
             return;
 
         final SvBreakend otherBreakend = breakend.getOtherBreakend();
 
         final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
-                .filter(x -> x.StableId.equals(geneId))
+                .filter(x -> x.geneId().equals(geneId))
                 .findFirst().orElse(null);
 
         if(matchingGene == null)

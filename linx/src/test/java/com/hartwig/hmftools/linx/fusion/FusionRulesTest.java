@@ -283,7 +283,7 @@ public class FusionRulesTest
 
         KnownFusionCache knownFusionCache = new KnownFusionCache();
         FusionFinder fusionFinder = new FusionFinder(null, knownFusionCache);
-        knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, gene1.GeneName, gene2.GeneName, "", ""));
+        knownFusionCache.addData(new KnownFusionData(KNOWN_PAIR, gene1.geneName(), gene2.geneName(), "", ""));
         gene1.addTranscript(trans1);
         gene2.addTranscript(trans2);
         final List<GeneFusion> fusions = fusionFinder.findFusions(Lists.newArrayList(gene1), Lists.newArrayList(gene2), params);

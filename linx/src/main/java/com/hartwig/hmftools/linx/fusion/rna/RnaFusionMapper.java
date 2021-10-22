@@ -203,15 +203,15 @@ public class RnaFusionMapper
 
                 for(BreakendGeneData gene : svGenesList)
                 {
-                    if(!geneName.isEmpty() && !geneName.equals(gene.GeneName))
+                    if(!geneName.isEmpty() && !geneName.equals(gene.geneName()))
                         continue;
 
                     if(!requireExactMatch)
                     {
                         // breakends cannot be too far upstream from any gene being considered
-                        if(gene.Strand == POS_STRAND && gene.getGeneData().GeneStart - breakend.position() > maxPreGeneDistance)
+                        if(gene.strand() == POS_STRAND && gene.GeneData.GeneStart - breakend.position() > maxPreGeneDistance)
                             continue;
-                        else if(gene.Strand == NEG_STRAND && breakend.position() - gene.getGeneData().GeneEnd > maxPreGeneDistance)
+                        else if(gene.strand() == NEG_STRAND && breakend.position() - gene.GeneData.GeneEnd > maxPreGeneDistance)
                             continue;
                     }
 
@@ -369,7 +369,7 @@ public class RnaFusionMapper
                     if(!isViable)
                     {
                         // for non-viable breakends, provide the exons skipped count
-                        String geneId = closestTrans.gene().StableId;
+                        String geneId = closestTrans.gene().geneId();
                         final int rnaExonData[] = mGeneTransCache.getExonRankings(geneId, rnaPosition);
                         final int svPosExonData[] = mGeneTransCache.getExonRankings(geneId, closestBreakend.position());
 

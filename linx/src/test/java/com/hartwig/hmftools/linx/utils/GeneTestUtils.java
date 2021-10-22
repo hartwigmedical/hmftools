@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
@@ -166,12 +167,12 @@ public class GeneTestUtils
                 .build();
     }
 
-    public static BreakendGeneData createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
+    public static BreakendGeneData createGeneAnnotation(
+            int svId, boolean isStart, final String geneName, String geneId, byte strand,
             final String chromosome, int position, int orientation)
     {
-        String karyotypeBand = "";
-
-        BreakendGeneData gene = new BreakendGeneData(svId, isStart, geneName, stableId, strand, karyotypeBand);
+        GeneData geneData = new GeneData(geneId, geneName, chromosome, strand, 0, 0, "");
+        BreakendGeneData gene = new BreakendGeneData(svId, isStart, geneData);
         gene.setPositionalData(chromosome, position, (byte)orientation);
 
         return gene;
@@ -193,7 +194,7 @@ public class GeneTestUtils
     {
         final String transName = String.format("TRANS%03d", transId);
         TranscriptData transData = new TranscriptData(
-                transId, transName, gene.StableId, isCanonical, gene.Strand, transStart, transEnd, codingStart, codingEnd, bioType);
+                transId, transName, gene.geneId(), isCanonical, gene.strand(), transStart, transEnd, codingStart, codingEnd, bioType);
 
         return new BreakendTransData(gene, transData, exonUpstream, exonDownstream, phase, exonicPhase, codingBases, totalCodingBases);
     }

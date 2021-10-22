@@ -640,7 +640,7 @@ public class FusionDisruptionAnalyser
                 {
                     // if the fusion from the upstream gene is on the positive strand, then it will have a fusion direction of +1
                     // whenever it goes through a subsequent linked pair by joining to the first (lower) breakend in the pair
-                    int upGeneStrand = fusion.upstreamTrans().gene().Strand;
+                    int upGeneStrand = fusion.upstreamTrans().gene().strand();
                     boolean isPrecodingUpstream = fusion.upstreamTrans().preCoding();
                     boolean fusionLowerToUpper = fusion.upstreamTrans().gene().position() == lowerBreakendPos;
 
@@ -851,7 +851,7 @@ public class FusionDisruptionAnalyser
             final List<BreakendGeneData> genesList = var.getGenesList(false);
 
             return genesList.stream()
-                    .filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x.GeneName, x.isUpstream()))
+                    .filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x.geneName(), x.isUpstream()))
                     .collect(Collectors.toList());
         }
 
@@ -1012,7 +1012,7 @@ public class FusionDisruptionAnalyser
                 {
                     for(BreakendTransData transcript : geneAnnotation.transcripts())
                     {
-                        if(mDisruptionFinder.matchesDisruptionTranscript(geneAnnotation.StableId, transcript.TransData))
+                        if(mDisruptionFinder.matchesDisruptionTranscript(geneAnnotation.geneId(), transcript.TransData))
                             transcripts.add(transcript);
                     }
                 }
@@ -1047,18 +1047,18 @@ public class FusionDisruptionAnalyser
                 final BreakendTransData transUp = fusion.upstreamTrans();
                 final BreakendTransData transDown = fusion.downstreamTrans();
 
-                mVisSampleData.addGeneExonData(clusterId, transUp.gene().StableId, transUp.gene().GeneName,
+                mVisSampleData.addGeneExonData(clusterId, transUp.gene().geneId(), transUp.geneName(),
                         transUp.transName(), transUp.transId(), transUp.gene().chromosome(), FUSION);
 
-                mVisSampleData.addGeneExonData(clusterId, transDown.gene().StableId, transDown.gene().GeneName,
+                mVisSampleData.addGeneExonData(clusterId, transDown.gene().geneId(), transDown.geneName(),
                         transDown.transName(), transDown.transId(), transDown.gene().chromosome(), FUSION);
 
                 visFusions.add(new VisFusionFile(
                         mSampleId, clusterId, fusion.reportable(),
                         transUp.geneName(), transUp.transName(), transUp.gene().chromosome(), transUp.gene().position(),
-                        transUp.gene().Strand, transUp.regionType().toString(), fusion.getFusedExon(true),
+                        transUp.gene().strand(), transUp.regionType().toString(), fusion.getFusedExon(true),
                         transDown.geneName(), transDown.transName(), transDown.gene().chromosome(), transDown.gene().position(),
-                        transDown.gene().Strand, transDown.regionType().toString(), fusion.getFusedExon(false)));
+                        transDown.gene().strand(), transDown.regionType().toString(), fusion.getFusedExon(false)));
             }
         }
 

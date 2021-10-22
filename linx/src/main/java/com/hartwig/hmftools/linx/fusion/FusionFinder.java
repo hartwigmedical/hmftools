@@ -119,8 +119,8 @@ public class FusionFinder
                 final BreakendGeneData upGene = startUpstream ? startGene : endGene;
                 final BreakendGeneData downGene = !startUpstream ? startGene : endGene;
 
-                boolean knownPair = mKnownFusionCache.hasKnownFusion(upGene.GeneName, downGene.GeneName);
-                boolean knownUnmappable3Pair = mKnownFusionCache.hasKnownUnmappable3Fusion(upGene.GeneName, downGene.GeneName);
+                boolean knownPair = mKnownFusionCache.hasKnownFusion(upGene.geneName(), downGene.geneName());
+                boolean knownUnmappable3Pair = mKnownFusionCache.hasKnownUnmappable3Fusion(upGene.geneName(), downGene.geneName());
 
                 for(final BreakendTransData upstreamTrans : upGene.transcripts())
                 {
@@ -253,7 +253,7 @@ public class FusionFinder
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
                 return null;
             }
-            else if(downstreamTrans.preCoding() && upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId))
+            else if(downstreamTrans.preCoding() && upstreamTrans.gene().geneId().equals(downstreamTrans.gene().geneId()))
             {
                 // skip pre-coding to pre-coding within the same gene
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to pre-coding");
@@ -354,7 +354,7 @@ public class FusionFinder
             }
 
             if(!phaseMatched && params.AllowExonSkipping
-            && (!upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId) || exonDelDupCandidate))
+            && (!upstreamTrans.gene().geneId().equals(downstreamTrans.gene().geneId()) || exonDelDupCandidate))
             {
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
@@ -458,7 +458,7 @@ public class FusionFinder
                 .collect(Collectors.toList());
 
         KnownFusionData kfData = mKnownFusionCache.getDataByType(IG_KNOWN_PAIR).stream()
-                .filter(x -> x.ThreeGene.equals(downGene.GeneName))
+                .filter(x -> x.ThreeGene.equals(downGene.geneName()))
                 .filter(x -> x.withinIgRegion(igGene.chromosome(), igGene.position()))
                 .findFirst().orElse(null);
 
@@ -505,7 +505,7 @@ public class FusionFinder
     private BreakendTransData generateIgTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
     {
         TranscriptData transData = new TranscriptData(
-                0, String.format("@%s", knownFusionData.FiveGene), gene.StableId, false, gene.Strand,
+                0, String.format("@%s", knownFusionData.FiveGene), gene.geneId(), false, gene.strand(),
                 knownFusionData.igRegion().start(), knownFusionData.igRegion().end(), null, null, "");
 
         BreakendTransData transcript = new BreakendTransData(
@@ -620,7 +620,7 @@ public class FusionFinder
 
             boolean pfPreserved = proteinFeaturePreserved(downTrans, true, featureStart, featureEnd);
 
-            if(!pfPreserved && downTrans.gene().StableId.equals(fusion.upstreamTrans().gene().StableId))
+            if(!pfPreserved && downTrans.gene().geneId().equals(fusion.upstreamTrans().gene().geneId()))
             {
                 // for same gene fusions, check whether the upstream transcript section preserves this feature
                 pfPreserved = proteinFeaturePreserved(fusion.upstreamTrans(), false, featureStart, featureEnd);
@@ -668,8 +668,8 @@ public class FusionFinder
 
     private void setKnownFusionType(GeneFusion geneFusion)
     {
-        final String upGene = geneFusion.transcripts()[FS_UP].gene().GeneName;
-        final String downGene = geneFusion.transcripts()[FS_DOWN].gene().GeneName;
+        final String upGene = geneFusion.transcripts()[FS_UP].geneName();
+        final String downGene = geneFusion.transcripts()[FS_DOWN].geneName();
 
         if(mKnownFusionCache.hasKnownFusion(upGene, downGene))
         {

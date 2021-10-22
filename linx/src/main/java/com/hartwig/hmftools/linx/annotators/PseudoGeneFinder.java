@@ -67,7 +67,7 @@ public class PseudoGeneFinder
                 {
                     for(final BreakendGeneData gene2 : upper.getSV().getGenesList(upper.usesStart()))
                     {
-                        if(!gene1.GeneName.equals(gene2.GeneName))
+                        if(!gene1.geneName().equals(gene2.geneName()))
                             continue;
 
                         final List<PseudoGeneMatch> pseudoMatches = findPseudoGeneExonMatches(
@@ -77,7 +77,7 @@ public class PseudoGeneFinder
                         {
                             pairMatchesMap.put(pair, pseudoMatches);
 
-                            if(!matchedGenes.stream().anyMatch(x -> x.GeneName.matches(gene1.GeneName)))
+                            if(!matchedGenes.stream().anyMatch(x -> x.geneName().matches(gene1.geneName())))
                             {
                                 matchedGenes.add(gene1);
                             }
@@ -92,7 +92,7 @@ public class PseudoGeneFinder
                 for (final BreakendGeneData gene : matchedGenes)
                 {
                     // find the most frequent transcript
-                    final PseudoGeneMatch maxTrans = findMostCommonTranscript(gene.GeneName, pairMatchesMap);
+                    final PseudoGeneMatch maxTrans = findMostCommonTranscript(gene.geneName(), pairMatchesMap);
 
                     if(maxTrans != null)
                     {
@@ -105,7 +105,7 @@ public class PseudoGeneFinder
                         if(matchedPairs.isEmpty())
                             continue;
 
-                        VisGeneData geneData = new VisGeneData(cluster.id(), gene.StableId, gene.GeneName,
+                        VisGeneData geneData = new VisGeneData(cluster.id(), gene.geneId(), gene.geneName(),
                                 maxTrans.TransName, maxTrans.TransId, gene.chromosome(), PSEUDOGENE);
 
                         final int selectedTransId = maxTrans.TransId;
@@ -122,7 +122,7 @@ public class PseudoGeneFinder
                                 int[] exonsLost = new int[SE_PAIR];
 
                                 String exonMatchData = String.format("%s;%s;%d;%d",
-                                        gene.GeneName, maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
+                                        gene.geneName(), maxTrans.TransName, pseudoMatch.ExonRank, pseudoMatch.ExonLength);
 
                                 pair.setExonMatchData(exonMatchData);
 
@@ -188,7 +188,7 @@ public class PseudoGeneFinder
     {
         List<PseudoGeneMatch> pseudoMatches = Lists.newArrayList();
 
-        List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.StableId);
+        List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.geneId());
 
         for(final TranscriptData transData : transDataList)
         {
@@ -212,7 +212,7 @@ public class PseudoGeneFinder
                     continue;
 
                 PseudoGeneMatch pseudoMatch = new PseudoGeneMatch(
-                        gene.GeneName, transData.TransId, transData.TransName, exonData.Rank, exonData.length());
+                        gene.geneName(), transData.TransId, transData.TransName, exonData.Rank, exonData.length());
 
                 if(startWithinHomology)
                 {
@@ -375,10 +375,10 @@ public class PseudoGeneFinder
 
         for(final BreakendGeneData gene : genesStart)
         {
-            if(!genesEnd.stream().anyMatch(x -> x.GeneName.equals(gene.GeneName)))
+            if(!genesEnd.stream().anyMatch(x -> x.geneName().equals(gene.geneName())))
                 continue;
 
-            List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.StableId);
+            List<TranscriptData> transDataList = mGeneDataCache.getTranscripts(gene.geneId());
 
             for(final TranscriptData transData : transDataList)
             {

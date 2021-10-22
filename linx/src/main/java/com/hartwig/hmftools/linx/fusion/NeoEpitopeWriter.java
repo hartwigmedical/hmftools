@@ -120,7 +120,7 @@ public class NeoEpitopeWriter
                 extensionLengths[geneStreamIndex] = lowerLink != null ? lowerLink.length() : -1;
                 extensionLengths[switchStream(geneStreamIndex)] = upperLink != null ? upperLink.length() : -1;
 
-                int maxUpstreamDistance = getMaxUpstreamDistance(upGene.GeneName, downGene.GeneName);
+                int maxUpstreamDistance = getMaxUpstreamDistance(upGene.geneName(), downGene.geneName());
 
                 final List<BreakendTransData> validUpTrans = findValidTranscripts(upGene, extensionLengths[FS_UP], 0);
                 final List<BreakendTransData> validDownTrans = findValidTranscripts(downGene, extensionLengths[FS_DOWN], maxUpstreamDistance);
@@ -141,8 +141,8 @@ public class NeoEpitopeWriter
                 validDownTrans.stream().map(x -> x.TransData.TransName).forEach(x -> sjDown.add(x));
 
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
-                        upGene.StableId, upGene.GeneName, upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
-                        downGene.StableId, downGene.GeneName, downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
+                        upGene.geneId(), upGene.geneName(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
+                        downGene.geneId(), downGene.geneName(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
                         avgJcn, upGene.insertSequence(), chainLength, new String[] { sjUp.toString(), sjDown.toString()});
 
                 writeData(fusion);
@@ -187,7 +187,7 @@ public class NeoEpitopeWriter
                     continue;
 
                 // check for a preceding splice acceptor from another transcript, whether same gene or not
-                int preTransDistance = gene.Strand == POS_STRAND ?
+                int preTransDistance = gene.strand() == POS_STRAND ?
                         transcript.transStart() - gene.position() : gene.position() - transcript.transEnd();
 
                 if(preTransDistance > 0)
@@ -196,7 +196,7 @@ public class NeoEpitopeWriter
 
                     if(preTransSpliceAcceptorPos > 0)
                     {
-                        int preTransSpliceAcceptorDistance = gene.Strand == POS_STRAND ?
+                        int preTransSpliceAcceptorDistance = gene.strand() == POS_STRAND ?
                                 transcript.transStart() - preTransSpliceAcceptorPos : preTransSpliceAcceptorPos - transcript.transEnd();
 
                         if(preTransSpliceAcceptorDistance < preTransDistance)
@@ -208,7 +208,7 @@ public class NeoEpitopeWriter
             // ensure the transcript is not interrupted by a chain link going elsewhere
             if(linkExtensionLength > 0)
             {
-                int transLength = (gene.Strand == POS_STRAND) == gene.isUpstream() ?
+                int transLength = (gene.strand() == POS_STRAND) == gene.isUpstream() ?
                         abs(gene.position() - transcript.TransData.TransStart) : abs(gene.position() - transcript.TransData.TransEnd);
 
                 if(linkExtensionLength < transLength)
@@ -242,7 +242,7 @@ public class NeoEpitopeWriter
         if(traversedPairs == null || traversedPairs.isEmpty())
             return true;
 
-        int upGeneStrand = upGene.Strand;
+        int upGeneStrand = upGene.strand();
         boolean isPrecodingUpstream = false;
 
         for(LinkedPair pair : traversedPairs)
