@@ -78,18 +78,17 @@ public class KnownFusionCache
                 .anyMatch(x -> x.FiveGene.equals(fiveGene) && x.ThreeGene.equals(threeGene));
     }
 
-    public boolean isSingleBreakendCandidate(final BreakendGeneData gene)
+    public boolean isSingleBreakendCandidate(final String geneName, boolean isUpstream)
     {
         if(mKnownPairData.stream()
-                .anyMatch(x -> (gene.isUpstream() && x.FiveGene.equals(gene.GeneName))
-                    || (!gene.isUpstream() && x.ThreeGene.equals(gene.GeneName))))
+                .anyMatch(x -> (isUpstream && x.FiveGene.equals(geneName)) || (!isUpstream && x.ThreeGene.equals(geneName))))
         {
             return true;
         }
 
         if(mDataByType.get(IG_KNOWN_PAIR).stream()
                 .filter(x -> !x.getThreeGeneAltRegions().isEmpty())
-                .anyMatch(x -> !gene.isUpstream() && x.ThreeGene.equals(gene.GeneName)))
+                .anyMatch(x -> !isUpstream && x.ThreeGene.equals(geneName)))
         {
             return true;
         }

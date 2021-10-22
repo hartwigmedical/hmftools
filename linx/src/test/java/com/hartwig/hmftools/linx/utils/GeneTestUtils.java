@@ -20,8 +20,8 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class GeneTestUtils
 {
@@ -165,6 +165,18 @@ public class GeneTestUtils
                 .reportGermlineDisruption(false)
                 .build();
     }
+
+    public static BreakendGeneData createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
+            final String chromosome, int position, int orientation)
+    {
+        String karyotypeBand = "";
+
+        BreakendGeneData gene = new BreakendGeneData(svId, isStart, geneName, stableId, strand, karyotypeBand);
+        gene.setPositionalData(chromosome, position, (byte)orientation);
+
+        return gene;
+    }
+
     public static BreakendTransData createTranscript(
             final BreakendGeneData gene, int transId, boolean isCanonical,
             int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType,

@@ -22,7 +22,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class RnaFusionAnnotator

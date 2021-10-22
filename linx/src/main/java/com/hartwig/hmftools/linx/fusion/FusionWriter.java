@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -17,8 +16,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
@@ -104,10 +103,10 @@ public class FusionWriter implements CohortFileInterface
                     .fusedExonDown(geneFusion.getFusedExon(false))
                     .geneStart(geneFusion.geneName(FS_UP))
                     .geneTranscriptStart(geneFusion.upstreamTrans().transName())
-                    .geneContextStart(context(geneFusion.upstreamTrans(), geneFusion.getFusedExon(true)))
+                    .geneContextStart(context(geneFusion.upstreamTrans().regionType(), geneFusion.getFusedExon(true)))
                     .geneEnd(geneFusion.geneName(FS_DOWN))
                     .geneTranscriptEnd(geneFusion.downstreamTrans().transName())
-                    .geneContextEnd(context(geneFusion.downstreamTrans(), geneFusion.getFusedExon(false)))
+                    .geneContextEnd(context(geneFusion.downstreamTrans().regionType(), geneFusion.getFusedExon(false)))
                     .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().gene().jcn(), geneFusion.downstreamTrans().gene().jcn()))
                     .build());
         }

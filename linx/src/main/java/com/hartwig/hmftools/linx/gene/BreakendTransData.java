@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.fusion;
+package com.hartwig.hmftools.linx.gene;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;

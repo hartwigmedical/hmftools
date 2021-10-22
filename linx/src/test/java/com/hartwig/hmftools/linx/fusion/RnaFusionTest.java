@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.createBreakendTranscriptData;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,8 +22,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator;
 

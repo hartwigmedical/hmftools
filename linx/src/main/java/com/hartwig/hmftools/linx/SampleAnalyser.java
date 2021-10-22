@@ -40,6 +40,7 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
+import com.hartwig.hmftools.linx.gene.BreakendGenePrep;
 import com.hartwig.hmftools.linx.types.ArmCluster;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.LinkedPair;
@@ -218,7 +219,7 @@ public class SampleAnalyser implements Callable
 
         if(mEnsemblDataCache != null)
         {
-            VariantPrep.setSvGeneData(mAllVariants, mEnsemblDataCache, mConfig.RunFusions, mConfig.breakendGeneLoading());
+            BreakendGenePrep.setSvGeneData(mAllVariants, mEnsemblDataCache, mConfig.RunFusions, mConfig.breakendGeneLoading());
         }
 
         analyse();

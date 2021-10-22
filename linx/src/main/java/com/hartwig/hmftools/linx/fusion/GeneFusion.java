@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.SKIPPED_EXONS
 import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNSET;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 

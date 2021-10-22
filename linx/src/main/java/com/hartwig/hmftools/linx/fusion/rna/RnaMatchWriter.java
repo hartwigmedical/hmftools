@@ -12,8 +12,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 public class RnaMatchWriter
 {

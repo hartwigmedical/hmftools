@@ -1,8 +1,5 @@
-package com.hartwig.hmftools.common.fusion;
+package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.createBreakendTranscriptData;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
-import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
@@ -17,6 +14,10 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.createBreakendTranscriptData;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setAlternativeTranscriptPhasings;
+import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +28,8 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -52,7 +55,7 @@ public class FusionTranscriptTest
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
         GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        BreakendGeneData genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData genePosStrand = createGeneAnnotation(0, true, geneName, geneId, POS_STRAND, CHR_1, 0, POS_ORIENT);
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -136,7 +139,7 @@ public class FusionTranscriptTest
         geneList.add(GeneTestUtils.createEnsemblGeneData(geneId, geneName, CHR_1, POS_STRAND, 100, 1000));
         GeneTestUtils.addGeneData(geneTransCache, CHR_1, geneList);
 
-        BreakendGeneData geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData geneNegStrand = createGeneAnnotation(0, true, geneName, geneId, NEG_STRAND, CHR_1, 0, POS_ORIENT);
 
         transDataList = Lists.newArrayList();
 
@@ -195,7 +198,7 @@ public class FusionTranscriptTest
     public void testBreakendTranscriptCoding()
     {
         // first a gene on the forward strand
-        BreakendGeneData genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, GENE_NAME_1, GENE_ID_1, POS_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData genePosStrand = createGeneAnnotation(0, true, GENE_NAME_1, GENE_ID_1, POS_STRAND, CHR_1, 0, POS_ORIENT);
 
         int transId = 1;
 
@@ -240,7 +243,7 @@ public class FusionTranscriptTest
         Assert.assertEquals(31, trans.TotalCodingBases);
 
         // test the reverse strand
-        BreakendGeneData geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, GENE_NAME_2, GENE_ID_2, NEG_STRAND, CHR_1, 0, POS_ORIENT);
+        BreakendGeneData geneNegStrand = createGeneAnnotation(0, true, GENE_NAME_2, GENE_ID_2, NEG_STRAND, CHR_1, 0, POS_ORIENT);
 
         // coding taking up exactly the first exon
         codingStart = 500;

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;

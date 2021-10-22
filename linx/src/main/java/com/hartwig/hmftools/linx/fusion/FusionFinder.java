@@ -33,17 +33,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class FusionFinder
 {

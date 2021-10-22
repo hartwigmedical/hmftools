@@ -14,7 +14,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -36,17 +35,6 @@ public final class GeneTestUtils
     public static final int TRANS_ID_1 = 1;
     public static final int TRANS_ID_2 = 2;
     public static final int TRANS_ID_3 = 3;
-
-    public static BreakendGeneData createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, byte strand,
-            final String chromosome, int position, int orientation)
-    {
-        String karyotypeBand = "";
-
-        BreakendGeneData gene = new BreakendGeneData(svId, isStart, geneName, stableId, strand, karyotypeBand);
-        gene.setPositionalData(chromosome, position, (byte)orientation);
-
-        return gene;
-    }
 
     // Ensembl data types
     public static EnsemblDataCache createGeneDataCache()

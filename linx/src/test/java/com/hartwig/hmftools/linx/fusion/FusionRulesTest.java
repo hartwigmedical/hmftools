@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.getCodingBases;
@@ -17,7 +16,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.BreakendTransData.POST_CODING_PHASE;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
+import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.TRANS_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.TRANS_2;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
 
 import static org.junit.Assert.assertEquals;
@@ -46,9 +47,9 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
 import org.junit.Test;
@@ -435,11 +436,11 @@ public class FusionRulesTest
 
         // upstream exonic to downstream intronic - will use the preceding exon and exon's end phase to fuse
         List<BreakendGeneData> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, 701, POS_ORIENT);
 
         List<BreakendGeneData> downGenes = Lists.newArrayList();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, 10650, NEG_ORIENT);
 
         FusionParameters params = new FusionParameters();
@@ -464,11 +465,11 @@ public class FusionRulesTest
 
         // now an exonic fusion
         upGenes.clear();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 701, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, 701, POS_ORIENT);
 
         downGenes.clear();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10705, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10705, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, 10705, NEG_ORIENT);
 
         fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);

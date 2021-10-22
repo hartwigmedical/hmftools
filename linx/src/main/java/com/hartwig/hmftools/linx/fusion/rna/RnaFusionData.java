@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.chaining.SvChain;

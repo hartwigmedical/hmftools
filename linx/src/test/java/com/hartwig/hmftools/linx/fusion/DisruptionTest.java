@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvGeneData;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;

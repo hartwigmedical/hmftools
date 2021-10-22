@@ -35,7 +35,7 @@ import static com.hartwig.hmftools.linx.fusion.ReportableReason.PRE_GENE_DISTANC
 import java.util.List;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 
 import org.apache.commons.compress.utils.Lists;
 

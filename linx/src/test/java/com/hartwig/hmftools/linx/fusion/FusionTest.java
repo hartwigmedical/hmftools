@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
@@ -13,13 +12,15 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionReportability.findTopPriorityFusion;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTranscript;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
@@ -39,9 +40,9 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -103,10 +104,10 @@ public class FusionTest
 
         // add upstream breakends
         List<BreakendGeneData> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, 250, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, CHR_1, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, true, CHR_1, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, true, CHR_1, 850, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, 250, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, 450, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 2, true, CHR_1, 650, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 3, true, CHR_1, 850, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, 250, POS_ORIENT);
         upGenes.get(1).setPositionalData(CHR_1, 450, POS_ORIENT);
         upGenes.get(2).setPositionalData(CHR_1, 650, POS_ORIENT);
@@ -114,10 +115,10 @@ public class FusionTest
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, 10250, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, 10450, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(2, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(3, false, CHR_1, 10850, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, 10250, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, 10450, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 2, false, CHR_1, 10650, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 3, false, CHR_1, 10850, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, 10250, NEG_ORIENT);
         downGenes.get(1).setPositionalData(CHR_1, 10450, NEG_ORIENT);
         downGenes.get(2).setPositionalData(CHR_1, 10650, NEG_ORIENT);

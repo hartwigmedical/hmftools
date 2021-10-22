@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.cn.HomLossEvent;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.types.DbPair;

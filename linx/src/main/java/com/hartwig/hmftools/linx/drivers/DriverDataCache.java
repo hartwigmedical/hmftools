@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;

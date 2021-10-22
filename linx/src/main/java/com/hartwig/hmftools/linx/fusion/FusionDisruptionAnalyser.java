@@ -25,17 +25,16 @@ import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.FU
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
@@ -850,7 +849,10 @@ public class FusionDisruptionAnalyser
         {
             // limit to known fusion genes
             final List<BreakendGeneData> genesList = var.getGenesList(false);
-            return genesList.stream().filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x)).collect(Collectors.toList());
+
+            return genesList.stream()
+                    .filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x.GeneName, x.isUpstream()))
+                    .collect(Collectors.toList());
         }
 
         return var.getGenesList(isStart);

@@ -17,8 +17,9 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.analysis.VariantPrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.findGeneAnnotationsBySv;
+import static com.hartwig.hmftools.linx.gene.BreakendGenePrep.setSvGeneData;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.GENE_NAME_1;
@@ -41,7 +42,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -70,13 +71,13 @@ public class SpecialFusionsTest
 
         List<BreakendGeneData> upGenes = Lists.newArrayList();
         int upPos = 1950;
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
         int downPos = 1350;
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
         FusionParameters params = new FusionParameters();
@@ -122,14 +123,14 @@ public class SpecialFusionsTest
         // first DEL doesn't delete a known region even though it's phased
         List<BreakendGeneData> upGenes = Lists.newArrayList();
         int upPos = 1550;
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
 
         int downPos = 2150;
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
@@ -138,11 +139,11 @@ public class SpecialFusionsTest
         upGenes.clear();
         downGenes.clear();
         upPos = 1350;
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
 
         downPos = 1950;
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
         fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));
@@ -184,11 +185,11 @@ public class SpecialFusionsTest
         upGenes.clear();
         downGenes.clear();
         upPos = geneStart + 350;
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, CHR_1, upPos, POS_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(CHR_1, upPos, POS_ORIENT);
 
         downPos = geneStart + 1950;
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, CHR_1, downPos, NEG_ORIENT, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(CHR_1, downPos, NEG_ORIENT);
 
         fusions.clear();
@@ -278,23 +279,23 @@ public class SpecialFusionsTest
 
         // a DEL linking the 2 regions
         List<BreakendGeneData> upGenes = Lists.newArrayList();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 200, NEG_ORIENT, 1000));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, true, chromosome, 200, NEG_ORIENT, 1000));
         upGenes.get(0).setPositionalData(chromosome, 200, NEG_ORIENT);
 
         // add downstream breakends
         List<BreakendGeneData> downGenes = Lists.newArrayList();
 
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 9500, NEG_ORIENT, 1000));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 0, false, chromosome, 9500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 9500, NEG_ORIENT);
 
         List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params);
 
         upGenes.clear();
-        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, true, chromosome, 200, NEG_ORIENT, 1000));
+        upGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, true, chromosome, 200, NEG_ORIENT, 1000));
         upGenes.get(0).setPositionalData(chromosome, 500, NEG_ORIENT);
 
         downGenes.clear();
-        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(1, false, chromosome, 19500, NEG_ORIENT, 1000));
+        downGenes.addAll(findGeneAnnotationsBySv(geneTransCache, 1, false, chromosome, 19500, NEG_ORIENT, 1000));
         downGenes.get(0).setPositionalData(chromosome, 20100, NEG_ORIENT);
 
         fusions.addAll(tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params));

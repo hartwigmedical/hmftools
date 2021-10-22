@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.fusion;
+package com.hartwig.hmftools.linx.gene;
 
 import java.util.List;
 

@@ -30,11 +30,10 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.BreakendGeneData;
-import com.hartwig.hmftools.common.fusion.BreakendTransData;
+import com.hartwig.hmftools.linx.gene.BreakendGeneData;
+import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFusion;
-import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.types.LinkedPair;
 
 import org.apache.commons.compress.utils.Lists;
