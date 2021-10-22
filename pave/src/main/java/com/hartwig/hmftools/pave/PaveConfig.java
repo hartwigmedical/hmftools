@@ -77,7 +77,7 @@ public class PaveConfig
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of sample");
         options.addOption(VCF_FILE, true, "VCF input file");
-        options.addOption(OUTPUT_VCF_FILE, false, "VCF output file");
+        options.addOption(OUTPUT_VCF_FILE, true, "Option VCF output file, otherwise will append 'pave' suffix to input filename");
 
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");

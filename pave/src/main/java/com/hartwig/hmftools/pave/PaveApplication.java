@@ -201,40 +201,47 @@ public class PaveApplication
     public static void findVariantImpacts(
             final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
     {
+        boolean processed = false;
+
         List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
 
-        if(geneCandidates.isEmpty())
-            return;
-
-        // analyse against each of the genes and their transcripts
-        for(GeneData geneData : geneCandidates)
+        if(!geneCandidates.isEmpty())
         {
-            List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
-
-            // non-coding transcripts are skipped for now
-            if(transDataList.isEmpty())
-                continue;
-
-            for(TranscriptData transData : transDataList)
+            // analyse against each of the genes and their transcripts
+            for(GeneData geneData : geneCandidates)
             {
-                VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                List<TranscriptData> transDataList = geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
 
-                // check right-alignment if the variant has microhomology
-                if(variant.realignedVariant() != null)
+                // non-coding transcripts are skipped for now
+                if(transDataList.isEmpty())
+                    continue;
+
+                for(TranscriptData transData : transDataList)
                 {
-                    VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
+                    VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                    processed = true;
 
-                    if(raTransImpact != null)
+                    // check right-alignment if the variant has microhomology
+                    if(variant.realignedVariant() != null)
                     {
-                        variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
-                        transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
-                    }
-                }
+                        VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
 
-                if(transImpact != null)
-                    variant.addImpact(geneData.GeneName, transImpact);
+                        if(raTransImpact != null)
+                        {
+                            variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
+                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                        }
+                    }
+
+                    if(transImpact != null)
+                        variant.addImpact(geneData.GeneName, transImpact);
+                }
             }
         }
+
+        // ensure all phased variants are cached
+        if(!processed && variant.hasLocalPhaseSet())
+            impactClassifier.phasedVariants().checkAddVariant(variant);
     }
 
     private void initialiseVcfWriter()
@@ -250,9 +257,13 @@ public class PaveApplication
         }
         else
         {
-            int extensionIndex = mConfig.VcfFile.indexOf(".vcf");
-            outputVcfFilename = mConfig.VcfFile.substring(0, extensionIndex) + ".pave" + mConfig.VcfFile.substring(extensionIndex);
+            String[] fileItems = mConfig.VcfFile.split("/");
+            String filename = fileItems[fileItems.length - 1];
+            int extensionIndex = filename.indexOf(".vcf");
+            outputVcfFilename = mConfig.OutputDir + filename.substring(0, extensionIndex) + ".pave" + filename.substring(extensionIndex);
         }
+
+        PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
         mVcfWriter.writeHeader(version.version());

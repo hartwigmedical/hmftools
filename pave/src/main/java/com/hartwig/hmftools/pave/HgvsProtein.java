@@ -57,9 +57,6 @@ public final class HgvsProtein
     {
         try
         {
-            if(effects.size() == 1)
-                return generate(proteinContext, effects.get(0));
-
             boolean hasStopGained = false;
             VariantEffect topEffect = null;
 
@@ -70,6 +67,9 @@ public final class HgvsProtein
                 else if(topEffect == null)
                     topEffect = effect;
             }
+
+            if(topEffect == null && hasStopGained) // re-instate for the protein string if effect was removed
+                topEffect = MISSENSE;
 
             String hgvs = generate(proteinContext, topEffect);
 

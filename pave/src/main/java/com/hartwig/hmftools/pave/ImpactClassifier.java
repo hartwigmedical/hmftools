@@ -224,11 +224,15 @@ public class ImpactClassifier
 
         if(ssEffect != null)
         {
+            // remove any superceded effects
             if(ssEffect == STOP_LOST || ssEffect == START_LOST)
             {
-                transImpact.effects().remove(MISSENSE); // superceded if present so remove
-                transImpact.effects().remove(FRAMESHIFT); // superceded if present so remove
+                transImpact.effects().remove(MISSENSE);
+                transImpact.effects().remove(FRAMESHIFT);
             }
+
+            if(ssEffect == STOP_GAINED)
+                transImpact.effects().remove(MISSENSE);
 
             transImpact.addEffect(ssEffect);
         }
