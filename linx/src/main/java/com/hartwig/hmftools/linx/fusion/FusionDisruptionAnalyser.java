@@ -995,7 +995,7 @@ public class FusionDisruptionAnalyser
 
     public final List<BreakendTransData> getTranscriptList(final List<SvVarData> svList, final List<GeneFusion> fusions)
     {
-        // add all canonical transcript and then add any additional transcripts from the fusions
+        // add all canonical or otherwise reportable transcript and then add any additional transcripts from the fusions
         List<BreakendTransData> transcripts = Lists.newArrayList();
 
         for(SvVarData var : svList)
@@ -1008,9 +1008,11 @@ public class FusionDisruptionAnalyser
 
                 for(BreakendGeneData geneAnnotation : var.getGenesList(isStart(be)))
                 {
-                    transcripts.addAll(geneAnnotation.transcripts().stream()
-                            .filter(x -> x.isCanonical())
-                            .collect(Collectors.toList()));
+                    for(BreakendTransData transcript : geneAnnotation.transcripts())
+                    {
+                        if(mDisruptionFinder.matchesDisruptionTranscript(geneAnnotation.StableId, transcript.TransData))
+                            transcripts.add(transcript);
+                    }
                 }
             }
         }

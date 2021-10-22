@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.genome.genepanel.HmfTranscriptRegionFile.ITEM_DELIM;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -12,7 +11,6 @@ import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIAN
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -219,9 +217,7 @@ public class ReferenceData
             {
                 if(!driverGene.additionalReportedTranscripts().isEmpty())
                 {
-                    OtherReportableTranscripts.put(
-                            driverGene.gene(),
-                            Arrays.stream(driverGene.additionalReportedTranscripts().split(ITEM_DELIM)).collect(Collectors.toList()));
+                    OtherReportableTranscripts.put(driverGene.gene(), driverGene.additionalReportedTranscripts());
                 }
             }
 

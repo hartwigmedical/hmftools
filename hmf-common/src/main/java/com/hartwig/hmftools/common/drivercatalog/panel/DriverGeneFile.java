@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsInde
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public final class DriverGeneFile
 {
     private static final String DELIMITER = "\t";
+    private static final String OTHER_TRANS_DELIM = ";";
 
     private DriverGeneFile()
     {
@@ -66,6 +68,13 @@ public final class DriverGeneFile
         {
             String[] values = line.split(DELIMITER, -1);
 
+            List<String> otherReportableTrans = Lists.newArrayList();
+
+            if(altTransIndex != null)
+            {
+                Arrays.stream(values[altTransIndex].split(OTHER_TRANS_DELIM)).forEach(x -> otherReportableTrans.add(x));
+            }
+
             builder.gene(values[geneIndex])
                     .reportMissenseAndInframe(Boolean.parseBoolean(values[missenseIndex]))
                     .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[nonsenseIndex]))
@@ -85,12 +94,22 @@ public final class DriverGeneFile
                             : DriverGeneGermlineReporting.NONE)
                     .reportGermlineDisruption(germlineDisruptionIndex != null ?
                             Boolean.parseBoolean(values[germlineDisruptionIndex]) : Boolean.parseBoolean(values[disruptionIndex]))
-                    .additionalReportedTranscripts(altTransIndex != null ? values[altTransIndex] : "");
+                    .additionalReportedTranscripts(otherReportableTrans);
 
             driverGenes.add(builder.build());
         }
 
         return driverGenes;
+    }
+
+    private static String otherReportableTransStr(final List<String> otherTrans)
+    {
+        if(otherTrans.isEmpty())
+            return "";
+
+        StringJoiner sj = new StringJoiner(OTHER_TRANS_DELIM);
+        otherTrans.forEach(x -> sj.add(x));
+        return sj.toString();
     }
 
     @NotNull
@@ -128,7 +147,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineVariant()))
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
-                .add(gene.additionalReportedTranscripts())
+                .add(otherReportableTransStr(gene.additionalReportedTranscripts()))
                 .toString();
     }
 

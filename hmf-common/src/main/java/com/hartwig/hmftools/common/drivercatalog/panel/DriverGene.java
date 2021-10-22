@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.immutables.value.Value;
@@ -38,8 +40,7 @@ public interface DriverGene extends Comparable<DriverGene>
 
     boolean reportGermlineDisruption();
 
-    @Nullable
-    String additionalReportedTranscripts();
+    List<String> additionalReportedTranscripts();
 
     @Override
     default int compareTo(@NotNull final DriverGene o)

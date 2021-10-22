@@ -116,7 +116,7 @@ public class LinxApplication
         {
             boolean reqProteinDomains = config.RunFusions;
             boolean reqSplicePositions = config.RunFusions;
-            boolean canonicalOnly = config.IsGermline || !config.RunFusions;
+            boolean canonicalOnly = config.IsGermline;
 
             ensemblDataCache.setRequiredData(true, reqProteinDomains, reqSplicePositions, canonicalOnly);
 

@@ -141,6 +141,8 @@ class DriverCatalogDAO {
                     .chromosomeBand(record.getValue(DRIVERCATALOG.CHROMOSOMEBAND))
                     .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
+                    .transcript(record.getValue(DRIVERCATALOG.TRANSCRIPT))
+                    .isCanonical(record.getValue(DRIVERCATALOG.CANONICALTRANSCRIPT) != 0)
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
                     .missense(record.getValue(DRIVERCATALOG.MISSENSE))

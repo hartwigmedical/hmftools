@@ -35,13 +35,13 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 public class DeletionDrivers
 {
     private final DriverDataCache mDataCache;
-    private final List<String> mReportableDelGeneIds;
+    private final Map<String,List<String>> mReportableDisruptionGeneTranscripts;
     private final boolean mHomDisAllGenes;
 
-    public DeletionDrivers(final List<String> disruptionGeneIds, final DriverDataCache dataCache, boolean homDisAllGenes)
+    public DeletionDrivers(final Map<String,List<String>> disruptionGeneTranscripts, final DriverDataCache dataCache, boolean homDisAllGenes)
     {
         mDataCache = dataCache;
-        mReportableDelGeneIds = disruptionGeneIds;
+        mReportableDisruptionGeneTranscripts = disruptionGeneTranscripts;
         mHomDisAllGenes = homDisAllGenes;
     }
 
@@ -228,106 +228,33 @@ public class DeletionDrivers
 
                 final List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.StableId))
-                        .filter(x -> mHomDisAllGenes || mReportableDelGeneIds.contains(x.StableId))
+                        .filter(x -> mHomDisAllGenes || mReportableDisruptionGeneTranscripts.containsKey(x.StableId))
                         .collect(Collectors.toList());
 
                 if(genesList.isEmpty())
                     continue;
 
-                // consider any disruptive canonical transcript
+                // consider any disruptive canonical or other configured reportable transcript
                 for(final BreakendGeneData gene : genesList)
                 {
-                    final BreakendTransData trans = gene.canonical();
-
-                    if(trans == null || !trans.isDisruptive())
-                        continue;
-
-                    if(delType)
+                    for(BreakendTransData transcript : gene.transcripts())
                     {
-                        final DbPair dbLink = breakend.getDBLink();
-
-                        // calculate the copy number over the deletion bridge section
-                        double cnLowSide = breakend.copyNumberLowSide();
-
-                        double otherSvJcn = dbLink.getOtherBreakend(breakend).jcn();
-
-                        // account for an overlapping DB by subtracting the ploidy of the overlap
-                        if(dbLink.length() < 0)
-                            cnLowSide -= otherSvJcn;
-
-                        if(cnLowSide >= TOTAL_CN_LOSS)
+                        if(transcript == null || !transcript.isDisruptive())
                             continue;
 
-                        // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
-                        final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
-
-                        final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
-                                .filter(x -> x.StableId.equals(gene.StableId))
-                                .findFirst().orElse(null);
-
-                        if(matchingGene == null || matchingGene.canonical() == null)
-                            continue;
-
-                        final BreakendTransData matchingTrans = matchingGene.canonical();
-
-                        if(!matchingTrans.isDisruptive())
-                            continue;
-
-                        delDriverGeneIds.add(gene.StableId);
-
-                        LNX_LOGGER.debug("gene({}) cluster({}) breakend({}) cause homozygous disruption for cnLowSide({}) dbLength({}) otherSvJcn({})",
-                                trans.geneName(), breakend.getCluster().id(), breakend,
-                                formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
-
-                        DriverGeneData dgData = mDataCache.createDriverData(gene);
-
-                        if(dgData != null)
+                        if(!transcript.isCanonical())
                         {
-                            DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
-                            event.addSvBreakendPair(breakend, otherBreakend, "DB");
-                            event.setCluster(breakend.getCluster());
-                            dgData.addEvent(event);
-                            disDelDrivers.add(dgData);
-                        }
-                    }
-                    else
-                    {
-                        // DUP must be wholly contained within the same gene
-                        if(!breakend.getSV().getGenesList(!breakend.usesStart()).stream().anyMatch(x -> x.StableId == gene.StableId))
-                            continue;
-
-                        final SvBreakend otherBreakend = breakend.getOtherBreakend();
-
-                        final BreakendGeneData otherGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
-                                .filter(x -> x.StableId.equals(gene.StableId))
-                                .findFirst().orElse(null);
-
-                        if(otherGene == null || otherGene.canonical() == null || !otherGene.canonical().isDisruptive())
+                            if(!mReportableDisruptionGeneTranscripts.get(gene.StableId).contains(transcript.transName()))
                                 continue;
+                        }
 
-                        double cnLowSideStart = breakend.copyNumberLowSide();
-                        double cnLowSideEnd = otherBreakend.copyNumberLowSide();
-                        double jcn = breakend.jcn();
-                        double jcnThreshold = max(jcn * (1 + MAX_COPY_NUM_DIFF_PERC), jcn + MAX_COPY_NUM_DIFF);
-
-                        if(cnLowSideStart < jcnThreshold && cnLowSideEnd < jcnThreshold)
+                        if(delType)
                         {
-                            delDriverGeneIds.add(gene.StableId);
-
-                            LNX_LOGGER.debug("gene({}) cluster({}) DUP({}) cause homozygous disruption cnLowSide({} & {}) jcn({})",
-                                    trans.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
-                                    formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(jcn));
-
-                            DriverGeneData dgData = mDataCache.createDriverData(gene);
-
-                            if(dgData != null)
-                            {
-                                DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);
-                                event.addSvBreakendPair(breakend, otherBreakend, "DUP");
-                                event.setCluster(breakend.getCluster());
-                                dgData.addEvent(event);
-                                disDelDrivers.add(dgData);
-                            }
+                            checkDelDisruption(breakend, transcript, delDriverGeneIds, disDelDrivers);
+                        }
+                        else
+                        {
+                            checkDupDisruption(breakend, transcript, delDriverGeneIds, disDelDrivers);
                         }
                     }
                 }
@@ -335,5 +262,107 @@ public class DeletionDrivers
         }
 
         return disDelDrivers;
+    }
+
+    private void checkDelDisruption(
+            final SvBreakend breakend, final BreakendTransData transcript,
+            final List<String> delDriverGeneIds, final List<DriverGeneData> disDelDrivers)
+    {
+        final DbPair dbLink = breakend.getDBLink();
+
+        // calculate the copy number over the deletion bridge section
+        double cnLowSide = breakend.copyNumberLowSide();
+
+        double otherSvJcn = dbLink.getOtherBreakend(breakend).jcn();
+
+        // account for an overlapping DB by subtracting the ploidy of the overlap
+        if(dbLink.length() < 0)
+            cnLowSide -= otherSvJcn;
+
+        if(cnLowSide >= TOTAL_CN_LOSS)
+            return;
+
+        // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
+        final String geneId = transcript.gene().StableId;
+
+        final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
+
+        final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                .filter(x -> x.StableId.equals(geneId))
+                .findFirst().orElse(null);
+
+        if(matchingGene == null)
+            return;
+
+        // the other transcript must also be disruptive
+        if(matchingGene.transcripts().stream().noneMatch(x -> x.transName().equals(transcript.transName()) && x.isDisruptive()))
+            return;
+
+        delDriverGeneIds.add(geneId);
+
+        LNX_LOGGER.debug("breakend({}) cluster({}) geneTrans({}:{}) cause homozygous disruption for cnLowSide({}) dbLength({}) otherSvJcn({})",
+                breakend, breakend.getCluster().id(), transcript.geneName(), transcript.transName(),
+                formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
+
+        DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData);
+
+        if(dgData != null)
+        {
+            DriverGeneEvent event = new DriverGeneEvent(HOM_DEL_DISRUPTION);
+            event.addSvBreakendPair(breakend, otherBreakend, "DB");
+            event.setCluster(breakend.getCluster());
+            dgData.addEvent(event);
+            disDelDrivers.add(dgData);
+        }
+    }
+
+    private void checkDupDisruption(
+            final SvBreakend breakend, final BreakendTransData transcript,
+            final List<String> delDriverGeneIds, final List<DriverGeneData> disDelDrivers)
+    {
+        final String geneId = transcript.gene().StableId;
+
+        // DUP must be wholly contained within the same gene
+        if(breakend.getSV().getGenesList(!breakend.usesStart()).stream().noneMatch(x -> x.StableId.equals(geneId)))
+            return;
+
+        final SvBreakend otherBreakend = breakend.getOtherBreakend();
+
+        final BreakendGeneData matchingGene = otherBreakend.getSV().getGenesList(otherBreakend.usesStart()).stream()
+                .filter(x -> x.StableId.equals(geneId))
+                .findFirst().orElse(null);
+
+        if(matchingGene == null)
+            return;
+
+        // the other transcript must also be disruptive
+        if(matchingGene.transcripts().stream().noneMatch(x -> x.transName().equals(transcript.transName()) && x.isDisruptive()))
+            return;
+
+        double cnLowSideStart = breakend.copyNumberLowSide();
+        double cnLowSideEnd = otherBreakend.copyNumberLowSide();
+        double jcn = breakend.jcn();
+        double jcnThreshold = max(jcn * (1 + MAX_COPY_NUM_DIFF_PERC), jcn + MAX_COPY_NUM_DIFF);
+
+        if(cnLowSideStart < jcnThreshold && cnLowSideEnd < jcnThreshold)
+        {
+            delDriverGeneIds.add(geneId);
+
+            LNX_LOGGER.debug("DUP({}) cluster({}) gene({}:{}) cause homozygous disruption cnLowSide({} & {}) jcn({})",
+                    breakend, breakend.getCluster().id(), transcript.geneName(), transcript.transName(),
+                    transcript.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
+                    formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(jcn));
+
+            DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData);
+
+            if(dgData != null)
+            {
+                DriverGeneEvent event = new DriverGeneEvent(HOM_DUP_DISRUPTION);
+                event.addSvBreakendPair(breakend, otherBreakend, "DUP");
+                event.setCluster(breakend.getCluster());
+                dgData.addEvent(event);
+                disDelDrivers.add(dgData);
+            }
+        }
     }
 }

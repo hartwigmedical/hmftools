@@ -47,7 +47,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 public class DisruptionFinder implements CohortFileInterface
 {
     private final EnsemblDataCache mGeneTransCache;
-    private final List<GeneData> mDisruptionGenes;
+    private final Map<String,List<String>> mDisruptionGeneTranscripts;
     private final VisSampleData mVisSampleData;
 
     private final List<SvDisruptionData> mDisruptions;
@@ -69,7 +69,7 @@ public class DisruptionFinder implements CohortFileInterface
         mIsGermline = config.IsGermline;
         mGermlineDisruptions = mIsGermline ? new GermlineDisruptions(config, geneTransCache, germlinePonCache) : null;
 
-        mDisruptionGenes = disruptionGeneIds(config.DriverGenes, !mIsGermline, geneTransCache);
+        mDisruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, !mIsGermline, geneTransCache);
 
         mVisSampleData = visSampleData;
         mCohortDataWriter = cohortDataWriter;
@@ -78,26 +78,50 @@ public class DisruptionFinder implements CohortFileInterface
         mRemovedDisruptions = Maps.newHashMap();
     }
 
-    public static List<GeneData> disruptionGeneIds(
+    public static Map<String,List<String>> getDisruptionGeneTranscripts(
             final List<DriverGene> driverGenes, boolean onlyReportable, final EnsemblDataCache geneTransCache)
     {
-        return driverGenes.stream()
-                .filter(x -> !onlyReportable || x.reportDisruption())
-                .map(x -> geneTransCache.getGeneDataByName(x.gene()))
-                .filter(x -> x != null)
-                .collect(Collectors.toList());
+        // builds a list of genes meeting reportable driver disruption criteria and includes any non-canonical transcript names
+        Map<String,List<String>> geneTransMap = Maps.newHashMap();
+
+        for(DriverGene driverGene : driverGenes)
+        {
+            if(onlyReportable && !driverGene.reportDisruption())
+                continue;
+
+            GeneData geneData = geneTransCache.getGeneDataByName(driverGene.gene());
+
+            if(geneData != null)
+            {
+                geneTransMap.put(geneData.GeneId, driverGene.additionalReportedTranscripts());
+            }
+        }
+
+        return geneTransMap;
     }
 
     public final List<SvDisruptionData> getDisruptions() { return mDisruptions; }
 
-    public boolean matchesDisruptionGene(final BreakendGeneData gene)
+    private boolean matchesDisruptionGene(final String geneId)
     {
-        return mDisruptionGenes.stream().anyMatch(x -> gene.StableId.equals(x.GeneId));
+        return mDisruptionGeneTranscripts.containsKey(geneId);
     }
 
-    public void addDisruptionGene(final GeneData geneData)
+    public boolean matchesDisruptionTranscript(final String geneId, final TranscriptData transData)
     {
-        mDisruptionGenes.add(geneData);
+        if(!mDisruptionGeneTranscripts.containsKey(geneId))
+            return false;
+
+        if(transData.IsCanonical)
+            return true;
+
+        List<String> otherTrans = mDisruptionGeneTranscripts.get(geneId);
+        return otherTrans.stream().anyMatch(x -> transData.TransName.equals(x));
+    }
+
+    public void addDisruptionGene(final String geneId)
+    {
+        mDisruptionGeneTranscripts.put(geneId, Lists.newArrayList());
     }
 
     public void markTranscriptsDisruptive(final List<SvVarData> svList)
@@ -350,7 +374,7 @@ public class DisruptionFinder implements CohortFileInterface
         if(mRemovedDisruptions.containsKey(transcript))
             return;
 
-        if(!transcript.isCanonical() || !matchesDisruptionGene(transcript.gene()))
+        if(!matchesDisruptionTranscript(transcript.gene().StableId, transcript.TransData))
             return;
 
         LNX_LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.gene().id(), context);
@@ -694,7 +718,7 @@ public class DisruptionFinder implements CohortFileInterface
                     continue;
 
                 final List<BreakendGeneData> tsgGenesList = var.getGenesList(isStart(be)).stream()
-                        .filter(x -> matchesDisruptionGene(x)).collect(Collectors.toList());
+                        .filter(x -> matchesDisruptionGene(x.StableId)).collect(Collectors.toList());
 
                 if(tsgGenesList.isEmpty())
                     continue;
@@ -702,12 +726,14 @@ public class DisruptionFinder implements CohortFileInterface
                 for(BreakendGeneData gene : tsgGenesList)
                 {
                     List<BreakendTransData> reportableDisruptions = gene.transcripts().stream()
-                            .filter(BreakendTransData::isCanonical)
                             .filter(BreakendTransData::isDisruptive)
                             .collect(Collectors.toList());
 
                     for(BreakendTransData transcript : reportableDisruptions)
                     {
+                        if(!matchesDisruptionTranscript(gene.StableId, transcript.TransData))
+                            continue;
+
                         LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
                                 var.id(), var.getBreakend(be), gene.GeneName, transcript.transName(),
                                 formatJcn(transcript.undisruptedCopyNumber()));

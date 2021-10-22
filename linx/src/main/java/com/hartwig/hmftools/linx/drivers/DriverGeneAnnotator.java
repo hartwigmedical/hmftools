@@ -8,15 +8,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
-import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.disruptionGeneIds;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.getDisruptionGeneTranscripts;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DRIVER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -79,10 +78,8 @@ public class DriverGeneAnnotator implements CohortFileInterface
         mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
 
-        List<String> disruptionGeneIds = disruptionGeneIds(config.DriverGenes, true, geneTransCache).stream()
-                .map(x -> x.GeneId).collect(Collectors.toList());
-
-        mDelDrivers = new DeletionDrivers(disruptionGeneIds, mDataCache, mConfig.HomDisAllGenes);
+        mDelDrivers = new DeletionDrivers(
+                getDisruptionGeneTranscripts(config.DriverGenes, true, geneTransCache), mDataCache, mConfig.HomDisAllGenes);
 
         mVisSampleData = visSampleData;
 

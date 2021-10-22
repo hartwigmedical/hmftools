@@ -144,7 +144,7 @@ public class DriverDataCache
         mIsMale = isMale;
     }
 
-    public DriverGeneData createDriverData(final BreakendGeneData gene)
+    public DriverGeneData createDriverData(final BreakendGeneData gene, final TranscriptData transData)
     {
         GeneCopyNumber gcnData;
 
@@ -162,8 +162,8 @@ public class DriverDataCache
                 .driver(DriverType.HOM_DISRUPTION)
                 .category(TSG)
                 .gene(gene.GeneName)
-                .transcript(gene.canonical().transName())
-                .isCanonical(true)
+                .transcript(transData.TransName)
+                .isCanonical(transData.IsCanonical)
                 .chromosome(gene.chromosome())
                 .chromosomeBand(gene.karyotypeBand())
                 .likelihoodMethod(DEL)
