@@ -59,7 +59,7 @@ public final class LimsCohortTestFactory {
     }
 
     @NotNull
-    private static ImmutableLimsCohortConfig.Builder allDisabledBuilder() {
+    public static ImmutableLimsCohortConfig.Builder allDisabledBuilder() {
         return ImmutableLimsCohortConfig.builder()
                 .sampleContainsHospitalCenterId(false)
                 .reportGermline(false)
