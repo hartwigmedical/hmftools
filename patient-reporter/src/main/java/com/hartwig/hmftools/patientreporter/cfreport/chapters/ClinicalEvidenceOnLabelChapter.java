@@ -3,7 +3,9 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.itextpdf.layout.Document;
 
@@ -18,16 +20,16 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
     }
 
     @NotNull
-    private final GenomicAnalysis analysis;
+    private final AnalysedPatientReport report;
 
-    public ClinicalEvidenceOnLabelChapter(@NotNull final GenomicAnalysis analysis) {
-        this.analysis = analysis;
+    public ClinicalEvidenceOnLabelChapter(@NotNull final AnalysedPatientReport report) {
+        this.report = report;
     }
-
 
     @Override
     public void render(@NotNull final Document document) {
 
+        GenomicAnalysis analysis = report.genomicAnalysis();
         List<ProtectEvidence> reportedOnLabel = analysis.tumorSpecificEvidence();
         addTreatmentSection(document, "Tumor type specific evidence", reportedOnLabel);
 
@@ -44,14 +46,18 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
     }
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
+        boolean reportGermline = report.sampleReport().germlineReportingLevel().equals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        boolean requireOnLabel = true;
         Map<String, List<ProtectEvidence>> onLabelTreatments =
-                ClinicalEvidenceFunctions.buildTreatmentMap(evidences, true, true);
+                ClinicalEvidenceFunctions.buildTreatmentMap(evidences, reportGermline, requireOnLabel);
         document.add(ClinicalEvidenceFunctions.createTreatmentTable(header, onLabelTreatments, contentWidth()));
     }
 
     private void addTrialSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
+        boolean reportGermline = report.sampleReport().germlineReportingLevel().equals(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
+        boolean requireOnLabel = true;
         Map<String, List<ProtectEvidence>> onLabelTreatments =
-                ClinicalEvidenceFunctions.buildTreatmentMap(evidences, true, true);
+                ClinicalEvidenceFunctions.buildTreatmentMap(evidences, reportGermline, requireOnLabel);
         document.add(ClinicalEvidenceFunctions.createTrialTable(header, onLabelTreatments, contentWidth()));
     }
 }

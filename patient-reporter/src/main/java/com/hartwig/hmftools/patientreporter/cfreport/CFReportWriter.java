@@ -51,9 +51,8 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        GenomicAnalysis analysis = report.genomicAnalysis();
-        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new ClinicalEvidenceOnLabelChapter(analysis),
-                new ClinicalEvidenceOffLabelChapter(analysis), new GenomicAlterationsChapter(report, report.sampleReport()),
+        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new ClinicalEvidenceOnLabelChapter(report),
+                new ClinicalEvidenceOffLabelChapter(report), new GenomicAlterationsChapter(report, report.sampleReport()),
                 new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 
