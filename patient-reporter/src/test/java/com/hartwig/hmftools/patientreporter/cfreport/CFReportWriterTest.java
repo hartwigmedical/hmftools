@@ -54,6 +54,19 @@ public class CFReportWriterTest {
     public void canGeneratePatientReportForCOLO829() throws IOException {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
                 .comments(COLO_COMMENT_STRING)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
+                .build();
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+
+        CFReportWriter writer = testCFReportWriter();
+        writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
+    }
+
+    @Test
+    public void canGeneratePatientReportForCOLO829_disabled_config() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_disables_config")
+                .comments(COLO_COMMENT_STRING)
+                .limsCohortConfig(LimsCohortTestFactory.createAllDisabledCohortConfig("COLO"))
                 .build();
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
 
@@ -66,6 +79,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T")
                 .isCorrectionReport(true)
                 .comments(COLO_COMMENT_STRING_CORRECTED)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
 
@@ -78,6 +92,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_GERMLINE")
                 .comments(COLO_COMMENT_STRING)
                 .reportGermline(true)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
 
@@ -92,6 +107,7 @@ public class CFReportWriterTest {
                 .qcForNumber(QsFormNumber.FOR_209)
                 .hasReliablePurity(false)
                 .includeSummary(false)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
 
@@ -107,6 +123,7 @@ public class CFReportWriterTest {
                 .impliedTumorPurity(0.19)
                 .includeSummary(false)
                 .hasReliablePurity(true)
+                .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
         AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
 

@@ -11,14 +11,14 @@ import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.CircosChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ClinicalEvidenceOffLabelChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ClinicalEvidenceOnLabelChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.DetailsAndDisclaimerChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ExplanationChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.GenomicAlterationsChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.QCFailChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOffLabel;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.TherapyDetailsChapterOnLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -51,10 +51,8 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        GenomicAnalysis analysis = report.genomicAnalysis();
-        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(analysis),
-                new TherapyDetailsChapterOffLabel(analysis),
-                new GenomicAlterationsChapter(report, report.sampleReport()),
+        ReportChapter[] chapters = new ReportChapter[] { new SummaryChapter(report), new ClinicalEvidenceOnLabelChapter(report),
+                new ClinicalEvidenceOffLabelChapter(report), new GenomicAlterationsChapter(report, report.sampleReport()),
                 new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
                 new DetailsAndDisclaimerChapter(report) };
 

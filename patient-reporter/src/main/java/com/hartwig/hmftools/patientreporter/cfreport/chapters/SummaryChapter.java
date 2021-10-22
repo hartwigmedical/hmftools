@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -40,9 +41,12 @@ import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class SummaryChapter implements ReportChapter {
+    private static final Logger LOGGER = LogManager.getLogger(SummaryChapter.class);
 
     private static final float TABLE_SPACER_HEIGHT = 5;
     private static final DecimalFormat SINGLE_DECIMAL_FORMAT = ReportResources.decimalFormat("#.#");
@@ -299,41 +303,49 @@ public class SummaryChapter implements ReportChapter {
 
     private void renderPeach(@NotNull Document report) {
         Div div = createSectionStartDiv(contentWidth());
-        String title = "Pharmacogenetics";
 
-        Table table;
-        if (patientReport.sampleReport().cohort().reportPeach()) {
-            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display())) {
-                table = TableUtil.createNAReportTable(title);
-                table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
-            } else if (analysis().peachGenotypes().isEmpty()) {
-                table = TableUtil.createNoneReportTable(title);
-                table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
-            } else if (patientReport.genomicAnalysis().hasReliablePurity() && patientReport.qsFormNumber()
-                    .equals(QsFormNumber.FOR_080.display())) {
+        Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        table.setWidth(contentWidth());
+        table.addCell(TableUtil.createLayoutCellSummary()
+                .add(new Paragraph("Pharmacogenetics").addStyle(ReportResources.sectionTitleStyle())));
+        table.addCell(TableUtil.createLayoutCell(1, 2).setHeight(TABLE_SPACER_HEIGHT));
 
-                table = TableUtil.createReportContentTableSummary(new float[] { 15, 25, 25, 50 },
-                        new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
-                                TableUtil.createHeaderCell("Function"),
-                                TableUtil.createHeaderCell("Linked drugs").setTextAlignment(TextAlignment.CENTER) });
+        Set<String> pgxFunctions;
+        Set<String> pgxGenes;
+        Style pgxStyle;
+        String reportedPhenotypes;
 
-                for (PeachGenotype peachGenotype : Pharmacogenetics.sort(analysis().peachGenotypes())) {
-                    table.addCell(TableUtil.createContentCell(peachGenotype.gene()));
-                    table.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
-                    table.addCell(TableUtil.createContentCell(peachGenotype.function()));
-                    table.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()).setTextAlignment(TextAlignment.CENTER));
-                }
-                table = TableUtil.createWrappingReportTableSummary(title, table);
-            } else {
-                table = TableUtil.createNAReportTable(title);
-                table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
-            }
+        if (patientReport.sampleReport().cohort().reportPeach() && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
+            pgxFunctions = Pharmacogenetics.phenotypesFunctions(patientReport.genomicAnalysis().peachGenotypes());
+            pgxGenes = Pharmacogenetics.phenotypesGenes(patientReport.genomicAnalysis().peachGenotypes());
+            pgxStyle = ReportResources.dataHighlightStyle();
+            reportedPhenotypes = Integer.toString(Pharmacogenetics.countPhenotypes(patientReport.genomicAnalysis().peachGenotypes()));
+        } else if (patientReport.sampleReport().cohort().reportPeach() && patientReport.qsFormNumber()
+                .equals(QsFormNumber.FOR_209.display())) {
+            pgxFunctions = Sets.newHashSet(DataUtil.NA_STRING);
+            pgxGenes = Sets.newHashSet(DataUtil.NA_STRING);
+            pgxStyle = ReportResources.dataHighlightNaStyle();
+            reportedPhenotypes = DataUtil.NA_STRING;
         } else {
-            table = TableUtil.createNAReportTable(title);
-            table.setWidth(ReportResources.CONTENT_WIDTH_NARROW);
+            pgxFunctions = Sets.newHashSet();
+            pgxGenes = Sets.newHashSet();
+            pgxStyle = ReportResources.dataHighlightNaStyle();
+            reportedPhenotypes = Integer.toString(0);
         }
 
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Genes with haplotypes").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createGeneListCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
+
+        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createGeneListCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
+
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
+
         div.add(table);
+
         report.add(div);
     }
 
