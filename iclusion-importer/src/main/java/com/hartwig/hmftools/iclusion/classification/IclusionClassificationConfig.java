@@ -134,7 +134,6 @@ public final class IclusionClassificationConfig {
     @NotNull
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("LOSS-OF-FUNCTION");
         set.add("INACTIVATING MUTATION");
         return set;
     }
@@ -162,6 +161,8 @@ public final class IclusionClassificationConfig {
     private static Set<String> deletionKeywords() {
         Set<String> set = Sets.newHashSet();
         set.add("LOSS");
+        set.add("LOSS-OF-FUNCTION");
+        set.add("NON-EXPRESSION");
         return set;
     }
 
