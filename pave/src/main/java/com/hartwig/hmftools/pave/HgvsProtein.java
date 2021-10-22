@@ -93,7 +93,10 @@ public final class HgvsProtein
 
     public static String generate(final ProteinContext proteinContext, final VariantEffect effect)
     {
-        if(!proteinContext.validRefCodon() || !proteinContext.validAltCodon())
+        if(!proteinContext.validRefCodon())
+            return HGVS_UNKNOWN;
+
+        if(!proteinContext.validAltCodon() && effect != FRAMESHIFT) // all the others should have been able to get complete codons
             return HGVS_UNKNOWN;
 
         StringBuilder sb = new StringBuilder();

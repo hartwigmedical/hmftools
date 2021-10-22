@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.VARIANT_CONSEQ_DELIM;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_CANONICAL;
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.SNPEFF_WORST;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
@@ -154,6 +156,15 @@ public class PaveApplication
         {
             if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
                 return;
+        }
+
+        if(!mConfig.CompareSnpEff)
+        {
+            if(variantContext.hasAttribute(SNPEFF_CANONICAL))
+                variantContext.getCommonInfo().removeAttribute(SNPEFF_CANONICAL);
+
+            if(variantContext.hasAttribute(SNPEFF_WORST))
+                variantContext.getCommonInfo().removeAttribute(SNPEFF_WORST);
         }
 
         variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));

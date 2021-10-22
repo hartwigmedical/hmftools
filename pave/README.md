@@ -7,7 +7,7 @@ For each impacted transcript it will add the following fields:
 Field | Description
 ---|---
 Gene | Ensembl gene ID
-GeneName | HGVS gene name
+GeneName | HGNC gene name
 Transcript | Ensembl transcript ID
 Effects | list of effects separated by '&'
 SpliceRegion | true/false - if variant overlaps with the 8 intronic bases or 3 exonic bases around a splice junction 
@@ -18,7 +18,7 @@ For each impacted transcript it will add the following fields:
 
 Field | Description
 ---|---
-Gene | HGVS gene name
+Gene | HGNC gene name
 Transcript | Ensembl canonical transcript ID
 CanonicalEffect | list of effects separated by '&'
 CanonicalCodingEffect | NONE, SPLICE, NONSENSE_OR_FRAMESHIFT, MISSENSE or SYNONYMOUS
