@@ -50,6 +50,7 @@ public class LoadPurpleSomaticVariants
 
             LOGGER.info("Streaming data from {} to db", somaticVcf);
             new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, true, somaticWriter);
+            somaticWriter.close();
         }
         catch(IOException e)
         {

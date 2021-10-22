@@ -56,26 +56,28 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
 
         mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, mKataegisEnrichment);
 
-        final Set<String> somaticGenes = refData.DriverGenes.driverGenes().stream()
-                .filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
-
         if(snpEffEnrichmentEnabled)
         {
+            final Set<String> somaticGenes = refData.DriverGenes.driverGenes().stream()
+                    .filter(DriverGene::reportSomatic).map(DriverGene::gene).collect(Collectors.toSet());
+
             mSnpEffEnrichment = new SnpEffEnrichment(
                     somaticGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mSomaticRefContextEnrichment);
         }
         else
         {
-            mSnpEffEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(mSomaticRefContextEnrichment);
+            mSnpEffEnrichment = null;
         }
+
+        VariantContextEnrichment prevConsumer = mSnpEffEnrichment != null ? mSnpEffEnrichment : mSomaticRefContextEnrichment;
 
         if(hotspotEnabled)
         {
-            mHotspotEnrichment = new VariantHotspotEnrichment(hotspots, mSnpEffEnrichment);
+            mHotspotEnrichment = new VariantHotspotEnrichment(hotspots, prevConsumer);
         }
         else
         {
-            mHotspotEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(mSnpEffEnrichment);
+            mHotspotEnrichment = VariantContextEnrichmentFactory.noEnrichment().create(prevConsumer);
         }
     }
 
@@ -83,7 +85,10 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
     public void flush()
     {
         mHotspotEnrichment.flush();
-        mSnpEffEnrichment.flush();
+
+        if(mSnpEffEnrichment != null)
+            mSnpEffEnrichment.flush();
+
         mSomaticRefContextEnrichment.flush();
         mKataegisEnrichment.flush();
         mPurityEnrichment.flush();
@@ -98,7 +103,10 @@ public class SomaticVariantEnrichment implements VariantContextEnrichment
         header = mKataegisEnrichment.enrichHeader(header);
         header = mSubclonalLikelihoodEnrichment.enrichHeader(header);
         header = mHotspotEnrichment.enrichHeader(header);
-        header = mSnpEffEnrichment.enrichHeader(header);
+
+        if(mSnpEffEnrichment != null)
+            header = mSnpEffEnrichment.enrichHeader(header);
+
         return mPurityEnrichment.enrichHeader(header);
     }
 

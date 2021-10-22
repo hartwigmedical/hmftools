@@ -168,10 +168,10 @@ public class SomaticStream implements Consumer<VariantContext>
                 if(varCount > 0 && (varCount % flushCount) == 0)
                 {
                     PPL_LOGGER.debug("enriched {} somatic variants", varCount);
-                    enricher.flush();
                 }
             }
 
+            enricher.flush();
             mVcfWriter.close();
             mRChartData.write();
         }
