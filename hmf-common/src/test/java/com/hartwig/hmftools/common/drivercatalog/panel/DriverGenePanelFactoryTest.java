@@ -35,7 +35,7 @@ public class DriverGenePanelFactoryTest {
         DriverGenePanel genePanel = testGenePanel();
         DndsDriverImpactLikelihood missense = genePanel.oncoLikelihood().get("ABL1").missense();
 
-        assertEquals(0.001423, missense.driversPerSample(), 1e-7);
+        assertEquals(0.00142281287636871, missense.driversPerSample(), 1e-7);
         assertEquals(4.436149558484221E-7, missense.passengersPerMutation(), 1e-8);
     }
 
