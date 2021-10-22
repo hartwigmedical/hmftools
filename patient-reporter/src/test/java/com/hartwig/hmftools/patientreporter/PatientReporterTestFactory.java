@@ -31,6 +31,7 @@ public final class PatientReporterTestFactory {
     private static final String PURPLE_SOMATIC_VARIANT_VCF = RUN_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String PURPLE_GERMLINE_VARIANT_VCF = RUN_DIRECTORY + "/purple/sample.purple.germline.vcf";
     private static final String PURPLE_SOMATIC_COPYNUMBER_TSV = RUN_DIRECTORY + "/purple/sample.purple.cnv.somatic.tsv";
+    private static final String PURPLE_SOMATIC_CHROMOSOME_ARM_TSV = RUN_DIRECTORY + "/purple/sample.cnv.chromosomearm.somatic.tsv";
     private static final String PURPLE_CIRCOS_FILE = RUN_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String LINX_FUSIONS_TSV = RUN_DIRECTORY + "/linx/sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/sample.linx.breakend.tsv";
@@ -49,6 +50,8 @@ public final class PatientReporterTestFactory {
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
 
+    private static final String UDI_DI = "5.22";
+
     private PatientReporterTestFactory() {
     }
 
@@ -64,6 +67,7 @@ public final class PatientReporterTestFactory {
                 .rvaLogo(RVA_LOGO_PATH)
                 .companyLogo(COMPANY_LOGO_PATH)
                 .signature(SIGNATURE_PATH)
+                .udiDi(UDI_DI)
                 .qcFail(false)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .purplePurityTsv(PURPLE_PURITY_TSV)
@@ -73,6 +77,7 @@ public final class PatientReporterTestFactory {
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
                 .purpleSomaticCopyNumberTsv(PURPLE_SOMATIC_COPYNUMBER_TSV)
+                .purpleSomaticChromsomeArmTsv(PURPLE_SOMATIC_CHROMOSOME_ARM_TSV)
                 .purpleCircosPlot(PURPLE_CIRCOS_FILE)
                 .linxFusionTsv(LINX_FUSIONS_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
@@ -89,7 +94,6 @@ public final class PatientReporterTestFactory {
                 .onlyCreatePDF(false)
                 .expectedPipelineVersion("5.22")
                 .overridePipelineVersion(false)
-                .refGenomeVersion(RefGenomeVersion.V37)
                 .build();
     }
 
@@ -104,6 +108,7 @@ public final class PatientReporterTestFactory {
                 .signaturePath(SIGNATURE_PATH)
                 .logoRVAPath(RVA_LOGO_PATH)
                 .logoCompanyPath(COMPANY_LOGO_PATH)
+                .udiDi(UDI_DI)
                 .build();
     }
 

@@ -37,6 +37,11 @@ public final class CnPerChromosomeArmFile
         Files.write(new File(filename).toPath(), toLines(cnPerChromosomeArm));
     }
 
+    @NotNull
+    public static List<CnPerChromosomeArmData> read(final String filePath) throws IOException {
+        return fromLines(filePath);
+    }
+
     private static List<String> toLines(@NotNull List<CnPerChromosomeArmData> cnPerChromosomeArm)
     {
         List<String> lines = Lists.newArrayList();

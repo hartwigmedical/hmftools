@@ -24,6 +24,7 @@ import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,14 +54,13 @@ public class AnalysedPatientReporter {
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
         String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile());
-        checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
+        PipelineVersion.checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
                 sampleMetadata.refSampleId(),
                 config,
-                sampleReport.germlineReportingLevel(),
-                config.refGenomeVersion());
+                sampleReport.germlineReportingLevel());
 
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
@@ -92,6 +92,7 @@ public class AnalysedPatientReporter {
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
+                .udiDi(reportData.udiDi())
                 .build();
 
         printReportState(report);
@@ -164,27 +165,5 @@ public class AnalysedPatientReporter {
             }
         }
         return germlineOnly;
-    }
-
-    @VisibleForTesting
-    static void checkPipelineVersion(@Nullable String actualPipelineVersion, @NotNull String expectedPipelineVersion,
-            boolean overridePipelineVersion) {
-        if (overridePipelineVersion) {
-            if (actualPipelineVersion == null) {
-                LOGGER.warn("No known pipeline version is known!");
-            }
-            LOGGER.warn("Pipeline version is overridden! The version is {} and the expected version is {}",
-                    actualPipelineVersion,
-                    expectedPipelineVersion);
-        } else {
-            if (actualPipelineVersion != null && !actualPipelineVersion.equals(expectedPipelineVersion)) {
-                throw new IllegalArgumentException(
-                        "The expected pipeline version " + expectedPipelineVersion + " is different from the actual pipeline version "
-                                + actualPipelineVersion + "!");
-            } else if (actualPipelineVersion == null) {
-                throw new IllegalArgumentException(
-                        "No pipeline version is known! The expected pipeline version is " + expectedPipelineVersion);
-            }
-        }
     }
 }

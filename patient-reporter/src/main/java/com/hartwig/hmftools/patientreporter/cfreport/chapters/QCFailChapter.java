@@ -90,7 +90,7 @@ public class QCFailChapter implements ReportChapter {
         switch (failReason) {
             case INSUFFICIENT_DNA: {
                 explanationDetail =
-                        "The tumor percentage based on molecular estimation could not be determined due to insufficient tumor DNA.";
+                        "Sequencing could not be performed due to insufficient DNA.";
                 break;
             }
             case INSUFFICIENT_TCP_DEEP_WGS:
@@ -280,7 +280,7 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Paragraph testsArePerformedUnderUNI() {
-        return createContentParagraph("UDI-DI: ", ReportResources.UDI_DI + ".");
+        return createContentParagraph("UDI-DI: ",  failReport.udiDi() + ".");
     }
 
     @NotNull

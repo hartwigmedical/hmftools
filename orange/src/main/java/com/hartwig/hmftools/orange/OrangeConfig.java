@@ -54,6 +54,7 @@ public interface OrangeConfig {
     String PURPLE_GERMLINE_DRIVER_CATALOG_TSV = "purple_germline_driver_catalog_tsv";
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
+    String PURPLE_SOMATIC_CHROMOSOME_ARM_TSV = "purple_somatic_chromosome_arm_tsv";
     String PURPLE_PLOT_DIRECTORY = "purple_plot_directory";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
@@ -100,6 +101,7 @@ public interface OrangeConfig {
         options.addOption(PURPLE_GERMLINE_DRIVER_CATALOG_TSV, true, "Path towards the purple germline driver catalog TSV.");
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
+        options.addOption(PURPLE_SOMATIC_CHROMOSOME_ARM_TSV, true, "Path towards the purple somatic chromosome arm TSV.");
         options.addOption(PURPLE_PLOT_DIRECTORY, true, "Path towards the directory holding all purple plots.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the LINX fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the LINX breakend TSV.");
@@ -184,6 +186,9 @@ public interface OrangeConfig {
 
     @NotNull
     String purpleGermlineVariantVcf();
+
+    @NotNull
+    String purpleSomaticChromsomeArmTsv();
 
     @NotNull
     String purplePlotDirectory();
@@ -271,6 +276,7 @@ public interface OrangeConfig {
                 .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
                 .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
                 .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
+                .purpleSomaticChromsomeArmTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_CHROMOSOME_ARM_TSV))
                 .purplePlotDirectory(nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
                 .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
                 .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))

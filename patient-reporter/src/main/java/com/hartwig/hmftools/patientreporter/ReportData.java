@@ -23,4 +23,7 @@ public interface ReportData {
 
     @NotNull
     String logoCompanyPath();
+
+    @NotNull
+    String udiDi();
 }
