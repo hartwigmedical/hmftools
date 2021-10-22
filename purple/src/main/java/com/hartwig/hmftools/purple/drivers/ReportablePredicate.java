@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
+
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -33,32 +36,37 @@ public class ReportablePredicate implements Predicate<SomaticVariant>
     public boolean test(final SomaticVariant variant)
     {
         final DriverGene driverGene = driverGeneMap.get(variant.gene());
+
         if(driverGene == null)
-        {
             return false;
-        }
 
         if(variant.type().equals(VariantType.INDEL) && maxRepeatCount > 0 && variant.repeatCount() > maxRepeatCount)
-        {
             return false;
-        }
 
         if(variant.isHotspot() && driverGene.reportSomaticHotspot())
-        {
             return true;
-        }
 
         DriverImpact impact = DriverImpact.select(variant);
+
+        // splice ranks above missense so if a gene is reportable for missense but not splice, ensure this is handled
+        boolean hasMissense = variant.canonicalEffect().contains(MISSENSE.effect());
+
+        if(hasMissense && driverGene.reportMissenseAndInframe())
+            return true;
+
         switch(impact)
         {
             case NONSENSE:
             case FRAMESHIFT:
                 return driverGene.reportNonsenseAndFrameshift();
+
             case SPLICE:
                 return driverGene.reportSplice();
+
             case MISSENSE:
             case INFRAME:
                 return driverGene.reportMissenseAndInframe();
+
             default:
                 return false;
         }
