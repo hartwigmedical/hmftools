@@ -89,9 +89,16 @@ public class ClinicalEvidenceFunctions {
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Responsive Evidence"),
                         TableUtil.createHeaderCell("Resistance Evidence") });
 
+        treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
+        return treatmentTable;
+    }
+
+    @NotNull
+    private static Table addingDataIntoTable(@NotNull Table treatmentTable, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
+            @NotNull String title, float contentWidth, @NotNull String evidenType) {
         boolean hasEvidence = false;
         for (EvidenceLevel level : EvidenceLevel.values()) {
-            if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level)) {
+            if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level, evidenType)) {
                 hasEvidence = true;
             }
 
@@ -111,51 +118,12 @@ public class ClinicalEvidenceFunctions {
                 new float[] { 20, 180, 180 },
                 new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility", 2) });
 
-        boolean hasEvidence = false;
-        for (EvidenceLevel level : EvidenceLevel.values()) {
-            if (addEvidenceWithMaxLevelTrial(treatmentTable, treatmentMap, level)) {
-                hasEvidence = true;
-            }
-
-        }
-
-        if (hasEvidence) {
-            return TableUtil.createWrappingReportTable(title, treatmentTable);
-        } else {
-            return TableUtil.createEmptyTable(title, contentWidth);
-        }
-    }
-
-    private static boolean addEvidenceWithMaxLevelTrial(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
-            @NotNull EvidenceLevel allowedHighestLevel) {
-        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
-        boolean hasEvidence = false;
-        for (String treatment : sortedTreatments) {
-            List<ProtectEvidence> evidences = treatmentMap.get(treatment);
-            if (allowedHighestLevel == highestEvidence(treatmentMap.get(treatment))) {
-                table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
-                table.addCell(TableUtil.createContentCell(treatment));
-
-                Table responsiveTable = new Table(new float[] { 1,1 });
-                for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
-                    Cell cell = TableUtil.createTransparentCell(display(responsive));
-                    String url = url(responsive);
-                    if (!url.isEmpty()) {
-                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
-                    }
-                    responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
-                    responsiveTable.addCell(cell);
-                }
-                table.addCell(TableUtil.createContentCell(responsiveTable));
-                hasEvidence = true;
-            }
-        }
-
-        return hasEvidence;
+        treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
+        return treatmentTable;
     }
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
-            @NotNull EvidenceLevel allowedHighestLevel) {
+            @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenType) {
         Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
@@ -164,7 +132,7 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
-                Table responsiveTable = new Table(new float[] { 1,1 });
+                Table responsiveTable = new Table(new float[] { 1, 1 });
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(responsive));
                     String url = url(responsive);
@@ -176,17 +144,20 @@ public class ClinicalEvidenceFunctions {
                 }
                 table.addCell(TableUtil.createContentCell(responsiveTable));
 
-                Table resistantTable = new Table(new float[] { 1,1 });
-                for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
-                    Cell cell = TableUtil.createTransparentCell(display(resistant));
-                    String url = url(resistant);
-                    if (!url.isEmpty()) {
-                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
+                if (evidenType.equals("evidence")) {
+                    Table resistantTable = new Table(new float[] { 1, 1 });
+                    for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
+                        Cell cell = TableUtil.createTransparentCell(display(resistant));
+                        String url = url(resistant);
+                        if (!url.isEmpty()) {
+                            cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
+                        }
+                        resistantTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
+                        resistantTable.addCell(cell);
                     }
-                    resistantTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
-                    resistantTable.addCell(cell);
+                    table.addCell(TableUtil.createContentCell(resistantTable));
                 }
-                table.addCell(TableUtil.createContentCell(resistantTable));
+
                 hasEvidence = true;
             }
         }
