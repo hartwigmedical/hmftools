@@ -72,30 +72,6 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    public static Paragraph noteEvidence() {
-        return new Paragraph().setKeepTogether(true)
-                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("The Clinical Knowledgebase (CKB) is used to "
-                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
-                        + "evidence levels \n( ")
-                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
-                .add(" FDA approved therapy and/or guidelines; ")
-                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
-                .add(" late clinical trials; ")
-                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" early clinical trials) can be reported.")
-                .add(" Potential evidence items with evidence level \n( ")
-                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
-                .add(" case reports and preclinical evidence) are not reported.")
-                .addStyle(ReportResources.subTextStyle());
-    }
-
-    @NotNull
-    public static Paragraph note(@NotNull String message) {
-        return new Paragraph(message).addStyle(ReportResources.subTextStyle());
-    }
-
-    @NotNull
     static Paragraph createTreatmentIcons(@NotNull String allDrugs) {
         String[] drugs = allDrugs.split(Pattern.quote(TREATMENT_DELIMITER));
         Paragraph p = new Paragraph();
@@ -113,15 +89,12 @@ public class ClinicalEvidenceFunctions {
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Responsive Evidence"),
                         TableUtil.createHeaderCell("Resistance Evidence") });
 
-        EvidenceLevel maxReportingLevel = EvidenceLevel.C;
-
         boolean hasEvidence = false;
         for (EvidenceLevel level : EvidenceLevel.values()) {
-            if (maxReportingLevel == null || !maxReportingLevel.isHigher(level)) {
-                if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level)) {
-                    hasEvidence = true;
-                }
+            if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level)) {
+                hasEvidence = true;
             }
+
         }
 
         if (hasEvidence) {
@@ -136,17 +109,14 @@ public class ClinicalEvidenceFunctions {
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
                 new float[] { 20, 180, 180 },
-                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility")});
-
-        EvidenceLevel maxReportingLevel = EvidenceLevel.C;
+                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility") });
 
         boolean hasEvidence = false;
         for (EvidenceLevel level : EvidenceLevel.values()) {
-            if (maxReportingLevel == null || !maxReportingLevel.isHigher(level)) {
-                if (addEvidenceWithMaxLevelTrial(treatmentTable, treatmentMap, level)) {
-                    hasEvidence = true;
-                }
+            if (addEvidenceWithMaxLevelTrial(treatmentTable, treatmentMap, level)) {
+                hasEvidence = true;
             }
+
         }
 
         if (hasEvidence) {
@@ -182,7 +152,6 @@ public class ClinicalEvidenceFunctions {
 
         return hasEvidence;
     }
-
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel) {
@@ -279,5 +248,29 @@ public class ClinicalEvidenceFunctions {
         } else {
             return url;
         }
+    }
+
+    @NotNull
+    public static Paragraph noteEvidence() {
+        return new Paragraph().setKeepTogether(true)
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add("The Clinical Knowledgebase (CKB) is used to "
+                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
+                        + "evidence levels \n( ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_A))
+                .add(" FDA approved therapy and/or guidelines; ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_B))
+                .add(" late clinical trials; ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_C))
+                .add(" early clinical trials) can be reported.")
+                .add(" Potential evidence items with evidence level \n( ")
+                .add(Icon.createIcon(Icon.IconType.LEVEL_D))
+                .add(" case reports and preclinical evidence) are not reported.")
+                .addStyle(ReportResources.subTextStyle());
+    }
+
+    @NotNull
+    public static Paragraph note(@NotNull String message) {
+        return new Paragraph(message).addStyle(ReportResources.subTextStyle());
     }
 }
