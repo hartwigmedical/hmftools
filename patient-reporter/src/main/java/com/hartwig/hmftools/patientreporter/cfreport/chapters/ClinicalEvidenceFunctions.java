@@ -72,16 +72,6 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    static Paragraph createTreatmentIcons(@NotNull String allDrugs) {
-        String[] drugs = allDrugs.split(Pattern.quote(TREATMENT_DELIMITER));
-        Paragraph p = new Paragraph();
-        for (String drug : drugs) {
-            p.add(Icon.createTreatmentIcon(drug.trim()));
-        }
-        return p;
-    }
-
-    @NotNull
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
@@ -90,6 +80,17 @@ public class ClinicalEvidenceFunctions {
                         TableUtil.createHeaderCell("Resistance Evidence") });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
+        return treatmentTable;
+    }
+
+    @NotNull
+    public static Table createTrialTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
+            float contentWidth) {
+        Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
+                new float[] { 20, 180, 180 },
+                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility", 2) });
+
+        treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
         return treatmentTable;
     }
 
@@ -112,14 +113,13 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    public static Table createTrialTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
-            float contentWidth) {
-        Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 20, 180, 180 },
-                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility", 2) });
-
-        treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
-        return treatmentTable;
+    static Paragraph createTreatmentIcons(@NotNull String allDrugs) {
+        String[] drugs = allDrugs.split(Pattern.quote(TREATMENT_DELIMITER));
+        Paragraph p = new Paragraph();
+        for (String drug : drugs) {
+            p.add(Icon.createTreatmentIcon(drug.trim()));
+        }
+        return p;
     }
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
