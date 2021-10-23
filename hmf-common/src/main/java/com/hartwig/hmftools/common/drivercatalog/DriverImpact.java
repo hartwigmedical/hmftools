@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,8 +22,9 @@ public enum DriverImpact
         return select(variant.type(), variant.canonicalCodingEffect());
     }
 
+
     @NotNull
-    public static DriverImpact select(VariantType variantType, CodingEffect canonicalCodingEffect)
+    public static DriverImpact select(final VariantType variantType, final CodingEffect canonicalCodingEffect)
     {
         if(isFrameshift(variantType, canonicalCodingEffect))
         {

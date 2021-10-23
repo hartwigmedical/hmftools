@@ -31,7 +31,8 @@ public class GeneDataCache
 {
     private final EnsemblDataCache mEnsemblDataCache;
 
-    private final List<String> mDriverGenes;
+    private final List<DriverGene> mDriverGenes;
+    private final Set<String> mDriverGeneNames;
     private final Map<String,List<String>> mOtherReportableTranscripts;
 
     private final Set<String> mMissingTranscripts; // no longer in Ensembl
@@ -53,6 +54,7 @@ public class GeneDataCache
         mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenVersion);
 
         mDriverGenes = Lists.newArrayList();
+        mDriverGeneNames = Sets.newHashSet();
         mOtherReportableTranscripts = Maps.newHashMap();
         loadDriverGenes(driverGeneFile);
 
@@ -70,7 +72,8 @@ public class GeneDataCache
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
-    public List<String> getDriverPanelGenes() { return mDriverGenes; }
+    public boolean isDriverPanelGene(final String geneName) { return mDriverGeneNames.contains(geneName); }
+    public List<DriverGene> getDriverPanel() { return mDriverGenes; }
     public Map<String,List<String>> getOtherReportableTranscripts() { return mOtherReportableTranscripts; }
 
     public boolean loadCache(boolean canonicalOnly, boolean onlyDriverGenes)
@@ -82,7 +85,7 @@ public class GeneDataCache
             if(!mEnsemblDataCache.load(true))
                 return false;
 
-            List<String> driverGeneIds = mDriverGenes.stream()
+            List<String> driverGeneIds = mDriverGeneNames.stream()
                     .map(x -> mEnsemblDataCache.getGeneDataByName(x).GeneId).collect(Collectors.toList());
 
             mEnsemblDataCache.loadTranscriptData(driverGeneIds);
@@ -105,11 +108,11 @@ public class GeneDataCache
 
         try
         {
-            List<DriverGene> driverGenes = DriverGeneFile.read(driverGeneFile);
+            mDriverGenes.addAll(DriverGeneFile.read(driverGeneFile));
 
-            for(DriverGene driverGene : driverGenes)
+            for(DriverGene driverGene : mDriverGenes)
             {
-                driverGenes.forEach(x -> mDriverGenes.add(x.gene()));
+                mDriverGeneNames.add(driverGene.gene());
 
                 if(!driverGene.additionalReportedTranscripts().isEmpty())
                     mOtherReportableTranscripts.put(driverGene.gene(), driverGene.additionalReportedTranscripts());

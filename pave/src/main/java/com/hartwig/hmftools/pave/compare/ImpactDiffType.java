@@ -6,5 +6,6 @@ public enum ImpactDiffType
     EFFECTS,
     HGVS_CODING,
     HGVS_PROTEIN,
+    REPORTED,
     ANY;
 }

@@ -1,8 +1,17 @@
 package com.hartwig.hmftools.pave.compare;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
+import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
+
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
+
+import org.jooq.Record;
 
 public class RefVariantData
 {
@@ -28,6 +37,7 @@ public class RefVariantData
     public final int RepeatCount;
     public final boolean PhasedInframeIndel;
     public final boolean Reported;
+    public final boolean IsHotspot;
 
     // repeatCount, localPhaseSet, localRealignmentSet, phasedInframeIndel, reported
 
@@ -36,7 +46,7 @@ public class RefVariantData
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
             final CodingEffect worstCodingEffect, final int genesAffected, final String hgvsCodingImpact, final String hgvsProteinImpact,
             final String microhomology, final String repeatSequence, int repeatCount, boolean phasedInframeIndel, int localPhaseSet,
-            boolean reported)
+            boolean reported, boolean isHotspot)
     {
         Chromosome = chromosome;
         Position = position;
@@ -58,16 +68,60 @@ public class RefVariantData
         RepeatCount = repeatCount;
         PhasedInframeIndel = phasedInframeIndel;
         Reported = reported;
+        IsHotspot = isHotspot;
     }
 
     public static RefVariantData fromSomatic(final SomaticVariant variant)
     {
+        boolean phasedInframe = variant.phasedInframeIndelIdentifier() != null && variant.phasedInframeIndelIdentifier() > 0;
+        int localPhaseSet = variant.localPhaseSet() != null ? variant.localPhaseSet() : NO_LOCAL_PHASE_SET;
+
         return new RefVariantData(
                 variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(), variant.type(), variant.gene(),
                 variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
                 variant.genesAffected(),  variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
-                variant.phasedInframeIndelIdentifier() > 0, variant.localPhaseSet(), variant.reported());
+                phasedInframe, localPhaseSet, variant.reported(), variant.isHotspot());
+    }
+
+    public static RefVariantData fromRecord(final Record record)
+    {
+        CodingEffect canonicalCodingEffect = record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
+                ? CodingEffect.UNDEFINED
+                : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT));
+
+        CodingEffect worstCodingEffect = record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
+                ? CodingEffect.UNDEFINED
+                : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT));
+
+        Integer localPhaseSetDb = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
+        int localPhaseSet = localPhaseSetDb != null ? localPhaseSetDb : NO_LOCAL_PHASE_SET;
+
+        Integer phasedInframeCount = record.getValue(SOMATICVARIANT.PHASEDINFRAMEINDEL);
+        boolean phasedInframe = phasedInframeCount != null ? phasedInframeCount > 0 : false;
+
+        boolean isHotspot = Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)) == Hotspot.HOTSPOT;
+
+        return new RefVariantData(
+                record.getValue(Tables.SOMATICVARIANT.CHROMOSOME),
+                record.getValue(Tables.SOMATICVARIANT.POSITION),
+                record.getValue(Tables.SOMATICVARIANT.REF),
+                record.getValue(Tables.SOMATICVARIANT.ALT),
+                VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
+                record.getValue(Tables.SOMATICVARIANT.GENE),
+                record.getValue(SOMATICVARIANT.CANONICALEFFECT),
+                canonicalCodingEffect,
+                worstCodingEffect,
+                record.getValue(SOMATICVARIANT.GENESEFFECTED),
+                record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
+                record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
+                record.getValue(SOMATICVARIANT.MICROHOMOLOGY),
+                record.getValue(SOMATICVARIANT.REPEATSEQUENCE),
+                record.getValue(SOMATICVARIANT.REPEATCOUNT),
+                phasedInframe,
+                localPhaseSet,
+                record.getValue(SOMATICVARIANT.REPORTED) == 1,
+                isHotspot);
     }
 
     public String toString()

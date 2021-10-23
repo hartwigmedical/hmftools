@@ -10,7 +10,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -38,8 +38,8 @@ public class SomaticVariantDrivers
         mVariantTypeCounts = Maps.newHashMap();
         mVariantTypeCountsBiallelic = Maps.newHashMap();
 
-        mOncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel);
-        mTsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel);
+        mOncoPredicate = new ReportablePredicate(DriverCategory.ONCO, panel.driverGenes());
+        mTsgPredicate = new ReportablePredicate(DriverCategory.TSG, panel.driverGenes());
     }
 
     public boolean add(@NotNull final SomaticVariant variant)

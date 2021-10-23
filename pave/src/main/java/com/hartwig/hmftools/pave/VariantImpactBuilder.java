@@ -49,7 +49,7 @@ public class VariantImpactBuilder
         {
             final String geneName = entry.getKey();
 
-            boolean isDriverGene = mGeneDataCache.getDriverPanelGenes().contains(geneName);
+            boolean isDriverGene = mGeneDataCache.isDriverPanelGene(geneName);
 
             if(!hasDriverGene && isDriverGene)
             {

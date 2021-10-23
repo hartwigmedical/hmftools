@@ -207,7 +207,7 @@ public class SomaticVariantDAO
                 .canonicalHgvsCodingImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT))
                 .canonicalHgvsProteinImpact(record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT))
                 .spliceRegion(byteToBoolean(record.getValue(SOMATICVARIANT.SPLICEREGION)))
-                .otherReportedEffects(record.getValue(SOMATICVARIANT.OTHERTRANSCRIPTEFFECTS))
+                .otherReportedEffects(DatabaseUtil.valueNotNull(record.getValue(SOMATICVARIANT.OTHERTRANSCRIPTEFFECTS)))
                 .alleleReadCount(record.getValue(SOMATICVARIANT.ALLELEREADCOUNT))
                 .totalReadCount(record.getValue(SOMATICVARIANT.TOTALREADCOUNT))
                 .adjustedCopyNumber(record.getValue(SOMATICVARIANT.COPYNUMBER))

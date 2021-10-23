@@ -58,9 +58,9 @@ public class ComparisonWriter
             writer.write("SampleId,");
             writer.write(VariantData.csvHeader());
             writer.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect,HgvsCoding,HgvsProtein");
-            writer.write(",WorstCodingEffect,GenesAffected");
+            writer.write(",WorstCodingEffect,Reported,GenesAffected");
             writer.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
-            writer.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffGenesAffected");
+            writer.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffReported,SnpEffGenesAffected");
             writer.newLine();
 
             return writer;
@@ -83,16 +83,16 @@ public class ComparisonWriter
             mImpactWriter.write(String.format("%s,%s,%s",
                     sampleId, variant.csvData(), variantImpact.CanonicalGeneName));
 
-            boolean isDriver = mGeneDataCache.getDriverPanelGenes().contains(variantImpact.CanonicalGeneName);
+            boolean isDriver = mGeneDataCache.isDriverPanelGene(variantImpact.CanonicalGeneName);
 
-            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
+            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%s,%d",
                     isDriver, variantImpact.CanonicalEffect, variantImpact.CanonicalCodingEffect,
                     variantImpact.CanonicalHgvsCoding, variantImpact.CanonicalHgvsProtein,
-                    variantImpact.WorstCodingEffect, variantImpact.GenesAffected));
+                    variantImpact.WorstCodingEffect, variant.reported(), variantImpact.GenesAffected));
 
-            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d",
+            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%s,%d",
                     refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect, refVariant.WorstCodingEffect,
-                    refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.GenesAffected));
+                    refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.Reported, refVariant.GenesAffected));
 
             mImpactWriter.newLine();
         }

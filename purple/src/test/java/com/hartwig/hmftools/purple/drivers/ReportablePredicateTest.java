@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.ONCO;
-import static com.hartwig.hmftools.purple.drivers.ReportablePredicate.MAX_ONCO_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate.MAX_ONCO_REPEAT_COUNT;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -39,7 +39,7 @@ public class ReportablePredicateTest {
         final SomaticVariant variantLargeRepeatCount =
                 ImmutableSomaticVariantImpl.builder().from(variant).repeatCount(MAX_ONCO_REPEAT_COUNT + 1).build();
 
-        ReportablePredicate oncoPredicate = new ReportablePredicate(ONCO, genePanel);
+        ReportablePredicate oncoPredicate = new ReportablePredicate(ONCO, genePanel.driverGenes());
 
         assertTrue(oncoPredicate.test(variant));
         assertFalse(oncoPredicate.test(variantLargeRepeatCount));

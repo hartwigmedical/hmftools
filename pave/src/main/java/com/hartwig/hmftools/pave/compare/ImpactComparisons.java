@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectD
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_CODING;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_PROTEIN;
+import static com.hartwig.hmftools.pave.compare.ImpactDiffType.REPORTED;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -26,9 +27,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
+import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -47,6 +51,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Record;
+import org.jooq.Record20;
 import org.jooq.Result;
 
 public class ImpactComparisons
@@ -55,6 +60,8 @@ public class ImpactComparisons
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
+    private final ReportablePredicate mReportableOncoGenes;
+    private final ReportablePredicate mReportableTsgGenes;
 
     private final DatabaseAccess mDbAccess;
 
@@ -74,6 +81,9 @@ public class ImpactComparisons
                 true, false);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
+
+        mReportableOncoGenes = new ReportablePredicate(DriverCategory.ONCO, mGeneDataCache.getDriverPanel());
+        mReportableTsgGenes = new ReportablePredicate(DriverCategory.TSG, mGeneDataCache.getDriverPanel());
 
         RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
         mImpactClassifier = new ImpactClassifier(refGenome);
@@ -178,14 +188,29 @@ public class ImpactComparisons
 
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
+        boolean reportable = isReported(variant, variantImpact, refVariant);
+
+        if(reportable)
+            variant.markReported();
+
         boolean hasDiff = false;
 
-        if(refVariant.Gene.isEmpty() != variant.getImpacts().isEmpty())
+        if(variantImpact == null)
         {
-            hasDiff = true;
+            hasDiff = refVariant.Reported;
         }
         else
         {
+            if(mConfig.checkDiffType(REPORTED))
+            {
+                hasDiff |= refVariant.Reported != variant.reported();
+            }
+
+            if(mConfig.checkDiffType(CODING_EFFECT))
+            {
+                hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
+            }
+
             if(mConfig.checkDiffType(CODING_EFFECT))
             {
                 hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
@@ -230,6 +255,28 @@ public class ImpactComparisons
             mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant);
     }
 
+    private boolean isReported(final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
+    {
+        if(variantImpact == null)
+            return false;
+
+        if(mReportableOncoGenes.test(
+                variantImpact.CanonicalGeneName, variant.type(), variant.repeatCount(), refVariant.IsHotspot,
+                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+        {
+            return true;
+        }
+
+        if(mReportableTsgGenes.test(
+                variantImpact.CanonicalGeneName, variant.type(), variant.repeatCount(), refVariant.IsHotspot,
+                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private void logComparison(
             final String sampleId, final RefVariantData refVariant, final VariantData variant, final VariantImpact variantImpact)
     {
@@ -261,7 +308,17 @@ public class ImpactComparisons
         mTotalComparisons = 0;
         mMatchedCount = 0;
 
-        Result<Record> result = mDbAccess.context().select()
+        // retrieve genic positions
+
+        Result<Record20<String, String, Integer, String, String, String, String, String, String, String, Integer, String, String, String,
+                String, Integer, Integer, Integer, Byte, String>>
+                result = mDbAccess.context()
+                .select(SOMATICVARIANT.GENE, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
+                        SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.TYPE, SOMATICVARIANT.GENE,
+                        SOMATICVARIANT.CANONICALEFFECT, SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.WORSTCODINGEFFECT,
+                        SOMATICVARIANT.GENESEFFECTED, SOMATICVARIANT.CANONICALHGVSCODINGIMPACT, SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
+                        SOMATICVARIANT.MICROHOMOLOGY, SOMATICVARIANT.REPEATSEQUENCE, SOMATICVARIANT.REPEATCOUNT,
+                        SOMATICVARIANT.PHASEDINFRAMEINDEL, SOMATICVARIANT.LOCALPHASESET, SOMATICVARIANT.REPORTED, SOMATICVARIANT.HOTSPOT)
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
@@ -271,8 +328,8 @@ public class ImpactComparisons
 
         for(Record record : result)
         {
-            final SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
-            processVariant(sampleId, RefVariantData.fromSomatic(variant));
+            //final SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
+            processVariant(sampleId, RefVariantData.fromRecord(record));
         }
 
         processPhasedVariants(NO_LOCAL_PHASE_SET);
@@ -312,6 +369,7 @@ public class ImpactComparisons
             int phasedInframeIndelIndex = fieldsIndexMap.get("phasedInframeIndel");
             int localPhaseSetIndex = fieldsIndexMap.get("localPhaseSet");
             int reportedIndex = fieldsIndexMap.get("reported");
+            Integer hotspotIndex = fieldsIndexMap.get("hotspot");
 
             String currentSample = "";
             int samplesProcessed = 0;
@@ -358,7 +416,8 @@ public class ImpactComparisons
                         items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
                         items[microhomologyIndex], items[repeatSequenceIndex], Integer.parseInt(items[repeatCountIndex]),
                         Boolean.parseBoolean(items[phasedInframeIndelIndex]),
-                        localPhaseSet, Boolean.parseBoolean(items[reportedIndex]));
+                        localPhaseSet, Boolean.parseBoolean(items[reportedIndex]),
+                        hotspotIndex != null ? items[hotspotIndex].equals(Hotspot.HOTSPOT.toString()) : false);
 
                 processVariant(sampleId, variant);
             }

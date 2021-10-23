@@ -15,14 +15,12 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
+import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class TsgDrivers
 {
@@ -32,7 +30,7 @@ public class TsgDrivers
     public TsgDrivers(final DriverGenePanel genePanel)
     {
         mLikelihoodsByGene = genePanel.tsgLikelihood();
-        mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel);
+        mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel.driverGenes());
     }
 
     public List<DriverCatalog> drivers(

@@ -69,6 +69,8 @@ public class VariantData
     private String mSampleId;
     private RefVariantData mRefVariantData;
 
+    private boolean mReportable;
+
     public static final int NO_LOCAL_PHASE_SET = -1;
 
     public VariantData(final String chromosome, final int position, final String ref, final String alt)
@@ -119,6 +121,7 @@ public class VariantData
 
         mRealignedVariant = null;
         mGeneImpacts = Maps.newHashMap();
+        mReportable = false;
     }
 
     public static VariantData fromContext(final VariantContext variantContext)
@@ -168,6 +171,9 @@ public class VariantData
 
     public RefVariantData refData() { return mRefVariantData; }
     public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
+
+    public boolean reported() { return mReportable; }
+    public void markReported() { mReportable = true; }
 
     public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequece, final int repeatCount)
     {
