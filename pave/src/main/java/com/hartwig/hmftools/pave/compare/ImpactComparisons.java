@@ -129,7 +129,7 @@ public class ImpactComparisons
 
                 if(i > 0 && (i % 100) == 0)
                 {
-                    PV_LOGGER.info("processing {} samples", i);
+                    PV_LOGGER.info("processed {} samples", i);
                 }
             }
         }
@@ -211,11 +211,6 @@ public class ImpactComparisons
                 hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
             }
 
-            if(mConfig.checkDiffType(CODING_EFFECT))
-            {
-                hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
-            }
-
             VariantTransImpact transImpact = variant.getCanonicalTransImpacts(refVariant.Gene);
 
             if(transImpact != null)
@@ -225,7 +220,7 @@ public class ImpactComparisons
                 if(mConfig.checkDiffType(HGVS_CODING))
                 {
                     if(!transImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)
-                    && (raTransImpact != null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
+                    && (raTransImpact == null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
                     {
                         hasDiff = true;
                     }
@@ -233,8 +228,8 @@ public class ImpactComparisons
 
                 if(mConfig.checkDiffType(HGVS_PROTEIN))
                 {
-                    if(!transImpact.hgvsCoding().equals(refVariant.HgvsProteinImpact)
-                            && (raTransImpact != null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsProteinImpact)))
+                    if(!transImpact.hgvsProtein().equals(refVariant.HgvsProteinImpact)
+                    && (raTransImpact == null || !raTransImpact.hgvsProtein().equals(refVariant.HgvsProteinImpact)))
                     {
                         hasDiff = true;
                     }
@@ -329,13 +324,22 @@ public class ImpactComparisons
         for(Record record : result)
         {
             //final SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
+
+            if(mConfig.OnlyDriverGenes)
+            {
+                String gene = record.getValue(SOMATICVARIANT.GENE);
+
+                if(!mGeneDataCache.isDriverPanelGene(gene))
+                    continue;
+            }
+
             processVariant(sampleId, RefVariantData.fromRecord(record));
         }
 
         processPhasedVariants(NO_LOCAL_PHASE_SET);
         mImpactClassifier.phasedVariants().clear();
 
-        PV_LOGGER.debug("sample({}) processed {} variants and transcripts({})",
+        PV_LOGGER.debug("sample({}) processed {} variants, matches({})",
                 sampleId, mTotalComparisons, mMatchedCount);
     }
 

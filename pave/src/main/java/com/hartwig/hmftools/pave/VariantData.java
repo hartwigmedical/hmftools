@@ -70,6 +70,7 @@ public class VariantData
     private RefVariantData mRefVariantData;
 
     private boolean mReportable;
+    private Double mGnomadFrequency;
 
     public static final int NO_LOCAL_PHASE_SET = -1;
 
@@ -122,6 +123,7 @@ public class VariantData
         mRealignedVariant = null;
         mGeneImpacts = Maps.newHashMap();
         mReportable = false;
+        mGnomadFrequency = null;
     }
 
     public static VariantData fromContext(final VariantContext variantContext)
@@ -174,6 +176,9 @@ public class VariantData
 
     public boolean reported() { return mReportable; }
     public void markReported() { mReportable = true; }
+
+    public Double gnomadFrequency() { return mGnomadFrequency; }
+    public void setGnomadFrequency(Double frequency) { mGnomadFrequency = frequency; }
 
     public void setVariantDetails(int localPhaseSet, final String microHomology, final String repeatSequece, final int repeatCount)
     {

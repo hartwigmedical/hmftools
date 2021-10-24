@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.pave.external.GnomadAnnotation.GNOMAD_FREQUENCY_FILE;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
@@ -83,6 +84,7 @@ public class PaveConfig
         options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
         addEnsemblDir(options);
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+        options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad variant frequencies file");
 
         options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");

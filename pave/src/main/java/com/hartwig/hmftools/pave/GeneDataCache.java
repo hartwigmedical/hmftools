@@ -85,8 +85,22 @@ public class GeneDataCache
             if(!mEnsemblDataCache.load(true))
                 return false;
 
+            for(String geneName : mDriverGeneNames)
+            {
+                GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
+
+                if(geneData == null)
+                {
+                    PV_LOGGER.error("gene({}) missing from Ensembl cache", geneName);
+                    continue;
+                }
+            }
+
             List<String> driverGeneIds = mDriverGeneNames.stream()
-                    .map(x -> mEnsemblDataCache.getGeneDataByName(x).GeneId).collect(Collectors.toList());
+                    .map(x -> mEnsemblDataCache.getGeneDataByName(x))
+                    .filter(x -> x != null)
+                    .map(x -> x.GeneId)
+                    .collect(Collectors.toList());
 
             mEnsemblDataCache.loadTranscriptData(driverGeneIds);
         }

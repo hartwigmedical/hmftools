@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationParser;
 import com.hartwig.hmftools.pave.compare.ComparisonUtils;
+import com.hartwig.hmftools.pave.external.GnomadAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -55,6 +56,7 @@ public class PaveApplication
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
+    private final GnomadAnnotation mGnomadAnnotation;
 
     // for comparison with SnpEff
     private int mTransEffectMatched;
@@ -70,6 +72,8 @@ public class PaveApplication
         mGeneDataCache = new GeneDataCache(
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
                 cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), mConfig.CompareSnpEff, true);
+
+        mGnomadAnnotation = new GnomadAnnotation(cmd);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
@@ -190,6 +194,8 @@ public class PaveApplication
         // can be null if no impacts exist for any transcript
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
+        variant.setGnomadFrequency(mGnomadAnnotation.getFrequency(variant));
+
         mVcfWriter.writeVariant(variant.context(), variant, variantImpact);
 
         if(!mConfig.WriteTranscriptCsv)
@@ -277,7 +283,7 @@ public class PaveApplication
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
         mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
-        mVcfWriter.writeHeader(version.version());
+        mVcfWriter.writeHeader(version.version(), mGnomadAnnotation.hasData());
     }
 
     private void initialiseTranscriptWriter()
