@@ -207,8 +207,8 @@ public class ClinicalEvidenceFunctions {
             sources.add(source.reportDisplay());
         }
 
-        if (PREDICTED.contains(evidence.direction())) {
-            return event + " (" + sources + ") PRD";
+        if (evidence.germline()) {
+            return event + " (" + sources + ") #";
         } else {
             return event + " (" + sources + ")";
         }
@@ -252,7 +252,9 @@ public class ClinicalEvidenceFunctions {
     public static Paragraph noteEvidence() {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("PRD (predicted)\n\n")
+                .add("if PRD mentioned after level then the evidence is predicted response/ressitent otherwise it is real "
+                        + "responsive/resistent\n\n")
+                .add("# evidence based on germline variant\n\n")
                 .add("The Clinical Knowledgebase (CKB) is used to "
                         + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
                         + "evidence levels \n( ")
