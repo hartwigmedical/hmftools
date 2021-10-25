@@ -75,10 +75,16 @@ public final class HgvsProtein
 
             if(hasStopGained)
             {
-                if(hgvs.endsWith(HGVS_STOP_TRI_CODE))
-                    hgvs = hgvs.replace(HGVS_STOP_TRI_CODE, HGVS_STOP_GAINED);
+                if(hgvs.contains(HGVS_STOP_TRI_CODE))
+                {
+                    // replace from Ter onwards
+                    int stopIndex = hgvs.indexOf(HGVS_STOP_TRI_CODE);
+                    hgvs = hgvs.substring(0, stopIndex) + HGVS_STOP_GAINED;
+                }
                 else if(topEffect != FRAMESHIFT)
+                {
                     hgvs += HGVS_STOP_GAINED;
+                }
             }
 
             return hgvs;

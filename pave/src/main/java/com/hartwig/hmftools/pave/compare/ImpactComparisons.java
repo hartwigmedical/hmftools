@@ -420,7 +420,7 @@ public class ImpactComparisons
                         items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
                         items[microhomologyIndex], items[repeatSequenceIndex], Integer.parseInt(items[repeatCountIndex]),
                         Boolean.parseBoolean(items[phasedInframeIndelIndex]),
-                        localPhaseSet, Boolean.parseBoolean(items[reportedIndex]),
+                        localPhaseSet, items[reportedIndex].equals("1"),
                         hotspotIndex != null ? items[hotspotIndex].equals(Hotspot.HOTSPOT.toString()) : false);
 
                 processVariant(sampleId, variant);

@@ -64,9 +64,16 @@ public class GnomadParser
 
             int itemCount = 0;
             int errorCount = 0;
+            int filteredCount = 0;
 
             for(VariantContext context : reader.iterator())
             {
+                if(context.isFiltered())
+                {
+                    ++filteredCount;
+                    continue;
+                }
+
                 try
                 {
                     String chromosome = context.getContig();
@@ -93,7 +100,7 @@ public class GnomadParser
 
                 if(itemCount > 0 && (itemCount % 10000) == 0)
                 {
-                    PV_LOGGER.debug("processed {} variants", itemCount);
+                    PV_LOGGER.debug("processed {} variants, filtered({})", itemCount, filteredCount);
                 }
             }
 

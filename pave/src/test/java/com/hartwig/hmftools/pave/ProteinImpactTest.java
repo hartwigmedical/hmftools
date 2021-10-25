@@ -2,7 +2,6 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
-import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -61,7 +60,6 @@ public class ProteinImpactTest
         // pos codons: M 20-22, A 23-25, C 26-28, D 29-31, L 32-34, L 35-37, G 38-40, H 41-43, E 44-46, stopX 47-49
         // M  A  C  D  L  L  G  H  E  X
         // ATGGCTTGTGACTTATTAGGACACGAGTAA
-        // 20
 
         refBases += generateRandomBases(prePostCoding);
         String codingBases = getAminoAcidCodon(START_AMINO_ACID);
@@ -163,6 +161,11 @@ public class ProteinImpactTest
         pos = 48;
         alt = "C";
         checkHgvsStrings(pos, 1, alt, STOP_LOST, "c.29A>C", "p.Ter10Serext*?");
+
+        // stop gained but in the first codon where an MNV is affecting 2
+        pos = 27;
+        alt = "AAC";
+        checkHgvsStrings(pos, 3, alt, STOP_GAINED, "c.8_10delGTGinsAAC", "p.Cys3_Asp4delins*");
     }
 
     @Test
@@ -595,60 +598,6 @@ public class ProteinImpactTest
 
         impact = classifier.classifyVariant(var, transDataNeg);
         assertEquals(MISSENSE, impact.topEffect());
-    }
-
-
-    @Test
-    public void testNonsenseImpactsOld()
-    {
-        final MockRefGenome refGenome = new MockRefGenome();
-
-        final String chr1Bases = generateRandomBases(300);
-
-        refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
-
-        int[] exonStarts = { 0, 100, 200 };
-        Integer codingStart = new Integer(10);
-        Integer codingEnd = new Integer(250);
-
-        TranscriptData transDataPosStrand = createTransExons(
-                GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 80, codingStart, codingEnd, false, "");
-
-        ImpactClassifier classifier = new ImpactClassifier(refGenome);
-
-        // stop gained by MNV
-        int pos = 46; // first base of codon
-        String ref = chr1Bases.substring(pos, pos + 3);
-        String alt = STOP_CODON_1;
-        VariantData var = new VariantData(CHR_1, pos, ref, alt);
-
-        VariantTransImpact impact = classifier.classifyVariant(var, transDataPosStrand);
-        assertEquals(STOP_GAINED, impact.topEffect());
-    }
-
-    @Test
-    public void testStopStartLostGainedOld()
-    {
-        // stop gained
-        String refAminoAcids = "SILFT";
-        String altAminoAcids = "SI" + STOP_AMINO_ACID + "FT";
-
-        assertEquals(STOP_GAINED, checkStopStartCodons(10, refAminoAcids, altAminoAcids));
-
-        // stop lost
-        refAminoAcids = "SILF" + STOP_AMINO_ACID;
-        altAminoAcids = "SILFTPW";
-
-        assertEquals(STOP_LOST, checkStopStartCodons(10, refAminoAcids, altAminoAcids));
-
-        // start lost
-        refAminoAcids = START_AMINO_ACID + "SILFT";
-        altAminoAcids = "WSILFT";
-
-        assertEquals(START_LOST, checkStopStartCodons(1, refAminoAcids, altAminoAcids));
-
-        assertEquals(null, checkStopStartCodons(2, refAminoAcids, altAminoAcids));
-
     }
 
     @Test

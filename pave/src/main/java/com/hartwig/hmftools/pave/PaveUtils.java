@@ -24,6 +24,10 @@ public final class PaveUtils
         if(variant.microhomology().isEmpty() || variant.microhomology().equals(".") || variant.repeatCount() == 0)
             return null;
 
+        // cannot realign if the ref and alt bases differ, eg T>AA
+        if(variant.Ref.charAt(0) != variant.Alt.charAt(0))
+            return null;
+
         // repeat count can only be used where the alt bases match the microhomology and repeat sequence
         // otherwise shift by the microhomology
 
