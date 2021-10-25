@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmFile;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.GenerateCnPerChromosome;
 import com.hartwig.hmftools.common.purple.copynumber.ImmutableReportableGainLoss;
@@ -50,7 +49,7 @@ public final class PurpleDataLoader {
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @NotNull String purpleSomaticChromsomeArmTsv) throws IOException {
+            @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
@@ -77,8 +76,7 @@ public final class PurpleDataLoader {
         LOGGER.info("  Extracted {} reportable gains and losses from driver catalog", reportableGainsLosses.size());
 
         List<ReportableGainLoss> unreportedGainsLosses = Lists.newArrayList();
-        if(purpleGeneCopyNumberTsv != null)
-        {
+        if (purpleGeneCopyNumberTsv != null) {
             List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCopyNumberTsv);
             LOGGER.info(" Loaded {} gene copy numbers entries from {}", geneCopyNumbers.size(), purpleGeneCopyNumberTsv);
 
@@ -93,7 +91,13 @@ public final class PurpleDataLoader {
         List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogTsv);
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
 
-        List<CnPerChromosomeArmData> cnPerChromosome = CnPerChromosomeArmFile.read(purpleSomaticChromsomeArmTsv);
+        List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
+        if (purpleSomaticCopynumberTsv != null) {
+            RefGenomeCoordinates refGenomeCoordinates =
+                    refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+            cnPerChromosome = GenerateCnPerChromosome.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv, refGenomeCoordinates);
+            LOGGER.info(" Loaded chromosomal arm copy numbers from {}", purpleSomaticCopynumberTsv);
+        }
 
         List<ReportableVariant> reportableGermlineVariants = Lists.newArrayList();
         List<SomaticVariant> unreportedGermlineVariants = Lists.newArrayList();
