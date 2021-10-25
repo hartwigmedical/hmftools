@@ -299,7 +299,7 @@ public class MnvCodingContextTest
         assertEquals(77, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(80, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_1, impact.codingContext().UpstreamPhase);
-        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(4, impact.codingContext().ExonRank);
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
@@ -452,7 +452,7 @@ public class MnvCodingContextTest
         assertEquals(90, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(90, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
-        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(3, impact.codingContext().ExonRank);
         assertTrue(impact.codingContext().SpansSpliceJunction);
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(EXONIC, impact.codingContext().RegionType);
@@ -477,7 +477,7 @@ public class MnvCodingContextTest
         assertEquals(70, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(71, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_1, impact.codingContext().UpstreamPhase);
-        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(4, impact.codingContext().ExonRank);
         assertTrue(impact.codingContext().SpansSpliceJunction);
 
         assertTrue(impact.proteinContext() != null);
@@ -494,12 +494,11 @@ public class MnvCodingContextTest
 
         impact = classifier.classifyVariant(var, transDataNeg);
 
-        // first check general coding context fields
         assertEquals(18, impact.codingContext().CodingBase);
         assertEquals(59, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(60, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
-        assertEquals(3, impact.codingContext().ExonRank);
+        assertEquals(5, impact.codingContext().ExonRank);
         assertTrue(impact.codingContext().SpansSpliceJunction);
 
         assertTrue(impact.proteinContext() != null);
@@ -508,6 +507,58 @@ public class MnvCodingContextTest
 
         altCodonBases = refBases.substring(57, 59) + alt.substring(0, 2) + refBases.substring(70, 72);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        // coding base is the lowest numerically (ie 19 is at pos 59, not the coding base at the lower position (ie 56)
+        pos = 56;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(19, impact.codingContext().CodingBase);
+        assertEquals(56, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(59, impact.codingContext().CodingPositionRange[SE_END]);
+
+        // 5'UTR exonic
+        pos = 112;
+        ref = refBases.substring(pos, pos + 3);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(10, impact.codingContext().CodingBase); // being the further exonic base from start of coding
+        assertEquals(112, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(114, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-10_-8delATCinsGAT", impact.codingContext().Hgvs);
+
+        // spanning into next lower intron
+        pos = 108;
+        ref = refBases.substring(pos, pos + 5);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(8, impact.codingContext().CodingBase); // being the further exonic base from start of coding
+        assertEquals(110, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(112, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-8_-6+2delCGATCinsTCGAT", impact.codingContext().Hgvs);
+
+        // next upper intron
+        pos = 118;
+        ref = refBases.substring(pos, pos + 5);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+
+        assertEquals(16, impact.codingContext().CodingBase);
+        assertEquals(118, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(120, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-16-2_-14delATCGAinsGATCG", impact.codingContext().Hgvs);
+
     }
 
 }

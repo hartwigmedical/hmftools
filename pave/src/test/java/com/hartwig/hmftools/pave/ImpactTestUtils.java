@@ -26,7 +26,7 @@ public final class ImpactTestUtils
     }
 
     // basic short transcripts for testing
-    public static MockRefGenome createMockGenome() { return createMockGenome(110); }
+    public static MockRefGenome createMockGenome() { return createMockGenome(150); }
 
     public static MockRefGenome createMockGenome(int requiredBases)
     {
@@ -51,7 +51,7 @@ public final class ImpactTestUtils
     public static TranscriptData createNegTranscript()
     {
         // codons: 95-93, 92-90, 80-78, 77-75, 74-72, 71-60, 59-57 etc
-        int[] exonStarts = { 10, 30, 50, 70, 90 };
+        int[] exonStarts = { 10, 30, 50, 70, 90, 110, 130 };
 
         Integer codingStart = new Integer(15);
         Integer codingEnd = new Integer(95);

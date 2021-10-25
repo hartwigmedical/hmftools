@@ -19,18 +19,21 @@ public class CodingContext
     public TranscriptCodingType CodingType;
     public int ExonRank;
     public byte Strand; // for convenience
-    public int NearestExonDistance;
+    public int UpstreamPhase;
 
     // coding base from start of transcript's coding region, or exonic bases to coding if UTR, or exonic index if non-coding
     //
-    public int CodingBase; // indexed at 1
+    public int CodingBase; // indexed at 1, for non-coding and UTR regions, this is exonic bases from the coding region
 
-    public int[] CodingPositionRange; // the alt bases for an MNV, otherwise the start and end ref bases (ie enclosing the del or insert)
+    // the alt bases for an MNV, otherwise the start and end ref bases (ie enclosing the del or insert)
+    // likewise the exonic base range for non-coding and UTR regions
+    public int[] CodingPositionRange;
+
+    public int NearestExonDistance;
     public boolean SpansSpliceJunction;
     public boolean IsFrameShift;
     public boolean SpansStopCodon;
     public int DeletedCodingBases;
-    public int UpstreamPhase;
 
     public String SpliceDonorAcceptorBases;
     public boolean CodingEndsOnExonBoundary; // applicable for UTR if position is in the intron immediate before or after

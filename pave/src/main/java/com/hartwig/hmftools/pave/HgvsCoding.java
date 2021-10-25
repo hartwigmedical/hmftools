@@ -155,28 +155,75 @@ public final class HgvsCoding
         boolean spansUpstreamSplice = spansSplice && (nearestExon < 0);
         boolean spansDownstreamSplice = spansSplice && !spansUpstreamSplice;
 
+        // if the variant doesn't cross a splice region (ie the actual deleted bases) but the range has been trimmed to match
+        // ann exon or coding region boundary, then don't move past the first ref (ie non-deleted) base
+        boolean codingBaseRangeCapped =
+                (codingContext.Strand == POS_STRAND &&  codingContext.CodingPositionRange[SE_START] > variant.Position)
+            || (codingContext.Strand == NEG_STRAND &&  codingContext.CodingPositionRange[SE_END] < variant.EndPosition);
+
+
+        int codingBaseStart;
+        int codingBaseEnd;
+
+        if(codingContext.RegionType == EXONIC)
+        {
+            if(codingContext.CodingType == UTR_5P)
+            {
+                // codingBaseStart = codingBase - 1;
+                if(!spansUpstreamSplice)
+                    codingBaseStart = codingBase - 1; // the furthest from start of coding, then back one from the ref position
+                else
+                    codingBaseStart = codingBase;
+
+                codingBaseEnd = codingBaseStart - codingBasesDeleted + 1;
+            }
+            else
+            {
+               if(!spansUpstreamSplice && !codingBaseRangeCapped)
+                   codingBaseStart = codingBase + 1; // move past the ref base
+                else
+                    codingBaseStart = codingBase;
+
+                if(delLength > 1)
+                    codingBaseEnd = codingBaseStart + codingBasesDeleted - 1;
+                else
+                    codingBaseEnd = codingBaseStart;
+            }
+        }
+        else
+        {
+            codingBaseStart = codingBaseEnd = codingBase;
+        }
+
+        /*
         // move past ref base
         if(codingContext.RegionType == EXONIC)
         {
             if(codingContext.CodingType == UTR_5P)
                 --codingBase;
-            else if(!spansUpstreamSplice)
+            else if(!spansUpstreamSplice && !codingBaseRangeCapped)
                 ++codingBase;
         }
+        */
 
         ++nearestExon;
 
-        addCodingBase(codingContext, codingBase, sb, false);
+        addCodingBase(codingContext, codingBaseStart, sb, false);
+        // addCodingBase(codingContext, codingBase, sb, false);
 
         if(codingContext.RegionType == INTRONIC || spansUpstreamSplice)
             addIntronicPosition(nearestExon, sb);
 
         if(delLength > 1)
         {
+            /*
             if(codingContext.RegionType == EXONIC)
                 codingBase += codingBasesDeleted - 1;
 
             addCodingBase(codingContext, codingBase, sb, true);
+            */
+
+            addCodingBase(codingContext, codingBaseEnd, sb, true);
 
             if(codingContext.RegionType == INTRONIC || spansDownstreamSplice)
             {
@@ -314,7 +361,6 @@ public final class HgvsCoding
         // MNVs intronic c.38-20810_38-20808delTTGinsACT
         // MNVs exonic: c.132_133delCCinsTT
         // MNVs 3'UTR: c.*907_*908delCCinsGT
-        // MNVs 5'UTR: c.-83_-82delGGinsAA
 
         int codingBase = codingContext.CodingBase;
         int nearestExon = codingContext.NearestExonDistance;
@@ -343,9 +389,12 @@ public final class HgvsCoding
 
             if(codingContext.CodingType == UTR_5P && codingContext.RegionType == EXONIC)
             {
-                // swap and reduce by 1
-                codingBaseStart = codingBaseEnd - 1;
-                codingBaseEnd = codingBase - 1;
+                // the highest exonic base numerically (ie furthest from start of coding) has been recorded
+                // coding bases will be negated but need to drop from the highest to lowest value
+                // MNVs 5'UTR: c.-83_-80delGGATinsCTGG
+
+                codingBaseStart = codingBase; // the furthest from start of coding
+                codingBaseEnd = codingBase - codingBaseLen + 1;
             }
 
             addCodingBase(codingContext, codingBaseStart, sb, false);

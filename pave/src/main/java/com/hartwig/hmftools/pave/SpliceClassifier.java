@@ -64,11 +64,11 @@ public final class SpliceClassifier
         if(!variant.isDeletion())
             return null;
 
-        if(positionWithin(exon.Start, variant.Position, variant.EndPosition))
+        if(exon.Start != transData.TransStart && positionWithin(exon.Start, variant.Position, variant.EndPosition))
         {
             return transData.posStrand() ? SPLICE_ACCEPTOR : SPLICE_DONOR;
         }
-        else if(positionWithin(exon.End, variant.Position, variant.EndPosition))
+        else if(exon.End != transData.TransEnd && positionWithin(exon.End, variant.Position, variant.EndPosition))
         {
             return transData.posStrand() ? SPLICE_DONOR : SPLICE_ACCEPTOR;
         }

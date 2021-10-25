@@ -8,12 +8,14 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createNegTranscript;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createPosTranscript;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -190,6 +192,18 @@ public class DelCodingContextTest
         impact = classifier.classifyVariant(var, transDataPos);
         assertTrue(impact.codingContext().IsFrameShift);
 
+        pos = 29; // deletes first 3 bases of exon
+        ref = refBases.substring(pos, pos + 4);
+        alt = refBases.substring(pos, pos + 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+        assertFalse(impact.codingContext().IsFrameShift);
+        assertEquals(7, impact.codingContext().CodingBase);
+        assertEquals(30, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(33, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.7_9delTCG", impact.codingContext().Hgvs);
+
         // inframe
         pos = 28;
         ref = refBases.substring(pos, pos + 5);
@@ -224,13 +238,28 @@ public class DelCodingContextTest
         impact = classifier.classifyVariant(var, transDataNeg);
         assertFalse(impact.codingContext().IsFrameShift);
 
-        pos = 78;
+        pos = 78; // deletes last 2 bases of exon, which are first 2 after splice acceptor, index 7 & 8
         ref = refBases.substring(pos, pos + 7);
         alt = refBases.substring(pos, pos + 1);
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNeg);
         assertTrue(impact.codingContext().IsFrameShift);
+        assertEquals(7, impact.codingContext().CodingBase);
+        assertEquals(78, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(80, impact.codingContext().CodingPositionRange[SE_END]);
+
+        pos = 76; // deletes last 3 bases of exon but none of the intron, doesn't span splice
+        ref = refBases.substring(pos, pos + 5);
+        alt = refBases.substring(pos, pos + 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+        assertTrue(impact.codingContext().IsFrameShift);
+        assertEquals(7, impact.codingContext().CodingBase);
+        assertEquals(76, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(80, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.7_10delCGAT", impact.codingContext().Hgvs);
 
         // deletes splice acceptor covering coding and intronic bases, coding bases 7-9
         pos = 77;
@@ -271,7 +300,70 @@ public class DelCodingContextTest
         assertEquals(3, impact.codingContext().NearestExonDistance);
         assertTrue(impact.codingContext().SpansStopCodon);
         assertEquals("c.43_45*2delTCGAT", impact.codingContext().Hgvs);
+    }
 
+    @Test
+    public void testUtrVariants()
+    {
+        // DELs crossing exon boundaries
+        MockRefGenome refGenome = createMockGenome(150);
+        String refBases = refGenome.RefGenomeMap.get(CHR_1);
+
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        TranscriptData transDataNeg = createNegTranscript();
+
+        // DEL in exon before coding begins - 110 = coding-base 6, pos 112 at cb 8, so actually deletes 9-11
+        int pos = 112;
+        String ref = refBases.substring(pos, pos + 4);
+        String alt = ref.substring(0, 1);
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+
+        VariantTransImpact impact = classifier.classifyVariant(var, transDataNeg);
+        assertEquals(12, impact.codingContext().CodingBase);
+        assertEquals(112, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(116, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(3, impact.codingContext().DeletedCodingBases);
+        assertEquals("c.-11_-9delGAT", impact.codingContext().Hgvs);
+
+        // 5'UTR delete of exonic bases spanning into next intron - coding base 6 at 110, and 9 at 113, deleted bases are 110-112
+        pos = 109;
+        ref = refBases.substring(pos, pos + 4);
+        alt = refBases.substring(pos, pos + 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+        assertEquals(9, impact.codingContext().CodingBase);
+        assertEquals(3, impact.codingContext().DeletedCodingBases);
+        assertEquals(110, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(113, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-8_-6delCGA", impact.codingContext().Hgvs);
+
+        // starting in the next intron
+        pos = 107;
+        ref = refBases.substring(pos, pos + 6);
+        alt = refBases.substring(pos, pos + 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+        assertEquals(9, impact.codingContext().CodingBase);
+        assertEquals(3, impact.codingContext().DeletedCodingBases);
+        assertEquals(110, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(113, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-8_-6+2delCGATC", impact.codingContext().Hgvs);
+
+        // spanning into the next intro
+        pos = 118;
+        ref = refBases.substring(pos, pos + 6);
+        alt = refBases.substring(pos, pos + 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+        assertEquals(16, impact.codingContext().CodingBase);
+        assertEquals(2, impact.codingContext().DeletedCodingBases);
+        assertEquals(118, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(120, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-16-3_-15delGATCG", impact.codingContext().Hgvs);
     }
 
     @Test

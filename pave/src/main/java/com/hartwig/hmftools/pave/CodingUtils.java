@@ -240,7 +240,6 @@ public final class CodingUtils
                         {
                             cc.CodingPositionRange[SE_START] = max(max(exon.Start, codingStart), variant.Position);
                             cc.CodingPositionRange[SE_END] = min(min(exon.End, codingEnd), variant.EndPosition);
-
                         }
                         else
                         {
@@ -314,7 +313,7 @@ public final class CodingUtils
 
         if(variant.isIndel() && cc.CodingType == CODING && cc.RegionType == EXONIC)
         {
-            // now coding bases have been clarified, mark any frameshift INDELs
+            // now coding bases have been clarified, mark any frameshift INDELs and determine deleted coding length
             int adjustedCodingBases;
 
             if(variant.isInsert())
@@ -340,7 +339,6 @@ public final class CodingUtils
 
             if(!isCodonMultiple(adjustedCodingBases))
                 cc.IsFrameShift = true;
-
         }
     }
 
@@ -397,6 +395,44 @@ public final class CodingUtils
 
             if(codingEnd == exon.End || codingStart == exon.Start)
                 codingStartsEndsOnExonBoundary = true;
+
+            // set coding range
+            if(variant.altPositionsOverlap(exon.Start, exon.End))
+            {
+                if(posStrand)
+                {
+                    cc.CodingPositionRange[SE_START] = max(exon.Start, variant.Position);
+
+                    cc.CodingPositionRange[SE_END] = !variant.isInsert() ?
+                            min(exon.End, variant.EndPosition) : cc.CodingPositionRange[SE_START];
+
+                    if(!variant.isInsert())
+                    {
+                        if(variant.EndPosition > exon.End)
+                            cc.NearestExonDistance = variant.EndPosition - exon.End;
+                        else if(variant.Position < exon.Start)
+                            cc.NearestExonDistance = variant.Position - exon.Start; // -ve back into previous intron
+                    }
+                }
+                else
+                {
+                    if(!variant.isInsert())
+                    {
+                        cc.CodingPositionRange[SE_START] = max(exon.Start, variant.Position);
+                        cc.CodingPositionRange[SE_END] = min(exon.End, variant.EndPosition);
+
+                        if(variant.EndPosition > exon.End)
+                            cc.NearestExonDistance = exon.End - variant.EndPosition; // -ve back into previous intron
+                        else if(variant.Position < exon.Start)
+                            cc.NearestExonDistance = exon.Start - variant.Position;
+                    }
+                    else
+                    {
+                        cc.CodingPositionRange[SE_END] = min(exon.End, variant.EndPosition);
+                        cc.CodingPositionRange[SE_START] = cc.CodingPositionRange[SE_END];
+                    }
+                }
+            }
         }
 
         // push base by 1 if intronic and closest to the next exon
@@ -418,6 +454,14 @@ public final class CodingUtils
                 cc.CodingBase = 1; // since zero-based
             else
                 cc.CodingBase = totalCodingBases;
+        }
+
+        if(variant.isDeletion() && cc.RegionType == EXONIC)
+        {
+            // need to account for overlaps in exon boundaries
+            String ref = cc.codingRef(variant);
+            String alt = cc.codingAlt(variant);
+            cc.DeletedCodingBases = ref.length() - alt.length();
         }
     }
 }

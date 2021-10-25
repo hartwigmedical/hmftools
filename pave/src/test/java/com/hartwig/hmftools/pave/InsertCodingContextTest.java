@@ -144,7 +144,7 @@ public class InsertCodingContextTest
         assertEquals(92, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(92, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_1, impact.codingContext().UpstreamPhase);
-        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(3, impact.codingContext().ExonRank);
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
@@ -166,7 +166,7 @@ public class InsertCodingContextTest
         assertEquals(16, impact.codingContext().CodingBase);
         assertEquals(71, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(71, impact.codingContext().CodingPositionRange[SE_END]);
-        assertEquals(2, impact.codingContext().ExonRank);
+        assertEquals(4, impact.codingContext().ExonRank);
 
         assertFalse(impact.codingContext().IsFrameShift);
         assertEquals(refBases.substring(57, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
@@ -187,7 +187,7 @@ public class InsertCodingContextTest
         assertEquals(93, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(93, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(PHASE_0, impact.codingContext().UpstreamPhase);
-        assertEquals(1, impact.codingContext().ExonRank);
+        assertEquals(3, impact.codingContext().ExonRank);
 
         assertFalse(impact.codingContext().IsFrameShift);
         assertEquals(refBases.substring(90, 96), impact.proteinContext().RefCodonBases);
