@@ -70,7 +70,12 @@ public class EnsemblDAO
                     37564047,37579125, "q21.1"));
 
     // ENSG00000124693 HIST1H3B -> ENSG00000286522 H3C2 - must be manually mapped
-    private static final List<String> GENE_ID_EXCEPTIONS_V37 = Lists.newArrayList("ENSG00000124693");
+    private static final Map<String,String> GENE_ID_MANUAL_MAPPINGS = Maps.newHashMap();
+
+    static
+    {
+        GENE_ID_MANUAL_MAPPINGS.put("ENSG00000124693", "ENSG00000286522");
+    }
 
     // GOPC processed transcript which matches a ROS1 splice site - only in v38
     private static final List<String> TRANSCRIPT_EXCLUSIONS = Lists.newArrayList("ENST00000467125");
@@ -258,19 +263,27 @@ public class EnsemblDAO
                         // rely on the v38 genes to find and check gene details, so v37 will limited to those genes in v38
                         GeneData refGeneData = findReferenceGeneData(geneId, geneName);
 
-                        if(refGeneData != null)
+                        if(refGeneData == null)
                         {
-                            geneName = refGeneData.GeneName;
-                            synonyms = (String)record.get("Synonyms");
-
-                            if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
-                                synonyms = refGeneData.getSynonyms() + ";" + synonyms;
-                        }
-                        else
-                        {
-                            if(!GENE_ID_EXCEPTIONS_V37.contains(geneId))
+                            // check for a manual mapping entry
+                            if(!GENE_ID_MANUAL_MAPPINGS.containsKey(geneId))
                                 continue;
+
+                            refGeneData = mReferenceGeneDataById.get(GENE_ID_MANUAL_MAPPINGS.get(geneId));
+
+                            if(refGeneData == null)
+                            {
+                                GU_LOGGER.error("manual gene mapping({} -> {}) has no reference data",
+                                        geneId, GENE_ID_MANUAL_MAPPINGS.get(geneId));
+                                continue;
+                            }
                         }
+
+                        geneName = refGeneData.GeneName;
+                        synonyms = (String)record.get("Synonyms");
+
+                        if(!refGeneData.getSynonyms().isEmpty() && !synonyms.contains(refGeneData.getSynonyms()))
+                            synonyms = refGeneData.getSynonyms() + ";" + synonyms;
                     }
                 }
                 else
