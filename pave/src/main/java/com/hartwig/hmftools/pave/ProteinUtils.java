@@ -124,8 +124,11 @@ public final class ProteinUtils
             // DEL example: var TACA > T, with ref: CGT-ACA-ACA and alt: CGT-...-ACA
             // var length = 4, open codon bases = 2 (ie CA), ref codon length = 9, override upstream bases = 3
             // working: alt = post-var (9 - 4 - 3) CG + alt T (1st ref base) + upstream pre-var (9 - 3) ACA
+            // but if the delete on the neg strand finishes at the exon boundary or coding region, it will already have been
+            // truncated 1 base
 
-            int upstreamRefBases = variant.isDeletion() ? upstreamOpenCodonBases + 1 : upstreamOpenCodonBases;
+            int upstreamRefBases = variant.isDeletion() && cc.CodingPositionRange[SE_END] == variant.EndPosition
+                    ? upstreamOpenCodonBases + 1 : upstreamOpenCodonBases;
 
             if(variant.isInsert())
             {
@@ -147,9 +150,6 @@ public final class ProteinUtils
                 pc.AltCodonBases = pc.RefCodonBases.substring(0, codonBaseLength - varLength) + alt;
             }
         }
-
-        if(!pc.validRefCodon())
-            return pc;
 
         if(posStrand)
         {
@@ -187,7 +187,12 @@ public final class ProteinUtils
         }
 
         if(!pc.validAltCodon())
+        {
+            pc.NetRefAminoAcids = pc.RefAminoAcids;
+            pc.NetCodonIndexRange[SE_START] = pc.CodonIndex;
+            pc.NetCodonIndexRange[SE_END] = pc.CodonIndex + pc.RefAminoAcids.length() - 1;
             return pc;
+        }
 
         if(posStrand)
         {
@@ -294,6 +299,7 @@ public final class ProteinUtils
         if(pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(1))
             return;
 
+        // a duplication of AAs means 1 extra copy, not multiple
         // duplication (single AA) p.Gln8dup
         // duplication (range) p.Gly4_Gln6dup - variety of AAs
         // dup range, single AA repeated: c.1014_1019dupTGCTGC	p.Ala339_Ala340dup
@@ -301,18 +307,28 @@ public final class ProteinUtils
         boolean posStrand = transData.posStrand();
 
         // check for a duplication of AAs
+
+        // check for a single AA repeated
         final String netAminoAcids = pc.NetAltAminoAcids;
 
-        // check for a single AA repeated - ie all insert AAs are the same
-        boolean isSingleRepeat = true;
+        boolean isSingleRepeat;
 
-        for(int i = 1; i < netAminoAcids.length(); ++i)
+        if(pc.NetAltAminoAcids.length() == pc.NetRefAminoAcids.length() + 1)
         {
-            if(netAminoAcids.charAt(i) != netAminoAcids.charAt(0))
+            isSingleRepeat = true;
+
+            for(int i = 1; i < netAminoAcids.length(); ++i)
             {
-                isSingleRepeat = false;
-                break;
+                if(netAminoAcids.charAt(i) != netAminoAcids.charAt(0))
+                {
+                    isSingleRepeat = false;
+                    break;
+                }
             }
+        }
+        else
+        {
+            isSingleRepeat = false;
         }
 
         if(isSingleRepeat)

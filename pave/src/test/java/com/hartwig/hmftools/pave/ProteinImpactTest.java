@@ -2,12 +2,14 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
+import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
@@ -249,14 +251,24 @@ public class ProteinImpactTest
         // single G repeated
         pos = 37;
         ref = mRefBases.substring(pos, pos + 1);
-        alt = ref + "GGAGGAGGA";
+        alt = ref + "GGA";
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = mClassifier.classifyVariant(var, mPosTrans);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
-        assertEquals("c.18_19insGGAGGAGGA", impact.codingContext().Hgvs);
+        assertEquals("c.18_19insGGA", impact.codingContext().Hgvs);
         assertEquals("p.Gly7dup", impact.proteinContext().Hgvs);
+
+        // repeated more than 1 is no longer a dup
+        pos = 37;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "GGAGGAGGA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+        assertEquals("p.Leu6_Gly7insGlyGlyGly", impact.proteinContext().Hgvs);
 
         // range of AAs: L(TTA) G(GGA) H(CAC) E(GAG), T>TAGGACACGA - duplicating GHE
         pos = 36;
@@ -269,6 +281,17 @@ public class ProteinImpactTest
 
         assertEquals("c.17_18insAGGACACGA", impact.codingContext().Hgvs);
         assertEquals("p.Gly7_Glu9dup", impact.proteinContext().Hgvs);
+
+        // both Ls are duplicated but treat this is a range rather than repeat of a single
+        pos = 31;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "TTATTA";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+
+        assertEquals("p.Leu5_Leu6dup", impact.proteinContext().Hgvs);
     }
 
     @Test
@@ -395,6 +418,45 @@ public class ProteinImpactTest
 
         assertEquals("c.6_7insA", impact.codingContext().Hgvs);
         // assertEquals("p.Ala5fs", impact.proteinContext().Hgvs);
+
+        // test 2: inframe deletion of 2 codons leading up to exon boundary
+        refBases = generateRandomBases(preGene);
+
+        refBases += generateRandomBases(preGene);
+        refBases += reverseStrandBases(STOP_CODON_1);
+        refBases += getAminoAcidsCodons("GHC", true);
+        refBases += generateRandomBases(preGene); // intron
+        refBases += getAminoAcidsCodons("LRD", true);
+        refBases += reverseStrandBases(START_CODON);
+        refBases += generateRandomBases(preGene);
+
+        int codingLength = 8 * 3;
+
+        transStart = preGene;
+        codingStart = transStart + prePostCoding;
+        codingEnd = 53;
+
+        // 10-19 3'UTR, 20-22 X, 23-25 C, 26-28 H 29-31 G, 32-41 intron 42-44 D, 45-47 R, 48-50 L, 51-53 M, 54-63 5'UTR
+        // TTACTCGTGTCCTAATAAGTCACAAGCCAT GATCGATCGA
+        // 110                            140
+        int[] exonStarts = new int[] {10, 42};
+
+        TranscriptData negTrans =  createTransExons(
+                GENE_ID_2, TRANS_ID_2, NEG_STRAND, exonStarts, 21,
+                codingStart, codingEnd, false, "");
+
+        mRefGenome.RefGenomeMap.put(CHR_3, refBases);
+
+        // deleting last 2 amino acids of second coding exon
+        pos = 25;
+        ref = refBases.substring(pos, pos + 7);
+        alt = ref.substring(0, 1);
+        var = new VariantData(CHR_3, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, negTrans);
+        assertEquals(INFRAME_DELETION, impact.topEffect());
+        assertEquals("c.13_18delGGACAC", impact.codingContext().Hgvs);
+        assertEquals("p.Gly5_His6del", impact.proteinContext().Hgvs);
     }
 
     private void checkHgvsStrings(

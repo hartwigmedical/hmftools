@@ -195,34 +195,15 @@ public final class HgvsCoding
             codingBaseStart = codingBaseEnd = codingBase;
         }
 
-        /*
-        // move past ref base
-        if(codingContext.RegionType == EXONIC)
-        {
-            if(codingContext.CodingType == UTR_5P)
-                --codingBase;
-            else if(!spansUpstreamSplice && !codingBaseRangeCapped)
-                ++codingBase;
-        }
-        */
-
         ++nearestExon;
 
         addCodingBase(codingContext, codingBaseStart, sb, false);
-        // addCodingBase(codingContext, codingBase, sb, false);
 
         if(codingContext.RegionType == INTRONIC || spansUpstreamSplice)
             addIntronicPosition(nearestExon, sb);
 
         if(delLength > 1)
         {
-            /*
-            if(codingContext.RegionType == EXONIC)
-                codingBase += codingBasesDeleted - 1;
-
-            addCodingBase(codingContext, codingBase, sb, true);
-            */
-
             addCodingBase(codingContext, codingBaseEnd, sb, true);
 
             if(codingContext.RegionType == INTRONIC || spansDownstreamSplice)
