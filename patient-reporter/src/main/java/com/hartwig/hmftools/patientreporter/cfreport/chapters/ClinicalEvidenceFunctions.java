@@ -37,6 +37,8 @@ public class ClinicalEvidenceFunctions {
             Sets.newHashSet(EvidenceDirection.RESPONSIVE, EvidenceDirection.PREDICTED_RESPONSIVE);
     private static final Set<EvidenceDirection> RESISTANT_DIRECTIONS =
             Sets.newHashSet(EvidenceDirection.RESISTANT, EvidenceDirection.PREDICTED_RESISTANT);
+    private static final Set<EvidenceDirection> PREDICTED =
+            Sets.newHashSet(EvidenceDirection.PREDICTED_RESISTANT, EvidenceDirection.PREDICTED_RESPONSIVE);
 
     @NotNull
     public static Map<String, List<ProtectEvidence>> buildTreatmentMap(@NotNull List<ProtectEvidence> evidences, boolean reportGermline,
@@ -132,27 +134,44 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
-                Table responsiveTable = new Table(new float[] { 1, 1 });
+                Table responsiveTable = new Table(new float[] { 1, 1, 1 });
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(responsive));
                     String url = url(responsive);
                     if (!url.isEmpty()) {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
+
+                    String predicted;
+                    if (PREDICTED.contains(responsive.direction())) {
+                        predicted = " PRD";
+                    } else {
+                        predicted = Strings.EMPTY;
+                    }
                     responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
+                    responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
+
                     responsiveTable.addCell(cell);
                 }
                 table.addCell(TableUtil.createContentCell(responsiveTable));
 
                 if (evidenType.equals("evidence")) {
-                    Table resistantTable = new Table(new float[] { 1, 1 });
+                    Table resistantTable = new Table(new float[] { 1, 1, 1 });
                     for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
                         Cell cell = TableUtil.createTransparentCell(display(resistant));
                         String url = url(resistant);
                         if (!url.isEmpty()) {
                             cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                         }
+
+                        String predicted;
+                        if (PREDICTED.contains(resistant.direction())) {
+                            predicted = " PRD";
+                        } else {
+                            predicted = Strings.EMPTY;
+                        }
                         resistantTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
+                        resistantTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
                         resistantTable.addCell(cell);
                     }
                     table.addCell(TableUtil.createContentCell(resistantTable));
@@ -188,7 +207,11 @@ public class ClinicalEvidenceFunctions {
             sources.add(source.reportDisplay());
         }
 
-        return event + " (" + sources + ")";
+        if (PREDICTED.contains(evidence.direction())) {
+            return event + " (" + sources + ") PRD";
+        } else {
+            return event + " (" + sources + ")";
+        }
     }
 
     @NotNull
@@ -229,6 +252,7 @@ public class ClinicalEvidenceFunctions {
     public static Paragraph noteEvidence() {
         return new Paragraph().setKeepTogether(true)
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add("PRD (predicted)\n\n")
                 .add("The Clinical Knowledgebase (CKB) is used to "
                         + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
                         + "evidence levels \n( ")
