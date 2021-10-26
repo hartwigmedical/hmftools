@@ -384,6 +384,13 @@ public final class ProteinUtils
             if(downstreamBases == null)
                 break;
 
+            if(downstreamBases.length() < extraBases || downstreamBases.length() < downstreamAltOpenCodonBases)
+            {
+                PV_LOGGER.warn("var({}) invalid extraBases(P{) downstreamBases({}) downstreamAltOpenCodonBases({})",
+                        variant, extraBases, downstreamBases, downstreamAltOpenCodonBases);
+                break;
+            }
+
             if(posStrand)
             {
                 // trim of the extra base(s) that the frame-shifted alt needs

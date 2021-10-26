@@ -17,11 +17,14 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FIVE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.NON_CODING_TRANSCRIPT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createSnv;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -366,6 +369,7 @@ public class NonCodingContextTest
         impact = classifier.classifyVariant(var, transDataNegStrand);
         assertEquals(VariantEffect.INTRONIC, impact.topEffect());
 
+
         // non-coding exonic
         TranscriptData transDataNonCoding = createTransExons(
                 GENE_ID_2, TRANS_ID_2, FusionCommon.NEG_STRAND, exonStarts, 50, null, null, false, "");
@@ -384,23 +388,40 @@ public class NonCodingContextTest
         impact = classifier.classifyVariant(var, transDataNonCoding);
         assertEquals(NON_CODING_TRANSCRIPT, impact.topEffect());
 
-        // non-coding spanning exonic boundaries
-
-        pos = 298;
+        // coding range for exonic
+        pos = 220;
         String ref = refBases.substring(pos, pos + 4);
-        String alt = ref.substring(0, 1);
+        String alt = generateAlt(ref);
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNonCoding);
-        assertEquals(100, impact.codingContext().CodingBase);
+        assertEquals(130, impact.codingContext().CodingBase);
+        assertEquals(220, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(223, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("n.130_133delGATCinsCGAT", impact.codingContext().Hgvs);
 
-        pos = 248;
+        // non-coding spanning exonic boundaries
+        pos = 298;
+        ref = refBases.substring(pos, pos + 5);
+        alt = ref.substring(0, 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNonCoding);
+        assertEquals(99, impact.codingContext().CodingBase);
+        assertEquals(300, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(303, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("n.100_102+1delATCG", impact.codingContext().Hgvs);
+
+        pos = 348;
         ref = refBases.substring(pos, pos + 4);
         alt = ref.substring(0, 1);
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNonCoding);
-        assertEquals(101, impact.codingContext().CodingBase);
+        assertEquals(51, impact.codingContext().CodingBase);
+        assertEquals(348, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(350, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("n.51-1_52delGAT", impact.codingContext().Hgvs);
     }
 
 }

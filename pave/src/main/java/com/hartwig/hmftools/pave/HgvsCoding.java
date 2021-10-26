@@ -250,7 +250,12 @@ public final class HgvsCoding
             addIntronicPosition(nearestExon, sb);
 
         if(codingContext.RegionType == EXONIC)
-            codingBase += 1;
+        {
+            if(codingContext.CodingType == UTR_5P)
+                codingBase -= 1;
+            else
+                codingBase += 1;
+        }
 
         addCodingBase(codingContext, codingBase, sb, true);
 

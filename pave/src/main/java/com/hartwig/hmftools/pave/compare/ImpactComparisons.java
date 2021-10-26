@@ -197,7 +197,8 @@ public class ImpactComparisons
 
         if(variantImpact == null)
         {
-            hasDiff = refVariant.Reported;
+            // hasDiff = refVariant.Reported;
+            return;
         }
         else
         {
@@ -280,20 +281,20 @@ public class ImpactComparisons
 
         if(variant.getImpacts().isEmpty())
         {
-            PV_LOGGER.debug("sample({}) var({}) no gene impacts found vs snpEff({} : {})",
+            PV_LOGGER.trace("sample({}) var({}) no gene impacts found vs snpEff({} : {})",
                     sampleId, variant.toString(), refVariant.Gene, refVariant.CanonicalCodingEffect);
             return;
         }
 
         if(!variant.getImpacts().containsKey(refVariant.Gene))
         {
-            PV_LOGGER.debug("sample({}) var({}) diff gene and canonical coding: pave({} : {}) snpEff({} : {})",
+            PV_LOGGER.trace("sample({}) var({}) diff gene and canonical coding: pave({} : {}) snpEff({} : {})",
                     sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
                     refVariant.Gene, refVariant.CanonicalCodingEffect);
             return;
         }
 
-        PV_LOGGER.debug("sample({}) var({}) diff canonical coding: pave({} : {}) snpEff({} : {})",
+        PV_LOGGER.trace("sample({}) var({}) diff canonical coding: pave({} : {}) snpEff({} : {})",
                 sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
                 refVariant.Gene, refVariant.CanonicalCodingEffect);
     }
