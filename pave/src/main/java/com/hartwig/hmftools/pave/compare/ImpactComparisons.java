@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave.compare;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
@@ -26,11 +28,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -49,6 +54,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Record;
 import org.jooq.Record20;
@@ -57,20 +63,10 @@ import org.jooq.Result;
 public class ImpactComparisons
 {
     private final ComparisonConfig mConfig;
-    private final ImpactClassifier mImpactClassifier;
-    private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
-    private final ReportablePredicate mReportableOncoGenes;
-    private final ReportablePredicate mReportableTsgGenes;
-
     private final DatabaseAccess mDbAccess;
-
     private final ComparisonWriter mWriter;
-
-    // counters
-    private int mTotalComparisons;
-    private int mMatchedCount;
-    private final PerformanceCounter mPerfCounter;
+    private final RefGenomeInterface mRefGenome;
 
     public ImpactComparisons(final CommandLine cmd)
     {
@@ -80,21 +76,10 @@ public class ImpactComparisons
                 cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION),
                 true, false);
 
-        mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
-
-        mReportableOncoGenes = new ReportablePredicate(DriverCategory.ONCO, mGeneDataCache.getDriverPanel());
-        mReportableTsgGenes = new ReportablePredicate(DriverCategory.TSG, mGeneDataCache.getDriverPanel());
-
-        RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
-        mImpactClassifier = new ImpactClassifier(refGenome);
-
+        mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
         mDbAccess = createDatabaseAccess(cmd);
 
         mWriter = new ComparisonWriter(mGeneDataCache, mConfig);
-
-        mPerfCounter = new PerformanceCounter("ClassifyVariant");
-        mTotalComparisons = 0;
-        mMatchedCount = 0;
     }
 
     public void run()
@@ -117,188 +102,56 @@ public class ImpactComparisons
             System.exit(1);
         }
 
-        if(mDbAccess != null)
+        Map<String,List<RefVariantData>> sampleVariantsCache = DataLoader.processRefVariantFile(mConfig.ReferenceVariantsFile);
+
+        List<SampleComparisonTask> sampleTasks = Lists.newArrayList();
+
+        if(mConfig.Threads > 1)
         {
-            for(int i = 0; i < mConfig.SampleIds.size(); ++i)
+            for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
-                String sampleId = mConfig.SampleIds.get(i);
-
-                mPerfCounter.start();
-                loadSampleDatabaseRecords(sampleId);
-                mPerfCounter.stop();
-
-                if(i > 0 && (i % 100) == 0)
-                {
-                    PV_LOGGER.info("processed {} samples", i);
-                }
+                sampleTasks.add(new SampleComparisonTask(
+                        i, mConfig, mRefGenome, mDbAccess, mWriter, mGeneDataCache, sampleVariantsCache));
             }
+
+            int taskIndex = 0;
+            for(String sampleId : mConfig.SampleIds)
+            {
+                if(taskIndex >= sampleTasks.size())
+                    taskIndex = 0;
+
+                sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
+
+                ++taskIndex;
+            }
+
+            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
         else
         {
-            processRefVariantFile(mConfig.ReferenceVariantsFile);
+            SampleComparisonTask sampleTask = new SampleComparisonTask(
+                    0, mConfig, mRefGenome, mDbAccess, mWriter, mGeneDataCache, sampleVariantsCache);
+
+            sampleTasks.add(sampleTask);
+
+            sampleTask.call();
         }
 
         mWriter.close();
 
-        PV_LOGGER.info("total comparisons({}) matched({}) diffs({})",
-                mTotalComparisons, mMatchedCount, mTotalComparisons - mMatchedCount);
+        int totalComparisons = sampleTasks.stream().mapToInt(x -> x.totalComparisons()).sum();
+        int matchedCount = sampleTasks.stream().mapToInt(x -> x.matchedCount()).sum();
 
-        mPerfCounter.logStats();
+        PV_LOGGER.info("samples({}) total comparisons({}) matched({}) diffs({})",
+                mConfig.SampleIds.size(), totalComparisons, matchedCount, totalComparisons - matchedCount);
 
-        PV_LOGGER.info("impact comparison complete");
+        // mPerfCounter.logStats();
+
+        PV_LOGGER.info("Pave impact comparison complete");
     }
 
-    private void processVariant(final String sampleId, final RefVariantData refVariant)
-    {
-        // generate variant impact data and then write comparison results to CSV file
-        VariantData variant = new VariantData(
-                refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
-
-        variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatSequence, refVariant.RepeatCount);
-        variant.setSampleId(sampleId);
-        variant.setRefData(refVariant);
-
-        variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
-
-        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
-
-        processPhasedVariants(variant.localPhaseSet());
-
-        if(!variant.hasLocalPhaseSet())
-            processVariant(sampleId, variant, refVariant);
-    }
-
-    private void processPhasedVariants(int currentLocalPhaseSet)
-    {
-        List<VariantData> variants = mImpactClassifier.processPhasedVariants(currentLocalPhaseSet);
-
-        if(variants != null)
-            variants.forEach(x -> processVariant(x.sampleId(), x, x.refData()));
-    }
-
-    private void processVariant(final String sampleId, final VariantData variant, final RefVariantData refVariant)
-    {
-        ++mTotalComparisons;
-
-        if(refVariant.Gene.isEmpty() && variant.getImpacts().isEmpty())
-        {
-            ++mMatchedCount;
-            return;
-        }
-
-        VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
-
-        boolean reportable = isReported(variant, variantImpact, refVariant);
-
-        if(reportable)
-            variant.markReported();
-
-        boolean hasDiff = false;
-
-        if(variantImpact == null)
-        {
-            // hasDiff = refVariant.Reported;
-            return;
-        }
-        else
-        {
-            if(mConfig.checkDiffType(REPORTED))
-            {
-                hasDiff |= refVariant.Reported != variant.reported();
-            }
-
-            if(mConfig.checkDiffType(CODING_EFFECT))
-            {
-                hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
-            }
-
-            VariantTransImpact transImpact = variant.getCanonicalTransImpacts(refVariant.Gene);
-
-            if(transImpact != null)
-            {
-                VariantTransImpact raTransImpact = variant.getRealignedImpact(refVariant.Gene, transImpact);
-
-                if(mConfig.checkDiffType(HGVS_CODING))
-                {
-                    if(!transImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)
-                    && (raTransImpact == null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
-                    {
-                        hasDiff = true;
-                    }
-                }
-
-                if(mConfig.checkDiffType(HGVS_PROTEIN))
-                {
-                    if(!transImpact.hgvsProtein().equals(refVariant.HgvsProteinImpact)
-                    && (raTransImpact == null || !raTransImpact.hgvsProtein().equals(refVariant.HgvsProteinImpact)))
-                    {
-                        hasDiff = true;
-                    }
-                }
-            }
-        }
-
-        if(!hasDiff)
-        {
-            ++mMatchedCount;
-        }
-        else
-        {
-            logComparison(sampleId, refVariant, variant, variantImpact);
-        }
-
-        if(hasDiff || mConfig.WriteMatches)
-            mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant);
-    }
-
-    private boolean isReported(final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
-    {
-        if(variantImpact == null)
-            return false;
-
-        if(mReportableOncoGenes.test(
-                variantImpact.CanonicalGeneName, variant.type(), variant.repeatCount(), refVariant.IsHotspot,
-                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
-        {
-            return true;
-        }
-
-        if(mReportableTsgGenes.test(
-                variantImpact.CanonicalGeneName, variant.type(), variant.repeatCount(), refVariant.IsHotspot,
-                variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    private void logComparison(
-            final String sampleId, final RefVariantData refVariant, final VariantData variant, final VariantImpact variantImpact)
-    {
-        if(!PV_LOGGER.isDebugEnabled())
-            return;
-
-        if(variant.getImpacts().isEmpty())
-        {
-            PV_LOGGER.trace("sample({}) var({}) no gene impacts found vs snpEff({} : {})",
-                    sampleId, variant.toString(), refVariant.Gene, refVariant.CanonicalCodingEffect);
-            return;
-        }
-
-        if(!variant.getImpacts().containsKey(refVariant.Gene))
-        {
-            PV_LOGGER.trace("sample({}) var({}) diff gene and canonical coding: pave({} : {}) snpEff({} : {})",
-                    sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
-                    refVariant.Gene, refVariant.CanonicalCodingEffect);
-            return;
-        }
-
-        PV_LOGGER.trace("sample({}) var({}) diff canonical coding: pave({} : {}) snpEff({} : {})",
-                sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
-                refVariant.Gene, refVariant.CanonicalCodingEffect);
-    }
-
+    /*
     private void loadSampleDatabaseRecords(final String sampleId)
     {
         mTotalComparisons = 0;
@@ -434,6 +287,7 @@ public class ImpactComparisons
             PV_LOGGER.error("failed to read ref variant data file: {}", e.toString());
         }
     }
+    */
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

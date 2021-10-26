@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAME
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
+import java.util.StringJoiner;
+
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -129,5 +131,57 @@ public class RefVariantData
         return String.format("pos(%s:%d) variant(%s: %s>%s) canon(%s: %s) worst(%s)",
                 Chromosome, Position, Type, Ref, Alt, CanonicalCodingEffect, CanonicalEffect,
                 WorstCodingEffect);
+    }
+
+    public static String tsvHeader()
+    {
+        StringJoiner sj = new StringJoiner("\t");
+        sj.add("sampleId");
+        sj.add("chromosome");
+        sj.add("position");
+        sj.add("type");
+        sj.add("ref");
+        sj.add("alt");
+        sj.add("gene");
+        sj.add("genesEffected");
+        sj.add("worstCodingEffect");
+        sj.add("canonicalEffect");
+        sj.add("canonicalCodingEffect");
+        sj.add("canonicalHgvsCodingImpact");
+        sj.add("canonicalHgvsProteinImpact");
+        sj.add("microhomology");
+        sj.add("repeatSequence");
+        sj.add("repeatCount");
+        sj.add("localPhaseSet");
+        sj.add("phasedInframeIndel");
+        sj.add("reported");
+        sj.add("hotspot");
+        return sj.toString();
+    }
+
+    public String tsvData(final String sampleId)
+    {
+        StringJoiner sj = new StringJoiner("\t");
+        sj.add(sampleId);
+        sj.add(Chromosome);
+        sj.add(String.valueOf(Position));
+        sj.add(Type.toString());
+        sj.add(Ref);
+        sj.add(Alt);
+        sj.add(Gene);
+        sj.add(String.valueOf(GenesAffected));
+        sj.add(String.valueOf(WorstCodingEffect));
+        sj.add(CanonicalEffect);
+        sj.add(String.valueOf(CanonicalCodingEffect));
+        sj.add(HgvsCodingImpact);
+        sj.add(HgvsProteinImpact);
+        sj.add(Microhomology);
+        sj.add(RepeatSequence);
+        sj.add(String.valueOf(RepeatCount));
+        sj.add(LocalPhaseSet == NO_LOCAL_PHASE_SET ? "NULL" : String.valueOf(LocalPhaseSet));
+        sj.add(String.valueOf(PhasedInframeIndel));
+        sj.add(Reported ? "1" : "0");
+        sj.add(IsHotspot ? Hotspot.HOTSPOT.toString() : "NONE");
+        return sj.toString();
     }
 }

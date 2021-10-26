@@ -18,6 +18,7 @@ public class ComparisonWriter
 {
     private final BufferedWriter mImpactWriter;
     private final BufferedWriter mTransImpactWriter;
+    private final BufferedWriter mRefVariantWriter;
     private final GeneDataCache mGeneDataCache;
 
     public ComparisonWriter(final GeneDataCache geneDataCache, final ComparisonConfig config)
@@ -25,12 +26,15 @@ public class ComparisonWriter
         mGeneDataCache = geneDataCache;
         mImpactWriter = initialiseImpactWriter(config.OutputDir, config.OutputId);
         mTransImpactWriter = config.WriteTransData ? initialiseTransWriter(config.OutputDir, config.OutputId) : null;
+
+        mRefVariantWriter = config.ReferenceVariantsFile == null ? initialiseRefVariantWriter(config.OutputDir, config.OutputId) : null;
     }
 
     public void close()
     {
         closeBufferedWriter(mImpactWriter);
         closeBufferedWriter(mTransImpactWriter);
+        closeBufferedWriter(mRefVariantWriter);
     }
 
     private static String formFilename(final String outputDir, final String outputId, final String fileType)
@@ -41,11 +45,14 @@ public class ComparisonWriter
             return outputDir + "pave_compare_" + fileType + ".csv";
     }
 
-    public void writeVariantData(
-            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
+    public synchronized void writeVariantData(
+            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant, boolean hasDiff)
     {
         writeImpactData(sampleId, variant, variantImpact, refVariant);
         writeTransImpactData(sampleId, variant, refVariant);
+
+        if(hasDiff)
+            writeRefVariant(sampleId, refVariant);
     }
 
     private BufferedWriter initialiseImpactWriter(final String outputDir, final String outputId)
@@ -177,6 +184,42 @@ public class ComparisonWriter
         catch(IOException e)
         {
             PV_LOGGER.error("failed to write transcript impact data: {}", e.toString());
+            return;
+        }
+    }
+
+    private BufferedWriter initialiseRefVariantWriter(final String outputDir, final String outputId)
+    {
+        try
+        {
+            String fileName = formFilename(outputDir, outputId, "ref_variants");
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            writer.write(RefVariantData.tsvHeader());
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            PV_LOGGER.error("failed to initialise ref variant file: {}", e.toString());
+            return null;
+        }
+    }
+
+    private void writeRefVariant(final String sampleId, final RefVariantData refVariant)
+    {
+        if(mRefVariantWriter == null)
+            return;
+
+        try
+        {
+            mRefVariantWriter.write(refVariant.tsvData(sampleId));
+            mRefVariantWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            PV_LOGGER.error("failed to write ref variant data: {}", e.toString());
             return;
         }
     }

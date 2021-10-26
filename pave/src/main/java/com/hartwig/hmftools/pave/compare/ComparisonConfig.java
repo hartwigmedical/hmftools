@@ -41,6 +41,7 @@ public class ComparisonConfig
     public final boolean WriteMatches;
     public final String OutputDir;
     public final String OutputId;
+    public final int Threads;
 
     private static final String SAMPLE_ID_FILE = "sample_id_file";
     private static final String REF_VARIANTS_FILE = "ref_variants_file";
@@ -50,6 +51,7 @@ public class ComparisonConfig
     private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_MATCHES = "write_matches";
     private static final String DIFF_TYPES = "diff_types";
+    private static final String THREADS = "threads";
 
     public ComparisonConfig(final CommandLine cmd)
     {
@@ -80,6 +82,7 @@ public class ComparisonConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
         WriteMatches = cmd.hasOption(WRITE_MATCHES);
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS));
     }
 
     public boolean checkDiffType(ImpactDiffType type) { return ImpactDiffTypes.contains(type) || ImpactDiffTypes.contains(ANY); }
@@ -92,6 +95,7 @@ public class ComparisonConfig
         options.addOption(REF_VARIANTS_FILE, true, "File with variants to test against");
         options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
         options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");
+        options.addOption(THREADS, true, "Thread count, default = 0 (disabled)");
 
         options.addOption(
                 DIFF_TYPES, true, "Types of diffs to write to file: CODING_EFFECT, EFFECTS, HGVS_CODING, HGVS_PROTEIN, ANY");
