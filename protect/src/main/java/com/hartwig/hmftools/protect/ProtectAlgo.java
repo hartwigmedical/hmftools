@@ -109,7 +109,8 @@ public class ProtectAlgo {
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
                 config.purpleGeneCopyNumberTsv(),
-                config.purpleSomaticChromsomeArmTsv());
+                null,
+                RefGenomeVersion.V37);
     }
 
     @NotNull

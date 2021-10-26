@@ -28,8 +28,6 @@ public class ProtectAlgoTest {
             Resources.getResource("test_run/purple/sample.driver.catalog.germline.tsv").getPath();
     private static final String PURPLE_SOMATIC_VARIANT_VCF = Resources.getResource("test_run/purple/sample.purple.somatic.vcf").getPath();
     private static final String PURPLE_GERMLINE_VARIANT_VCF = Resources.getResource("test_run/purple/sample.purple.germline.vcf").getPath();
-    private static final String PURPLE_SOMATIC_CHROMOSOME_ARM_TSV =
-            Resources.getResource("test_run/purple/sample.cnv.chromosomearm.somatic.tsv").getPath();
 
     private static final String LINX_FUSION_TSV = Resources.getResource("test_run/linx/sample.linx.fusion.tsv").getPath();
     private static final String LINX_BREAKEND_TSV = Resources.getResource("test_run/linx/sample.linx.breakend.tsv").getPath();
@@ -53,7 +51,6 @@ public class ProtectAlgoTest {
                 .purpleGermlineDriverCatalogTsv(PURPLE_GERMLINE_DRIVER_CATALOG_TSV)
                 .purpleSomaticVariantVcf(PURPLE_SOMATIC_VARIANT_VCF)
                 .purpleGermlineVariantVcf(PURPLE_GERMLINE_VARIANT_VCF)
-                .purpleSomaticChromsomeArmTsv(PURPLE_SOMATIC_CHROMOSOME_ARM_TSV)
                 .linxFusionTsv(LINX_FUSION_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)

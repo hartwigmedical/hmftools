@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 
 import org.apache.commons.cli.CommandLine;
@@ -56,7 +57,6 @@ public interface PatientReporterConfig {
     String PURPLE_SOMATIC_VARIANT_VCF = "purple_somatic_variant_vcf";
     String PURPLE_GERMLINE_VARIANT_VCF = "purple_germline_variant_vcf";
     String PURPLE_SOMATIC_COPYNUMBER_TSV = "purple_somatic_copynumber_tsv";
-    String PURPLE_SOMATIC_CHROMOSOME_ARM_TSV = "purple_somatic_chromosome_arm_tsv";
     String PURPLE_CIRCOS_PLOT = "purple_circos_plot";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
@@ -114,7 +114,6 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_SOMATIC_VARIANT_VCF, true, "Path towards the purple somatic variant VCF.");
         options.addOption(PURPLE_GERMLINE_VARIANT_VCF, true, "Path towards the purple germline variant VCF.");
         options.addOption(PURPLE_SOMATIC_COPYNUMBER_TSV, true, "Path towards the purple somatic copynumber TSV.");
-        options.addOption(PURPLE_SOMATIC_CHROMOSOME_ARM_TSV, true, "Path towards the purple somatic chromosome arm TSV.");
         options.addOption(PURPLE_CIRCOS_PLOT, true, "Path towards the purple circos plot.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
@@ -136,6 +135,9 @@ public interface PatientReporterConfig {
 
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
         options.addOption(OVERRIDE_PIPELINE_VERSION, false, "if set, the check for pipeline version is overridden");
+
+        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version to use (either '37' or '38')");
+
         return options;
     }
 
@@ -205,9 +207,6 @@ public interface PatientReporterConfig {
     String purpleSomaticCopyNumberTsv();
 
     @NotNull
-    String purpleSomaticChromsomeArmTsv();
-
-    @NotNull
     String purpleCircosPlot();
 
     @NotNull
@@ -256,6 +255,9 @@ public interface PatientReporterConfig {
     boolean overridePipelineVersion();
 
     @NotNull
+    RefGenomeVersion refGenomeVersion();
+
+    @NotNull
     static PatientReporterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
@@ -280,7 +282,6 @@ public interface PatientReporterConfig {
         String purpleSomaticVariantVcf = Strings.EMPTY;
         String purpleGermlineVariantVcf = Strings.EMPTY;
         String purpleSomaticCopyNumberTsv = Strings.EMPTY;
-        String purpleSomaticChromsomeArmTsv = Strings.EMPTY;
         String purpleCircosPlot = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
@@ -307,7 +308,6 @@ public interface PatientReporterConfig {
             purpleSomaticVariantVcf = nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF);
             purpleGermlineVariantVcf = nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF);
             purpleSomaticCopyNumberTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_COPYNUMBER_TSV);
-            purpleSomaticChromsomeArmTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_CHROMOSOME_ARM_TSV);
             purpleCircosPlot = nonOptionalFile(cmd, PURPLE_CIRCOS_PLOT);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
@@ -346,7 +346,6 @@ public interface PatientReporterConfig {
                 .purpleSomaticVariantVcf(purpleSomaticVariantVcf)
                 .purpleGermlineVariantVcf(purpleGermlineVariantVcf)
                 .purpleSomaticCopyNumberTsv(purpleSomaticCopyNumberTsv)
-                .purpleSomaticChromsomeArmTsv(purpleSomaticChromsomeArmTsv)
                 .purpleCircosPlot(purpleCircosPlot)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
@@ -364,6 +363,7 @@ public interface PatientReporterConfig {
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
                 .overridePipelineVersion(cmd.hasOption(OVERRIDE_PIPELINE_VERSION))
+                .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))
                 .build();
     }
 

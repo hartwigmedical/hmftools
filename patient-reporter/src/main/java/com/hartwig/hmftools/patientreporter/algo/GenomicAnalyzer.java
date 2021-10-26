@@ -57,7 +57,7 @@ public class GenomicAnalyzer {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                null, config.purpleSomaticChromsomeArmTsv());
+                null, config.purpleSomaticCopyNumberTsv(), config.refGenomeVersion());
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
