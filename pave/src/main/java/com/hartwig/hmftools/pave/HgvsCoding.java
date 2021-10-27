@@ -99,6 +99,9 @@ public final class HgvsCoding
         if(isSecond)
             sb.append('_');
 
+        if(isSecond && codingContext.SpansStopCodon)
+            return;
+
         addUtr(codingContext, sb);
 
         if(codingContext.CodingBase == 0)

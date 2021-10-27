@@ -338,6 +338,9 @@ public final class SpliceClassifier
                 // exclude this base from comparison
                 refSpliceBases = posStrand ? refSpliceBases.substring(1, 3) : refSpliceBases.substring(0, 2);
                 altSpliceBases = posStrand ? altSpliceBases.substring(1, 3) : altSpliceBases.substring(0, 2);
+
+                if(refSpliceBases.equals(altSpliceBases))
+                    return OUTSIDE_RANGE;
             }
         }
 

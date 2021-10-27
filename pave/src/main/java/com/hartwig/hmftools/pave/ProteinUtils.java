@@ -296,7 +296,7 @@ public final class ProteinUtils
             return;
 
         // first inserted amino acids matches end ref AA
-        if(pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(1))
+        if(pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(0) && pc.NetAltAminoAcids.charAt(0) != pc.RefAminoAcids.charAt(1))
             return;
 
         // a duplication of AAs means 1 extra copy, not multiple
@@ -311,10 +311,22 @@ public final class ProteinUtils
         // check for a single AA repeated
         final String netAminoAcids = pc.NetAltAminoAcids;
 
-        boolean isSingleRepeat;
-
         if(pc.NetAltAminoAcids.length() == pc.NetRefAminoAcids.length() + 1)
         {
+            if(pc.NetAltAminoAcids.charAt(0) == pc.RefAminoAcids.charAt(0))
+            {
+                pc.IsDuplication = true;
+                pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] = pc.CodonIndex;
+                return;
+            }
+            else if(pc.NetAltAminoAcids.charAt(0) == pc.RefAminoAcids.charAt(1))
+            {
+                pc.IsDuplication = true;
+                pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START];
+                return;
+            }
+
+            /*
             isSingleRepeat = true;
 
             for(int i = 1; i < netAminoAcids.length(); ++i)
@@ -325,38 +337,27 @@ public final class ProteinUtils
                     break;
                 }
             }
-        }
-        else
-        {
-            isSingleRepeat = false;
+            */
         }
 
-        if(isSingleRepeat)
+        // otherwise extend downstream the length of the inserted AAs and test for a match
+        int extraBases = (netAminoAcids.length() - 1) * 3;
+        boolean searchUp = posStrand;
+        int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
+
+        String downstreamBases = getExtraBases(
+                transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
+
+        String extraAminoAcids = posStrand
+                ? aminoAcidFromBases(downstreamBases)
+                : aminoAcidFromBases(reverseStrandBases(downstreamBases));
+
+        String extendedRefAminoAcids = pc.RefAminoAcids.charAt(1) + extraAminoAcids;
+
+        if(extendedRefAminoAcids.equals(netAminoAcids))
         {
             pc.IsDuplication = true;
-            pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START];
-        }
-        else
-        {
-            // otherwise extend downstream the length of the inserted AAs and test for a match
-            int extraBases = (netAminoAcids.length() - 1) * 3;
-            boolean searchUp = posStrand;
-            int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
-
-            String downstreamBases = getExtraBases(
-                    transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
-
-            String extraAminoAcids = posStrand
-                    ? aminoAcidFromBases(downstreamBases)
-                    : aminoAcidFromBases(reverseStrandBases(downstreamBases));
-
-            String extendedRefAminoAcids = pc.RefAminoAcids.charAt(1) + extraAminoAcids;
-
-            if(extendedRefAminoAcids.equals(netAminoAcids))
-            {
-                pc.IsDuplication = true;
-                pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] + extendedRefAminoAcids.length() - 1;
-            }
+            pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] + extendedRefAminoAcids.length() - 1;
         }
     }
 

@@ -299,7 +299,7 @@ public class DelCodingContextTest
         assertEquals(3, impact.codingContext().DeletedCodingBases);
         assertEquals(3, impact.codingContext().NearestExonDistance);
         assertTrue(impact.codingContext().SpansStopCodon);
-        assertEquals("c.43_45*2delTCGAT", impact.codingContext().Hgvs);
+        assertEquals("c.43_*2delTCGAT", impact.codingContext().Hgvs);
     }
 
     @Test
