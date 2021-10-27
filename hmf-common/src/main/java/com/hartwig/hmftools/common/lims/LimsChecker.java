@@ -33,6 +33,25 @@ public final class LimsChecker {
         }
     }
 
+    public static boolean checkReportPgx(@Nullable LimsJsonSampleData sampleData, @Nullable LimsCohortConfig cohort,
+            @NotNull String sampleId) {
+        if (sampleData != null && cohort != null) {
+            if (sampleData.reportPgx()) {
+                if (!cohort.reportPeach()) {
+                    LOGGER.warn("Consent of pharmogenetics is true, but must be false for sample '{}'", sampleId);
+                }
+                return true;
+            } else {
+                if (cohort.reportPeach()) {
+                    LOGGER.warn("Consent of pharmogenetics is false, but must be true for sample '{}'", sampleId);
+                }
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
     public static boolean checkGermlineVariants(@Nullable LimsJsonSampleData sampleData, @Nullable LimsCohortConfig cohort,
             @NotNull String sampleId) {
         if (sampleData != null && cohort != null) {

@@ -31,6 +31,7 @@ public final class LimsTestUtil {
                 .reportGermlineVariants(false)
                 .shallowSeq(false)
                 .reportViralPresence(false)
+                .reportPgx(false)
                 .cohort(Strings.EMPTY)
                 .analysisType(Strings.EMPTY);
     }

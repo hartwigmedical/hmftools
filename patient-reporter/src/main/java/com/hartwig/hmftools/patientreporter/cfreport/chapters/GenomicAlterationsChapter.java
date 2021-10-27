@@ -85,7 +85,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes(),
                 hasReliablePurity,
                 patientReport.qsFormNumber(),
-                sampleReport.cohort().reportPeach()));
+                sampleReport.reportPharmogenetics()));
     }
 
     @NotNull

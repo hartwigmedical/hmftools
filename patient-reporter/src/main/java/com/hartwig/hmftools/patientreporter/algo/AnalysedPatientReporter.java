@@ -65,7 +65,7 @@ public class AnalysedPatientReporter {
         GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
                 sampleReport.germlineReportingLevel(),
                 sampleReport.reportViralPresence(),
-                sampleReport.cohort().reportPeach());
+                sampleReport.reportPharmogenetics());
 
         String qcForm = determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity());
 

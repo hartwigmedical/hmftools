@@ -320,6 +320,7 @@ public final class ExampleAnalysisTestFactory {
                         ? LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION
                         : LimsGermlineReportingLevel.NO_REPORTING)
                 .reportViralPresence(cohort.reportViral())
+                .reportPharmogenetics(cohort.reportPeach())
                 .refArrivalDate(LocalDate.parse("01-Oct-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Oct-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(Lims.NOT_PERFORMED_STRING)

@@ -340,6 +340,7 @@ public class CFReportWriterTest {
                 .biopsyLocation(Strings.EMPTY)
                 .germlineReportingLevel(LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION)
                 .reportViralPresence(true)
+                .reportPharmogenetics(true)
                 .refArrivalDate(LocalDate.parse("10-Jan-2020", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2020", DATE_FORMATTER))
                 .shallowSeqPurityString(shallowSeqPurity)
