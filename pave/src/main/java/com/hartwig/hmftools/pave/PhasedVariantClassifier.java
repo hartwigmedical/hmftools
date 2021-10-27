@@ -346,6 +346,14 @@ public class PhasedVariantClassifier
         combinedPc.IsPhased = true;
         combinedPc.Hgvs = HgvsProtein.generate(variants.get(0), combinedPc, combinedEffects);
 
+        // now convert missense / synonymous to phased inframe to it's clearer what has happened
+        if(combinedEffects.contains(SYNONYMOUS) || combinedEffects.contains(MISSENSE))
+        {
+            combinedEffects.remove(MISSENSE);
+            combinedEffects.remove(SYNONYMOUS);
+            combinedEffects.add(indelBaseTotal > 0 ? PHASED_INFRAME_INSERTION : PHASED_INFRAME_DELETION);
+        }
+
         for(int i = 0; i < transImpacts.size(); ++i)
         {
             VariantData variant = variants.get(i);

@@ -277,10 +277,10 @@ public class PhasedVariantsTest
         assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(MISSENSE));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(MISSENSE));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
 
         // now synonynous
         pos = 20;
@@ -308,10 +308,10 @@ public class PhasedVariantsTest
         assertTrue(impact1.phasedFrameshift());
         assertFalse(impact1.codingContext().IsFrameShift);
         assertFalse(impact1.hasEffect(FRAMESHIFT));
-        assertTrue(impact1.hasEffect(SYNONYMOUS));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
-        assertTrue(impact2.hasEffect(SYNONYMOUS));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
     }
 
     @Test
