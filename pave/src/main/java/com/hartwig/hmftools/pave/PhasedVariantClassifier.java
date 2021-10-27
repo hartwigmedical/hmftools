@@ -148,6 +148,8 @@ public class PhasedVariantClassifier
 
         // ignore if not phased anyway
         int indelBaseTotal = 0;
+        int minIndelIndex = transImpacts.size();
+        int maxIndelIndex = 0;
 
         for(int i = 0; i < transImpacts.size(); ++i)
         {
@@ -158,6 +160,36 @@ public class PhasedVariantClassifier
                 continue;
 
             indelBaseTotal += variant.isInsert() ? variant.baseDiff() : -transImpact.codingContext().DeletedCodingBases;
+
+            minIndelIndex = min(minIndelIndex, i);
+            maxIndelIndex = max(maxIndelIndex, i);
+        }
+
+        // ignore any SNV or MNV which is not in between INDELs and doesn't overlap another variant
+        List<VariantData> ignoredVariants = Lists.newArrayList();
+
+        for(int i = 0; i < transImpacts.size(); ++i)
+        {
+            VariantTransImpact transImpact = transImpacts.get(i);
+            VariantData variant = variants.get(i);
+
+            if(!transImpact.hasProteinContext() || variant.isIndel())
+                continue;
+
+            if(i > minIndelIndex && i < maxIndelIndex)
+                continue; // in between INDELs
+
+            VariantTransImpact prevTransImpact = i > 0 ? transImpacts.get(i - 1) : null;
+            VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
+
+            boolean overlapsOnStart = prevTransImpact != null && prevTransImpact.hasProteinContext()
+                    && prevTransImpact.proteinContext().refCodingBaseEnd() >= transImpact.proteinContext().refCodingBaseStart();
+
+            boolean overlapsOnEnd = nextTransImpact != null && nextTransImpact.hasProteinContext()
+                    && nextTransImpact.proteinContext().refCodingBaseStart() <= transImpact.proteinContext().refCodingBaseEnd();
+
+            if(!overlapsOnStart && !overlapsOnEnd)
+                ignoredVariants.add(variant);
         }
 
         if(!isCodonMultiple(indelBaseTotal))
@@ -170,7 +202,6 @@ public class PhasedVariantClassifier
         final String chromosome = variants.get(0).Chromosome;
         boolean posStrand = transImpacts.get(0).TransData.posStrand();
 
-
         String combinedRefCodons = "";
         String combinedAltCodons = "";
         int minCodonIndex = -1;
@@ -179,12 +210,15 @@ public class PhasedVariantClassifier
         for(int i = 0; i < transImpacts.size(); ++i)
         {
             VariantData variant = variants.get(i);
+
+            if(ignoredVariants.contains(variant))
+                continue;
+
             VariantTransImpact transImpact = transImpacts.get(i);
 
             if(!transImpact.hasProteinContext())
                 continue;
 
-            // ignore SNVs/MNVs if they don't overlap the same codons as any of the INDELs
             int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
             int refCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
 
@@ -200,8 +234,10 @@ public class PhasedVariantClassifier
                     localPhaseSet, variant, transImpact.proteinContext().RefCodonBases, transImpact.proteinContext().AltCodonBases,
                     refCodonStart, refCodonEnd, overlapsOnStart, overlapsOnEnd);
 
-            minCodonIndex = i == 0 ?
-                    transImpact.proteinContext().CodonIndex : min(transImpact.proteinContext().CodonIndex, minCodonIndex);
+            if(minCodonIndex < 0)
+                minCodonIndex = transImpact.proteinContext().CodonIndex;
+            else
+                minCodonIndex = min(transImpact.proteinContext().CodonIndex, minCodonIndex);
 
             if(overlapsOnStart)
             {
@@ -310,8 +346,16 @@ public class PhasedVariantClassifier
         combinedPc.IsPhased = true;
         combinedPc.Hgvs = HgvsProtein.generate(variants.get(0), combinedPc, combinedEffects);
 
-        for(VariantTransImpact transImpact : transImpacts)
+        for(int i = 0; i < transImpacts.size(); ++i)
         {
+            VariantData variant = variants.get(i);
+
+            // ignore SNVs/MNVs if they don't overlap the same codons as any of the INDELs unless they are between indels
+            if(ignoredVariants.contains(variant))
+                continue;
+
+            VariantTransImpact transImpact = transImpacts.get(i);
+
             if(!transImpact.hasProteinContext())
                 continue;
 

@@ -82,7 +82,7 @@ public class ComparisonConfig
         OutputId = cmd.getOptionValue(OUTPUT_ID);
         WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
         WriteMatches = cmd.hasOption(WRITE_MATCHES);
-        Threads = Integer.parseInt(cmd.getOptionValue(THREADS));
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
     }
 
     public boolean checkDiffType(ImpactDiffType type) { return ImpactDiffTypes.contains(type) || ImpactDiffTypes.contains(ANY); }

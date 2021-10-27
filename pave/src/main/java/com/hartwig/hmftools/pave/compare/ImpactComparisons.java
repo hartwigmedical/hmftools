@@ -104,6 +104,11 @@ public class ImpactComparisons
 
         Map<String,List<RefVariantData>> sampleVariantsCache = DataLoader.processRefVariantFile(mConfig.ReferenceVariantsFile);
 
+        if(mConfig.SampleIds.isEmpty() && !sampleVariantsCache.isEmpty())
+        {
+            sampleVariantsCache.keySet().forEach(x -> mConfig.SampleIds.add(x));
+        }
+
         List<SampleComparisonTask> sampleTasks = Lists.newArrayList();
 
         if(mConfig.Threads > 1)
@@ -133,6 +138,8 @@ public class ImpactComparisons
             SampleComparisonTask sampleTask = new SampleComparisonTask(
                     0, mConfig, mRefGenome, mDbAccess, mWriter, mGeneDataCache, sampleVariantsCache);
 
+            sampleTask.getSampleIds().addAll(mConfig.SampleIds);
+
             sampleTasks.add(sampleTask);
 
             sampleTask.call();
@@ -150,144 +157,6 @@ public class ImpactComparisons
 
         PV_LOGGER.info("Pave impact comparison complete");
     }
-
-    /*
-    private void loadSampleDatabaseRecords(final String sampleId)
-    {
-        mTotalComparisons = 0;
-        mMatchedCount = 0;
-
-        // retrieve genic positions
-
-        Result<Record20<String, String, Integer, String, String, String, String, String, String, String, Integer, String, String, String,
-                String, Integer, Integer, Integer, Byte, String>>
-                result = mDbAccess.context()
-                .select(SOMATICVARIANT.GENE, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
-                        SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.TYPE, SOMATICVARIANT.GENE,
-                        SOMATICVARIANT.CANONICALEFFECT, SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.WORSTCODINGEFFECT,
-                        SOMATICVARIANT.GENESEFFECTED, SOMATICVARIANT.CANONICALHGVSCODINGIMPACT, SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
-                        SOMATICVARIANT.MICROHOMOLOGY, SOMATICVARIANT.REPEATSEQUENCE, SOMATICVARIANT.REPEATCOUNT,
-                        SOMATICVARIANT.PHASEDINFRAMEINDEL, SOMATICVARIANT.LOCALPHASESET, SOMATICVARIANT.REPORTED, SOMATICVARIANT.HOTSPOT)
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.GENE.isNotNull())
-                .orderBy(SOMATICVARIANT.CHROMOSOME,SOMATICVARIANT.POSITION)
-                .fetch();
-
-        for(Record record : result)
-        {
-            //final SomaticVariant variant = SomaticVariantDAO.buildFromRecord(record);
-
-            if(mConfig.OnlyDriverGenes)
-            {
-                String gene = record.getValue(SOMATICVARIANT.GENE);
-
-                if(!mGeneDataCache.isDriverPanelGene(gene))
-                    continue;
-            }
-
-            processVariant(sampleId, RefVariantData.fromRecord(record));
-        }
-
-        processPhasedVariants(NO_LOCAL_PHASE_SET);
-        mImpactClassifier.phasedVariants().clear();
-
-        PV_LOGGER.debug("sample({}) processed {} variants, matches({})",
-                sampleId, mTotalComparisons, mMatchedCount);
-    }
-
-    private void processRefVariantFile(final String filename)
-    {
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-            String header = fileReader.readLine();
-
-            final String fileDelim = "\t";
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
-
-            int sampleIndex = fieldsIndexMap.get("sampleId");
-
-            int chrIndex = fieldsIndexMap.get("chromosome");
-            int posIndex = fieldsIndexMap.get("position");
-            int refIndex = fieldsIndexMap.get("ref");
-            int altIndex = fieldsIndexMap.get("alt");
-            int typeIndex = fieldsIndexMap.get("type");
-            int geneIndex = fieldsIndexMap.get("gene");
-            int canonicalEffectIndex = fieldsIndexMap.get("canonicalEffect");
-            int canonicalCodingEffectIndex = fieldsIndexMap.get("canonicalCodingEffect");
-            int worstCodingEffectIndex = fieldsIndexMap.get("worstCodingEffect");
-            int genesAffectedIndex = fieldsIndexMap.get("genesEffected");
-            int canonicalHgvsCodingImpactIndex = fieldsIndexMap.get("canonicalHgvsCodingImpact");
-            int canonicalHgvsProteinImpactIndex = fieldsIndexMap.get("canonicalHgvsProteinImpact");
-            int microhomologyIndex = fieldsIndexMap.get("microhomology");
-            int repeatSequenceIndex = fieldsIndexMap.get("repeatSequence");
-            int repeatCountIndex = fieldsIndexMap.get("repeatCount");
-            int phasedInframeIndelIndex = fieldsIndexMap.get("phasedInframeIndel");
-            int localPhaseSetIndex = fieldsIndexMap.get("localPhaseSet");
-            int reportedIndex = fieldsIndexMap.get("reported");
-            Integer hotspotIndex = fieldsIndexMap.get("hotspot");
-
-            String currentSample = "";
-            int samplesProcessed = 0;
-
-            String line = "";
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(fileDelim, -1);
-
-                String sampleId = items[sampleIndex];
-
-                if(!currentSample.equals(sampleId))
-                {
-                    if(!mConfig.SampleIds.isEmpty() && !mConfig.SampleIds.contains(sampleId))
-                    {
-                        if(samplesProcessed == mConfig.SampleIds.size())
-                        {
-                            PV_LOGGER.info("all {} samples processed", samplesProcessed);
-                            break;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-
-                    currentSample = sampleId;
-                    ++samplesProcessed;
-
-                    if(samplesProcessed > 0 && (samplesProcessed % 100) == 0)
-                    {
-                        PV_LOGGER.info("processed {} samples", samplesProcessed);
-                    }
-                }
-
-                int localPhaseSet = !items[localPhaseSetIndex].equals("NULL") ? Integer.parseInt(items[localPhaseSetIndex]) : NO_LOCAL_PHASE_SET;
-
-                RefVariantData variant = new RefVariantData(
-                        items[chrIndex], Integer.parseInt(items[posIndex]), items[refIndex], items[altIndex],
-                        VariantType.valueOf(items[typeIndex]), items[geneIndex], items[canonicalEffectIndex],
-                        items[canonicalCodingEffectIndex].isEmpty() ? NONE : CodingEffect.valueOf(items[canonicalCodingEffectIndex]),
-                        CodingEffect.valueOf(items[worstCodingEffectIndex]), Integer.parseInt(items[genesAffectedIndex]),
-                        items[canonicalHgvsCodingImpactIndex], items[canonicalHgvsProteinImpactIndex],
-                        items[microhomologyIndex], items[repeatSequenceIndex], Integer.parseInt(items[repeatCountIndex]),
-                        Boolean.parseBoolean(items[phasedInframeIndelIndex]),
-                        localPhaseSet, items[reportedIndex].equals("1"),
-                        hotspotIndex != null ? items[hotspotIndex].equals(Hotspot.HOTSPOT.toString()) : false);
-
-                processVariant(sampleId, variant);
-            }
-
-            processPhasedVariants(NO_LOCAL_PHASE_SET);
-        }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to read ref variant data file: {}", e.toString());
-        }
-    }
-    */
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

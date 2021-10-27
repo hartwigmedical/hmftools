@@ -36,6 +36,7 @@ public class PhasedVariantsTest
         - DEL and INS causing missense
         - DEL and INS causing synonymous
         - 3x DEL/INS causing inframe insert or delete or missense
+        - SNVs before and after a set of phaseable INDELs
     */
 
     private MockRefGenome mRefGenome = createMockGenome(201);
@@ -236,11 +237,11 @@ public class PhasedVariantsTest
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
         assertTrue(impact1.phasedFrameshift());
-        // assertFalse(impact1.hasEffect(FRAMESHIFT));
-        //assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
-        //assertFalse(impact2.codingContext().IsFrameShift);
-        //assertFalse(impact2.hasEffect(FRAMESHIFT));
-        //assertTrue(impact2.hasEffect(PHASED_INFRAME_INSERTION));
+        assertFalse(impact1.hasEffect(FRAMESHIFT));
+        assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
+        assertFalse(impact2.codingContext().IsFrameShift);
+        assertFalse(impact2.hasEffect(FRAMESHIFT));
+        assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
     }
 
     @Test
@@ -320,10 +321,18 @@ public class PhasedVariantsTest
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 0, 100 }, 80, 10, 190, false, "");
 
         // DEL and INS making missense and symonymous effects
-        int pos = 20;
-
+        // SNVs at either end are ignored
+        int pos = 14;
         String ref = mRefBases.substring(pos, pos + 1);
-        String alt = ref + "AG";
+        String alt = generateAlt(ref);
+        VariantData varIgnore1 = new VariantData(CHR_1, pos, ref, alt);
+        varIgnore1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impactIgnore1 = classifyVariant(varIgnore1, transDataNeg);
+        assertTrue(impactIgnore1.hasEffect(MISSENSE));
+
+        pos = 20;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "AG";
         VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
         var1.setVariantDetails(1, "", "", 0);
         VariantTransImpact impact1 = classifyVariant(var1, transDataNeg);
@@ -351,6 +360,22 @@ public class PhasedVariantsTest
         assertTrue(impact3.codingContext().IsFrameShift);
         assertTrue(impact3.hasEffect(FRAMESHIFT));
 
+        pos = 40;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = generateAlt(ref);
+        VariantData varIgnore2 = new VariantData(CHR_1, pos, ref, alt);
+        varIgnore2.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impactIgnore2 = classifyVariant(varIgnore2, transDataNeg);
+        assertTrue(impactIgnore2.hasEffect(SYNONYMOUS));
+
+        pos = 46;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = generateAlt(ref);
+        VariantData varIgnore3 = new VariantData(CHR_1, pos, ref, alt);
+        varIgnore3.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impactIgnore3 = classifyVariant(varIgnore3, transDataNeg);
+        assertTrue(impactIgnore3.hasEffect(SYNONYMOUS));
+
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
         assertFalse(impact1.codingContext().IsFrameShift);
@@ -359,6 +384,13 @@ public class PhasedVariantsTest
         assertTrue(impact1.hasEffect(PHASED_INFRAME_DELETION));
         assertTrue(impact2.hasEffect(PHASED_INFRAME_DELETION));
         assertTrue(impact3.hasEffect(PHASED_INFRAME_DELETION));
+
+        assertFalse(impactIgnore1.phasedFrameshift());
+        assertFalse(impactIgnore2.phasedFrameshift());
+        assertFalse(impactIgnore3.phasedFrameshift());
+        assertFalse(impactIgnore1.hasEffect(PHASED_INFRAME_DELETION));
+        assertFalse(impactIgnore2.hasEffect(PHASED_INFRAME_DELETION));
+        assertFalse(impactIgnore3.hasEffect(PHASED_INFRAME_DELETION));
     }
 
     private VariantTransImpact classifyVariant(final VariantData var, final TranscriptData transData)

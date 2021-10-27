@@ -192,7 +192,9 @@ public class ComparisonWriter
     {
         try
         {
-            String fileName = formFilename(outputDir, outputId, "ref_variants");
+            String fileName = outputId != null ?
+                outputDir + "prod_ref_variants_" + outputId + ".tsv" : outputDir + "prod_ref_variants.tsv";
+
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             writer.write(RefVariantData.tsvHeader());
