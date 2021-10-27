@@ -35,6 +35,8 @@ public final class QualityOverruleFunctions {
             }
         }
 
+        List<CnPerChromosomeArmData> cnPerChromosomeDataSorted = cnPerChromosomeData.stream().sorted().collect(Collectors.toList());;
+
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
         Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
         for (ReportableVariantWithNotify overruled : overruledVariantsWithNotify) {
@@ -54,7 +56,7 @@ public final class QualityOverruleFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(sortedNotifyPerVariant)
-                .cnPerChromosome(cnPerChromosomeData)
+                .cnPerChromosome(cnPerChromosomeDataSorted)
                 .peachGenotypes(qcForm.equals(QsFormNumber.FOR_080.display()) ? genomicAnalysis.peachGenotypes() : Lists.newArrayList())
                 .build();
     }
