@@ -289,6 +289,10 @@ For each novel splice junction we count the number of fragments supporting the e
 * INTRONIC_TO_EXONIC - Neither end matches a known splice site.  One end is intronic and 1 end is exonic
 * CIRCULAR - Circular RNAs (typically formed by backsplicing) are also treated as novel splice junctions when they fall wholly within a gene and are marked as orientation "CIRCULAR".  Inversion oriented events are not considered to be novel splice junctions and are instead treated as chimeric.
 
+Below figure shows examples of the novel splice junction event types (and of retained intron, see section below).
+
+![Novel SJ and Retained Intron](src/main/resources/readme/novel_splice_junctions_and_retained_intron.png)
+
 In the case of overlapping genes, we assign the novel splice junction to one of the genes using the following priority rules in order
 * Genes with matching splice site at a least one end
 * Genes on strand such that splice motif matches canonical splice motif (GT-AG)
