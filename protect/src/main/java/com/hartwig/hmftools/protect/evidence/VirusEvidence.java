@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -30,8 +31,8 @@ public class VirusEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull VirusInterpreterData virusInterpreterData) {
-        List<AnnotatedVirusV1> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("HPV"));
-        List<AnnotatedVirusV1> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("EBV"));
+        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("HPV"));
+        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("EBV"));
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
@@ -62,16 +63,16 @@ public class VirusEvidence {
     }
 
     @NotNull
-    private static List<AnnotatedVirusV1> virusesWithInterpretation(@NotNull VirusInterpreterData virusInterpreterData,
+    private static List<AnnotatedVirus> virusesWithInterpretation(@NotNull VirusInterpreterData virusInterpreterData,
             @NotNull VirusConstants interpretationToInclude) {
-        List<AnnotatedVirusV1> virusesWithInterpretation = Lists.newArrayList();
-        for (AnnotatedVirusV1 virus : virusInterpreterData.reportableViruses()) {
+        List<AnnotatedVirus> virusesWithInterpretation = Lists.newArrayList();
+        for (AnnotatedVirus virus : virusInterpreterData.reportableViruses()) {
             if (virus.interpretation().equals(interpretationToInclude.name())) {
                 virusesWithInterpretation.add(virus);
             }
         }
 
-        for (AnnotatedVirusV1 virus : virusInterpreterData.unreportedViruses()) {
+        for (AnnotatedVirus virus : virusInterpreterData.unreportedViruses()) {
             if (virus.interpretation().equals(interpretationToInclude.name())) {
                 virusesWithInterpretation.add(virus);
             }

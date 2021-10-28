@@ -50,6 +50,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -99,7 +100,7 @@ public final class ExampleAnalysisTestFactory {
         List<LinxFusion> fusions = Lists.newArrayList();
         List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
-        List<AnnotatedVirusV1> viruses = Lists.newArrayList();
+        List<AnnotatedVirus> viruses = Lists.newArrayList();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         SampleReport sampleReport = createSkinMelanomaSampleReport(config.sampleId(), config.reportGermline(), config.limsCohortConfig());
@@ -181,7 +182,7 @@ public final class ExampleAnalysisTestFactory {
         AnalysedPatientReport coloReport = createWithCOLO829Data(config);
 
         List<LinxFusion> fusions = createTestFusions();
-        List<AnnotatedVirusV1> viruses = createTestAnnotatedViruses();
+        List<AnnotatedVirus> viruses = createTestAnnotatedViruses();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
         List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
@@ -1037,7 +1038,7 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    private static List<AnnotatedVirusV1> createTestAnnotatedViruses() {
+    private static List<AnnotatedVirus> createTestAnnotatedViruses() {
         return Lists.newArrayList(VirusTestFactory.testAnnotatedVirusBuilder()
                 .name("Human papillomavirus type 16")
                 .integrations(2)

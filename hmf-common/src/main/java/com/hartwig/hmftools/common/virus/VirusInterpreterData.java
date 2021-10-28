@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
 public interface VirusInterpreterData {
 
     @NotNull
-    List<AnnotatedVirusV1> reportableViruses();
+    List<AnnotatedVirus> reportableViruses();
 
     @NotNull
-    List<AnnotatedVirusV1> unreportedViruses();
+    List<AnnotatedVirus> unreportedViruses();
 }
