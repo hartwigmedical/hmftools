@@ -55,46 +55,37 @@ public final class HgvsProtein
 
     public static String generate(final VariantData variant, final ProteinContext proteinContext, final List<VariantEffect> effects)
     {
-        try
+        boolean hasStopGained = false;
+        VariantEffect topEffect = null;
+
+        for(VariantEffect effect : effects)
         {
-            boolean hasStopGained = false;
-            VariantEffect topEffect = null;
-
-            for(VariantEffect effect : effects)
-            {
-                if(effect == STOP_GAINED)
-                    hasStopGained = true;
-                else if(topEffect == null)
-                    topEffect = effect;
-            }
-
-            if(topEffect == null && hasStopGained) // re-instate for the protein string if effect was removed
-                topEffect = MISSENSE;
-
-            String hgvs = generate(proteinContext, topEffect);
-
-            if(hasStopGained)
-            {
-                if(hgvs.contains(HGVS_STOP_TRI_CODE))
-                {
-                    // replace from Ter onwards
-                    int stopIndex = hgvs.indexOf(HGVS_STOP_TRI_CODE);
-                    hgvs = hgvs.substring(0, stopIndex) + HGVS_STOP_GAINED;
-                }
-                else if(topEffect != FRAMESHIFT)
-                {
-                    hgvs += HGVS_STOP_GAINED;
-                }
-            }
-
-            return hgvs;
+            if(effect == STOP_GAINED)
+                hasStopGained = true;
+            else if(topEffect == null)
+                topEffect = effect;
         }
-        catch(Exception e)
+
+        if(topEffect == null && hasStopGained) // re-instate for the protein string if effect was removed
+            topEffect = MISSENSE;
+
+        String hgvs = generate(proteinContext, topEffect);
+
+        if(hasStopGained)
         {
-            PV_LOGGER.error("var({}) error forming HGVS protein string", variant);
-            e.printStackTrace();
-            return HGVS_UNKNOWN;
+            if(hgvs.contains(HGVS_STOP_TRI_CODE))
+            {
+                // replace from Ter onwards
+                int stopIndex = hgvs.indexOf(HGVS_STOP_TRI_CODE);
+                hgvs = hgvs.substring(0, stopIndex) + HGVS_STOP_GAINED;
+            }
+            else if(topEffect != FRAMESHIFT)
+            {
+                hgvs += HGVS_STOP_GAINED;
+            }
         }
+
+        return hgvs;
     }
 
     public static String generate(final ProteinContext proteinContext, final VariantEffect effect)
@@ -282,12 +273,32 @@ public final class HgvsProtein
 
             if(proteinContext.NetRefAminoAcids.isEmpty())
             {
+                // skip past any redundant ref codons upstream
+                int i = 0;
+
+                for(; i < min(refAminoAcids.length() - 1, proteinContext.AltAminoAcids.length()); ++i)
+                {
+                    if(refAminoAcids.charAt(i) != proteinContext.AltAminoAcids.charAt(i))
+                        break;
+                }
+
+                --i;
+
+                if(i < 0 || i >= refAminoAcids.length() - 1)
+                {
+                    sb.append(HGVS_UNKNOWN);
+                    return;
+                }
+
+                int aaStartIndex = proteinContext.CodonIndex + i;
+                int aaEndIndex = aaStartIndex + 1;
+
                 // conservative: only an insert, no deleted AAs so quote the range
-                sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
-                sb.append(proteinContext.CodonIndex);
+                sb.append(convertToTriLetters(refAminoAcids.charAt(i)));
+                sb.append(aaStartIndex);
                 sb.append('_');
-                sb.append(convertToTriLetters(refAminoAcids.charAt(1)));
-                sb.append(proteinContext.CodonIndex + 1);
+                sb.append(convertToTriLetters(refAminoAcids.charAt(i + 1)));
+                sb.append(aaEndIndex);
             }
             else
             {
@@ -323,24 +334,22 @@ public final class HgvsProtein
     private static void formFrameshift(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // report first changed AA (ie the ref) downstream and its index
-        for(int i = 0; i < min(proteinContext.RefAminoAcids.length(), proteinContext.AltAminoAcids.length()); ++i)
+        int i = 0;
+        for(; i < proteinContext.RefAminoAcids.length(); ++i)
         {
-            if(proteinContext.RefAminoAcids.charAt(i) != proteinContext.AltAminoAcids.charAt(i))
-            {
-                sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(i)));
-                sb.append(proteinContext.CodonIndex + i);
-                sb.append(HGVS_FRAMESHIFT);
+            if(i >= proteinContext.AltAminoAcids.length())
                 break;
-            }
+
+            if(proteinContext.RefAminoAcids.charAt(i) != proteinContext.AltAminoAcids.charAt(i))
+                break;
         }
 
-        /*
-        String refAminoAcids = !proteinContext.NetRefAminoAcids.isEmpty() ? proteinContext.NetRefAminoAcids : proteinContext.RefAminoAcids;
-        int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
-        sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
-        sb.append(aaIndexStart);
+        if(i == proteinContext.RefAminoAcids.length())
+            --i;
+
+        sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(i)));
+        sb.append(proteinContext.CodonIndex + i);
         sb.append(HGVS_FRAMESHIFT);
-        */
     }
 
     private static void formStopLost(final ProteinContext proteinContext, final StringBuilder sb)

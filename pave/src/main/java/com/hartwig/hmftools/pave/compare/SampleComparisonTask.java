@@ -181,7 +181,7 @@ public class SampleComparisonTask implements Callable
                 if(mConfig.checkDiffType(HGVS_CODING))
                 {
                     if(!transImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)
-                            && (raTransImpact == null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
+                    && (raTransImpact == null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
                     {
                         hasDiff = true;
                     }

@@ -60,6 +60,9 @@ public class ComparisonWriter
         try
         {
             String fileName = formFilename(outputDir, outputId, "impacts");
+
+            PV_LOGGER.info("writing impact comparison file: {}", fileName);
+
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             writer.write("SampleId,");
@@ -115,6 +118,9 @@ public class ComparisonWriter
         try
         {
             String fileName = formFilename(outputDir, outputId, "trans_impacts");
+
+            PV_LOGGER.info("writing transcript comparison file: {}", fileName);
+
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             writer.write(String.format("SampleId,%s,GeneId,GeneName,%s,%s,%s",

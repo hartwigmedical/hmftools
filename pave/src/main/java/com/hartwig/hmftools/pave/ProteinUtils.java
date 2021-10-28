@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.codon.Codons.aminoAcidFromBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
@@ -17,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 public final class ProteinUtils
 {
@@ -220,40 +222,44 @@ public final class ProteinUtils
         if(!variant.isIndel())
             return;
 
-        // if(!cc.IsFrameShift)
-        //    return;
-
         boolean posStrand = transData.posStrand();
 
         // for indels contained with a codon (ie phase 1 or 2), extract the first additional upstream bases
-        if(variant.isInsert() && (cc.UpstreamPhase == PHASE_1 || cc.UpstreamPhase == PHASE_2)
-        && pc.RefAminoAcids.charAt(0) == pc.AltAminoAcids.charAt(pc.AltAminoAcids.length() - 1)) // && pc.RefAminoAcids.length() == 1 &&
+        if(variant.isInsert() && (cc.UpstreamPhase == PHASE_1 || cc.UpstreamPhase == PHASE_2))
         {
-            boolean searchUp = !posStrand;
+            boolean firstMatchesLast = pc.RefAminoAcids.charAt(0) == pc.AltAminoAcids.charAt(pc.AltAminoAcids.length() - 1);
 
-            String upstreamBases = getExtraBases(
-                    transData, refGenome, variant.Chromosome, exon, 3, searchUp, pc.RefCodonsRanges);
+            boolean firstSeqMatchesLast = pc.RefAminoAcids.length() >= 2 && pc.AltAminoAcids.length() >= 2
+                    && pc.RefAminoAcids.substring(0, 2).equals(pc.AltAminoAcids.substring(pc.AltAminoAcids.length() - 2));
 
-            --pc.CodonIndex;
-            pc.ExtraUpstreamCodon = true;
-
-            if(posStrand)
+            if(firstMatchesLast || firstSeqMatchesLast)
             {
-                pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
-                pc.AltCodonBases = upstreamBases + pc.AltCodonBases;
-                pc.AltCodonBasesComplete = upstreamBases + pc.AltCodonBasesComplete;
+                boolean searchUp = !posStrand;
 
-                pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBases);
-                pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
-            }
-            else
-            {
-                pc.RefCodonBases += upstreamBases;
-                pc.AltCodonBases += upstreamBases;
-                pc.AltCodonBasesComplete += upstreamBases;
+                String upstreamBases = getExtraBases(
+                        transData, refGenome, variant.Chromosome, exon, 3, searchUp, pc.RefCodonsRanges);
 
-                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
-                pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+                --pc.CodonIndex;
+                pc.ExtraUpstreamCodon = true;
+
+                if(posStrand)
+                {
+                    pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
+                    pc.AltCodonBases = upstreamBases + pc.AltCodonBases;
+                    pc.AltCodonBasesComplete = upstreamBases + pc.AltCodonBasesComplete;
+
+                    pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBases);
+                    pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
+                }
+                else
+                {
+                    pc.RefCodonBases += upstreamBases;
+                    pc.AltCodonBases += upstreamBases;
+                    pc.AltCodonBasesComplete += upstreamBases;
+
+                    pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
+                    pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+                }
             }
         }
 
@@ -320,7 +326,7 @@ public final class ProteinUtils
                 || variant.isDeletion()
                 || variant.isInsert(); //  && !proteinContext.ExtraUpstreamCodon);
 
-        boolean repeatStartRemoval = canTrimStart && (codingContext.IsFrameShift || variant.isDeletion());
+        boolean repeatStartRemoval = canTrimStart && variant.isIndel(); // (codingContext.IsFrameShift || variant.isDeletion());
 
         boolean repeatEndRemoval = variant.isInsert(); // && codingContext.IsFrameShift;
 
@@ -417,7 +423,7 @@ public final class ProteinUtils
         // check for a single AA repeated
         final String netAminoAcids = pc.NetAltAminoAcids;
 
-        if(pc.NetAltAminoAcids.length() == pc.NetRefAminoAcids.length() + 1)
+        if(pc.NetAltAminoAcids.length() == 1 && pc.NetRefAminoAcids.isEmpty())
         {
             if(pc.NetAltAminoAcids.charAt(0) == pc.RefAminoAcids.charAt(0))
             {
@@ -489,7 +495,7 @@ public final class ProteinUtils
 
     public static String getExtraBases(
             final TranscriptData transData, final RefGenomeInterface refGenome, final String chromosome,
-            final ExonData currentExon, int requiredBases, boolean searchUp, final List<int[]> codingBaseRanges)
+            final ExonData refExon, int requiredBases, boolean searchUp, final List<int[]> codingBaseRanges)
     {
         if(codingBaseRanges.isEmpty())
             return null;
@@ -499,6 +505,12 @@ public final class ProteinUtils
         int[] currentRange = searchUp ? codingBaseRanges.get(codingBaseRanges.size() - 1) : codingBaseRanges.get(0);
 
         int startPos = searchUp ? currentRange[SE_END] : currentRange[SE_START];
+
+        final ExonData currentExon = positionWithin(startPos, refExon.Start, refExon.End) ?
+                refExon : transData.exons().stream().filter(x -> positionWithin(startPos, x.Start, x.End)).findFirst().orElse(null);
+
+        if(currentExon == null)
+            return null;
 
         if(searchUp)
         {
