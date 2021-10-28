@@ -32,7 +32,7 @@ public class QCFailReporter {
     @NotNull
     public QCFailReport run(@Nullable QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport, @NotNull String expectedPipelineVersion,
-            boolean overridePipelineVersion, @NotNull String pipelineVersionFile) throws IOException {
+            boolean overridePipelineVersion, @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile) throws IOException {
         assert reason != null;
 
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
@@ -42,8 +42,13 @@ public class QCFailReporter {
         SampleReport sampleReport = SampleReportFactory.fromLimsModel(sampleMetadata, reportData.limsModel(), patientPrimaryTumor);
 
         if (reason.equals(QCFailReason.SUFFICIENT_TCP_QC_FAILURE) || reason.equals(QCFailReason.INSUFFICIENT_TCP_DEEP_WGS)) {
-            String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            PipelineVersion.checkPipelineVersion(pipelineVersion, expectedPipelineVersion, overridePipelineVersion);
+
+            String pipelineVersion = null;
+            if (requirePipelineVersionFile) {
+                assert pipelineVersionFile != null;
+                pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+                PipelineVersion.checkPipelineVersion(pipelineVersion, expectedPipelineVersion, overridePipelineVersion);
+            }
         }
 
         LimsCohortConfig cohort = sampleReport.cohort();

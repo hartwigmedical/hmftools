@@ -90,7 +90,7 @@ public class ClinicalEvidenceFunctions {
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
                 new float[] { 20, 180, 180 },
-                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Eligibility", 2) });
+                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Genomic event", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
         return treatmentTable;
@@ -134,7 +134,13 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
-                Table responsiveTable = new Table(new float[] { 1, 1, 1 });
+                Table responsiveTable;
+                if (!evidenType.equals("trial")) {
+                    responsiveTable = new Table(new float[] { 1, 1, 1 });
+                } else {
+                    responsiveTable = new Table(new float[] { 1 });
+                }
+
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(responsive));
                     String url = url(responsive);
@@ -142,14 +148,16 @@ public class ClinicalEvidenceFunctions {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
 
-                    String predicted;
-                    if (PREDICTED.contains(responsive.direction())) {
-                        predicted = " PRD";
-                    } else {
-                        predicted = Strings.EMPTY;
+                    if (!evidenType.equals("trial")) {
+                        String predicted;
+                        if (PREDICTED.contains(responsive.direction())) {
+                            predicted = "pred";
+                        } else {
+                            predicted = Strings.EMPTY;
+                        }
+                        responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
+                        responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
                     }
-                    responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
-                    responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
 
                     responsiveTable.addCell(cell);
                 }
@@ -166,7 +174,7 @@ public class ClinicalEvidenceFunctions {
 
                         String predicted;
                         if (PREDICTED.contains(resistant.direction())) {
-                            predicted = " PRD";
+                            predicted = "pred";
                         } else {
                             predicted = Strings.EMPTY;
                         }

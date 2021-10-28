@@ -38,18 +38,7 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    public static ImmutableAnnotatedVirusV1.Builder testAnnotatedVirusBuilder() {
-        return ImmutableAnnotatedVirusV1.builder()
-                .taxid(0)
-                .name(Strings.EMPTY)
-                .interpretation(Strings.EMPTY)
-                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
-                .integrations(0)
-                .reported(false);
-    }
-
-    @NotNull
-    public static ImmutableAnnotatedVirus.Builder testAnnotatedVirusBuilderNewModel() {
+    public static ImmutableAnnotatedVirus.Builder testAnnotatedVirusBuilder() {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)

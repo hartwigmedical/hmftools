@@ -356,6 +356,13 @@ public class Lims {
         return LimsChecker.checkViralInsertions(sampleData, cohort, sampleId(sampleBarcode));
     }
 
+    public boolean reportPgx(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        LimsCohortConfig cohort = cohortConfig(sampleBarcode);
+
+        return LimsChecker.checkReportPgx(sampleData, cohort, sampleId(sampleBarcode));
+    }
+
     @Nullable
     private String submission(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);

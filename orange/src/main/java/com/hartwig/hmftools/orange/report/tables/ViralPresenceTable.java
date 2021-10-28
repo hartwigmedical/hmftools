@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
@@ -16,7 +17,7 @@ public final class ViralPresenceTable {
     }
 
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirusV1> viruses) {
+    public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirus> viruses) {
         if (viruses.isEmpty()) {
             return TableUtil.createEmptyTable(title, width);
         }
@@ -26,7 +27,7 @@ public final class ViralPresenceTable {
                 new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("QC Status"),
                         TableUtil.createHeaderCell("Interpretation"), TableUtil.createHeaderCell("Integrations") });
 
-        for (AnnotatedVirusV1 virus : viruses) {
+        for (AnnotatedVirus virus : viruses) {
             table.addCell(TableUtil.createContentCell(virus.name()));
             table.addCell(TableUtil.createContentCell(virus.qcStatus().toString()));
             table.addCell(TableUtil.createContentCell(virus.interpretation() != null ? virus.interpretation().toString() : Strings.EMPTY));

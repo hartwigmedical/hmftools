@@ -68,6 +68,7 @@ public final class SampleReportFactory {
                 .biopsyLocation(curatedBiopsyLocation)
                 .germlineReportingLevel(lims.germlineReportingChoice(tumorSampleBarcode))
                 .reportViralPresence(lims.reportViralPresence(tumorSampleBarcode))
+                .reportPharmogenetics(lims.reportPgx(tumorSampleBarcode))
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .shallowSeqPurityString(lims.purityShallowSeq(tumorSampleBarcode))

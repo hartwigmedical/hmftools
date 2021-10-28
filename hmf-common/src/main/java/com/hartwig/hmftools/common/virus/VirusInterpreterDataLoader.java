@@ -20,11 +20,11 @@ public final class VirusInterpreterDataLoader {
     @NotNull
     public static VirusInterpreterData load(@NotNull String annotatedVirusTsv) throws IOException {
         LOGGER.info("Loading annotated virus data from {}", new File(annotatedVirusTsv).getParent());
-        List<AnnotatedVirusV1> viruses = AnnotatedVirusFileV1.read(annotatedVirusTsv);
+        List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
 
-        List<AnnotatedVirusV1> reportable = Lists.newArrayList();
-        List<AnnotatedVirusV1> unreported = Lists.newArrayList();
-        for (AnnotatedVirusV1 virus : viruses) {
+        List<AnnotatedVirus> reportable = Lists.newArrayList();
+        List<AnnotatedVirus> unreported = Lists.newArrayList();
+        for (AnnotatedVirus virus : viruses) {
             if (virus.reported()) {
                 reportable.add(virus);
             } else {

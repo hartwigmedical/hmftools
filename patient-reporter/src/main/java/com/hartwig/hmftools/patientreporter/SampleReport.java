@@ -33,6 +33,8 @@ public abstract class SampleReport {
 
     public abstract boolean reportViralPresence();
 
+    public abstract boolean reportPharmogenetics();
+
     @Nullable
     public abstract LocalDate refArrivalDate();
 

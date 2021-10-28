@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -32,6 +35,8 @@ public final class QualityOverruleFunctions {
             }
         }
 
+        List<CnPerChromosomeArmData> cnPerChromosomeDataSorted = cnPerChromosomeData.stream().sorted().collect(Collectors.toList());;
+
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
         Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
         for (ReportableVariantWithNotify overruled : overruledVariantsWithNotify) {
@@ -39,11 +44,19 @@ public final class QualityOverruleFunctions {
             newNotifyPerVariant.put(overruled.variant(), overruled.notifyVariant());
         }
 
+        Map<ReportableVariant, Boolean> sortedNotifyPerVariant = newNotifyPerVariant.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
-                .notifyGermlineStatusPerVariant(newNotifyPerVariant)
-                .cnPerChromosome(cnPerChromosomeData)
+                .notifyGermlineStatusPerVariant(sortedNotifyPerVariant)
+                .cnPerChromosome(cnPerChromosomeDataSorted)
                 .peachGenotypes(qcForm.equals(QsFormNumber.FOR_080.display()) ? genomicAnalysis.peachGenotypes() : Lists.newArrayList())
                 .build();
     }

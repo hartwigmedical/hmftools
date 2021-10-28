@@ -315,12 +315,12 @@ public class SummaryChapter implements ReportChapter {
         Style pgxStyle;
         String reportedPhenotypes;
 
-        if (patientReport.sampleReport().cohort().reportPeach() && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
+        if (patientReport.sampleReport().reportPharmogenetics() && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
             pgxFunctions = Pharmacogenetics.phenotypesFunctions(patientReport.genomicAnalysis().peachGenotypes());
             pgxGenes = Pharmacogenetics.phenotypesGenes(patientReport.genomicAnalysis().peachGenotypes());
             pgxStyle = ReportResources.dataHighlightStyle();
             reportedPhenotypes = Integer.toString(Pharmacogenetics.countPhenotypes(patientReport.genomicAnalysis().peachGenotypes()));
-        } else if (patientReport.sampleReport().cohort().reportPeach() && patientReport.qsFormNumber()
+        } else if (patientReport.sampleReport().reportPharmogenetics() && patientReport.qsFormNumber()
                 .equals(QsFormNumber.FOR_209.display())) {
             pgxFunctions = Sets.newHashSet(DataUtil.NA_STRING);
             pgxGenes = Sets.newHashSet(DataUtil.NA_STRING);
