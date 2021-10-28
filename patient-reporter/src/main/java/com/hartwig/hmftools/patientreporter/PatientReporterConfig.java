@@ -49,7 +49,6 @@ public interface PatientReporterConfig {
     String QC_FAIL_REASON = "qc_fail_reason";
 
     // Params specific for actual patient reports
-    String PIPELINE_VERSION_FILE = "pipeline_version_file";
     String PURPLE_PURITY_TSV = "purple_purity_tsv"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_QC_FILE = "purple_qc_file"; // Also used for certain QC fail reports in case deep WGS is available.
     String PURPLE_SOMATIC_DRIVER_CATALOG_TSV = "purple_somatic_driver_catalog_tsv";
@@ -79,6 +78,8 @@ public interface PatientReporterConfig {
     String ONLY_CREATE_PDF = "only_create_pdf";
 
     // parameters for pipeline version
+    String REQUIRE_PIPELINE_VERSION_FILE = "require_pipeline_version_file";
+    String PIPELINE_VERSION_FILE = "pipeline_version_file";
     String EXPECTED_PIPELINE_VERSION = "expected_pipeline_version";
     String OVERRIDE_PIPELINE_VERSION = "override_pipeline_version";
 
@@ -106,7 +107,6 @@ public interface PatientReporterConfig {
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON, true, "One of: " + Strings.join(Lists.newArrayList(QCFailReason.validIdentifiers()), ','));
 
-        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_SOMATIC_DRIVER_CATALOG_TSV, true, "Path towards the purple somatic driver catalog TSV.");
@@ -133,6 +133,8 @@ public interface PatientReporterConfig {
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
+        options.addOption(REQUIRE_PIPELINE_VERSION_FILE, true, "Boolean for determine pipeline version file is requierde");
+        options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version (optional)");
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
         options.addOption(OVERRIDE_PIPELINE_VERSION, false, "if set, the check for pipeline version is overridden");
 
@@ -181,9 +183,6 @@ public interface PatientReporterConfig {
 
     @Nullable
     QCFailReason qcFailReason();
-
-    @NotNull
-    String pipelineVersionFile();
 
     @NotNull
     String purplePurityTsv();
@@ -249,6 +248,11 @@ public interface PatientReporterConfig {
 
     boolean onlyCreatePDF();
 
+    boolean requirePipelineVersionFile();
+
+    @Nullable
+    String pipelineVersionFile();
+
     @NotNull
     String expectedPipelineVersion();
 
@@ -265,6 +269,7 @@ public interface PatientReporterConfig {
         }
 
         boolean isQCFail = cmd.hasOption(QC_FAIL);
+        boolean requirePipelineVersion = cmd.hasOption(REQUIRE_PIPELINE_VERSION_FILE);
         QCFailReason qcFailReason = null;
         if (isQCFail) {
             String qcFailReasonString = nonOptionalValue(cmd, QC_FAIL_REASON);
@@ -274,7 +279,7 @@ public interface PatientReporterConfig {
             }
         }
 
-        String pipelineVersion = Strings.EMPTY;
+        String pipelineVersion = null;
         String purplePurityTsv = Strings.EMPTY;
         String purpleQcFile = Strings.EMPTY;
         String purpleSomaticDriverCatalogTsv = Strings.EMPTY;
@@ -300,7 +305,10 @@ public interface PatientReporterConfig {
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
         } else if (!isQCFail) {
-            pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+            if (requirePipelineVersion) {
+                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+            }
+
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
             purpleSomaticDriverCatalogTsv = nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV);
@@ -338,7 +346,6 @@ public interface PatientReporterConfig {
                 .udiDi(nonOptionalValue(cmd, UDI_DI))
                 .qcFail(isQCFail)
                 .qcFailReason(qcFailReason)
-                .pipelineVersionFile(pipelineVersion)
                 .purplePurityTsv(purplePurityTsv)
                 .purpleQcFile(purpleQcFile)
                 .purpleSomaticDriverCatalogTsv(purpleSomaticDriverCatalogTsv)
@@ -361,6 +368,8 @@ public interface PatientReporterConfig {
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
+                .requirePipelineVersionFile(requirePipelineVersion)
+                .pipelineVersionFile(pipelineVersion)
                 .expectedPipelineVersion(cmd.getOptionValue(EXPECTED_PIPELINE_VERSION))
                 .overridePipelineVersion(cmd.hasOption(OVERRIDE_PIPELINE_VERSION))
                 .refGenomeVersion(RefGenomeVersion.from(nonOptionalValue(cmd, RefGenomeVersion.REF_GENOME_VERSION)))

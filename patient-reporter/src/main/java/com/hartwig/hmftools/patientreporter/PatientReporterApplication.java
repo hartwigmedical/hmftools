@@ -105,7 +105,9 @@ public class PatientReporterApplication {
                 config.comments(),
                 config.isCorrectedReport(),
                 config.expectedPipelineVersion(),
-                config.overridePipelineVersion(), config.pipelineVersionFile());
+                config.overridePipelineVersion(),
+                config.pipelineVersionFile(),
+                config.requirePipelineVersionFile());
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();

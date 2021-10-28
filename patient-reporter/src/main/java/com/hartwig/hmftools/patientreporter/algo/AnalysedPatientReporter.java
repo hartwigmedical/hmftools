@@ -53,8 +53,13 @@ public class AnalysedPatientReporter {
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId(), sampleReport.cohort());
 
-        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(config.pipelineVersionFile());
-        PipelineVersion.checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
+        String pipelineVersion = null;
+        if (config.requirePipelineVersionFile()) {
+            String pipelineVersionFile = config.pipelineVersionFile();
+            assert pipelineVersionFile != null;
+            pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
+            PipelineVersion.checkPipelineVersion(pipelineVersion, config.expectedPipelineVersion(), config.overridePipelineVersion());
+        }
 
         GenomicAnalyzer genomicAnalyzer = new GenomicAnalyzer(reportData.germlineReportingModel());
         GenomicAnalysis genomicAnalysis = genomicAnalyzer.run(sampleMetadata.tumorSampleId(),
