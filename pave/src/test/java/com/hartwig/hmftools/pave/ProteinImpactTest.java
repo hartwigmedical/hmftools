@@ -240,11 +240,43 @@ public class ProteinImpactTest
         alt = ref + getAminoAcidsCodons("RVS", false);
         checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.6_7insAGGGTGTCA", "p.Ala2_Cys3insArgValSer");
 
-        // non-conservative insert D(GAC) + L(TTA) -> E(GAA) (G)GGG (C)TGT
+        // non-conservative insert: CDL -> CEGCL   C + D(GAC) + L(TTA) + L -> C + E(GAA) (G)GGG (C)TGT + L
         pos = 30;
         ref = mRefBases.substring(pos, pos + 1);
         alt = ref + getAminoAcidsCodons("RV", false);
         checkHgvsStrings(pos, 1, alt, INFRAME_INSERTION, "c.11_12insAGGGTG", "p.Asp4delinsGluGlyCys");
+
+        // pos codons: M 20-22, A 23-25, C 26-28, D 29-31, L 32-34, L 35-37, G 38-40, H 41-43, E 44-46, stopX 47-49
+        // M  A  C  D  L  L  G  H  E  X
+        // ATGGCTTGTGACTTATTAGGACACGAGTAA
+
+        // DLLG -> DCCLLG, or shortened DL -> DCCL, so should be p.D4_L5insCC
+        // ref: L
+        //      T       TA
+        // alt: C     C   L
+        //      T  GT TGT T  TA
+        pos = 32;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + "GTTGTT"; // getAminoAcidsCodons("CC", false);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+        assertEquals("p.Asp4_Leu5insCysCys", impact.proteinContext().Hgvs);
+
+        // neg codons: M 139-37, A 136-134, C 133-131, D 130-128, L 127-125, L 124-122, G 121-119, H 118-116, E 115-113, stopX 112-110
+        //   X  E  H  G  L  L  D  C  A  M
+        // TTACTCGTGTCCTAATAAGTCACAAGCCAT GATCGATCGA
+        // 110                            140
+
+        pos = 123;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = ref + getAminoAcidsCodons("GC", true);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mNegTrans);
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
+        // assertEquals("p.Leu5_Leu6insCysGly", impact.proteinContext().Hgvs);
 
         // duplications
 

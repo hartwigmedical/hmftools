@@ -78,9 +78,9 @@ public class InsertCodingContextTest
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(18, 21) + refBases.substring(30, 33), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(15, 21) + refBases.substring(30, 33), impact.proteinContext().RefCodonBases);
 
-        String altCodonBases = refBases.substring(18, 19) + alt + refBases.substring(20, 21) + refBases.substring(30, 33);
+        String altCodonBases = refBases.substring(15, 19) + alt + refBases.substring(20, 21) + refBases.substring(30, 33);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
@@ -149,9 +149,9 @@ public class InsertCodingContextTest
         assertEquals(EXONIC, impact.codingContext().RegionType);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(78, 81) + refBases.substring(90, 93), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(78, 81) + refBases.substring(90, 96), impact.proteinContext().RefCodonBases);
 
-        altCodonBases = refBases.substring(78, 81) + refBases.substring(90, 91) + alt + refBases.substring(92, 93);
+        altCodonBases = refBases.substring(78, 81) + refBases.substring(90, 91) + alt + refBases.substring(92, 96);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
@@ -169,9 +169,9 @@ public class InsertCodingContextTest
         assertEquals(4, impact.codingContext().ExonRank);
 
         assertFalse(impact.codingContext().IsFrameShift);
-        assertEquals(refBases.substring(57, 61) + refBases.substring(70, 72), impact.proteinContext().RefCodonBases);
+        assertEquals(refBases.substring(57, 61) + refBases.substring(70, 75), impact.proteinContext().RefCodonBases);
 
-        altCodonBases = refBases.substring(57, 61) + alt + refBases.substring(71, 72);
+        altCodonBases = refBases.substring(57, 61) + alt + refBases.substring(71, 75);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 

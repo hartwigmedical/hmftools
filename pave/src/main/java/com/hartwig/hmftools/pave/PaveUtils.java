@@ -21,7 +21,7 @@ public final class PaveUtils
         if(variant.isBaseChange()) // to be confirmed
             return null;
 
-        if(variant.microhomology().isEmpty() || variant.microhomology().equals(".") || variant.repeatCount() == 0)
+        if(variant.microhomology().isEmpty() || variant.microhomology().equals("."))
             return null;
 
         // cannot realign if the ref and alt bases differ, eg T>AA
@@ -45,7 +45,7 @@ public final class PaveUtils
 
         int shiftCount;
 
-        if(variant.microhomology().equals(altBases))
+        if(variant.microhomology().equals(altBases) && variant.repeatCount() > 0)
         {
             int repeatCount = 0;
 

@@ -25,6 +25,7 @@ public class ProteinContext
     public String AltAminoAcids;
 
     // strips off any ref codon present in both
+    public boolean ExtraUpstreamCodon;
     public int[] NetCodonIndexRange;
     public String NetRefAminoAcids;
     public String NetAltAminoAcids;
@@ -49,6 +50,7 @@ public class ProteinContext
         NetRefAminoAcids = "";
         NetAltAminoAcids = "";
         IsDuplication = false;
+        ExtraUpstreamCodon = false;
         IsPhased = false;
         Hgvs = "";
     }

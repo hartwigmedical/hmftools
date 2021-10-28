@@ -246,19 +246,19 @@ public final class HgvsProtein
             return;
         }
 
-        String refAminoAcids = proteinContext.RefAminoAcids;
-
         if(proteinContext.IsDuplication)
         {
-            String altAminoAcids = proteinContext.NetAltAminoAcids;
-
             // duplication (single AA) p.Gln8dup
             // duplication (range) p.Gly4_Gln6dup - variety of AAs
             // dup range, single AA repeated: c.1014_1019dupTGCTGC	p.Ala339_Ala340dup
-            if(proteinContext.NetCodonIndexRange[SE_END] > proteinContext.NetCodonIndexRange[SE_START])
+            String altAminoAcids = proteinContext.NetAltAminoAcids;
+            int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
+            int aaIndexEnd = proteinContext.NetCodonIndexRange[SE_END];
+
+            if(aaIndexEnd > aaIndexStart)
             {
                 sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
-                sb.append(proteinContext.NetCodonIndexRange[SE_START]);
+                sb.append(aaIndexStart);
                 sb.append('_');
                 sb.append(convertToTriLetters(altAminoAcids.charAt(altAminoAcids.length() - 1)));
                 sb.append(proteinContext.NetCodonIndexRange[SE_END]);
@@ -266,21 +266,41 @@ public final class HgvsProtein
             else
             {
                 sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
-                sb.append(proteinContext.NetCodonIndexRange[SE_START]);
+                sb.append(aaIndexStart);
             }
 
             sb.append(HGVS_TYPE_DUP);
         }
         else
         {
-            // insertion p.Lys2_Leu3insGlnSer
-            // insertion (conservative stop) p.Ser81_Val82ins*
-            // insertion (non conservative) p.Cys28delinsTrpVal
-            int aaIndexStart = proteinContext.CodonIndex;
+            // insertion conservative single: AA AC -> ARC = p.A2_C3insR from net: '' -> R
+            // insertion conservative multiple: KL -> KGSL = p.K2_L3insGS from net: '' -> GS
+            // insertion conservative multiple: DN -> DKDN = p.D295_N296insKD from net: '' -> DN
+            // insertion non-conservative: DCN -> DWVN = p.C28delinsWV from net: C -> WV
+            // insertion conservative stop: p.Ser81_Val82ins*
+            String refAminoAcids = proteinContext.RefAminoAcids;
 
-            sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
-            sb.append(aaIndexStart);
+            if(proteinContext.NetRefAminoAcids.isEmpty())
+            {
+                // conservative: only an insert, no deleted AAs so quote the range
+                sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
+                sb.append(proteinContext.CodonIndex);
+                sb.append('_');
+                sb.append(convertToTriLetters(refAminoAcids.charAt(1)));
+                sb.append(proteinContext.CodonIndex + 1);
+            }
+            else
+            {
+                // non-conservative: an AA has been deleted
+                sb.append(convertToTriLetters(proteinContext.NetRefAminoAcids.charAt(0)));
+                sb.append(proteinContext.NetCodonIndexRange[SE_START]);
+                sb.append(HGVS_TYPE_DEL);
+            }
 
+            sb.append(HGVS_TYPE_INS);
+            sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
+
+            /*
             if(proteinContext.RefAminoAcids.charAt(0) == proteinContext.AltAminoAcids.charAt(0))
             {
                 // conservative
@@ -296,6 +316,7 @@ public final class HgvsProtein
                 sb.append(HGVS_TYPE_INS);
                 sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
             }
+            */
         }
     }
 

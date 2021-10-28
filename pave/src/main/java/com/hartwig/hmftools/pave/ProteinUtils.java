@@ -203,8 +203,8 @@ public final class ProteinUtils
             pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
         }
 
-        // for frameshifts with equivalent AAs, continue extracting ref bases until a difference arises
-        extendInframe(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
+        // extend the range of up and downstream codons for INDELs to help determine the net differences in amino acids
+        extendIndelCodonBases(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
 
         trimAminoAcids(variant, cc, pc);
 
@@ -214,9 +214,101 @@ public final class ProteinUtils
         return pc;
     }
 
+    public static void extendIndelCodonBases(final VariantData variant, final CodingContext cc, final ProteinContext pc,
+            final TranscriptData transData, final ExonData exon, final RefGenomeInterface refGenome, int downstreamAltOpenCodonBases)
+    {
+        if(!variant.isIndel())
+            return;
+
+        // if(!cc.IsFrameShift)
+        //    return;
+
+        boolean posStrand = transData.posStrand();
+
+        // for indels contained with a codon (ie phase 1 or 2), extract the first additional upstream bases
+        if(variant.isInsert() && (cc.UpstreamPhase == PHASE_1 || cc.UpstreamPhase == PHASE_2)
+        && pc.RefAminoAcids.charAt(0) == pc.AltAminoAcids.charAt(pc.AltAminoAcids.length() - 1)) // && pc.RefAminoAcids.length() == 1 &&
+        {
+            boolean searchUp = !posStrand;
+
+            String upstreamBases = getExtraBases(
+                    transData, refGenome, variant.Chromosome, exon, 3, searchUp, pc.RefCodonsRanges);
+
+            --pc.CodonIndex;
+            pc.ExtraUpstreamCodon = true;
+
+            if(posStrand)
+            {
+                pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
+                pc.AltCodonBases = upstreamBases + pc.AltCodonBases;
+                pc.AltCodonBasesComplete = upstreamBases + pc.AltCodonBasesComplete;
+
+                pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBases);
+                pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
+            }
+            else
+            {
+                pc.RefCodonBases += upstreamBases;
+                pc.AltCodonBases += upstreamBases;
+                pc.AltCodonBasesComplete += upstreamBases;
+
+                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
+                pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+            }
+        }
+
+        if(!pc.RefAminoAcids.equals(pc.AltAminoAcids) || downstreamAltOpenCodonBases == 0)
+            return;
+
+        // from last ref codon base get 3 more each time
+        boolean searchUp = posStrand;
+        int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
+        int extraBases = 3 + downstreamAltOpenCodonBases;
+
+        while(true)
+        {
+            String downstreamBases = getExtraBases(
+                    transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
+
+            if(downstreamBases == null)
+                break;
+
+            if(downstreamBases.length() < extraBases || downstreamBases.length() < downstreamAltOpenCodonBases)
+            {
+                PV_LOGGER.warn("var({}) invalid extraBases(P{) downstreamBases({}) downstreamAltOpenCodonBases({})",
+                        variant, extraBases, downstreamBases, downstreamAltOpenCodonBases);
+                break;
+            }
+
+            if(posStrand)
+            {
+                // trim of the extra base(s) that the frame-shifted alt needs
+                String refDownstreamBases = downstreamBases.substring(0, downstreamBases.length() - downstreamAltOpenCodonBases);
+                pc.RefCodonBasesExtended = pc.RefCodonBases + refDownstreamBases;
+                pc.AltCodonBasesComplete = pc.AltCodonBases + downstreamBases;
+                pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBasesExtended);
+                pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
+            }
+            else
+            {
+                String refDownstreamBases = downstreamBases.substring(downstreamAltOpenCodonBases);
+                pc.RefCodonBasesExtended = refDownstreamBases + pc.RefCodonBases;
+                pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBases;
+                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBasesExtended));
+                pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+            }
+
+            if(!pc.RefAminoAcids.equals(pc.AltAminoAcids))
+                break;
+
+            extraBases += 3;
+        }
+    }
+
     private static void trimAminoAcids(
             final VariantData variant, final CodingContext codingContext, final ProteinContext proteinContext)
     {
+        // trim matching amino acids from the start and end to align any differences to the most 3'UTR end in protein space
         if(proteinContext.RefAminoAcids.equals(proteinContext.AltAminoAcids))
             return; // ignore synonymous
 
@@ -225,37 +317,35 @@ public final class ProteinUtils
         // DEL: strip off the initial AA if it doesn't overlap a deleted base
         // INS:
         boolean canTrimStart = variant.isBaseChange()
-                // || (variant.isDeletion() && (codingContext.UpstreamPhase == PHASE_0 || codingContext.IsFrameShift))
                 || variant.isDeletion()
-                || variant.isInsert();
+                || variant.isInsert(); //  && !proteinContext.ExtraUpstreamCodon);
 
         boolean repeatStartRemoval = canTrimStart && (codingContext.IsFrameShift || variant.isDeletion());
 
-        boolean canTrimEnd = true;
+        boolean repeatEndRemoval = variant.isInsert(); // && codingContext.IsFrameShift;
 
-        trimAminoAcids(proteinContext, canTrimStart, repeatStartRemoval, canTrimEnd);
+        trimAminoAcids(proteinContext, canTrimStart, repeatStartRemoval, repeatEndRemoval);
     }
 
     public static void trimAminoAcids(
-            final ProteinContext proteinContext, boolean canTrimStart, boolean repeatStartRemoval, boolean canTrimEnd)
+            final ProteinContext proteinContext, boolean canTrimStart, boolean repeatStartRemoval, boolean repeatEndRemoval)
     {
         int aaIndex = proteinContext.CodonIndex;
-        String refAminoAcids = proteinContext.RefAminoAcids;
-        String altAminoAcids = proteinContext.AltAminoAcids;
+        String netRefAminoAcids = proteinContext.RefAminoAcids;
+        String netAltAminoAcids = proteinContext.AltAminoAcids;
 
         // strip off the initial AA if it doesn't relate to any of the altered bases, as is the case for a DEL with the reference
         // is the last base of a codon
         if(canTrimStart)
         {
             // strip out any matching AA from the start if the ref has more than 1
-
             while(true)
             {
-                if(refAminoAcids.length() > 1 && !refAminoAcids.isEmpty() && !altAminoAcids.isEmpty()
-                && refAminoAcids.charAt(0) == altAminoAcids.charAt(0))
+                if(netRefAminoAcids.length() > 1 && !netRefAminoAcids.isEmpty() && !netAltAminoAcids.isEmpty()
+                && netRefAminoAcids.charAt(0) == netAltAminoAcids.charAt(0))
                 {
-                    refAminoAcids = refAminoAcids.substring(1);
-                    altAminoAcids = altAminoAcids.substring(1);
+                    netRefAminoAcids = netRefAminoAcids.substring(1);
+                    netAltAminoAcids = netAltAminoAcids.substring(1);
                     aaIndex++;
 
                     if(!repeatStartRemoval) // only the first
@@ -269,20 +359,36 @@ public final class ProteinUtils
         }
 
         // and strip off a matching AA from the end if there is one
-        if(canTrimEnd)
+        while(true)
         {
-            if(!refAminoAcids.isEmpty() && !altAminoAcids.isEmpty()
-            && refAminoAcids.charAt(refAminoAcids.length() - 1) == altAminoAcids.charAt(altAminoAcids.length() - 1))
+            if(!netRefAminoAcids.isEmpty() && !netAltAminoAcids.isEmpty()
+            && netRefAminoAcids.charAt(netRefAminoAcids.length() - 1) == netAltAminoAcids.charAt(netAltAminoAcids.length() - 1))
             {
-                refAminoAcids = refAminoAcids.substring(0, refAminoAcids.length() - 1);
-                altAminoAcids = altAminoAcids.substring(0, altAminoAcids.length() - 1);
+                netRefAminoAcids = netRefAminoAcids.substring(0, netRefAminoAcids.length() - 1);
+                netAltAminoAcids = netAltAminoAcids.substring(0, netAltAminoAcids.length() - 1);
+
+                if(!repeatEndRemoval)
+                    break;
+            }
+            else
+            {
+                break;
             }
         }
 
-        proteinContext.NetRefAminoAcids = refAminoAcids;
-        proteinContext.NetAltAminoAcids = altAminoAcids;
+            /*
+            if(!netRefAminoAcids.isEmpty() && !netAltAminoAcids.isEmpty()
+            && netRefAminoAcids.charAt(netRefAminoAcids.length() - 1) == netAltAminoAcids.charAt(netAltAminoAcids.length() - 1))
+            {
+                netRefAminoAcids = netRefAminoAcids.substring(0, netRefAminoAcids.length() - 1);
+                netAltAminoAcids = netAltAminoAcids.substring(0, netAltAminoAcids.length() - 1);
+            }
+            */
+
+        proteinContext.NetRefAminoAcids = netRefAminoAcids;
+        proteinContext.NetAltAminoAcids = netAltAminoAcids;
         proteinContext.NetCodonIndexRange[SE_START] = aaIndex;
-        proteinContext.NetCodonIndexRange[SE_END] = aaIndex + max(refAminoAcids.length() - 1, 0);
+        proteinContext.NetCodonIndexRange[SE_END] = aaIndex + max(netRefAminoAcids.length() - 1, 0);
     }
 
     public static void checkInsertDuplication(
@@ -358,62 +464,6 @@ public final class ProteinUtils
         {
             pc.IsDuplication = true;
             pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START] + extendedRefAminoAcids.length() - 1;
-        }
-    }
-
-    public static void extendInframe(final VariantData variant, final CodingContext cc, final ProteinContext pc,
-            final TranscriptData transData, final ExonData exon, final RefGenomeInterface refGenome, int downstreamAltOpenCodonBases)
-    {
-        if(!cc.IsFrameShift)
-            return;
-
-        if(!pc.RefAminoAcids.equals(pc.AltAminoAcids) || downstreamAltOpenCodonBases == 0)
-            return;
-
-        boolean posStrand = transData.posStrand();
-
-        // from last ref codon base get 3 more each time
-        boolean searchUp = posStrand;
-        int currentPos = posStrand ? pc.refCodingBaseEnd() : pc.refCodingBaseStart();
-        int extraBases = 3 + downstreamAltOpenCodonBases;
-
-        while(true)
-        {
-            String downstreamBases = getExtraBases(
-                    transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
-
-            if(downstreamBases == null)
-                break;
-
-            if(downstreamBases.length() < extraBases || downstreamBases.length() < downstreamAltOpenCodonBases)
-            {
-                PV_LOGGER.warn("var({}) invalid extraBases(P{) downstreamBases({}) downstreamAltOpenCodonBases({})",
-                        variant, extraBases, downstreamBases, downstreamAltOpenCodonBases);
-                break;
-            }
-
-            if(posStrand)
-            {
-                // trim of the extra base(s) that the frame-shifted alt needs
-                String refDownstreamBases = downstreamBases.substring(0, downstreamBases.length() - downstreamAltOpenCodonBases);
-                pc.RefCodonBasesExtended = pc.RefCodonBases + refDownstreamBases;
-                pc.AltCodonBasesComplete = pc.AltCodonBases + downstreamBases;
-                pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBasesExtended);
-                pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
-            }
-            else
-            {
-                String refDownstreamBases = downstreamBases.substring(downstreamAltOpenCodonBases);
-                pc.RefCodonBasesExtended = refDownstreamBases + pc.RefCodonBases;
-                pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBases;
-                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBasesExtended));
-                pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
-            }
-
-            if(!pc.RefAminoAcids.equals(pc.AltAminoAcids))
-                break;
-
-            extraBases += 3;
         }
     }
 
