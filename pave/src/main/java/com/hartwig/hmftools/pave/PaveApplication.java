@@ -172,14 +172,22 @@ public class PaveApplication
                 variantContext.getCommonInfo().removeAttribute(SNPEFF_WORST);
         }
 
-        variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
+        try
+        {
+            variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
 
-        findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
+            findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
-        processPhasedVariants(variant.localPhaseSet());
+            processPhasedVariants(variant.localPhaseSet());
 
-        if(!variant.hasLocalPhaseSet())
-            processVariant(variant);
+            if(!variant.hasLocalPhaseSet())
+                processVariant(variant);
+        }
+        catch(Exception e)
+        {
+            PV_LOGGER.error("error processing var({})", variant);
+            e.printStackTrace();
+        }
     }
 
     private void processPhasedVariants(int currentLocalPhaseSet)
@@ -219,56 +227,48 @@ public class PaveApplication
     public static void findVariantImpacts(
             final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
     {
-        try
+        boolean processed = false;
+
+        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
+
+        if(!geneCandidates.isEmpty())
         {
-            boolean processed = false;
-
-            List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
-
-            if(!geneCandidates.isEmpty())
+            // analyse against each of the genes and their transcripts
+            for(GeneData geneData : geneCandidates)
             {
-                // analyse against each of the genes and their transcripts
-                for(GeneData geneData : geneCandidates)
+                List<TranscriptData> transDataList =
+                        geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+
+                // non-coding transcripts are skipped for now
+                if(transDataList.isEmpty())
+                    continue;
+
+                for(TranscriptData transData : transDataList)
                 {
-                    List<TranscriptData> transDataList =
-                            geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+                    VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                    processed = true;
 
-                    // non-coding transcripts are skipped for now
-                    if(transDataList.isEmpty())
-                        continue;
-
-                    for(TranscriptData transData : transDataList)
+                    // check right-alignment if the variant has microhomology
+                    if(variant.realignedVariant() != null)
                     {
-                        VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
-                        processed = true;
+                        VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
 
-                        // check right-alignment if the variant has microhomology
-                        if(variant.realignedVariant() != null)
+                        if(raTransImpact != null)
                         {
-                            VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
-
-                            if(raTransImpact != null)
-                            {
-                                variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
-                                transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
-                            }
+                            variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
+                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
                         }
-
-                        if(transImpact != null)
-                            variant.addImpact(geneData.GeneName, transImpact);
                     }
+
+                    if(transImpact != null)
+                        variant.addImpact(geneData.GeneName, transImpact);
                 }
             }
+        }
 
-            // ensure all phased variants are cached
-            if(!processed && variant.hasLocalPhaseSet())
-                impactClassifier.phasedVariants().checkAddVariant(variant);
-        }
-        catch(Exception e)
-        {
-            PV_LOGGER.error("error classifying var({})", variant);
-            e.printStackTrace();
-        }
+        // ensure all phased variants are cached
+        if(!processed && variant.hasLocalPhaseSet())
+            impactClassifier.phasedVariants().checkAddVariant(variant);
     }
 
     private void initialiseVcfWriter()

@@ -128,9 +128,9 @@ public class RefVariantData
 
     public String toString()
     {
-        return String.format("pos(%s:%d) variant(%s: %s>%s) canon(%s: %s) worst(%s)",
+        return String.format("pos(%s:%d) variant(%s: %s>%s) canon(%s: %s) worst(%s) hgvs(coding=%s protein=%s)",
                 Chromosome, Position, Type, Ref, Alt, CanonicalCodingEffect, CanonicalEffect,
-                WorstCodingEffect);
+                WorstCodingEffect, HgvsCodingImpact, HgvsProteinImpact);
     }
 
     public static String tsvHeader()

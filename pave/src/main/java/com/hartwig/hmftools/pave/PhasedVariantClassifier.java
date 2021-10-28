@@ -173,6 +173,9 @@ public class PhasedVariantClassifier
             VariantTransImpact transImpact = transImpacts.get(i);
             VariantData variant = variants.get(i);
 
+            if(i > 0 && variants.get(i - 1).Position >= variant.Position)
+                return; // don't handle overlapping or out-of-order variants
+
             if(!transImpact.hasProteinContext() || variant.isIndel())
                 continue;
 
@@ -266,6 +269,13 @@ public class PhasedVariantClassifier
                 {
                     currentAltBasesTrimmed = refOverlap;
                     prevAltBasesTrimmed = 0;
+                }
+
+                if(combinedAltCodons.length() - prevAltBasesTrimmed <= 0)
+                {
+                    PV_LOGGER.error("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
+                            localPhaseSet, variant, combinedAltCodons, prevAltBasesTrimmed);
+                    return;
                 }
 
                 combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);

@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
+import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsCodingDiff;
+import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsProteinDiff;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_CODING;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_PROTEIN;
@@ -112,14 +114,22 @@ public class SampleComparisonTask implements Callable
             variant.setSampleId(sampleId);
             variant.setRefData(refVariant);
 
-            variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
+            try
+            {
+                variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
 
-            findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
+                findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
-            processPhasedVariants(variant.localPhaseSet());
+                processPhasedVariants(variant.localPhaseSet());
 
-            if(!variant.hasLocalPhaseSet())
-                processVariant(sampleId, variant, refVariant);
+                if(!variant.hasLocalPhaseSet())
+                    processVariant(sampleId, variant, refVariant);
+            }
+            catch(Exception e)
+            {
+                PV_LOGGER.error("error processing var({})", variant);
+                e.printStackTrace();
+            }
         }
 
         processPhasedVariants(NO_LOCAL_PHASE_SET);
@@ -162,15 +172,11 @@ public class SampleComparisonTask implements Callable
         }
         else
         {
-            if(mConfig.checkDiffType(REPORTED))
-            {
-                hasDiff |= refVariant.Reported != variant.reported();
-            }
+            if(mConfig.checkDiffType(REPORTED) && refVariant.Reported != variant.reported())
+                hasDiff = true;
 
-            if(mConfig.checkDiffType(CODING_EFFECT))
-            {
-                hasDiff |= hasCodingEffectDiff(variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect);
-            }
+            if(mConfig.checkDiffType(CODING_EFFECT) && hasCodingEffectDiff(variantImpact, refVariant))
+                hasDiff = true;
 
             VariantTransImpact transImpact = variant.getCanonicalTransImpacts(refVariant.Gene);
 
@@ -180,20 +186,14 @@ public class SampleComparisonTask implements Callable
 
                 if(mConfig.checkDiffType(HGVS_CODING))
                 {
-                    if(!transImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)
-                    && (raTransImpact == null || !raTransImpact.hgvsCoding().equals(refVariant.HgvsCodingImpact)))
-                    {
+                    if(hasHgvsCodingDiff(transImpact, raTransImpact, refVariant))
                         hasDiff = true;
-                    }
                 }
 
                 if(mConfig.checkDiffType(HGVS_PROTEIN))
                 {
-                    if(!transImpact.hgvsProtein().equals(refVariant.HgvsProteinImpact)
-                            && (raTransImpact == null || !raTransImpact.hgvsProtein().equals(refVariant.HgvsProteinImpact)))
-                    {
+                    if(hasHgvsProteinDiff(variant, transImpact, raTransImpact, refVariant))
                         hasDiff = true;
-                    }
                 }
             }
         }
