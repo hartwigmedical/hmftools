@@ -299,24 +299,6 @@ public final class HgvsProtein
 
             sb.append(HGVS_TYPE_INS);
             sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
-
-            /*
-            if(proteinContext.RefAminoAcids.charAt(0) == proteinContext.AltAminoAcids.charAt(0))
-            {
-                // conservative
-                sb.append('_');
-                sb.append(convertToTriLetters(refAminoAcids.charAt(refAminoAcids.length() - 1)));
-                sb.append(aaIndexStart + 1);
-                sb.append(HGVS_TYPE_INS);
-                sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
-            }
-            else
-            {
-                sb.append(HGVS_TYPE_DEL);
-                sb.append(HGVS_TYPE_INS);
-                sb.append(convertToTriLetters(proteinContext.NetAltAminoAcids));
-            }
-            */
         }
     }
 
@@ -341,11 +323,24 @@ public final class HgvsProtein
     private static void formFrameshift(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // report first changed AA (ie the ref) downstream and its index
+        for(int i = 0; i < min(proteinContext.RefAminoAcids.length(), proteinContext.AltAminoAcids.length()); ++i)
+        {
+            if(proteinContext.RefAminoAcids.charAt(i) != proteinContext.AltAminoAcids.charAt(i))
+            {
+                sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(i)));
+                sb.append(proteinContext.CodonIndex + i);
+                sb.append(HGVS_FRAMESHIFT);
+                break;
+            }
+        }
+
+        /*
         String refAminoAcids = !proteinContext.NetRefAminoAcids.isEmpty() ? proteinContext.NetRefAminoAcids : proteinContext.RefAminoAcids;
         int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
         sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
         sb.append(aaIndexStart);
         sb.append(HGVS_FRAMESHIFT);
+        */
     }
 
     private static void formStopLost(final ProteinContext proteinContext, final StringBuilder sb)
