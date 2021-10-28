@@ -333,7 +333,7 @@ public final class HgvsProtein
 
     private static void formFrameshift(final ProteinContext proteinContext, final StringBuilder sb)
     {
-        // report first changed AA (ie the ref) downstream and its index
+        // report first changed AA (ie the ref) downstream and its index, otherwise the last ref AA
         int i = 0;
         for(; i < proteinContext.RefAminoAcids.length(); ++i)
         {

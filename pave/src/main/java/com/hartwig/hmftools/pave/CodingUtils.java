@@ -59,9 +59,9 @@ public final class CodingUtils
                 {
                     // used to set HGVS coding string correctly
                     if(transData.posStrand() && variant.altPositions().contains(transData.CodingEnd))
-                        cc.SpansStopCodon = true;
+                        cc.SpansCodingEnd = true;
                     else if(!transData.posStrand() && variant.altPositions().contains(transData.CodingStart))
-                        cc.SpansStopCodon = true;
+                        cc.SpansCodingEnd = true;
                 }
             }
 
@@ -187,6 +187,8 @@ public final class CodingUtils
                                 cc.NearestExonDistance = variant.EndPosition - exonCodingEnd;
                             else if(variant.Position < exonCodingStart)
                                 cc.NearestExonDistance = variant.Position - exonCodingStart; // -ve back into previous intron
+
+                            cc.SpansCodingStart = variant.Position < codingStart;
                         }
                     }
                     else
@@ -310,6 +312,8 @@ public final class CodingUtils
                                 cc.NearestExonDistance = exonCodingEnd - variant.EndPosition; // -ve back into previous intron
                             else if(variant.Position < exonCodingStart)
                                 cc.NearestExonDistance = exonCodingStart - variant.Position;
+
+                            cc.SpansCodingStart = variant.EndPosition > codingEnd;
                         }
                     }
                     else

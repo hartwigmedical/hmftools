@@ -225,7 +225,7 @@ public final class ProteinUtils
         boolean posStrand = transData.posStrand();
 
         // for indels contained with a codon (ie phase 1 or 2), extract the first additional upstream bases
-        if(variant.isInsert() && (cc.UpstreamPhase == PHASE_1 || cc.UpstreamPhase == PHASE_2))
+        if(variant.isInsert() && (cc.UpstreamPhase == PHASE_1 || cc.UpstreamPhase == PHASE_2) && pc.CodonIndex > 1)
         {
             boolean firstMatchesLast = pc.RefAminoAcids.charAt(0) == pc.AltAminoAcids.charAt(pc.AltAminoAcids.length() - 1);
 
@@ -239,26 +239,29 @@ public final class ProteinUtils
                 String upstreamBases = getExtraBases(
                         transData, refGenome, variant.Chromosome, exon, 3, searchUp, pc.RefCodonsRanges);
 
-                --pc.CodonIndex;
-                pc.ExtraUpstreamCodon = true;
-
-                if(posStrand)
+                if(upstreamBases != null)
                 {
-                    pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
-                    pc.AltCodonBases = upstreamBases + pc.AltCodonBases;
-                    pc.AltCodonBasesComplete = upstreamBases + pc.AltCodonBasesComplete;
+                    --pc.CodonIndex;
+                    pc.ExtraUpstreamCodon = true;
 
-                    pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBases);
-                    pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
-                }
-                else
-                {
-                    pc.RefCodonBases += upstreamBases;
-                    pc.AltCodonBases += upstreamBases;
-                    pc.AltCodonBasesComplete += upstreamBases;
+                    if(posStrand)
+                    {
+                        pc.RefCodonBases = upstreamBases + pc.RefCodonBases;
+                        pc.AltCodonBases = upstreamBases + pc.AltCodonBases;
+                        pc.AltCodonBasesComplete = upstreamBases + pc.AltCodonBasesComplete;
 
-                    pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
-                    pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+                        pc.RefAminoAcids = aminoAcidFromBases(pc.RefCodonBases);
+                        pc.AltAminoAcids = aminoAcidFromBases(pc.AltCodonBasesComplete);
+                    }
+                    else
+                    {
+                        pc.RefCodonBases += upstreamBases;
+                        pc.AltCodonBases += upstreamBases;
+                        pc.AltCodonBasesComplete += upstreamBases;
+
+                        pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
+                        pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+                    }
                 }
             }
         }
@@ -382,15 +385,6 @@ public final class ProteinUtils
             }
         }
 
-            /*
-            if(!netRefAminoAcids.isEmpty() && !netAltAminoAcids.isEmpty()
-            && netRefAminoAcids.charAt(netRefAminoAcids.length() - 1) == netAltAminoAcids.charAt(netAltAminoAcids.length() - 1))
-            {
-                netRefAminoAcids = netRefAminoAcids.substring(0, netRefAminoAcids.length() - 1);
-                netAltAminoAcids = netAltAminoAcids.substring(0, netAltAminoAcids.length() - 1);
-            }
-            */
-
         proteinContext.NetRefAminoAcids = netRefAminoAcids;
         proteinContext.NetAltAminoAcids = netAltAminoAcids;
         proteinContext.NetCodonIndexRange[SE_START] = aaIndex;
@@ -437,19 +431,6 @@ public final class ProteinUtils
                 pc.NetCodonIndexRange[SE_END] = pc.NetCodonIndexRange[SE_START];
                 return;
             }
-
-            /*
-            isSingleRepeat = true;
-
-            for(int i = 1; i < netAminoAcids.length(); ++i)
-            {
-                if(netAminoAcids.charAt(i) != netAminoAcids.charAt(0))
-                {
-                    isSingleRepeat = false;
-                    break;
-                }
-            }
-            */
         }
 
         // otherwise extend downstream the length of the inserted AAs and test for a match
@@ -459,6 +440,9 @@ public final class ProteinUtils
 
         String downstreamBases = getExtraBases(
                 transData, refGenome, variant.Chromosome, exon, currentPos, extraBases, searchUp);
+
+        if(downstreamBases == null)
+            return;
 
         String extraAminoAcids = posStrand
                 ? aminoAcidFromBases(downstreamBases)

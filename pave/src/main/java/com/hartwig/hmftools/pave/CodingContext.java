@@ -32,7 +32,8 @@ public class CodingContext
     public int NearestExonDistance;
     public boolean SpansSpliceJunction;
     public boolean IsFrameShift;
-    public boolean SpansStopCodon;
+    public boolean SpansCodingStart;
+    public boolean SpansCodingEnd;
     public int DeletedCodingBases;
 
     public String SpliceDonorAcceptorBases;
@@ -57,7 +58,8 @@ public class CodingContext
         NearestExonDistance = 0;
         UpstreamPhase = PHASE_NONE;
         CodingEndsOnExonBoundary = false;
-        SpansStopCodon = false;
+        SpansCodingStart = false;
+        SpansCodingEnd = false;
         Hgvs = "";
     }
 

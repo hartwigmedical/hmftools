@@ -103,7 +103,6 @@ public final class DataLoader
             int reportedIndex = fieldsIndexMap.get("reported");
             Integer hotspotIndex = fieldsIndexMap.get("hotspot");
 
-            String currentSample = "";
             List<RefVariantData> variants = null;
 
             String line = "";
@@ -114,9 +113,9 @@ public final class DataLoader
 
                 String sampleId = items[sampleIndex];
 
-                if(!currentSample.equals(sampleId))
+                variants = sampleVariantsMap.get(sampleId);
+                if(variants == null)
                 {
-                    currentSample = sampleId;
                     variants = Lists.newArrayList();
                     sampleVariantsMap.put(sampleId, variants);
                 }

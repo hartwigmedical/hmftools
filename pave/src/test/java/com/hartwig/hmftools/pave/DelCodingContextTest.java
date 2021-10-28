@@ -298,7 +298,7 @@ public class DelCodingContextTest
         assertEquals(18, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals(3, impact.codingContext().DeletedCodingBases);
         assertEquals(3, impact.codingContext().NearestExonDistance);
-        assertTrue(impact.codingContext().SpansStopCodon);
+        assertTrue(impact.codingContext().SpansCodingEnd);
         assertEquals("c.43_*2delTCGAT", impact.codingContext().Hgvs);
     }
 
@@ -364,6 +364,22 @@ public class DelCodingContextTest
         assertEquals(118, impact.codingContext().CodingPositionRange[SE_START]);
         assertEquals(120, impact.codingContext().CodingPositionRange[SE_END]);
         assertEquals("c.-16-3_-15delGATCG", impact.codingContext().Hgvs);
+
+        // delete exonic bases just before coding
+        TranscriptData transDataPos = createPosTranscript();
+
+        pos = 12;
+        ref = refBases.substring(pos, pos + 5);
+        alt = refBases.substring(pos, pos + 1);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+        assertEquals(1, impact.codingContext().CodingBase);
+        assertTrue(impact.codingContext().SpansCodingStart);
+        assertEquals(2, impact.codingContext().DeletedCodingBases);
+        assertEquals(15, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(17, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-2_2delATCG", impact.codingContext().Hgvs);
     }
 
     @Test

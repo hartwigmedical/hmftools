@@ -343,6 +343,19 @@ public class MnvCodingContextTest
 
         altCodonBases = alt + refCodonBases.substring(4, 6);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
+
+        // crossing coding start
+        pos = 94;
+        ref = refBases.substring(pos, pos + 4);
+        alt = generateAlt(ref);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataNeg);
+        assertEquals(1, impact.codingContext().CodingBase);
+        assertTrue(impact.codingContext().SpansCodingStart);
+        assertEquals(94, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(95, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals("c.-2_2delTCGAinsATCG", impact.codingContext().Hgvs);
     }
 
     @Test
