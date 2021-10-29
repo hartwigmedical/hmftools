@@ -534,7 +534,7 @@ CREATE TABLE somaticVariant
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
-    genesEffected int not null,
+    genesAffected int not null,
     canonicalEffect varchar(255) NOT NULL,
     canonicalCodingEffect varchar(50) NOT NULL,
     canonicalHgvsCodingImpact varchar(255) NOT NULL,
@@ -612,16 +612,16 @@ CREATE TABLE germlineVariant
     pathogenicity varchar(255) NOT NULL,
     pathogenic BOOLEAN NOT NULL,
 
-    ## SNP EFF ENRICHMENT
+    ## PAVE IMPACTS
     gene varchar(255) NOT NULL,
-    genesEffected int not null,
-    worstEffectTranscript varchar(255) NOT NULL,
-    worstEffect varchar(255) NOT NULL,
-    worstCodingEffect varchar(255) NOT NULL,
+    genesAffected int not null,
     canonicalEffect varchar(255) NOT NULL,
     canonicalCodingEffect varchar(255) NOT NULL,
     canonicalHgvsCodingImpact varchar(255) NOT NULL,
     canonicalHgvsProteinImpact varchar(255) NOT NULL,
+    spliceRegion BOOLEAN NOT NULL,
+    otherTranscriptEffects varchar(255) NOT NULL,
+    worstCodingEffect varchar(255) NOT NULL,
 
     ### REF GENOME ENRICHMENT
     microhomology varchar(255) NOT NULL,

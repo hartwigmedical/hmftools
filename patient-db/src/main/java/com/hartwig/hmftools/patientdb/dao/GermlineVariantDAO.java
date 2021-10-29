@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
 
 import java.sql.Timestamp;
@@ -85,14 +86,14 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT.PATHOGENICITY,
                 GERMLINEVARIANT.PATHOGENIC,
                 GERMLINEVARIANT.GENE,
-                GERMLINEVARIANT.GENESEFFECTED,
-                GERMLINEVARIANT.WORSTEFFECT,
-                GERMLINEVARIANT.WORSTCODINGEFFECT,
-                GERMLINEVARIANT.WORSTEFFECTTRANSCRIPT,
+                GERMLINEVARIANT.GENESAFFECTED,
                 GERMLINEVARIANT.CANONICALEFFECT,
                 GERMLINEVARIANT.CANONICALCODINGEFFECT,
                 GERMLINEVARIANT.CANONICALHGVSCODINGIMPACT,
                 GERMLINEVARIANT.CANONICALHGVSPROTEINIMPACT,
+                GERMLINEVARIANT.SPLICEREGION,
+                GERMLINEVARIANT.OTHERTRANSCRIPTEFFECTS,
+                GERMLINEVARIANT.WORSTCODINGEFFECT,
                 GERMLINEVARIANT.MICROHOMOLOGY,
                 GERMLINEVARIANT.REPEATSEQUENCE,
                 GERMLINEVARIANT.REPEATCOUNT,
@@ -102,8 +103,10 @@ public class GermlineVariantDAO {
                 GERMLINEVARIANT.REPORTED);
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String tumorSample, String referenceSample,
-            String rnaSample, VariantContext variantContext) {
+    private static void addRecord(
+            Timestamp timestamp, InsertValuesStepN inserter, String tumorSample, String referenceSample,
+            String rnaSample, VariantContext variantContext)
+    {
         final VariantContextDecorator decorator = new VariantContextDecorator(variantContext);
         final AllelicDepth tumorDepth = decorator.allelicDepth(tumorSample);
         final AllelicDepth referenceDepth = decorator.allelicDepth(referenceSample);
@@ -139,13 +142,13 @@ public class GermlineVariantDAO {
                 decorator.isPathogenic(),
                 variantImpact.gene(),
                 variantImpact.GenesAffected,
-                "",
-                variantImpact.WorstCodingEffect != CodingEffect.UNDEFINED ? variantImpact.WorstCodingEffect : Strings.EMPTY,
-                "",
                 variantImpact.CanonicalEffect,
                 variantImpact.CanonicalCodingEffect != CodingEffect.UNDEFINED ? variantImpact.CanonicalCodingEffect : Strings.EMPTY,
                 variantImpact.CanonicalHgvsCoding,
                 variantImpact.CanonicalHgvsProtein,
+                variantImpact.CanonicalSpliceRegion,
+                variantImpact.OtherReportableEffects,
+                variantImpact.WorstCodingEffect != CodingEffect.UNDEFINED ? variantImpact.WorstCodingEffect : Strings.EMPTY,
                 decorator.microhomology(),
                 decorator.repeatSequence(),
                 decorator.repeatCount(),

@@ -195,7 +195,7 @@ public class SomaticVariantDAO
                 .ref(record.getValue(SOMATICVARIANT.REF))
                 .alt(record.getValue(SOMATICVARIANT.ALT))
                 .gene(record.getValue(SOMATICVARIANT.GENE))
-                .genesAffected(record.getValue(SOMATICVARIANT.GENESEFFECTED))
+                .genesAffected(record.getValue(SOMATICVARIANT.GENESAFFECTED))
                 .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
                         ? CodingEffect.UNDEFINED
                         : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
@@ -257,7 +257,7 @@ public class SomaticVariantDAO
                 SOMATICVARIANT.REF,
                 SOMATICVARIANT.ALT,
                 SOMATICVARIANT.GENE,
-                SOMATICVARIANT.GENESEFFECTED,
+                SOMATICVARIANT.GENESAFFECTED,
                 SOMATICVARIANT.REPORTED,
                 SOMATICVARIANT.WORSTCODINGEFFECT,
                 SOMATICVARIANT.CANONICALEFFECT,
