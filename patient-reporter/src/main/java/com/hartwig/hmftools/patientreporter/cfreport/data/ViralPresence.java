@@ -40,7 +40,7 @@ public final class ViralPresence {
 
     @NotNull
     public static String createViralCoverageString(double percentageCovered) {
-        return percentageCovered + "%";
+        return Math.round(percentageCovered) + "%";
     }
 
     @NotNull
