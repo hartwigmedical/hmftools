@@ -27,11 +27,11 @@ public class VirusConstantsTest {
 
         VirusConstants VirusConstantsHBV = VirusConstants.fromVirusName("HBV");
         assertEquals(VirusConstants.HBV, VirusConstantsHBV);
-        assertFalse(VirusConstantsHBV.reportVirusOnSummary());
+        assertTrue(VirusConstantsHBV.reportVirusOnSummary());
 
         VirusConstants VirusConstantsHHV8 = VirusConstants.fromVirusName("HHV-8");
         assertEquals(VirusConstants.HHV8, VirusConstantsHHV8);
-        assertFalse(VirusConstantsHHV8.reportVirusOnSummary());
+        assertTrue(VirusConstantsHHV8.reportVirusOnSummary());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -47,6 +47,8 @@ public class VirusConstantsTest {
         expectedViruses.add("MCV");
         expectedViruses.add("EBV");
         expectedViruses.add("HPV");
+        expectedViruses.add("HBV");
+        expectedViruses.add("HHV-8");
         assertEquals(reportableSummaryViruses, expectedViruses);
     }
 }

@@ -234,9 +234,18 @@ public class SummaryChapter implements ReportChapter {
 
     @NotNull
     private static Cell createVirusInterpretationString(@NotNull Set<String> virus, boolean reportViralPresence) {
-        String virusSummary = reportViralPresence ? String.join(", ", virus) : DataUtil.NA_STRING;
-
-        Style style = reportViralPresence ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
+        String virusSummary;
+        Style style;
+        if (reportViralPresence && virus.size() == 0) {
+            virusSummary = DataUtil.NONE_STRING;
+            style = ReportResources.dataHighlightNaStyle();
+        } else if (reportViralPresence && virus.size() > 0) {
+            virusSummary = String.join(", ", virus);
+            style = ReportResources.dataHighlightStyle();
+        } else {
+            virusSummary = DataUtil.NA_STRING;
+            style = ReportResources.dataHighlightNaStyle();
+        }
 
         return createMiddleAlignedCell(2).add(createHighlightParagraph(virusSummary)).addStyle(style);
     }

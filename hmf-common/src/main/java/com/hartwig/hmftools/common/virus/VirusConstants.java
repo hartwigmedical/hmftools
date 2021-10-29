@@ -9,8 +9,8 @@ public enum VirusConstants {
     MCV("MCV", true),
     EBV("EBV", true),
     HPV("HPV", true),
-    HBV("HBV", false),
-    HHV8("HHV-8", false);
+    HBV("HBV", true),
+    HHV8("HHV-8", true);
 
     @NotNull
     private final String virusName;
