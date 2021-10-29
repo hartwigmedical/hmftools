@@ -4,8 +4,12 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.itextpdf.layout.Document;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface ReportChapter {
+
+    @NotNull
+    String pdfTitle();
 
     @NotNull
     String name();

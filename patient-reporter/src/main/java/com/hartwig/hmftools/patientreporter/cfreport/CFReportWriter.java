@@ -75,6 +75,7 @@ public class CFReportWriter implements ReportWriter {
         for (int i = 0; i < chapters.length; i++) {
             ReportChapter chapter = chapters[i];
 
+            pageEventHandler.pdfTitle(chapter.pdfTitle());
             pageEventHandler.chapterTitle(chapter.name());
             pageEventHandler.resetChapterPageCounter();
             pageEventHandler.sidebarType(!chapter.isFullWidth(), chapter.hasCompleteSidebar());

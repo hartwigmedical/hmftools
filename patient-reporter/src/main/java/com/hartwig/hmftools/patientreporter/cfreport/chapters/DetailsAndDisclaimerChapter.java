@@ -15,7 +15,9 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class DetailsAndDisclaimerChapter implements ReportChapter {
 
@@ -24,6 +26,12 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
 
     public DetailsAndDisclaimerChapter(@NotNull AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @Override

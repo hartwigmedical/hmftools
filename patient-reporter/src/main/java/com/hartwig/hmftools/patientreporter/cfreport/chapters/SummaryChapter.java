@@ -43,7 +43,9 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SummaryChapter implements ReportChapter {
     private static final Logger LOGGER = LogManager.getLogger(SummaryChapter.class);
@@ -61,7 +63,7 @@ public class SummaryChapter implements ReportChapter {
 
     @NotNull
     @Override
-    public String name() {
+    public String pdfTitle() {
         if (patientReport.isCorrectedReport()) {
             return "DNA Analysis Report (Corrected)";
         } else {
@@ -71,6 +73,12 @@ public class SummaryChapter implements ReportChapter {
                 return "DNA Analysis Report";
             }
         }
+    }
+
+    @NotNull
+    @Override
+    public String name() {
+        return "Summary";
     }
 
     @Override
@@ -89,7 +97,6 @@ public class SummaryChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        reportDocument.add(new Paragraph("Summary").addStyle(ReportResources.chapterTitleStyle()));
         reportDocument.add(TumorLocationAndTypeTable.createBiopsyLocationAndTumorLocation(patientReport.sampleReport()
                 .primaryTumorLocationString(), patientReport.sampleReport().biopsyLocationString(), contentWidth()));
         reportDocument.add(new Paragraph());

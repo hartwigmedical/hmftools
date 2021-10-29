@@ -8,11 +8,19 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ExplanationChapter implements ReportChapter {
 
     public ExplanationChapter() {
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @NotNull

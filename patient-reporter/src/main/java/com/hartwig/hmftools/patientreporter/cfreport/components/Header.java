@@ -40,7 +40,7 @@ public class Header {
         companyLogoObj = companyLogoImage != null ? new PdfImageXObject(companyLogoImage) : null;
     }
 
-    public void renderHeader(@NotNull String chapterTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {
+    public void renderHeader(@NotNull String chapterTitle, @NotNull String pdfTitle, boolean firstPageOfChapter, @NotNull PdfPage page) {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
@@ -56,10 +56,16 @@ public class Header {
                 .setFixedPosition(230, 791, 300));
 
         if (firstPageOfChapter) {
-            chapterPageCounters.add(new ChapterPageCounter(chapterTitle));
+            chapterPageCounters.add(new ChapterPageCounter(chapterTitle, pdfTitle));
         }
 
-        PdfFormXObject chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
+        PdfFormXObject chapterTitleTemplate;
+        if (pdfTitle.isEmpty()) {
+            chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 30));
+        } else {
+            chapterTitleTemplate = new PdfFormXObject(new Rectangle(0, 0, 500, 60));
+        }
+
         pdfCanvas.addXObject(chapterTitleTemplate, ReportResources.PAGE_MARGIN_LEFT, 721);
         chapterPageCounters.get(chapterPageCounters.size() - 1).addPage(chapterTitleTemplate);
 
@@ -75,11 +81,14 @@ public class Header {
     private static class ChapterPageCounter {
 
         @NotNull
+        private final String pdfTitle;
+        @NotNull
         private final String chapterTitle;
         private final List<PdfFormXObject> templates = Lists.newArrayList();
 
-        ChapterPageCounter(@NotNull String chapterTitle) {
+        ChapterPageCounter(@NotNull String chapterTitle, @NotNull String pdfTitle) {
             this.chapterTitle = chapterTitle;
+            this.pdfTitle = pdfTitle;;
         }
 
         void addPage(@NotNull PdfFormXObject chapterTitleTemplate) {
@@ -95,6 +104,11 @@ public class Header {
                 String text = chapterTitle + (totalChapterPages > 1 ? " (" + (i + 1) + "/" + totalChapterPages + ")" : "");
 
                 Canvas canvas = new Canvas(tpl, document);
+
+                if (!pdfTitle.isEmpty()) {
+                    canvas.add(new Paragraph(pdfTitle).addStyle(ReportResources.chapterTitleStyle()));
+                }
+
                 canvas.add(new Paragraph(text).addStyle(ReportResources.chapterTitleStyle()));
             }
         }

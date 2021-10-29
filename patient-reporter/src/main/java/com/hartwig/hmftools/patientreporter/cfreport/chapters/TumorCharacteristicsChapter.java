@@ -30,6 +30,7 @@ import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TumorCharacteristicsChapter implements ReportChapter {
 
@@ -44,6 +45,12 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
     public TumorCharacteristicsChapter(@NotNull final AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @Override

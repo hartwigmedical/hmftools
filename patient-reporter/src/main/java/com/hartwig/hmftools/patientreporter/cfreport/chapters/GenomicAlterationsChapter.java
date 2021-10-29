@@ -40,6 +40,7 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -55,6 +56,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     public GenomicAlterationsChapter(@NotNull final AnalysedPatientReport patientReport, @NotNull final SampleReport sampleReport) {
         this.patientReport = patientReport;
         this.sampleReport = sampleReport;
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @Override
