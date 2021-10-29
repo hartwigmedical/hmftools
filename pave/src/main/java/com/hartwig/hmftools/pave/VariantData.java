@@ -63,6 +63,7 @@ public class VariantData
     private final Map<String,List<VariantTransImpact>> mGeneImpacts;
 
     private VariantData mRealignedVariant;
+    private boolean mIsRealignedVariant;
 
     // associated data
     private VariantContext mVariantContext;
@@ -121,6 +122,7 @@ public class VariantData
         }
 
         mRealignedVariant = null;
+        mIsRealignedVariant = false;
         mGeneImpacts = Maps.newHashMap();
         mReportable = false;
         mGnomadFrequency = null;
@@ -163,7 +165,15 @@ public class VariantData
     public List<Integer> altPositions() { return mAltPositions; }
 
     public VariantData realignedVariant() { return mRealignedVariant; }
-    public void setRealignedVariant(final VariantData variant) { mRealignedVariant = variant; }
+
+    public void setRealignedVariant(final VariantData variant)
+    {
+        mRealignedVariant = variant;
+        variant.markRealignedVariant();
+    }
+
+    public boolean isRealignedVariant() { return mIsRealignedVariant; }
+    public void markRealignedVariant() { mIsRealignedVariant = true; }
 
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }

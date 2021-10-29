@@ -309,6 +309,9 @@ public final class SpliceClassifier
             }
             else
             {
+                if(variant.isRealignedVariant())
+                    return BASE_CHANGE;
+
                 // the DEL starts before the splice range and ends in it, so the comparison alt bases are all pulled from lower positions only
                 int preDelBases = variant.EndPosition - posRangeStart;
                 altSpliceBases = refGenome.getBaseString(variant.Chromosome, variant.Position - (preDelBases - 1), variant.Position);

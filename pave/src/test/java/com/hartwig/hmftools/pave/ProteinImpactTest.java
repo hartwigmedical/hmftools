@@ -31,7 +31,6 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
-import java.util.Set;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.fusion.FusionCommon;
