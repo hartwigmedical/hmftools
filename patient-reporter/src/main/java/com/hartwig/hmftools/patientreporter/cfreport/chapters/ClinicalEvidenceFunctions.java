@@ -136,17 +136,22 @@ public class ClinicalEvidenceFunctions {
 
                 Table responsiveTable;
                 if (!evidenType.equals("trial")) {
-                    responsiveTable = new Table(new float[] { 1, 1, 1 });
+                    responsiveTable = new Table(new float[] { 1, 1, 1, 1 });
                 } else {
-                    responsiveTable = new Table(new float[] { 1 });
+                    responsiveTable = new Table(new float[] { 1, 1 });
                 }
 
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = TableUtil.createTransparentCell(display(responsive));
-                    String url = url(responsive);
-                    if (!url.isEmpty()) {
-                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
+
+                    if (!evidenType.equals("trial")) {
+                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
+                    } else {
+                        cell.addStyle(ReportResources.subTextStyle());
                     }
+
+                    Cell cellnumbers = createLinksPublications(responsive);
+
 
                     if (!evidenType.equals("trial")) {
                         String predicted;
@@ -155,22 +160,24 @@ public class ClinicalEvidenceFunctions {
                         } else {
                             predicted = Strings.EMPTY;
                         }
-                        responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name()))));
+                        responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level()
+                                .name()))));
                         responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
                     }
 
                     responsiveTable.addCell(cell);
+                    responsiveTable.addCell(cellnumbers);
+
                 }
                 table.addCell(TableUtil.createContentCell(responsiveTable));
 
                 if (evidenType.equals("evidence")) {
-                    Table resistantTable = new Table(new float[] { 1, 1, 1 });
+                    Table resistantTable = new Table(new float[] { 1, 1, 1, 1 });
                     for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
                         Cell cell = TableUtil.createTransparentCell(display(resistant));
-                        String url = url(resistant);
-                        if (!url.isEmpty()) {
-                            cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
-                        }
+                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
+
+                        Cell cellnumbers = createLinksPublications(resistant);
 
                         String predicted;
                         if (PREDICTED.contains(resistant.direction())) {
@@ -181,6 +188,8 @@ public class ClinicalEvidenceFunctions {
                         resistantTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
                         resistantTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
                         resistantTable.addCell(cell);
+                        resistantTable.addCell(cellnumbers);
+
                     }
                     table.addCell(TableUtil.createContentCell(resistantTable));
                 }
@@ -235,25 +244,26 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    private static String url(@NotNull ProtectEvidence evidence) {
-        if (evidence.urls().isEmpty()) {
-            return Strings.EMPTY;
-        }
-
-        // We prefer pubmed URLs over all other URLs so if there is one pubmed then we use that.
-        for (String url : evidence.urls()) {
-            if (url.contains("pubmed")) {
-                return url;
+    private static Cell createLinksPublications(@NotNull ProtectEvidence evidence) {
+        List<String> urlForSymlinks= Lists.newArrayList();
+        for (String url: evidence.urls()) {
+            if (!url.contains("google")) {
+                urlForSymlinks.add(url);
             }
         }
 
-        // If there are no pubmeds, and the first url refers to google we remove it.
-        String url = evidence.urls().iterator().next();
-        if (url.contains("google")) {
-            return Strings.EMPTY;
-        } else {
-            return url;
+        Cell cellnumbers = TableUtil.createTransparentCell(Strings.EMPTY);
+        String numbers = urlForSymlinks.size()> 0 ? "[" : Strings.EMPTY;
+        for (int i = 0; i < urlForSymlinks.size(); i++) {
+            numbers= numbers.concat(Integer.toString(i + 1)).concat(", ");
         }
+        numbers = numbers.length() > 1 ? numbers.substring(0, numbers.length()-2).concat("]") : numbers;
+        cellnumbers = TableUtil.createTransparentCell(numbers);
+
+        for (int i = 0; i < urlForSymlinks.size(); i++) {
+            cellnumbers.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(urlForSymlinks.get(i)));
+        }
+        return cellnumbers;
     }
 
     @NotNull
