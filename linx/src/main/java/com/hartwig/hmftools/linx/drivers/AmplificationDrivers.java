@@ -35,7 +35,7 @@ public class AmplificationDrivers
     public void annotateAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
     {
         LNX_LOGGER.debug("gene({}) chromosome({}) position({} -> {}) minCN({})",
-                dgData.GeneData.GeneName, dgData.GeneData.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
+                dgData.GeneInfo.GeneName, dgData.GeneInfo.Chromosome, dgData.TransData.TransStart, dgData.TransData.TransEnd,
                 formatJcn(dgData.CopyNumberRegion.MinCopyNumber));
 
         checkChromosomeAmplification(dgData);
@@ -43,7 +43,7 @@ public class AmplificationDrivers
 
         if(dgData.getEvents().isEmpty())
         {
-            LNX_LOGGER.debug("gene({}) AMP gain no event found", dgData.GeneData.GeneName);
+            LNX_LOGGER.debug("gene({}) AMP gain no event found", dgData.GeneInfo.GeneName);
 
             // otherwise no event
             DriverGeneEvent event = new DriverGeneEvent(GAIN);
@@ -54,7 +54,7 @@ public class AmplificationDrivers
     private void checkChromosomeAmplification(final DriverGeneData dgData)
     {
         // check for an arm or whole chromosome amplified above the sample ploidy
-        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
+        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
 
         if(tcData == null)
             return;
@@ -67,12 +67,12 @@ public class AmplificationDrivers
 
         double samplePloidy = mDataCache.samplePloidy();
 
-        if(!isShortArmChromosome(dgData.GeneData.Chromosome))
+        if(!isShortArmChromosome(dgData.GeneInfo.Chromosome))
         {
             if (chromosomeCopyNumber / samplePloidy > 2)
             {
                 LNX_LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
-                        dgData.GeneData.GeneName, formatJcn(chromosomeCopyNumber),
+                        dgData.GeneInfo.GeneName, formatJcn(chromosomeCopyNumber),
                         formatJcn(telomereCopyNumber), formatJcn(centromereCopyNumber), formatPloidy(samplePloidy));
 
                 DriverGeneEvent event = new DriverGeneEvent(GAIN_CHR);
@@ -88,7 +88,7 @@ public class AmplificationDrivers
         if (centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
         {
             LNX_LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
-                    dgData.GeneData.GeneName, dgData.Arm, formatJcn(tcData.CentromerePArm), formatJcn(tcData.CentromereQArm),
+                    dgData.GeneInfo.GeneName, dgData.Arm, formatJcn(tcData.CentromerePArm), formatJcn(tcData.CentromereQArm),
                     formatJcn(centromereCNChange));
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN_ARM);
@@ -215,7 +215,7 @@ public class AmplificationDrivers
                     netClusterCNChange += segmentCNChange;
 
                     LNX_LOGGER.trace("gene({}) cluster({}) adding segment CN({} -> {} chg={}) net({}) breakends({} -> {})",
-                            dgData.GeneData.GeneName, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(endCopyNumber),
+                            dgData.GeneInfo.GeneName, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(endCopyNumber),
                             formatJcn(segmentCNChange), formatJcn(netClusterCNChange), segStartBreakend, breakend);
 
                     inSegment = false;
@@ -229,7 +229,7 @@ public class AmplificationDrivers
                     if(opposingSegment.remainingCNChange() > netClusterCNChange)
                     {
                         LNX_LOGGER.trace("gene({}) cluster({}) netCN({}) cancelled by breakend({}) cnChange(orig={} remain={})",
-                                dgData.GeneData.GeneName, targetCluster.id(), formatJcn(netClusterCNChange),
+                                dgData.GeneInfo.GeneName, targetCluster.id(), formatJcn(netClusterCNChange),
                                 breakend, formatJcn(breakend.copyNumberChange()), formatJcn(opposingSegment.remainingCNChange()));
 
                         opposingSegment.reduceCNChange(netClusterCNChange);
@@ -238,7 +238,7 @@ public class AmplificationDrivers
                     else
                     {
                         LNX_LOGGER.trace("gene({}) cluster({}) netCN({}) reducing by breakend({}) cnChange({})",
-                                dgData.GeneData.GeneName, targetCluster.id(), formatJcn(netClusterCNChange),
+                                dgData.GeneInfo.GeneName, targetCluster.id(), formatJcn(netClusterCNChange),
                                 breakend, formatJcn(breakend.copyNumberChange()));
 
                         netClusterCNChange -= opposingSegment.remainingCNChange();
@@ -268,14 +268,14 @@ public class AmplificationDrivers
             clusterCNChange += geneMinCopyNumber - segmentStartCopyNumber;
 
             LNX_LOGGER.trace("gene({}) cluster({}) open segment startCN({}) net({}) start breakend({})",
-                    dgData.GeneData.GeneName, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(clusterCNChange),
+                    dgData.GeneInfo.GeneName, targetCluster.id(), formatJcn(segmentStartCopyNumber), formatJcn(clusterCNChange),
                     segStartBreakend);
         }
 
         if(clusterCNChange > 0 && !copyNumbersEqual(clusterCNChange, 0) && !copyNumbersEqual(startCopyNumber + clusterCNChange, startCopyNumber))
         {
             LNX_LOGGER.debug("gene({}) cluster({}) copy number gain({}) vs startCN({}) segments({}: CN={}) traversal({})",
-                    dgData.GeneData.GeneName, targetCluster.id(), formatJcn(clusterCNChange), formatJcn(startCopyNumber),
+                    dgData.GeneInfo.GeneName, targetCluster.id(), formatJcn(clusterCNChange), formatJcn(startCopyNumber),
                     segmentCount, formatJcn(netClusterCNChange), traverseUp ? "up" : "down");
 
             return new DriverAmpData(targetCluster, traverseUp, breakendCount, segmentCount, startCopyNumber, clusterCNChange);
@@ -382,7 +382,7 @@ public class AmplificationDrivers
                 continue;
 
             LNX_LOGGER.debug("gene({}) cluster({}) adding AMP data: {}",
-                    dgData.GeneData.GeneName, cluster.id(), ampData);
+                    dgData.GeneInfo.GeneName, cluster.id(), ampData);
 
             DriverGeneEvent event = new DriverGeneEvent(GAIN);
             event.setCluster(cluster);

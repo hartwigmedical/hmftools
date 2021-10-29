@@ -95,6 +95,7 @@ public class DriverDataCache
         mDriverCatalog.addAll(
                 mDbAccess.readDriverCatalog(mSampleId).stream()
                         .filter(x -> x.driver() != DriverType.HOM_DISRUPTION)
+                        .filter(x -> x.isCanonical())
                         .collect(Collectors.toList()));
 
         LNX_LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
@@ -127,7 +128,10 @@ public class DriverDataCache
             final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
             setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
-            mDriverCatalog.addAll(DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)));
+            mDriverCatalog.addAll(
+                    DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)).stream()
+                            .filter(x -> x.isCanonical())
+                            .collect(Collectors.toList()));
 
             mGeneCopyNumberData.addAll(
                     GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, mSampleId)));
@@ -146,12 +150,26 @@ public class DriverDataCache
 
     public DriverGeneData createDriverData(final BreakendGeneData gene, final TranscriptData transData)
     {
-        GeneCopyNumber gcnData;
+        GeneCopyNumber gcnData = null;
 
         if(mDbAccess != null)
         {
             final List<GeneCopyNumber> geneCopyNumbers = mDbAccess.readGeneCopynumbers(mSampleId, Lists.newArrayList(gene.geneName()));
-            gcnData = !geneCopyNumbers.isEmpty() ? geneCopyNumbers.get(0) : null;
+
+            if(geneCopyNumbers != null)
+            {
+                for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+                {
+                    if(geneCopyNumber.transName().equals(transData.TransName))
+                    {
+                        gcnData = geneCopyNumber;
+                        break;
+                    }
+                }
+
+                if(gcnData == null && !geneCopyNumbers.isEmpty())
+                    gcnData = geneCopyNumbers.get(0);
+            }
         }
         else
         {
@@ -188,22 +206,14 @@ public class DriverDataCache
             return null;
         }
 
-        final TranscriptData canonicalTrans = GeneTransCache.getTranscriptData(geneData.GeneId, "");
-
-        if(canonicalTrans == null)
-        {
-            LNX_LOGGER.warn("gene({}:{}) no canonical transcript found", geneData.GeneId, gene.geneName());
-            return null;
-        }
-
         GeneCopyNumberRegion copyNumberRegion;
 
         if(gcnData != null)
             copyNumberRegion = new GeneCopyNumberRegion(gcnData);
         else
-            copyNumberRegion = calcGeneCopyNumberRegion(canonicalTrans, CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
+            copyNumberRegion = calcGeneCopyNumberRegion(transData, CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
 
-        DriverGeneData dgData = new DriverGeneData(driverRecord, geneData, canonicalTrans, copyNumberRegion);
+        DriverGeneData dgData = new DriverGeneData(driverRecord, geneData, transData, copyNumberRegion);
         mDriverGeneDataList.add(dgData);
 
         return dgData;

@@ -9,24 +9,25 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 public class DriverGeneData
 {
     public final DriverCatalog DriverData;
-    public final com.hartwig.hmftools.common.gene.GeneData GeneData;
+    public final GeneData GeneInfo;
     public final TranscriptData TransData;
     public final GeneCopyNumberRegion CopyNumberRegion;
     public final ChromosomeArm Arm;
 
     private final List<DriverGeneEvent> mEvents;
 
-    public DriverGeneData(final DriverCatalog driverData, final com.hartwig.hmftools.common.gene.GeneData geneData,
+    public DriverGeneData(final DriverCatalog driverData, final GeneData geneData,
             final TranscriptData transData, final GeneCopyNumberRegion copyNumberRegion)
     {
         DriverData = driverData;
-        GeneData = geneData;
+        GeneInfo = geneData;
         TransData = transData;
         CopyNumberRegion = copyNumberRegion;
 

@@ -46,8 +46,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-import sun.security.krb5.Config;
-
 public class CopyNumberAnalyser
 {
     private boolean mWriteLohEvents;

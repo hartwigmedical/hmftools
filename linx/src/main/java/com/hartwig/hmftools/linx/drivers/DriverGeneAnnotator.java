@@ -175,7 +175,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             }
             else if (driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             {
-                final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneData.Chromosome);
+                final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneInfo.Chromosome);
                 mAmpDrivers.annotateAmplification(dgData, breakendList);
             }
 
@@ -275,6 +275,9 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
     private void writeDriverData(final DriverGeneData dgData)
     {
+        if(!dgData.TransData.IsCanonical) // currently ignored since would duplicate everthing
+            return;
+
         // convert to a sample driver record
         if(mVisSampleData != null)
         {
@@ -284,12 +287,12 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
                 mDriverOutputList.add(ImmutableLinxDriver.builder()
                         .clusterId(clusterId)
-                        .gene(dgData.GeneData.GeneName)
+                        .gene(dgData.GeneInfo.GeneName)
                         .eventType(driverEvent.Type.toString())
                         .build());
 
-                mVisSampleData.addGeneExonData(clusterId, dgData.GeneData.GeneId, dgData.GeneData.GeneName,
-                        "", 0, dgData.GeneData.Chromosome, DRIVER);
+                mVisSampleData.addGeneExonData(clusterId, dgData.GeneInfo.GeneId, dgData.GeneInfo.GeneName,
+                        "", 0, dgData.GeneInfo.Chromosome, DRIVER);
             }
         }
 
@@ -297,16 +300,16 @@ public class DriverGeneAnnotator implements CohortFileInterface
             return;
 
         final DriverCatalog driverGene = dgData.DriverData;
-        final GeneData geneData = dgData.GeneData;
+        final GeneData geneData = dgData.GeneInfo;
 
-        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
+        final TelomereCentromereCnData tcData = mDataCache.CopyNumberData.getChrTeleCentroData().get(dgData.GeneInfo.Chromosome);
 
         double centromereCopyNumber = 0;
         double telomereCopyNumber = 0;
 
         if(tcData == null)
         {
-            LNX_LOGGER.warn("chromosome({}) missing centro-telo data", dgData.GeneData.Chromosome);
+            LNX_LOGGER.warn("chromosome({}) missing centro-telo data", dgData.GeneInfo.Chromosome);
         }
         else
         {

@@ -55,7 +55,7 @@ public class DeletionDrivers
         int minRegionStart = dgData.CopyNumberRegion.RegionStart;
         int minRegionEnd = dgData.CopyNumberRegion.RegionEnd;
 
-        if(expectSingleChromosome(mDataCache.isMale(), dgData.GeneData.Chromosome))
+        if(expectSingleChromosome(mDataCache.isMale(), dgData.GeneInfo.Chromosome))
         {
             for(final HomLossEvent homLoss : mDataCache.CopyNumberData.getHomLossData())
             {
@@ -63,7 +63,7 @@ public class DeletionDrivers
                 if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
                 {
                     LNX_LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by hom-loss({})",
-                            dgData.GeneData.GeneName, minRegionStart, minRegionEnd, homLoss);
+                            dgData.GeneInfo.GeneName, minRegionStart, minRegionEnd, homLoss);
 
                     // DEL covers the whole gene or extends to end of arm
                     DriverGeneEvent event = new DriverGeneEvent(DriverEventType.DEL);
@@ -81,7 +81,7 @@ public class DeletionDrivers
 
         for(final LohEvent lohEvent : mDataCache.CopyNumberData.getLohData())
         {
-            if(!lohEvent.Chromosome.equals(dgData.GeneData.Chromosome))
+            if(!lohEvent.Chromosome.equals(dgData.GeneInfo.Chromosome))
                 continue;
 
             // the LOH needs to straddle one or the other of the min-gene breakends
@@ -89,7 +89,7 @@ public class DeletionDrivers
                 continue;
 
             LNX_LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by LOH({})",
-                    dgData.GeneData.GeneName, minRegionStart, minRegionEnd, lohEvent);
+                    dgData.GeneInfo.GeneName, minRegionStart, minRegionEnd, lohEvent);
 
             if((lohEvent.PosStart < minRegionEnd && lohEvent.PosEnd > minRegionStart) || !lohEvent.doubleSvEvent())
             {
@@ -138,7 +138,7 @@ public class DeletionDrivers
                 if(homLoss.PosStart <= minRegionEnd && homLoss.PosEnd >= minRegionStart)
                 {
                     LNX_LOGGER.debug("gene({}) minCnRegion({} -> {}) covered by hom-loss({})",
-                            dgData.GeneData.GeneName, minRegionStart, minRegionEnd, homLoss);
+                            dgData.GeneInfo.GeneName, minRegionStart, minRegionEnd, homLoss);
 
                     // DEL covers the whole gene or extends to end of arm
                     DriverGeneEvent event = new DriverGeneEvent(DriverEventType.DEL);
@@ -166,14 +166,14 @@ public class DeletionDrivers
 
         for(final LohEvent lohEvent : mDataCache.CopyNumberData.getLohData())
         {
-            if(!lohEvent.Chromosome.equals(dgData.GeneData.Chromosome))
+            if(!lohEvent.Chromosome.equals(dgData.GeneInfo.Chromosome))
                 continue;
 
             if(lohEvent.PosStart > codingEnd || lohEvent.PosEnd < codingStart)
                 continue;
 
             LNX_LOGGER.debug("gene({}) coding region({} -> {}) covered by LOH({})",
-                    dgData.GeneData.GeneName, codingStart, codingEnd, lohEvent);
+                    dgData.GeneInfo.GeneName, codingStart, codingEnd, lohEvent);
 
             if(lohEvent.doubleSvEvent())
             {
@@ -212,7 +212,7 @@ public class DeletionDrivers
         // 2. Duplication of exons from DUPs or other complex clusters
         final List<String> delDriverGeneIds = mDataCache.getDriverGeneDataList().stream()
                 .filter(x -> x.DriverData.driver() == DriverType.DEL)
-                .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+                .map(x -> x.GeneInfo.GeneId).collect(Collectors.toList());
 
         final List<DriverGeneData> disDelDrivers = Lists.newArrayList();
 
