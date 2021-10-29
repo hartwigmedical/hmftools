@@ -114,7 +114,7 @@ public class RefVariantData
                 record.getValue(SOMATICVARIANT.CANONICALEFFECT),
                 canonicalCodingEffect,
                 worstCodingEffect,
-                record.getValue(SOMATICVARIANT.GENESEFFECTED),
+                record.getValue(SOMATICVARIANT.GENESAFFECTED),
                 record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
                 record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
                 record.getValue(SOMATICVARIANT.MICROHOMOLOGY),

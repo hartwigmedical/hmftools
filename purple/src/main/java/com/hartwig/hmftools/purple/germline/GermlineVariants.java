@@ -72,7 +72,7 @@ public class GermlineVariants
     public void processAndWrite(
             final String referenceId, final String tumorSample, final String germlineVcf,
             @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final Set<String> somaticReportedGenes) throws IOException
+            @NotNull final Set<String> somaticReportedGenes, boolean snpEffEnrichmentEnabled) throws IOException
     {
         mReportableVariants.clear();
 
@@ -84,12 +84,13 @@ public class GermlineVariants
         PPL_LOGGER.info("Loading germline variants from {}", germlineVcf);
         PPL_LOGGER.info("Enriching germline variants");
 
-        try (
-                VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
-                VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
-                        .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
-                        .build())
+        try
         {
+            VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+
+            VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
+                    .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                    .build();
 
             final Consumer<VariantContext> consumer = context ->
             {
@@ -102,14 +103,20 @@ public class GermlineVariants
 
             final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                     mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                    mReferenceData.GermlineHotspots, somaticReportedGenes, consumer);
+                    mReferenceData.GermlineHotspots, somaticReportedGenes, snpEffEnrichmentEnabled, consumer);
 
             writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
             for(VariantContext context : vcfReader)
             {
                 enrichment.accept(context);
             }
+
             enrichment.flush();
+            writer.close();
+        }
+        catch(Exception e)
+        {
+            PPL_LOGGER.error(" failed to enrich germline variants: {}", e.toString());
         }
     }
 }

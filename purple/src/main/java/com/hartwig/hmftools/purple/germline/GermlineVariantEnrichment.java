@@ -49,7 +49,7 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
             final String purpleVersion, final String referenceSample, final String tumorSample, final ReferenceData refData,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes,
-            final Consumer<VariantContext> consumer)
+            boolean snpEffEnrichmentEnabled, final Consumer<VariantContext> consumer)
     {
         final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
                 .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
@@ -59,11 +59,21 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         mPathogenicEnrichment = new GermlinePathogenicEnrichment(mReportableEnrichment);
         mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, mPathogenicEnrichment);
 
-        mSnpEffEnrichment = new SnpEffEnrichment(germlineGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mRefGenomeEnrichment);
+        if(snpEffEnrichmentEnabled)
+        {
+            mSnpEffEnrichment =
+                    new SnpEffEnrichment(germlineGenes, refData.GeneTransCache, refData.OtherReportableTranscripts, mRefGenomeEnrichment);
+        }
+        else
+        {
+            mSnpEffEnrichment = null;
+        }
+
+        VariantContextEnrichment prevConsumer = mSnpEffEnrichment != null ? mSnpEffEnrichment : mRefGenomeEnrichment;
 
         // Purity must go before lowTumorVCNEnrichment
         // Hotspot must be before lowTumorVCNEnrichment
-        mLowTumorVCNEnrichment = new GermlineLowTumorVCNEnrichment(mSnpEffEnrichment);
+        mLowTumorVCNEnrichment = new GermlineLowTumorVCNEnrichment(prevConsumer);
 
         // Purity must go before lowVafRescue
         // Genotype must go before lowVafRescue
@@ -95,7 +105,10 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         mPurityEnrichment.flush();
         mLowVafRescueEnrichment.flush();
         mLowTumorVCNEnrichment.flush();
-        mSnpEffEnrichment.flush();
+
+        if(mSnpEffEnrichment != null)
+            mSnpEffEnrichment.flush();
+
         mRefGenomeEnrichment.flush();
         mPathogenicEnrichment.flush();
         mReportableEnrichment.flush();
@@ -108,7 +121,10 @@ public class GermlineVariantEnrichment implements VariantContextEnrichment
         VCFHeader header = mPurityEnrichment.enrichHeader(template);
         header = mHotspotEnrichment.enrichHeader(header);
         header = mRefGenomeEnrichment.enrichHeader(header);
-        header = mSnpEffEnrichment.enrichHeader(header);
+
+        if(mSnpEffEnrichment != null)
+            header = mSnpEffEnrichment.enrichHeader(header);
+
         header = mLowVafRescueEnrichment.enrichHeader(header);
         header = mLowTumorVCNEnrichment.enrichHeader(header);
         header = mReportableEnrichment.enrichHeader(header);

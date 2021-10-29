@@ -334,11 +334,7 @@ public class PurpleApplication
         if(!sampleDataFiles.GermlineVcfFile.isEmpty())
         {
             mGermlineVariants.processAndWrite(referenceId,
-                    tumorSample,
-                    sampleDataFiles.GermlineVcfFile,
-                    purityAdjuster,
-                    copyNumbers,
-                    reportedGenes);
+                    tumorSample, sampleDataFiles.GermlineVcfFile, purityAdjuster, copyNumbers, reportedGenes, !mConfig.UsePaveImpacts);
         }
 
         final PurityContext purityContext = ImmutablePurityContext.builder()
