@@ -336,7 +336,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
             for (AnnotatedVirus virus : viruses) {
                 contentTable.addCell(TableUtil.createContentCell(virus.name()));
-                contentTable.addCell(TableUtil.createContentCell(Integer.toString(virus.integrations()))
+                contentTable.addCell(TableUtil.createContentCell(ViralPresence.createIntegrationSiteString(virus.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
                 contentTable.addCell(TableUtil.createContentCell(ViralPresence.createViralCoverageString(virus.percentageCovered()))
                         .setTextAlignment(TextAlignment.CENTER));

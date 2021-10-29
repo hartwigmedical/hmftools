@@ -42,4 +42,9 @@ public final class ViralPresence {
     public static String createViralCoverageString(double percentageCovered) {
         return percentageCovered + "%";
     }
+
+    @NotNull
+    public static String createIntegrationSiteString(Integer integrations) {
+        return integrations == 0 ? "Detected without integration sites" : Integer.toString(integrations);
+    }
 }
