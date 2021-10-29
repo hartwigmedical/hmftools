@@ -16,7 +16,9 @@ import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CircosChapter implements ReportChapter {
 
@@ -25,6 +27,12 @@ public class CircosChapter implements ReportChapter {
 
     public CircosChapter(@NotNull final AnalysedPatientReport patientReport) {
         this.patientReport = patientReport;
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @NotNull

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
@@ -95,7 +94,8 @@ public final class ConsentFilterFunctions {
             @NotNull LimsGermlineReportingLevel germlineReportingLevel) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.germline() && germlineReportingLevel == LimsGermlineReportingLevel.REPORT_WITHOUT_NOTIFICATION) {
+            if (evidence.germline() && germlineReportingLevel != LimsGermlineReportingLevel.NO_REPORTING) {
+                // We always overwrite to somatic in evidence since we are not sure we notify about the actual variant.
                 filtered.add(ImmutableProtectEvidence.builder().from(evidence).germline(false).build());
             } else if (!evidence.germline()) {
                 filtered.add(evidence);

@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFileV1;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,7 +43,7 @@ public class LoadVirusInterpreter {
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
         LOGGER.info("Reading virus annotation TSV {}", virusAnnotationTsv);
-        List<AnnotatedVirusV1> virusAnnotations = AnnotatedVirusFileV1.read(virusAnnotationTsv);
+        List<AnnotatedVirus> virusAnnotations = AnnotatedVirusFile.read(virusAnnotationTsv);
         LOGGER.info(" Read {} virus annotation", virusAnnotations.size());
 
         LOGGER.info("Writing virus annotations into database for {}", sample);

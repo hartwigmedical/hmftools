@@ -17,21 +17,17 @@ public final class ViralPresence {
     @NotNull
     public static Set<String> virusInterpretationSummary(@NotNull List<AnnotatedVirus> reportableViruses) {
         Set<String> positiveInterpretations = Sets.newHashSet();
-        Set<String> negativeInterpretations = Sets.newHashSet();
         Set<String> virusInterpretationSummary = Sets.newHashSet();
 
         for (AnnotatedVirus virus : reportableViruses) {
-            VirusConstants virusConstants = VirusConstants.fromVirusName(virus.interpretation());
-            if (virusConstants.reportVirusOnSummary()) {
-                positiveInterpretations.add(virus.interpretation());
-            } else if (!virusConstants.reportVirusOnSummary()) {
-                negativeInterpretations.add(virus.interpretation());
-            }
-        }
+            String virusInterpretation = virus.interpretation();
 
-        for (String virusSummary: VirusConstants.allViruses()) {
-            if (!positiveInterpretations.contains(virusSummary)) {
-                negativeInterpretations.add(virusSummary);
+            if (virus.interpretation() != null) {
+                assert virusInterpretation != null;
+                VirusConstants virusConstants = VirusConstants.fromVirusName(virusInterpretation);
+                if (virusConstants.reportVirusOnSummary()) {
+                    positiveInterpretations.add(virus.interpretation());
+                }
             }
         }
 
@@ -39,10 +35,16 @@ public final class ViralPresence {
             virusInterpretationSummary.add(positiveVirus + " positive");
         }
 
-        for (String negativeVirus : negativeInterpretations) {
-            virusInterpretationSummary.add(negativeVirus + " negative");
-        }
-
         return virusInterpretationSummary;
+    }
+
+    @NotNull
+    public static String createViralCoverageString(double percentageCovered) {
+        return Math.round(percentageCovered) + "%";
+    }
+
+    @NotNull
+    public static String createIntegrationSiteString(Integer integrations) {
+        return integrations == 0 ? "Detected without integration sites" : Integer.toString(integrations);
     }
 }

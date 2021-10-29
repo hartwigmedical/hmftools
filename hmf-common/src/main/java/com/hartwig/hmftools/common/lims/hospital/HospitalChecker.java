@@ -24,6 +24,8 @@ public final class HospitalChecker {
         Set<String> keyWIDE = hospitalModel.hospitalPersonsWIDE().keySet();
         Set<String> keyCOREDB = hospitalModel.hospitalPersonsCOREDB().keySet();
         Set<String> keyACTIN = hospitalModel.hospitalPersonsACTIN().keySet();
+        Set<String> keyGLOW = hospitalModel.hospitalPersonsGLOW().keySet();
+        Set<String> keyOPTIC = hospitalModel.hospitalPersonsOPTIC().keySet();
         Set<String> keySampleMapping = Sets.newHashSet(hospitalModel.sampleToHospitalMapping().values());
 
         boolean allCorrect = true;
@@ -59,6 +61,20 @@ public final class HospitalChecker {
             if (!hospitalIdsInAddressList.contains(ACTIN)) {
                 allCorrect = false;
                 LOGGER.warn("ACTIN hospital ID is not present in hospital address list: '{}'", ACTIN);
+            }
+        }
+
+        for (String GLOW : keyGLOW) {
+            if (!hospitalIdsInAddressList.contains(GLOW)) {
+                allCorrect = false;
+                LOGGER.warn("ACTIN hospital ID is not present in hospital address list: '{}'", GLOW);
+            }
+        }
+
+        for (String OPTIC : keyOPTIC) {
+            if (!hospitalIdsInAddressList.contains(OPTIC)) {
+                allCorrect = false;
+                LOGGER.warn("ACTIN hospital ID is not present in hospital address list: '{}'", OPTIC);
             }
         }
 

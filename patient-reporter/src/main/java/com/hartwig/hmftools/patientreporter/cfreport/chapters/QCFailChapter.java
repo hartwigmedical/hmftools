@@ -19,6 +19,7 @@ import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class QCFailChapter implements ReportChapter {
 
@@ -35,6 +36,12 @@ public class QCFailChapter implements ReportChapter {
     @Override
     public String name() {
         return failReport.isCorrectedReport() ? TITLE_REPORT + " (Corrected)" : TITLE_REPORT;
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @Override

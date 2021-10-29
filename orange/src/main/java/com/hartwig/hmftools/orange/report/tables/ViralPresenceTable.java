@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;

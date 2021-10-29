@@ -13,6 +13,7 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class PageEventHandler implements IEventHandler {
 
@@ -28,6 +29,7 @@ class PageEventHandler implements IEventHandler {
     private boolean fullSidebarContent;
 
     private String chapterTitle = "Undefined";
+    private String pdfTitle = "Undefined";
     private boolean firstPageOfChapter = true;
 
     private PdfOutline outline = null;
@@ -45,7 +47,7 @@ class PageEventHandler implements IEventHandler {
         if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
             PdfPage page = documentEvent.getPage();
 
-            header.renderHeader(chapterTitle, firstPageOfChapter, page);
+            header.renderHeader(chapterTitle, pdfTitle, firstPageOfChapter, page);
             if (firstPageOfChapter) {
                 firstPageOfChapter = false;
 
@@ -55,6 +57,10 @@ class PageEventHandler implements IEventHandler {
             SidePanel.renderSidePanel(page, patientReport, fullSidebar, fullSidebarContent);
             footer.renderFooter(page, !fullSidebar);
         }
+    }
+
+    void pdfTitle(@NotNull String pdfTitle) {
+        this.pdfTitle = pdfTitle;
     }
 
     void chapterTitle(@NotNull String chapterTitle) {

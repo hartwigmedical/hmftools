@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusV1;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -30,6 +29,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
+import com.hartwig.hmftools.patientreporter.cfreport.data.ViralPresence;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
@@ -40,6 +40,7 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -55,6 +56,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     public GenomicAlterationsChapter(@NotNull final AnalysedPatientReport patientReport, @NotNull final SampleReport sampleReport) {
         this.patientReport = patientReport;
         this.sampleReport = sampleReport;
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @Override
@@ -221,7 +228,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("min copies"),
                         TableUtil.createHeaderCell("max copies"),
-                        TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER)});
+                        TableUtil.createHeaderCell("Chromosome arm copies").setTextAlignment(TextAlignment.CENTER) });
 
         List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
         for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
@@ -328,16 +335,17 @@ public class GenomicAlterationsChapter implements ReportChapter {
         } else if (viruses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
-            Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 150, 180 },
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 150, 150 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("") });
+                            TableUtil.createHeaderCell("Viral coverage").setTextAlignment(TextAlignment.CENTER) });
 
             for (AnnotatedVirus virus : viruses) {
                 contentTable.addCell(TableUtil.createContentCell(virus.name()));
-                contentTable.addCell(TableUtil.createContentCell(Integer.toString(virus.integrations()))
+                contentTable.addCell(TableUtil.createContentCell(ViralPresence.createIntegrationSiteString(virus.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
-                contentTable.addCell(TableUtil.createContentCell(""));
+                contentTable.addCell(TableUtil.createContentCell(ViralPresence.createViralCoverageString(virus.percentageCovered()))
+                        .setTextAlignment(TextAlignment.CENTER));
             }
 
             return TableUtil.createWrappingReportTable(title, contentTable);

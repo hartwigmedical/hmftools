@@ -9,7 +9,9 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.itextpdf.layout.Document;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
 
@@ -17,6 +19,12 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
     @NotNull
     public String name() {
         return "Therapy details (Tumor type specific)";
+    }
+
+    @NotNull
+    @Override
+    public String pdfTitle() {
+        return Strings.EMPTY;
     }
 
     @NotNull
