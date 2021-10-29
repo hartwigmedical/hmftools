@@ -152,7 +152,6 @@ public class ClinicalEvidenceFunctions {
 
                     Cell cellnumbers = createLinksPublications(responsive);
 
-
                     if (!evidenType.equals("trial")) {
                         String predicted;
                         if (PREDICTED.contains(responsive.direction())) {
@@ -223,12 +222,8 @@ public class ClinicalEvidenceFunctions {
         for (Knowledgebase source : evidence.sources()) {
             sources.add(source.reportDisplay());
         }
+        return event + " (" + sources + ")";
 
-        if (evidence.germline()) {
-            return event + " (" + sources + ") #";
-        } else {
-            return event + " (" + sources + ")";
-        }
     }
 
     @NotNull
@@ -245,19 +240,19 @@ public class ClinicalEvidenceFunctions {
 
     @NotNull
     private static Cell createLinksPublications(@NotNull ProtectEvidence evidence) {
-        List<String> urlForSymlinks= Lists.newArrayList();
-        for (String url: evidence.urls()) {
+        List<String> urlForSymlinks = Lists.newArrayList();
+        for (String url : evidence.urls()) {
             if (!url.contains("google")) {
                 urlForSymlinks.add(url);
             }
         }
 
         Cell cellnumbers = TableUtil.createTransparentCell(Strings.EMPTY);
-        String numbers = urlForSymlinks.size()> 0 ? "[" : Strings.EMPTY;
+        String numbers = urlForSymlinks.size() > 0 ? "[" : Strings.EMPTY;
         for (int i = 0; i < urlForSymlinks.size(); i++) {
-            numbers= numbers.concat(Integer.toString(i + 1)).concat(", ");
+            numbers = numbers.concat(Integer.toString(i + 1)).concat(", ");
         }
-        numbers = numbers.length() > 1 ? numbers.substring(0, numbers.length()-2).concat("]") : numbers;
+        numbers = numbers.length() > 1 ? numbers.substring(0, numbers.length() - 2).concat("]") : numbers;
         cellnumbers = TableUtil.createTransparentCell(numbers);
 
         for (int i = 0; i < urlForSymlinks.size(); i++) {
@@ -272,7 +267,6 @@ public class ClinicalEvidenceFunctions {
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("if PRD mentioned after level then the evidence is predicted response/ressitent otherwise it is real "
                         + "responsive/resistent\n\n")
-                .add("# evidence based on germline variant\n\n")
                 .add("The Clinical Knowledgebase (CKB) is used to "
                         + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
                         + "evidence levels \n( ")
