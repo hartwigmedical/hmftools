@@ -81,6 +81,30 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
+    public void canReadHospitalContactGLOW() throws IOException {
+        Map<String, HospitalPersons> hospitalContactGLOW =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_glow.tsv", 4, "GLOW");
+        assertEquals(1, hospitalContactGLOW.size());
+
+        HospitalPersons glow1 = hospitalContactGLOW.get("01");
+        assertEquals("Someone", glow1.hospitalPI());
+        assertEquals("Someone1", glow1.requesterName());
+        assertEquals("my@email.com", glow1.requesterEmail());
+    }
+
+    @Test
+    public void canReadHospitalContactOPTIC() throws IOException {
+        Map<String, HospitalPersons> hospitalContactOPTIC =
+                HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_optic.tsv", 4, "OPTIC");
+        assertEquals(1, hospitalContactOPTIC.size());
+
+        HospitalPersons optic1 = hospitalContactOPTIC.get("01");
+        assertEquals("Someone", optic1.hospitalPI());
+        assertEquals("Someone1", optic1.requesterName());
+        assertEquals("my@email.com", optic1.requesterEmail());
+    }
+
+    @Test
     public void canReadHospitalContactWIDE() throws IOException {
         Map<String, HospitalPersons> hospitalContactWIDE =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4, "WIDE");

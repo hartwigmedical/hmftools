@@ -81,7 +81,7 @@ public class ConsentFilterFunctionsTest {
 
         List<ProtectEvidence> withNotify = ConsentFilterFunctions.filterEvidenceForGermlineConsent(Lists.newArrayList(evidence),
                 LimsGermlineReportingLevel.REPORT_WITH_NOTIFICATION);
-        assertEquals(0, withNotify.size());
+        assertEquals(1, withNotify.size());
         assertEquals(0, withNotify.stream().filter(x -> x.germline()).count());
 
         assertEquals(0,
