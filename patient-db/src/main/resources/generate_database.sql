@@ -791,7 +791,7 @@ CREATE TABLE driverCatalog
     chromosome varchar(10) NOT NULL,
     chromosomeBand varchar(50) NOT NULL,
     gene varchar(50) NOT NULL,
-    transcript varchar(50) NOT NULL,
+    transcriptId varchar(50) NOT NULL,
     canonicalTranscript BOOLEAN NOT NULL DEFAULT 1,
     category varchar(50) NOT NULL,
     driver varchar(50) NOT NULL,

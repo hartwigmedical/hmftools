@@ -10,7 +10,7 @@ ALTER TABLE somaticVariant
 
 ALTER TABLE driverCatalog
     ADD COLUMN transcriptId varchar(50) NOT NULL AFTER gene,
-    ADD COLUMN canonicalTranscript BOOLEAN NOT NULL DEFAULT 1 after transcript;
+    ADD COLUMN canonicalTranscript BOOLEAN NOT NULL DEFAULT 1 after transcriptId;
 
 ALTER TABLE germlineVariant
     ADD COLUMN spliceRegion BOOLEAN NOT NULL DEFAULT 0 AFTER canonicalHgvsProteinImpact,
