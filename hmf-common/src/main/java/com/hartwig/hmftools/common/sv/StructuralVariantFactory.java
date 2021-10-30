@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.sv;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -28,8 +30,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
-public class StructuralVariantFactory {
-
+public class StructuralVariantFactory
+{
     public static final String RECOVERED = "RECOVERED";
     public static final String RECOVERY_METHOD = "RECOVERY_METHOD";
     public static final String RECOVERY_FILTER = "RECOVERY_FILTER";
@@ -65,52 +67,70 @@ public class StructuralVariantFactory {
     private static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
     private static final String ANCHOR_SUPPORT_CIGAR = "SC";
 
-    /**
-     * Must match the small deldup threshold in scripts/gridss/gridss.config.R
-     */
+    // Must match the small deldup threshold in scripts/gridss/gridss.config.R
     private static final int SMALL_DELDUP_SIZE = 1000;
+
     private static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
     private static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
 
-    @NotNull
-    private final Map<String, VariantContext> unmatched = Maps.newHashMap();
-    @NotNull
-    private final List<StructuralVariant> results = Lists.newArrayList();
-    @NotNull
-    private final CompoundFilter filter;
+    private final Map<String,VariantContext> mUnmatchedVariants = Maps.newHashMap();
 
-    public StructuralVariantFactory(final @NotNull VariantContextFilter filter) {
-        this.filter = new CompoundFilter(true);
-        this.filter.add(new HumanChromosomeFilter());
-        this.filter.add(new ExcludeCNVFilter());
-        this.filter.add(filter);
+    private final List<StructuralVariant> mCompleteVariants = Lists.newArrayList();
+
+    private final CompoundFilter mFilter;
+
+    public StructuralVariantFactory(final @NotNull VariantContextFilter filter)
+    {
+        mFilter = new CompoundFilter(true);
+        mFilter.add(new HumanChromosomeFilter());
+        mFilter.add(new ExcludeCNVFilter());
+        mFilter.add(filter);
     }
 
-    public void addVariantContext(final @NotNull VariantContext context) {
-        if (filter.test(context)) {
+    public static boolean isSingleBreakend(final VariantContext context)
+    {
+        final StructuralVariantType type = type(context);
+        return type.equals(BND) && SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches();
+    }
+
+    public void addVariantContext(final VariantContext context)
+    {
+        if(mFilter.test(context))
+        {
             final StructuralVariantType type = type(context);
-            if (type.equals(StructuralVariantType.BND)) {
+            if(type.equals(BND))
+            {
                 final boolean isSingleBreakend = SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches();
-                if (isSingleBreakend) {
-                    results.add(createSingleBreakend(context));
-                } else {
+                if(isSingleBreakend)
+                {
+                    mCompleteVariants.add(createSingleBreakend(context));
+                }
+                else
+                {
                     String mate = mateId(context);
-                    if (unmatched.containsKey(mate)) {
-                        results.add(create(unmatched.remove(mate), context));
-                    } else {
-                        unmatched.put(context.getID(), context);
+                    if(mUnmatchedVariants.containsKey(mate))
+                    {
+                        mCompleteVariants.add(create(mUnmatchedVariants.remove(mate), context));
+                    }
+                    else
+                    {
+                        mUnmatchedVariants.put(context.getID(), context);
                     }
                 }
-            } else {
-                results.add(createFromMantaWithBPI(context));
+            }
+            else
+            {
+                mCompleteVariants.add(createFromMantaWithBPI(context));
             }
         }
     }
 
     @Nullable
-    public static String mateId(@NotNull VariantContext context) {
+    public static String mateId(@NotNull VariantContext context)
+    {
         String mate = context.getAttributeAsString(MATE_ID, null);
-        if (mate == null) {
+        if(mate == null)
+        {
             return context.getAttributeAsString(PAR_ID, null);
         }
 
@@ -118,32 +138,34 @@ public class StructuralVariantFactory {
     }
 
     @NotNull
-    public List<StructuralVariant> results() {
-        return results;
-    }
+    public List<StructuralVariant> results() { return mCompleteVariants; }
 
-    @NotNull
-    public List<VariantContext> unmatched() {
-        return Lists.newArrayList(unmatched.values());
-    }
+    public List<VariantContext> unmatched() { return Lists.newArrayList(mUnmatchedVariants.values()); }
 
-    @NotNull
-    private static StructuralVariant createFromMantaWithBPI(@NotNull VariantContext context) {
+    public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
+    public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
+
+    private static StructuralVariant createFromMantaWithBPI(final VariantContext context)
+    {
         final StructuralVariantType type = type(context);
-        Preconditions.checkArgument(!StructuralVariantType.BND.equals(type));
+        Preconditions.checkArgument(!BND.equals(type));
 
         final int start = context.getStart();
         final int end = context.getEnd();
 
         // Don't try and use TAF
-        final List<Double> af =  context.getAttributeAsDoubleList(BPI_AF, 0.0);
+        final List<Double> af = context.getAttributeAsDoubleList(BPI_AF, 0.0);
 
         byte startOrientation = 0, endOrientation = 0;
-        switch (type) {
+        switch(type)
+        {
             case INV:
-                if (context.hasAttribute("INV3")) {
+                if(context.hasAttribute("INV3"))
+                {
                     startOrientation = endOrientation = 1;
-                } else if (context.hasAttribute("INV5")) {
+                }
+                else if(context.hasAttribute("INV5"))
+                {
                     startOrientation = endOrientation = -1;
                 }
                 break;
@@ -163,21 +185,28 @@ public class StructuralVariantFactory {
 
         String insertedSequence = "";
 
-        if (type == StructuralVariantType.INS) {
+        if(type == StructuralVariantType.INS)
+        {
             final String leftInsertSeq = context.getAttributeAsString(LEFT_INS_SEQ, "");
             final String rightInsertSeq = context.getAttributeAsString(RIGHT_INS_SEQ, "");
-            if (!leftInsertSeq.isEmpty() && !rightInsertSeq.isEmpty()) {
+            if(!leftInsertSeq.isEmpty() && !rightInsertSeq.isEmpty())
+            {
                 insertedSequence = leftInsertSeq + "|" + rightInsertSeq;
-            } else {
+            }
+            else
+            {
                 List<Allele> alleles = context.getAlleles();
-                if (alleles.size() > 1) {
+                if(alleles.size() > 1)
+                {
                     insertedSequence = alleles.get(1).toString();
 
                     // remove the ref base from the start
                     insertedSequence = insertedSequence.substring(1);
                 }
             }
-        } else {
+        }
+        else
+        {
             insertedSequence = context.getAttributeAsString(INS_SEQ, "");
         }
         final boolean isSmallDelDup =
@@ -210,16 +239,18 @@ public class StructuralVariantFactory {
     }
 
     @NotNull
-    public static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second) {
-        Preconditions.checkArgument(StructuralVariantType.BND.equals(type(first)));
-        Preconditions.checkArgument(StructuralVariantType.BND.equals(type(second)));
+    public static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second)
+    {
+        Preconditions.checkArgument(BND.equals(type(first)));
+        Preconditions.checkArgument(BND.equals(type(second)));
 
         final int start = first.getStart();
         final int end = second.getStart();
 
         final String alt = first.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
-        if (!match.matches()) {
+        if(!match.matches())
+        {
             throw new IllegalArgumentException(String.format("ALT %s is not in breakend notation", alt));
         }
 
@@ -230,7 +261,8 @@ public class StructuralVariantFactory {
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
         String insertedSequence =
                 match.group(1).length() > 0 ? match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
-        if (Strings.isNullOrEmpty(insertedSequence)) {
+        if(Strings.isNullOrEmpty(insertedSequence))
+        {
             insertedSequence = first.getAttributeAsString(INS_SEQ, "");
         }
 
@@ -250,16 +282,24 @@ public class StructuralVariantFactory {
                 .alleleFrequency(unadjustedAllelicFrequency(second))
                 .build();
 
-        StructuralVariantType inferredType = StructuralVariantType.BND;
-        if (startLeg.chromosome().equals(endLeg.chromosome())) {
-            if (startLeg.orientation() == endLeg.orientation()) {
+        StructuralVariantType inferredType = BND;
+        if(startLeg.chromosome().equals(endLeg.chromosome()))
+        {
+            if(startLeg.orientation() == endLeg.orientation())
+            {
                 inferredType = StructuralVariantType.INV;
-            } else if (startLeg.orientation() == -1) {
+            }
+            else if(startLeg.orientation() == -1)
+            {
                 inferredType = StructuralVariantType.DUP;
-            } else if (insertedSequence != null && insertedSequence.length() > 0
-                    && Math.abs(endLeg.position() - startLeg.position()) <= 1) {
+            }
+            else if(insertedSequence != null && insertedSequence.length() > 0
+                    && Math.abs(endLeg.position() - startLeg.position()) <= 1)
+            {
                 inferredType = StructuralVariantType.INS;
-            } else {
+            }
+            else
+            {
                 inferredType = StructuralVariantType.DEL;
             }
         }
@@ -274,12 +314,15 @@ public class StructuralVariantFactory {
                 .build();
     }
 
-    public static Double unadjustedAllelicFrequency(@NotNull VariantContext context) {
-        if (context.hasAttribute(TAF)) {
+    public static Double unadjustedAllelicFrequency(@NotNull VariantContext context)
+    {
+        if(context.hasAttribute(TAF))
+        {
             return context.getAttributeAsDoubleList(TAF, 0.0).get(0);
         }
 
-        if (context.hasAttribute(BPI_AF)) {
+        if(context.hasAttribute(BPI_AF))
+        {
             return context.getAttributeAsDoubleList(BPI_AF, 0.0).get(0);
         }
 
@@ -287,8 +330,9 @@ public class StructuralVariantFactory {
     }
 
     @NotNull
-    public static StructuralVariant createSingleBreakend(@NotNull VariantContext context) {
-        Preconditions.checkArgument(StructuralVariantType.BND.equals(type(context)));
+    public static StructuralVariant createSingleBreakend(@NotNull VariantContext context)
+    {
+        Preconditions.checkArgument(BND.equals(type(context)));
         Preconditions.checkArgument(SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches());
 
         final List<Double> af = context.hasAttribute(BPI_AF)
@@ -315,14 +359,15 @@ public class StructuralVariantFactory {
                 .build();
     }
 
-    @NotNull
-    private static ImmutableStructuralVariantImpl.Builder setCommon(@NotNull ImmutableStructuralVariantImpl.Builder builder,
-            @NotNull VariantContext context) {
+    private static ImmutableStructuralVariantImpl.Builder setCommon(final ImmutableStructuralVariantImpl.Builder builder,
+            final VariantContext context)
+    {
         // backwards compatibility for Manta until fully over to GRIDSS
         int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
         double qualityScore = context.getPhredScaledQual();
 
-        if (somaticScore > 0) {
+        if(somaticScore > 0)
+        {
             qualityScore = somaticScore;
         }
 
@@ -346,7 +391,8 @@ public class StructuralVariantFactory {
                         .stream()
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")));
-        if (context.hasAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS)) {
+        if(context.hasAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS))
+        {
             builder.insertSequenceRepeatClass(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, ""))
                     .insertSequenceRepeatType(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, ""))
                     .insertSequenceRepeatOrientation(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION, "+").equals("+")
@@ -357,18 +403,20 @@ public class StructuralVariantFactory {
         return builder;
     }
 
-    @NotNull
-    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(@NotNull ImmutableStructuralVariantLegImpl.Builder builder,
-            @NotNull VariantContext context, boolean ignoreRefpair, byte orientation) {
+    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(final ImmutableStructuralVariantLegImpl.Builder builder,
+            final VariantContext context, boolean ignoreRefpair, byte orientation)
+    {
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
         builder.orientation(orientation);
 
         int ciLeft = 0;
         int ciRight = 0;
-        if (context.hasAttribute(CIPOS)) {
+        if(context.hasAttribute(CIPOS))
+        {
             final List<Integer> cipos = context.getAttributeAsIntList(CIPOS, 0);
-            if (cipos.size() == 2) {
+            if(cipos.size() == 2)
+            {
                 ciLeft = cipos.get(0);
                 ciRight = cipos.get(1);
             }
@@ -377,10 +425,13 @@ public class StructuralVariantFactory {
         builder.endOffset(ciRight);
         int supportWidth = 0;
         int supportCi = 0;
-        if (context.hasAttribute(ANCHOR_SUPPORT_CIGAR)) {
+        if(context.hasAttribute(ANCHOR_SUPPORT_CIGAR))
+        {
             Cigar cigar = TextCigarCodec.decode(context.getAttributeAsString(ANCHOR_SUPPORT_CIGAR, ""));
-            for (CigarElement ce : cigar.getCigarElements()) {
-                switch (ce.getOperator()) {
+            for(CigarElement ce : cigar.getCigarElements())
+            {
+                switch(ce.getOperator())
+                {
                     case X:
                     case N:
                         supportCi += ce.getLength();
@@ -397,17 +448,22 @@ public class StructuralVariantFactory {
             }
             //assert(supportCi - 1 == ciLeft + ciRight);
         }
-        if (supportWidth > 0) {
+        if(supportWidth > 0)
+        {
             builder.anchoringSupportDistance((orientation == -1 ? -ciLeft : ciRight) + supportWidth);
-        } else {
+        }
+        else
+        {
             builder.anchoringSupportDistance(0);
         }
 
         builder.inexactHomologyOffsetStart(0);
         builder.inexactHomologyOffsetEnd(0);
-        if (context.hasAttribute(IHOMPOS)) {
+        if(context.hasAttribute(IHOMPOS))
+        {
             final List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
-            if (ihompos.size() == 2) {
+            if(ihompos.size() == 2)
+            {
                 builder.inexactHomologyOffsetStart(ihompos.get(0));
                 builder.inexactHomologyOffsetEnd(ihompos.get(1));
             }
@@ -416,10 +472,12 @@ public class StructuralVariantFactory {
         int normalOrdinal = context.getGenotypes().size() == 1 ? -1 : 0;
         int tumorOrdinal = context.getGenotypes().size() == 1 ? 0 : 1;
 
-        if (normalOrdinal >= 0 && context.getGenotype(normalOrdinal) != null) {
+        if(normalOrdinal >= 0 && context.getGenotype(normalOrdinal) != null)
+        {
             Genotype geno = context.getGenotype(normalOrdinal);
-            if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
-                    VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
+            if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
+                    VARIANT_FRAGMENT_BREAKEND_COVERAGE))
+            {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
                         ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
@@ -429,10 +487,12 @@ public class StructuralVariantFactory {
                 builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
-        if (context.getGenotype(tumorOrdinal) != null) {
+        if(context.getGenotype(tumorOrdinal) != null)
+        {
             Genotype geno = context.getGenotype(tumorOrdinal);
-            if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
-                    VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
+            if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
+                    VARIANT_FRAGMENT_BREAKEND_COVERAGE))
+            {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
                         ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
@@ -445,45 +505,58 @@ public class StructuralVariantFactory {
         return builder;
     }
 
-    private static Integer asInteger(Object obj) {
-        if (obj == null) {
+    private static Integer asInteger(Object obj)
+    {
+        if(obj == null)
+        {
             return null;
-        } else if (obj instanceof Integer) {
+        }
+        else if(obj instanceof Integer)
+        {
             return (Integer) obj;
-        } else {
+        }
+        else
+        {
             final String strObj = obj.toString();
-            if (strObj == null || strObj.isEmpty()) {
+            if(strObj == null || strObj.isEmpty())
+            {
                 return null;
-            } else {
+            }
+            else
+            {
                 return Integer.parseInt(strObj);
             }
         }
     }
 
-    @NotNull
-    private static String filters(@NotNull VariantContext context, @Nullable VariantContext pairedContext) {
+    private static String filters(final VariantContext context, @Nullable VariantContext pairedContext)
+    {
         final Set<String> filters = new HashSet<>(context.getFilters());
-        if (pairedContext != null) {
+        if(pairedContext != null)
+        {
             filters.addAll(pairedContext.getFilters());
         }
-        if (filters.size() > 1) {
+        if(filters.size() > 1)
+        {
             // Doesn't pass if a filter is applied to either of the two records
             filters.remove(PASS);
         }
-        if (filters.size() == 0) {
+        if(filters.size() == 0)
+        {
             filters.add(PASS);
         }
         return filters.stream().sorted().collect(Collectors.joining(";"));
     }
 
-    private static boolean imprecise(@NotNull VariantContext context) {
+    private static boolean imprecise(final VariantContext context)
+    {
         final String impreciseStr = context.getAttributeAsString(IMPRECISE, "");
         boolean isPrecise = impreciseStr.isEmpty() || !impreciseStr.equals("true");
         return !isPrecise;
     }
 
-    @NotNull
-    private static StructuralVariantType type(@NotNull VariantContext context) {
+    private static StructuralVariantType type(final VariantContext context)
+    {
         return StructuralVariantType.fromAttribute((String) context.getAttribute(SVTYPE));
     }
 }

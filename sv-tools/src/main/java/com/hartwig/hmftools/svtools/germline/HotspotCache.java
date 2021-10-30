@@ -53,6 +53,22 @@ public class HotspotCache
         return false;
     }
 
+    public boolean matchesHotspotBreakend(final String chromosome, int position)
+    {
+        List<KnownHotspot> regions = mHotspotRegions.get(chromosome);
+
+        if(regions != null)
+        {
+            for(KnownHotspot region : regions)
+            {
+                if(region.RegionStart.containsPosition(position) || region.RegionEnd.containsPosition(position))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     private void loadFile(final String filename)
     {
         if(filename == null)

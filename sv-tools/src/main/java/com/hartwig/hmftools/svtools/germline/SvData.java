@@ -9,6 +9,11 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.BQ;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.BVF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.HOMSEQ;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.QUAL;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VF;
 
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -24,6 +29,8 @@ public class SvData
     private final int[] mPosition;
     private final byte[] mOrientation;
 
+    private final int mReferenceOrdinal;
+    private final int mTumorOrdinal;
     private VariantContext[] mContexts;
 
     private int mPonCount;
@@ -35,13 +42,15 @@ public class SvData
     public SvData(
             final String id, final StructuralVariantType type,
             final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
-            final VariantContext contextStart, final VariantContext contextEnd)
+            final VariantContext contextStart, final VariantContext contextEnd, final int referenceOrdinal, final int tumorOrdinal)
     {
         mId = id;
         mType = type;
         mChromosome = new String[] { chrStart, chrEnd };
         mPosition = new int[] { posStart, posEnd };
         mOrientation = new byte[] { orientStart, orientEnd };
+        mReferenceOrdinal = referenceOrdinal;
+        mTumorOrdinal = tumorOrdinal;
         mContexts = new VariantContext[] { contextStart, contextEnd };
 
         mPonCount = 0;
@@ -49,7 +58,7 @@ public class SvData
         mAsmbSvIds = new String[SE_PAIR];
     }
 
-    public static SvData from(final StructuralVariant sv)
+    public static SvData from(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
         boolean sglBreakend = sv.type() == SGL;
 
@@ -57,7 +66,7 @@ public class SvData
                 sv.id(), sv.type(), sv.chromosome(true), !sglBreakend ? sv.chromosome(false) : "0",
                 sv.position(true).intValue(), !sglBreakend ? sv.position(false).intValue() : -1,
                 sv.orientation(true), !sglBreakend ? sv.orientation(false) : 0,
-                sv.startContext(), sv.endContext());
+                sv.startContext(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
     }
 
     public String id() { return mId; }
@@ -74,17 +83,36 @@ public class SvData
     public byte orientStart() { return mOrientation[SE_START]; }
     public byte orientEnd() { return mOrientation[SE_END]; }
 
+    public StructuralVariantType type() { return mType; }
     public boolean isSgl() { return mType == SGL; }
 
     public VariantContext[] contexts() { return mContexts; }
     public VariantContext contextStart() { return mContexts[SE_START]; }
     public VariantContext contextEnd() { return mContexts[SE_END]; }
 
+    public double qual()
+    {
+        if(isSgl())
+            return mContexts[SE_START].getAttributeAsDouble(BQ, 0);
+        else
+            return mContexts[SE_START].getAttributeAsDouble(QUAL, 0);
+    }
+
+    public int normalSupport()
+    {
+        if(isSgl())
+            return mContexts[SE_START].getAttributeAsInt(BVF, 0);
+        else
+            return mContexts[SE_START].getAttributeAsInt(VF, 0);
+    }
+
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }
 
     public void setHotspotGeneInfo(final String info) { mHotspotGeneInfo = info; }
     public String getHotspotGeneInfo() { return mHotspotGeneInfo; }
+
+    public boolean hasLength() { return hasLength(mType); }
 
     public static boolean hasLength(final StructuralVariantType type)
     {
@@ -100,6 +128,9 @@ public class SvData
 
         return 0;
     }
+
+    public String startHomology() { return contextStart().getAttributeAsString(HOMSEQ, ""); }
+    public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(HOMSEQ, "") : ""; }
 
     /*
         sampleName, sv.id(), sv.filter(), getDoubleValue(normalGenotype, QUAL), sv.type(),

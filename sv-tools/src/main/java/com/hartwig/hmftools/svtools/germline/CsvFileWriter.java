@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static java.util.stream.Collectors.toList;
-
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
@@ -38,12 +36,6 @@ public class CsvFileWriter
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    @NotNull
-    public static List<SvData> read(final String filePath) throws IOException
-    {
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
-    }
-
     public static void write(@NotNull final String filename, @NotNull List<SvData> svList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svList));
@@ -56,12 +48,6 @@ public class CsvFileWriter
         lines.add(header());
         svList.stream().map(x -> toString(x)).forEach(lines::add);
         return lines;
-    }
-
-    @NotNull
-    private static List<SvData> fromLines(@NotNull List<String> lines)
-    {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(x -> fromString(x, false)).collect(toList());
     }
 
     @NotNull
@@ -124,40 +110,6 @@ public class CsvFileWriter
          */
 
         return "";
-    }
-
-    @NotNull
-    public static SvData fromString(@NotNull final String sv, boolean reprocess)
-    {
-        String[] values = sv.split(DELIMITER, -1);
-        int index = 0;
-
-        return null;
-
-        /*
-        return new GermlineSV(
-                values[index++],
-                values[index++],
-                values[index++],
-                Double.parseDouble(values[index++]),
-                StructuralVariantType.valueOf(values[index++]),
-                values[index++],
-                values[index++],
-                Long.parseLong(values[index++]),
-                Long.parseLong(values[index++]),
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Double.parseDouble(values[index++]),
-                Integer.parseInt(values[index++]),
-                Double.parseDouble(values[index++]),
-                Integer.parseInt(values[index++]),
-                values[index++],
-                values[index++],
-                reprocess ? "" : values[index++],
-                reprocess ? "" : values[index++]);
-         */
     }
 
     private void writeCsv(final SvData svData)

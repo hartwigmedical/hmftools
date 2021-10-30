@@ -1,14 +1,10 @@
 package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
@@ -26,13 +22,11 @@ public class GermlineVcfConfig
 {
     // run config
     public final String SampleId;
+    public final String ReferenceId;
     public final String OutputDir;
     public final String Scope;
     public final String VcfFile;
     public final String OutputVcfFile;
-    public final String VcfsFile;
-    public final String ProcessedFile;
-    public final String BatchRunRootDir;
     public final boolean LinkByAssembly;
 
     // filtering config
@@ -43,12 +37,9 @@ public class GermlineVcfConfig
     public final boolean RequireGene;
 
     private static final String SAMPLE = "sample";
+    private static final String REFERENCE = "reference";
     private static final String VCF_FILE = "vcf";
-    private static final String VCFS_FILE = "vcfs_file";
-    private static final String BATCH_ROOT_DIR = "batch_root_dir";
     private static final String OUTPUT_VCF = "output_vcf";
-
-    private static final String PROCESSED_FILE = "processed";
 
     private static final String SCOPE = "scope";
     public static final String GENE_PANEL_FILE = "gene_panel_file";
@@ -64,11 +55,10 @@ public class GermlineVcfConfig
     public GermlineVcfConfig(final CommandLine cmd)
     {
         SampleId = cmd.getOptionValue(SAMPLE);
+        ReferenceId = cmd.getOptionValue(REFERENCE);
         OutputDir = parseOutputDir(cmd);
 
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
-        VcfsFile = cmd.getOptionValue(VCFS_FILE, "");
-        BatchRunRootDir = cmd.getOptionValue(BATCH_ROOT_DIR, "");
         OutputVcfFile = cmd.getOptionValue(VCF_FILE, "");
 
         RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
@@ -78,7 +68,6 @@ public class GermlineVcfConfig
         // unused
         RequireGridssPass = cmd.hasOption(REQUIRE_PASS);
         QualScoreThreshold = Integer.parseInt(cmd.getOptionValue(QUAL_SCORE_THRESHOLD, "350"));
-        ProcessedFile = cmd.getOptionValue(PROCESSED_FILE, "");
         Scope = cmd.getOptionValue(SCOPE);
         LinkByAssembly = cmd.hasOption(LINK_BY_ASSEMBLY);
 
@@ -107,10 +96,8 @@ public class GermlineVcfConfig
     public static void addCommandLineOptions(final Options options)
     {
         options.addOption(SAMPLE, true, "Name of the tumor sample");
+        options.addOption(REFERENCE, true, "Optional, name of the reference sample");
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
-        options.addOption(BATCH_ROOT_DIR, true, "Path to the root directory for sample runs");
-        options.addOption(PROCESSED_FILE, true, "Path to a previously-run output file");
-        addEnsemblDir(options);
         options.addOption(GENE_PANEL_FILE, true, "Gene panel file");
         options.addOption(CHECK_DISRUPTIONS, false, "Check gene disruptions and filter out non-disruptive genes");
         options.addOption(LINK_BY_ASSEMBLY, false, "Look for assembled links");
@@ -119,6 +106,7 @@ public class GermlineVcfConfig
         addOutputDir(options);
         addLoggingOptions(options);
         addRefGenomeConfig(options);
+        // addEnsemblDir(options);
 
         options.addOption(REQUIRE_PASS, false, "Require variants to have GRIDSS filter = PASS");
         options.addOption(QUAL_SCORE_THRESHOLD, true, "Qual score threshold");
