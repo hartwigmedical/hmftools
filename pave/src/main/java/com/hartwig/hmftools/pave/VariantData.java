@@ -168,8 +168,11 @@ public class VariantData
 
     public void setRealignedVariant(final VariantData variant)
     {
-        mRealignedVariant = variant;
-        variant.markRealignedVariant();
+        if(variant != null)
+        {
+            mRealignedVariant = variant;
+            variant.markRealignedVariant();
+        }
     }
 
     public boolean isRealignedVariant() { return mIsRealignedVariant; }

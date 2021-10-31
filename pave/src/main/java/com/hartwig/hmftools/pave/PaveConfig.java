@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
@@ -81,7 +82,7 @@ public class PaveConfig
         options.addOption(OUTPUT_VCF_FILE, true, "Option VCF output file, otherwise will append 'pave' suffix to input filename");
 
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         addEnsemblDir(options);
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad variant frequencies file");
