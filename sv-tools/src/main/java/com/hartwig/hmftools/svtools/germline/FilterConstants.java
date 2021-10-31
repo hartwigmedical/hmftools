@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.svtools.germline;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -7,9 +11,9 @@ import org.apache.commons.cli.CommandLine;
 public class FilterConstants
 {
     public final int MinTumorQual;
-    public final int MaxNormalAbsoluteSupport;
+    public final int HardMaxNormalAbsoluteSupport;
     public final double HardMaxNormalRelativeSupport;
-    public final double SoftMinNormalRelativeSupport;
+    public final double SoftMaxNormalRelativeSupport;
     public final double MinNormalCoverage;
     public final double MinTumorAf;
     public final double MaxShortStrandBias;
@@ -20,12 +24,20 @@ public class FilterConstants
     public final int MaxInexactHomLengthShortDel;
     public final int MinLength;
     public final int PonDistance;
+    public final ChrBaseRegion PolyGcRegion;
 
     // filter which only apply when reference is present:
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
 
     // default filter values
     public static final int SHORT_RESCUE_LENGTH = 1000;
+    public static final int SHORT_CALLING_SIZE = 1000;
+    public static final int HOM_INV_LENGTH = 40;
+
+    public static final String POLY_G_INSERT = "GGGGGGGGGGGGGGGG";
+    public static final String POLY_C_INSERT = "CCCCCCCCCCCCCCCC";
+    public static final String POLY_A_HOMOLOGY = "AAAAAAA";
+    public static final String POLY_T_HOMOLOGY = "TTTTTTT";
 
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 100;
     public static final int DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT = 3;
@@ -66,6 +78,8 @@ public class FilterConstants
 
     public static FilterConstants from(final CommandLine cmd)
     {
+        RefGenomeVersion refGenVersion = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+
         return new FilterConstants(
                 Integer.parseInt(cmd.getOptionValue(HARD_MIN_TUMOR_QUAL_CFG, String.valueOf(DEFAULT_HARD_MIN_TUMOR_QUAL))),
                 Integer.parseInt(cmd.getOptionValue(
@@ -85,18 +99,20 @@ public class FilterConstants
                 Integer.parseInt(cmd.getOptionValue(
                         MAX_INEXACT_HOM_LENGTH_SHORT_DEL_CFG, String.valueOf(DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL))),
                 Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
-                Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))));
+                Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
+                refGenVersion == V37 ? LINC_00486_V37 : LINC_00486_V38);
     }
 
     public FilterConstants(
-            int minTumorQual, int maxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMinNormalRelativeSupport,
+            int minTumorQual, int hardMaxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMaxNormalRelativeSupport,
             double minNormalCoverage, double minTumorAf, double maxShortStrandBias, int minQualBreakend, int minQualBreakpoint,
-            int minQualRescueLine, int maxHomLengthShortInv, int maxInexactHomLengthShortDel, int minLength, int ponDistance)
+            int minQualRescueLine, int maxHomLengthShortInv, int maxInexactHomLengthShortDel, int minLength, int ponDistance,
+            final ChrBaseRegion polyGcRegion)
     {
         MinTumorQual = minTumorQual;
-        MaxNormalAbsoluteSupport = maxNormalAbsoluteSupport;
+        HardMaxNormalAbsoluteSupport = hardMaxNormalAbsoluteSupport;
         HardMaxNormalRelativeSupport = hardMaxNormalRelativeSupport;
-        SoftMinNormalRelativeSupport = softMinNormalRelativeSupport;
+        SoftMaxNormalRelativeSupport = softMaxNormalRelativeSupport;
         MinNormalCoverage = minNormalCoverage;
         MinTumorAf = minTumorAf;
         MaxShortStrandBias = maxShortStrandBias;
@@ -107,5 +123,6 @@ public class FilterConstants
         MaxInexactHomLengthShortDel = maxInexactHomLengthShortDel;
         MinLength = minLength;
         PonDistance = ponDistance;
+        PolyGcRegion = polyGcRegion;
     }
 }

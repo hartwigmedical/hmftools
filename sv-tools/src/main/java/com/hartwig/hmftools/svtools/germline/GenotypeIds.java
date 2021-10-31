@@ -14,4 +14,6 @@ public class GenotypeIds
         ReferenceId = referenceId;
         TumorId = tumorId;
     }
+
+    public boolean hasReference() { return ReferenceOrdinal >= 0; }
 }

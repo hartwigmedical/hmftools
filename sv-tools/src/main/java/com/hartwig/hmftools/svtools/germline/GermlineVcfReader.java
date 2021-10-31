@@ -2,8 +2,6 @@ package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
-import static com.hartwig.hmftools.svtools.germline.GermlineUtils.findVcfFiles;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.loadVcfFiles;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,6 +38,7 @@ public class GermlineVcfReader
     private final PonCache mPonCache;
     private final HotspotCache mHotspotCache;
     private final HardFilters mHardFilters;
+    private final SoftFilters mSoftFilters;
 
     private int mProcessedVariants;
     private StructuralVariantFactory mSvFactory;
@@ -64,6 +63,7 @@ public class GermlineVcfReader
         mHotspotCache = new HotspotCache(cmd);
 
         mHardFilters = new HardFilters(mFilterConstants, mHotspotCache);
+        mSoftFilters = new SoftFilters(mFilterConstants);
 
         mProcessedVariants = 0;
         mSampleSvData = Lists.newArrayList();
@@ -106,6 +106,10 @@ public class GermlineVcfReader
                 // annotate with the PON
                 svData.setPonCount(mPonCache.getPonCount(svData));
 
+                List<FilterType> softFilters = mSoftFilters.applyFilters(svData);
+                softFilters.forEach(x -> svData.addFilter(x));
+                softFilters.forEach(x -> registerFilter(x));
+
                 //mLinkAnalyser.cacheAssemblyData(svData);
                 //mLinkAnalyser.populateAssemblyLinks(svData);
                 // writeCsv(germlineSV);
@@ -143,7 +147,7 @@ public class GermlineVcfReader
                 return; // already filtered
         }
 
-        if(mHardFilters.failsMinTumorQuality(variant, genotypeIds.TumorOrdinal))
+        if(mHardFilters.isFiltered(variant, genotypeIds))
         {
             if(mateId != null)
             {
@@ -162,7 +166,7 @@ public class GermlineVcfReader
                 // mate ID not set or a single breakend, but either way no need to register hard-filtered ID
             }
 
-            registerFilter(FilterType.HARD_MIN_QUAL);
+            registerFilter(FilterType.HARD_FILTERED);
             return;
         }
 
@@ -179,11 +183,9 @@ public class GermlineVcfReader
             return;
 
         // check hard filters again on the pair of breakends to ensure they both match a known pair
-        FilterType hardFilter = mHardFilters.getFilterType(sv);
-
-        if(hardFilter != FilterType.PASS)
+        if(!mHardFilters.keepHotspotVariant(sv))
         {
-            registerFilter(hardFilter);
+            registerFilter(FilterType.HARD_FILTERED);
             return;
         }
 

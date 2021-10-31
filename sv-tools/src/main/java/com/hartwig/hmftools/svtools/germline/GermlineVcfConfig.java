@@ -30,6 +30,7 @@ public class GermlineVcfConfig
     public final boolean LinkByAssembly;
 
     // filtering config
+    public final boolean WriteSoftFiltered;
     public final boolean RequireGridssPass;
     public final boolean LogFiltered;
     public final int QualScoreThreshold;
@@ -44,8 +45,8 @@ public class GermlineVcfConfig
     private static final String SCOPE = "scope";
     public static final String GENE_PANEL_FILE = "gene_panel_file";
     private static final String LINK_BY_ASSEMBLY = "link_by_assembly";
-    private static final String CHECK_DISRUPTIONS = "check_disruptions";
 
+    private static final String WRITE_SOFT_FILTERED = "write_soft_filtered";
     private static final String REQUIRE_PASS = "require_pass";
     private static final String LOG_FILTERED = "log_filtered";
     private static final String QUAL_SCORE_THRESHOLD = "qs_threshold";
@@ -64,6 +65,8 @@ public class GermlineVcfConfig
         RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES, "")
                 .split(";")).collect(Collectors.toList()) : Lists.newArrayList();
+
+        WriteSoftFiltered = cmd.hasOption(WRITE_SOFT_FILTERED);
 
         // unused
         RequireGridssPass = cmd.hasOption(REQUIRE_PASS);
@@ -98,16 +101,18 @@ public class GermlineVcfConfig
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(REFERENCE, true, "Optional, name of the reference sample");
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
-        options.addOption(GENE_PANEL_FILE, true, "Gene panel file");
-        options.addOption(CHECK_DISRUPTIONS, false, "Check gene disruptions and filter out non-disruptive genes");
-        options.addOption(LINK_BY_ASSEMBLY, false, "Look for assembled links");
-        options.addOption(SCOPE, true, "Scope: germline or somatic");
+
+        // options.addOption(GENE_PANEL_FILE, true, "Gene panel file");
+        options.addOption(WRITE_SOFT_FILTERED, false, "Write variants to file even if soft-filtered");
+
         options.addOption(OUTPUT_VCF, true, "Path to write results");
         addOutputDir(options);
         addLoggingOptions(options);
         addRefGenomeConfig(options);
         // addEnsemblDir(options);
 
+        options.addOption(LINK_BY_ASSEMBLY, false, "Look for assembled links");
+        options.addOption(SCOPE, true, "Scope: germline or somatic");
         options.addOption(REQUIRE_PASS, false, "Require variants to have GRIDSS filter = PASS");
         options.addOption(QUAL_SCORE_THRESHOLD, true, "Qual score threshold");
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Optional set of chromosomes to restrict search to");

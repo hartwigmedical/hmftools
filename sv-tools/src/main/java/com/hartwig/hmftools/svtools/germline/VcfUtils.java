@@ -10,6 +10,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class VcfUtils
@@ -21,6 +23,7 @@ public class VcfUtils
     public static final String SRQ = "SRQ";
     public static final String VF = "VF";
     public static final String RP = "RP";
+    public static final String IC = "IC";
     public static final String RPQ = "RPQ";
     public static final String REF = "REF";
     public static final String BEID = "BEID";
@@ -36,6 +39,7 @@ public class VcfUtils
     public static final String SB = "SB";
     public static final String BVF = "BVF";
     public static final String REFPAIR = "REFPAIR";
+    public static final String IMPRECISE = "IMPRECISE";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {
@@ -72,6 +76,17 @@ public class VcfUtils
         return new GenotypeIds(referenceOrdinal, tumorOrdinal, vcfRefefenceId, vcfTumorId);
     }
 
+    public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
+    {
+        Object value = genotype.getExtendedAttribute(attribute);
+        return value == null ? defaultVaue : (int)value;
+    }
+
+    public static double getGenotypeAttributeAsDouble(final Genotype genotype, final String attribute, double defaultVaue)
+    {
+        Object value = genotype.getExtendedAttribute(attribute);
+        return value == null ? defaultVaue : (double)value;
+    }
 
     public static List<String> loadVcfFiles(final String vcfsFile)
     {
