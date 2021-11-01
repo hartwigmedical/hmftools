@@ -10,7 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.zip.GZIPOutputStream;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.telo.analysers.TelomereReadsAnalyser;
+import com.hartwig.hmftools.telo.breakend.TelomereReadsAnalyser;
 
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
@@ -25,15 +25,15 @@ import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.IntColumn;
 import tech.tablesaw.api.StringColumn;
 
-class TelBamRecord
-{
-    public SAMRecord samRecord;
-    public boolean hasTeloContent = false;
-    public boolean poison = false;
-}
-
 public class BamRecordWriter implements Runnable
 {
+    private class TelBamRecord
+    {
+        public SAMRecord samRecord;
+        public boolean hasTeloContent = false;
+        public boolean poison = false;
+    }
+
     private final BlockingQueue<TelBamRecord> mTelBamRecordQ;
 
     private final Set<String> mIncompleteReadNames;
@@ -99,13 +99,15 @@ public class BamRecordWriter implements Runnable
             TE_LOGGER.warn("incomplete read group: id={}, is complete={}", rg.getName(), rg.isComplete(Level.WARN));
             for(SAMRecord r : rg.Reads)
             {
-                TE_LOGGER.warn("record({}) first of pair({}) suppl flag({}) suppl attr({})",
-                        r, r.getFirstOfPairFlag(), r.getSupplementaryAlignmentFlag(), r.getStringAttribute(SAMTag.SA.name()));
+                TE_LOGGER.warn("record({}) cigar({}) neg strand({}) suppl flag({}) suppl attr({})",
+                        r, r.getCigarString(), r.getReadNegativeStrandFlag(),  r.getSupplementaryAlignmentFlag(),
+                        r.getStringAttribute(SAMTag.SA.name()));
             }
             for(SAMRecord r : rg.SupplementaryReads)
             {
-                TE_LOGGER.warn("supplementary({}) first of pair({}) suppl flag({}) suppl attr({})",
-                        r, r.getFirstOfPairFlag(), r.getSupplementaryAlignmentFlag(), r.getStringAttribute(SAMTag.SA.name()));
+                TE_LOGGER.warn("supplementary({}) cigar({}) neg strand({}) suppl flag({}) suppl attr({})",
+                        r, r.getCigarString(), r.getReadNegativeStrandFlag(),  r.getSupplementaryAlignmentFlag(),
+                        r.getStringAttribute(SAMTag.SA.name()));
             }
         }
 

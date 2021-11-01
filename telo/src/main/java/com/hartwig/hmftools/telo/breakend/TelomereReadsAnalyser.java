@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.telo.analysers;
+package com.hartwig.hmftools.telo.breakend;
 
 import java.util.HashMap;
 import java.util.Map;

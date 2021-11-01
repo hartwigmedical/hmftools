@@ -17,22 +17,22 @@ public class TestReadGroup
     {
         String saString = "16,59998,+,64S38M49S,55,0;";
 
-        List<ChrBaseRegion> brs = ReadGroup.suppAlignmentPositions(saString);
+        List<ReadGroup.SupplementaryAlignment> sas = ReadGroup.suppAlignmentPositions(saString);
 
-        TestCase.assertEquals(brs.size(), 1);
-        TestCase.assertEquals(brs.get(0).Chromosome, "16");
-        TestCase.assertEquals(brs.get(0).start(), 59998);
+        TestCase.assertEquals(sas.size(), 1);
+        TestCase.assertEquals(sas.get(0).Chromosome, "16");
+        TestCase.assertEquals(sas.get(0).Position, 59998);
 
         saString = "16,59998,+,64S38M49S,55,0;15,42243201,+,108S35M8S,9,0;,";
 
-        brs = ReadGroup.suppAlignmentPositions(saString);
+        sas = ReadGroup.suppAlignmentPositions(saString);
 
-        TestCase.assertEquals(brs.size(), 2);
-        TestCase.assertEquals(brs.get(0).Chromosome, "16");
-        TestCase.assertEquals(brs.get(0).start(), 59998);
+        TestCase.assertEquals(sas.size(), 2);
+        TestCase.assertEquals(sas.get(0).Chromosome, "16");
+        TestCase.assertEquals(sas.get(0).Position, 59998);
 
-        TestCase.assertEquals(brs.get(1).Chromosome, "15");
-        TestCase.assertEquals(brs.get(1).start(), 42243201);
+        TestCase.assertEquals(sas.get(1).Chromosome, "15");
+        TestCase.assertEquals(sas.get(1).Position, 42243201);
     }
 
     @Test

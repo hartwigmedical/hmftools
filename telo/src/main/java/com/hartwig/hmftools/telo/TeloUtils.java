@@ -85,7 +85,7 @@ public class TeloUtils
     private static ThreadLocal<Matcher> sGTeloPatternMatcher = ThreadLocal.withInitial(() -> sGTeloPattern.matcher(""));
     private static ThreadLocal<Matcher> sCTeloPatternMatcher = ThreadLocal.withInitial(() -> sCTeloPattern.matcher(""));
 
-    public static boolean isFullyGTelomeric(final String readBases)
+    public static boolean isLikelyGTelomeric(final String readBases)
     {
         if (StringUtils.countMatches(readBases, "TTAGGG") >= MIN_CANONICAL_COUNT)
         {
@@ -96,7 +96,7 @@ public class TeloUtils
         return false;
     }
 
-    public static boolean isFullyCTelomeric(final String readBases)
+    public static boolean isLikelyCTelomeric(final String readBases)
     {
         if (StringUtils.countMatches(readBases, "CCCTAA") >= MIN_CANONICAL_COUNT)
         {
@@ -147,8 +147,8 @@ public class TeloUtils
 
     public static ReadGroup.FragmentType classifyFragment(String readPairG, String readPairC)
     {
-        boolean isGTelomeric = isFullyGTelomeric(readPairG);
-        boolean isCTelomeric = isFullyCTelomeric(readPairC);
+        boolean isGTelomeric = isLikelyGTelomeric(readPairG);
+        boolean isCTelomeric = isLikelyCTelomeric(readPairC);
 
         // first we want to find the TTAGGG motif, then fill it up backwards
         if (isGTelomeric && isCTelomeric)
@@ -170,6 +170,99 @@ public class TeloUtils
 
         // not telomeric
         return ReadGroup.FragmentType.NOT_TELOMERE;
+    }
+
+    // TTAGGG but we also match for anything that start with [ACGT]{3}GGG with total <= 4 Gs
+    static boolean isGTeloHexamer(String sequence, int startOffset)
+    {
+        if ((sequence.length() - startOffset) < 6)
+        {
+            return false;
+        }
+
+        for (String gHexamer : TELOMERE_HEXAMERS)
+        {
+            if (sequence.regionMatches(startOffset, gHexamer, 0, gHexamer.length()))
+                return true;
+        }
+
+        return false;
+    }
+
+    // CCCTAA but we also match for anything that start with CCC[ACGT]{3} with total <= 4 Cs
+    static boolean isCTeloHexamer(String sequence, int startOffset)
+    {
+        if ((sequence.length() - startOffset) < 6)
+        {
+            return false;
+        }
+
+        for (String cHexamer : TELOMERE_HEXAMERS_REV)
+        {
+            if (sequence.regionMatches(startOffset, cHexamer, 0, cHexamer.length()))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isStrictlyGTelomeric(final String seq)
+    {
+        return isStrictlyTelomericHelper(seq, CANONICAL_TELOMERE_SEQ, TeloUtils::isGTeloHexamer);
+    }
+
+    public static boolean isStrictlyCTelomeric(final String seq)
+    {
+        return isStrictlyTelomericHelper(seq, CANONICAL_TELOMERE_SEQ_REV, TeloUtils::isCTeloHexamer);
+    }
+
+    public static boolean isStrictlyTelomericHelper(final String seq, final String canonicalHexamer,
+            java.util.function.BiFunction<String, Integer, Boolean> hexamerCheckFunc)
+    {
+        // here we apply a very stringent rule to go through the bases and work out if something is
+        // telomeric by shifting across by 6 and see if we can find a way that is totally telomeric
+        for (int i = 0; i < 6; ++i)
+        {
+            // we use a modified seq to fix up the ends to make it easier
+            String modifiedSeq = seq;
+            if (i != 0)
+            {
+                // we add something at the start to make it a full hexamer
+                modifiedSeq = canonicalHexamer.substring(0, 6 - i) + seq;
+            }
+
+            // also fix the end
+            int residualLength = modifiedSeq.length() % 6;
+            if (residualLength != 0)
+            {
+                modifiedSeq += canonicalHexamer.substring(residualLength);
+            }
+
+            boolean isAllTelo = true;
+            for (int j = 0; j < modifiedSeq.length(); j += 6)
+            {
+                if (!hexamerCheckFunc.apply(modifiedSeq, j))
+                {
+                    isAllTelo = false;
+                    break;
+                }
+            }
+
+            if (isAllTelo)
+                return true;
+        }
+        return false;
+    }
+
+    // determine if the read is poly G
+    // note: We must supply this function with the read as is from
+    // the read
+    public static boolean isPolyGC(String readSeq)
+    {
+        // we use threshold of 90%
+        double numGCs = Math.max(StringUtils.countMatches(readSeq, 'G'), StringUtils.countMatches(readSeq, 'C'));
+        double gcFrac = numGCs / readSeq.length();
+        return gcFrac >= POLY_G_THRESHOLD;
     }
 
     public static List<ChrBaseRegion> createPartitions(final TeloConfig config)

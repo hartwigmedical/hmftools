@@ -24,6 +24,28 @@ public class ReadGroup
         F4
     }
 
+    public static class SupplementaryAlignment
+    {
+        public String Chromosome;
+        public boolean NegativeStrand;
+        public int Position;
+        public String Cigar;
+
+        public boolean isMatch(SAMRecord read)
+        {
+            return read.getAlignmentStart() == Position &&
+                    read.getReadNegativeStrandFlag() == NegativeStrand &&
+                    read.getReferenceName().equals(Chromosome) &&
+                    cigarEqual(read.getCigarString(), Cigar);
+        }
+
+        // for the purpose of matching supplementary alignments, hard clip and soft clip are equivalent
+        private static boolean cigarEqual(String cigar1, String cigar2)
+        {
+            return cigar1.replace('H', 'S').equals(cigar2.replace('H', 'S'));
+        }
+    }
+
     public final List<SAMRecord> Reads = new ArrayList<>();
     public final List<SAMRecord> SupplementaryReads = new ArrayList<>();
     private final String mName;
@@ -59,17 +81,13 @@ public class ReadGroup
             String saAttribute = read.getStringAttribute(SAMTag.SA.name());
             if (saAttribute != null)
             {
-                List<ChrBaseRegion> supplementaryRegions = ReadGroup.suppAlignmentPositions(saAttribute);
-                for (ChrBaseRegion br : supplementaryRegions)
+                for (SupplementaryAlignment sa : suppAlignmentPositions(saAttribute))
                 {
                     // check if this supplementary read exists
-                    if (SupplementaryReads.stream()
-                            .noneMatch(x -> x.getFirstOfPairFlag() == read.getFirstOfPairFlag() &&
-                                    x.getAlignmentStart() == br.start() &&
-                                    x.getReferenceName().equals(br.Chromosome)))
+                    if (SupplementaryReads.stream().noneMatch(sa::isMatch))
                     {
                         TE_LOGGER.log(logLevel, "{} Missing supplementary read: aligned to {}:{}", Reads.get(0),
-                                br.chromosome(), br.start());
+                                sa.Chromosome, sa.Position);
                         return false;
                     }
                 }
@@ -99,7 +117,9 @@ public class ReadGroup
         return listToLook.stream().anyMatch(x ->
                         x.getFirstOfPairFlag() == read.getFirstOfPairFlag() &&
                         x.getAlignmentStart() == read.getAlignmentStart() &&
-                        x.getReferenceName().equals(read.getReferenceName()));
+                        x.getReadNegativeStrandFlag() == read.getReadNegativeStrandFlag() &&
+                        x.getReferenceName().equals(read.getReferenceName()) &&
+                        x.getCigar().equals(read.getCigar()));
     }
 
     //public boolean isDuplicate() { return Reads.stream().anyMatch(x -> x.isDuplicate()); }
@@ -123,12 +143,12 @@ public class ReadGroup
 
     public static final String SUPP_ALIGNMENT_DELIM = ",";
 
-    public static List<ChrBaseRegion> suppAlignmentPositions(final String suppAlignment)
+    public static List<SupplementaryAlignment> suppAlignmentPositions(final String suppAlignment)
     {
         if(suppAlignment == null)
             return null;
 
-        List<ChrBaseRegion> suppAignPos = new ArrayList<>();
+        List<SupplementaryAlignment> suppAignPos = new ArrayList<>();
 
         final String[] supplementaryItems = suppAlignment.split(";");
 
@@ -142,9 +162,12 @@ public class ReadGroup
             // supplementary(SA) string attribute looks like
             // 4,191039958,+,68S33M,0,0
             // the first word is the chromosome, the second is the alignment start
-            String supplementaryAlignRef = items[0];
-            int supplementaryAlignStart = Integer.parseInt(items[1]);
-            suppAignPos.add(new ChrBaseRegion(supplementaryAlignRef, supplementaryAlignStart, supplementaryAlignStart));
+            SupplementaryAlignment sa = new SupplementaryAlignment();
+            sa.Chromosome = items[0];
+            sa.Position = Integer.parseInt(items[1]);
+            sa.NegativeStrand = items[2].equals("-");
+            sa.Cigar = items[3];
+            suppAignPos.add(sa);
         }
         return suppAignPos;
     }
@@ -214,21 +237,14 @@ public class ReadGroup
             String saAttribute = read.getStringAttribute(SAMTag.SA.name());
             if (saAttribute != null)
             {
-                List<ChrBaseRegion> supplementaryRegions = ReadGroup.suppAlignmentPositions(saAttribute);
-                for (ChrBaseRegion br : supplementaryRegions)
+                for (SupplementaryAlignment sa : suppAlignmentPositions(saAttribute))
                 {
-                    if (br != null)
+                    // check if this supplementary read exists
+                    if (SupplementaryReads.stream().noneMatch(sa::isMatch))
                     {
-                        // check if this supplementary read exists
-                        if (SupplementaryReads.stream()
-                                .noneMatch(x -> x.getFirstOfPairFlag() == read.getFirstOfPairFlag() &&
-                                        x.getAlignmentStart() == br.start() &&
-                                        x.getReferenceName().equals(br.Chromosome)))
-                        {
-                            baseRegions.add(br);
-                            TE_LOGGER.trace("{} Missing supplementary read: aligned to {}:{}", Reads.get(0),
-                                    br.chromosome(), br.start());
-                        }
+                        baseRegions.add(new ChrBaseRegion(sa.Chromosome, sa.Position, sa.Position));
+                        TE_LOGGER.trace("{} Missing supplementary read: aligned to {}:{}", Reads.get(0),
+                                sa.Chromosome, sa.Position);
                     }
                 }
             }
