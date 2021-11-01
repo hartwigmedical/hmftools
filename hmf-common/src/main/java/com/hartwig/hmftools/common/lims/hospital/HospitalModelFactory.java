@@ -76,9 +76,9 @@ public final class HospitalModelFactory {
         Map<String, HospitalPersons> hospitalPersonsACTIN =
                 readFromHospitalPersonsTsv(hospitalPersonsACTINTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "ACTIN");
         Map<String, HospitalPersons> hospitalPersonsGLOW =
-                readFromHospitalPersonsTsv(hospitalPersonsGLOWTsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE, "GLOW");
+                readFromHospitalPersonsTsv(hospitalPersonsGLOWTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "GLOW");
         Map<String, HospitalPersons> hospitalPersonsOPTIC =
-                readFromHospitalPersonsTsv(hospitalPersonsOPTICTsv, HOSPITAL_PERSONS_FIELD_COUNT_WIDE, "OPTIC");
+                readFromHospitalPersonsTsv(hospitalPersonsOPTICTsv, HOSPITAL_PERSONS_FIELD_COUNT_CPCT_DRUP_ACTIN, "OPTIC");
         Map<String, String> sampleHospitalMapping = readFromSampleToHospitalMappingTsv(sampleHospitalMappingTsv);
 
         HospitalModel hospitalModel = ImmutableHospitalModel.builder()
