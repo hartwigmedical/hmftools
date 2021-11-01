@@ -6,18 +6,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.SHORT_CALLING_SIZE;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.BQ;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.BVF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.EVENT;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.HOMSEQ;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.QUAL;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.REF;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.REFPAIR;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.VF;
 
 import java.util.List;
 
@@ -25,14 +17,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SvData
 {
     // VCF data
-    private final String mVcfId;
+    private final String mId;
     private final StructuralVariantType mType;
 
     private final int mReferenceOrdinal;
@@ -52,16 +42,17 @@ public class SvData
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        mVcfId = sv.id();
+        mId = sv.startContext().getAttributeAsString(EVENT, sv.id());
+
         mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
         mTumorOrdinal = genotypeIds.TumorOrdinal;
 
         Breakend breakendStart = Breakend.from(
-                mVcfId, mType, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+                mId, mType, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
         Breakend breakendEnd = sv.end() != null ?
-                Breakend.from(mVcfId, mType, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+                Breakend.from(mId, mType, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
 
         mBreakends = new Breakend[] { breakendStart, breakendEnd };
 
@@ -79,7 +70,7 @@ public class SvData
         mAlt = "";
     }
 
-    public String id() { return mVcfId; }
+    public String id() { return mId; }
 
     public String chromosomeStart() { return mBreakends[SE_START].Chromosome; }
     public String chromosomeEnd() { return !isSgl() ? mBreakends[SE_END].Chromosome : ""; }
@@ -201,12 +192,12 @@ public class SvData
         if(!isSgl())
         {
             return String.format("%s:%s pos(%s:%d - %s:%d)",
-                    mVcfId, mType.toString(), chromosomeStart(), posStart(), chromosomeEnd(), posEnd());
+                    mId, mType.toString(), chromosomeStart(), posStart(), chromosomeEnd(), posEnd());
         }
         else
         {
             return String.format("%s:%s pos(%s:%d)",
-                    mVcfId, mType.toString(), chromosomeStart(), posStart());
+                    mId, mType.toString(), chromosomeStart(), posStart());
         }
     }
 

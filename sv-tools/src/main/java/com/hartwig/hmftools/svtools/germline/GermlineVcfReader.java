@@ -3,6 +3,10 @@ package com.hartwig.hmftools.svtools.germline;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.svtools.germline.AssemblyLinks.buildAssembledLinks;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
 import java.io.IOException;
@@ -36,7 +40,6 @@ public class GermlineVcfReader
     private final GermlineVcfConfig mConfig;
     public final FilterConstants mFilterConstants;
 
-    private final LinkAnalyser mLinkAnalyser;
     private final PonCache mPonCache;
     private final HotspotCache mHotspotCache;
     private final HardFilters mHardFilters;
@@ -59,8 +62,6 @@ public class GermlineVcfReader
         mHardFilteredVcfIds = Sets.newHashSet();
 
         mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
-
-        mLinkAnalyser = new LinkAnalyser();
 
         GM_LOGGER.info("loading reference data");
         mPonCache = new PonCache(cmd, mConfig.RestrictedChromosomes);
@@ -121,18 +122,44 @@ public class GermlineVcfReader
 
             for(final SvData svData : mSampleSvData)
             {
+                // realign breakends
+                final Breakend[] breakends = svData.breakends();
+
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    Breakend realignedBreakend = mRealigner.realign(breakends[se], svData.isSgl(), svData.imprecise());
+
+                    if(realignedBreakend.realigned())
+                    {
+                        breakends[se] = realignedBreakend;
+
+                        int otherSe = switchIndex(se);
+                        Breakend realignedRemoteBreakend = mRealigner.realignRemote(breakends[otherSe], realignedBreakend);
+                        breakends[otherSe] = realignedRemoteBreakend;
+                    }
+                }
+
                 // annotate with the PON
                 svData.setPonCount(mPonCache.getPonCount(svData));
 
                 mSoftFilters.applyFilters(svData);
 
+                if(GM_LOGGER.isDebugEnabled())
+                {
+                    svData.getFilters().forEach(x -> registerFilter(x));
+
+                    svData.breakendStart().getFilters().forEach(x -> registerFilter(x));
+
+                    if(!svData.isSgl())
+                        svData.breakendEnd().getFilters().forEach(x -> registerFilter(x));
+                }
+
                 // TODO maintain or ditch?
                 // softFilters.forEach(x -> registerFilter(x));
-
-                //mLinkAnalyser.cacheAssemblyData(svData);
-                //mLinkAnalyser.populateAssemblyLinks(svData);
-                // writeCsv(germlineSV);
             }
+
+            List<Link> assemblyLink = buildAssembledLinks(mSampleSvData);
+
         }
         catch(IOException e)
         {
@@ -143,6 +170,14 @@ public class GermlineVcfReader
 
         GM_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",
                 mConfig.SampleId, mProcessedVariants, hardFiltered, mSampleSvData.size());
+
+        if(GM_LOGGER.isDebugEnabled())
+        {
+            for(Map.Entry<FilterType,Integer> entry : mFilterCounts.entrySet())
+            {
+                GM_LOGGER.debug("soft filter {}: count({})", entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     private void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)

@@ -1,13 +1,7 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -36,12 +30,11 @@ public class VcfUtils
     public static final String CAS = "CAS";
     public static final String RAS = "RAS";
 
-    public static final String BASRP = "BASRP";
+    public static final String EVENT = "EVENT";
     public static final String ASRP = "ASRP";
     public static final String SB = "SB";
     public static final String BVF = "BVF";
     public static final String REFPAIR = "REFPAIR";
-    public static final String IMPRECISE = "IMPRECISE";
     public static final String CIRPOS = "CIRPOS";
     public static final String REALIGN = "REALIGN";
 
@@ -99,5 +92,30 @@ public class VcfUtils
 
         List<Integer> values = variantContext.getAttributeAsIntList(attribute, 0);
         return new Interval(values.get(0), values.get(1));
+    }
+
+    public static List<String> parseAssemblies(final VariantContext variantContext)
+    {
+        List<String> assemblies = Lists.newArrayList();
+
+        int assemblyCount = variantContext.getAttributeAsInt(AS, 0)
+                + variantContext.getAttributeAsInt(RAS, 0)
+                + variantContext.getAttributeAsInt(CAS, 0);
+
+        if(assemblyCount >= 2 && variantContext.hasAttribute(BEID) && variantContext.hasAttribute(BEIDL))
+        {
+            List<String> beids = variantContext.getAttributeAsStringList(BEID, "");
+            List<String> beidls = variantContext.getAttributeAsStringList(BEIDL, "");
+
+            if(beidls.size() == beids.size())
+            {
+                for(int i = 0; i < beids.size(); ++i)
+                {
+                    assemblies.add(String.format("%s/%s", beids.get(i), beidls.get(i)));
+                }
+            }
+        }
+
+        return assemblies;
     }
 }

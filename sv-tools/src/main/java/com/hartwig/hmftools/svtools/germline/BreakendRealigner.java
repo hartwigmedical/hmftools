@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svtools.germline.Breakend.formPairedAltString;
-import static com.hartwig.hmftools.svtools.germline.Breakend.formSingleAltString;
+import static com.hartwig.hmftools.svtools.germline.VariantAltInsertCoords.formPairedAltString;
+import static com.hartwig.hmftools.svtools.germline.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.CIRPOS;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.REALIGN;
 

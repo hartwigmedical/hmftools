@@ -1,8 +1,14 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import java.util.List;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
-import org.apache.commons.compress.utils.Lists;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class AssemblyLinks
 {
@@ -10,65 +16,57 @@ public class AssemblyLinks
     {
         List<Link> links = Lists.newArrayList();
 
+        Map<String,List<Breakend>> assemblyBreakendMap = Maps.newHashMap();
 
-        return links;
-    }
+        for(SvData sv : svList)
+        {
+            if(sv.isSgl())
+                continue;
 
-    /*
-        fun links(allVariants: Collection<StructuralVariantContext>): List<Link> {
-        val variantsByAssembly: HashMap<String, MutableList<StructuralVariantContext>> = HashMap()
-        for (variant in allVariants) {
-            if (!variant.isSingle) {
-                for (assembly in variant.assemblies()) {
-                    variantsByAssembly.computeIfAbsent(assembly) { mutableListOf() }.add(variant)
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                Breakend breakend = sv.breakends()[se];
+
+                for(String assembly : breakend.getAssemblies())
+                {
+                    List<Breakend> breakends = assemblyBreakendMap.get(assembly);
+
+                    if(breakends == null)
+                    {
+                        breakends = Lists.newArrayList();
+                        assemblyBreakendMap.put(assembly, breakends);
+                    }
+
+                    breakends.add(breakend);
                 }
             }
         }
 
-        val result = mutableListOf<Link>()
-        for ((assembly, assemblyVariants) in variantsByAssembly) {
-            if (assemblyVariants.size > 1) {
-                result.addAll(createLinks(assembly, assemblyVariants))
+        GM_LOGGER.debug("found {} unique assemblies", assemblyBreakendMap.size());
+
+        for(Map.Entry<String,List<Breakend>> entry : assemblyBreakendMap.entrySet())
+        {
+            List<Breakend> breakends = entry.getValue();
+
+            if(breakends.size() < 2)
+                continue;
+
+            for(int i = 0; i < breakends.size() - 1; ++i)
+            {
+                Breakend breakend1 = breakends.get(i);
+
+                for(int j = i + 1; j < breakends.size() - 1; ++j)
+                {
+                    Breakend breakend2 = breakends.get(j);
+
+                    if(breakend1.SvId.equals(breakend2.SvId))
+                        continue;
+
+                    links.add(Link.from(breakend1, breakend2));
+                }
             }
         }
 
-        return result
+        return links;
     }
-
-    private fun createLinks(assembly: String, variants: MutableList<StructuralVariantContext>): List<Link> {
-
-        if (variants.size < 2) {
-            return Collections.emptyList()
-        }
-
-        if (variants.size == 2) {
-            return createLinks(assembly, Pair(variants[0], variants[1]))
-        }
-
-        var extraIdentifier = 1
-        val result = mutableListOf<Link>()
-        variants.sortWith(Comparator { x, y -> x.start.compareTo(y.start) })
-        for (i in 0..variants.size - 2) {
-            val current = variants[i]
-            val next = variants[i + 1]
-
-            val links = createLinks("${assembly}-${extraIdentifier}", Pair(current, next))
-            if (links.isNotEmpty()) {
-                extraIdentifier++
-                result.addAll(links)
-            }
-        }
-
-        return result
-    }
-
-    private fun createLinks(assembly: String, variants: Pair<StructuralVariantContext, StructuralVariantContext>): List<Link> {
-        if (variants.first.mateId?.equals(variants.second.vcfId) != true) {
-            return listOf(Link(assembly, Pair(variants.first, variants.second)), Link(assembly, Pair(variants.second, variants.first)))
-        }
-        return Collections.emptyList()
-    }
-
-     */
-
 }
