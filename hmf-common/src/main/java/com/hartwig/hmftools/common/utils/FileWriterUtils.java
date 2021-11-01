@@ -18,10 +18,22 @@ import org.jetbrains.annotations.NotNull;
 public final class FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
+    public static final String OUTPUT_ID = "output_id";
 
     public static void addOutputDir(final Options options)
     {
         options.addOption(OUTPUT_DIR, true, "Output directory");
+    }
+
+    public static void addOutputId(final Options options)
+    {
+        options.addOption(OUTPUT_ID, true, "Output file suffix");
+    }
+
+    public static void addOutputOptions(final Options options)
+    {
+        addOutputDir(options);
+        addOutputId(options);
     }
 
     public static String parseOutputDir(@NotNull final CommandLine cmd)

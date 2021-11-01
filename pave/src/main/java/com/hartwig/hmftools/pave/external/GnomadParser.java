@@ -2,7 +2,9 @@ package com.hartwig.hmftools.pave.external;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
@@ -32,13 +34,21 @@ public class GnomadParser
 {
     private final String mInputVcf;
     private final String mOutputDir;
+    private final String mOutputId;
+    private final String mSpecificChromosome;
+    private final double mFreqThreshold;
 
     private static final String GNOMAD_FILE = "gnomad_file";
+    private static final String SPECIFIC_CHROMOSOME = "specific_chr";
+    private static final String FREQ_THRESHOLD = "freq_threshold";
 
     public GnomadParser(final CommandLine cmd)
     {
         mOutputDir = parseOutputDir(cmd);
         mInputVcf = cmd.getOptionValue(GNOMAD_FILE);
+        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mSpecificChromosome = cmd.getOptionValue(SPECIFIC_CHROMOSOME);
+        mFreqThreshold = Double.parseDouble(cmd.getOptionValue(FREQ_THRESHOLD, "0"));
     }
 
     public void run()
@@ -49,59 +59,71 @@ public class GnomadParser
             System.exit(1);
         }
 
-        PV_LOGGER.info("parsing Gnomad file({})", mInputVcf);
+        PV_LOGGER.info("parsing Gnomad file({}) specificChr({}) frequencyThreshold({})",
+                mInputVcf, mSpecificChromosome, mFreqThreshold);
+
+        String outputFile = mOutputDir + "gnomad_variants";
+
+        if(!mSpecificChromosome.isEmpty())
+            outputFile += "_chr" + mSpecificChromosome;
+
+        if(mOutputId != null)
+            outputFile += "_" + mOutputId;
+
+        outputFile += ".csv";
 
         try
         {
             final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
                     mInputVcf, new VCFCodec(), false);
 
-            String outputFile = mOutputDir + "gnomad_variants.csv";
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("Chromosome,Position,Ref,Alt,Frequency");
+            if(mSpecificChromosome.isEmpty())
+                writer.write("Chromosome,");
+
+            writer.write("Position,Ref,Alt,Frequency");
             writer.newLine();
 
             int itemCount = 0;
-            int errorCount = 0;
             int filteredCount = 0;
+            int belowFreqCount = 0;
 
             for(VariantContext context : reader.iterator())
             {
+                ++itemCount;
+
+                if(itemCount > 0 && (itemCount % 100000) == 0)
+                {
+                    PV_LOGGER.debug("processed {} variants, filtered({}) belowFreq({}) current location({}:{})",
+                            itemCount, filteredCount, belowFreqCount, context.getContig(), context.getStart());
+                }
+
                 if(context.isFiltered())
                 {
                     ++filteredCount;
                     continue;
                 }
 
-                try
+                double frequency = context.getAttributeAsDouble("AF", 0);
+
+                if(mFreqThreshold > 0 && frequency < mFreqThreshold)
                 {
-                    String chromosome = context.getContig();
-                    int position = context.getStart();
-
-                    String ref = context.getReference().getBaseString();
-                    String alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
-
-                    double frequency = context.getAttributeAsDouble("AF", 0);
-
-                    writer.write(String.format("%s,%d,%s,%s,%4.5e", chromosome, position, ref, alt, frequency));
-                    writer.newLine();
-                }
-                catch(Exception e)
-                {
-                    ++errorCount;
-                    PV_LOGGER.debug("error processing variant at item({})", itemCount);
-
-                    if(errorCount > 100)
-                        break;
+                    ++belowFreqCount;
+                    continue;
                 }
 
-                ++itemCount;
+                String chromosome = context.getContig();
+                int position = context.getStart();
 
-                if(itemCount > 0 && (itemCount % 10000) == 0)
-                {
-                    PV_LOGGER.debug("processed {} variants, filtered({})", itemCount, filteredCount);
-                }
+                String ref = context.getReference().getBaseString();
+                String alt = context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
+
+                if(mSpecificChromosome.isEmpty())
+                    writer.write(String.format("%s,", chromosome));
+
+                writer.write(String.format("%d,%s,%s,%.5f", position, ref, alt, frequency));
+                writer.newLine();
             }
 
             writer.close();
@@ -118,7 +140,9 @@ public class GnomadParser
     {
         Options options = new Options();
         options.addOption(GNOMAD_FILE, true, "Gnomad VCF input file");
-        addOutputDir(options);
+        options.addOption(FREQ_THRESHOLD, true, "Population frequency (AF) threshold to write VCF entry");
+        options.addOption(SPECIFIC_CHROMOSOME, true, "Produce file per chromosome");
+        addOutputOptions(options);
         addLoggingOptions(options);
 
         final CommandLine cmd = createCommandLine(args, options);

@@ -11,7 +11,9 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
@@ -47,7 +49,6 @@ public class ComparisonConfig
     private static final String REF_VARIANTS_FILE = "ref_variants_file";
     private static final String ONLY_DRIVER_GENES = "only_driver_genes";
     private static final String ONLY_CANONCIAL = "only_canonical";
-    private static final String OUTPUT_ID = "output_id";
     private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_MATCHES = "write_matches";
     private static final String DIFF_TYPES = "diff_types";
@@ -108,8 +109,7 @@ public class ComparisonConfig
         addEnsemblDir(options);
         addDatabaseCmdLineArgs(options);
         addLoggingOptions(options);
-        addOutputDir(options);
-        options.addOption(OUTPUT_ID, true, "Output file identifier");
+        addOutputOptions(options);
 
         return options;
     }
