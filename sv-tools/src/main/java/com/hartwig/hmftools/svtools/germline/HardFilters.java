@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.svtools.germline.CommonFilters.isPolyATSequence;
-import static com.hartwig.hmftools.svtools.germline.GermlineFilters.getDoubleValue;
 import static com.hartwig.hmftools.svtools.germline.SvData.hasLength;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.BVF;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.QUAL;
@@ -52,7 +51,7 @@ public class HardFilters
 
     private boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds)
     {
-        double qual = getDoubleValue(variant.getGenotype(genotypeIds.TumorOrdinal), QUAL);
+        double qual = VcfUtils.getGenotypeAttributeAsDouble(variant.getGenotype(genotypeIds.TumorOrdinal), QUAL, 0);
         return qual < mFilterConstants.MinTumorQual;
     }
 
@@ -83,23 +82,5 @@ public class HardFilters
             return false;
 
         return mHotspotCache.matchesHotspot(sv);
-    }
-
-    private boolean belowMinQual(final StructuralVariant sv)
-    {
-        double qual = getDoubleValue(sv.startContext().getGenotype(0), QUAL);
-
-        if(qual < mFilterConstants.MinTumorQual)
-            return true;
-
-        if(sv.endContext() != null)
-        {
-            qual = getDoubleValue(sv.endContext().getGenotype(0), QUAL);
-
-            if(qual < mFilterConstants.MinTumorQual)
-                return true;
-        }
-
-        return false;
     }
 }

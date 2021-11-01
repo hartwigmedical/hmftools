@@ -34,22 +34,15 @@ public class SvData
     // VCF data
     private final String mVcfId;
     private final StructuralVariantType mType;
-    private final String[] mChromosome;
-    private final int[] mPosition;
-    private final byte[] mOrientation;
 
     private final int mReferenceOrdinal;
     private final int mTumorOrdinal;
-    private VariantContext[] mContexts;
+    private final Breakend[] mBreakends;
 
     // repeatedly used values for filtering are cached
-    private final int mTumorFragments;
-    private final int mReferenceFragments;
-    private final int mReferenceReads;
-    private final int mReferencePairReads;
-    private final double mTumorQuality;
     private final String mAlt;
     private final String mInsertSequence;
+    private final boolean mImprecise;
     private final boolean mIsShortLocal;
 
     private final List<FilterType> mFilters;
@@ -57,119 +50,88 @@ public class SvData
     private int mPonCount;
     private String mHotspotGeneInfo;
 
-    // classification state
-    private String[] mAsmbSvIds;
-
-    public SvData(
-            final String id, final StructuralVariantType type,
-            final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
-            final VariantContext contextStart, final VariantContext contextEnd, final int referenceOrdinal, final int tumorOrdinal)
+    public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        mVcfId = id;
-        mType = type;
-        mChromosome = new String[] { chrStart, chrEnd };
-        mPosition = new int[] { posStart, posEnd };
-        mOrientation = new byte[] { orientStart, orientEnd };
-        mReferenceOrdinal = referenceOrdinal;
-        mTumorOrdinal = tumorOrdinal;
-        mContexts = new VariantContext[] { contextStart, contextEnd };
+        mVcfId = sv.id();
+        mType = sv.type();
+        mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
+        mTumorOrdinal = genotypeIds.TumorOrdinal;
+
+        Breakend breakendStart = Breakend.from(
+                mVcfId, mType, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+
+        Breakend breakendEnd = sv.end() != null ?
+                Breakend.from(mVcfId, mType, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+
+        mBreakends = new Breakend[] { breakendStart, breakendEnd };
+
+        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
 
         mFilters = Lists.newArrayList();
 
         mPonCount = 0;
         mHotspotGeneInfo = "";
-        mAsmbSvIds = new String[SE_PAIR];
 
-        final Genotype refGenotype = mContexts[SE_START].getGenotype(mReferenceOrdinal);
-        final Genotype tumorGenotype = mContexts[SE_START].getGenotype(mTumorOrdinal);
+        mImprecise = sv.imprecise();
+        mInsertSequence = sv.insertSequence();
 
-        if(isSgl())
-        {
-            mReferenceFragments = VcfUtils.getGenotypeAttributeAsInt(refGenotype, BVF, 0);
-            mTumorFragments = VcfUtils.getGenotypeAttributeAsInt(tumorGenotype, BVF, 0);
-            mTumorQuality = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, BQ, 0);
-        }
-        else
-        {
-            mReferenceFragments = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VF, 0);
-            mTumorFragments = VcfUtils.getGenotypeAttributeAsInt(tumorGenotype, VF, 0);
-            mTumorQuality = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
-        }
-
-        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
-
-        mReferenceReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, REF, 0);
-        mReferencePairReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, REFPAIR, 0);
-
-        // set alt and insert sequence
+        // TODO
         mAlt = "";
-        mInsertSequence = "";
-    }
-
-    public static SvData from(final StructuralVariant sv, final GenotypeIds genotypeIds)
-    {
-        boolean sglBreakend = sv.type() == SGL;
-
-        return new SvData(
-                sv.id(), sv.type(), sv.chromosome(true), !sglBreakend ? sv.chromosome(false) : "0",
-                sv.position(true).intValue(), !sglBreakend ? sv.position(false).intValue() : -1,
-                sv.orientation(true), !sglBreakend ? sv.orientation(false) : 0,
-                sv.startContext(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
     }
 
     public String id() { return mVcfId; }
 
-    public String[] chromosomes() { return mChromosome; }
-    public String chromosomeStart() { return mChromosome[SE_START]; }
-    public String chromosomeEnd() { return mChromosome[SE_END]; }
+    public String chromosomeStart() { return mBreakends[SE_START].Chromosome; }
+    public String chromosomeEnd() { return !isSgl() ? mBreakends[SE_END].Chromosome : ""; }
 
-    public int[] positions() { return mPosition; }
-    public int posStart() { return mPosition[SE_START]; }
-    public int posEnd() { return mPosition[SE_END]; }
+    public int posStart() { return mBreakends[SE_START].Position; }
+    public int posEnd() { return !isSgl() ? mBreakends[SE_END].Position : -1; }
 
-    public byte[] orientations() { return mOrientation; }
-    public byte orientStart() { return mOrientation[SE_START]; }
-    public byte orientEnd() { return mOrientation[SE_END]; }
+    public byte orientStart() { return mBreakends[SE_START].Orientation; }
+    public byte orientEnd() { return !isSgl() ? mBreakends[SE_END].Orientation : 0; }
 
     public StructuralVariantType type() { return mType; }
     public boolean isSgl() { return mType == SGL; }
 
-    public VariantContext[] contexts() { return mContexts; }
-    public VariantContext contextStart() { return mContexts[SE_START]; }
-    public VariantContext contextEnd() { return mContexts[SE_END]; }
+    public Breakend[] breakends() { return mBreakends; }
+    public Breakend breakendStart() { return mBreakends[SE_START]; }
+    public Breakend breakendEnd() { return mBreakends[SE_END]; }
 
+    public VariantContext contextStart() { return mBreakends[SE_START].Context; }
+    public VariantContext contextEnd() { return !isSgl() ? mBreakends[SE_END].Context : null; }
+
+    /*
     public Genotype refGenotype() { return mContexts[SE_START].getGenotype(mReferenceOrdinal); }
     public Genotype tumorGenotype() { return mContexts[SE_START].getGenotype(mTumorOrdinal); }
 
     public Allele refAllele() { return mReferenceOrdinal >= 0 ? mContexts[SE_START].getAlleles().get(mReferenceOrdinal) : null; }
     public Allele tumorAllele() { return mContexts[SE_START].getAlleles().get(mTumorOrdinal); }
+    */
 
     public String altString()
     {
+        // TODO
         if(isSgl())
-            return mOrientation[SE_START] == POS_ORIENT ? mAlt + mInsertSequence : mInsertSequence + mAlt;
+            return ""; // mOrientation[SE_START] == POS_ORIENT ? mAlt + mInsertSequence : mInsertSequence + mAlt;
         else
             return mAlt;
     }
 
     public String insertSequence() { return mInsertSequence; }
+    public int insertSequenceLength() { return mInsertSequence.length(); }
 
     public boolean hasReference() { return mReferenceOrdinal >= 0; }
 
-    public int tumorFragments() { return mTumorFragments; }
-    public int referenceFragments() { return mReferenceFragments; }
-    public int referenceReads() { return mReferenceReads; }
-    public int referencePairReads() { return mReferencePairReads; }
-    public double tumorQuality() { return mTumorQuality; }
     public boolean isShortLocal() { return mIsShortLocal; }
+    public boolean imprecise() { return mImprecise; }
+
+    public List<FilterType> getFilters() { return mFilters; }
 
     public void addFilter(final FilterType filter)
     {
         if(!mFilters.contains(filter))
             mFilters.add(filter);
     }
-
-    public List<FilterType> getFilters() { return mFilters; }
 
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }
@@ -197,8 +159,6 @@ public class SvData
     public String startHomology() { return contextStart().getAttributeAsString(HOMSEQ, ""); }
     public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(HOMSEQ, "") : ""; }
 
-    public String assemblySvIds(boolean isStart) { return mAsmbSvIds[seIndex(isStart)]; }
-    public void setAssemblySvId(int seIndex, final String svId) { mAsmbSvIds[seIndex] = svId; }
 
     {
         /*
@@ -238,8 +198,16 @@ public class SvData
 
     public String toString()
     {
-        return String.format("%s:%s %s:%d - %s:%d",
-                mVcfId, mType.toString(), mChromosome[SE_START], mPosition[SE_START], mChromosome[SE_END], mPosition[SE_END]);
+        if(!isSgl())
+        {
+            return String.format("%s:%s pos(%s:%d - %s:%d)",
+                    mVcfId, mType.toString(), chromosomeStart(), posStart(), chromosomeEnd(), posEnd());
+        }
+        else
+        {
+            return String.format("%s:%s pos(%s:%d)",
+                    mVcfId, mType.toString(), chromosomeStart(), posStart());
+        }
     }
 
 }

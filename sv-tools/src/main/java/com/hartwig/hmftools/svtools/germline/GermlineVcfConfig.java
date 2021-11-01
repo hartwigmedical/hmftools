@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
@@ -13,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 
 import org.apache.commons.cli.CommandLine;
@@ -23,14 +29,15 @@ public class GermlineVcfConfig
     // run config
     public final String SampleId;
     public final String ReferenceId;
-    public final String OutputDir;
-    public final String Scope;
+    public final RefGenomeVersion RefGenVersion;
     public final String VcfFile;
     public final String OutputVcfFile;
-    public final boolean LinkByAssembly;
 
-    // filtering config
+    // optional / filtering / unused config
     public final boolean WriteSoftFiltered;
+    public final String OutputDir;
+    public final String Scope;
+    public final boolean LinkByAssembly;
     public final boolean RequireGridssPass;
     public final boolean LogFiltered;
     public final int QualScoreThreshold;
@@ -60,6 +67,8 @@ public class GermlineVcfConfig
         OutputDir = parseOutputDir(cmd);
 
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
+        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+
         OutputVcfFile = cmd.getOptionValue(VCF_FILE, "");
 
         RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
@@ -78,6 +87,8 @@ public class GermlineVcfConfig
         RequireGene = cmd.hasOption(REQUIRE_GENE);
     }
 
+    public boolean tumorOnly() { return ReferenceId.isEmpty(); }
+
     public boolean excludeVariant(final StructuralVariant sv)
     {
         // optionally filter out all but specified chromosomes
@@ -88,10 +99,7 @@ public class GermlineVcfConfig
         }
 
         if(RequireGridssPass && !sv.filter().contains(PASS))
-        {
             return true;
-        }
-
 
         return false;
     }
@@ -101,6 +109,8 @@ public class GermlineVcfConfig
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(REFERENCE, true, "Optional, name of the reference sample");
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
+        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         // options.addOption(GENE_PANEL_FILE, true, "Gene panel file");
         options.addOption(WRITE_SOFT_FILTERED, false, "Write variants to file even if soft-filtered");

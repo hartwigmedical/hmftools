@@ -23,7 +23,6 @@ public class LinkAnalyser
     public LinkAnalyser()
     {
         mSvAssemblyData = Lists.newArrayList();
-
     }
 
     public void clear()
@@ -105,8 +104,8 @@ public class LinkAnalyser
         if(asmData == null)
             return;
 
-        svData.setAssemblySvId(SE_START, asmData.getLinkedSvIds()[SE_START]);
-        svData.setAssemblySvId(SE_END, asmData.getLinkedSvIds()[SE_END]);
+        // svData.setAssemblySvId(SE_START, asmData.getLinkedSvIds()[SE_START]);
+        // svData.setAssemblySvId(SE_END, asmData.getLinkedSvIds()[SE_END]);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.germline;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
@@ -11,6 +13,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
@@ -30,7 +33,6 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineVcfReader
 {
-    private final GermlineFilters mFilter;
     private final GermlineVcfConfig mConfig;
     public final FilterConstants mFilterConstants;
 
@@ -39,6 +41,8 @@ public class GermlineVcfReader
     private final HotspotCache mHotspotCache;
     private final HardFilters mHardFilters;
     private final SoftFilters mSoftFilters;
+    private final RefGenomeInterface mRefGenome;
+    private BreakendRealigner mRealigner;
 
     private int mProcessedVariants;
     private StructuralVariantFactory mSvFactory;
@@ -51,10 +55,10 @@ public class GermlineVcfReader
         mConfig = new GermlineVcfConfig(cmd);
         mFilterConstants = FilterConstants.from(cmd);
 
-        mFilter = new GermlineFilters(mConfig);
-
         mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
         mHardFilteredVcfIds = Sets.newHashSet();
+
+        mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
 
         mLinkAnalyser = new LinkAnalyser();
 
@@ -64,6 +68,7 @@ public class GermlineVcfReader
 
         mHardFilters = new HardFilters(mFilterConstants, mHotspotCache);
         mSoftFilters = new SoftFilters(mFilterConstants);
+        mRealigner = null;
 
         mProcessedVariants = 0;
         mSampleSvData = Lists.newArrayList();
@@ -81,6 +86,7 @@ public class GermlineVcfReader
         {
             GM_LOGGER.info("processing germline VCF({})", vcfFile);
 
+            // TODO: only in place in run in a cohort mode, but then would be threaded anyway?
             clearSampleData();
 
             final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
@@ -91,6 +97,18 @@ public class GermlineVcfReader
             if(genotypeIds == null)
             {
                 System.exit(1);
+            }
+
+            mRealigner = new BreakendRealigner(mRefGenome, genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+
+            if(mConfig.tumorOnly())
+            {
+                GM_LOGGER.info("sample({}) genetype info: ref({}: {}) tumor({}: {})",
+                        genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
+            }
+            else
+            {
+                GM_LOGGER.info("sample({}) tumor genetype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
             }
 
             reader.iterator().forEach(x -> processVariant(x, genotypeIds));
@@ -106,9 +124,10 @@ public class GermlineVcfReader
                 // annotate with the PON
                 svData.setPonCount(mPonCache.getPonCount(svData));
 
-                List<FilterType> softFilters = mSoftFilters.applyFilters(svData);
-                softFilters.forEach(x -> svData.addFilter(x));
-                softFilters.forEach(x -> registerFilter(x));
+                mSoftFilters.applyFilters(svData);
+
+                // TODO maintain or ditch?
+                // softFilters.forEach(x -> registerFilter(x));
 
                 //mLinkAnalyser.cacheAssemblyData(svData);
                 //mLinkAnalyser.populateAssemblyLinks(svData);
@@ -193,7 +212,7 @@ public class GermlineVcfReader
         if(mConfig.excludeVariant(sv))
             return;
 
-        SvData svData = SvData.from(sv, genotypeIds);
+        SvData svData = new SvData(sv, genotypeIds);
         mSampleSvData.add(svData);
     }
 

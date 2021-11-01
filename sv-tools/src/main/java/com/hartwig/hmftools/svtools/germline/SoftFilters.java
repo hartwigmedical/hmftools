@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.POLY_C_INSERT;
@@ -35,10 +37,6 @@ import static com.hartwig.hmftools.svtools.germline.VcfUtils.SB;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.SR;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.getGenotypeAttributeAsInt;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 public class SoftFilters
 {
     private final FilterConstants mFilterConstants;
@@ -48,76 +46,82 @@ public class SoftFilters
         mFilterConstants = filterConstants;
     }
 
-    public List<FilterType> applyFilters(final SvData sv)
+    public void applyFilters(final SvData sv)
     {
-        List<FilterType> filters = Lists.newArrayList();
+        // breakend filters
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            Breakend breakend = sv.breakends()[se];
 
-        if(normalCoverage(sv))
-            filters.add(MIN_NORMAL_COVERAGE);
+            if(normalCoverage(breakend))
+                breakend.addFilter(MIN_NORMAL_COVERAGE);
 
-        if(normalRelativeSupport(sv))
-            filters.add(MAX_NORMAL_RELATIVE_SUPPORT);
+            if(normalRelativeSupport(breakend))
+                breakend.addFilter(MAX_NORMAL_RELATIVE_SUPPORT);
 
-        if(allelicFrequency(sv))
-            filters.add(MIN_TUMOR_AF);
+            if(allelicFrequency(sv, breakend))
+                breakend.addFilter(MIN_TUMOR_AF);
 
+            if(minQuality(sv, breakend))
+                breakend.addFilter(MIN_QUAL);
+
+            if(shortSplitReadTumor(sv, breakend))
+                breakend.addFilter(SHORT_SR_SUPPORT);
+
+            if(shortSplitReadNormal(sv, breakend))
+                breakend.addFilter(SHORT_SR_NORMAL);
+
+            if(discordantPairSupport(sv, breakend) || breakendAssemblyReadPairs(breakend))
+                breakend.addFilter(DISCORDANT_PAIR_SUPPORT);
+        }
+
+        // SV filters
         if(shortDelInsertArtifact(sv))
-            filters.add(SHORT_DEL_INS_ARTIFACT);
-
-        if(minQuality(sv))
-            filters.add(MIN_QUAL);
+            sv.addFilter(SHORT_DEL_INS_ARTIFACT);
 
         if(imprecise(sv))
-            filters.add(IMPRECISE);
+            sv.addFilter(IMPRECISE);
 
         if(polyGCInsert(sv))
-            filters.add(MAX_POLY_G_LENGTH);
+            sv.addFilter(MAX_POLY_G_LENGTH);
 
         if(polyATHomology(sv))
-            filters.add(MAX_POLY_A_HOM_LENGTH);
+            sv.addFilter(MAX_POLY_A_HOM_LENGTH);
 
         if(homologyLengthFilterShortInversion(sv))
-            filters.add(MAX_HOM_LENGTH_SHORT_INV);
+            sv.addFilter(MAX_HOM_LENGTH_SHORT_INV);
 
         if(inexactHomologyLengthShortDel(sv))
-            filters.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
-
-        if(shortSplitReadTumor(sv))
-            filters.add(SHORT_SR_SUPPORT);
-
-        if(shortSplitReadNormal(sv))
-            filters.add(SHORT_SR_NORMAL);
+            sv.addFilter(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
 
         if(strandBias(sv))
-            filters.add(SHORT_STRAND_BIAS);
-
-        if(discordantPairSupport(sv) || breakendAssemblyReadPairs(sv))
-            filters.add(DISCORDANT_PAIR_SUPPORT);
+            sv.addFilter(SHORT_STRAND_BIAS);
 
         if(minLength(sv))
-            filters.add(MIN_LENGTH);
-
-        return filters;
+            sv.addFilter(MIN_LENGTH);
     }
 
-    private boolean normalCoverage(final SvData sv)
+    private boolean normalCoverage(final Breakend breakend)
     {
-        if(!sv.hasReference())
+        if(breakend.RefGenotype == null)
             return false;
 
-         return sv.referenceFragments() + sv.referenceReads() + sv.referencePairReads() < mFilterConstants.MinNormalCoverage;
+         return breakend.ReferenceFragments + breakend.ReferenceReads + breakend.ReferencePairReads < mFilterConstants.MinNormalCoverage;
     }
 
-    private boolean normalRelativeSupport(final SvData sv)
+    private boolean normalRelativeSupport(final Breakend breakend)
     {
-        return sv.referenceFragments() > mFilterConstants.SoftMaxNormalRelativeSupport * sv.tumorFragments();
+        if(breakend.RefGenotype == null)
+            return false;
+
+        return breakend.ReferenceFragments > mFilterConstants.SoftMaxNormalRelativeSupport * breakend.TumorFragments;
     }
 
-    private boolean allelicFrequency(final SvData sv)
+    private boolean allelicFrequency(final SvData sv, final Breakend breakend)
     {
-        int tumorFrags = sv.tumorFragments();
-        int readPairSupport = (sv.isSgl() || !sv.isShortLocal()) ? sv.referencePairReads() : 0;
-        int totalSupport = tumorFrags + sv.referenceReads() + readPairSupport;
+        int tumorFrags = breakend.TumorFragments;
+        int readPairSupport = (sv.isSgl() || !sv.isShortLocal()) ? breakend.ReferencePairReads : 0;
+        int totalSupport = tumorFrags + breakend.ReferenceReads + readPairSupport;
         double alleleFrequency = totalSupport > 0 ? tumorFrags / totalSupport : 0;
 
         return alleleFrequency < mFilterConstants.MinTumorAf;
@@ -131,12 +135,12 @@ public class SoftFilters
         return sv.altString().length() - 1 == sv.insertSequence().length();
     }
 
-    private boolean minQuality(final SvData sv)
+    private boolean minQuality(final SvData sv, final Breakend breakend)
     {
         if(sv.isSgl())
-            return sv.tumorQuality() < mFilterConstants.MinQualBreakend;
+            return breakend.Qual < mFilterConstants.MinQualBreakend;
         else
-            return sv.tumorQuality() < mFilterConstants.MinQualBreakpoint;
+            return breakend.Qual < mFilterConstants.MinQualBreakpoint;
     }
 
     private boolean polyGCInsert(final SvData sv)
@@ -166,6 +170,7 @@ public class SoftFilters
 
     private boolean inexactHomologyLengthShortDel(final SvData sv)
     {
+        // TODO
 
         /*
         fun inexactHomologyLengthShortDel(maxInexactHomLength: Int, minDelLength: Int = 100, maxDelLength: Int = 800): Boolean {
@@ -179,8 +184,9 @@ public class SoftFilters
         return false;
     }
 
-    private boolean breakendAssemblyReadPairs(final SvData sv)
+    private boolean breakendAssemblyReadPairs(final Breakend breakend)
     {
+        // TODO
         /*
                 fun breakendAssemblyReadPairs(): Boolean {
         return isSingle && context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()
@@ -194,7 +200,7 @@ public class SoftFilters
 
     private boolean imprecise(final SvData sv)
     {
-        return sv.contextStart().getAttributeAsBoolean(VcfUtils.IMPRECISE, false);
+        return sv.imprecise();
     }
 
     private boolean homologyLengthFilterShortInversion(final SvData sv)
@@ -205,21 +211,21 @@ public class SoftFilters
         return sv.length() <= HOM_INV_LENGTH && sv.startHomology().length() > mFilterConstants.MaxHomLengthShortInv;
     }
 
-    private boolean shortSplitReadTumor(final SvData sv)
+    private boolean shortSplitReadTumor(final SvData sv, final Breakend breakend)
     {
-        int splitReads = getGenotypeAttributeAsInt(sv.tumorGenotype(), SR, 0);
-        int indelCount = getGenotypeAttributeAsInt(sv.tumorGenotype(), IC, 0);
+        int splitReads = getGenotypeAttributeAsInt(breakend.TumorGenotype, SR, 0);
+        int indelCount = getGenotypeAttributeAsInt(breakend.TumorGenotype, IC, 0);
 
         return sv.isShortLocal() && (splitReads + indelCount == 0);
     }
 
-    private boolean shortSplitReadNormal(final SvData sv)
+    private boolean shortSplitReadNormal(final SvData sv, final Breakend breakend)
     {
-        if(!sv.hasReference())
+        if(breakend.RefGenotype == null)
             return false;
 
-        int splitReads = getGenotypeAttributeAsInt(sv.refGenotype(), SR, 0);
-        int indelCount = getGenotypeAttributeAsInt(sv.refGenotype(), IC, 0);
+        int splitReads = getGenotypeAttributeAsInt(breakend.RefGenotype, SR, 0);
+        int indelCount = getGenotypeAttributeAsInt(breakend.RefGenotype, IC, 0);
 
         return sv.isShortLocal() && (splitReads + indelCount > 0);
     }
@@ -235,7 +241,7 @@ public class SoftFilters
         return false;
     }
 
-    private boolean discordantPairSupport(final SvData sv)
+    private boolean discordantPairSupport(final SvData sv, final Breakend breakend)
     {
         if(!sv.hasReference())
             return false;
@@ -243,10 +249,10 @@ public class SoftFilters
         if(sv.isSgl() || sv.isShortLocal())
             return false;
 
-        return sv.referencePairReads() == 0
-                && VcfUtils.getGenotypeAttributeAsInt(sv.refGenotype(), ASRP, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(sv.tumorGenotype(), REFPAIR, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(sv.tumorGenotype(), ASRP, 0) == 0;
+        return breakend.ReferencePairReads == 0
+                && VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, ASRP, 0) == 0
+                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, REFPAIR, 0) == 0
+                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, ASRP, 0) == 0;
     }
 
     private boolean minLength(final SvData sv)

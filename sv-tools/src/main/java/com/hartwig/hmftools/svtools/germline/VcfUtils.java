@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.germline;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class VcfUtils
 {
-    // VCF field identifiers - can these be sourced from hmf-common SV classes?
+    // VCF fields used by Gripss
     public static final String QUAL = "QUAL";
     public static final String SR = "SR";
     public static final String BQ = "BQ";
@@ -40,6 +42,8 @@ public class VcfUtils
     public static final String BVF = "BVF";
     public static final String REFPAIR = "REFPAIR";
     public static final String IMPRECISE = "IMPRECISE";
+    public static final String CIRPOS = "CIRPOS";
+    public static final String REALIGN = "REALIGN";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {
@@ -88,24 +92,12 @@ public class VcfUtils
         return value == null ? defaultVaue : (double)value;
     }
 
-    public static List<String> loadVcfFiles(final String vcfsFile)
+    public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)
     {
-        List<String> vcfFiles = Lists.newArrayList();
+        if(!variantContext.hasAttribute(attribute))
+            return new Interval();
 
-        if (!Files.exists(Paths.get(vcfsFile)))
-            return vcfFiles;
-
-        try
-        {
-            vcfFiles = Files.readAllLines(new File(vcfsFile).toPath());
-
-            GM_LOGGER.info("loaded {} VCF filenames", vcfFiles.size());
-        }
-        catch(IOException e)
-        {
-            GM_LOGGER.error("failed to load gene panel file({}): {}", vcfsFile, e.toString());
-        }
-
-        return vcfFiles;
+        List<Integer> values = variantContext.getAttributeAsIntList(attribute, 0);
+        return new Interval(values.get(0), values.get(1));
     }
 }

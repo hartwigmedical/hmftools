@@ -359,7 +359,7 @@ public class PonCache
             if(var.posEnd() < RegionEnd.start() - margin || var.posEnd() > RegionEnd.end() + margin)
                 return false;
 
-            return OrientStart == var.orientations()[SE_START] && OrientEnd == var.orientations()[SE_END];
+            return OrientStart == var.orientStart() && OrientEnd == var.orientEnd();
         }
     }
 

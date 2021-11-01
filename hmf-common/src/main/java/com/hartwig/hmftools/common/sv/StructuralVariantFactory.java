@@ -70,8 +70,8 @@ public class StructuralVariantFactory
     // Must match the small deldup threshold in scripts/gridss/gridss.config.R
     private static final int SMALL_DELDUP_SIZE = 1000;
 
-    private static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
-    private static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
+    public static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
+    public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
 
     private final Map<String,VariantContext> mUnmatchedVariants = Maps.newHashMap();
 
