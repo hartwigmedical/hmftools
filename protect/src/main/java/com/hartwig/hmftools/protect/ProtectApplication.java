@@ -76,7 +76,7 @@ public class ProtectApplication {
             return Sets.newHashSet();
         }
 
-        LOGGER.debug(" Starting doid resolving for patient with initial tumor doids '{}'", initialDoids);
+        LOGGER.info(" Starting doid resolving for patient with initial tumor doids '{}'", initialDoids);
         for (String initialDoid : initialDoids) {
             result.add(initialDoid);
             result.addAll(doidParentModel.parents(initialDoid));
