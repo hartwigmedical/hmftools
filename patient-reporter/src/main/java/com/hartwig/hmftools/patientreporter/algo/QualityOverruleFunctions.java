@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public final class QualityOverruleFunctions {
             }
         }
 
-        List<CnPerChromosomeArmData> cnPerChromosomeDataSorted = cnPerChromosomeData.stream().sorted().collect(Collectors.toList());;
+        //TODO sort cnPerChromosomeData
 
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
         Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
@@ -56,7 +57,7 @@ public final class QualityOverruleFunctions {
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(sortedNotifyPerVariant)
-                .cnPerChromosome(cnPerChromosomeDataSorted)
+                .cnPerChromosome(cnPerChromosomeData)
                 .peachGenotypes(qcForm.equals(QsFormNumber.FOR_080.display()) ? genomicAnalysis.peachGenotypes() : Lists.newArrayList())
                 .build();
     }
