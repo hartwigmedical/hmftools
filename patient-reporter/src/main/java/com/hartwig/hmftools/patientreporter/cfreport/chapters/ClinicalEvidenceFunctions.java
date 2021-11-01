@@ -159,9 +159,9 @@ public class ClinicalEvidenceFunctions {
                         } else {
                             predicted = Strings.EMPTY;
                         }
-                        responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(responsive.level()
+                        responsiveTable.addCell(TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level()
                                 .name()))));
-                        responsiveTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
+                        responsiveTable.addCell(TableUtil.createTransparentCell(new Paragraph(predicted)));
                     }
 
                     responsiveTable.addCell(cell);
@@ -184,8 +184,8 @@ public class ClinicalEvidenceFunctions {
                         } else {
                             predicted = Strings.EMPTY;
                         }
-                        resistantTable.addCell(TableUtil.createContentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
-                        resistantTable.addCell(TableUtil.createContentCell(new Paragraph(predicted)));
+                        resistantTable.addCell(TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
+                        resistantTable.addCell(TableUtil.createTransparentCell(new Paragraph(predicted)));
                         resistantTable.addCell(cell);
                         resistantTable.addCell(cellnumbers);
 
