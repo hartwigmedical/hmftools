@@ -181,6 +181,7 @@ public class PatientReporterApplication {
                 .signaturePath(config.signature())
                 .logoRVAPath(config.rvaLogo())
                 .logoCompanyPath(config.companyLogo())
+                .udiDi(config.udiDi())
                 .build();
     }
 
