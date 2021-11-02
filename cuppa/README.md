@@ -417,6 +417,16 @@ Liposarcoma | ? | GENOMIC_ POSITION | MDM2+CDK4 coamplified liposarcomas (well-d
 
 
 
+## Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.3)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.4)
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.5)
+
+
+
 
 
 

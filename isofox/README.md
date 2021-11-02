@@ -514,3 +514,9 @@ TransDataDown | Transcript ids which contain a splice junction which includes ma
 OtherGenesUp | Other genes which match the up breakpoint
 OtherGenesDown | Other genes which match the down breakpoint
 RelatedFusions | Ids of other fusions in the same gene which may be caused by the same structural variant
+
+## Version History and Download Links
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.0)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.1)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.2)
+
