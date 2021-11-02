@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -267,18 +268,16 @@ public class ClinicalEvidenceFunctions {
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("if PRD mentioned after level then the evidence is predicted response/ressitent otherwise it is real "
                         + "responsive/resistent\n\n")
-                .add("The Clinical Knowledgebase (CKB) is used to "
-                        + "annotate variants of all types with clinical evidence. Only treatment associated evidence with "
-                        + "evidence levels \n( ")
+                .add("The Clinical Knowledgebase (CKB) is used to annotate variants of all types with clinical evidence. "
+                        + "Only treatment associated evidence with evidence levels ( \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
                 .add(" FDA approved therapy and/or guidelines; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
                 .add(" late clinical trials; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" early clinical trials) can be reported.")
-                .add(" Potential evidence items with evidence level \n( ")
+                .add(" arly clinical trials) can be reported. Potential evidence items with evidence level  \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
-                .add(" case reports and preclinical evidence) are not reported.")
+                .add(" case reports and preclinical evidence) are not reported.\n\n")
                 .addStyle(ReportResources.subTextStyle());
     }
 

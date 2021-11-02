@@ -50,19 +50,18 @@ public class ExplanationChapter implements ReportChapter {
                                 + "whole genome data." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "The CGI and CIViC knowledge base are used to annotate variants of all types with "
-                        + "clinical evidence, with a hyperlink to the specific evidence items when available. The evidence is gathered "
-                        + "from the Cancer Genome Interpreter (CGI) and CIViC knowledge bases without further checks or interpretation. "
-                        + "This also means that if a certain evidence item or drug-biomarker is missing from the knowledge bases it will "
-                        + "also not be included in this report.\n"
-                        + "VICC (Variant Interpretation for Cancer Consortium, https://cancervariants.org) software has been used to "
-                        + "harmonize and curate the knowledge bases.\n"
-                        + "Clinical trials are matched against the iClusion database (https://iclusion.org) including a link to "
-                        + "the specific trial.\n"
+                .add(createContentDiv(new String[] { "The Clinical Knowledgebase (CKB) (https://ckbhome.jax.org/) is used to annotate "
+                        + "variants of all types with clinical evidence, with a hyperlink to the specific evidence items when available."
+                        + " The evidence is gathered from CKB without further checks or interpretation. This also means that if a certain"
+                        + " evidence item or drug-biomarker is missing from the knowledge bases it will also not be included in this"
+                        + " report. More details about CKB can be found in their Glossary Of Terms "
+                        + "(https://ckbhome.jax.org/about/glossaryOfTerms). "
+                        + "Clinical trials are matched against the iClusion database (https://iclusion.org) including a link"
+                        + " to the specific trial.\n"
                         + "\n"
                         + "Hartwig Medical Foundation is not responsible for the content of the knowledge bases used to generate this "
                         + "report. Furthermore, Hartwig Medical Foundation is not liable and cannot be held accountable for any "
-                        + "incorrectness, incompleteness or error of any other kind in the knowledge bases, or the VICC software "
+                        + "incorrectness, incompleteness or error of any other kind in the knowledge bases, or the external software "
                         + "used to harmonize and curate the knowledge bases." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
