@@ -50,11 +50,12 @@ public class ExplanationChapter implements ReportChapter {
                                 + "whole genome data." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "The Clinical Knowledgebase (CKB) is used to annotate variants of all types with "
-                        + "clinical evidence, with a hyperlink to the specific evidence items when available. The evidence is gathered "
-                        + "from CKB without further checks or interpretation. This also means that if a certain evidence item or "
-                        + "drug-biomarker is missing from the knowledge bases it will also not be included in this report. "
-                        + "More details about CKB can be found in their Glossary Of Terms (https://ckbhome.jax.org/about/glossaryOfTerms). "
+                .add(createContentDiv(new String[] { "The Clinical Knowledgebase (CKB) (https://ckbhome.jax.org/) is used to annotate "
+                        + "variants of all types with clinical evidence, with a hyperlink to the specific evidence items when available."
+                        + " The evidence is gathered from CKB without further checks or interpretation. This also means that if a certain"
+                        + " evidence item or drug-biomarker is missing from the knowledge bases it will also not be included in this"
+                        + " report. More details about CKB can be found in their Glossary Of Terms "
+                        + "(https://ckbhome.jax.org/about/glossaryOfTerms). "
                         + "Clinical trials are matched against the iClusion database (https://iclusion.org) including a link"
                         + " to the specific trial.\n"
                         + "\n"
