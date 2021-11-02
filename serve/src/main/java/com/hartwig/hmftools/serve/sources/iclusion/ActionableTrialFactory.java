@@ -3,6 +3,7 @@ package com.hartwig.hmftools.serve.sources.iclusion;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
@@ -15,6 +16,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ActionableTrialFactory {
 
@@ -51,10 +53,21 @@ public class ActionableTrialFactory {
                 }
             }
             for (String doid : doids) {
-                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation()).doid(doid).build());
+                String doidCorrected = extractDoid(doid);
+                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation()).doid(doidCorrected).build());
             }
         }
 
         return actionableTrials;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String extractDoid(@NotNull String doid) {
+        String doidCorrected = doid;
+        if (doid.equals("0050586")) {
+            doidCorrected = "162";
+        }
+        return doidCorrected;
     }
 }

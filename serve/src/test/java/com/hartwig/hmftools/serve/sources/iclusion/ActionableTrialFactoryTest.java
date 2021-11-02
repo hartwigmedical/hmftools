@@ -43,4 +43,10 @@ public class ActionableTrialFactoryTest {
         assertEquals(location2, actionableTrials.get(2).cancerType());
         assertEquals(loc2Doid1, actionableTrials.get(2).doid());
     }
+
+    @Test
+    public void canExtractAndMapDoid() {
+        assertEquals("0060463", ActionableTrialFactory.extractDoid("0060463"));
+        assertEquals("162", ActionableTrialFactory.extractDoid("0050586"));
+    }
 }
