@@ -65,7 +65,7 @@ public class NeoSampleTask implements Callable
 
     public NeoSampleTask(
             final SampleData sampleData, final NeoConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
-            final CohortTpmData cohortTpmData, final BufferedWriter neoEpitopeWriter, final BufferedWriter peptideWriter)
+            final CohortTpmData cohortTpmData)
     {
         mSampleData = sampleData;
 
@@ -77,18 +77,8 @@ public class NeoSampleTask implements Callable
         mNextNeoEpitopeId = 0;
         mFusions = Lists.newArrayList();
 
-        if(neoEpitopeWriter != null && peptideWriter != null)
-        {
-            mNeoEpitopeWriter = null;
-            mPeptideWriter = null;
-        }
-        else
-        {
-            mNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, mSampleData.Id);
-
-            if(mConfig.WritePeptides)
-                mPeptideWriter = initialisePeptideWriter(mConfig.OutputDir, mSampleData.Id);
-        }
+        mNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, mSampleData.Id);
+        mPeptideWriter = mConfig.WritePeptides ? initialisePeptideWriter(mConfig.OutputDir, mSampleData.Id) : null;
     }
 
     @Override

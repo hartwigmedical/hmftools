@@ -240,11 +240,6 @@ public abstract class NeoEpitope
 
     public abstract void setSkippedSpliceSites(final EnsemblDataCache geneTransCache);
 
-    public boolean matchesAminoAcids(final NeoEpitope other)
-    {
-        return UpstreamAcids.equals(other.UpstreamAcids) && DownstreamAcids.equals(other.DownstreamAcids) && NovelAcid.equals(other.NovelAcid);
-    }
-
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
     public boolean hasWildtypeAminoAcidMatch()
@@ -286,6 +281,6 @@ public abstract class NeoEpitope
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
                 ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "",
-                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN], hasWildtypeAminoAcidMatch());
+                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN]);
     }
 }

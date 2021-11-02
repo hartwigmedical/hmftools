@@ -64,7 +64,6 @@ public class NeoConfig
     public static final String WRITE_PEPTIDES = "write_peptides";
     public static final String WRITE_TRANS_DATA = "write_trans_data";
 
-    public static final String NEO_EPITOPE_FILE_ID = ".neo.neoepitopes.csv";
     public static final String HLA_PEPTIDE_FILE_ID = ".neo.hla_peptides.csv";
 
     public static final int DEFAULT_AMINO_ACID_REF_COUNT = 18;

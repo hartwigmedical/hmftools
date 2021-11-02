@@ -54,14 +54,9 @@ public class NeoEpitopeAnnotator
     private final DatabaseAccess mDbAccess;
     private final CohortTpmData mCohortTpmData;
 
-    private BufferedWriter mNeoEpitopeWriter;
-    private BufferedWriter mPeptideWriter;
-
     public NeoEpitopeAnnotator(final CommandLine cmd)
     {
         mConfig = new NeoConfig(cmd);
-        mNeoEpitopeWriter = null;
-        mPeptideWriter = null;
 
         mSampleFusionMap = Maps.newHashMap();
 
@@ -87,11 +82,6 @@ public class NeoEpitopeAnnotator
         else
         {
             NE_LOGGER.info("processing {} samples", mConfig.Samples.size());
-
-            mNeoEpitopeWriter = initialiseNeoepitopeWriter(mConfig.OutputDir, null);
-
-            if(mConfig.WritePeptides)
-                mPeptideWriter = initialisePeptideWriter(mConfig.OutputDir, null);
         }
 
         // check required inputs and config
@@ -99,8 +89,7 @@ public class NeoEpitopeAnnotator
 
         for(final SampleData sample : mConfig.Samples)
         {
-            NeoSampleTask sampleTask = new NeoSampleTask(
-                    sample, mConfig, mGeneTransCache, mDbAccess, mCohortTpmData, mNeoEpitopeWriter, mPeptideWriter);
+            NeoSampleTask sampleTask = new NeoSampleTask(sample, mConfig, mGeneTransCache, mDbAccess, mCohortTpmData);
 
             sampleTasks.add(sampleTask);
         }
@@ -114,68 +103,6 @@ public class NeoEpitopeAnnotator
         {
             sampleTasks.forEach(x -> x.processSample());
         }
-
-        if(mConfig.WritePeptides)
-        {
-            closeBufferedWriter(mNeoEpitopeWriter);
-            closeBufferedWriter(mPeptideWriter);
-        }
-    }
-
-    private final List<PointMutationData> loadCohortSomaticVariants()
-    {
-        final List<PointMutationData> pointMutations = Lists.newArrayList();
-
-        if(mConfig.MutationsFile == null)
-            return pointMutations;
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(mConfig.MutationsFile).toPath());
-
-            if(fileContents.isEmpty())
-                return pointMutations;
-
-            final String header = fileContents.get(0);
-            fileContents.remove(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
-
-            for(String data : fileContents)
-            {
-                final String[] items = data.split(DELIMITER);
-
-                pointMutations.add(new PointMutationData(
-                        items[fieldsIndexMap.get("Chromosome")],
-                        Integer.parseInt(items[fieldsIndexMap.get("Position")]),
-                        items[fieldsIndexMap.get("Ref")],
-                        items[fieldsIndexMap.get("Alt")],
-                        items[fieldsIndexMap.get("GeneName")],
-                        CodingEffect.valueOf(items[fieldsIndexMap.get("CodingEffect")]),
-                        1, -1));
-            }
-        }
-        catch (IOException e)
-        {
-            NE_LOGGER.warn("failed to load common HLA types file({}): {}", mConfig.MutationsFile, e.toString());
-        }
-
-        return pointMutations;
-    }
-
-    private final List<NeoEpitopeFusion> getSvFusions(final String sampleId)
-    {
-        if(mSampleFusionMap.isEmpty())
-        {
-            if(mConfig.SvFusionsDir == null)
-                return Lists.newArrayList();
-
-            loadCohortSvNeoEpitopes();
-        }
-
-        final List<NeoEpitopeFusion> fusions = mSampleFusionMap.get(sampleId);
-        mSampleFusionMap.remove(sampleId);
-
-        return fusions != null ? fusions : Lists.newArrayList();
     }
 
     private static void populateTpmMedians(
@@ -199,57 +126,6 @@ public class NeoEpitopeAnnotator
         }
     }
 
-    private void loadCohortSvNeoEpitopes()
-    {
-        final String filename = mConfig.SvFusionsDir + NE_FUSION_COHORT_FILE;
-
-        if(Files.exists(Paths.get(filename)))
-            return;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                NE_LOGGER.error("empty Linx neo-epitope file({})", filename);
-                return;
-            }
-
-            int neCount = 0;
-            String currentSampleId = "";
-            List<NeoEpitopeFusion> fusions = null;
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                final String sampleId = items[0];
-
-                if(!mConfig.Samples.stream().noneMatch(x -> x.Id.equals(sampleId)))
-                    continue;
-
-                if(!currentSampleId.equals(sampleId))
-                {
-                    fusions = Lists.newArrayList();
-                    currentSampleId = sampleId;
-                    mSampleFusionMap.put(sampleId, fusions);
-                }
-
-                fusions.add(NeoEpitopeFusion.fromString(line, true));
-                ++neCount;
-            }
-
-            NE_LOGGER.debug("loaded {} Linx neo-epitope candidates from file: {}", neCount, filename);
-        }
-        catch(IOException exception)
-        {
-            NE_LOGGER.error("failed to read Linx neo-epitope file({})", filename, exception.toString());
-        }
-    }
-
     public static BufferedWriter initialiseNeoepitopeWriter(final String outputDir, final String sampleId)
     {
         if(outputDir.isEmpty())
@@ -257,12 +133,8 @@ public class NeoEpitopeAnnotator
 
         try
         {
-            String outputFileName = outputDir;
-
-            if(sampleId == null)
-                outputFileName += "IMU_NEO_EPITOPES.csv";
-            else
-                outputFileName += sampleId + NeoConfig.NEO_EPITOPE_FILE_ID;
+            String outputFileName = sampleId != null ?
+                    NeoEpitopeFile.generateFilename(outputDir, sampleId) : outputDir + "IMU_NEO_EPITOPES.csv";
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
@@ -308,15 +180,12 @@ public class NeoEpitopeAnnotator
 
     public static BufferedWriter initialisePeptideWriter(final String outputDir, final String sampleId)
     {
+        if(sampleId == null)
+            return null;
+
         try
         {
-            String outputFileName = outputDir;
-
-            if(sampleId == null)
-                outputFileName += "IMU_HLA_PEPTIDES.csv";
-            else
-                outputFileName += sampleId + NeoConfig.HLA_PEPTIDE_FILE_ID;
-
+            String outputFileName = outputDir +  sampleId + NeoConfig.HLA_PEPTIDE_FILE_ID;
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             if(sampleId == null)
