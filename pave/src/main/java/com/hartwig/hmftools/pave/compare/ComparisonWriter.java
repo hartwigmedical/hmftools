@@ -70,7 +70,7 @@ public class ComparisonWriter
             writer.write(",GeneName,IsDriver,CanonEffects,CanonCodingEffect,HgvsCoding,HgvsProtein");
             writer.write(",WorstCodingEffect,Reported,GenesAffected");
             writer.write(",SnpEffGeneName,SnpEffCanonEffects,SnpEffCanonCodingEffect");
-            writer.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffReported,SnpEffGenesAffected");
+            writer.write(",SnpEffWorstCodingEffect,SnpEffHgvsCoding,SnpEffHgvsProtein,SnpEffReported");
             writer.newLine();
 
             return writer;
@@ -100,9 +100,9 @@ public class ComparisonWriter
                     variantImpact.CanonicalHgvsCoding, variantImpact.CanonicalHgvsProtein,
                     variantImpact.WorstCodingEffect, variant.reported(), variantImpact.GenesAffected));
 
-            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%s,%d",
+            mImpactWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%s",
                     refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect, refVariant.WorstCodingEffect,
-                    refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.Reported, refVariant.GenesAffected));
+                    refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.Reported));
 
             mImpactWriter.newLine();
         }

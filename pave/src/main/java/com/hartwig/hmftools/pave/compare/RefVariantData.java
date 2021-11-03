@@ -31,7 +31,6 @@ public class RefVariantData
     public final String HgvsProteinImpact;
 
     public final CodingEffect WorstCodingEffect;
-    public final int GenesAffected;
 
     public final int LocalPhaseSet;
     public final String Microhomology;
@@ -46,7 +45,7 @@ public class RefVariantData
     public RefVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
-            final CodingEffect worstCodingEffect, final int genesAffected, final String hgvsCodingImpact, final String hgvsProteinImpact,
+            final CodingEffect worstCodingEffect, final String hgvsCodingImpact, final String hgvsProteinImpact,
             final String microhomology, final String repeatSequence, int repeatCount, boolean phasedInframeIndel, int localPhaseSet,
             boolean reported, boolean isHotspot)
     {
@@ -60,7 +59,6 @@ public class RefVariantData
         CanonicalEffect = canonicalEffect;
         CanonicalCodingEffect = canonicalCodingEffect;
         WorstCodingEffect = worstCodingEffect;
-        GenesAffected = genesAffected;
 
         LocalPhaseSet = localPhaseSet;
         HgvsCodingImpact = hgvsCodingImpact;
@@ -81,7 +79,7 @@ public class RefVariantData
         return new RefVariantData(
                 variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(), variant.type(), variant.gene(),
                 variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
-                variant.genesAffected(),  variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
+                variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
                 phasedInframe, localPhaseSet, variant.reported(), variant.isHotspot());
     }
@@ -114,7 +112,6 @@ public class RefVariantData
                 record.getValue(SOMATICVARIANT.CANONICALEFFECT),
                 canonicalCodingEffect,
                 worstCodingEffect,
-                record.getValue(SOMATICVARIANT.GENESAFFECTED),
                 record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
                 record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
                 record.getValue(SOMATICVARIANT.MICROHOMOLOGY),
@@ -143,7 +140,6 @@ public class RefVariantData
         sj.add("ref");
         sj.add("alt");
         sj.add("gene");
-        sj.add("genesEffected");
         sj.add("worstCodingEffect");
         sj.add("canonicalEffect");
         sj.add("canonicalCodingEffect");
@@ -169,7 +165,6 @@ public class RefVariantData
         sj.add(Ref);
         sj.add(Alt);
         sj.add(Gene);
-        sj.add(String.valueOf(GenesAffected));
         sj.add(String.valueOf(WorstCodingEffect));
         sj.add(CanonicalEffect);
         sj.add(String.valueOf(CanonicalCodingEffect));

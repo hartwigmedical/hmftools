@@ -153,7 +153,29 @@ public class ImpactComparisons
         PV_LOGGER.info("samples({}) total comparisons({}) matched({}) diffs({})",
                 mConfig.SampleIds.size(), totalComparisons, matchedCount, totalComparisons - matchedCount);
 
-        // mPerfCounter.logStats();
+        if(PV_LOGGER.isDebugEnabled())
+        {
+            Map<String,PerformanceCounter> combinedPerfCounters = sampleTasks.get(0).getPerfCounters();
+
+            for(int i = 1; i < sampleTasks.size(); ++i)
+            {
+                Map<String,PerformanceCounter> saPerfCounters = sampleTasks.get(i).getPerfCounters();
+
+                for(Map.Entry<String,PerformanceCounter> entry : combinedPerfCounters.entrySet())
+                {
+                    PerformanceCounter combinedPc = entry.getValue();
+                    PerformanceCounter saPc = saPerfCounters.get(entry.getKey());
+
+                    if(combinedPc != null)
+                        combinedPc.merge(saPc);
+                }
+            }
+
+            for(Map.Entry<String,PerformanceCounter> entry : combinedPerfCounters.entrySet())
+            {
+                entry.getValue().logStats();
+            }
+        }
 
         PV_LOGGER.info("Pave impact comparison complete");
     }

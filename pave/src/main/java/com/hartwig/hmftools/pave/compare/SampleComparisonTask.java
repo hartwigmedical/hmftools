@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -44,7 +45,10 @@ public class SampleComparisonTask implements Callable
 
     private final List<String> mSampleIds;
     private final Map<String,List<RefVariantData>> mSampleVariantsCache;
-    private final PerformanceCounter mPerfCounter;
+
+    private static final String PC_QUERY = "Query";
+    private static final String PC_PROCESS = "Process";
+    private final Map<String,PerformanceCounter> mPerfCounters;
 
     private int mTotalComparisons;
     private int mMatchedCount;
@@ -66,14 +70,19 @@ public class SampleComparisonTask implements Callable
         mReportableOncoGenes = new ReportablePredicate(DriverCategory.ONCO, mGeneDataCache.getDriverPanel());
         mReportableTsgGenes = new ReportablePredicate(DriverCategory.TSG, mGeneDataCache.getDriverPanel());
 
-        mPerfCounter = new PerformanceCounter("ClassifyVariant");
         mTotalComparisons = 0;
         mMatchedCount = 0;
+
+        mPerfCounters = Maps.newHashMap();
+        mPerfCounters.put(PC_QUERY, new PerformanceCounter(PC_QUERY));
+        mPerfCounters.put(PC_PROCESS, new PerformanceCounter(PC_PROCESS));
     }
 
     public List<String> getSampleIds() { return mSampleIds; }
     public int totalComparisons() { return mTotalComparisons; }
     public int matchedCount() { return mMatchedCount; }
+
+    public Map<String,PerformanceCounter> getPerfCounters() { return mPerfCounters; }
 
     @Override
     public Long call()
@@ -97,12 +106,18 @@ public class SampleComparisonTask implements Callable
 
     private void checkSampleDiffs(final String sampleId)
     {
+        mPerfCounters.get(PC_QUERY).start();
+
         List<RefVariantData> refVariants = mDbAccess != null ?
                 DataLoader.loadSampleDatabaseRecords(sampleId, mDbAccess, mConfig.OnlyDriverGenes ? mGeneDataCache : null)
                 : mSampleVariantsCache.get(sampleId);
 
+        mPerfCounters.get(PC_QUERY).stop();
+
         if(refVariants.isEmpty())
             return;
+
+        mPerfCounters.get(PC_PROCESS).start();
 
         for(RefVariantData refVariant :refVariants)
         {
@@ -134,6 +149,8 @@ public class SampleComparisonTask implements Callable
 
         processPhasedVariants(NO_LOCAL_PHASE_SET);
         mImpactClassifier.phasedVariants().clear();
+
+        mPerfCounters.get(PC_PROCESS).stop();
 
         PV_LOGGER.debug("{}: sample({}) processed {} variants", mTaskId, sampleId, refVariants.size());
     }

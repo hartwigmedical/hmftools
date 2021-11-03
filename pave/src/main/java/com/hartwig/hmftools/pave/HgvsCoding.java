@@ -301,6 +301,9 @@ public final class HgvsCoding
         {
             int baseShift = insertLength - 1;
 
+            if(codingContext.CodingType == UTR_5P)
+                baseShift = -baseShift;
+
             // on the negative strand the positions are flipped around
             int codingBaseStart;
             int codingBaseEnd;
@@ -324,11 +327,13 @@ public final class HgvsCoding
                 intronBaseStart = codingContext.RegionType == INTRONIC ? nearestExon - baseShift : nearestExon;
             }
 
+            /*
             if(codingContext.Strand == NEG_STRAND && codingContext.CodingType == UTR_5P && codingContext.RegionType == EXONIC)
             {
                 // may apply to both strands
                 codingBaseStart = codingBaseEnd + baseShift;
             }
+            */
 
             addCodingBase(codingContext, codingBaseStart, sb, false);
 
