@@ -13,10 +13,10 @@ ALTER TABLE baseline
     ADD COLUMN outsideEU BOOLEAN AFTER inHMFDatabase;
 
 ALTER TABLE virusAnnotation
-    ADD COLUMN percentageCovered BOOLEAN AFTER interpretation;
+    ADD COLUMN percentageCovered double NOT NULL AFTER interpretation;
 
 ALTER TABLE virusAnnotation
-    ADD COLUMN meanCoverage BOOLEAN AFTER percentageCovered;
+    ADD COLUMN meanCoverage double NOT NULL AFTER percentageCovered;
 
 ALTER TABLE virusAnnotation
-    ADD COLUMN expectedClonalCoverage BOOLEAN AFTER meanCoverage;
+    ADD COLUMN expectedClonalCoverage double AFTER meanCoverage;

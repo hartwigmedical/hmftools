@@ -70,15 +70,22 @@ public final class AnnotatedVirusFile
         {
             String[] values = line.split(DELIMITER, -1);
 
+            Double expectedClonalCoverage = null;
+            if (expectedClonalCoverageIndex != null) {
+                if (!values[expectedClonalCoverageIndex].equals("null")) {
+                    expectedClonalCoverage = Double.valueOf(values[expectedClonalCoverageIndex]);
+                }
+            }
+
             virusList.add(ImmutableAnnotatedVirus.builder()
                 .taxid(Integer.parseInt(values[fieldsIndexMap.get("taxid")]))
                 .name(values[fieldsIndexMap.get("name")])
                 .qcStatus(VirusBreakendQCStatus.valueOf(values[fieldsIndexMap.get("qcStatus")]))
                 .integrations(Integer.parseInt(values[fieldsIndexMap.get("integrations")]))
-                .interpretation(values[fieldsIndexMap.get("interpretation")])
+                .interpretation(values[fieldsIndexMap.get("interpretation")].equals("null") ? null : values[fieldsIndexMap.get("interpretation")])
                 .percentageCovered(percentageCoveredIndex != null ? Double.parseDouble(values[percentageCoveredIndex]) : 0)
                 .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
-                .expectedClonalCoverage(expectedClonalCoverageIndex != null ? Double.parseDouble(values[expectedClonalCoverageIndex]) : 0)
+                .expectedClonalCoverage(expectedClonalCoverage)
                 .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
                 .build());
         }
