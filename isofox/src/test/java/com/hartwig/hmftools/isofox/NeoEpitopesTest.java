@@ -382,7 +382,7 @@ public class NeoEpitopesTest
                 "", "", "", 0, 0, 0, 0, 0, 0, 0,
                 transcriptsUp, transcriptsDown, "",
                 codingBaseUpPosStart, codingBaseUpPosEnd, codingBasesUp, codingBaseCigarUp,
-                codingBaseDownPosStart, codingBaseDownPosEnd, codingBasesDown, codingBaseCigarDown, 0, 0, 0, 0, false);
+                codingBaseDownPosStart, codingBaseDownPosEnd, codingBasesDown, codingBaseCigarDown, 0, 0, 0, 0);
 
         return new NeoEpitopeData(neFile);
     }
@@ -399,7 +399,7 @@ public class NeoEpitopesTest
                 "", "", "", 0, 0, 0, 0, 0, 0, 0,
                 transcripts, transcripts, "",
                 codingBasePosStart, codingBasePosEnd, codingBases, codingBaseCigar, 0, 0, "", "",
-                0, 0, 0, 0, false);
+                0, 0, 0, 0);
 
         NeoEpitopeData neData = new NeoEpitopeData(neFile);
         neData.setOrientation(geneStrand);
