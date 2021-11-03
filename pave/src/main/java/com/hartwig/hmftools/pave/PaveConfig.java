@@ -8,15 +8,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
-import static com.hartwig.hmftools.pave.external.GnomadAnnotation.GNOMAD_FREQUENCY_FILE;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.pave.external.GnomadAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -55,7 +52,7 @@ public class PaveConfig
         SampleId = cmd.getOptionValue(SAMPLE);
         VcfFile = cmd.getOptionValue(VCF_FILE);
 
-        RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
         WriteTranscriptCsv = cmd.hasOption(WRITE_TRANSCRIPT_CSV);
@@ -87,13 +84,14 @@ public class PaveConfig
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         addEnsemblDir(options);
         options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-        options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad variant frequencies file");
 
         options.addOption(COMPARE_SNPEFF, false, "Check against SnpEff annotations");
         options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
         options.addOption(WRITE_TRANSCRIPT_CSV, false, "Write variant impacts per transcript to CSV");
         options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
         options.addOption(FILTER_PASS, false, "Only annotate passing variants");
+
+        GnomadAnnotation.addCmdLineArgs(options);
 
         addOutputDir(options);
         addLoggingOptions(options);

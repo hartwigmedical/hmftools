@@ -42,6 +42,8 @@ public class GnomadParser
     private static final String SPECIFIC_CHROMOSOME = "specific_chr";
     private static final String FREQ_THRESHOLD = "freq_threshold";
 
+    public static final String GNOMAD_FILE_ID = "gnomad_variants";
+
     public GnomadParser(final CommandLine cmd)
     {
         mOutputDir = parseOutputDir(cmd);
@@ -62,7 +64,7 @@ public class GnomadParser
         PV_LOGGER.info("parsing Gnomad file({}) specificChr({}) frequencyThreshold({})",
                 mInputVcf, mSpecificChromosome, mFreqThreshold);
 
-        String outputFile = mOutputDir + "gnomad_variants";
+        String outputFile = mOutputDir + GNOMAD_FILE_ID;
 
         if(!mSpecificChromosome.isEmpty())
             outputFile += "_chr" + mSpecificChromosome;
