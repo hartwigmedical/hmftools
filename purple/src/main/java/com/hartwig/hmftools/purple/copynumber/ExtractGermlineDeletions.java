@@ -13,17 +13,17 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-class ExtractGermlineDeletions
+public class ExtractGermlineDeletions
 {
     private final CobaltChromosomes mCobaltChromosomes;
 
-    ExtractGermlineDeletions(final CobaltChromosomes cobaltChromosomes)
+    public ExtractGermlineDeletions(final CobaltChromosomes cobaltChromosomes)
     {
-        this.mCobaltChromosomes = cobaltChromosomes;
+        mCobaltChromosomes = cobaltChromosomes;
     }
 
     @NotNull
-    List<CombinedRegion> extractGermlineDeletions(@NotNull final List<CombinedRegion> regions)
+    public List<CombinedRegion> extractGermlineDeletions(final List<CombinedRegion> regions)
     {
         final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
 
@@ -38,9 +38,8 @@ class ExtractGermlineDeletions
         return result;
     }
 
-    @NotNull
-    private List<CombinedRegion> extractChildren(@NotNull final EnumSet<GermlineStatus> eligibleStatus,
-            @NotNull final CombinedRegion parent, @NotNull final SegmentSupport parentNext)
+    private List<CombinedRegion> extractChildren(
+            final EnumSet<GermlineStatus> eligibleStatus, final CombinedRegion parent, final SegmentSupport parentNext)
     {
         final List<CombinedRegion> children = Lists.newArrayList();
 
@@ -72,8 +71,7 @@ class ExtractGermlineDeletions
         return extendRight(children);
     }
 
-    @NotNull
-    private static CombinedRegion createChild(@NotNull final FittedRegion child, double newCopyNumber, double newBaf, SegmentSupport next)
+    private static CombinedRegion createChild(final FittedRegion child, double newCopyNumber, double newBaf, SegmentSupport next)
     {
         final CombinedRegionImpl result = new CombinedRegionImpl(child);
         result.setTumorCopyNumber(method(child), newCopyNumber);
@@ -82,8 +80,7 @@ class ExtractGermlineDeletions
         return result;
     }
 
-    @NotNull
-    private static CopyNumberMethod method(@NotNull final FittedRegion child)
+    private static CopyNumberMethod method(final FittedRegion child)
     {
         switch(child.status())
         {
@@ -94,8 +91,7 @@ class ExtractGermlineDeletions
         }
     }
 
-    @NotNull
-    private static List<CombinedRegion> extendRight(@NotNull final List<CombinedRegion> children)
+    private static List<CombinedRegion> extendRight(final List<CombinedRegion> children)
     {
         int i = 0;
         while(i < children.size() - 1)
@@ -117,7 +113,7 @@ class ExtractGermlineDeletions
         return children;
     }
 
-    private double upperBound(@NotNull final FittedRegion region)
+    private double upperBound(final FittedRegion region)
     {
         double expectedNormalRatio = mCobaltChromosomes.get(region.chromosome()).actualRatio();
         return Math.max(region.tumorCopyNumber(), region.refNormalisedCopyNumber()) / (2 * Math.min(expectedNormalRatio,

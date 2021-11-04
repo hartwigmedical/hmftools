@@ -53,7 +53,7 @@ public final class GeneCopyNumberFile
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull final List<GeneCopyNumber> ratio)
+    static List<String> toLines(final List<GeneCopyNumber> ratio)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -61,7 +61,6 @@ public final class GeneCopyNumberFile
         return lines;
     }
 
-    @NotNull
     private static String header()
     {
         return new StringJoiner(DELIMITER, "", "")
@@ -87,8 +86,7 @@ public final class GeneCopyNumberFile
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final GeneCopyNumber geneCopyNumber)
+    private static String toString(final GeneCopyNumber geneCopyNumber)
     {
         return new StringJoiner(DELIMITER).add(geneCopyNumber.chromosome())
                 .add(String.valueOf(geneCopyNumber.start()))
@@ -112,11 +110,9 @@ public final class GeneCopyNumberFile
                 .toString();
     }
 
-    @NotNull
     @VisibleForTesting
-    static List<GeneCopyNumber> fromLines(@NotNull List<String> lines)
+    static List<GeneCopyNumber> fromLines(final List<String> lines)
     {
-
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
         lines.remove(0);
 

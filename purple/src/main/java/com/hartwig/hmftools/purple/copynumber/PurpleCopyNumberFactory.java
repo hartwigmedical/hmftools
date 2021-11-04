@@ -52,11 +52,14 @@ public class PurpleCopyNumberFactory
         mGermlineDeletions.clear();
 
         final ExtractGermlineDeletions extendGermline = new ExtractGermlineDeletions(mCobaltChromosomes);
+
         final ExtendDiploid extendDiploid =
                 new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
+
         final PopulateUnknown populateUnknownFactory = new PopulateUnknown(mCobaltChromosomes);
 
         final ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             final List<FittedRegion> chromosomeFittedRegions =

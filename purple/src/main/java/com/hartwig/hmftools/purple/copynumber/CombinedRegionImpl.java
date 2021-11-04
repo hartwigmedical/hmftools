@@ -30,8 +30,8 @@ class CombinedRegionImpl implements CombinedRegion
 
     CombinedRegionImpl(boolean isBafWeighed, @NotNull final FittedRegion region)
     {
-        this.mCombined = ModifiableFittedRegion.create().from(region);
-        this.mIsBafWeighted = isBafWeighed;
+        mCombined = ModifiableFittedRegion.create().from(region);
+        mIsBafWeighted = isBafWeighed;
 
         if(region.status() != GermlineStatus.DIPLOID)
         {
@@ -98,7 +98,7 @@ class CombinedRegionImpl implements CombinedRegion
 
     public void setCopyNumberMethod(@NotNull CopyNumberMethod copyNumberMethod)
     {
-        this.mCopyNumberMethod = copyNumberMethod;
+        mCopyNumberMethod = copyNumberMethod;
     }
 
     @NotNull
@@ -116,7 +116,7 @@ class CombinedRegionImpl implements CombinedRegion
 
     public void setGermlineEndSupport(@NotNull final SegmentSupport germlineEndSupport)
     {
-        this.mGermlineEndSupport = germlineEndSupport;
+        mGermlineEndSupport = germlineEndSupport;
     }
 
     public void extend(@NotNull final FittedRegion region)

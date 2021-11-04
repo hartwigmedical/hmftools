@@ -25,23 +25,6 @@ public class PurpleQCFileTest {
         assertEquals(expected, PurpleQCFile.fromLines(PurpleQCFile.toLines(expected)));
     }
 
-    @Test
-    public void testCompatibilityWith2_47() throws IOException {
-        PurpleQCFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-47.purple.qc"), Charset.defaultCharset()));
-    }
-
-    @Test
-    public void testCompatibilityWith2_54() throws IOException {
-        PurpleQC purpleQC = PurpleQCFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-54.purple.qc"), Charset.defaultCharset()));
-        assertEquals(0, purpleQC.amberMeanDepth());
-    }
-
-    @Test
-    public void testCompatibilityWith2_55() throws IOException {
-        PurpleQC purpleQC = PurpleQCFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-55.purple.qc"), Charset.defaultCharset()));
-        assertTrue(purpleQC.amberMeanDepth() > 0);
-    }
-
     @NotNull
     public static PurpleQC create(@NotNull final Random random) {
         return ImmutablePurpleQC.builder()

@@ -44,16 +44,6 @@ public class PurpleCopyNumberFileTest {
         }
     }
 
-    @Test
-    public void testCompatibilityWith2_24() throws IOException {
-        PurpleCopyNumberFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-24.purple.cnv"), Charset.defaultCharset()));
-    }
-
-    @Test
-    public void testCompatibilityWith2_25() throws IOException {
-        PurpleCopyNumberFile.fromLines(Resources.readLines(Resources.getResource("purple/v2-25.purple.cnv"), Charset.defaultCharset()));
-    }
-
     @NotNull
     private static List<PurpleCopyNumber> create(int count) {
         Random random = new Random();

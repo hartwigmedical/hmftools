@@ -1,22 +1,24 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
-import static java.util.stream.Collectors.toList;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleCopyNumberFile {
-
+public final class PurpleCopyNumberFile
+{
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
 
@@ -26,43 +28,51 @@ public final class PurpleCopyNumberFile {
     private static final String SOMATIC_EXTENSION_OLD = ".purple.cnv";
     private static final String GERMLINE_EXTENSION_OLD = ".purple.germline.cnv";
 
-    private PurpleCopyNumberFile() {
+    private PurpleCopyNumberFile()
+    {
     }
 
     @NotNull
-    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + SOMATIC_EXTENSION;
     }
 
     @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    {
         String filename = basePath + File.separator + sample + SOMATIC_EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + SOMATIC_EXTENSION_OLD;
     }
 
     @NotNull
-    public static String generateGermlineFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateGermlineFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
+    {
         return basePath + File.separator + sample + GERMLINE_EXTENSION;
     }
 
     @NotNull
-    public static String generateGermlineFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+    public static String generateGermlineFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    {
         String filename = basePath + File.separator + sample + GERMLINE_EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + GERMLINE_EXTENSION_OLD;
     }
 
     @NotNull
-    public static List<PurpleCopyNumber> read(final String filePath) throws IOException {
+    public static List<PurpleCopyNumber> read(final String filePath) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers) throws IOException {
+    public static void write(@NotNull final String filename, @NotNull List<PurpleCopyNumber> copyNumbers) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(copyNumbers));
     }
 
     @VisibleForTesting
     @NotNull
-    public static List<String> toLines(@NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public static List<String> toLines(@NotNull final List<PurpleCopyNumber> copyNumbers)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         copyNumbers.stream().map(PurpleCopyNumberFile::toString).forEach(lines::add);
@@ -71,16 +81,58 @@ public final class PurpleCopyNumberFile {
 
     @VisibleForTesting
     @NotNull
-    public static List<PurpleCopyNumber> fromLines(@NotNull List<String> lines) {
-        return lines.stream()
-                .skip(1)
-                .map(PurpleCopyNumberFile::fromString)
-                .collect(toList());
+    public static List<PurpleCopyNumber> fromLines(final List<String> lines)
+    {
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        lines.remove(0);
+
+        int chrIndex = fieldsIndexMap.get("chromosome");
+        int startIndex = fieldsIndexMap.get("start");
+        int endIndex = fieldsIndexMap.get("end");
+        int cnIndex = fieldsIndexMap.get("copyNumber");
+        int bafCountIndex = fieldsIndexMap.get("bafCount");
+        int observedBAFIndex = fieldsIndexMap.get("observedBAF");
+        int bafIndex = fieldsIndexMap.get("baf");
+        int segmentStartSupportIndex = fieldsIndexMap.get("segmentStartSupport");
+        int segmentEndSupportIndex = fieldsIndexMap.get("segmentEndSupport");
+        int methodIndex = fieldsIndexMap.get("method");
+        int depthWindowCountIndex = fieldsIndexMap.get("depthWindowCount");
+        int gcContentIndex = fieldsIndexMap.get("gcContent");
+        int minStartIndex = fieldsIndexMap.get("minStart");
+        int maxStartIndex = fieldsIndexMap.get("maxStart");
+
+        List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
+
+        for(final String line : lines)
+        {
+            String[] values = line.split(DELIMITER, -1);
+
+            final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
+                    .chromosome(values[chrIndex])
+                    .start(Long.parseLong(values[startIndex]))
+                    .end(Long.parseLong(values[endIndex]))
+                    .bafCount(Integer.parseInt(values[bafCountIndex]))
+                    .averageTumorCopyNumber(Double.parseDouble(values[cnIndex]))
+                    .averageObservedBAF(Double.parseDouble(values[observedBAFIndex]))
+                    .averageActualBAF(Double.parseDouble(values[bafIndex]))
+                    .segmentStartSupport(SegmentSupport.valueOf(values[segmentStartSupportIndex]))
+                    .segmentEndSupport(SegmentSupport.valueOf(values[segmentEndSupportIndex]))
+                    .method(CopyNumberMethod.valueOf(values[methodIndex]))
+                    .gcContent(Double.parseDouble(values[gcContentIndex]))
+                    .depthWindowCount(Integer.parseInt(values[depthWindowCountIndex]))
+                    .minStart(Long.parseLong(values[minStartIndex]))
+                    .maxStart(Long.parseLong(values[maxStartIndex]));
+
+            copyNumbers.add(builder.build());
+        }
+
+        return copyNumbers;
     }
 
-    @NotNull
-    private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+    private static String header()
+    {
+        return new StringJoiner(DELIMITER, "", "")
+                .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("copyNumber")
@@ -99,8 +151,8 @@ public final class PurpleCopyNumberFile {
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final PurpleCopyNumber copyNumber) {
+    private static String toString(@NotNull final PurpleCopyNumber copyNumber)
+    {
         return new StringJoiner(DELIMITER).add(copyNumber.chromosome())
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
@@ -120,8 +172,8 @@ public final class PurpleCopyNumberFile {
                 .toString();
     }
 
-    @NotNull
-    private static PurpleCopyNumber fromString(@NotNull final String copyNumber) {
+    private static PurpleCopyNumber fromString(@NotNull final String copyNumber)
+    {
         String[] values = copyNumber.split(DELIMITER);
         final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                 .chromosome(values[0])

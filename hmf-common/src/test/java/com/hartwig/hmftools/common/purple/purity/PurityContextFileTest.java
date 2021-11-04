@@ -55,13 +55,6 @@ public class PurityContextFileTest {
         assertEquals(input, output);
     }
 
-    @Test
-    public void testCompatibilityWith2_47() throws IOException {
-        final List<String> qcLines = Resources.readLines(Resources.getResource("purple/v2-47.purple.qc"), Charset.defaultCharset());
-        final List<String> fitLines = Resources.readLines(Resources.getResource("purple/v2-47.purple.purity"), Charset.defaultCharset());
-        PurityContextFile.fromLines(qcLines, fitLines);
-    }
-
     @NotNull
     private static PurityContext createRandomContext(@NotNull Random random) {
         return ImmutablePurityContext.builder()
