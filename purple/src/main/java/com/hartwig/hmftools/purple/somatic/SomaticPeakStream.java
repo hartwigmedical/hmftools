@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -57,6 +58,9 @@ public class SomaticPeakStream
     {
         mIndelCount = 0;
         mSnpCount = 0;
+
+        if(somaticVcfFile.isEmpty())
+            return Lists.newArrayList();
 
         try (VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcfFile), false))
         {

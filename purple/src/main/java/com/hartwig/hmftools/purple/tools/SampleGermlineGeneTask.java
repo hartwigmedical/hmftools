@@ -58,7 +58,7 @@ public class SampleGermlineGeneTask implements Callable
 
             if(i > 0 && (i % 100) == 0)
             {
-                PPL_LOGGER.info("{}: processed {} samples", mTaskId, i);
+                PPL_LOGGER.debug("{}: processed {} samples", mTaskId, i);
             }
         }
 
@@ -124,7 +124,7 @@ public class SampleGermlineGeneTask implements Callable
                     if(overlappedExons.isEmpty())
                         continue;
 
-                    PPL_LOGGER.debug("sample({}) region({}: {}-{}) overlaps gene({}) exons({})",
+                    PPL_LOGGER.trace("sample({}) region({}: {}-{}) overlaps gene({}) exons({})",
                             sampleId, region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
 
                     writeGeneOverlapData(mWriter, sampleId, region, matchedCopyNumber, geneData, transData, overlappedExons);

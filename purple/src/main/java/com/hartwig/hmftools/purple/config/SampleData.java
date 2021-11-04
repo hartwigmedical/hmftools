@@ -48,7 +48,7 @@ public class SampleData
     {
         if(somaticVcf.isEmpty())
         {
-            PPL_LOGGER.info("Somatic variants support disabled.");
+            PPL_LOGGER.debug("no somatic variants loaded");
             return;
         }
 

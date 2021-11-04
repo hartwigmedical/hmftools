@@ -144,8 +144,8 @@ public class GermlineGeneAnalyser
         {
             writer.write(String.format("%s,%s,%d,%d,%s,%d,%d,%.3f,%.3f,%.3f",
                     sampleId, region.chromosome(), region.start(), region.end(), region.germlineStatus(),
-                    region.bafCount(), region.depthWindowCount(),  region.observedNormalRatio(),
-                    region.tumorCopyNumber(), region.refNormalisedCopyNumber()));
+                    region.bafCount(), region.depthWindowCount(), region.observedTumorRatio(), region.observedNormalRatio(),
+                    region.refNormalisedCopyNumber()));
 
             writer.write(String.format(",%.2f,%d,%.2f,%.2f,%.2f",
                     copyNumber.averageTumorCopyNumber(), copyNumber.depthWindowCount(), copyNumber.gcContent(),
