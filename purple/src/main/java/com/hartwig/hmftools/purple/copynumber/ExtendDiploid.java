@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class ExtendDiploid
@@ -161,12 +159,12 @@ class ExtendDiploid
 
     private boolean isValid(int minTumorCount, @NotNull final FittedRegion region)
     {
-        return region.status() == GermlineStatus.DIPLOID && (region.support().isSV() || region.depthWindowCount() >= minTumorCount);
+        return region.germlineStatus() == GermlineStatus.DIPLOID && (region.support().isSV() || region.depthWindowCount() >= minTumorCount);
     }
 
     private boolean isDubious(int minTumorCount, @NotNull final FittedRegion region)
     {
-        return region.status() == GermlineStatus.DIPLOID && !region.support().isSV() && region.depthWindowCount() < minTumorCount;
+        return region.germlineStatus() == GermlineStatus.DIPLOID && !region.support().isSV() && region.depthWindowCount() < minTumorCount;
     }
 
     private boolean nextBigBreakIsCentromereOrTelomere(@NotNull final List<CombinedRegion> regions, @NotNull final Direction direction,
@@ -263,7 +261,7 @@ class ExtendDiploid
         {
             final CombinedRegion combined = regions.get(i);
             final FittedRegion region = combined.region();
-            if(!combined.isProcessed() && region.status().equals(GermlineStatus.DIPLOID))
+            if(!combined.isProcessed() && region.germlineStatus().equals(GermlineStatus.DIPLOID))
             {
 
                 if(region.bafCount() > largestBAFCount)
@@ -291,7 +289,7 @@ class ExtendDiploid
                 .add("chromosome", region.chromosome())
                 .add("start", region.start())
                 .add("end", region.end())
-                .add("status", region.status())
+                .add("status", region.germlineStatus())
                 .add("support", region.support())
                 .add("copyNumber", FORMAT.format(region.tumorCopyNumber()))
                 .toString();

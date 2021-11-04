@@ -107,7 +107,7 @@ public class FittedPurityFactory
             return false;
         }
 
-        if(region.status() != GermlineStatus.DIPLOID)
+        if(region.germlineStatus() != GermlineStatus.DIPLOID)
         {
             return false;
         }

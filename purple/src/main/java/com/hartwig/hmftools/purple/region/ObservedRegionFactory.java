@@ -77,7 +77,7 @@ public class ObservedRegionFactory
                     .setSupport(region.support())
                     .setDepthWindowCount(cobalt.tumorCount())
                     .setGcContent(gc.averageGCContent())
-                    .setStatus(mStatusFactory.status(region, normalRatio, tumorRatio))
+                    .setGermlineStatus(mStatusFactory.status(region, normalRatio, tumorRatio))
                     .setSvCluster(region.svCluster())
                     .setMinStart(region.minStart())
                     .setMaxStart(region.maxStart());
@@ -94,12 +94,12 @@ public class ObservedRegionFactory
         for(int i = 0; i < modifiables.size(); i++)
         {
             final ModifiableEnrichedRegion target = modifiables.get(i);
-            if(target.support() == SegmentSupport.NONE && target.status() == GermlineStatus.DIPLOID)
+            if(target.support() == SegmentSupport.NONE && target.germlineStatus() == GermlineStatus.DIPLOID)
             {
                 for(int j = i - 1; j >= 0; j--)
                 {
                     final ModifiableEnrichedRegion prior = modifiables.get(j);
-                    if(prior.status() == GermlineStatus.DIPLOID)
+                    if(prior.germlineStatus() == GermlineStatus.DIPLOID)
                     {
                         break;
                     }

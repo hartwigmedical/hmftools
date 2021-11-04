@@ -33,15 +33,15 @@ public class ExtendNonDiploidTest
         assertTrue(ExtendNonDiploid.isEligible(eligible, eligible));
         assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
                 .from(eligible)
-                .status(GermlineStatus.AMPLIFICATION)
+                .germlineStatus(GermlineStatus.AMPLIFICATION)
                 .build(), null));
         assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
                 .from(eligible)
-                .status(GermlineStatus.HOM_DELETION)
+                .germlineStatus(GermlineStatus.HOM_DELETION)
                 .build(), null));
         assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
                 .from(eligible)
-                .status(GermlineStatus.UNKNOWN)
+                .germlineStatus(GermlineStatus.UNKNOWN)
                 .build(), null));
 
         assertTrue(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
@@ -52,11 +52,11 @@ public class ExtendNonDiploidTest
         assertFalse(ExtendNonDiploid.isEligible(eligible, centromere));
         assertFalse(ExtendNonDiploid.isEligible(centromere, eligible));
 
-        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).status(GermlineStatus.NOISE).build(), null));
+        assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).germlineStatus(GermlineStatus.NOISE).build(), null));
         assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).support(SegmentSupport.NONE).build(), null));
         assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder()
                 .from(eligible)
-                .status(GermlineStatus.DIPLOID)
+                .germlineStatus(GermlineStatus.DIPLOID)
                 .build(), null));
         assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).depthWindowCount(0).build(), null));
         assertFalse(ExtendNonDiploid.isEligible(ImmutableFittedRegion.builder().from(eligible).observedTumorRatio(0.9).build(), null));
@@ -128,7 +128,7 @@ public class ExtendNonDiploidTest
                 .depthWindowCount(1)
                 .observedNormalRatio(1)
                 .observedTumorRatio(1.1)
-                .status(status)
+                .germlineStatus(status)
                 .support(support)
                 .build();
     }

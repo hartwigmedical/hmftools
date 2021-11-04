@@ -73,6 +73,6 @@ public class ExtendMinSupportTest
     @NotNull
     private ModifiableEnrichedRegion create(long start, @NotNull final GermlineStatus status, @NotNull final SegmentSupport support)
     {
-        return ModifiableEnrichedRegion.create().setStart(start).setMinStart(start).setStatus(status).setSupport(support);
+        return ModifiableEnrichedRegion.create().setStart(start).setMinStart(start).setGermlineStatus(status).setSupport(support);
     }
 }

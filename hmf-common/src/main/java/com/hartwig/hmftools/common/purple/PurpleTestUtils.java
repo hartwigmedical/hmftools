@@ -91,7 +91,7 @@ public class PurpleTestUtils
                 .svCluster(false)
                 .minStart(0)
                 .maxStart(0)
-                .status(GermlineStatus.DIPLOID)
+                .germlineStatus(GermlineStatus.DIPLOID)
                 .gcContent(0.93)
                 .support(SegmentSupport.NONE);
     }

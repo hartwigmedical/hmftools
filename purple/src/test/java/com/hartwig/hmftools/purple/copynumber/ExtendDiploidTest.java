@@ -196,7 +196,7 @@ public class ExtendDiploidTest
     private static FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support)
     {
         return createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(GermlineStatus.DIPLOID)
+                .germlineStatus(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedNormalRatio(0.5)
@@ -223,7 +223,7 @@ public class ExtendDiploidTest
             SegmentSupport support)
     {
         return createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(GermlineStatus.DIPLOID)
+                .germlineStatus(GermlineStatus.DIPLOID)
                 .tumorCopyNumber(copyNumber)
                 .refNormalisedCopyNumber(copyNumber)
                 .observedNormalRatio(0.5)
@@ -238,7 +238,7 @@ public class ExtendDiploidTest
             GermlineStatus status, SegmentSupport support)
     {
         return createDefaultFittedRegion(CHROMOSOME, start, end)
-                .status(status)
+                .germlineStatus(status)
                 .tumorCopyNumber(tumorCopyNumber)
                 .refNormalisedCopyNumber(tumorCopyNumber)
                 .observedNormalRatio(observedNormalRatio)

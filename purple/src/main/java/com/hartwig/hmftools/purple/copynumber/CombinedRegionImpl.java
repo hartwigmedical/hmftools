@@ -33,7 +33,7 @@ class CombinedRegionImpl implements CombinedRegion
         mCombined = ModifiableFittedRegion.create().from(region);
         mIsBafWeighted = isBafWeighed;
 
-        if(region.status() != GermlineStatus.DIPLOID)
+        if(region.germlineStatus() != GermlineStatus.DIPLOID)
         {
             clearBAFValues();
         }
@@ -148,7 +148,7 @@ class CombinedRegionImpl implements CombinedRegion
 
     public void extendWithWeightedAverage(@NotNull final FittedRegion region)
     {
-        mCombined.setStatus(GermlineStatus.DIPLOID);
+        mCombined.setGermlineStatus(GermlineStatus.DIPLOID);
 
         int currentWeight = region().depthWindowCount();
         int newWeight = region.depthWindowCount();

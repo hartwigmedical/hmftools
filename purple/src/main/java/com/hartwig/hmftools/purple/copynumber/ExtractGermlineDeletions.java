@@ -50,9 +50,9 @@ public class ExtractGermlineDeletions
             final FittedRegion child = parent.regions().get(i);
             final SegmentSupport childNext = i == parent.regions().size() - 1 ? parentNext : parent.regions().get(i + 1).support();
 
-            if(eligibleStatus.contains(child.status()))
+            if(eligibleStatus.contains(child.germlineStatus()))
             {
-                if(child.status().equals(GermlineStatus.HET_DELETION))
+                if(child.germlineStatus().equals(GermlineStatus.HET_DELETION))
                 {
                     final double upperBound = upperBound(child);
                     if(Doubles.lessThan(upperBound, Math.min(0.5, copyNumber)))
@@ -61,7 +61,7 @@ public class ExtractGermlineDeletions
                     }
                 }
 
-                if(child.status().equals(GermlineStatus.HOM_DELETION))
+                if(child.germlineStatus().equals(GermlineStatus.HOM_DELETION))
                 {
                     children.add(createChild(child, child.refNormalisedCopyNumber(), baf, childNext));
                 }
@@ -82,7 +82,7 @@ public class ExtractGermlineDeletions
 
     private static CopyNumberMethod method(final FittedRegion child)
     {
-        switch(child.status())
+        switch(child.germlineStatus())
         {
             case HOM_DELETION:
                 return CopyNumberMethod.GERMLINE_HOM_DELETION;
@@ -99,7 +99,7 @@ public class ExtractGermlineDeletions
             final CombinedRegion target = children.get(i);
             final CombinedRegion neighbour = children.get(i + 1);
 
-            if(target.region().status().equals(neighbour.region().status()) && target.end() + 1 == neighbour.start())
+            if(target.region().germlineStatus().equals(neighbour.region().germlineStatus()) && target.end() + 1 == neighbour.start())
             {
                 target.extendWithUnweightedAverage(neighbour.region());
                 children.remove(i + 1);

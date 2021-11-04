@@ -21,7 +21,7 @@ public interface ObservedRegion extends GenomeRegion {
 
     double unnormalisedObservedNormalRatio();
 
-    GermlineStatus status();
+    GermlineStatus germlineStatus();
 
     boolean svCluster();
 

@@ -42,8 +42,8 @@ class ExtendNonDiploid extends ExtendRegion
 
     static boolean isEligible(@NotNull final FittedRegion region, @Nullable final FittedRegion neighbour)
     {
-        return Doubles.greaterThan(region.observedTumorRatio(), region.observedNormalRatio()) && !region.status()
-                .equals(GermlineStatus.DIPLOID) && !region.status().equals(GermlineStatus.NOISE) && region.depthWindowCount() > 0
+        return Doubles.greaterThan(region.observedTumorRatio(), region.observedNormalRatio()) && !region.germlineStatus()
+                .equals(GermlineStatus.DIPLOID) && !region.germlineStatus().equals(GermlineStatus.NOISE) && region.depthWindowCount() > 0
                 && !isBoundByCentromere(region, neighbour) && isBoundBySV(region, neighbour);
     }
 

@@ -152,7 +152,7 @@ public class BestFitFactory
         }
 
         int tumorEvidenceBafCountTotal = observedRegions.stream()
-                .filter(x -> x.status() == DIPLOID)
+                .filter(x -> x.germlineStatus() == DIPLOID)
                 .filter(x -> x.observedTumorRatio() < NO_TUMOR_DEPTH_RATIO_MIN || x.observedTumorRatio() > NO_TUMOR_DEPTH_RATIO_MAX)
                 .mapToInt(x -> x.bafCount())
                 .sum();

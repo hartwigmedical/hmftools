@@ -40,14 +40,14 @@ public class CombinedRegionTest
     {
         final FittedRegion somaticRegion = createDefaultFittedRegion("1", 2001, 3000)
                 .depthWindowCount(2)
-                .status(GermlineStatus.DIPLOID)
+                .germlineStatus(GermlineStatus.DIPLOID)
                 .build();
         final CombinedRegion region = new CombinedRegionImpl(somaticRegion);
         assertEquals(2, region.region().depthWindowCount());
 
         final FittedRegion amplificationRegion = createDefaultFittedRegion("1", 1, 1000)
                 .depthWindowCount(2)
-                .status(GermlineStatus.AMPLIFICATION)
+                .germlineStatus(GermlineStatus.AMPLIFICATION)
                 .build();
 
         region.extend(amplificationRegion);
@@ -55,7 +55,7 @@ public class CombinedRegionTest
 
         final FittedRegion germlineRegion = createDefaultFittedRegion("1", 1001, 2000)
                 .depthWindowCount(2)
-                .status(GermlineStatus.AMPLIFICATION)
+                .germlineStatus(GermlineStatus.AMPLIFICATION)
                 .build();
         region.extend(germlineRegion);
         assertEquals(2, region.region().depthWindowCount());
