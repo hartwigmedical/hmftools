@@ -76,9 +76,6 @@ public class SampleGermlineGeneTask implements Callable
 
         for(Map.Entry<String,List<FittedRegion>> entry : fittedRegionMap.entrySet())
         {
-            if(entry.getValue().stream().noneMatch(x -> x.germlineStatus() == HOM_DELETION && x.germlineStatus() != HET_DELETION))
-                continue;
-
             String chromosome = entry.getKey();
 
             List<PurpleCopyNumber> copyNumbers = copyNumberMap.get(chromosome);
@@ -86,7 +83,6 @@ public class SampleGermlineGeneTask implements Callable
 
             if(copyNumbers == null || geneDataList == null)
                 continue;
-
 
             for(FittedRegion region : entry.getValue())
             {
