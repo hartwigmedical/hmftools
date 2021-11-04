@@ -187,9 +187,7 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         String molecularTissuePrediction =
-                patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display()) && patientReport.molecularTissueOrigin() != null
-                        ? patientReport.molecularTissueOrigin().conclusion()
-                        : DataUtil.NA_STRING;
+                patientReport.molecularTissueOrigin() != null ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
         Style dataStyleMolecularTissuePrediction = hasReliablePurity && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())
                 ? ReportResources.dataHighlightStyle()
                 : ReportResources.dataHighlightNaStyle();
