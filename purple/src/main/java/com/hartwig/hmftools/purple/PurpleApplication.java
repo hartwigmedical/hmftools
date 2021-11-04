@@ -313,11 +313,8 @@ public class PurpleApplication
         PPL_LOGGER.info("Modelling somatic peaks");
         final SomaticPeakStream somaticPeakStream = new SomaticPeakStream(mConfig);
 
-        final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(purityAdjuster,
-                copyNumbers,
-                enrichedFittedRegions,
-                sampleData.SomaticVariants,
-                sampleDataFiles.SomaticVcfFile);
+        final List<PeakModel> somaticPeaks = somaticPeakStream.somaticPeakModel(
+                purityAdjuster, copyNumbers, enrichedFittedRegions, sampleDataFiles.SomaticVcfFile);
 
         // at the moment the enriching of somatic variants is also contributing to the purity context,
         // so it cannot be done afterwards

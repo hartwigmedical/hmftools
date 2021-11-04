@@ -3,16 +3,14 @@ package com.hartwig.hmftools.purple.config;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
-import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.enrich.VariantHotspotEnrichment;
+import com.hartwig.hmftools.purple.somatic.VariantHotspotEnrichment;
 import com.hartwig.hmftools.common.variant.filter.SGTFilter;
 import com.hartwig.hmftools.purple.StructuralVariantCache;
 
@@ -28,7 +26,6 @@ public class SampleData
     public final AmberData Amber;
     public final CobaltData Cobalt;
     public final StructuralVariantCache SvCache;
-    public final List<SomaticVariant> SomaticVariants;
     public final List<SomaticVariant> FittingSomaticVariants;
 
     public SampleData(final String referenceId, final String sampleId,
@@ -40,22 +37,17 @@ public class SampleData
         Amber = amber;
         Cobalt = cobalt;
         SvCache = svCache;
-        SomaticVariants = Lists.newArrayList();
         FittingSomaticVariants = Lists.newArrayList();
     }
 
     public void loadSomatics(final String somaticVcf, final ReferenceData referenceData, boolean tumorOnlyMode)
     {
-        if(somaticVcf.isEmpty())
-        {
-            PPL_LOGGER.debug("no somatic variants loaded");
+        if(somaticVcf.isEmpty() || tumorOnlyMode)
             return;
-        }
 
         final SomaticVariantFactory factory = new SomaticVariantFactory(new PassingVariantFilter(), new SGTFilter());
-        final Consumer<VariantContext> convertThenSave = context -> factory.createVariant(SampleId, context).ifPresent(SomaticVariants::add);
 
-        final VariantHotspotEnrichment enrich = new VariantHotspotEnrichment(referenceData.SomaticHotspots, convertThenSave);
+        final VariantHotspotEnrichment hotspotEnrichment = new VariantHotspotEnrichment(referenceData.SomaticHotspots, null);
 
         PPL_LOGGER.info("Loading somatic variants from {}", somaticVcf);
 
@@ -65,18 +57,12 @@ public class SampleData
             {
                 if(factory.test(variantContext))
                 {
-                    enrich.accept(variantContext);
+                    Optional<SomaticVariant> variant = factory.createVariant(SampleId, hotspotEnrichment.enrich(variantContext));
+
+                    if(variant.isPresent() && variant.get().isSnp())
+                        FittingSomaticVariants.add(variant.get());
                 }
             }
         }
-
-        enrich.flush();
-
-        if(!tumorOnlyMode)
-        {
-            SomaticVariants.stream().filter(SomaticVariant::isSnp).forEach(x -> FittingSomaticVariants.add(x));
-        }
     }
-
-
 }

@@ -53,8 +53,8 @@ public class SomaticPeakStream
     }
 
     public List<PeakModel> somaticPeakModel(
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions, final List<SomaticVariant> somaticVariants, final String somaticVcfFile)
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
+            final List<FittedRegion> fittedRegions, final String somaticVcfFile)
     {
         mIndelCount = 0;
         mSnpCount = 0;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.somatic;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,11 +7,13 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.VariantContextFromString;
+import com.hartwig.hmftools.common.test.VariantContextFromString;
+import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -57,7 +59,7 @@ public class HotspotEnrichmentTest {
     public void testFromVariant() {
         VariantContext variant = createNonHotspotV37(1, "G");
         VariantContext nonHotspot = new VariantContextBuilder(variant).attribute("HOTSPOT", false).make();
-        assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(nonHotspot));
+        Assert.assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(nonHotspot));
     }
 
     private static void assertOverlap(@NotNull Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart,

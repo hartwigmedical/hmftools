@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.sage.SageMetaData;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.VariantContextFromString;
+import com.hartwig.hmftools.common.test.VariantContextFromString;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

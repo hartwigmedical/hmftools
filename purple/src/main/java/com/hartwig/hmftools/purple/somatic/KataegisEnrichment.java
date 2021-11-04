@@ -1,9 +1,12 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.purple.somatic;
+
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
 
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.variant.kataegis.KataegisQueue;
+import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -13,9 +16,9 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class KataegisEnrichment implements VariantContextEnrichment {
+public class KataegisEnrichment implements VariantContextEnrichment
+{
 
-    public static final String KATAEGIS_FLAG = "KT";
     private static final String KATAEGIS_FLAG_DESCRIPTION = "Forward/reverse kataegis id";
 
     private final KataegisQueue forwardDetector;

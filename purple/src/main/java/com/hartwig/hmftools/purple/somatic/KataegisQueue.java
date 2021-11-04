@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.variant.kataegis;
+package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

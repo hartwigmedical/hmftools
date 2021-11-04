@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.variant.kataegis;
+package com.hartwig.hmftools.purple.somatic;
+
+import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -7,7 +9,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.enrich.KataegisEnrichment;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -27,7 +28,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(input);
         assertEquals(KataegisQueue.MIN_COUNT, result.size());
-        assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(0).getAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -39,7 +40,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(input);
         assertEquals(KataegisQueue.MIN_COUNT, result.size());
-        assertFalse(result.get(0).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertFalse(result.get(0).hasAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -53,7 +54,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(0).getAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -67,7 +68,7 @@ public class KataegisQueueTest {
 
         List<VariantContext> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals("TST_1", result.get(0).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(0).getAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -84,8 +85,8 @@ public class KataegisQueueTest {
 
         final List<VariantContext> result = kataegis(input);
         assertEquals(KataegisQueue.MIN_COUNT + 2, result.size());
-        assertEquals("TST_1", result.get(i + 1).getAttribute(KataegisEnrichment.KATAEGIS_FLAG));
-        assertFalse(result.get(i + 2).hasAttribute(KataegisEnrichment.KATAEGIS_FLAG));
+        assertEquals("TST_1", result.get(i + 1).getAttribute(KATAEGIS_FLAG));
+        assertFalse(result.get(i + 2).hasAttribute(KATAEGIS_FLAG));
     }
 
     @NotNull

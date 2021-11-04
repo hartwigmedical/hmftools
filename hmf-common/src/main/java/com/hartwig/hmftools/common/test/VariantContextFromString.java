@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.common.test;
 
 import com.google.common.collect.Sets;
 

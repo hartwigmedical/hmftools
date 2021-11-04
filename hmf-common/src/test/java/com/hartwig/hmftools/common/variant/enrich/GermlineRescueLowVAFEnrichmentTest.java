@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.VariantHeader.PURPLE_VARIANT_C
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.variant.VariantContextFromString;
+import com.hartwig.hmftools.common.test.VariantContextFromString;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
