@@ -107,11 +107,13 @@ public class PatientReporterApplication {
                 config.expectedPipelineVersion(),
                 config.overridePipelineVersion(),
                 config.pipelineVersionFile(),
-                config.requirePipelineVersionFile());
+                config.requirePipelineVersionFile(),
+                config.peachGenotypeTsv());
         LOGGER.info("Cohort of this sample is: {}", report.sampleReport().cohort().cohortId());
 
         ReportWriter reportWriter = CFReportWriter.createProductionReportWriter();
         String outputFilePath = generateOutputFilePathForPatientReport(config.outputDirReport(), report);
+
         reportWriter.writeQCFailReport(report, outputFilePath);
 
         if (!config.onlyCreatePDF()) {

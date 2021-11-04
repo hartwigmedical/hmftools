@@ -82,7 +82,4 @@ public abstract class GenomicAnalysis {
 
     @NotNull
     public abstract List<AnnotatedVirus> reportableViruses();
-
-    @NotNull
-    public abstract List<PeachGenotype> peachGenotypes();
 }

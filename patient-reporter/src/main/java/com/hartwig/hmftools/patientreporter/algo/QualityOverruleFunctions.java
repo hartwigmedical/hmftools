@@ -22,7 +22,7 @@ public final class QualityOverruleFunctions {
     }
 
     @NotNull
-    public static GenomicAnalysis overrule(@NotNull GenomicAnalysis genomicAnalysis, @NotNull String qcForm) {
+    public static GenomicAnalysis overrule(@NotNull GenomicAnalysis genomicAnalysis) {
         Map<ReportableVariant, Boolean> overruledVariantMaps =
                 overruleMap(genomicAnalysis.notifyGermlineStatusPerVariant(), genomicAnalysis.hasReliablePurity());
 
@@ -58,7 +58,6 @@ public final class QualityOverruleFunctions {
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(sortedNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosomeData)
-                .peachGenotypes(qcForm.equals(QsFormNumber.FOR_080.display()) ? genomicAnalysis.peachGenotypes() : Lists.newArrayList())
                 .build();
     }
 

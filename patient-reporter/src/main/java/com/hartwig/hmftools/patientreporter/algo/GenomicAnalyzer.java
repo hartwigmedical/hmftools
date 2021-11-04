@@ -61,7 +61,6 @@ public class GenomicAnalyzer {
 
         LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
-        List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
 
         List<ReportableVariant> reportableVariants =
                 ReportableVariantFactory.mergeVariantLists(purpleData.reportableGermlineVariants(), purpleData.reportableSomaticVariants());
@@ -99,7 +98,6 @@ public class GenomicAnalyzer {
                 .geneDisruptions(linxData.geneDisruptions())
                 .homozygousDisruptions(linxData.homozygousDisruptions())
                 .reportableViruses(virusInterpreterData.reportableViruses())
-                .peachGenotypes(peachGenotypes)
                 .build();
     }
 
@@ -139,14 +137,6 @@ public class GenomicAnalyzer {
         }
 
         return false;
-    }
-
-    @NotNull
-    private static List<PeachGenotype> loadPeachData(@NotNull String peachGenotypeTsv) throws IOException {
-        LOGGER.info("Loading peach genotypes from {}", new File(peachGenotypeTsv).getParent());
-        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
-        LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
-        return peachGenotypes;
     }
 
     @NotNull

@@ -33,6 +33,7 @@ public interface PatientReporterConfig {
 
     String PRIMARY_TUMOR_TSV = "primary_tumor_tsv";
     String LIMS_DIRECTORY = "lims_dir";
+    String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
 
     String RVA_LOGO = "rva_logo";
     String COMPANY_LOGO = "company_logo";
@@ -64,7 +65,6 @@ public interface PatientReporterConfig {
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
     String MOLECULAR_TISSUE_ORIGIN_PLOT = "molecular_tissue_origin_plot";
     String ANNOTATED_VIRUS_TSV = "annotated_virus_tsv";
-    String PEACH_GENOTYPE_TSV = "peach_genotype_tsv";
     String PROTECT_EVIDENCE_TSV = "protect_evidence_tsv";
 
     // Resources used for generating an analysed patient report
@@ -94,6 +94,7 @@ public interface PatientReporterConfig {
 
         options.addOption(PRIMARY_TUMOR_TSV, true, "Path towards the (curated) primary tumor TSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
+        options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
 
         options.addOption(RVA_LOGO, true, "Path towards an image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards an image file containing the company logo.");
@@ -122,7 +123,6 @@ public interface PatientReporterConfig {
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_PLOT, true, "Path towards the molecular tissue origin plot.");
         options.addOption(ANNOTATED_VIRUS_TSV, true, "Path towards the annotated virus TSV.");
-        options.addOption(PEACH_GENOTYPE_TSV, true, "Path towards the peach genotype TSV.");
         options.addOption(PROTECT_EVIDENCE_TSV, true, "Path towards the protect evidence TSV.");
 
         options.addOption(GERMLINE_REPORTING_TSV, true, "Path towards a TSV containing germline reporting config.");
@@ -166,6 +166,9 @@ public interface PatientReporterConfig {
 
     @NotNull
     String limsDir();
+
+    @NotNull
+    String peachGenotypeTsv();
 
     @NotNull
     String rvaLogo();
@@ -228,9 +231,6 @@ public interface PatientReporterConfig {
 
     @NotNull
     String annotatedVirusTsv();
-
-    @NotNull
-    String peachGenotypeTsv();
 
     @NotNull
     String protectEvidenceTsv();
@@ -302,8 +302,12 @@ public interface PatientReporterConfig {
         String sampleSummaryTsv = Strings.EMPTY;
 
         if (isQCFail && qcFailReason.isDeepWGSDataAvailable()) {
+            if (requirePipelineVersion) {
+                pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);
+            }
             purplePurityTsv = nonOptionalFile(cmd, PURPLE_PURITY_TSV);
             purpleQcFile = nonOptionalFile(cmd, PURPLE_QC_FILE);
+            peachGenotypeTsv = nonOptionalFile(cmd, PEACH_GENOTYPE_TSV);
         } else if (!isQCFail) {
             if (requirePipelineVersion) {
                 pipelineVersion = nonOptionalFile(cmd, PIPELINE_VERSION_FILE);

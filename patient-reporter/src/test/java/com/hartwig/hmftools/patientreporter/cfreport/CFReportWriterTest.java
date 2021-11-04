@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -13,6 +15,8 @@ import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
+import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
@@ -354,6 +358,7 @@ public class CFReportWriterTest {
                 .build();
 
         ReportData testReportData = PatientReporterTestFactory.loadTestReportData();
+        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
         QCFailReport patientReport = ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(reason.qcFormNumber())
@@ -365,12 +370,28 @@ public class CFReportWriterTest {
                 .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi(UDI_DI)
+                .peachGenotypes(createTestPeachGenotypes())
                 .build();
 
         String filename = testReportFilePath(patientReport);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeQCFailReport(patientReport, filename);
+    }
+
+    @NotNull
+    private static List<PeachGenotype> createTestPeachGenotypes() {
+        return Lists.newArrayList(ImmutablePeachGenotype.builder()
+                .gene("DPYD")
+                .haplotype("*1_HOM")
+                .function("Normal Function")
+                .linkedDrugs("5-Fluorouracil;Capecitabine;Tegafur")
+                .urlPrescriptionInfo("https://www.pharmgkb.org/chemical/PA128406956/guidelineAnnotation/PA166104939;"
+                        + "https://www.pharmgkb.org/chemical/PA448771/guidelineAnnotation/PA166104963;"
+                        + "https://www.pharmgkb.org/chemical/PA452620/guidelineAnnotation/PA166104944")
+                .panelVersion("PGx_min_DPYD_v0.3")
+                .repoVersion("1.0")
+                .build());
     }
 
     @NotNull

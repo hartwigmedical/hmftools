@@ -1,26 +1,38 @@
 package com.hartwig.hmftools.patientreporter.qcfail;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
+import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleMetadata;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.SampleReportFactory;
 import com.hartwig.hmftools.patientreporter.pipeline.PipelineVersion;
 
+import org.apache.commons.compress.utils.Lists;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class QCFailReporter {
+
+    private static final Logger LOGGER = LogManager.getLogger(QCFailReporter.class);
 
     @NotNull
     private final QCFailReportData reportData;
@@ -32,7 +44,8 @@ public class QCFailReporter {
     @NotNull
     public QCFailReport run(@Nullable QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
             @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport, @NotNull String expectedPipelineVersion,
-            boolean overridePipelineVersion, @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile) throws IOException {
+            boolean overridePipelineVersion, @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile,
+            @NotNull String peachGenotypeTsv) throws IOException {
         assert reason != null;
 
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
@@ -58,6 +71,7 @@ public class QCFailReporter {
         }
 
         String wgsPurityString = null;
+        PurpleQC purpleQc = null;
         if (reason.isDeepWGSDataAvailable()) {
             PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
 
@@ -65,7 +79,15 @@ public class QCFailReporter {
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
+            purpleQc = purityContext.qc();
         }
+
+        List<PeachGenotype> peachGenotypesOverrule = Lists.newArrayList();
+        if (reason.isDeepWGSDataAvailable()) {
+            List<PeachGenotype> peachGenotypes = loadPeachData(peachGenotypeTsv);
+            peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
+        }
+
 
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
@@ -78,6 +100,20 @@ public class QCFailReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
+                .peachGenotypes(peachGenotypesOverrule)
+                .purpleQC(purpleQc)
                 .build();
+    }
+
+    @NotNull
+    private static List<PeachGenotype> loadPeachData(@NotNull String peachGenotypeTsv) throws IOException {
+        if (!peachGenotypeTsv.equals(Strings.EMPTY)) {
+            LOGGER.info("Loading peach genotypes from {}", new File(peachGenotypeTsv).getParent());
+            List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
+            LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
+            return peachGenotypes;
+        }else {
+            return Lists.newArrayList();
+        }
     }
 }
