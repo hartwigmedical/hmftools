@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
@@ -67,14 +69,12 @@ public class AnalysedPatientReporter {
                 config,
                 sampleReport.germlineReportingLevel());
 
-        GenomicAnalysis filteredAnalysis = ConsentFilterFunctions.filter(genomicAnalysis,
-                sampleReport.germlineReportingLevel(),
-                sampleReport.reportViralPresence(),
-                sampleReport.reportPharmogenetics());
+        GenomicAnalysis filteredAnalysis =
+                ConsentFilterFunctions.filter(genomicAnalysis, sampleReport.germlineReportingLevel(), sampleReport.reportViralPresence());
 
         String qcForm = determineForNumber(genomicAnalysis.hasReliablePurity(), genomicAnalysis.impliedPurity());
 
-        GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis, qcForm);
+        GenomicAnalysis overruledAnalysis = QualityOverruleFunctions.overrule(filteredAnalysis);
 
         LOGGER.info("Loading CUPPA result from {}", new File(config.molecularTissueOriginTxt()).getParent());
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
@@ -83,6 +83,10 @@ public class AnalysedPatientReporter {
                 .build();
 
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
+
+        List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
+        List<PeachGenotype> peachGenotypesOverrule =
+                sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -98,11 +102,20 @@ public class AnalysedPatientReporter {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
+                .peachGenotypes(peachGenotypesOverrule)
                 .build();
 
         printReportState(report);
 
         return report;
+    }
+
+    @NotNull
+    private static List<PeachGenotype> loadPeachData(@NotNull String peachGenotypeTsv) throws IOException {
+        LOGGER.info("Loading peach genotypes from {}", new File(peachGenotypeTsv).getParent());
+        List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
+        LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
+        return peachGenotypes;
     }
 
     @NotNull
@@ -148,7 +161,7 @@ public class AnalysedPatientReporter {
         LOGGER.info(" Homozygous disruptions to report: {}", analysis.homozygousDisruptions().size());
         LOGGER.info(" Gene disruptions to report: {}", analysis.geneDisruptions().size());
         LOGGER.info(" Viruses to report: {}", analysis.reportableViruses().size());
-        LOGGER.info(" Pharmacogenetics to report: {}", analysis.peachGenotypes().size());
+        LOGGER.info(" Pharmacogenetics to report: {}", report.peachGenotypes().size());
 
         LOGGER.info(" CHORD analysis HRD prediction: {} ({})", analysis.chordHrdValue(), analysis.chordHrdStatus());
         LOGGER.info(" Microsatellite indels per Mb: {} ({})", analysis.microsatelliteIndelsPerMb(), analysis.microsatelliteStatus());

@@ -1,20 +1,28 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TumorLocationAndTypeTable;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.Pharmacogenetics;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailType;
+import com.itextpdf.kernel.pdf.action.PdfAction;
+import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.property.TextAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
 import org.apache.logging.log4j.util.Strings;
@@ -69,6 +77,8 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
+        reportDocument.add(createPeachGenotypesTable(failReport.peachGenotypes(), failReport.sampleReport().reportPharmogenetics()));
+
         reportDocument.add(createContentBody());
         reportDocument.add(ReportSignature.createSignatureDiv(failReport.logoRVAPath(), failReport.signaturePath()).setMarginTop(15));
         reportDocument.add(ReportSignature.createEndOfReportIndication());
@@ -79,6 +89,7 @@ public class QCFailChapter implements ReportChapter {
         String reason = DataUtil.NA_STRING;
         String explanation = DataUtil.NA_STRING;
         String explanationDetail = DataUtil.NA_STRING;
+        boolean reportPeachReport = true;
 
         switch (failReason.type()) {
             case LOW_QUALITY_BIOPSY: {
@@ -124,7 +135,6 @@ public class QCFailChapter implements ReportChapter {
         div.add(new Paragraph(explanation).addStyle(ReportResources.bodyTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
         div.add(new Paragraph(explanationDetail).addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING));
-
         return div;
     }
 
@@ -341,5 +351,35 @@ public class QCFailChapter implements ReportChapter {
                 .add(regularPart2)
                 .add(new Text(boldPart2).addStyle(ReportResources.smallBodyBoldTextStyle()))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean reportPeach) {
+        String title = "Pharmacogenetics";
+
+        if (reportPeach) {
+            if (peachGenotypes.isEmpty()) {
+                return TableUtil.createNoneReportTable(title);
+            } else  {
+                Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
+                        new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
+                                TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
+                                TableUtil.createHeaderCell("Source").setTextAlignment(TextAlignment.CENTER) });
+
+                for (PeachGenotype peachGenotype : Pharmacogenetics.sort(peachGenotypes)) {
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.gene()));
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.haplotype()));
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.function()));
+                    contentTable.addCell(TableUtil.createContentCell(peachGenotype.linkedDrugs()));
+                    contentTable.addCell(TableUtil.createContentCell(new Paragraph(Pharmacogenetics.sourceName(peachGenotype.urlPrescriptionInfo())).addStyle(
+                                    ReportResources.dataHighlightLinksStyle()))
+                            .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
+                            .setTextAlignment(TextAlignment.CENTER));
+                }
+                return TableUtil.createWrappingReportTable(title, contentTable);
+            }
+        } else {
+            return TableUtil.createNAReportTable(title);
+        }
     }
 }

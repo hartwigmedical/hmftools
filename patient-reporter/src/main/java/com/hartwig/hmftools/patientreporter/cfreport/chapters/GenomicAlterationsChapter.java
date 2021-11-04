@@ -90,7 +90,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
-        reportDocument.add(createPeachGenotypesTable(genomicAnalysis.peachGenotypes(),
+        reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(),
                 hasReliablePurity,
                 patientReport.qsFormNumber(),
                 sampleReport.reportPharmogenetics()));
@@ -358,13 +358,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
         String title = "Pharmacogenetics";
 
         if (reportPeach) {
-            if (qsFormNumber.equals(QsFormNumber.FOR_209.display())) {
-                String unreliable =
-                        "The pharmacogenetics calling is not validated for low tumor purities and therefore the results are not displayed.";
-                return TableUtil.createPeachUnreliableReportTable(title, unreliable);
-            } else if (peachGenotypes.isEmpty()) {
+            if (peachGenotypes.isEmpty()) {
                 return TableUtil.createNoneReportTable(title);
-            } else if (hasReliablePurity && qsFormNumber.equals(QsFormNumber.FOR_080.display())) {
+            } else  {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
@@ -381,8 +377,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             .setTextAlignment(TextAlignment.CENTER));
                 }
                 return TableUtil.createWrappingReportTable(title, contentTable);
-            } else {
-                return TableUtil.createNAReportTable(title);
             }
         } else {
             return TableUtil.createNAReportTable(title);

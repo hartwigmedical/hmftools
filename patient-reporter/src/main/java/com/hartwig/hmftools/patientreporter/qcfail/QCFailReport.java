@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.patientreporter.qcfail;
 
+import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 
@@ -28,6 +31,9 @@ public abstract class QCFailReport implements PatientReport {
     @Nullable
     public abstract String wgsPurityString();
 
+    @Nullable
+    public abstract PurpleQC purpleQC();
+
     @Override
     @NotNull
     public abstract Optional<String> comments();
@@ -46,5 +52,9 @@ public abstract class QCFailReport implements PatientReport {
     @Override
     @NotNull
     public abstract String logoCompanyPath();
+
+    @NotNull
+    @Override
+    public abstract List<PeachGenotype> peachGenotypes();
 }
 

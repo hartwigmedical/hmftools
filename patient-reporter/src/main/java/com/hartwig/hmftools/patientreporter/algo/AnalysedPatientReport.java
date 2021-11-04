@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
+import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
@@ -37,6 +39,10 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     @NotNull
     public abstract String circosPath();
+
+    @NotNull
+    @Override
+    public abstract List<PeachGenotype> peachGenotypes();
 
     @Override
     @NotNull

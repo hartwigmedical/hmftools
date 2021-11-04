@@ -151,7 +151,6 @@ public final class ExampleAnalysisTestFactory {
                 .geneDisruptions(disruptions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
-                .peachGenotypes(peachGenotypes)
                 .build();
 
         MolecularTissueOrigin molecularTissueOrigin = ImmutableMolecularTissueOrigin.builder()
@@ -173,6 +172,7 @@ public final class ExampleAnalysisTestFactory {
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion(pipelineVersion)
+                .peachGenotypes(peachGenotypes)
                 .build();
     }
 
@@ -190,27 +190,9 @@ public final class ExampleAnalysisTestFactory {
                 .geneFusions(fusions)
                 .homozygousDisruptions(homozygousDisruptions)
                 .reportableViruses(viruses)
-                .peachGenotypes(peachGenotypes)
                 .build();
 
         return ImmutableAnalysedPatientReport.builder().from(coloReport).genomicAnalysis(analysis).build();
-    }
-
-    @NotNull
-    public static QCFailReport createQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason,
-            @NotNull LimsCohortConfig limsCohortConfig) {
-        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId, true, limsCohortConfig);
-
-        ReportData reportData = PatientReporterTestFactory.loadTestReportData();
-        return ImmutableQCFailReport.builder()
-                .sampleReport(sampleReport)
-                .reason(reason)
-                .comments(Optional.empty())
-                .isCorrectedReport(false)
-                .signaturePath(reportData.signaturePath())
-                .logoRVAPath(reportData.logoRVAPath())
-                .logoCompanyPath(reportData.logoCompanyPath())
-                .build();
     }
 
     @NotNull
