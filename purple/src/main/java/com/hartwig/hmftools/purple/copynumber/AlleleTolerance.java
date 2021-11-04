@@ -19,7 +19,7 @@ public class AlleleTolerance implements CopyNumberTolerance
 
     public AlleleTolerance(@NotNull final PurityAdjuster purityAdjuster)
     {
-        this.mPurityAdjuster = purityAdjuster;
+        mPurityAdjuster = purityAdjuster;
     }
 
     @Override

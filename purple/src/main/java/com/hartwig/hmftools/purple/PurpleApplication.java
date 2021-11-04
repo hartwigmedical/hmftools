@@ -264,7 +264,8 @@ public class PurpleApplication
         final PurityAdjuster purityAdjuster =
                 new PurityAdjusterAbnormalChromosome(fittedPurity.purity(), fittedPurity.normFactor(), cobaltChromosomes.chromosomes());
 
-        final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(mConfig.Fitting.MinDiploidTumorRatioCount,
+        final PurpleCopyNumberFactory copyNumberFactory = new PurpleCopyNumberFactory(
+                mConfig.Fitting.MinDiploidTumorRatioCount,
                 mConfig.Fitting.MinDiploidTumorRatioCountAtCentromere,
                 amberData.AverageTumorDepth,
                 fittedPurity.ploidy(),
