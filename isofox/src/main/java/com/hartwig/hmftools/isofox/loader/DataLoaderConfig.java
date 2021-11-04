@@ -101,7 +101,7 @@ public class DataLoaderConfig
             }
             catch(IOException e)
             {
-                ISF_LOGGER.warn("invalid cancer ypes file: {}", e.toString());
+                ISF_LOGGER.warn("invalid cancer types file: {}", e.toString());
             }
         }
 
