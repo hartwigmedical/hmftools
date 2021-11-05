@@ -101,9 +101,12 @@ public class SampleGermlineGeneTask implements Callable
                     continue;
                 }
 
+                int regionLowerPos = (int)region.start() - 500;
+                int regionHighPos = (int)region.end() + 500;
+
                 // now find genes
                 List<GeneData> overlappingGenes = geneDataList.stream()
-                        .filter(x -> positionsOverlap(x.GeneStart, x.GeneEnd, (int)region.start(), (int)region.end()))
+                        .filter(x -> positionsOverlap(x.GeneStart, x.GeneEnd, regionLowerPos, regionHighPos))
                         .collect(Collectors.toList());
 
                 for(GeneData geneData : overlappingGenes)
@@ -114,7 +117,7 @@ public class SampleGermlineGeneTask implements Callable
                         continue;
 
                     List<ExonData> overlappedExons = transData.exons().stream()
-                            .filter(x -> positionsOverlap(x.Start, x.End, (int)region.start(), (int)region.end()))
+                            .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
                             .collect(Collectors.toList());
 
                     if(overlappedExons.isEmpty())
