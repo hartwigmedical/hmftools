@@ -27,8 +27,6 @@ public class FusionCohortTask implements Callable
     private final CohortConfig mConfig;
 
     private final Map<String,Path> mSampleFileMap;
-    private final Map<String,Integer> mFieldsMap;
-    private String mFilteredFusionHeader;
     private final PassingFusions mFilters;
     private final BufferedWriter mCombinedFusionWriter;
     private final FusionCollection mFusionCollection;
@@ -41,8 +39,6 @@ public class FusionCohortTask implements Callable
         mTaskId = taskId;
         mConfig = config;
         mSampleFileMap = sampleFileMap;
-        mFieldsMap = Maps.newHashMap();
-        mFilteredFusionHeader = null;
         mFilters = filters;
         mFusionCollection = fusionCollection;
         mCombinedFusionWriter = combinedFusionWriter;
@@ -96,43 +92,6 @@ public class FusionCohortTask implements Callable
 
         return (long)0;
     }
-
-    /*
-    private List<FusionData> loadSampleFile(final Path filename)
-    {
-        try
-        {
-            final List<String> lines = Files.readAllLines(filename);
-
-            if(mFieldsMap.isEmpty())
-            {
-                mFilteredFusionHeader = lines.get(0);
-                mFieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
-            }
-
-            lines.remove(0);
-
-            List<FusionData> fusions = Lists.newArrayList();
-
-            for(String data : lines)
-            {
-                FusionData fusion = FusionData.fromCsv(data, mFieldsMap);
-
-                if(mConfig.Fusions.WriteFilteredFusions || mConfig.Fusions.WriteCombinedFusions)
-                    fusion.cacheCsvData(data);
-
-                fusions.add(fusion);
-            }
-
-            return fusions;
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load fusion file({}): {}", filename.toString(), e.toString());
-            return Lists.newArrayList();
-        }
-    }
-    */
 
     private void writeFilteredFusion(final String sampleId, final List<FusionData> sampleFusions)
     {
