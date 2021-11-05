@@ -52,9 +52,7 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
         document.add(ClinicalEvidenceFunctions.note(""));
         document.add(ClinicalEvidenceFunctions.noteEvidence());
         document.add(ClinicalEvidenceFunctions.note(""));
-        document.add(ClinicalEvidenceFunctions.note("The abbreviation ‘PRD’ (mentioned after the level of evidence) indicates the evidence "
-                + "is predicted responsive/resistent. More details about CKB can be found in their Glossary Of "
-                + "Terms (https://ckbhome.jax.org/about/glossaryOfTerms)."));
+        document.add(ClinicalEvidenceFunctions.noteGlossaryTerms());
     }
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
