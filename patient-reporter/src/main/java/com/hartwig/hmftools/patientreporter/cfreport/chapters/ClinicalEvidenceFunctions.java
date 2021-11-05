@@ -19,8 +19,10 @@ import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.apache.commons.compress.utils.Lists;
@@ -145,10 +147,8 @@ public class ClinicalEvidenceFunctions {
                         cellGenomic.addStyle(ReportResources.urlStyle())
                                 .setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
                     } else {
-                        cellGenomic.addStyle(ReportResources.urlStyle())
-                                .setAction(PdfAction.createURI(createLinkiClusion(responsive)));
+                        cellGenomic.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(createLinkiClusion(responsive)));
                     }
-
 
                     Cell cellLevel;
                     Cell cellPredicted;
@@ -259,11 +259,18 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    public static Paragraph noteEvidence() {
-        return new Paragraph().setKeepTogether(true)
+    public static Paragraph noteGlossaryTerms() {
+        return new Paragraph("The abbreviation ‘PRD’ (mentioned after the level of evidence) indicates the evidence is predicted "
+                + "responsive/resistent. More details about CKB can be found in their").addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add("if PRD mentioned after level then the evidence is predicted response/ressitent otherwise it is real "
-                        + "responsive/resistent\n\n")
+                .add(new Text("Glossary Of Terms").addStyle(ReportResources.urlStyle())
+                        .setAction(PdfAction.createURI("https://ckbhome.jax.org/about/glossaryOfTerms")))
+                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+    }
+
+    @NotNull
+    public static Paragraph noteEvidence() {
+        return new Paragraph().setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add("The Clinical Knowledgebase (CKB) is used to annotate variants of all types with clinical evidence. "
                         + "Only treatment associated evidence with evidence levels ( \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_A))
@@ -273,7 +280,7 @@ public class ClinicalEvidenceFunctions {
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
                 .add(" arly clinical trials) can be reported. Potential evidence items with evidence level  \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
-                .add(" case reports and preclinical evidence) are not reported.\n\n")
+                .add(" case reports and preclinical evidence) are not reported.")
                 .addStyle(ReportResources.subTextStyle());
     }
 
