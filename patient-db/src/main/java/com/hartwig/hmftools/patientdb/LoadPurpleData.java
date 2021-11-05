@@ -54,9 +54,6 @@ public class LoadPurpleData {
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDir, sample));
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
 
-        List<PurpleCopyNumber> germlineCopyNumbers =
-                PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateGermlineFilenameForReading(purpleDir, sample));
-
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
 
         final String germlineDriverFile = DriverCatalogFile.generateGermlineFilename(purpleDir, sample);
@@ -69,7 +66,6 @@ public class LoadPurpleData {
         dbAccess.writePurity(sample, purityContext, purityContext.qc());
         dbAccess.writeBestFitPerPurity(sample, bestFitPerPurity);
         dbAccess.writeCopynumbers(sample, copyNumbers);
-        dbAccess.writeGermlineCopynumbers(sample, germlineCopyNumbers);
         dbAccess.writeGeneCopynumberRegions(sample, geneCopyNumbers);
         dbAccess.writePurpleDriverCatalog(sample, somaticDriverCatalog, germlineDriverCatalog);
 
@@ -93,7 +89,6 @@ public class LoadPurpleData {
         dbAccess.writePurity(tumorSample, purityContext, qcChecks);
         dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
         dbAccess.writeCopynumbers(tumorSample, copyNumbers);
-        dbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
         dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
         dbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
     }

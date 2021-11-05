@@ -89,35 +89,6 @@ class CopyNumberDAO {
         }
     }
 
-    void writeGermlineCopyNumber(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
-        Timestamp timestamp = new Timestamp(new Date().getTime());
-        context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
-
-        for (List<PurpleCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep18 inserter = context.insertInto(COPYNUMBERGERMLINE,
-                    COPYNUMBERGERMLINE.SAMPLEID,
-                    COPYNUMBERGERMLINE.CHROMOSOME,
-                    COPYNUMBERGERMLINE.START,
-                    COPYNUMBERGERMLINE.END,
-                    COPYNUMBERGERMLINE.COPYNUMBERMETHOD,
-                    COPYNUMBERGERMLINE.SEGMENTSTARTSUPPORT,
-                    COPYNUMBERGERMLINE.SEGMENTENDSUPPORT,
-                    COPYNUMBERGERMLINE.BAFCOUNT,
-                    COPYNUMBERGERMLINE.OBSERVEDBAF,
-                    COPYNUMBER.BAF,
-                    COPYNUMBER.COPYNUMBER_,
-                    COPYNUMBER.MINORALLELECOPYNUMBER,
-                    COPYNUMBER.MAJORALLELECOPYNUMBER,
-                    COPYNUMBERGERMLINE.DEPTHWINDOWCOUNT,
-                    COPYNUMBERGERMLINE.GCCONTENT,
-                    COPYNUMBERGERMLINE.MINSTART,
-                    COPYNUMBERGERMLINE.MAXSTART,
-                    COPYNUMBERGERMLINE.MODIFIED);
-            splitCopyNumbers.forEach(x -> addCopynumberRecord(timestamp, inserter, sample, x));
-            inserter.execute();
-        }
-    }
-
     private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
         inserter.values(sample,
@@ -142,6 +113,5 @@ class CopyNumberDAO {
 
     void deleteCopyNumberForSample(@NotNull String sample) {
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
-        context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
     }
 }

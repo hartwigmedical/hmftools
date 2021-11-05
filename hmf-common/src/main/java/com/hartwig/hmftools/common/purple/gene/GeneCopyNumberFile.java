@@ -71,8 +71,6 @@ public final class GeneCopyNumberFile
                 .add("minCopyNumber")
                 .add("maxCopyNumber")
                 .add("somaticRegions")
-                .add("germlineHomDeletionRegions")
-                .add("germlineHetToHomDeletionRegions")
                 .add("transcriptId")
                 .add("isCanonical")
                 .add("chromosomeBand")
@@ -95,8 +93,6 @@ public final class GeneCopyNumberFile
                 .add(FORMAT.format(geneCopyNumber.minCopyNumber()))
                 .add(FORMAT.format(geneCopyNumber.maxCopyNumber()))
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
-                .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
-                .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
                 .add(geneCopyNumber.transName())
                 .add(String.valueOf(geneCopyNumber.isCanonical()))
                 .add(geneCopyNumber.chromosomeBand())
@@ -123,8 +119,6 @@ public final class GeneCopyNumberFile
         int minCnIndex = fieldsIndexMap.get("minCopyNumber");
         int maxCnIndex = fieldsIndexMap.get("maxCopyNumber");
         int somRegionsIndex = fieldsIndexMap.get("somaticRegions");
-        int germHmDelRegionsIndex = fieldsIndexMap.get("germlineHomDeletionRegions");
-        int germHtHDelRegionsIndex = fieldsIndexMap.get("germlineHetToHomDeletionRegions");
         int transIdIndex = fieldsIndexMap.get("transcriptId");
         Integer canonicalIndex = fieldsIndexMap.get("isCanonical");
         int chrBandIndex = fieldsIndexMap.get("chromosomeBand");
@@ -150,8 +144,6 @@ public final class GeneCopyNumberFile
                     .minCopyNumber(Double.parseDouble(values[minCnIndex]))
                     .maxCopyNumber(Double.parseDouble(values[maxCnIndex]))
                     .somaticRegions(Integer.parseInt(values[somRegionsIndex]))
-                    .germlineHomRegions(Integer.parseInt(values[germHmDelRegionsIndex]))
-                    .germlineHet2HomRegions(Integer.parseInt(values[germHtHDelRegionsIndex]))
                     .transName(values[transIdIndex])
                     .isCanonical(canonicalIndex != null ? Boolean.parseBoolean(values[canonicalIndex]) : true)
                     .chromosomeBand(values[chrBandIndex])

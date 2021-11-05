@@ -57,23 +57,6 @@ public class CNADriversTest {
     }
 
     @Test
-    public void testDeletionsInGermlineAsStillReportable() {
-        List<DriverGene> driverGenes = Lists.newArrayList(genePanel.deletionTargets());
-        GeneCopyNumber somatic =
-                createTestCopyNumberBuilder(driverGenes.get(0).gene()).germlineHet2HomRegions(0).germlineHomRegions(0).build();
-        GeneCopyNumber germline1 =
-                createTestCopyNumberBuilder(driverGenes.get(1).gene()).germlineHet2HomRegions(1).germlineHomRegions(0).build();
-        GeneCopyNumber germline2 =
-                createTestCopyNumberBuilder(driverGenes.get(2).gene()).germlineHet2HomRegions(0).germlineHomRegions(1).build();
-
-        List<DriverCatalog> drivers = new CNADrivers(Sets.newHashSet(PurpleQCStatus.PASS), genePanel).deletions(Lists.newArrayList(somatic,
-                germline1,
-                germline2));
-        assertEquals(1, drivers.size());
-        assertEquals(somatic.geneName(), drivers.get(0).gene());
-    }
-
-    @Test
     public void testAmpWithWarn() {
         String gene = Lists.newArrayList(genePanel.amplificationTargets()).get(0).gene();
         GeneCopyNumber ampNoSupport = createTestCopyNumberBuilder(gene).geneName(gene)
@@ -179,8 +162,6 @@ public class CNADriversTest {
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
                 .minRegions(1)
-                .germlineHet2HomRegions(0)
-                .germlineHomRegions(0)
                 .somaticRegions(1)
                 .minCopyNumber(0.1)
                 .maxCopyNumber(0.1)

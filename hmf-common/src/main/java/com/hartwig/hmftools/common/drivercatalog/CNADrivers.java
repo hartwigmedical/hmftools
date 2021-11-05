@@ -39,8 +39,8 @@ public class CNADrivers
     public static int deletedGenes(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
     {
         return (int) geneCopyNumbers.stream()
-                .filter(x -> !HumanChromosome.fromString(x.chromosome()).equals(HumanChromosome._Y) && x.germlineHet2HomRegions() == 0
-                        && x.germlineHomRegions() == 0 && Doubles.lessThan(x.minCopyNumber(), MAX_COPY_NUMBER_DEL))
+                .filter(x -> !HumanChromosome.fromString(x.chromosome()).equals(HumanChromosome._Y)
+                        && Doubles.lessThan(x.minCopyNumber(), MAX_COPY_NUMBER_DEL))
                 .count();
     }
 
@@ -83,7 +83,6 @@ public class CNADrivers
         return geneCopyNumbers.stream()
                 .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
                 .filter(x -> mDeletionTargets.containsKey(x.geneName()))
-                .filter(x -> x.germlineHet2HomRegions() == 0 && x.germlineHomRegions() == 0)
                 .filter(qcStatusPredicate)
                 .map(this::createDelDriver)
                 .collect(Collectors.toList());

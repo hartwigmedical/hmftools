@@ -397,10 +397,6 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantDAO.write(sampleId, variants);
     }
 
-    public void writeGermlineCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
-        copyNumberDAO.writeGermlineCopyNumber(sample, copyNumbers);
-    }
-
     public void writeSvClusters(@NotNull String sample, @NotNull List<LinxCluster> clusters) {
         structuralVariantClusterDAO.writeClusters(sample, clusters);
     }

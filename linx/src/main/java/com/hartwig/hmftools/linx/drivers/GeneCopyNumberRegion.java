@@ -23,7 +23,7 @@ public class GeneCopyNumberRegion
         RegionStart = (int)geneCN.minRegionStart();
         RegionEnd = (int)geneCN.minRegionEnd();
         MinCopyNumber = geneCN.minCopyNumber();
-        IsGermline = geneCN.germlineHet2HomRegions() > 0 || geneCN.germlineHomRegions() > 0;
+        IsGermline = false; // TODO: check new logic geneCN.germlineHet2HomRegions() > 0 || geneCN.germlineHomRegions() > 0;
     }
 
     public GeneCopyNumberRegion(final String geneName, final String transName, int regionStart, int regionEnd, double minCopyNumber)

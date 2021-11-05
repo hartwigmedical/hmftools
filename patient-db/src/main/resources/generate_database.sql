@@ -729,31 +729,6 @@ CREATE TABLE copyNumber
     INDEX(sampleId)
 );
 
-DROP TABLE IF EXISTS copyNumberGermline;
-CREATE TABLE copyNumberGermline
-(   id int NOT NULL AUTO_INCREMENT,
-    modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
-    start int not null,
-    end int not null,
-    segmentStartSupport varchar(255) NOT NULL,
-    segmentEndSupport varchar(255) NOT NULL,
-    depthWindowCount int not null,
-    bafCount int not null,
-    observedBaf DOUBLE PRECISION not null,
-    baf DOUBLE PRECISION not null,
-    copyNumber DOUBLE PRECISION not null,
-    minorAlleleCopyNumber DOUBLE PRECISION not null,
-    majorAlleleCopyNumber DOUBLE PRECISION not null,
-    copyNumberMethod varchar(255) NOT NULL,
-    gcContent DOUBLE PRECISION not null,
-    minStart int not null,
-    maxStart int not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
-);
-
 DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -769,8 +744,6 @@ CREATE TABLE geneCopyNumber
     minCopyNumber DOUBLE PRECISION not null,
     maxCopyNumber DOUBLE PRECISION not null,
     somaticRegions int not null,
-    germlineHomDeletionRegions int not null,
-    germlineHetToHomDeletionRegions int not null,
     minRegions int not null,
     minRegionStart int not null,
     minRegionEnd int not null,

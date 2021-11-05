@@ -23,10 +23,6 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
     int somaticRegions();
 
-    int germlineHet2HomRegions();
-
-    int germlineHomRegions();
-
     int minRegions();
 
     long minRegionStart();
@@ -46,7 +42,7 @@ public interface GeneCopyNumber extends TranscriptRegion {
     double minMinorAlleleCopyNumber();
 
     default int totalRegions() {
-        return somaticRegions() + germlineHet2HomRegions() + germlineHomRegions();
+        return somaticRegions();
     }
 
     static Map<String,List<GeneCopyNumber>> listToMap(final List<GeneCopyNumber> geneCopyNumbers)

@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStep20;
 import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
@@ -55,8 +56,6 @@ class GeneCopyNumberDAO
                     .minCopyNumber(record.getValue(GENECOPYNUMBER.MINCOPYNUMBER))
                     .maxCopyNumber(record.getValue(GENECOPYNUMBER.MAXCOPYNUMBER))
                     .somaticRegions(record.getValue(GENECOPYNUMBER.SOMATICREGIONS))
-                    .germlineHomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHOMDELETIONREGIONS))
-                    .germlineHet2HomRegions(record.getValue(GENECOPYNUMBER.GERMLINEHETTOHOMDELETIONREGIONS))
                     .transName(record.getValue(GENECOPYNUMBER.TRANSCRIPTID))
                     .isCanonical(record.getValue(GENECOPYNUMBER.CANONICALTRANSCRIPT) == 1)
                     .chromosomeBand(record.getValue(GENECOPYNUMBER.CHROMOSOMEBAND))
@@ -79,7 +78,7 @@ class GeneCopyNumberDAO
 
         for(List<GeneCopyNumber> splitCopyNumbers : Iterables.partition(copyNumbers, DB_BATCH_INSERT_SIZE))
         {
-            InsertValuesStep21 inserter = context.insertInto(GENECOPYNUMBER,
+            InsertValuesStep19 inserter = context.insertInto(GENECOPYNUMBER,
                     GENECOPYNUMBER.SAMPLEID,
                     GENECOPYNUMBER.CHROMOSOME,
                     GENECOPYNUMBER.START,
@@ -88,8 +87,6 @@ class GeneCopyNumberDAO
                     GENECOPYNUMBER.MINCOPYNUMBER,
                     GENECOPYNUMBER.MAXCOPYNUMBER,
                     GENECOPYNUMBER.SOMATICREGIONS,
-                    GENECOPYNUMBER.GERMLINEHOMDELETIONREGIONS,
-                    GENECOPYNUMBER.GERMLINEHETTOHOMDELETIONREGIONS,
                     GENECOPYNUMBER.TRANSCRIPTID,
                     GENECOPYNUMBER.CANONICALTRANSCRIPT,
                     GENECOPYNUMBER.CHROMOSOMEBAND,
@@ -106,7 +103,7 @@ class GeneCopyNumberDAO
         }
     }
 
-    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
+    private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
             @NotNull GeneCopyNumber gene)
     {
         inserter.values(sample,
@@ -117,8 +114,6 @@ class GeneCopyNumberDAO
                 DatabaseUtil.decimal(gene.minCopyNumber()),
                 DatabaseUtil.decimal(gene.maxCopyNumber()),
                 gene.somaticRegions(),
-                gene.germlineHomRegions(),
-                gene.germlineHet2HomRegions(),
                 gene.transName(),
                 gene.isCanonical(),
                 gene.chromosomeBand(),

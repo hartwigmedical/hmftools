@@ -294,11 +294,9 @@ public class PurpleApplication
         final List<PurpleCopyNumber> copyNumbers = copyNumberFactory.copyNumbers();
         sampleData.SvCache.inferMissingVariant(copyNumbers);
 
-        final List<PurpleCopyNumber> germlineDeletions = copyNumberFactory.germlineDeletions();
         final List<FittedRegion> enrichedFittedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
-        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(
-                mReferenceData.GeneTransCache, copyNumbers, germlineDeletions);
+        final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFactory.geneCopyNumbers(mReferenceData.GeneTransCache, copyNumbers);
 
         PPL_LOGGER.info("Generating QC Stats");
         final PurpleQC qcChecks = PurpleQCFactory.create(amberData.Contamination,
@@ -359,7 +357,6 @@ public class PurpleApplication
         PurityContextFile.write(mConfig.OutputDir, tumorSample, purityContext);
         FittedPurityRangeFile.write(mConfig.OutputDir, tumorSample, bestFit.allFits());
         PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
-        PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateGermlineFilenameForWriting(mConfig.OutputDir, tumorSample), germlineDeletions);
         GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
 
@@ -370,7 +367,6 @@ public class PurpleApplication
             mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
             mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
             mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
-            mDbAccess.writeGermlineCopynumbers(tumorSample, germlineDeletions);
             mDbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
         }
 

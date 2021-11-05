@@ -23,10 +23,7 @@ public final class PurpleCopyNumberFile
     private static final String DELIMITER = "\t";
 
     private static final String SOMATIC_EXTENSION = ".purple.cnv.somatic.tsv";
-    private static final String GERMLINE_EXTENSION = ".purple.cnv.germline.tsv";
-
     private static final String SOMATIC_EXTENSION_OLD = ".purple.cnv";
-    private static final String GERMLINE_EXTENSION_OLD = ".purple.germline.cnv";
 
     private PurpleCopyNumberFile()
     {
@@ -43,19 +40,6 @@ public final class PurpleCopyNumberFile
     {
         String filename = basePath + File.separator + sample + SOMATIC_EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + SOMATIC_EXTENSION_OLD;
-    }
-
-    @NotNull
-    public static String generateGermlineFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
-    {
-        return basePath + File.separator + sample + GERMLINE_EXTENSION;
-    }
-
-    @NotNull
-    public static String generateGermlineFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
-    {
-        String filename = basePath + File.separator + sample + GERMLINE_EXTENSION;
-        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + GERMLINE_EXTENSION_OLD;
     }
 
     @NotNull

@@ -1,5 +1,9 @@
 ALTER TABLE geneCopyNumber
-    ADD COLUMN canonicalTranscript BOOLEAN NOT NULL DEFAULT 1;
+    ADD COLUMN canonicalTranscript BOOLEAN NOT NULL DEFAULT 1,
+    DROP COLUMN germlineHomDeletionRegions,
+    DROP COLUMN germlineHetToHomDeletionRegions;
+
+DROP TABLE IF EXISTS copyNumberGermline;
 
 ALTER TABLE somaticVariant
     ADD COLUMN spliceRegion BOOLEAN NOT NULL DEFAULT 0 AFTER canonicalHgvsProteinImpact,

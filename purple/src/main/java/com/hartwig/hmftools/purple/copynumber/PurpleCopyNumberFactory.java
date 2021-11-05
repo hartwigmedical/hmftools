@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 public class PurpleCopyNumberFactory
 {
     private final List<PurpleCopyNumber> mSomaticCopyNumbers = Lists.newArrayList();
-    private final List<PurpleCopyNumber> mGermlineDeletions = Lists.newArrayList();
 
     private final double mPloidy;
     private final int mAverageReadDepth;
@@ -49,7 +48,6 @@ public class PurpleCopyNumberFactory
     public void invoke(final List<FittedRegion> fittedRegions, final List<StructuralVariant> structuralVariants)
     {
         mSomaticCopyNumbers.clear();
-        mGermlineDeletions.clear();
 
         final ExtractGermlineDeletions extendGermline = new ExtractGermlineDeletions(mCobaltChromosomes);
 
@@ -84,10 +82,7 @@ public class PurpleCopyNumberFactory
             final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
             final List<CombinedRegion> somatics = extendDiploidBAF.extendBAF(populateUnknown);
 
-            final List<CombinedRegion> germlineDeletions = extendGermline.extractGermlineDeletions(somatics);
-
             mSomaticCopyNumbers.addAll(toCopyNumber(somatics));
-            mGermlineDeletions.addAll(germlineDeletions.stream().map(x -> toCopyNumber(x, x.germlineEndSupport())).collect(toList()));
         }
     }
 
@@ -107,12 +102,6 @@ public class PurpleCopyNumberFactory
     public List<PurpleCopyNumber> copyNumbers()
     {
         return mSomaticCopyNumbers;
-    }
-
-    @NotNull
-    public List<PurpleCopyNumber> germlineDeletions()
-    {
-        return mGermlineDeletions;
     }
 
     @NotNull

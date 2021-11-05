@@ -22,22 +22,6 @@ public class ExtractGermlineDeletions
         mCobaltChromosomes = cobaltChromosomes;
     }
 
-    @NotNull
-    public List<CombinedRegion> extractGermlineDeletions(final List<CombinedRegion> regions)
-    {
-        final EnumSet<GermlineStatus> eligibleStatus = EnumSet.of(GermlineStatus.HET_DELETION, GermlineStatus.HOM_DELETION);
-
-        final List<CombinedRegion> result = Lists.newArrayList();
-        for(int i = 0; i < regions.size(); i++)
-        {
-            final CombinedRegion parent = regions.get(i);
-            final SegmentSupport next = i == regions.size() - 1 ? SegmentSupport.TELOMERE : regions.get(i + 1).support();
-            result.addAll(extractChildren(eligibleStatus, parent, next));
-        }
-
-        return result;
-    }
-
     private List<CombinedRegion> extractChildren(
             final EnumSet<GermlineStatus> eligibleStatus, final CombinedRegion parent, final SegmentSupport parentNext)
     {

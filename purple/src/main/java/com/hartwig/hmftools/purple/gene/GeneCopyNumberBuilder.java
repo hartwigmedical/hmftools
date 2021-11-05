@@ -19,8 +19,6 @@ public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumb
     private double mMinMinorAllelePloidy = Double.MAX_VALUE;
     private double mMaxCopyNumber = -Double.MAX_VALUE;
     private int mSomaticCount;
-    private int mHomCount;
-    private int mHet2HomCount;
 
     private PurpleCopyNumber mPrevious;
 
@@ -87,10 +85,7 @@ public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumb
                 switch(copyNumber.method())
                 {
                     case GERMLINE_HOM_DELETION:
-                        mHomCount++;
-                        break;
                     case GERMLINE_HET2HOM_DELETION:
-                        mHet2HomCount++;
                         break;
                     default:
                         mSomaticCount++;
@@ -144,8 +139,6 @@ public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumb
                 .minRegionEnd(mMinRegionEnd)
                 .minCopyNumber(mMinCopyNumber)
                 .somaticRegions(mSomaticCount)
-                .germlineHomRegions(mHomCount)
-                .germlineHet2HomRegions(mHet2HomCount)
                 .minRegions(mMinRegions)
                 .minMinorAlleleCopyNumber(mMinMinorAllelePloidy)
                 .build();

@@ -198,8 +198,6 @@ public class SvTestUtils
                 .maxCopyNumber(minCopyNumber)
                 .minCopyNumber(minCopyNumber)
                 .somaticRegions(0)
-                .germlineHet2HomRegions(0)
-                .germlineHomRegions(0)
                 .minRegions(0)
                 .minRegionStart(0)
                 .minRegionEnd(0)

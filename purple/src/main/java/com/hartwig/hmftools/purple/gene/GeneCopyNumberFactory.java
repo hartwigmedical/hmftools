@@ -14,8 +14,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 public final class GeneCopyNumberFactory
 {
     public static List<GeneCopyNumber> geneCopyNumbers(
-            final EnsemblDataCache geneTransCache,
-            final List<PurpleCopyNumber> somaticCopyNumbers, final List<PurpleCopyNumber> germlineDeletions)
+            final EnsemblDataCache geneTransCache, final List<PurpleCopyNumber> somaticCopyNumbers)
     {
         final List<GeneCopyNumber> result = Lists.newArrayList();
 
@@ -32,7 +31,6 @@ public final class GeneCopyNumberFactory
                     final GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(region);
 
                     RegionZipper.zip(somaticCopyNumbers, region.exons(), builder);
-                    RegionZipper.zip(germlineDeletions, region.exons(), builder);
 
                     GeneCopyNumber geneCopyNumber = builder.build();
 
