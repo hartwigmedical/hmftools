@@ -278,7 +278,7 @@ public class ClinicalEvidenceFunctions {
                 .add(Icon.createIcon(Icon.IconType.LEVEL_B))
                 .add(" late clinical trials; ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_C))
-                .add(" arly clinical trials) can be reported. Potential evidence items with evidence level  \n( ")
+                .add(" early clinical trials) can be reported. Potential evidence items with evidence level  \n( ")
                 .add(Icon.createIcon(Icon.IconType.LEVEL_D))
                 .add(" case reports and preclinical evidence) are not reported.")
                 .addStyle(ReportResources.subTextStyle());
