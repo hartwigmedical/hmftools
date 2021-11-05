@@ -114,7 +114,7 @@ public class SampleComparisonTask implements Callable
 
         mPerfCounters.get(PC_QUERY).stop();
 
-        if(refVariants.isEmpty())
+        if(refVariants == null || refVariants.isEmpty())
             return;
 
         mPerfCounters.get(PC_PROCESS).start();
