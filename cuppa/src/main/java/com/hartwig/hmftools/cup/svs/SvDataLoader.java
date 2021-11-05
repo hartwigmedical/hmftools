@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -115,9 +117,14 @@ public class SvDataLoader
 
     private static void mapSvData(
             final String sampleId, final Map<String,SvData> sampleSvData,
-            final List<StructuralVariantData> svDataList, final List<LinxCluster> clusterList)
+            final List<StructuralVariantData> allSVs, final List<LinxCluster> clusterList)
     {
         int lineCount = clusterList.stream().filter(x -> x.resolvedType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
+
+        // ensure only filtered SVs are considered
+        final List<StructuralVariantData> svDataList = allSVs.stream()
+                .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS))
+                .collect(Collectors.toList());
 
         int telomericSgls = (int)svDataList.stream()
                 .filter(x -> x.type() == SGL)
