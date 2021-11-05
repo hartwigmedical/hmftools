@@ -34,8 +34,6 @@ public class ClinicalEvidenceFunctions {
 
     private static final String TREATMENT_DELIMITER = " + ";
 
-    private static final Set<EvidenceDirection> RESPONSIVE_DIRECTIONS =
-            Sets.newHashSet(EvidenceDirection.RESPONSIVE, EvidenceDirection.PREDICTED_RESPONSIVE);
     private static final Set<EvidenceDirection> RESISTANT_DIRECTIONS =
             Sets.newHashSet(EvidenceDirection.RESISTANT, EvidenceDirection.PREDICTED_RESISTANT);
     private static final Set<EvidenceDirection> PREDICTED =
@@ -78,9 +76,9 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 150, 150, 150 },
-                new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Responsive Evidence"),
-                        TableUtil.createHeaderCell("Resistance Evidence") });
+                new float[] { 25, 160, 25, 35, 160 },
+                new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level", 1),
+                        TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -135,64 +133,62 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
-                Table responsiveTable;
-                if (!evidenType.equals("trial")) {
-                    responsiveTable = new Table(new float[] { 1, 1, 1, 1 });
-                } else {
-                    responsiveTable = new Table(new float[] { 1, 1 });
-                }
+                Table levelTable = new Table(new float[] { 1 });
+                Table responseTable = new Table(new float[] { 1, 1 });
 
-                for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
-                    Cell cell = TableUtil.createTransparentCell(display(responsive));
+                Table responsiveTable = new Table(new float[] { 1, 1 });
+
+                for (ProtectEvidence responsive : evidences) {
+                    Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
 
                     if (!evidenType.equals("trial")) {
-                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
+                        cellGenomic.addStyle(ReportResources.urlStyle())
+                                .setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
                     } else {
-                        cell.addStyle(ReportResources.subTextStyle());
+                        cellGenomic.addStyle(ReportResources.urlStyle())
+                                .setAction(PdfAction.createURI(createLinkiClusion(responsive)));
                     }
 
-                    Cell cellnumbers = createLinksPublications(responsive);
 
+                    Cell cellLevel;
+                    Cell cellPredicted;
+                    Cell cellResistent;
                     if (!evidenType.equals("trial")) {
-                        String predicted;
+                        String predicted = " ";
                         if (PREDICTED.contains(responsive.direction())) {
-                            predicted = "pred";
-                        } else {
-                            predicted = Strings.EMPTY;
+                            predicted = "D";
                         }
-                        responsiveTable.addCell(TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level()
-                                .name()))));
-                        responsiveTable.addCell(TableUtil.createTransparentCell(new Paragraph(predicted)));
+
+                        String resistent = " ";
+                        if (RESISTANT_DIRECTIONS.contains(responsive.direction())) {
+                            resistent = "C";
+                        }
+
+                        cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
+                        cellPredicted = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(predicted)));
+                        cellResistent = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(resistent)));
+                        levelTable.addCell(cellLevel);
+                        responseTable.addCell(cellResistent);
+                        responseTable.addCell(cellPredicted);
+
                     }
 
-                    responsiveTable.addCell(cell);
-                    responsiveTable.addCell(cellnumbers);
+                    responsiveTable.addCell(cellGenomic);
 
+                    if (evidenType.equals("evidence")) {
+                        Cell cellnumbers = createLinksPublications(responsive);
+                        responsiveTable.addCell(cellnumbers);
+                    } else {
+                        Cell cellnumbers = TableUtil.createTransparentCell(Strings.EMPTY);
+                        responsiveTable.addCell(cellnumbers);
+                    }
                 }
-                table.addCell(TableUtil.createContentCell(responsiveTable));
 
                 if (evidenType.equals("evidence")) {
-                    Table resistantTable = new Table(new float[] { 1, 1, 1, 1 });
-                    for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
-                        Cell cell = TableUtil.createTransparentCell(display(resistant));
-                        cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
-
-                        Cell cellnumbers = createLinksPublications(resistant);
-
-                        String predicted;
-                        if (PREDICTED.contains(resistant.direction())) {
-                            predicted = "pred";
-                        } else {
-                            predicted = Strings.EMPTY;
-                        }
-                        resistantTable.addCell(TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(resistant.level().name()))));
-                        resistantTable.addCell(TableUtil.createTransparentCell(new Paragraph(predicted)));
-                        resistantTable.addCell(cell);
-                        resistantTable.addCell(cellnumbers);
-
-                    }
-                    table.addCell(TableUtil.createContentCell(resistantTable));
+                    table.addCell(TableUtil.createContentCell(levelTable));
+                    table.addCell(TableUtil.createContentCell(responseTable));
                 }
+                table.addCell(TableUtil.createContentCell(responsiveTable));
 
                 hasEvidence = true;
             }
@@ -228,15 +224,15 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    private static Set<ProtectEvidence> filterOnDirections(@NotNull List<ProtectEvidence> evidences,
-            @NotNull Set<EvidenceDirection> allowedDirections) {
-        Set<ProtectEvidence> filtered = Sets.newTreeSet();
-        for (ProtectEvidence evidence : evidences) {
-            if (allowedDirections.contains(evidence.direction())) {
-                filtered.add(evidence);
+    private static String createLinkiClusion(@NotNull ProtectEvidence evidence) {
+        String link = Strings.EMPTY;
+        for (String url : evidence.urls()) {
+            if (url.contains("iclusion")) {
+                link = url;
             }
         }
-        return filtered;
+        //We assume iClusion has one link
+        return link;
     }
 
     @NotNull
