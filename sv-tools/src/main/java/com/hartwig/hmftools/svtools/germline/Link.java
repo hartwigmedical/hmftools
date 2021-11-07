@@ -3,37 +3,45 @@ package com.hartwig.hmftools.svtools.germline;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 public class Link
 {
-    public final String VcfId;
-    public final String OtherVcfId;
+    public final String Id;
+
+    private final Breakend[] mBreakends;
     public final int MinDistance;
     public final int MaxDistance;
 
-    public Link(final String vcfId, final String otherVcfId, final int minDistance, final int maxDistance)
+    public Link(final String id, final Breakend first, final Breakend second, final int minDistance, final int maxDistance)
     {
-        VcfId = vcfId;
-        OtherVcfId = otherVcfId;
+        Id = id;
+
+        mBreakends = new Breakend[] { first, second };
         MinDistance = minDistance;
         MaxDistance = maxDistance;
     }
 
     public static Link from(final SvData sv)
     {
-        int duplicationLength = sv.type() == DUP ? sv.length() + 1 : 0;
-        int distance = duplicationLength + sv.insertSequenceLength();
-
-        return new Link(sv.contextStart().getID(), sv.contextEnd().getID(), distance, distance);
+        int distance = sv.duplicationLength() + sv.insertSequenceLength();
+        return new Link("SV", sv.breakendStart(), sv.breakendEnd(), distance, distance);
     }
 
-    public static Link from(final Breakend first, final Breakend second)
+    public static Link from(final String linkId, final Breakend first, final Breakend second)
     {
         int minDistance = abs(first.maxPosition() - second.minPosition());
         int maxDistance = abs(first.minPosition() - second.maxPosition());
 
-        return new Link(first.VcfId, second.VcfId, minDistance, maxDistance);
+        return new Link(linkId, first, second, minDistance, maxDistance);
     }
 
-    public String toString() { return String.format("%s - %s distance(%d - %d)", VcfId, OtherVcfId, MinDistance, MaxDistance); }
+    public Breakend breakendStart() { return mBreakends[SE_START]; }
+    public Breakend breakendEnd() { return mBreakends[SE_END]; }
+
+    public Breakend otherBreakend(final Breakend breakend) { return breakendStart() == breakend ?  breakendEnd() : breakendStart(); }
+
+    public String toString() { return String.format("%s<%s>%s distance(%d - %d)",
+            breakendStart().VcfId, breakendEnd().VcfId, MinDistance, MaxDistance); }
 }

@@ -12,10 +12,20 @@ import com.google.common.collect.Maps;
 
 public class AssemblyLinks
 {
-    public static List<Link> buildAssembledLinks(final List<SvData> svList)
-    {
-        List<Link> links = Lists.newArrayList();
+    // TODO: store by breakend instead?
+    private final Map<String,List<Link>> mBreakendLinksMap;
 
+    public AssemblyLinks()
+    {
+        mBreakendLinksMap = Maps.newHashMap();
+    }
+
+    public Map<String,List<Link>> getBreakendLinksMap() { return mBreakendLinksMap; }
+
+    public List<Link> getBreakendLinks(final Breakend breakend) { return mBreakendLinksMap.get(breakend.VcfId); }
+
+    public void buildAssembledLinks(final List<SvData> svList)
+    {
         Map<String,List<Breakend>> assemblyBreakendMap = Maps.newHashMap();
 
         for(SvData sv : svList)
@@ -46,11 +56,13 @@ public class AssemblyLinks
 
         for(Map.Entry<String,List<Breakend>> entry : assemblyBreakendMap.entrySet())
         {
+            String assembly = entry.getKey();
             List<Breakend> breakends = entry.getValue();
 
             if(breakends.size() < 2)
                 continue;
 
+            int linkCounter = 0;
             for(int i = 0; i < breakends.size() - 1; ++i)
             {
                 Breakend breakend1 = breakends.get(i);
@@ -59,14 +71,28 @@ public class AssemblyLinks
                 {
                     Breakend breakend2 = breakends.get(j);
 
-                    if(breakend1.SvId.equals(breakend2.SvId))
+                    if(breakend1.sv() == breakend2.sv())
                         continue;
 
-                    links.add(Link.from(breakend1, breakend2));
+                    String linkId = String.format("%d-%d", assembly, linkCounter++);
+
+                    Link newLink = Link.from(linkId, breakend1, breakend2);
+                    addLink(breakend1, newLink);
+                    addLink(breakend2, newLink);
                 }
             }
         }
+    }
 
-        return links;
+    private void addLink(final Breakend breakend, final Link link)
+    {
+        List<Link> links = mBreakendLinksMap.get(breakend.VcfId);
+        if(links ==  null)
+        {
+            links = Lists.newArrayList();
+            mBreakendLinksMap.put(breakend.VcfId, links);
+        }
+
+        links.add(link);
     }
 }

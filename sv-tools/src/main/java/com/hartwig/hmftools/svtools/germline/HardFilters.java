@@ -2,9 +2,9 @@ package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.svtools.germline.CommonFilters.isPolyATSequence;
 import static com.hartwig.hmftools.svtools.germline.SvData.hasLength;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.BVF;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.QUAL;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.VF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_BVF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_VF;
 
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
@@ -51,7 +51,7 @@ public class HardFilters
 
     private boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds)
     {
-        double qual = VcfUtils.getGenotypeAttributeAsDouble(variant.getGenotype(genotypeIds.TumorOrdinal), QUAL, 0);
+        double qual = VcfUtils.getGenotypeAttributeAsDouble(variant.getGenotype(genotypeIds.TumorOrdinal), VT_QUAL, 0);
         return qual < mFilterConstants.MinTumorQual;
     }
 
@@ -60,7 +60,7 @@ public class HardFilters
         if(!genotypeIds.hasReference())
             return false;
 
-        final String supportTag = StructuralVariantFactory.isSingleBreakend(variant) ? BVF : VF;
+        final String supportTag = StructuralVariantFactory.isSingleBreakend(variant) ? VT_BVF : VT_VF;
         int refFrags = VcfUtils.getGenotypeAttributeAsInt(variant.getGenotype(genotypeIds.ReferenceOrdinal), supportTag, 0);
         int tumorFrags = VcfUtils.getGenotypeAttributeAsInt(variant.getGenotype(genotypeIds.TumorOrdinal), supportTag, 0);
 

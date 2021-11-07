@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svtools.germline.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.svtools.germline.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.CIRPOS;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.REALIGN;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_REALIGN;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class BreakendRealigner
 
         VariantContext newContext = new VariantContextBuilder(breakend.Context)
                 .alleles(alleles)
-                .attribute(CIRPOS, Lists.newArrayList(breakend.ConfidenceInterval.Start, breakend.ConfidenceInterval.End))
+                .attribute(VT_CIRPOS, Lists.newArrayList(breakend.ConfidenceInterval.Start, breakend.ConfidenceInterval.End))
                 .make();
 
         return Breakend.realigned(breakend, newContext, breakend.Position);
@@ -127,8 +127,8 @@ public class BreakendRealigner
                 .start(newStart)
                 .stop(newStart)
                 .alleles(alleles)
-                .attribute(REALIGN, true)
-                .attribute(CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
+                .attribute(VT_REALIGN, true)
+                .attribute(VT_CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
                 .make();
 
         return Breakend.realigned(breakend, newContext, newStart);
@@ -156,8 +156,8 @@ public class BreakendRealigner
                 .start(newStart)
                 .stop(newStart)
                 .alleles(alleles)
-                .attribute(REALIGN, true)
-                .attribute(CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
+                .attribute(VT_REALIGN, true)
+                .attribute(VT_CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
                 .make();
 
         return Breakend.realigned(breakend, newContext, newStart);

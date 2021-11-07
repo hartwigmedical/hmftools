@@ -1,15 +1,17 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svtools.germline.VariantAltInsertCoords.parseRefAlt;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.BQ;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.BVF;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.CIRPOS;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.QUAL;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.REF;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.REFPAIR;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.VF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_BQ;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_BVF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.svtools.germline.VcfUtils.parseAssemblies;
 
 import java.util.List;
@@ -23,12 +25,12 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class Breakend
 {
-    public final String SvId;
     public final String VcfId;
     public final VariantContext Context;
     public final String Chromosome;
     public final int Position;
     public final byte Orientation;
+    public final boolean IsStart; // the start breakend in an SV, or true if a SGL
 
     public final double Qual;
     public final int TumorFragments;
@@ -49,21 +51,24 @@ public class Breakend
     public final Interval ConfidenceInterval;
     public final Interval RemoteConfidenceInterval;
 
+    private final SvData mSvData;
     private final List<FilterType> mFilters;
     private final List<String> mAssemblies;
     private boolean mReligned;
+    private int mChrLocationIndex;
 
     public Breakend(
-            final String svId, final VariantContext context, final String chromosome, final int position, final byte orientation,
+            final SvData svData, final boolean isStart, final VariantContext context, final String chromosome, final int position, final byte orientation,
             final Genotype refGenotype, final Genotype tumorGenotype, final double qual, final int tumorFragments,
             final int refFrags, final int refReads, final int refPairReads)
     {
+        mSvData = svData;
         VcfId = context.getID();
-        SvId = svId;
         Context = context;
         Chromosome = chromosome;
         Position = position;
         Orientation = orientation;
+        IsStart = isStart;
 
         RefGenotype = refGenotype;
         TumorGenotype = tumorGenotype;
@@ -73,8 +78,8 @@ public class Breakend
         ReferenceReads = refReads;
         ReferencePairReads = refPairReads;
 
-        ConfidenceInterval = VcfUtils.confidenceInterval(context, CIPOS);
-        RemoteConfidenceInterval = VcfUtils.confidenceInterval(context, CIRPOS);
+        ConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIPOS);
+        RemoteConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIRPOS);
 
         Ref = context.getAlleles().get(0).getDisplayString();;
 
@@ -89,17 +94,18 @@ public class Breakend
         mFilters = Lists.newArrayList();
         mAssemblies = parseAssemblies(context);
         mReligned = false;
+        mChrLocationIndex = -1;
     }
 
     public static Breakend from(
-            final String svId, final StructuralVariantType type, final StructuralVariantLeg svLeg, final VariantContext variantContext,
-            final int referenceOrdinal, final int tumorOrdinal)
+            final SvData svData, final StructuralVariantType type, final boolean isStart, final StructuralVariantLeg svLeg,
+            final VariantContext variantContext, final int referenceOrdinal, final int tumorOrdinal)
     {
         final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
         final Genotype refGenotype = referenceOrdinal > 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
-        final String qualTag = type == SGL ? BQ : QUAL;
-        final String fragsTag = type == SGL ? BVF : VF;
+        final String qualTag = type == SGL ? VT_BQ : VT_QUAL;
+        final String fragsTag = type == SGL ? VT_BVF : VT_VF;
         double qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
 
         int refFrags = 0;
@@ -109,21 +115,21 @@ public class Breakend
         if(refGenotype != null)
         {
             refFrags = VcfUtils.getGenotypeAttributeAsInt(refGenotype, fragsTag, 0);
-            refReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, REF, 0);
-            refPairReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, REFPAIR, 0);
+            refReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VT_REF, 0);
+            refPairReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VT_REFPAIR, 0);
         }
 
         int tumorFrags = VcfUtils.getGenotypeAttributeAsInt(tumorGenotype, fragsTag, 0);
 
         return new Breakend(
-                svId, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype,
+                svData, isStart, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype,
                 qual, tumorFrags, refFrags, refReads, refPairReads);
     }
 
     public static Breakend realigned(final Breakend original, final VariantContext newContext, final int newPosition)
     {
         Breakend newBreakend = new Breakend(
-                original.VcfId, newContext, original.Chromosome, newPosition, original.Orientation, original.RefGenotype,
+                original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orientation, original.RefGenotype,
                 original.TumorGenotype, original.Qual, original.TumorFragments, original.ReferenceFragments, original.ReferenceReads,
                 original.ReferencePairReads);
 
@@ -131,7 +137,25 @@ public class Breakend
         return newBreakend;
     }
 
-    public int insertSequenceLength() { return 0; } // TODO
+    public final SvData sv() { return mSvData; }
+
+    public Breakend otherBreakend()
+    {
+        if(mSvData.isSgl())
+            return null;
+
+        return IsStart ? mSvData.breakendEnd() : mSvData.breakendStart();
+    }
+
+    // convenience
+    public boolean isSgl() { return mSvData.isSgl(); }
+    public StructuralVariantType type() { return mSvData.type(); }
+    public String svId() { return mSvData.id(); }
+    public boolean imprecise() { return mSvData.imprecise(); }
+    public boolean posOrient() { return Orientation == POS_ORIENT; }
+    public boolean negOrient() { return Orientation == NEG_ORIENT; }
+
+    public int insertSequenceLength() { return InsertSequence.length(); }
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }
@@ -148,6 +172,9 @@ public class Breakend
 
     public void markRealigned() { mReligned = true; }
     public boolean realigned() { return mReligned; }
+
+    public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
+    public int chrLocationIndex() { return mChrLocationIndex; }
 
     /*
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)

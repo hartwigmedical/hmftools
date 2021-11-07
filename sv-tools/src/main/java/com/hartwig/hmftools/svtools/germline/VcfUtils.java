@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.germline;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
 import java.util.List;
@@ -13,30 +14,31 @@ import htsjdk.variant.vcf.VCFHeader;
 public class VcfUtils
 {
     // VCF fields used by Gripss
-    public static final String QUAL = "QUAL";
-    public static final String SR = "SR";
-    public static final String BQ = "BQ";
-    public static final String SRQ = "SRQ";
-    public static final String VF = "VF";
-    public static final String RP = "RP";
-    public static final String IC = "IC";
-    public static final String RPQ = "RPQ";
-    public static final String REF = "REF";
-    public static final String BEID = "BEID";
-    public static final String BEIDL = "BEIDL";
-    public static final String HOMSEQ = "HOMSEQ";
+    public static final String VT_QUAL = "QUAL";
+    public static final String VT_SR = "SR";
+    public static final String VT_BQ = "BQ";
+    public static final String VT_SRQ = "SRQ";
+    public static final String VT_VF = "VF";
+    public static final String VT_RP = "RP";
+    public static final String VT_IC = "IC";
+    public static final String VT_RPQ = "RPQ";
+    public static final String VT_REF = "REF";
+    public static final String VT_BEID = "BEID";
+    public static final String VT_BEIDL = "BEIDL";
+    public static final String VT_HOMSEQ = "HOMSEQ";
 
-    public static final String AS = "AS";
-    public static final String CAS = "CAS";
-    public static final String RAS = "RAS";
+    public static final String VT_AS = "AS";
+    public static final String VT_CAS = "CAS";
+    public static final String VT_RAS = "RAS";
 
-    public static final String EVENT = "EVENT";
-    public static final String ASRP = "ASRP";
-    public static final String SB = "SB";
-    public static final String BVF = "BVF";
-    public static final String REFPAIR = "REFPAIR";
-    public static final String CIRPOS = "CIRPOS";
-    public static final String REALIGN = "REALIGN";
+    public static final String VT_EVENT = "EVENT";
+    public static final String VT_ASRP = "ASRP";
+    public static final String VT_SB = "SB";
+    public static final String VT_BVF = "BVF";
+    public static final String VT_REFPAIR = "REFPAIR";
+    public static final String VT_CIPOS = CIPOS;
+    public static final String VT_CIRPOS = "CIRPOS";
+    public static final String VT_REALIGN = "REALIGN";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {
@@ -98,14 +100,14 @@ public class VcfUtils
     {
         List<String> assemblies = Lists.newArrayList();
 
-        int assemblyCount = variantContext.getAttributeAsInt(AS, 0)
-                + variantContext.getAttributeAsInt(RAS, 0)
-                + variantContext.getAttributeAsInt(CAS, 0);
+        int assemblyCount = variantContext.getAttributeAsInt(VT_AS, 0)
+                + variantContext.getAttributeAsInt(VT_RAS, 0)
+                + variantContext.getAttributeAsInt(VT_CAS, 0);
 
-        if(assemblyCount >= 2 && variantContext.hasAttribute(BEID) && variantContext.hasAttribute(BEIDL))
+        if(assemblyCount >= 2 && variantContext.hasAttribute(VT_BEID) && variantContext.hasAttribute(VT_BEIDL))
         {
-            List<String> beids = variantContext.getAttributeAsStringList(BEID, "");
-            List<String> beidls = variantContext.getAttributeAsStringList(BEIDL, "");
+            List<String> beids = variantContext.getAttributeAsStringList(VT_BEID, "");
+            List<String> beidls = variantContext.getAttributeAsStringList(VT_BEIDL, "");
 
             if(beidls.size() == beids.size())
             {

@@ -14,15 +14,14 @@ import com.google.common.collect.Sets;
 
 public class AlternatePathFinder
 {
-
-    public static List<AlternatePath> findPaths(final List<Link> links, final List<SvData> svList)
+    public static List<AlternatePath> findPaths(final SvDataCache svDataCache, final AssemblyLinks assemblyLinks)
     {
         Set<String> failed = Sets.newHashSet();
-        Map<String,AlternatePath> result = Maps.newHashMap();
+        Map<String,AlternatePath> alternatePaths = Maps.newHashMap();
 
-        TransitiveLink transitiveLink = new TransitiveLink(svList);
+        TransitiveLinkFinder transitiveLinkFinder = new TransitiveLinkFinder(svDataCache, assemblyLinks);
 
-        for(SvData sv : svList)
+        for(SvData sv : svDataCache.getSvList())
         {
             if(sv.isSgl())
                 continue;
@@ -32,42 +31,33 @@ public class AlternatePathFinder
                 Breakend breakend = sv.breakends()[se];
                 Breakend otherBreakend = sv.breakends()[switchIndex(se)];
 
-                if(result.containsKey(otherBreakend.VcfId) && failed.contains(otherBreakend.VcfId))
+                if(alternatePaths.containsKey(otherBreakend.VcfId) && failed.contains(otherBreakend.VcfId))
                     continue;
 
+                List<Link> transLinks = transitiveLinkFinder.findTransitiveLinks(breakend);
 
+                if(!transLinks.isEmpty())
+                {
+                    AlternatePath altPath = new AlternatePath(breakend.VcfId, otherBreakend.VcfId, transLinks);
 
+                    // TODO - reverse links
+                    AlternatePath reverseAltPath = new AlternatePath(otherBreakend.VcfId, breakend.VcfId, transLinks);
+                    // val reverseAlternatePath = AlternatePath(variant.mateId, variant.vcfId, links.map { x -> x.reverse() }.reversed())
 
-            }
-        }
+                    alternatePaths.put(breakend.VcfId, altPath);
+                    alternatePaths.put(otherBreakend.VcfId, reverseAltPath);
 
-
-
-        return result.values().stream().collect(Collectors.toList());
-    }
-    /*
-            operator fun invoke(assemblyLinkStore: LinkStore, variantStore: VariantStore): Collection<AlternatePath> {
-
-            val failed = HashSet<String>()
-            val result = HashMap<String, AlternatePath>()
-            val transitiveLink = TransitiveLink(assemblyLinkStore, variantStore)
-
-            for (variant in variantStore.selectAll()) {
-                if (variant.mateId != null && !result.keys.contains(variant.mateId) && !failed.contains(variant.mateId)) {
-                    val links = transitiveLink.transitiveLink(variant)
-                    if (links.isNotEmpty()) {
-                        val alternatePath = AlternatePath(variant.vcfId, variant.mateId, links)
-                        val reverseAlternatePath = AlternatePath(variant.mateId, variant.vcfId, links.map { x -> x.reverse() }.reversed())
-                        result[variant.vcfId] = alternatePath
-                        result[variant.mateId] = reverseAlternatePath
-                        logger.debug("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.pathString()}")
-                    } else {
-                        failed.add(variant.vcfId)
-                    }
+                    // result[variant.vcfId] = alternatePath
+                    // result[variant.mateId] = reverseAlternatePath
+                    // logger.debug("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.pathString()}")
+                }
+                else
+                {
+                    failed.add(breakend.VcfId);
                 }
             }
-
-            return result.values
         }
-     */
+
+        return alternatePaths.values().stream().collect(Collectors.toList());
+    }
 }

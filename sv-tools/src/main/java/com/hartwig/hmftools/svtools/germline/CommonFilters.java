@@ -3,7 +3,7 @@ package com.hartwig.hmftools.svtools.germline;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.POLY_A;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.POLY_T;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.SHORT_RESCUE_LENGTH;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.HOMSEQ;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_HOMSEQ;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -13,7 +13,7 @@ public class CommonFilters
 
     public static boolean isPolyATSequence(final VariantContext variant)
     {
-        final String homology = variant.getAttributeAsString(HOMSEQ, "");
+        final String homology = variant.getAttributeAsString(VT_HOMSEQ, "");
         return homology.contains(POLY_A) || homology.contains(POLY_T);
     }
 

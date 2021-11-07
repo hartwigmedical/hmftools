@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.svtools.germline.FilterConstants.SHORT_CALLING_SIZE;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.EVENT;
-import static com.hartwig.hmftools.svtools.germline.VcfUtils.HOMSEQ;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_EVENT;
+import static com.hartwig.hmftools.svtools.germline.VcfUtils.VT_HOMSEQ;
 
 import java.util.List;
 
@@ -30,7 +30,6 @@ public class SvData
     private final Breakend[] mBreakends;
 
     // repeatedly used values for filtering are cached
-    private final String mAlt;
     private final String mInsertSequence;
     private final boolean mImprecise;
     private final boolean mIsShortLocal;
@@ -42,17 +41,17 @@ public class SvData
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        mId = sv.startContext().getAttributeAsString(EVENT, sv.id());
+        mId = sv.startContext().getAttributeAsString(VT_EVENT, sv.id());
 
         mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
         mTumorOrdinal = genotypeIds.TumorOrdinal;
 
         Breakend breakendStart = Breakend.from(
-                mId, mType, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+                this, mType, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
         Breakend breakendEnd = sv.end() != null ?
-                Breakend.from(mId, mType, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+                Breakend.from(this, mType, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
 
         mBreakends = new Breakend[] { breakendStart, breakendEnd };
 
@@ -65,9 +64,6 @@ public class SvData
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
-
-        // TODO
-        mAlt = "";
     }
 
     public String id() { return mId; }
@@ -91,25 +87,9 @@ public class SvData
     public VariantContext contextStart() { return mBreakends[SE_START].Context; }
     public VariantContext contextEnd() { return !isSgl() ? mBreakends[SE_END].Context : null; }
 
-    /*
-    public Genotype refGenotype() { return mContexts[SE_START].getGenotype(mReferenceOrdinal); }
-    public Genotype tumorGenotype() { return mContexts[SE_START].getGenotype(mTumorOrdinal); }
-
-    public Allele refAllele() { return mReferenceOrdinal >= 0 ? mContexts[SE_START].getAlleles().get(mReferenceOrdinal) : null; }
-    public Allele tumorAllele() { return mContexts[SE_START].getAlleles().get(mTumorOrdinal); }
-    */
-
-    public String altString()
-    {
-        // TODO
-        if(isSgl())
-            return ""; // mOrientation[SE_START] == POS_ORIENT ? mAlt + mInsertSequence : mInsertSequence + mAlt;
-        else
-            return mAlt;
-    }
-
     public String insertSequence() { return mInsertSequence; }
     public int insertSequenceLength() { return mInsertSequence.length(); }
+    public int duplicationLength() { return mType == DUP ? length() + 1 : 0; }
 
     public boolean hasReference() { return mReferenceOrdinal >= 0; }
 
@@ -147,45 +127,8 @@ public class SvData
         return 0;
     }
 
-    public String startHomology() { return contextStart().getAttributeAsString(HOMSEQ, ""); }
-    public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(HOMSEQ, "") : ""; }
-
-
-    {
-        /*
-            Paired logic:
-
-            val match = Regex(BREAKPOINT_REGEX).find(alt)!!
-            val (initialSequence, bracket, location, finalSequence) = match.destructured
-            val (otherChromosome, otherPosition) = LocationString(location)
-
-            val endOrientation: Byte = if (bracket == "]") 1 else -1
-
-            val startOrientation: Byte
-            val insertSequence: String
-            val altBase: String
-            if (initialSequence.isNotEmpty()) {
-                startOrientation = 1
-                insertSequence = initialSequence.substring(ref.length, initialSequence.length)
-                altBase = alt.substring(0, 1)
-            } else {
-                startOrientation = -1
-                insertSequence = finalSequence.substring(0, finalSequence.length - ref.length)
-                altBase = alt.substring(alt.length - 1, alt.length)
-            }
-
-            if (alt.startsWith(".")) {
-                return Single(alt.substring(alt.length - 1, alt.length), alt.substring(ref.length, alt.length - 1), -1)
-            }
-
-            if (alt.endsWith(".")) {
-                return Single(alt.substring(0, 1), alt.substring(1, alt.length - ref.length), 1)
-            }
-
-            return paired(chromosome, position, ref, alt)
-
-         */
-    }
+    public String startHomology() { return contextStart().getAttributeAsString(VT_HOMSEQ, ""); }
+    public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(VT_HOMSEQ, "") : ""; }
 
     public String toString()
     {

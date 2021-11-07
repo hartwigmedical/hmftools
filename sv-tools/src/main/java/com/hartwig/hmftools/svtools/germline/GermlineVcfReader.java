@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.svtools.germline.AssemblyLinks.buildAssembledLinks;
 import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
 import java.io.IOException;
@@ -50,7 +49,7 @@ public class GermlineVcfReader
     private int mProcessedVariants;
     private StructuralVariantFactory mSvFactory;
     private final Set<String> mHardFilteredVcfIds;
-    private final List<SvData> mSampleSvData;
+    private final SvDataCache mSvDataCache;
     private final Map<FilterType,Integer> mFilterCounts;
 
     public GermlineVcfReader(final CommandLine cmd)
@@ -72,7 +71,7 @@ public class GermlineVcfReader
         mRealigner = null;
 
         mProcessedVariants = 0;
-        mSampleSvData = Lists.newArrayList();
+        mSvDataCache = new SvDataCache();
         mFilterCounts = Maps.newHashMap();
     }
 
@@ -117,10 +116,10 @@ public class GermlineVcfReader
             GM_LOGGER.info("sample({}) read VCF: unmatched({}) results({})",
                     mConfig.SampleId, mSvFactory.unmatched().size(), mSvFactory.results().size());
 
-            if(mSampleSvData.isEmpty())
+            if(mSvDataCache.getSvList().isEmpty())
                 return;
 
-            for(final SvData svData : mSampleSvData)
+            for(final SvData svData : mSvDataCache.getSvList())
             {
                 // realign breakends
                 final Breakend[] breakends = svData.breakends();
@@ -158,7 +157,12 @@ public class GermlineVcfReader
                 // softFilters.forEach(x -> registerFilter(x));
             }
 
-            List<Link> assemblyLink = buildAssembledLinks(mSampleSvData);
+            mSvDataCache.buildBreakendMap();
+
+            AssemblyLinks assemblyLinks = new AssemblyLinks();
+            assemblyLinks.buildAssembledLinks(mSvDataCache.getSvList());
+
+            List<AlternatePath> alternatePaths =  AlternatePathFinder.findPaths(mSvDataCache, assemblyLinks);
 
         }
         catch(IOException e)
@@ -169,7 +173,7 @@ public class GermlineVcfReader
         int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
 
         GM_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",
-                mConfig.SampleId, mProcessedVariants, hardFiltered, mSampleSvData.size());
+                mConfig.SampleId, mProcessedVariants, hardFiltered, mSvDataCache.getSvList().size());
 
         if(GM_LOGGER.isDebugEnabled())
         {
@@ -248,7 +252,7 @@ public class GermlineVcfReader
             return;
 
         SvData svData = new SvData(sv, genotypeIds);
-        mSampleSvData.add(svData);
+        mSvDataCache.addSvData(svData);
     }
 
     private void registerFilter(final FilterType type)
