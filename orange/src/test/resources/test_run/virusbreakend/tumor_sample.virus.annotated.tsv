@@ -1,1 +1,1 @@
-taxid	name	qcStatus	integrations	interpretation	reported
+taxid	name	qcStatus	integrations	interpretation	percentageCovered	meanCoverage	expectedClonalCoverage	reported
