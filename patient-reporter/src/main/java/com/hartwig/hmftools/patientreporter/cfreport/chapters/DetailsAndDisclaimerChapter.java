@@ -8,6 +8,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.io.IOException;
+import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
@@ -125,7 +126,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 " based on ",
                 patientReport.qsFormNumber() + "."));
         div.add(createContentParagraph("UDI-DI: ", patientReport.udiDi() + "."));
-        div.add(createContentParagraph("The OncoAct user manual can be found at ", ReportResources.MANUAL + "."));
+        div.add(createContentDivWithLink("The OncoAct user manual can be found at ", ReportResources.MANUAL + ".", ReportResources.MANUAL + "."));
         div.add(createContentParagraph("This report is based on pipeline version ", pipelineVersion + "."));
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "
                 + "clinical evidence/study matching. No check is performed to verify the received information."));
@@ -139,6 +140,22 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 ReportResources.CONTACT_EMAIL_GENERAL + "."));
 
         return div;
+    }
+
+    @NotNull
+    private static Div createContentDivWithLink(@NotNull String string1, @NotNull String string2, @NotNull String link) {
+        Div div = new Div();
+
+        div.add(createParaGraphWithLink(string1, string2, link));
+        return div;
+    }
+
+    @NotNull
+    private static Paragraph createParaGraphWithLink(@NotNull String string1, @NotNull String string2, @NotNull String link) {
+        return new Paragraph(string1).addStyle(ReportResources.subTextStyle())
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
+                .add(new Text(string2).addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(link)))
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull
