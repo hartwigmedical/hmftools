@@ -38,7 +38,7 @@ public class ReportWriter {
     @NotNull
     private final ReportConfig reportConfig;
 
-    public ReportWriter(final boolean writeToDisk, @NotNull final String outputDir, @NotNull final ReportConfig reportConfig) {
+    ReportWriter(final boolean writeToDisk, @NotNull final String outputDir, @NotNull final ReportConfig reportConfig) {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
         this.reportConfig = reportConfig;
