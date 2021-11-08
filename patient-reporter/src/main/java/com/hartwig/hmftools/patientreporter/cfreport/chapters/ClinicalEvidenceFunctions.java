@@ -239,6 +239,7 @@ public class ClinicalEvidenceFunctions {
         int number = 0;
         for (String url : evidence.urls()) {
             if (!url.contains("google")) {
+                //Google urls are filtered out
                 number += 1;
                 if (!paragraphPublications.isEmpty()) {
                     paragraphPublications.add(new Text(", "));
