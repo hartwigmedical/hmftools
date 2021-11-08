@@ -345,7 +345,7 @@ If the segments identified by the PCF algorithm are not contiguous, then there r
 
 Once the segments have been established we map our observations to them.  In each segment we take the median BAF of the tumor sample and the median read ratio of both the tumor and reference samples.  We also record the number of BAF points within the segment as the BAFCount and the number of tumor read depth windows within the segment as the depth window count.
 
-A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.8<= read depth ratio<=1.2), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.8), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.2<ratio<=2.2) or ‘NOISE’ (ratio>2.2).  The purity fitting and smoothing steps below use only the DIPLOID germline segments.
+A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.85<= read depth ratio<=1.15), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.85), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.15<ratio<=2.2) or ‘NOISE’ (ratio>2.2).  The purity fitting and smoothing steps below use only the DIPLOID germline segments.
 
 ### 3. Sample Purity and Ploidy
 
