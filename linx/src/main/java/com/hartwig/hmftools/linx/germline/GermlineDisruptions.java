@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.linx.germline;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
@@ -184,6 +182,11 @@ public class GermlineDisruptions
         }
     }
 
+    public static String csvHeader()
+    {
+        return (",Filter,QualScore,PonCount,NormRefFragsStart,NormRefFragsEnd,NormVarFrags");
+    }
+
     public List<String> formCohortData(final String sampleId, final List<SvDisruptionData> standardDisruptions)
     {
         List<String> outputLines = Lists.newArrayList();
@@ -201,8 +204,12 @@ public class GermlineDisruptions
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append(String.format("%s,%s,%s,%d",
-                    sampleId, disruptionData.asCsv(), var.getSvData().filter(), getPonCount(var)));
+            sb.append(String.format("%s,%s,%s,%.2f,%d",
+                    sampleId, disruptionData.asCsv(), var.getSvData().filter(), var.getSvData().qualityScore(), getPonCount(var)));
+
+            sb.append(String.format(",%d,%d,%d",
+                    var.getSvData().startTumorReferenceFragmentCount(), var.getSvData().endTumorReferenceFragmentCount(),
+                    var.getSvData().startTumorVariantFragmentCount()));
 
             outputLines.add(sb.toString());
         }

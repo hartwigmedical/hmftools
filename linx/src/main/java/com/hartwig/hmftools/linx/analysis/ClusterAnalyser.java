@@ -399,7 +399,7 @@ public class ClusterAnalyser {
 
     private void setClusterResolvedState(SvCluster cluster, boolean isFinal)
     {
-        ClusterClassification.setClusterResolvedState(cluster, isFinal,
+        ClusterClassification.setClusterResolvedState(cluster, isFinal, mConfig.IsGermline,
                 mState.getDelCutoffLength(), mState.getDupCutoffLength(), mState.getChrBreakendMap());
     }
 

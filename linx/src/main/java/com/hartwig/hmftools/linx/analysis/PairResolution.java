@@ -66,7 +66,8 @@ public class PairResolution
     }
 
     public static void classifyPairClusters(
-            final SvCluster cluster, long longDelThreshold, long longDupThreshold, final Map<String, List<SvBreakend>> chrBreakendMap)
+            final SvCluster cluster, long longDelThreshold, long longDupThreshold, final Map<String,List<SvBreakend>> chrBreakendMap,
+            boolean isGermline)
     {
         // classifies 2-event clusters based on the types of breakends and their orientations, and whether a long TI exists
         // treat existing chains as SVs - ie with 2 breakends from the open ends
@@ -125,7 +126,7 @@ public class PairResolution
             return;
         }
 
-        if(longTiLinks.stream().anyMatch(x -> isInterruptedTI(x, chrBreakendMap)))
+        if(!isGermline && longTiLinks.stream().anyMatch(x -> isInterruptedTI(x, chrBreakendMap)))
             return;
 
         // otherwise test whether a single chain be split at the long TI to make 2 chains and a balance translocation
@@ -221,7 +222,7 @@ public class PairResolution
             return;
         }
 
-        if(areInterruptedBreakends(startBe1, endBe1, startBe2, endBe2, chrBreakendMap))
+        if(!isGermline && areInterruptedBreakends(startBe1, endBe1, startBe2, endBe2, chrBreakendMap))
             return;
 
         if(startBe1.chromosome().equals(endBe1.chromosome()) && startBe2.chromosome().equals(endBe2.chromosome())
@@ -248,7 +249,7 @@ public class PairResolution
         }
     }
 
-    private static void classifySyntheticDelDups(SvCluster cluster, long longDelThreshold, long longDupThreshold)
+    private static void classifySyntheticDelDups(final SvCluster cluster, long longDelThreshold, long longDupThreshold)
     {
         if(!cluster.isFullyChained(true) || cluster.getChains().size() != 1 || cluster.getSglBreakendCount() > 0)
             return;
@@ -625,14 +626,14 @@ public class PairResolution
         cluster.setResolved(isResolved, resolvedType);
     }
 
-    private static boolean isInterruptedTI(final LinkedPair pair, final Map<String, List<SvBreakend>> chrBreakendMap)
+    private static boolean isInterruptedTI(final LinkedPair pair, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         return isInterruptedBreakendPair(pair.getBreakend(true), pair.getBreakend(false), chrBreakendMap);
     }
 
     private static boolean areInterruptedBreakends(
             final SvBreakend startBe1, final SvBreakend endBe1, final SvBreakend startBe2, final SvBreakend endBe2,
-            final Map<String, List<SvBreakend>> chrBreakendMap)
+            final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         if(startBe1.getChrArm().equals(startBe2.getChrArm()) && isInterruptedBreakendPair(startBe1, startBe2, chrBreakendMap))
             return true;
@@ -646,7 +647,8 @@ public class PairResolution
         return false;
     }
 
-    private static boolean isInterruptedBreakendPair(final SvBreakend be1, final SvBreakend be2, final Map<String, List<SvBreakend>> chrBreakendMap)
+    private static boolean isInterruptedBreakendPair(
+            final SvBreakend be1, final SvBreakend be2, final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         // look between these breakends for any non-simple, non-contained SV
         final List<SvBreakend> breakendList = chrBreakendMap.get(be1.chromosome());

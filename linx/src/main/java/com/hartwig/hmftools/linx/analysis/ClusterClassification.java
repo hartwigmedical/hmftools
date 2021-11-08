@@ -130,7 +130,8 @@ public class ClusterClassification
     }
 
     public static void setClusterResolvedState(
-            SvCluster cluster, boolean isFinal, int longDelThreshold, int longDupThreshold, final Map<String, List<SvBreakend>> chrBreakendMap)
+            final SvCluster cluster, boolean isFinal, boolean isGermline, int longDelThreshold, int longDupThreshold,
+            final Map<String,List<SvBreakend>> chrBreakendMap)
     {
         if(cluster.getResolvedType() != NONE)
             return;
@@ -146,7 +147,7 @@ public class ClusterClassification
         {
             if(cluster.getChains().size() == 1)
             {
-                classifyPairClusters(cluster, longDelThreshold, longDupThreshold, chrBreakendMap);
+                classifyPairClusters(cluster, longDelThreshold, longDupThreshold, chrBreakendMap, isGermline);
 
                 if(cluster.getResolvedType() != NONE)
                     return;
@@ -181,10 +182,9 @@ public class ClusterClassification
             return;
         }
 
-        // markSyntheticTypes(cluster, isFinal, longDelThreshold, longDupThreshold, proximityThreshold);
         if(cluster.getSglBreakendCount() == 0)
         {
-            classifyPairClusters(cluster, longDelThreshold, longDupThreshold, chrBreakendMap);
+            classifyPairClusters(cluster, longDelThreshold, longDupThreshold, chrBreakendMap, isGermline);
         }
         else
         {

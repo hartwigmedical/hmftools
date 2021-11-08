@@ -846,7 +846,7 @@ public class DisruptionFinder implements CohortFileInterface
             }
             else
             {
-                writer.write(",Filter,PonCount");
+                writer.write(GermlineDisruptions.csvHeader());
             }
 
             writer.newLine();
