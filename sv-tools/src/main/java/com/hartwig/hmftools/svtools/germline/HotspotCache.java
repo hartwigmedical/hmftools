@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.svtools.germline.GermlineUtils.GM_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -108,11 +108,11 @@ public class HotspotCache
                 line = fileReader.readLine();
             }
 
-            LNX_LOGGER.info("loaded {} known hotspot records from file", itemCount, filename);
+            GM_LOGGER.info("loaded {} known hotspot records from file", itemCount, filename);
         }
         catch(IOException e)
         {
-            LNX_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
+            GM_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
             return;
         }
     }

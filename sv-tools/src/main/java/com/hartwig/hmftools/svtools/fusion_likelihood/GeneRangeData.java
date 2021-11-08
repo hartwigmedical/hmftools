@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svtools.fusion_likelihood;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.UNKNOWN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
 
 import java.util.List;
@@ -8,7 +10,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.linx.analysis.SvUtilities;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 public class GeneRangeData
@@ -44,7 +47,7 @@ public class GeneRangeData
         mPhaseRegions = Lists.newArrayList();
         mTranscriptPhaseRegions = Lists.newArrayList();
 
-        Arm = SvUtilities.getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
+        Arm = getChromosomalArm(geneData.Chromosome, geneData.GeneStart);
         ChromosomeArm = makeChrArmStr(geneData.Chromosome, Arm);
 
         mStreamUpOnly = null;
@@ -54,6 +57,21 @@ public class GeneRangeData
 
         mBaseOverlapCountUpstream = new long[NON_PROX_TYPE_MAX];
         mBaseOverlapCountDownstream = new long[NON_PROX_TYPE_MAX];
+    }
+
+    private static ChromosomeArm getChromosomalArm(final String chromosome, final int position)
+    {
+        final Long centromerePos = RefGenomeCoordinates.COORDS_37.centromeres().get(HumanChromosome.fromString(chromosome));
+
+        if(centromerePos == null)
+            return UNKNOWN;
+
+        return position < centromerePos ? P_ARM : Q_ARM;
+    }
+
+    private static String makeChrArmStr(final String chr, final ChromosomeArm arm)
+    {
+        return chr + "_" + com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr(arm);
     }
 
     public final List<GenePhaseRegion> getPhaseRegions() { return mPhaseRegions; }

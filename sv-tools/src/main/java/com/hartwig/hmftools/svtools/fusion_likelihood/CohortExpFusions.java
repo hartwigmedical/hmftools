@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.UNKNOWN;
@@ -39,7 +38,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.linx.analysis.SvUtilities;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 // routines for calculating expected fusion rates across the whole genome for a set of pre-described SV and length categories
@@ -107,7 +107,7 @@ public class CohortExpFusions
         // sum up all arm lengths to adjust same-arm fusion rates
         int maxBucketLength = max(getMaxBucketLength(), 4000000);
 
-        for(Map.Entry<Chromosome,Long> entry : SvUtilities.refGenomeLengths().lengths().entrySet())
+        for(Map.Entry<Chromosome,Long> entry : RefGenomeCoordinates.COORDS_37.lengths().entrySet())
         {
             final String chromosome = entry.getKey().toString();
 
@@ -138,6 +138,27 @@ public class CohortExpFusions
             mDupRegionAllocators.add(i, new RegionAllocator(blockSize));
         }
     }
+
+    private static int getChromosomalArmLength(final String chromosome, final ChromosomeArm armType)
+    {
+        final RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
+        final HumanChromosome chr = HumanChromosome.fromString(chromosome);
+
+        final Long centromerePos = refGenome.centromeres().get(chr);
+
+        if(centromerePos == null)
+            return 0;
+
+        if(armType == P_ARM)
+        {
+            return centromerePos.intValue();
+        }
+
+        int chrLength = refGenome.lengths().get(chr).intValue();
+
+        return chrLength - centromerePos.intValue();
+    }
+
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 

@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PSD;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_LINX;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_PCAWG;
@@ -22,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
@@ -29,11 +27,8 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class LineInsertSiteCompare
@@ -100,11 +95,11 @@ public class LineInsertSiteCompare
                 }
             }
 
-            LNX_LOGGER.info("loaded {} linx line chain items from file: {}", lineSvCount, filename);
+            LOGGER.info("loaded {} linx line chain items from file: {}", lineSvCount, filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("failed to read linx line chain data file({})", filename, exception.toString());
+            LOGGER.error("failed to read linx line chain data file({})", filename, exception.toString());
         }
     }
 
@@ -146,11 +141,11 @@ public class LineInsertSiteCompare
                 }
             }
 
-            LNX_LOGGER.info("loaded {} external line insertion sites from file: {}", lineSvCount, filename);
+            LOGGER.info("loaded {} external line insertion sites from file: {}", lineSvCount, filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("failed to read external line insertion data file({})", filename, exception.toString());
+            LOGGER.error("failed to read external line insertion data file({})", filename, exception.toString());
         }
     }
 

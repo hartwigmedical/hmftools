@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -248,12 +247,12 @@ public class SineBreakendFinder
                 }
             }
 
-            LNX_LOGGER.info("loaded {} repeat-masker items, pairs({}) items from file: {}",
+            LOGGER.info("loaded {} repeat-masker items, pairs({}) items from file: {}",
                     fileContents.size(), mMatchedSineElements.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("failed to read repeat-masker CSV file({})", filename);
+            LOGGER.error("failed to read repeat-masker CSV file({})", filename);
         }
     }
 

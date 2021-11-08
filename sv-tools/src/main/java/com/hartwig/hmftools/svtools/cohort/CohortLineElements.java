@@ -16,9 +16,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
-import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.LINE_ELEMENT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.fromString;
 
 import java.io.BufferedWriter;
@@ -29,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -45,8 +43,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class CohortLineElements
 {
-    private static final Logger LOGGER = LogManager.getLogger(CohortLineElements.class);
-
     private final Map<String,Map<Integer,LineClusterData>> mSampleClusterLineData;
     private final Map<ChrBaseRegion,Integer> mExtLineSampleCounts;
     private final Map<String,List<RepeatMaskerData>> mChrRepeatMaskerData;
@@ -61,6 +57,9 @@ public class CohortLineElements
     private final String mPolymorphicDataFile;
     private final String mKnownLineElementsFile;
     public final boolean mWriteRefGenomeLineBases;
+
+    public static final int LINE_ELEMENT_PROXIMITY_DISTANCE = 5000; // mirrors the value in Linx
+    public static final Logger CL_LOGGER = LogManager.getLogger(CohortLineElements.class);
 
     public CohortLineElements(final CommandLine cmd)
     {
@@ -88,7 +87,7 @@ public class CohortLineElements
         }
         catch (Exception e)
         {
-            LNX_LOGGER.error("failed to load ref genome: {}", e.toString());
+            CL_LOGGER.error("failed to load ref genome: {}", e.toString());
         }
     }
 
@@ -146,11 +145,11 @@ public class CohortLineElements
                 processLineSv(sampleId, clusterId, chromosomes, positions, lineTypes);
             }
 
-            LNX_LOGGER.info("loaded {} known line elements from file: {}", lineSvCount, filename);
+            CL_LOGGER.info("loaded {} known line elements from file: {}", lineSvCount, filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+            CL_LOGGER.error("Failed to read line element CSV file({})", filename);
         }
     }
 
@@ -173,18 +172,18 @@ public class CohortLineElements
                 String[] items = line.split(",");
 
                 final ChrBaseRegion lineRegion = new ChrBaseRegion(
-                        RG_VERSION.versionedChromosome(items[fieldsIndexMap.get("Chromosome")]),
+                        RefGenomeVersion.V37.versionedChromosome(items[fieldsIndexMap.get("Chromosome")]),
                         Integer.parseInt(items[fieldsIndexMap.get("PosStart")]),
                         Integer.parseInt(items[fieldsIndexMap.get("PosEnd")]));
 
                 mKnownLineElements.add(lineRegion);
             }
 
-            LNX_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
+            CL_LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+            CL_LOGGER.error("Failed to read line element CSV file({})", filename);
         }
     }
 
@@ -210,17 +209,17 @@ public class CohortLineElements
                 int pos2 = Integer.parseInt(items[fieldsIndexMap.get("NegativePosition")]);
 
                 final ChrBaseRegion lineRegion = new ChrBaseRegion(
-                        RG_VERSION.versionedChromosome(items[fieldsIndexMap.get("Chromosome")]),
+                        RefGenomeVersion.V37.versionedChromosome(items[fieldsIndexMap.get("Chromosome")]),
                         Math.min(pos1, pos2), Math.max(pos1, pos2));
 
                 mPolymorphicLineElements.add(lineRegion);
             }
 
-            LNX_LOGGER.info("loaded {} polymorphic line elements from file: {}", mPolymorphicLineElements.size(), filename);
+            CL_LOGGER.info("loaded {} polymorphic line elements from file: {}", mPolymorphicLineElements.size(), filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+            CL_LOGGER.error("Failed to read line element CSV file({})", filename);
         }
     }
 
@@ -252,11 +251,11 @@ public class CohortLineElements
                 mExtLineSampleCounts.put(new ChrBaseRegion(chromosome, positions), sampleCount);
             }
 
-            LNX_LOGGER.info("loaded {} external line data items from file: {}", mExtLineSampleCounts.size(), filename);
+            CL_LOGGER.info("loaded {} external line data items from file: {}", mExtLineSampleCounts.size(), filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("Failed to read line element CSV file({})", filename);
+            CL_LOGGER.error("Failed to read line element CSV file({})", filename);
         }
     }
 
@@ -316,11 +315,11 @@ public class CohortLineElements
                 rmDataList.add(rmData);
             }
 
-            LNX_LOGGER.info("loaded {} repeat-masker line data items from file: {}", itemCount, filename);
+            CL_LOGGER.info("loaded {} repeat-masker line data items from file: {}", itemCount, filename);
         }
         catch(IOException exception)
         {
-            LNX_LOGGER.error("failed to read line element CSV file({})", filename);
+            CL_LOGGER.error("failed to read line element CSV file({})", filename);
         }
     }
 
@@ -364,7 +363,7 @@ public class CohortLineElements
 
         if(clusterData == null)
         {
-            LOGGER.warn("sample({}) cluster({}) has no source elements", sampleId, clusterId);
+            CL_LOGGER.warn("sample({}) cluster({}) has no source elements", sampleId, clusterId);
             return;
         }
 
@@ -468,7 +467,7 @@ public class CohortLineElements
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write to line cluster data: {}", e.toString());
+            CL_LOGGER.error("failed to write to line cluster data: {}", e.toString());
         }
     }
 
@@ -631,7 +630,7 @@ public class CohortLineElements
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write to line ref-genome bases: {}", e.toString());
+            CL_LOGGER.error("failed to write to line ref-genome bases: {}", e.toString());
         }
     }
 
@@ -663,7 +662,7 @@ public class CohortLineElements
         CohortLineElements cohortLineElements = new CohortLineElements(cmd);
         cohortLineElements.run();
 
-        LOGGER.info("LINE element processing complete");
+        CL_LOGGER.info("LINE element processing complete");
     }
 
     @NotNull
