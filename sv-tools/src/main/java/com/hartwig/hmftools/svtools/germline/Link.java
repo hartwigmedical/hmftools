@@ -37,10 +37,16 @@ public class Link
         return new Link(linkId, first, second, minDistance, maxDistance);
     }
 
+    public String vcfId() { return mBreakends[SE_START].VcfId; }
     public Breakend breakendStart() { return mBreakends[SE_START]; }
     public Breakend breakendEnd() { return mBreakends[SE_END]; }
 
     public Breakend otherBreakend(final Breakend breakend) { return breakendStart() == breakend ?  breakendEnd() : breakendStart(); }
+
+    public Link reverse()
+    {
+        return new Link(Id, mBreakends[SE_END], mBreakends[SE_START], MinDistance, MaxDistance);
+    }
 
     public String toString() { return String.format("%s<%s>%s distance(%d - %d)",
             breakendStart().VcfId, breakendEnd().VcfId, MinDistance, MaxDistance); }

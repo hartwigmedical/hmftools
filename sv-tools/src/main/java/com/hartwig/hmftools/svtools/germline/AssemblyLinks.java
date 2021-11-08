@@ -12,19 +12,7 @@ import com.google.common.collect.Maps;
 
 public class AssemblyLinks
 {
-    // TODO: store by breakend instead?
-    private final Map<String,List<Link>> mBreakendLinksMap;
-
-    public AssemblyLinks()
-    {
-        mBreakendLinksMap = Maps.newHashMap();
-    }
-
-    public Map<String,List<Link>> getBreakendLinksMap() { return mBreakendLinksMap; }
-
-    public List<Link> getBreakendLinks(final Breakend breakend) { return mBreakendLinksMap.get(breakend.VcfId); }
-
-    public void buildAssembledLinks(final List<SvData> svList)
+    public static LinkStore buildAssembledLinks(final List<SvData> svList)
     {
         Map<String,List<Breakend>> assemblyBreakendMap = Maps.newHashMap();
 
@@ -54,6 +42,8 @@ public class AssemblyLinks
 
         GM_LOGGER.debug("found {} unique assemblies", assemblyBreakendMap.size());
 
+        LinkStore assemblyLinkStore = new LinkStore();
+
         for(Map.Entry<String,List<Breakend>> entry : assemblyBreakendMap.entrySet())
         {
             String assembly = entry.getKey();
@@ -77,22 +67,12 @@ public class AssemblyLinks
                     String linkId = String.format("%d-%d", assembly, linkCounter++);
 
                     Link newLink = Link.from(linkId, breakend1, breakend2);
-                    addLink(breakend1, newLink);
-                    addLink(breakend2, newLink);
+                    assemblyLinkStore.addLink(breakend1, newLink);
+                    assemblyLinkStore.addLink(breakend2, newLink);
                 }
             }
         }
-    }
 
-    private void addLink(final Breakend breakend, final Link link)
-    {
-        List<Link> links = mBreakendLinksMap.get(breakend.VcfId);
-        if(links ==  null)
-        {
-            links = Lists.newArrayList();
-            mBreakendLinksMap.put(breakend.VcfId, links);
-        }
-
-        links.add(link);
+        return assemblyLinkStore;
     }
 }

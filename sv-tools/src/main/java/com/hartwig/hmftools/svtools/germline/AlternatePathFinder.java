@@ -12,14 +12,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.compress.utils.Lists;
+
 public class AlternatePathFinder
 {
-    public static List<AlternatePath> findPaths(final SvDataCache svDataCache, final AssemblyLinks assemblyLinks)
+    public static List<AlternatePath> findPaths(final SvDataCache svDataCache, final LinkStore assemblyLinkStore)
     {
         Set<String> failed = Sets.newHashSet();
         Map<String,AlternatePath> alternatePaths = Maps.newHashMap();
 
-        TransitiveLinkFinder transitiveLinkFinder = new TransitiveLinkFinder(svDataCache, assemblyLinks);
+        TransitiveLinkFinder transitiveLinkFinder = new TransitiveLinkFinder(svDataCache, assemblyLinkStore);
 
         for(SvData sv : svDataCache.getSvList())
         {
@@ -40,9 +42,9 @@ public class AlternatePathFinder
                 {
                     AlternatePath altPath = new AlternatePath(breakend.VcfId, otherBreakend.VcfId, transLinks);
 
-                    // TODO - reverse links
-                    AlternatePath reverseAltPath = new AlternatePath(otherBreakend.VcfId, breakend.VcfId, transLinks);
-                    // val reverseAlternatePath = AlternatePath(variant.mateId, variant.vcfId, links.map { x -> x.reverse() }.reversed())
+                    List<Link> reversedLinks = Lists.newArrayList();
+                    transLinks.forEach(x -> reversedLinks.add(0, x.reverse()));
+                    AlternatePath reverseAltPath = new AlternatePath(otherBreakend.VcfId, breakend.VcfId, reversedLinks);
 
                     alternatePaths.put(breakend.VcfId, altPath);
                     alternatePaths.put(otherBreakend.VcfId, reverseAltPath);
@@ -59,5 +61,17 @@ public class AlternatePathFinder
         }
 
         return alternatePaths.values().stream().collect(Collectors.toList());
+    }
+
+    public static Map<String,String> createIdToPathMap(final List<AlternatePath> alternatePaths)
+    {
+        Map<String,String> idPathMap = Maps.newHashMap();
+
+        for(AlternatePath altPath : alternatePaths)
+        {
+            idPathMap.put(altPath.VcfId, altPath.pathString());
+        }
+
+        return idPathMap;
     }
 }

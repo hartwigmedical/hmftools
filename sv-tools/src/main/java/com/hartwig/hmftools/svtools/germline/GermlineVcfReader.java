@@ -138,7 +138,7 @@ public class GermlineVcfReader
                     }
                 }
 
-                // annotate with the PON
+                // CHECK: annotate with the PON - or can this be done at the very end only for variants written to file?
                 svData.setPonCount(mPonCache.getPonCount(svData));
 
                 mSoftFilters.applyFilters(svData);
@@ -156,20 +156,71 @@ public class GermlineVcfReader
                 // TODO maintain or ditch?
                 // softFilters.forEach(x -> registerFilter(x));
             }
-
-            mSvDataCache.buildBreakendMap();
-
-            AssemblyLinks assemblyLinks = new AssemblyLinks();
-            assemblyLinks.buildAssembledLinks(mSvDataCache.getSvList());
-
-            List<AlternatePath> alternatePaths =  AlternatePathFinder.findPaths(mSvDataCache, assemblyLinks);
-
         }
         catch(IOException e)
         {
             GM_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
         }
 
+        mSvDataCache.buildBreakendMap();
+
+        GM_LOGGER.info("finding assembly links");
+        LinkStore assemblyLinkStore = AssemblyLinks.buildAssembledLinks(mSvDataCache.getSvList());
+
+        GM_LOGGER.info("finding alternative paths and transitive links");
+        /*
+        logger.info("Finding transitive links")
+        val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore)
+        val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString()) }
+        val transitiveLinks = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
+        val combinedTransitiveAssemblyLinks = LinkStore(assemblyLinks, transitiveLinks)
+        */
+        List<AlternatePath> alternatePaths = AlternatePathFinder.findPaths(mSvDataCache, assemblyLinkStore);
+        Map<String,String> idPathMap = AlternatePathFinder.createIdToPathMap(alternatePaths);
+        LinkStore transitiveLinkStore = AlternatePath.createLinkStore(alternatePaths);
+        LinkStore combinedTransitiveAssemblyLinks = LinkStore.from(assemblyLinkStore, transitiveLinkStore);
+
+        GM_LOGGER.info("paired break end de-duplication");
+
+        // val dedupPair = DedupPair(initialFilters, alternatePaths, variantStore)
+        // val softFiltersAfterPairedDedup = initialFilters.update(dedupPair.duplicates, dedupPair.rescue)
+
+        GM_LOGGER.info("single break end de-duplication");
+
+        // val dedupSingle = DedupSingle(variantStore, softFiltersAfterPairedDedup, combinedTransitiveAssemblyLinks)
+        // val softFiltersAfterSingleDedup = softFiltersAfterPairedDedup.update(dedupSingle.duplicates, setOf())
+
+        GM_LOGGER.info("Finding double stranded break links");
+        // val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
+
+        GM_LOGGER.info("rescuing linked variants");
+        /*
+        val dsbRescues = LinkRescue.rescueDsb(dsbLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val dsbRescueMobileElements = LinkRescue.rescueDsbMobileElementInsertion(config.filterConfig, dsbLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val assemblyRescues = LinkRescue.rescueAssembly(assemblyLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val transitiveRescues = LinkRescue.rescueTransitive(transitiveLinks, softFiltersAfterSingleDedup, variantStore).rescues
+        val allRescues = dsbRescues + dsbRescueMobileElements + assemblyRescues + transitiveRescues
+        */
+
+        GM_LOGGER.info("writing output VCF file: {}", mConfig.OutputVcfFile);
+
+        /*
+        logger.info("Writing file: ${config.outputVcf}")
+        val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
+        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
+        fileWriter.writeHeader(version.version(), fileReader.fileHeader, outputSampleNames)
+        for (variant in variantStore.selectAll()) {
+
+            val localLinkedBy = combinedLinks[variant.vcfId]
+            val remoteLinkedBy = combinedLinks[variant.mateId]
+            val altPath = alternatePathsStringsByVcfId[variant.vcfId]
+
+            val filters = finalFilters.filters(variant.vcfId, variant.mateId)
+            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
+        }
+        */
+
+        // summary logging
         int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
 
         GM_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",

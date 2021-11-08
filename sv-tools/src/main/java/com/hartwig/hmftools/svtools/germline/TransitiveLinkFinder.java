@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 public class TransitiveLinkFinder
 {
     private final SvDataCache mSvDataCache;
-    private final AssemblyLinks mAssemblyLinks;
+    private final LinkStore mAssemblyLinkStore;
 
     // TODO: make public and move to Constants
     public static final int MAX_ASSEMBLY_JUMPS = 5;
@@ -24,10 +24,10 @@ public class TransitiveLinkFinder
     private static final int MAX_TRANSITIVE_SEEK_DISTANCE = 2000;
     private static final int MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000;
 
-    public TransitiveLinkFinder(final SvDataCache svDataCache, final AssemblyLinks assemblyLinks)
+    public TransitiveLinkFinder(final SvDataCache svDataCache, final LinkStore assemblyLinkStore)
     {
         mSvDataCache = svDataCache;
-        mAssemblyLinks = assemblyLinks;
+        mAssemblyLinkStore = assemblyLinkStore;
     }
 
     public List<Link> findTransitiveLinks(final Breakend breakend)
@@ -177,7 +177,7 @@ public class TransitiveLinkFinder
 
         // get assembly links for the end of the transitive link
         Breakend transBreakend = transLink.breakendEnd();
-        List<Link> unfilteredAssemblyLinks = mAssemblyLinks.getBreakendLinks(transBreakend);
+        List<Link> unfilteredAssemblyLinks = mAssemblyLinkStore.getBreakendLinks(transBreakend);
 
         List<Link> assemblyLinkedBreakends = Lists.newArrayList();
 
@@ -249,7 +249,7 @@ public class TransitiveLinkFinder
         List<TransitiveLink> transLinks = Lists.newArrayList();
 
         Breakend transBreakend = transLink.breakendEnd();
-        List<Link> assemblyLinks = mAssemblyLinks.getBreakendLinks(transBreakend);
+        List<Link> assemblyLinks = mAssemblyLinkStore.getBreakendLinks(transBreakend);
 
         // skip if this breakend has assembly links
         if(assemblyLinks != null && !assemblyLinks.isEmpty())
