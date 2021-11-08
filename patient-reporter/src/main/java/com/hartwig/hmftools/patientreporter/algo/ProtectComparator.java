@@ -12,11 +12,11 @@ public class ProtectComparator implements Comparator<ProtectEvidence>  {
     public int compare(@NotNull ProtectEvidence protectEvidence1, @NotNull ProtectEvidence protectEvidence2) {
         if (protectEvidence1.treatment().equals(protectEvidence2.treatment())) {
             if (protectEvidence1.level().equals(protectEvidence2.level())) {
-                return protectEvidence1.direction().compareTo(protectEvidence1.direction());
+                return protectEvidence1.compareTo(protectEvidence2);
             }
 
         }
 
-        return protectEvidence2.treatment().compareTo(protectEvidence1.treatment());
+        return protectEvidence2.compareTo(protectEvidence1);
     }
 }
