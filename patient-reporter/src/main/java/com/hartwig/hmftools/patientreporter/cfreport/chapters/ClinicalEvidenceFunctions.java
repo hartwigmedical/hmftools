@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.patientreporter.algo.ProtectComparator;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -125,7 +127,7 @@ public class ClinicalEvidenceFunctions {
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenType) {
-        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
+        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet().stream().collect(Collectors.toSet()));
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
@@ -138,7 +140,7 @@ public class ClinicalEvidenceFunctions {
 
                 Table responsiveTable = new Table(new float[] { 1, 1 });
 
-                for (ProtectEvidence responsive : evidences) {
+                for (ProtectEvidence responsive : ProtectComparator.sort(evidences)) {
                     Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
 
                     if (!evidenType.equals("trial")) {

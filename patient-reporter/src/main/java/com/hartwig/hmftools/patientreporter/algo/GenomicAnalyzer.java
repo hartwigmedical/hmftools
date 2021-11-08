@@ -151,7 +151,6 @@ public class GenomicAnalyzer {
             }
         }
         LOGGER.info(" Loaded {} reportable evidence items from {}", reportableEvidenceItems.size(), protectEvidenceTsv);
-        reportableEvidenceItems.sort(new ProtectComparator());
 
         return reportableEvidenceItems;
     }
