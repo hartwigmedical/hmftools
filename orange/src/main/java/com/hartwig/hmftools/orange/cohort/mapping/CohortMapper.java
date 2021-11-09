@@ -16,6 +16,7 @@ import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CohortMapper {
 
@@ -31,7 +32,7 @@ public class CohortMapper {
         this.mappings = mappings;
     }
 
-    @NotNull
+    @Nullable
     public String cancerTypeForSample(@NotNull Sample sample) {
         Multimap<String, CohortMapping> positiveMatchesPerDoid = ArrayListMultimap.create();
 
@@ -44,8 +45,8 @@ public class CohortMapper {
         }
 
         if (positiveMatchesPerDoid.isEmpty()) {
-            LOGGER.warn("No positive doid matches found for {}", toString(sample));
-            return CohortConstants.COHORT_OTHER;
+            LOGGER.warn("No DOID matches found for {}", toString(sample));
+            return null;
         } else {
             return pickBestCancerType(sample, positiveMatchesPerDoid);
         }
@@ -74,7 +75,7 @@ public class CohortMapper {
         return include && !exclude;
     }
 
-    @NotNull
+    @Nullable
     private static String pickBestCancerType(@NotNull Sample sample, @NotNull Multimap<String, CohortMapping> positiveMatchesPerDoid) {
         List<CohortMapping> bestMappings = Lists.newArrayList();
         for (Map.Entry<String, Collection<CohortMapping>> entry : positiveMatchesPerDoid.asMap().entrySet()) {
@@ -82,8 +83,9 @@ public class CohortMapper {
             if (mappings.size() == 1) {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
-                LOGGER.warn("DOID '{}' for {} matched to multiple mappings: '{}'", entry.getKey(), sample.sampleId(), toString(mappings));
-                return CohortConstants.COHORT_OTHER;
+                String doid = entry.getKey();
+                LOGGER.warn("DOID '{}' for {} matched to multiple cancer types: '{}'", doid, sample.sampleId(), toString(mappings));
+                return null;
             }
         }
 
@@ -93,8 +95,10 @@ public class CohortMapper {
             for (int i = 1; i < bestMappings.size(); i++) {
                 CohortMapping compare = bestMappings.get(i);
                 if (bestMapping.preferenceRank() == compare.preferenceRank() && !bestMapping.cancerType().equals(compare.cancerType())) {
-                    LOGGER.warn("Multiple different cancer types for {} with same preference rank: '{}'", toString(sample), toString(bestMappings));
-                    return CohortConstants.COHORT_OTHER;
+                    LOGGER.warn("Multiple different cancer types for {} with same preference rank: '{}'",
+                            toString(sample),
+                            toString(bestMappings));
+                    return null;
                 }
             }
         }

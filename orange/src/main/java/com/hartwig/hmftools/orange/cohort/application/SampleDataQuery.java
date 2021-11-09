@@ -33,7 +33,7 @@ public final class SampleDataQuery {
             String sampleId = (String) record.getValue(0);
             String doidString = (String) record.getValue(1);
             if (doidString == null) {
-                LOGGER.info(" Skipping sample {} because doids are unknown", sampleId);
+                LOGGER.debug(" Skipping sample {} because doids are unknown", sampleId);
             } else {
                 samples.add(ImmutableSample.builder().sampleId(sampleId).doids(toDoids(doidString)).build());
             }
