@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.cohort;
+package com.hartwig.hmftools.orange.cohort.mapping;
 
 import static org.junit.Assert.assertEquals;
 
@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class CohortMappingFileTest {
 
-    private static final String EXAMPLE_MAPPING_TSV = Resources.getResource("cohort/example_cohort_mapping.tsv").getPath();
+    private static final String EXAMPLE_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
 
     @Test
     public void canReadExampleCohortMappingTsv() throws IOException {

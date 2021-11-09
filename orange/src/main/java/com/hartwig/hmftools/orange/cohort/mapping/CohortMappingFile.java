@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.cohort;
+package com.hartwig.hmftools.orange.cohort.mapping;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
