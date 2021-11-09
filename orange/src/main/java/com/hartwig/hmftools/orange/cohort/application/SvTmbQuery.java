@@ -19,15 +19,15 @@ public final class SvTmbQuery {
     }
 
     @NotNull
-    public static List<Observation> run(@NotNull DatabaseAccess database, @NotNull List<Sample> samples) {
+    public static List<Observation> run(@NotNull DatabaseAccess database, @NotNull List<Sample> samplesToInclude) {
         List<Observation> observations = Lists.newArrayList();
 
         Result<Record> result = database.context().resultQuery("select sampleId, svTmb from purity").fetch();
         for (Record record : result) {
             String sampleId = (String) record.getValue(0);
-            double svTmb = Double.parseDouble((String) record.getValue(1));
+            int svTmb = (Integer) record.getValue(1);
 
-            Sample sample = findSample(samples, sampleId);
+            Sample sample = findSample(samplesToInclude, sampleId);
             if (sample != null) {
                 observations.add(ImmutableObservation.builder().sample(sample).value(svTmb).build());
             }
