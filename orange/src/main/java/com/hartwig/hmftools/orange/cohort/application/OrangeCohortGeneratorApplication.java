@@ -72,7 +72,6 @@ public class OrangeCohortGeneratorApplication {
         LOGGER.info("Reading DOID model from {}", config.doidJson());
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJson());
         DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
-        LOGGER.info(" Created DOID parent model from {} edges", doidEntry.edges().size());
 
         LOGGER.info("Resolving cancer types for {} samples", samples.size());
         CohortMapper mapper = new CohortMapper(doidParentModel, mappings);
