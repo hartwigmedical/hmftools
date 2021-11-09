@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import java.io.File;
-import java.nio.file.Paths;
-
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
@@ -51,14 +48,11 @@ public class CohortComparisonChapter implements ReportChapter {
     }
 
     private void addCuppaFeaturePlot(@NotNull Document document) {
-        String featurePlotPaths = report.plots().cuppaFeaturePlot();
-        if (featurePlotPaths != null) {
-            if (new File(featurePlotPaths).exists()) {
-                Image cuppaFeatureImage = ImageUtil.build(featurePlotPaths);
-                cuppaFeatureImage.setMaxWidth(740);
-                cuppaFeatureImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-                document.add(cuppaFeatureImage);
-            }
+        if (report.plots().cuppaFeaturePlot() != null) {
+            Image cuppaFeatureImage = ImageUtil.build(report.plots().cuppaFeaturePlot());
+            cuppaFeatureImage.setMaxWidth(740);
+            cuppaFeatureImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+            document.add(cuppaFeatureImage);
         }
     }
 }
