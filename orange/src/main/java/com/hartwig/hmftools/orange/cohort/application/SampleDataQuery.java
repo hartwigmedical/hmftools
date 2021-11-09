@@ -5,8 +5,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSampleData;
-import com.hartwig.hmftools.orange.cohort.datamodel.SampleData;
+import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
+import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,8 +25,8 @@ public final class SampleDataQuery {
     }
 
     @NotNull
-    public static List<SampleData> run(@NotNull DatabaseAccess database) {
-        List<SampleData> samples = Lists.newArrayList();
+    public static List<Sample> run(@NotNull DatabaseAccess database) {
+        List<Sample> samples = Lists.newArrayList();
 
         Result<Record> result = database.context().resultQuery("select sampleId, doids from datarequest").fetch();
         for (Record record : result) {
@@ -35,7 +35,7 @@ public final class SampleDataQuery {
             if (doidString == null) {
                 LOGGER.info(" Skipping sample {} because doids are unknown", sampleId);
             } else {
-                samples.add(ImmutableSampleData.builder().sampleId(sampleId).doids(toDoids(doidString)).build());
+                samples.add(ImmutableSample.builder().sampleId(sampleId).doids(toDoids(doidString)).build());
             }
         }
 

@@ -6,7 +6,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.orange.cohort.datamodel.SampleData;
+import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
@@ -63,7 +63,7 @@ public class OrangeCohortGeneratorApplication {
         DatabaseAccess database = DatabaseAccess.createDatabaseAccess(commandLine);
 
         LOGGER.info("Loading samples from database");
-        List<SampleData> samples = SampleDataQuery.run(database);
+        List<Sample> samples = SampleDataQuery.run(database);
         LOGGER.info(" Loaded {} samples from database", samples.size());
 
         LOGGER.info("Loading cohort mappings from {}", config.cohortMappingTsv());
@@ -78,7 +78,7 @@ public class OrangeCohortGeneratorApplication {
         LOGGER.info("Resolving cancer types for {} samples", samples.size());
         CohortMapper mapper = new CohortMapper(doidParentModel, mappings);
         int failed = 0;
-        for (SampleData sample : samples) {
+        for (Sample sample : samples) {
             String cancerType = mapper.cancerTypeForSample(sample);
             if (cancerType.equals(CohortConstants.COHORT_OTHER)) {
                 failed++;

@@ -1,19 +1,15 @@
 package com.hartwig.hmftools.orange.cohort.datamodel;
 
-import java.util.Set;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SampleData {
+public abstract class Observation {
 
     @NotNull
-    public abstract String sampleId();
+    public abstract Sample sample();
 
-    @NotNull
-    public abstract Set<String> doids();
-
+    public abstract double value();
 }

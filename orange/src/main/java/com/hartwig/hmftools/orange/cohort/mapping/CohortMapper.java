@@ -11,7 +11,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.doid.DoidParents;
-import com.hartwig.hmftools.orange.cohort.datamodel.SampleData;
+import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,7 +32,7 @@ public class CohortMapper {
     }
 
     @NotNull
-    public String cancerTypeForSample(@NotNull SampleData sample) {
+    public String cancerTypeForSample(@NotNull Sample sample) {
         Multimap<String, CohortMapping> positiveMatchesPerDoid = ArrayListMultimap.create();
 
         for (String doid : sample.doids()) {
@@ -75,7 +75,7 @@ public class CohortMapper {
     }
 
     @NotNull
-    private static String pickBestCancerType(@NotNull SampleData sample, @NotNull Multimap<String, CohortMapping> positiveMatchesPerDoid) {
+    private static String pickBestCancerType(@NotNull Sample sample, @NotNull Multimap<String, CohortMapping> positiveMatchesPerDoid) {
         List<CohortMapping> bestMappings = Lists.newArrayList();
         for (Map.Entry<String, Collection<CohortMapping>> entry : positiveMatchesPerDoid.asMap().entrySet()) {
             Collection<CohortMapping> mappings = entry.getValue();
@@ -113,7 +113,7 @@ public class CohortMapper {
     }
 
     @NotNull
-    private static String toString(@NotNull SampleData sample) {
+    private static String toString(@NotNull Sample sample) {
         StringJoiner joiner = new StringJoiner(", ");
         for (String doid : sample.doids()) {
             joiner.add(doid);

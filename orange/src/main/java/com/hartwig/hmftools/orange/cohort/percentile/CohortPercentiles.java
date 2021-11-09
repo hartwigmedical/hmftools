@@ -13,6 +13,8 @@ public abstract class CohortPercentiles {
     @NotNull
     public abstract String cancerType();
 
+    public abstract int cohortSize();
+
     @NotNull 
     public abstract List<Double> percentileValues();
 

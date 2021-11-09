@@ -38,6 +38,7 @@ public final class CohortPercentilesFile {
 
             CohortPercentiles percentiles = ImmutableCohortPercentiles.builder()
                     .cancerType(values[fields.get("cancerType")])
+                    .cohortSize(Integer.parseInt(values[fields.get("cohortSize")]))
                     .percentileValues(toPercentileValues(values[fields.get("percentiles")]))
                     .build();
 
