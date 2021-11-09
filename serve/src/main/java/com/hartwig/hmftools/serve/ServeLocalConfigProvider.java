@@ -33,8 +33,7 @@ public final class ServeLocalConfigProvider {
                 .skipHotspotResolving(true);
 
         // Datastore is a shared vm with fixed paths.
-        // TODO Update datastore to serve-vm!
-        if (hostname.toLowerCase().equals("datastore")) {
+        if (hostname.toLowerCase().equals("serve-vm")) {
             builder.viccJson("/data/common/dbs/serve/static_sources/vicc/all.json");
             builder.ckbDir("/data/common/dbs/ckb/210514_flex_dump");
             builder.ckbFilterTsv("/data/common/dbs/serve/curation/ckb_filters.tsv");

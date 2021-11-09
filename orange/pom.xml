@@ -19,6 +19,10 @@
             <artifactId>hmf-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>patient-db</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
         </dependency>

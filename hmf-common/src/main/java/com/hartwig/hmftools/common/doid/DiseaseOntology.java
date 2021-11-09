@@ -80,7 +80,7 @@ public final class DiseaseOntology {
     }
 
     @NotNull
-    public static String extractDoid(@NotNull String url) {
+    static String extractDoid(@NotNull String url) {
         return url.replace("http://purl.obolibrary.org/obo/DOID_", "");
     }
 

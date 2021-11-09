@@ -112,10 +112,14 @@ public class OrangeAlgo {
         String pipelineVersionFile = config.pipelineVersionFile();
         if (pipelineVersionFile != null) {
             String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-            LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+            if (platinumVersion != null) {
+                LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
+            } else {
+                LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
+            }
             return platinumVersion;
         } else {
-            LOGGER.warn("No platinum version could be determined");
+            LOGGER.warn("No platinum version could be determined as pipeline version file was not passed");
             return null;
         }
     }

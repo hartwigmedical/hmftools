@@ -19,10 +19,11 @@ public class OrangeApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(OrangeApplication.class);
 
+    private static final String APPLICATION = "ORANGE";
     public static final String VERSION = OrangeApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws IOException {
-        LOGGER.info("Running ORANGE v{}", VERSION);
+        LOGGER.info("Running {} v{}", APPLICATION, VERSION);
 
         Options options = OrangeConfig.createOptions();
 
@@ -31,7 +32,7 @@ public class OrangeApplication {
             config = OrangeConfig.createConfig(new DefaultParser().parse(options, args));
         } catch (ParseException exception) {
             LOGGER.warn(exception);
-            new HelpFormatter().printHelp("ORANGE", options);
+            new HelpFormatter().printHelp(APPLICATION, options);
             System.exit(1);
         }
 

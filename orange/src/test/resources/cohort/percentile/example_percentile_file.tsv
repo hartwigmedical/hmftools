@@ -1,0 +1,3 @@
+type	cancerType	cohortSize	percentiles
+SV_TMB	Ovary	12	1;2;3;4;5
+SV_TMB	Lymphoid tissue	300	0;0;0;1;2

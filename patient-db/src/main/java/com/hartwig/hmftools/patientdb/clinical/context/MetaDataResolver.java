@@ -111,7 +111,7 @@ public final class MetaDataResolver {
             @NotNull File pipelineVersionFile) throws IOException {
         JsonObject json = GSON.fromJson(new FileReader(pv5MetadataFile), JsonObject.class);
 
-        String pipelineVersion = PipelineVersionFile.readPipelineVersion(pipelineVersionFile.getPath());
+        String pipelineVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile.getPath());
 
         String refSample = sampleIdP5(json, REF_SAMPLE_OBJECT_P5);
         String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_OBJECT_P5);
@@ -168,7 +168,7 @@ public final class MetaDataResolver {
     }
 
     private static boolean isPostP5dot15(@NotNull String pipelineVersion) {
-        String minorVersion = pipelineVersion.substring(2, 4);
-        return minorVersion.matches("[0-9]+") && Integer.parseInt(minorVersion) >= 15;
+        String minorVersion = pipelineVersion.split("\\.")[1];
+        return Integer.parseInt(minorVersion) >= 15;
     }
 }
