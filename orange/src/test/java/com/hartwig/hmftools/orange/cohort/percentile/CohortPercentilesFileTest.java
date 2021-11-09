@@ -22,7 +22,7 @@ public class CohortPercentilesFileTest {
         assertEquals(1, map.keySet().size());
         assertEquals(2, map.values().size());
 
-        CohortPercentiles ovary = find(map.get(PercentileType.SV_PASS_COUNT), "Ovary");
+        CohortPercentiles ovary = find(map.get(PercentileType.SV_TMB), "Ovary");
         assertEquals(5, ovary.percentileValues().size());
     }
 

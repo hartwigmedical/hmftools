@@ -27,13 +27,18 @@ public class PercentileGenerator {
     public List<CohortPercentiles> run(@NotNull List<Observation> observations) {
         Multimap<String, Double> valuesPerCancerType = ArrayListMultimap.create();
         for (Observation observation : observations) {
-            valuesPerCancerType.put(cohortMapper.cancerTypeForSample(observation.sample()), observation.value());
+            String cancerType = cohortMapper.cancerTypeForSample(observation.sample());
+            if (cancerType != null) {
+                valuesPerCancerType.put(cancerType, observation.value());
+            }
         }
 
         List<CohortPercentiles> percentiles = Lists.newArrayList();
-        percentiles.add(toPercentiles(CohortConstants.PAN_CANCER_COHORT, valuesPerCancerType.values()));
-        for (Map.Entry<String, Collection<Double>> entry : valuesPerCancerType.asMap().entrySet()) {
-            percentiles.add(toPercentiles(entry.getKey(), entry.getValue()));
+        if (!valuesPerCancerType.isEmpty()) {
+            percentiles.add(toPercentiles(CohortConstants.PAN_CANCER_COHORT, valuesPerCancerType.values()));
+            for (Map.Entry<String, Collection<Double>> entry : valuesPerCancerType.asMap().entrySet()) {
+                percentiles.add(toPercentiles(entry.getKey(), entry.getValue()));
+            }
         }
 
         return percentiles;
@@ -47,7 +52,7 @@ public class PercentileGenerator {
         List<Double> percentileValues = Lists.newArrayList();
         double baseIndex = (double) sorted.size() / PercentileConstants.BUCKET_COUNT;
         for (int i = 0; i < PercentileConstants.BUCKET_COUNT; i++) {
-            int index = (int) Math.round(i * baseIndex);
+            int index = (int) Math.max(0, Math.round((i * baseIndex) - 0.501));
             percentileValues.add(sorted.get(index));
         }
 

@@ -17,10 +17,22 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CohortPercentilesFile {
 
+    private static final String COHORT_FILE_NAME = "orange_cohort_percentiles.tsv";
+
     private static final String LINE_DELIMITER = "\t";
     private static final String PERCENTILE_DELIMITER = ";";
 
     private CohortPercentilesFile() {
+    }
+
+    @NotNull
+    public static String generateOutputTsv(@NotNull String outputDirectory) {
+        String path = outputDirectory.endsWith(File.separator) ? outputDirectory : outputDirectory + File.separator;
+        return path + COHORT_FILE_NAME;
+    }
+
+    public static void write(@NotNull String tsv, @NotNull Multimap<PercentileType, CohortPercentiles> map) throws IOException {
+
     }
 
     @NotNull

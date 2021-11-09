@@ -3,14 +3,21 @@ package com.hartwig.hmftools.orange.cohort.application;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
 import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
+import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
+import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileGenerator;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -66,6 +73,27 @@ public class OrangeCohortGeneratorApplication {
         List<Sample> samples = SampleDataQuery.run(database);
         LOGGER.info(" Loaded {} samples from database", samples.size());
 
+        LOGGER.info("Loading SV TMB from database");
+        List<Observation> svTmbObservations = SvTmbQuery.run(database, samples);
+        LOGGER.info(" Loaded {} SV TMBs from database", svTmbObservations.size());
+
+        PercentileGenerator generator = new PercentileGenerator(createCohortMapper(config));
+
+        LOGGER.info("Building percentiles");
+        List<CohortPercentiles> svTmbPercentiles = generator.run(svTmbObservations);
+
+        Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
+        map.putAll(PercentileType.SV_TMB, svTmbPercentiles);
+
+        String outputTsv = CohortPercentilesFile.generateOutputTsv(config.outputDirectory());
+        LOGGER.info("Writing cohort percentiles to {}", outputTsv);
+        CohortPercentilesFile.write(outputTsv, map);
+
+        LOGGER.info("Done!");
+    }
+
+    @NotNull
+    private static CohortMapper createCohortMapper(@NotNull OrangeCohortGeneratorConfig config) throws IOException {
         LOGGER.info("Loading cohort mappings from {}", config.cohortMappingTsv());
         List<CohortMapping> mappings = CohortMappingFile.read(config.cohortMappingTsv());
         LOGGER.info(" Loaded {} mappings", mappings.size());
@@ -74,17 +102,6 @@ public class OrangeCohortGeneratorApplication {
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJson());
         DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
 
-        LOGGER.info("Resolving cancer types for {} samples", samples.size());
-        CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
-        int failed = 0;
-        for (Sample sample : samples) {
-            String cancerType = mapper.cancerTypeForSample(sample);
-            if (cancerType == null) {
-                failed++;
-            }
-        }
-        LOGGER.info(" Resolving failed for {} samples", failed);
-
-        LOGGER.info("Done!");
+        return new DoidCohortMapper(doidParentModel, mappings);
     }
 }
