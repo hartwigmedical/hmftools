@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -80,16 +81,28 @@ public class CohortMapper {
             if (mappings.size() == 1) {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
-                LOGGER.warn("DOID '{}' led to multiple mappings: {}. Reverting to cohort '{}'",
-                        entry.getKey(),
-                        mappings,
-                        CohortConstants.COHORT_OTHER);
+                LOGGER.warn("DOID '{}' matched to multiple mappings: '{}'", entry.getKey(), toDisplayString(mappings));
                 return CohortConstants.COHORT_OTHER;
             }
         }
 
         bestMappings.sort(new PreferenceRankComparator());
-        return bestMappings.get(0).cancerType();
+        if (bestMappings.size() > 1 && bestMappings.get(0).preferenceRank() == bestMappings.get(1).preferenceRank()) {
+            LOGGER.warn("Multiple cancer types ended up with same preference rank: '{}'", toDisplayString(bestMappings));
+            return CohortConstants.COHORT_OTHER;
+        } else {
+            return bestMappings.get(0).cancerType();
+        }
+    }
+
+    @NotNull
+    private static String toDisplayString(@NotNull Collection<CohortMapping> mappings) {
+        StringJoiner joiner = new StringJoiner(", ");
+        for (CohortMapping mapping : mappings) {
+            joiner.add(mapping.cancerType());
+        }
+
+        return joiner.toString();
     }
 
     private static class PreferenceRankComparator implements Comparator<CohortMapping> {
