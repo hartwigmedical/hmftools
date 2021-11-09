@@ -3,6 +3,8 @@ package com.hartwig.hmftools.purple;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.gene.GeneCopyNumber.listToMap;
+import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_URL;
@@ -25,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
@@ -39,6 +42,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.purity.BestFit;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
@@ -61,6 +65,7 @@ import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
+import com.hartwig.hmftools.purple.drivers.GermlineDeletionDrivers;
 import com.hartwig.hmftools.purple.drivers.GermlineDrivers;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
@@ -351,6 +356,12 @@ public class PurpleApplication
                 .qc(qcChecks)
                 .build();
 
+        GermlineDeletionDrivers germlineDeletionDrivers = new GermlineDeletionDrivers(
+                mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
+
+        germlineDeletionDrivers.findDeletions(copyNumbers, fittedRegions);
+        final List<GermlineDeletion> germlineDeletions = germlineDeletionDrivers.getDeletions();
+
         // write fit results
         PPL_LOGGER.info("Writing purple data to directory: {}", mConfig.OutputDir);
         mPurpleVersion.write(mConfig.OutputDir);
@@ -359,6 +370,7 @@ public class PurpleApplication
         PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
         GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
+        GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorSample), germlineDeletions);
 
         if(mDbAccess != null)
         {
@@ -367,7 +379,8 @@ public class PurpleApplication
             mDbAccess.writePurity(tumorSample, purityContext, qcChecks);
             mDbAccess.writeBestFitPerPurity(tumorSample, bestFit.bestFitPerPurity());
             mDbAccess.writeCopynumbers(tumorSample, copyNumbers);
-            mDbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+            mDbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
+            mDbAccess.writeGermlineDeletions(tumorSample, germlineDeletions);
         }
 
         if(mConfig.Charting.Enabled || mConfig.Charting.CircosBinary.isPresent())
@@ -382,7 +395,7 @@ public class PurpleApplication
 
         if(mConfig.RunDrivers)
         {
-            findDrivers(tumorSample, purityContext, geneCopyNumbers, somaticStream);
+            findDrivers(tumorSample, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
         }
     }
 
@@ -409,14 +422,22 @@ public class PurpleApplication
 
         final PurityContext purityContext = PurityContextFile.read(purpleDataPath, tumorSample);
 
+        final List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(
+                PurpleCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorSample));
+
+        final List<FittedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorSample)).stream()
+                .filter(x -> x.germlineStatus() == HET_DELETION || x.germlineStatus() == HOM_DELETION)
+                .collect(Collectors.toList());
+
         final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(
                 GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorSample));
 
-        findDrivers(tumorSample, purityContext, geneCopyNumbers, somaticStream);
+        findDrivers(tumorSample, purityContext, copyNumbers, geneCopyNumbers, fittedRegions, somaticStream);
     }
 
     private void findDrivers(
-            final String tumorSample, final PurityContext purityContext, final List<GeneCopyNumber> geneCopyNumbers,
+            final String tumorSample, final PurityContext purityContext, final List<PurpleCopyNumber> copyNumbers,
+            final List<GeneCopyNumber> geneCopyNumbers, final List<FittedRegion> fittedRegions,
             final SomaticStream somaticStream) throws IOException
     {
         final List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
@@ -434,7 +455,14 @@ public class PurpleApplication
         somaticDriverCatalog.addAll(cnaDrivers.amplifications(purityContext.bestFit().ploidy(), geneCopyNumbers));
 
         final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.driverGenes());
-        germlineDriverCatalog.addAll(germlineDrivers.drivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
+        germlineDriverCatalog.addAll(germlineDrivers.findDrivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
+
+        GermlineDeletionDrivers germlineDeletionDrivers = new GermlineDeletionDrivers(
+                mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
+
+        germlineDeletionDrivers.findDeletions(copyNumbers, fittedRegions);
+
+        germlineDriverCatalog.addAll(germlineDeletionDrivers.getDrivers());
 
         DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(mConfig.OutputDir, tumorSample), somaticDriverCatalog);
         DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(mConfig.OutputDir, tumorSample), germlineDriverCatalog);

@@ -783,6 +783,32 @@ CREATE TABLE driverCatalog
     INDEX(gene)
 );
 
+DROP TABLE IF EXISTS germlineDeletion;
+
+CREATE TABLE germlineDeletion
+(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    gene varchar(50) NOT NULL,
+    chromosome varchar(10) NOT NULL,
+    regionStart int not null,
+    regionEnd int not null,
+    depthWindowCount int not null,
+    exonStart int not null,
+    exonEnd int not null,
+    detectionMethod varchar(20) NOT NULL,
+    germlineStatus varchar(20) NOT NULL,
+    tumorStatus varchar(20) NOT NULL,
+    germlineCopyNumber DOUBLE PRECISION NOT NULL,
+    tumorCopyNumber DOUBLE PRECISION NOT NULL,
+    filter varchar(50) NOT NULL,
+    cohortFrequency int not null,
+    reported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId, gene),
+    INDEX(gene)
+);
+
 DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,

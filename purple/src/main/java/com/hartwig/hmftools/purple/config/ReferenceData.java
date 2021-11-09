@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
+import static com.hartwig.hmftools.purple.drivers.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.purple.drivers.GermlineDeletionFrequency;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -57,14 +59,15 @@ public class ReferenceData
     public final IndexedFastaSequenceFile RefGenome;
     public final RefGenomeCoordinates RefGeCoordinates;
 
-    public final Map<Chromosome, GenomePosition> ChromosomeLengths;
+    public final Map<Chromosome,GenomePosition> ChromosomeLengths;
 
-    public final Map<Chromosome, GenomePosition> Centromeres;
+    public final Map<Chromosome,GenomePosition> Centromeres;
 
     public final EnsemblDataCache GeneTransCache;
 
     public final DriverGenePanel DriverGenes;
     public final Map<String,List<String>> OtherReportableTranscripts;
+    public final GermlineDeletionFrequency CohortGermlineDeletions;
 
     public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
     public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
@@ -206,6 +209,8 @@ public class ReferenceData
             mIsValid = false;
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
         }
+
+        CohortGermlineDeletions = new GermlineDeletionFrequency(cmd.getOptionValue(COHORT_DEL_FREQ_FILE));
     }
 
     private void loadGeneTransCache(final CommandLine cmd)
@@ -294,6 +299,7 @@ public class ReferenceData
         options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
         options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
         options.addOption(GC_PROFILE, true, "Path to GC profile");
+        options.addOption(COHORT_DEL_FREQ_FILE, true, "Path to cohort germline deletions frequency file");
         EnsemblDataCache.addEnsemblDir(options);
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }

@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
@@ -417,8 +418,12 @@ public class DatabaseAccess implements AutoCloseable {
         signatureDAO.write(sample, sigAllocations);
     }
 
-    public void writeGeneCopynumberRegions(@NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+    public void writeGeneCopyNumbers(@NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
+    }
+
+    public void writeGermlineDeletions(@NotNull String sample, @NotNull List<GermlineDeletion> deletions) {
+        geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }
 
     public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {

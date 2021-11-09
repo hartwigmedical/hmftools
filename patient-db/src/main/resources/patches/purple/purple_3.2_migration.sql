@@ -22,3 +22,5 @@ ALTER TABLE germlineVariant
     CHANGE COLUMN genesEffected genesAffected int not null,
     DROP COLUMN worstEffect,
     DROP COLUMN worstEffectTranscript;
+
+# TODO - add germlineDeletion table

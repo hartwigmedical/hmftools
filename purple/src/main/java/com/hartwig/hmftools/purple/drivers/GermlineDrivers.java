@@ -35,13 +35,13 @@ public class GermlineDrivers
     @NotNull
     private final Map<String, DriverCategory> mDriverCatalogMap;
 
-    public GermlineDrivers(@NotNull final List<DriverGene> driverGenes)
+    public GermlineDrivers(final List<DriverGene> driverGenes)
     {
         mDriverCatalogMap = driverGenes.stream()
                 .filter(DriverGene::reportGermline).collect(toMap(DriverGene::gene, DriverGene::likelihoodType));
     }
 
-    public List<DriverCatalog> drivers(final List<VariantContext> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
+    public List<DriverCatalog> findDrivers(final List<VariantContext> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
         final List<VariantContextDecorator> decoratedVariants = variants.stream().map(VariantContextDecorator::new).collect(toList());
         final Set<String> genes = decoratedVariants.stream().map(VariantContextDecorator::gene).collect(toSet());

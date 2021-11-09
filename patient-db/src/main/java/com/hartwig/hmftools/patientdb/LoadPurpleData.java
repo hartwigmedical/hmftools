@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityRangeFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -53,6 +54,7 @@ public class LoadPurpleData {
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDir, sample));
         List<PurpleCopyNumber> copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sample));
+        List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(GermlineDeletion.generateFilename(purpleDir, sample));
 
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDir, sample));
 
@@ -66,7 +68,8 @@ public class LoadPurpleData {
         dbAccess.writePurity(sample, purityContext, purityContext.qc());
         dbAccess.writeBestFitPerPurity(sample, bestFitPerPurity);
         dbAccess.writeCopynumbers(sample, copyNumbers);
-        dbAccess.writeGeneCopynumberRegions(sample, geneCopyNumbers);
+        dbAccess.writeGeneCopyNumbers(sample, geneCopyNumbers);
+        dbAccess.writeGermlineDeletions(sample, germlineDeletions);
         dbAccess.writePurpleDriverCatalog(sample, somaticDriverCatalog, germlineDriverCatalog);
 
         LOGGER.info("Complete");
@@ -89,7 +92,7 @@ public class LoadPurpleData {
         dbAccess.writePurity(tumorSample, purityContext, qcChecks);
         dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
         dbAccess.writeCopynumbers(tumorSample, copyNumbers);
-        dbAccess.writeGeneCopynumberRegions(tumorSample, geneCopyNumbers);
+        dbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
         dbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
     }
 }

@@ -27,6 +27,12 @@ public class PurpleConstants
     public static final double RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE = 0.6;
     public static final double RECOVERY_UNBALANCED_MIN_UNEXPLAINED_COPY_NUMBER_CHANGE_PERC = 0.2;
 
-
-
+    // germline deletions
+    public static final int GERMLINE_DEL_GENE_BUFFER = 500;
+    public static final int GERMLINE_DEL_REGION_MIN = 1000;
+    public static final int GERMLINE_DEL_REGION_MATCH_BUFFER = 2000;
+    public static final double GERMLINE_DEL_CN_CONSISTENCY_MIN = 0.5;
+    public static final double GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC = 0.2;
+    public static final double GERMLINE_DEL_NORMAL_RATIO = 0.65;
+    public static final int GERMLINE_DEL_COHORT_FREQ = 4;
 }

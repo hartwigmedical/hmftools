@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -339,7 +340,7 @@ public class LinxConfig
         options.addOption(CHECK_FUSIONS, false, "Run fusion detection");
         options.addOption(HOM_DIS_ALL_GENES, false, "Run fusion detection");
         options.addOption(VCF_FILE, true, "Path to the PURPLE structural variant VCF file");
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, "Driver gene panel file");
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
         options.addOption(CLUSTER_BASE_DISTANCE, true, "Clustering base distance, defaults to 5000");
         options.addOption(LINE_ELEMENT_FILE, true, "Line Elements file");
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
