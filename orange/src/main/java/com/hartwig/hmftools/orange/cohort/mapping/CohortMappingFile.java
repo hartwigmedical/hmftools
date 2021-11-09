@@ -41,7 +41,7 @@ public final class CohortMappingFile {
             configRules.add(ImmutableCohortMapping.builder()
                     .cancerType(values[fields.get("cancerType")])
                     .preferenceRank(Integer.parseInt(values[fields.get("preferenceRank")]))
-                    .mappingRule(MappingRule.valueOf(values[fields.get("mappingRule")]))
+                    .rule(MappingRule.valueOf(values[fields.get("rule")]))
                     .include(toDOIDs(values[fields.get("include")]))
                     .exclude(toDOIDs(values[fields.get("exclude")]))
                     .build());

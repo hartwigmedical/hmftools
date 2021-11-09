@@ -1,4 +1,4 @@
-cancerType	mappingRule	preferenceRank	include	exclude	note
+cancerType	rule	preferenceRank	include	exclude	note
 Bile duct	DEFAULT	1	4606	10020;3254;4064	
 Lymphoid tissue	DEFAULT	2	60058		IF sample doid set includes 60058, ALWAYS Lymphoid tissue
 Mesothelium	DEFAULT	2	1790;5158;1725;116	50695;4490	

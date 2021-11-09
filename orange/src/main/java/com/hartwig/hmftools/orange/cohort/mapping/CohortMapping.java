@@ -16,7 +16,7 @@ public abstract class CohortMapping {
     public abstract int preferenceRank();
 
     @NotNull
-    public abstract MappingRule mappingRule();
+    public abstract MappingRule rule();
 
     @NotNull
     public abstract Set<String> include();
