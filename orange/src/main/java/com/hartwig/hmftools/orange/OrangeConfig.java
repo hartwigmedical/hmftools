@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.orange;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.orange.report.ImmutableReportConfig;
 import com.hartwig.hmftools.orange.report.ReportConfig;
+import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -250,120 +249,46 @@ public interface OrangeConfig {
         }
 
         return ImmutableOrangeConfig.builder()
-                .tumorSampleId(nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
-                .referenceSampleId(optionalValue(cmd, REFERENCE_SAMPLE_ID))
+                .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
+                .referenceSampleId(Config.optionalValue(cmd, REFERENCE_SAMPLE_ID))
                 .reportConfig(report)
-                .primaryTumorDoids(toStringSet(nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
-                .outputDir(outputDir(cmd, OUTPUT_DIRECTORY))
-                .doidJsonFile(nonOptionalFile(cmd, DOID_JSON))
-                .pipelineVersionFile(optionalValue(cmd, PIPELINE_VERSION_FILE))
-                .refSampleWGSMetricsFile(nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
-                .refSampleFlagstatFile(nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
-                .tumorSampleWGSMetricsFile(nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
-                .tumorSampleFlagstatFile(nonOptionalValue(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
-                .sageGermlineGeneCoverageTsv(nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
-                .sageSomaticRefSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
-                .sageSomaticTumorSampleBQRPlot(nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
-                .purplePurityTsv(nonOptionalFile(cmd, PURPLE_PURITY_TSV))
-                .purpleQcFile(nonOptionalFile(cmd, PURPLE_QC_FILE))
-                .purpleGeneCopyNumberTsv(nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
-                .purpleSomaticDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
-                .purpleGermlineDriverCatalogTsv(nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
-                .purpleSomaticVariantVcf(nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
-                .purpleGermlineVariantVcf(nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
-                .purplePlotDirectory(nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
-                .linxFusionTsv(nonOptionalFile(cmd, LINX_FUSION_TSV))
-                .linxBreakendTsv(nonOptionalFile(cmd, LINX_BREAKEND_TSV))
-                .linxDriverCatalogTsv(nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
-                .linxDriverTsv(nonOptionalFile(cmd, LINX_DRIVER_TSV))
-                .linxPlotDirectory(nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
-                .chordPredictionTxt(nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
-                .cuppaConclusionTxt(nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
-                .cuppaResultCsv(nonOptionalFile(cmd, CUPPA_RESULT_CSV))
-                .cuppaSummaryPlot(nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
-                .cuppaFeaturePlot(optionalFile(cmd, CUPPA_FEATURE_PLOT))
-                .annotatedVirusTsv(nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
-                .peachGenotypeTsv(nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
-                .protectEvidenceTsv(nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
+                .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
+                .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
+                .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
+                .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
+                .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
+                .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
+                .tumorSampleWGSMetricsFile(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_WGS_METRICS_FILE))
+                .tumorSampleFlagstatFile(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_FLAGSTAT_FILE))
+                .sageGermlineGeneCoverageTsv(Config.nonOptionalFile(cmd, SAGE_GERMLINE_GENE_COVERAGE_TSV))
+                .sageSomaticRefSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT))
+                .sageSomaticTumorSampleBQRPlot(Config.nonOptionalFile(cmd, SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT))
+                .purplePurityTsv(Config.nonOptionalFile(cmd, PURPLE_PURITY_TSV))
+                .purpleQcFile(Config.nonOptionalFile(cmd, PURPLE_QC_FILE))
+                .purpleGeneCopyNumberTsv(Config.nonOptionalFile(cmd, PURPLE_GENE_COPY_NUMBER_TSV))
+                .purpleSomaticDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_DRIVER_CATALOG_TSV))
+                .purpleGermlineDriverCatalogTsv(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_DRIVER_CATALOG_TSV))
+                .purpleSomaticVariantVcf(Config.nonOptionalFile(cmd, PURPLE_SOMATIC_VARIANT_VCF))
+                .purpleGermlineVariantVcf(Config.nonOptionalFile(cmd, PURPLE_GERMLINE_VARIANT_VCF))
+                .purplePlotDirectory(Config.nonOptionalDir(cmd, PURPLE_PLOT_DIRECTORY))
+                .linxFusionTsv(Config.nonOptionalFile(cmd, LINX_FUSION_TSV))
+                .linxBreakendTsv(Config.nonOptionalFile(cmd, LINX_BREAKEND_TSV))
+                .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
+                .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
+                .linxPlotDirectory(Config.nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
+                .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
+                .cuppaConclusionTxt(Config.nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
+                .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
+                .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
+                .cuppaFeaturePlot(Config.optionalFile(cmd, CUPPA_FEATURE_PLOT))
+                .annotatedVirusTsv(Config.nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
+                .peachGenotypeTsv(Config.nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
+                .protectEvidenceTsv(Config.nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
                 .build();
     }
 
     @NotNull
     static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
-    }
-
-    @NotNull
-    static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = cmd.getOptionValue(param);
-        if (value == null) {
-            throw new ParseException("Parameter must be provided: " + param);
-        }
-
-        return value;
-    }
-
-    @Nullable
-    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = null;
-        if (cmd.hasOption(param)) {
-            value = cmd.getOptionValue(param);
-        }
-
-        if (value != null && value.isEmpty()) {
-            value = null;
-        }
-        return value;
-    }
-
-    @NotNull
-    static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException, IOException {
-        String value = nonOptionalValue(cmd, param);
-        File outputDir = new File(value);
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
-            throw new IOException("Unable to write to directory " + value);
-        }
-        return value;
-    }
-
-    @NotNull
-    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = nonOptionalValue(cmd, param);
-
-        if (!pathExists(value) || !pathIsDirectory(value)) {
-            throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
-        }
-
-        return value;
-    }
-
-    @NotNull
-    static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = nonOptionalValue(cmd, param);
-
-        if (!pathExists(value)) {
-            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
-        }
-
-        return value;
-    }
-
-    @Nullable
-    static String optionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
-        String value = optionalValue(cmd, param);
-
-        if (value != null && !pathExists(value)) {
-            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
-        }
-
-        return value;
-    }
-
-    static boolean pathExists(@NotNull String path) {
-        return Files.exists(new File(path).toPath());
-    }
-
-    static boolean pathIsDirectory(@NotNull String path) {
-        return Files.isDirectory(new File(path).toPath());
     }
 }
