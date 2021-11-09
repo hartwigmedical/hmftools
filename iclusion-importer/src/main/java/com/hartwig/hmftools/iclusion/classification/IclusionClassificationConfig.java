@@ -154,7 +154,9 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> deletionBlacklistKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("NON-EXPRESSION");
+        return set;
     }
 
     @NotNull
@@ -188,6 +190,7 @@ public final class IclusionClassificationConfig {
         set.add("COPY-GAIN");
         set.add("LOSS-OF-FUNCTION");
         set.add("FLT3-ITD");
+        set.add("NON-EXPRESSION");
         return set;
     }
 
