@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,16 +22,23 @@ public final class PipelineVersionFile {
     @Nullable
     public static String majorDotMinorVersion(@NotNull String pipelineVersionFile) throws IOException {
         String version = readPipelineVersion(pipelineVersionFile);
-        if (version == null) {
-            return null;
-        } else {
-            String[] versionSplit = version.split("\\.");
-            return versionSplit[0] + "." + versionSplit[1];
-        }
+        return version != null ? convertToMajorDotVersion(version) : null;
     }
 
     @Nullable
-    public static String readPipelineVersion(@NotNull String pipelineVersionFile) throws IOException {
+    @VisibleForTesting
+    static String convertToMajorDotVersion(@NotNull String version) {
+        // In case no dot is present there is no major.minor version either.
+        if (!version.contains(".")) {
+            return null;
+        }
+
+        String[] versionSplit = version.split("\\.");
+        return versionSplit[0] + "." + versionSplit[1];
+    }
+
+    @Nullable
+    private static String readPipelineVersion(@NotNull String pipelineVersionFile) throws IOException {
         List<String> lines = Files.readAllLines(new File(pipelineVersionFile).toPath());
         if (lines.isEmpty()) {
             throw new IOException("Pipeline version file seems empty on " + pipelineVersionFile);
