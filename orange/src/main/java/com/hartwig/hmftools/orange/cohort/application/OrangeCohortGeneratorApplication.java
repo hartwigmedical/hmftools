@@ -78,16 +78,14 @@ public class OrangeCohortGeneratorApplication {
         LOGGER.info(" Loaded {} SV TMBs from database", svTmbObservations.size());
 
         PercentileGenerator generator = new PercentileGenerator(createCohortMapper(config));
+        Multimap<PercentileType, CohortPercentiles> percentileMap = ArrayListMultimap.create();
 
-        LOGGER.info("Building percentiles");
-        List<CohortPercentiles> svTmbPercentiles = generator.run(svTmbObservations);
-
-        Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
-        map.putAll(PercentileType.SV_TMB, svTmbPercentiles);
+        LOGGER.info("Building SV TMB percentiles");
+        percentileMap.putAll(PercentileType.SV_TMB, generator.run(svTmbObservations));
 
         String outputTsv = CohortPercentilesFile.generateOutputTsv(config.outputDirectory());
         LOGGER.info("Writing cohort percentiles to {}", outputTsv);
-        CohortPercentilesFile.write(outputTsv, map);
+        CohortPercentilesFile.write(outputTsv, percentileMap);
 
         LOGGER.info("Done!");
     }
