@@ -252,8 +252,8 @@ public class GermlineDeletionDrivers
                 .inframe(0)
                 .frameshift(0)
                 .biallelic(false)
-                .minCopyNumber(0)
-                .maxCopyNumber(0)
+                .minCopyNumber(region.refNormalisedCopyNumber())
+                .maxCopyNumber(region.refNormalisedCopyNumber())
                 .likelihoodMethod(LikelihoodMethod.GERMLINE)
                 .build();
 

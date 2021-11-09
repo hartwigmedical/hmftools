@@ -143,7 +143,7 @@ public final class GermlineDeletion
                     Integer.parseInt(values[fieldsIndexMap.get("depthWindowCount")]),
                     Integer.parseInt(values[fieldsIndexMap.get("exonStart")]), Integer.parseInt(values[fieldsIndexMap.get("exonEnd")]),
                     GermlineDetectionMethod.valueOf(values[fieldsIndexMap.get("detectionMethod")]),
-                    GermlineStatus.valueOf(values[fieldsIndexMap.get("normalStatus")]),
+                    GermlineStatus.valueOf(values[fieldsIndexMap.get("germlineStatus")]),
                     GermlineStatus.valueOf(values[fieldsIndexMap.get("tumorStatus")]),
                     Double.parseDouble(values[fieldsIndexMap.get("germlineCopyNumber")]),
                     Double.parseDouble(values[fieldsIndexMap.get("tumorCopyNumber")]),

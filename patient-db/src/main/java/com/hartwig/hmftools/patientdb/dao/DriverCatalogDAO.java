@@ -27,50 +27,59 @@ import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Result;
 
-class DriverCatalogDAO {
-
+class DriverCatalogDAO
+{
     @NotNull
     private final DSLContext context;
 
-    DriverCatalogDAO(@NotNull final DSLContext context) {
+    DriverCatalogDAO(@NotNull final DSLContext context)
+    {
         this.context = context;
     }
 
-    void writeGermline(@NotNull String sample, @NotNull List<DriverCatalog> germlineCatalog) {
+    void writeGermline(@NotNull String sample, @NotNull List<DriverCatalog> germlineCatalog)
+    {
         deleteForSample(sample, DriverType.DRIVERS_GERMLINE);
         insert(sample, germlineCatalog);
     }
 
-    void writeSomatic(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {
+    void writeSomatic(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog)
+    {
         Collection<DriverType> somatics = Sets.newHashSet();
         somatics.addAll(DriverType.DRIVERS_MUTATION);
         somatics.addAll(DriverType.DRIVERS_COPY_NUMBER);
         write(sample, somaticCatalog, somatics);
     }
 
-    void writePurple(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
+    void writePurple(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog)
+    {
         writeSomatic(sample, somaticCatalog);
         writeGermline(sample, germlineCatalog);
     }
 
-    void writeLinx(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {
+    void writeLinx(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog)
+    {
         write(sample, somaticCatalog, DriverType.DRIVERS_LINX);
     }
 
-    void writeAll(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
+    void writeAll(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog)
+    {
         deleteForSample(sample);
         insert(sample, driverCatalog);
     }
 
-    void write(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, @NotNull Collection<DriverType> types) {
+    void write(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, @NotNull Collection<DriverType> types)
+    {
         final List<DriverCatalog> filtered = driverCatalog.stream().filter(x -> types.contains(x.driver())).collect(Collectors.toList());
         deleteForSample(sample, types);
         insert(sample, filtered);
     }
 
-    private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
+    private void insert(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog)
+    {
         Timestamp timestamp = new Timestamp(new Date().getTime());
-        for (List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE)) {
+        for(List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE))
+        {
             InsertValuesStep19 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.CHROMOSOME,
@@ -97,8 +106,10 @@ class DriverCatalogDAO {
     }
 
     private static void addRecord(
-            Timestamp timestamp, InsertValuesStep19 inserter, String sample, DriverCatalog entry) {
-        inserter.values(sample,
+            Timestamp timestamp, InsertValuesStep19 inserter, String sample, DriverCatalog entry)
+    {
+        inserter.values(
+                sample,
                 entry.chromosome(),
                 entry.chromosomeBand(),
                 entry.gene(),
@@ -114,27 +125,31 @@ class DriverCatalogDAO {
                 entry.inframe(),
                 entry.frameshift(),
                 entry.biallelic(),
-                entry.minCopyNumber(),
-                entry.maxCopyNumber(),
+                DatabaseUtil.decimal(entry.minCopyNumber()),
+                DatabaseUtil.decimal(entry.maxCopyNumber()),
                 timestamp);
     }
 
-    void deleteForSample(String sample) {
+    void deleteForSample(String sample)
+    {
         context.delete(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).execute();
     }
 
-    void deleteForSample(String sample, Collection<DriverType> types) {
+    void deleteForSample(String sample, Collection<DriverType> types)
+    {
         final List<String> stringTypes = types.stream().map(Enum::toString).collect(Collectors.toList());
         context.delete(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).and(DRIVERCATALOG.DRIVER.in(stringTypes)).execute();
     }
 
     @NotNull
-    List<DriverCatalog> readDriverData(String sample) {
+    List<DriverCatalog> readDriverData(String sample)
+    {
         List<DriverCatalog> dcList = Lists.newArrayList();
 
         Result<Record> result = context.select().from(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).fetch();
 
-        for (Record record : result) {
+        for(Record record : result)
+        {
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
                     .chromosome(record.getValue(DRIVERCATALOG.CHROMOSOME))
