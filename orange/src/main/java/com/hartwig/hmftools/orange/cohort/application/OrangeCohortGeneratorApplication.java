@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
 import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
@@ -74,7 +75,7 @@ public class OrangeCohortGeneratorApplication {
         DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
 
         LOGGER.info("Resolving cancer types for {} samples", samples.size());
-        DoidCohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
+        CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
         int failed = 0;
         for (Sample sample : samples) {
             String cancerType = mapper.cancerTypeForSample(sample);

@@ -10,16 +10,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
-import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 
 import org.jetbrains.annotations.NotNull;
 
 public class PercentileGenerator {
 
     @NotNull
-    private final DoidCohortMapper cohortMapper;
+    private final CohortMapper cohortMapper;
 
-    public PercentileGenerator(@NotNull final DoidCohortMapper cohortMapper) {
+    public PercentileGenerator(@NotNull final CohortMapper cohortMapper) {
         this.cohortMapper = cohortMapper;
     }
 

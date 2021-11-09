@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DoidCohortMapper {
+public class DoidCohortMapper implements CohortMapper {
 
     private static final Logger LOGGER = LogManager.getLogger(DoidCohortMapper.class);
 
@@ -33,6 +33,7 @@ public class DoidCohortMapper {
     }
 
     @Nullable
+    @Override
     public String cancerTypeForSample(@NotNull Sample sample) {
         Multimap<String, CohortMapping> positiveMatchesPerDoid = ArrayListMultimap.create();
 
