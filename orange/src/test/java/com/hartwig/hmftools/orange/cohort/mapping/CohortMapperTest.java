@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CohortMapperTest {
@@ -19,25 +20,32 @@ public class CohortMapperTest {
     public void canMatchDoidsToCancerType() {
         CohortMapper mapper = createTestCohortMapper();
 
-        assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForDoids(Sets.newHashSet("not a doid")));
+        assertEquals(CohortConstants.COHORT_OTHER, evaluate(mapper, "not a doid"));
 
         // DOID 1 maps to type 1 unless DOID = 1.2
-        assertEquals("type 1", mapper.cancerTypeForDoids(Sets.newHashSet("doid1.0")));
-        assertEquals("type 1", mapper.cancerTypeForDoids(Sets.newHashSet("doid1.1")));
-        assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForDoids(Sets.newHashSet("doid1.2")));
+        assertEquals("type 1", evaluate(mapper, "doid1.0"));
+        assertEquals("type 1", evaluate(mapper, "doid1.1"));
+        assertEquals(CohortConstants.COHORT_OTHER, evaluate(mapper, "doid1.2"));
 
         // DOID 2 maps to type 2 but only on exact match with DOID 2.1
-        assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForDoids(Sets.newHashSet("doid2.0")));
-        assertEquals("type 2", mapper.cancerTypeForDoids(Sets.newHashSet("doid2.1")));
-        assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForDoids(Sets.newHashSet("doid2.2")));
+        assertEquals(CohortConstants.COHORT_OTHER, evaluate(mapper, "doid2.0"));
+        assertEquals("type 2", evaluate(mapper, "doid2.1"));
+        assertEquals(CohortConstants.COHORT_OTHER, evaluate(mapper, "doid2.2"));
 
         // DOID 3/4/5 match to type 3/4/5 but DOID 5 has the lowest preference rank
-        assertEquals("type 5", mapper.cancerTypeForDoids(Sets.newHashSet("doid3", "doid4", "doid5")));
+        assertEquals("type 5", evaluate(mapper, "doid3", "doid4", "doid5"));
         // However, if only one DOID present, that should still win!
-        assertEquals("type 4", mapper.cancerTypeForDoids(Sets.newHashSet("doid4")));
+        assertEquals("type 4", evaluate(mapper, "doid4"));
+        // DOID 4 and 7 have multiple mappings with same preference though!.
+        assertEquals(CohortConstants.COHORT_OTHER, evaluate(mapper, "doid4", "doid7"));
 
         // DOID 6 maps to multiple cancer types on its own - wrong config.
-        assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForDoids(Sets.newHashSet("doid6")));
+        assertEquals(CohortConstants.COHORT_OTHER, evaluate(mapper, "doid6"));
+    }
+
+    @NotNull
+    private static String evaluate(@NotNull CohortMapper mapper, @NotNull String... doids) {
+        return mapper.cancerTypeForDoids("TestSample", Sets.newHashSet(doids));
     }
 
     private static CohortMapper createTestCohortMapper() {
@@ -58,7 +66,9 @@ public class CohortMapperTest {
 
         mappings.add(builder.cancerType("type 3").include(Sets.newHashSet("doid3")).preferenceRank(2).build());
         mappings.add(builder.cancerType("type 4").include(Sets.newHashSet("doid4")).preferenceRank(3).build());
+        mappings.add(builder.cancerType("type 6").include(Sets.newHashSet("doid7")).preferenceRank(3).build());
         mappings.add(builder.cancerType("type 5").include(Sets.newHashSet("doid5")).preferenceRank(1).build());
+
         mappings.add(builder.cancerType("type 6").include(Sets.newHashSet("doid6")).build());
         mappings.add(builder.cancerType("type 7").include(Sets.newHashSet("doid6")).build());
 

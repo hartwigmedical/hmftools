@@ -31,7 +31,7 @@ public class CohortMapper {
     }
 
     @NotNull
-    public String cancerTypeForDoids(@NotNull Set<String> doids) {
+    public String cancerTypeForDoids(@NotNull String sampleId, @NotNull Set<String> doids) {
         Multimap<String, CohortMapping> positiveMatchesPerDoid = ArrayListMultimap.create();
 
         for (String doid : doids) {
@@ -43,10 +43,10 @@ public class CohortMapper {
         }
 
         if (positiveMatchesPerDoid.isEmpty()) {
-            LOGGER.warn("No positive doid matches found for doids '{}'. Reverting to cohort '{}'", doids, CohortConstants.COHORT_OTHER);
+            LOGGER.warn("No positive doid matches found for {} with doids '{}'", sampleId, doids);
             return CohortConstants.COHORT_OTHER;
         } else {
-            return pickBestCancerType(positiveMatchesPerDoid);
+            return pickBestCancerType(sampleId, positiveMatchesPerDoid);
         }
     }
 
@@ -74,21 +74,21 @@ public class CohortMapper {
     }
 
     @NotNull
-    private static String pickBestCancerType(@NotNull Multimap<String, CohortMapping> positiveMatchesPerDoid) {
+    private static String pickBestCancerType(@NotNull String sampleId, @NotNull Multimap<String, CohortMapping> positiveMatchesPerDoid) {
         List<CohortMapping> bestMappings = Lists.newArrayList();
         for (Map.Entry<String, Collection<CohortMapping>> entry : positiveMatchesPerDoid.asMap().entrySet()) {
             Collection<CohortMapping> mappings = entry.getValue();
             if (mappings.size() == 1) {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
-                LOGGER.warn("DOID '{}' matched to multiple mappings: '{}'", entry.getKey(), toDisplayString(mappings));
+                LOGGER.warn("DOID '{}' for {} matched to multiple mappings: '{}'", entry.getKey(), sampleId, toDisplayString(mappings));
                 return CohortConstants.COHORT_OTHER;
             }
         }
 
         bestMappings.sort(new PreferenceRankComparator());
         if (bestMappings.size() > 1 && bestMappings.get(0).preferenceRank() == bestMappings.get(1).preferenceRank()) {
-            LOGGER.warn("Multiple cancer types ended up with same preference rank: '{}'", toDisplayString(bestMappings));
+            LOGGER.warn("Multiple cancer types for {} with same preference rank: '{}'", sampleId, toDisplayString(bestMappings));
             return CohortConstants.COHORT_OTHER;
         } else {
             return bestMappings.get(0).cancerType();
@@ -116,5 +116,4 @@ public class CohortMapper {
             }
         }
     }
-
 }

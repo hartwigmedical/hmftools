@@ -78,7 +78,7 @@ public class OrangeCohortGeneratorApplication {
         CohortMapper mapper = new CohortMapper(doidParentModel, mappings);
         int failed = 0;
         for (SampleData sample : samples) {
-            String cancerType = mapper.cancerTypeForDoids(sample.doids());
+            String cancerType = mapper.cancerTypeForDoids(sample.sampleId(), sample.doids());
             if (cancerType.equals(CohortConstants.COHORT_OTHER)) {
                 failed++;
             }
