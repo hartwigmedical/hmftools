@@ -14,7 +14,7 @@ public abstract class CohortMapping {
     public abstract String cancerType();
 
     @NotNull
-    public abstract CohortMappingRule mappingRule();
+    public abstract MappingRule mappingRule();
 
     @NotNull
     public abstract Set<String> include();

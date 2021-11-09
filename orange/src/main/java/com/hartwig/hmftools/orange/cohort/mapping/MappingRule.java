@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.cohort.mapping;
 
-public enum CohortMappingRule {
+public enum MappingRule {
     DEFAULT,
     EXACT_MATCH
 }
