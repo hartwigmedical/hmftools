@@ -82,21 +82,24 @@ public class CohortMapper {
             if (mappings.size() == 1) {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
-                LOGGER.warn("DOID '{}' for {} matched to multiple mappings: '{}'",
-                        entry.getKey(),
-                        sample.sampleId(),
-                        toString(mappings));
+                LOGGER.warn("DOID '{}' for {} matched to multiple mappings: '{}'", entry.getKey(), sample.sampleId(), toString(mappings));
                 return CohortConstants.COHORT_OTHER;
             }
         }
 
         bestMappings.sort(new PreferenceRankComparator());
-        if (bestMappings.size() > 1 && bestMappings.get(0).preferenceRank() == bestMappings.get(1).preferenceRank()) {
-            LOGGER.warn("Multiple cancer types for {} with same preference rank: '{}'", toString(sample), toString(bestMappings));
-            return CohortConstants.COHORT_OTHER;
-        } else {
-            return bestMappings.get(0).cancerType();
+        if (bestMappings.size() > 1) {
+            CohortMapping bestMapping = bestMappings.get(0);
+            for (int i = 1; i < bestMappings.size(); i++) {
+                CohortMapping compare = bestMappings.get(i);
+                if (bestMapping.preferenceRank() == compare.preferenceRank() && !bestMapping.cancerType().equals(compare.cancerType())) {
+                    LOGGER.warn("Multiple different cancer types for {} with same preference rank: '{}'", toString(sample), toString(bestMappings));
+                    return CohortConstants.COHORT_OTHER;
+                }
+            }
         }
+
+        return bestMappings.get(0).cancerType();
     }
 
     @NotNull
