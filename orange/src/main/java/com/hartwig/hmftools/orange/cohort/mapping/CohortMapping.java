@@ -13,6 +13,8 @@ public abstract class CohortMapping {
     @NotNull
     public abstract String cancerType();
 
+    public abstract int preferenceRank();
+
     @NotNull
     public abstract MappingRule mappingRule();
 

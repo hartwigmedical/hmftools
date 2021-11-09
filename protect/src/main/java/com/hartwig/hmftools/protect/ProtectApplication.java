@@ -68,7 +68,7 @@ public class ProtectApplication {
     private static Set<String> patientTumorDoids(@NotNull ProtectConfig config) throws IOException {
         Set<String> result = Sets.newHashSet();
         LOGGER.info("Loading DOID file from {}", config.doidJsonFile());
-        DoidParents doidParentModel = new DoidParents(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
+        DoidParents doidParentModel = DoidParents.fromEdges(DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile()).edges());
 
         Set<String> initialDoids = config.primaryTumorDoids();
         if (initialDoids.isEmpty()) {

@@ -20,7 +20,7 @@ public class DoidParentsTest {
         edges.add(createParent("305", "162"));
         edges.add(createEdge("305", "has_a", "162"));
 
-        DoidParents victim = new DoidParents(edges);
+        DoidParents victim = DoidParents.fromEdges(edges);
         assertEquals(2, victim.size());
 
         Set<String> parents299 = victim.parents("299");
