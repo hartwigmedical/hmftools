@@ -10,6 +10,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.doid.DoidTestFactory;
+import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSampleData;
+import com.hartwig.hmftools.orange.cohort.datamodel.SampleData;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -45,7 +47,8 @@ public class CohortMapperTest {
 
     @NotNull
     private static String evaluate(@NotNull CohortMapper mapper, @NotNull String... doids) {
-        return mapper.cancerTypeForDoids("TestSample", Sets.newHashSet(doids));
+        SampleData sample = ImmutableSampleData.builder().sampleId("TestSample").addDoids(doids).build();
+        return mapper.cancerTypeForSample(sample);
     }
 
     private static CohortMapper createTestCohortMapper() {

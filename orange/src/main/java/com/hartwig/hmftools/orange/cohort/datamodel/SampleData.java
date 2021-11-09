@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.cohort.application;
+package com.hartwig.hmftools.orange.cohort.datamodel;
 
 import java.util.Set;
 
