@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -14,12 +14,12 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.patientreporter.algo.ProtectComparator;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Div;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
@@ -127,7 +127,7 @@ public class ClinicalEvidenceFunctions {
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenType) {
-        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
+        Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet().stream().collect(Collectors.toSet()));
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
@@ -140,7 +140,7 @@ public class ClinicalEvidenceFunctions {
 
                 Table responsiveTable = new Table(new float[] { 1, 1 });
 
-                for (ProtectEvidence responsive : evidences) {
+                for (ProtectEvidence responsive : ProtectComparator.sort(evidences)) {
                     Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
 
                     if (!evidenType.equals("trial")) {
@@ -175,12 +175,12 @@ public class ClinicalEvidenceFunctions {
 
                     responsiveTable.addCell(cellGenomic);
 
+                    Cell publications = TableUtil.createTransparentCell(Strings.EMPTY);
                     if (evidenType.equals("evidence")) {
-                        Cell cellnumbers = createLinksPublications(responsive);
-                        responsiveTable.addCell(cellnumbers);
+                        publications = TableUtil.createTransparentCell(createLinksPublications(responsive));
+                        responsiveTable.addCell(publications);
                     } else {
-                        Cell cellnumbers = TableUtil.createTransparentCell(Strings.EMPTY);
-                        responsiveTable.addCell(cellnumbers);
+                        responsiveTable.addCell(publications);
                     }
                 }
 
@@ -236,26 +236,29 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    private static Cell createLinksPublications(@NotNull ProtectEvidence evidence) {
-        List<String> urlForSymlinks = Lists.newArrayList();
+    private static Paragraph createLinksPublications(@NotNull ProtectEvidence evidence) {
+        Paragraph paragraphPublications = new Paragraph();
+        int number = 0;
         for (String url : evidence.urls()) {
             if (!url.contains("google")) {
-                urlForSymlinks.add(url);
+                //Google urls are filtered out
+                number += 1;
+                if (!paragraphPublications.isEmpty()) {
+                    paragraphPublications.add(new Text(", "));
+                }
+                if (paragraphPublications.isEmpty()) {
+                    paragraphPublications.add(new Text("["));
+                }
+                paragraphPublications.add(new Text(Integer.toString(number)).addStyle(ReportResources.urlStyle())
+                        .setAction(PdfAction.createURI(url))).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+
             }
         }
 
-        Cell cellnumbers = TableUtil.createTransparentCell(Strings.EMPTY);
-        String numbers = urlForSymlinks.size() > 0 ? "[" : Strings.EMPTY;
-        for (int i = 0; i < urlForSymlinks.size(); i++) {
-            numbers = numbers.concat(Integer.toString(i + 1)).concat(", ");
+        if (!paragraphPublications.isEmpty()) {
+            paragraphPublications.add(new Text("]"));
         }
-        numbers = numbers.length() > 1 ? numbers.substring(0, numbers.length() - 2).concat("]") : numbers;
-        cellnumbers = TableUtil.createTransparentCell(numbers);
-
-        for (int i = 0; i < urlForSymlinks.size(); i++) {
-            cellnumbers.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(urlForSymlinks.get(i)));
-        }
-        return cellnumbers;
+        return paragraphPublications;
     }
 
     @NotNull
@@ -265,7 +268,7 @@ public class ClinicalEvidenceFunctions {
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text("Glossary Of Terms").addStyle(ReportResources.urlStyle())
                         .setAction(PdfAction.createURI("https://ckbhome.jax.org/about/glossaryOfTerms")))
-                        .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+                .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }
 
     @NotNull

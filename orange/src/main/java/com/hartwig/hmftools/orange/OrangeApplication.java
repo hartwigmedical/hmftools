@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportWriter;
+import com.hartwig.hmftools.orange.report.ReportWriterFactory;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -49,7 +50,7 @@ public class OrangeApplication {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
         OrangeReport report = algo.run(config);
 
-        ReportWriter writer = new ReportWriter(true, config.outputDir(), config.reportConfig());
+        ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
         writer.write(report);
 
         LOGGER.info("Done!");
