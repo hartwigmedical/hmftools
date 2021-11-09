@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -19,7 +21,7 @@ public final class CohortPercentilesFile {
 
     private static final String COHORT_FILE_NAME = "orange_cohort_percentiles.tsv";
 
-    private static final String LINE_DELIMITER = "\t";
+    private static final String FIELD_DELIMITER = "\t";
     private static final String PERCENTILE_DELIMITER = ";";
 
     private CohortPercentilesFile() {
@@ -31,22 +33,61 @@ public final class CohortPercentilesFile {
         return path + COHORT_FILE_NAME;
     }
 
-    public static void write(@NotNull String tsv, @NotNull Multimap<PercentileType, CohortPercentiles> map) throws IOException {
+    public static void write(@NotNull String tsv, @NotNull Multimap<PercentileType, CohortPercentiles> percentileMap) throws IOException {
+        List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        lines.addAll(toLines(percentileMap));
 
+        Files.write(new File(tsv).toPath(), lines);
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String header() {
+        return new StringJoiner(FIELD_DELIMITER).add("type").add("cancerType").add("cohortSize").add("percentiles").toString();
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<String> toLines(@NotNull Multimap<PercentileType, CohortPercentiles> percentileMap) {
+        List<String> lines = Lists.newArrayList();
+        for (Map.Entry<PercentileType, Collection<CohortPercentiles>> entry : percentileMap.asMap().entrySet()) {
+            for (CohortPercentiles percentiles : entry.getValue()) {
+                lines.add(toLine(entry.getKey(), percentiles));
+            }
+        }
+        return lines;
+    }
+
+    @NotNull
+    private static String toLine(@NotNull PercentileType type, @NotNull CohortPercentiles percentiles) {
+        StringJoiner percentileField = new StringJoiner(PERCENTILE_DELIMITER);
+        for (double value : percentiles.percentileValues()) {
+            percentileField.add(String.valueOf(value));
+        }
+
+        return new StringJoiner(FIELD_DELIMITER).add(type.toString())
+                .add(percentiles.cancerType())
+                .add(String.valueOf(percentiles.cohortSize()))
+                .add(percentileField.toString())
+                .toString();
     }
 
     @NotNull
     public static Multimap<PercentileType, CohortPercentiles> read(@NotNull String tsv) throws IOException {
-        Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
-
         List<String> lines = Files.readAllLines(new File(tsv).toPath());
 
-        String header = lines.get(0);
-        Map<String, Integer> fields = createFieldsIndexMap(header, LINE_DELIMITER);
-        lines.remove(0);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
+
+        return fromLines(fields, lines.subList(1, lines.size()));
+    }
+
+    @NotNull
+    static Multimap<PercentileType, CohortPercentiles> fromLines(@NotNull Map<String, Integer> fields, @NotNull List<String> lines) {
+        Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
 
         for (String line : lines) {
-            String[] values = line.split(LINE_DELIMITER, -1);
+            String[] values = line.split(FIELD_DELIMITER, -1);
 
             CohortPercentiles percentiles = ImmutableCohortPercentiles.builder()
                     .cancerType(values[fields.get("cancerType")])
@@ -61,7 +102,6 @@ public final class CohortPercentilesFile {
 
             map.put(type, percentiles);
         }
-
         return map;
     }
 

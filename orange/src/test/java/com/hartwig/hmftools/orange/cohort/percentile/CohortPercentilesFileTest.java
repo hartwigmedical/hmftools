@@ -4,9 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -35,5 +39,28 @@ public class CohortPercentilesFileTest {
         }
 
         throw new IllegalStateException("Could not find percentile for cancer type: " + cancerType);
+    }
+
+    @Test
+    public void canConvertBackAndForth() {
+        Multimap<PercentileType, CohortPercentiles> testMap = createTestMap();
+
+        List<String> lines = CohortPercentilesFile.toLines(testMap);
+
+        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(CohortPercentilesFile.header(), "\t");
+
+        Multimap<PercentileType, CohortPercentiles> recreatedMap = CohortPercentilesFile.fromLines(fields, lines);
+
+        assertEquals(testMap, recreatedMap);
+    }
+
+    @NotNull
+    private Multimap<PercentileType, CohortPercentiles> createTestMap() {
+        Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
+        map.put(PercentileType.SV_TMB,
+                ImmutableCohortPercentiles.builder().cancerType("type 1").cohortSize(12).addPercentileValues(1, 2, 3, 4).build());
+        map.put(PercentileType.SV_TMB,
+                ImmutableCohortPercentiles.builder().cancerType("type 2").cohortSize(12).addPercentileValues(1, 2, 3, 4).build());
+        return map;
     }
 }
