@@ -18,16 +18,16 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class CohortMapper {
+public class DoidCohortMapper {
 
-    private static final Logger LOGGER = LogManager.getLogger(CohortMapper.class);
+    private static final Logger LOGGER = LogManager.getLogger(DoidCohortMapper.class);
 
     @NotNull
     private final DoidParents doidParentModel;
     @NotNull
     private final List<CohortMapping> mappings;
 
-    public CohortMapper(@NotNull final DoidParents doidParentModel, @NotNull final List<CohortMapping> mappings) {
+    public DoidCohortMapper(@NotNull final DoidParents doidParentModel, @NotNull final List<CohortMapping> mappings) {
         this.doidParentModel = doidParentModel;
         this.mappings = mappings;
     }

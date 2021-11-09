@@ -18,11 +18,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class CohortMapperTest {
+public class DoidCohortMapperTest {
 
     @Test
     public void canMatchDoidsToCancerType() {
-        CohortMapper mapper = createTestCohortMapper();
+        DoidCohortMapper mapper = createTestCohortMapper();
 
         assertNull(evaluate(mapper, "not a doid"));
 
@@ -48,12 +48,12 @@ public class CohortMapperTest {
     }
 
     @Nullable
-    private static String evaluate(@NotNull CohortMapper mapper, @NotNull String... doids) {
+    private static String evaluate(@NotNull DoidCohortMapper mapper, @NotNull String... doids) {
         Sample sample = ImmutableSample.builder().sampleId("TestSample").addDoids(doids).build();
         return mapper.cancerTypeForSample(sample);
     }
 
-    private static CohortMapper createTestCohortMapper() {
+    private static DoidCohortMapper createTestCohortMapper() {
         ListMultimap<String, String> relationship = ArrayListMultimap.create();
         relationship.put("doid1.2", "doid1.1");
         relationship.put("doid1.1", "doid1.0");
@@ -77,6 +77,6 @@ public class CohortMapperTest {
         mappings.add(builder.cancerType("type 6").include(Sets.newHashSet("doid6")).build());
         mappings.add(builder.cancerType("type 7").include(Sets.newHashSet("doid6")).build());
 
-        return new CohortMapper(doidParentModel, mappings);
+        return new DoidCohortMapper(doidParentModel, mappings);
     }
 }

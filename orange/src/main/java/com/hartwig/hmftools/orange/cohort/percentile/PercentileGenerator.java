@@ -10,16 +10,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
-import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
+import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 
 import org.jetbrains.annotations.NotNull;
 
 public class PercentileGenerator {
 
     @NotNull
-    private final CohortMapper cohortMapper;
+    private final DoidCohortMapper cohortMapper;
 
-    public PercentileGenerator(@NotNull final CohortMapper cohortMapper) {
+    public PercentileGenerator(@NotNull final DoidCohortMapper cohortMapper) {
         this.cohortMapper = cohortMapper;
     }
 
@@ -44,6 +44,17 @@ public class PercentileGenerator {
         List<Double> sorted = Lists.newArrayList(values);
         sorted.sort(Comparator.naturalOrder());
 
-        return ImmutableCohortPercentiles.builder().cancerType(cancerType).cohortSize(sorted.size()).build();
+        List<Double> percentileValues = Lists.newArrayList();
+        double baseIndex = (double) sorted.size() / PercentileConstants.BUCKET_COUNT;
+        for (int i = 0; i < PercentileConstants.BUCKET_COUNT; i++) {
+            int index = (int) Math.round(i * baseIndex);
+            percentileValues.add(sorted.get(index));
+        }
+
+        return ImmutableCohortPercentiles.builder()
+                .cancerType(cancerType)
+                .cohortSize(sorted.size())
+                .percentileValues(percentileValues)
+                .build();
     }
 }
