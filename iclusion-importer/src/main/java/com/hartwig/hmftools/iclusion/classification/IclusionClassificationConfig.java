@@ -116,7 +116,9 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> geneLevelBlacklistKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("EDM MUTATION");
+        return set;
     }
 
     @NotNull
