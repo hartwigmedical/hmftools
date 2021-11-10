@@ -39,10 +39,10 @@ public class CohortPercentileEvaluator {
 
     private static final Logger LOGGER = LogManager.getLogger(CohortPercentileEvaluator.class);
 
-    private static final String EXPERIMENTS_DIR = "/data/experiments/orange_cohort";
     private static final String DOID_JSON = "/data/resources/public/disease_ontology/201015_doid.json";
-    private static final String COHORT_MAPPING_TSV = "/data/experiments/orange_cohort/orange_cohort_mapping.tsv";
 
+    private static final String EXPERIMENTS_DIR = "/data/experiments/orange_cohort";
+    private static final String COHORT_MAPPING_TSV = EXPERIMENTS_DIR + File.separator + "orange_cohort_mapping.tsv";
     private static final String OUTPUT_EVALUATION_TSV = EXPERIMENTS_DIR + File.separator + "sample_sv_tmb_percentile_evaluations.tsv";
 
     public static void main(String[] args) throws ParseException, IOException {

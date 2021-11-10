@@ -29,12 +29,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class OrangeCohortGeneratorApplication {
+public class OrangeCohortGenerator {
 
-    private static final Logger LOGGER = LogManager.getLogger(OrangeCohortGeneratorApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(OrangeCohortGenerator.class);
 
     private static final String APPLICATION = "ORANGE Cohort Generator";
-    public static final String VERSION = OrangeCohortGeneratorApplication.class.getPackage().getImplementationVersion();
+    public static final String VERSION = OrangeCohortGenerator.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws IOException, ParseException {
         LOGGER.info("Running {} v{}", APPLICATION, VERSION);
@@ -51,7 +51,7 @@ public class OrangeCohortGeneratorApplication {
             System.exit(1);
         }
 
-        new OrangeCohortGeneratorApplication(config, cmd).run();
+        new OrangeCohortGenerator(config, cmd).run();
     }
 
     @NotNull
@@ -59,7 +59,7 @@ public class OrangeCohortGeneratorApplication {
     @NotNull
     private final CommandLine commandLine;
 
-    public OrangeCohortGeneratorApplication(@NotNull final OrangeCohortGeneratorConfig config, @NotNull final CommandLine commandLine) {
+    public OrangeCohortGenerator(@NotNull final OrangeCohortGeneratorConfig config, @NotNull final CommandLine commandLine) {
         this.config = config;
         this.commandLine = commandLine;
     }
