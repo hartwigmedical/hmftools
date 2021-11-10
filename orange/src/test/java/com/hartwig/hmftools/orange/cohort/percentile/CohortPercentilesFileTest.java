@@ -27,7 +27,7 @@ public class CohortPercentilesFileTest {
         assertEquals(2, map.values().size());
 
         CohortPercentiles ovary = find(map.get(PercentileType.SV_TMB), "Ovary");
-        assertEquals(5, ovary.percentileValues().size());
+        assertEquals(5, ovary.values().size());
     }
 
     @NotNull
@@ -58,9 +58,9 @@ public class CohortPercentilesFileTest {
     private Multimap<PercentileType, CohortPercentiles> createTestMap() {
         Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
         map.put(PercentileType.SV_TMB,
-                ImmutableCohortPercentiles.builder().cancerType("type 1").cohortSize(12).addPercentileValues(1, 2, 3, 4).build());
+                ImmutableCohortPercentiles.builder().cancerType("type 1").cohortSize(12).addValues(1, 2, 3, 4).build());
         map.put(PercentileType.SV_TMB,
-                ImmutableCohortPercentiles.builder().cancerType("type 2").cohortSize(12).addPercentileValues(1, 2, 3, 4).build());
+                ImmutableCohortPercentiles.builder().cancerType("type 2").cohortSize(12).addValues(1, 2, 3, 4).build());
         return map;
     }
 }

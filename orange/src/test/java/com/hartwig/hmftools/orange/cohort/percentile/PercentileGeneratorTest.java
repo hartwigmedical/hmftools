@@ -20,7 +20,8 @@ public class PercentileGeneratorTest {
 
         assertTrue(generator.run(Lists.newArrayList()).isEmpty());
 
-        ImmutableObservation.Builder builder = ImmutableObservation.builder().sample(ImmutableSample.builder().sampleId("test").build());
+        ImmutableObservation.Builder builder =
+                ImmutableObservation.builder().type(PercentileType.SV_TMB).sample(ImmutableSample.builder().sampleId("test").build());
 
         List<Observation> observationLimited = Lists.newArrayList();
         observationLimited.add(builder.value(1).build());
@@ -32,7 +33,7 @@ public class PercentileGeneratorTest {
         List<CohortPercentiles> percentilesLimited = generator.run(observationLimited);
         assertEquals(2, percentilesLimited.size());
         assertEquals(5, percentilesLimited.get(0).cohortSize());
-        assertEquals(PercentileConstants.BUCKET_COUNT, percentilesLimited.get(0).percentileValues().size());
+        assertEquals(PercentileConstants.BUCKET_COUNT, percentilesLimited.get(0).values().size());
 
         List<Observation> observationsMassive = Lists.newArrayList();
         int massiveCount = PercentileConstants.BUCKET_COUNT * 3;
@@ -43,6 +44,6 @@ public class PercentileGeneratorTest {
         List<CohortPercentiles> percentilesMassive = generator.run(observationsMassive);
         assertEquals(2, percentilesMassive.size());
         assertEquals(massiveCount, percentilesMassive.get(0).cohortSize());
-        assertEquals(PercentileConstants.BUCKET_COUNT, percentilesMassive.get(0).percentileValues().size());
+        assertEquals(PercentileConstants.BUCKET_COUNT, percentilesMassive.get(0).values().size());
     }
 }
