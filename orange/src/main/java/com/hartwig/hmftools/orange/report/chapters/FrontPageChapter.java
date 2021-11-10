@@ -326,7 +326,7 @@ public class FrontPageChapter implements ReportChapter {
         String addon = Strings.EMPTY;
         if (evaluation != null) {
             String panCancerPercentile = PERCENTAGE.format(evaluation.panCancerPercentile() * 100);
-            addon = " (Pct: Pan " + panCancerPercentile;
+            addon = " (Pan " + panCancerPercentile;
             if (!evaluation.cancerType().equals(CohortConstants.COHORT_OTHER) && !evaluation.cancerType()
                     .equals(CohortConstants.COHORT_UNKNOWN)) {
                 String cancerTypePercentile = PERCENTAGE.format(evaluation.cancerTypePercentile() * 100);
