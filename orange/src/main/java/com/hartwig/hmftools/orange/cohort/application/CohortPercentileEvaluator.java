@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
-import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
 import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
@@ -32,42 +31,43 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class CohortPercentileEvaluator {
 
+    private static final Logger LOGGER = LogManager.getLogger(CohortPercentileEvaluator.class);
+
+    private static final String EXPERIMENTS_DIR = "/data/experiments/orange_cohort";
+    private static final String DOID_JSON = "/data/resources/public/disease_ontology/201015_doid.json";
+    private static final String COHORT_MAPPING_TSV = "/data/experiments/orange_cohort/orange_cohort_mapping.tsv";
+
+    private static final String OUTPUT_EVALUATION_TSV = EXPERIMENTS_DIR + File.separator + "sample_sv_tmb_percentile_evaluations.tsv";
+
     public static void main(String[] args) throws ParseException, IOException {
+        LOGGER.info("Running ORANGE Cohort Percentile Evaluator");
         CommandLine cmd = new DefaultParser().parse(createOptions(), args);
 
         DatabaseAccess database = DatabaseAccess.createDatabaseAccess(cmd);
 
+        LOGGER.info("Querying database");
         List<Sample> samples = SampleQuery.run(database);
         List<Observation> observations = SvTmbQuery.run(database, samples);
 
-        String dir = "/data/experiments/orange_cohort";
-        String percentileTsv = CohortPercentilesFile.generateOutputTsv(dir);
-        Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(percentileTsv);
-
-        String doidJson = "/data/resources/public/disease_ontology/201015_doid.json";
-        DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(doidJson);
-        DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
-
-        String cohortMappingTsv = "/data/experiments/orange_cohort/orange_cohort_mapping.tsv";
-        List<CohortMapping> mappings = CohortMappingFile.read(cohortMappingTsv);
-        CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
-
-        CohortPercentilesModel model = new CohortPercentilesModel(mapper, percentilesMap);
+        LOGGER.info("Creating percentiles model");
+        CohortPercentilesModel model = createModel();
         Map<Observation, Evaluation> evaluations = Maps.newHashMap();
         for (Observation observation : observations) {
             evaluations.put(observation, model.percentile(observation));
         }
 
-        List<String> lines = com.google.common.collect.Lists.newArrayList();
+        List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(evaluations));
 
-        String outputTsv = dir + File.separator + "sample_sv_tmb_percentile_evaluations.tsv";
-        Files.write(new File(outputTsv).toPath(), lines);
+        LOGGER.info("Writing output evaluations to {}", OUTPUT_EVALUATION_TSV);
+        Files.write(new File(OUTPUT_EVALUATION_TSV).toPath(), lines);
     }
 
     @NotNull
@@ -75,6 +75,22 @@ public class CohortPercentileEvaluator {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         return options;
+    }
+
+    @NotNull
+    private static CohortPercentilesModel createModel() throws IOException {
+        String percentileTsv = CohortPercentilesFile.generateOutputTsv(EXPERIMENTS_DIR);
+        LOGGER.info(" Reading percentiles from {}", percentileTsv);
+        Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(percentileTsv);
+
+        LOGGER.info(" Reading DOIDs from {}", DOID_JSON);
+        DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_JSON);
+        DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
+
+        LOGGER.info(" Reading cohort mappings from {}", COHORT_MAPPING_TSV);
+        List<CohortMapping> mappings = CohortMappingFile.read(COHORT_MAPPING_TSV);
+
+        return new CohortPercentilesModel(new DoidCohortMapper(doidParentModel, mappings), percentilesMap);
     }
 
     @NotNull
