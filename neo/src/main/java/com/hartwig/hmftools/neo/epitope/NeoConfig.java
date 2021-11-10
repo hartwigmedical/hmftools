@@ -45,6 +45,7 @@ public class NeoConfig
     public final boolean WriteTransData;
     public final boolean WritePeptides;
     public final String SvFusionsDir;
+    public final String SomaticVcf;
     public final String OutputDir;
     public final int Threads;
 
@@ -57,6 +58,7 @@ public class NeoConfig
     public static final String MUTATIONS_FILE = "mutations_file";
 
     public static final String SV_FUSION_DATA_DIR = "sv_fusion_data_dir";
+    public static final String SOMATIC_VCF = "somatic_vcf";
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String CANCER_TPM_FILE = "cancer_tpm_file";
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
@@ -126,6 +128,7 @@ public class NeoConfig
         RefGenome = loadRefGenome(refGenomeFilename);
 
         SvFusionsDir = cmd.getOptionValue(SV_FUSION_DATA_DIR);
+        SomaticVcf = cmd.getOptionValue(SOMATIC_VCF);
         OutputDir = parseOutputDir(cmd);
 
         RequiredAminoAcids = Integer.parseInt(cmd.getOptionValue(REQ_AMINO_ACIDS, String.valueOf(DEFAULT_AMINO_ACID_REF_COUNT)));
@@ -149,25 +152,6 @@ public class NeoConfig
 
     public boolean isMultiSample() { return Samples.size() > 1; }
 
-    public NeoConfig(
-            final List<SampleData> samples, final RefGenomeInterface refGenome, final List<String> restrictedGeneIds,
-            final int requiredAminoAcids)
-    {
-        Samples = samples;
-        PeptideLengths = new int[SE_PAIR];
-        PeptideFlanks = 0;
-        RefGenome = refGenome;
-        RestrictedGeneIds = restrictedGeneIds;
-        RequiredAminoAcids = requiredAminoAcids;
-        CommonHlaTypes = Lists.newArrayList();
-        MutationsFile = null;
-        SvFusionsDir = "";
-        OutputDir = "";
-        WriteTransData = false;
-        WritePeptides = false;
-        Threads = 0;
-    }
-
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(SAMPLE, true, "Sample - Id(s) separated by ';' or CSV file");
@@ -179,7 +163,8 @@ public class NeoConfig
         EnsemblDataCache.addEnsemblDir(options);
         options.addOption(GENE_ID_FILE, true, "Restrict to specific genes");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(SV_FUSION_DATA_DIR, true, "SV fusion file (single sample or cohort)");
+        options.addOption(SV_FUSION_DATA_DIR, true, "Linx neoepitope directory");
+        options.addOption(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
         options.addOption(CANCER_TPM_FILE, true, "TPM per cancer type and pan-cancer");
         options.addOption(WRITE_TRANS_DATA, false, "Write transcript data for each neo-epitope");
         options.addOption(WRITE_PEPTIDES, false, "Write all allele + peptide combinations for each neoepitope");
