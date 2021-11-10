@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -22,6 +23,8 @@ import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
@@ -73,13 +76,24 @@ public class FrontPageChapter implements ReportChapter {
 
     private void addSummaryTable(@NotNull Document document) {
         Table table = TableUtil.createReportContentTable(contentWidth(),
-                new float[] { 3, 2, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Cancer Type"),
-                        TableUtil.createHeaderCell("QC") });
-        table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
+                new float[] { 3, 2, 2, 1 },
+                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Configured Cancer Type"),
+                        TableUtil.createHeaderCell("Cuppa Cancer Type"), TableUtil.createHeaderCell("QC") });
+        table.addCell(TableUtil.createContentCell(toConfiguredPrimaryTumor(report.configuredPrimaryTumor())));
+        table.addCell(TableUtil.createContentCell(toConfiguredCancerType(report.cohortEvaluations())));
         table.addCell(TableUtil.createContentCell(toCuppaCancerType(report.cuppa())));
         table.addCell(TableUtil.createContentCell(purpleQCString()));
         document.add(TableUtil.createWrappingReportTable(table));
+    }
+
+    @NotNull
+    private static String toConfiguredCancerType(@NotNull Map<PercentileType, Evaluation> cohortEvaluations) {
+        // Assuming all evaluations led to the same cancer type
+        if (cohortEvaluations.isEmpty()) {
+            return ReportResources.NOT_AVAILABLE;
+        } else {
+            return cohortEvaluations.values().iterator().next().cancerType();
+        }
     }
 
     @NotNull
@@ -88,7 +102,7 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String toConfiguredTumorType(@NotNull Set<DoidNode> nodes) {
+    private static String toConfiguredPrimaryTumor(@NotNull Set<DoidNode> nodes) {
         StringJoiner joiner = new StringJoiner(", ");
 
         for (DoidNode node : nodes) {
@@ -138,7 +152,7 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createKeyCell("HR deficiency score:"));
         summary.addCell(TableUtil.createValueCell(hrDeficiencyString()));
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
-        summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
+        summary.addCell(TableUtil.createValueCell(svTmbString()));
         summary.addCell(TableUtil.createKeyCell("Max complex cluster size:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().maxComplexSize())));
         summary.addCell(TableUtil.createKeyCell("Telomeric SGLs:"));
@@ -313,6 +327,21 @@ public class FrontPageChapter implements ReportChapter {
             }
             return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
         }
+    }
+
+    @NotNull
+    private String svTmbString() {
+        String svTmb = String.valueOf(report.purple().svTumorMutationalBurden());
+
+        Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
+        String addon = Strings.EMPTY;
+        if (evaluation != null) {
+            String cancerTypePercentile = PERCENTAGE.format(evaluation.cancerTypePercentile() * 100);
+            String panCancerPercentile = PERCENTAGE.format(evaluation.panCancerPercentile() * 100);
+            addon = " (" + cancerTypePercentile + ", " + panCancerPercentile + ")";
+        }
+
+        return svTmb + addon;
     }
 
     @NotNull

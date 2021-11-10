@@ -37,7 +37,7 @@ public interface OrangeConfig {
     // Input files used by the algorithm
     String DOID_JSON = "doid_json";
     String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
-    String COHORT_PERCENTILES_TSV = "cohort_percentiles.tsv";
+    String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordDataLoader;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaFactory;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
+import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -37,6 +39,18 @@ import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
+import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
+import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
+import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
+import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentiles;
+import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
+import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,20 +63,35 @@ public class OrangeAlgo {
 
     @NotNull
     private final DoidEntry doidEntry;
+    @NotNull
+    private final CohortPercentilesModel percentilesModel;
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
         LOGGER.info("Loading DOID database from {}", config.doidJsonFile());
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile());
-        return new OrangeAlgo(doidEntry);
+        DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
+
+        LOGGER.info("Reading cohort mappings from {}", config.cohortMappingTsv());
+        List<CohortMapping> mappings = CohortMappingFile.read(config.cohortMappingTsv());
+        CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
+
+        LOGGER.info(" Reading percentiles from {}", config.cohortPercentilesTsv());
+        Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(config.cohortPercentilesTsv());
+        CohortPercentilesModel percentilesModel = new CohortPercentilesModel(mapper, percentilesMap);
+
+        return new OrangeAlgo(doidEntry, percentilesModel);
     }
 
-    private OrangeAlgo(@NotNull final DoidEntry doidEntry) {
+    private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortPercentilesModel percentilesModel) {
         this.doidEntry = doidEntry;
+        this.percentilesModel = percentilesModel;
     }
 
     @NotNull
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
+        PurpleData purple = loadPurpleData(config);
+
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
                 .reportDate(LocalDate.now())
@@ -71,13 +100,14 @@ public class OrangeAlgo {
                 .refSample(loadSampleData(config, false))
                 .tumorSample(loadSampleData(config, true))
                 .germlineMVLHPerGene(loadGermlineMVLHPerGene(config))
-                .purple(loadPurpleData(config))
+                .purple(purple)
                 .linx(loadLinxData(config))
                 .virusInterpreter(loadVirusInterpreterData(config))
                 .chord(loadChordAnalysis(config))
                 .cuppa(loadCuppaData(config))
                 .peach(loadPeachData(config))
                 .protect(loadProtectData(config))
+                .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
     }
@@ -212,6 +242,31 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} PROTECT evidences from {}", evidences.size(), config.protectEvidenceTsv());
 
         return evidences;
+    }
+
+    @NotNull
+    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleData purple) {
+        PercentileType type = PercentileType.SV_TMB;
+
+        Observation svTmbObservation = ImmutableObservation.builder()
+                .sample(ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build())
+                .type(type)
+                .value(purple.svTumorMutationalBurden())
+                .build();
+
+        LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
+        Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
+        Evaluation evaluation = percentilesModel.percentile(svTmbObservation);
+        if (evaluation == null) {
+            LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
+        } else {
+            LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
+                    evaluation.panCancerPercentile(),
+                    evaluation.cancerTypePercentile(),
+                    evaluation.cancerType());
+            evaluations.put(type, evaluation);
+        }
+        return evaluations;
     }
 
     @NotNull

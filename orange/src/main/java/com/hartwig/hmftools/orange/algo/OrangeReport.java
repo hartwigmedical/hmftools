@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -63,6 +65,9 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract List<ProtectEvidence> protect();
+
+    @NotNull
+    public abstract Map<PercentileType, Evaluation> cohortEvaluations();
 
     @NotNull
     public abstract OrangePlots plots();
