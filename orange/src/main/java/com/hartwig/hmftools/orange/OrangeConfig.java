@@ -282,7 +282,7 @@ public interface OrangeConfig {
                 .linxBreakendTsv(Config.nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
-                .linxPlotDirectory(Config.nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
+                .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
