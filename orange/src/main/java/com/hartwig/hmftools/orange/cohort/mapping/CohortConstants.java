@@ -15,8 +15,11 @@ public final class CohortConstants {
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_OTHER = Lists.newArrayList();
 
     static {
-        // The combination of liver cancer and bile duct is occasionally used but not easily map.
+        // The combination of liver cancer and bile duct is occasionally used but not easily mapped.
         DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("686", "4947"));
+
+        // Kidney cancer is a tough one to spread out without affecting either Kidney or Urothelial tract itself.
+        DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("263"));
     }
 
     private CohortConstants() {
