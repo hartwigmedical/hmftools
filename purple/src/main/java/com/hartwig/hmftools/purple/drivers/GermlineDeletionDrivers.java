@@ -173,8 +173,9 @@ public class GermlineDeletionDrivers
         int regionHighPos = (int)region.end() + GERMLINE_DEL_GENE_BUFFER;
 
         // find overlapping driver genes
-        GeneData overlappingGeneData = null;
-        DriverGene driverGene = null;
+        List<GeneData> overlappingGenes = Lists.newArrayList();
+        List<DriverGene> driverGenes = Lists.newArrayList();
+        List<TranscriptData> transcripts = Lists.newArrayList();
 
         for(GeneData geneData : geneDataList)
         {
@@ -186,36 +187,54 @@ public class GermlineDeletionDrivers
 
             if(positionsOverlap(geneData.GeneStart, geneData.GeneEnd, regionLowerPos, regionHighPos))
             {
-                overlappingGeneData = geneData;
-                driverGene = mDriverGenes.stream().filter(y -> y.gene().equals(geneData.GeneName)).findFirst().orElse(null);
-                break;
+                DriverGene driverGene = mDriverGenes.stream().filter(y -> y.gene().equals(geneData.GeneName)).findFirst().orElse(null);
+
+                if(driverGene != null)
+                {
+                    driverGenes.add(driverGene);
+                    overlappingGenes.add(geneData);
+                }
             }
         }
 
-        if(overlappingGeneData == null || driverGene == null)
+        if(overlappingGenes.isEmpty() && driverGenes.isEmpty())
             return;
 
-        TranscriptData transData = mGeneDataCache.getTranscriptData(overlappingGeneData.GeneId, "");
+        int exonRankMin = 0;
+        int exonRankMax = 0;
+        StringJoiner geneNames = new StringJoiner(";");
 
-        if(transData == null)
-            return;
+        for(GeneData geneData : overlappingGenes)
+        {
+            TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, "");
 
-        List<ExonData> overlappedExons = transData.exons().stream()
-                .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
-                .collect(Collectors.toList());
+            if(transData == null)
+                continue;
 
-        if(overlappedExons.isEmpty())
-            return;
+            List<ExonData> overlappedExons = transData.exons().stream()
+                    .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
+                    .collect(Collectors.toList());
 
-        PPL_LOGGER.debug("region({}: {}-{}) overlaps gene({}) exons({})",
-                region.chromosome(), region.start(), region.end(), overlappingGeneData.GeneName, overlappedExons.size());
+            if(overlappedExons.isEmpty())
+                continue;
 
-        int exonRankMin = overlappedExons.stream().mapToInt(x -> x.Rank).min().orElse(0);
-        int exonRankMax = overlappedExons.stream().mapToInt(x -> x.Rank).max().orElse(0);
+            PPL_LOGGER.debug("region({}: {}-{}) overlaps gene({}) exons({})",
+                    region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
+
+            // take the first if more than one overlapping gene
+            if(transcripts.isEmpty())
+            {
+                exonRankMin = overlappedExons.stream().mapToInt(x -> x.Rank).min().orElse(0);
+                exonRankMax = overlappedExons.stream().mapToInt(x -> x.Rank).max().orElse(0);
+            }
+
+            transcripts.add(transData);
+            geneNames.add(geneData.GeneName);
+        }
+
         double germlineCopyNumber = region.observedNormalRatio() * 2;
         double tumorCopyNumber = region.refNormalisedCopyNumber();
         GermlineStatus tumorStatus = tumorCopyNumber < 0.5 ? HOM_DELETION : HET_DELETION;
-        boolean reported = filters.isEmpty() && driverGene.reportGermlineDisruption();
 
         String filter;
 
@@ -230,33 +249,44 @@ public class GermlineDeletionDrivers
             filter = sj.toString();
         }
 
-        mDeletions.add(new GermlineDeletion(
-                overlappingGeneData.GeneName, region.chromosome(), (int)region.start(), (int)region.end(),
-                region.depthWindowCount(), exonRankMin, exonRankMax,
-                GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
-                filter, cohortFrequency, reported));
+        for(TranscriptData transData : transcripts)
+        {
+            GeneData geneData = overlappingGenes.stream().filter(x -> x.GeneId.equals(transData.GeneId)).findFirst().orElse(null);
+            DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
-        // create a driver record
-        DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
-                .chromosome(region.chromosome())
-                .chromosomeBand(overlappingGeneData.KaryotypeBand)
-                .gene(overlappingGeneData.GeneName)
-                .transcript(transData.TransName)
-                .isCanonical(transData.IsCanonical)
-                .driver(DriverType.GERMLINE_DELETION)
-                .category(driverGene.likelihoodType())
-                .driverLikelihood(1)
-                .missense(0)
-                .nonsense(0)
-                .splice(0)
-                .inframe(0)
-                .frameshift(0)
-                .biallelic(false)
-                .minCopyNumber(region.refNormalisedCopyNumber())
-                .maxCopyNumber(region.refNormalisedCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.GERMLINE)
-                .build();
+            boolean reported = filters.isEmpty() && driverGene.reportGermlineDisruption();
 
-        mDrivers.add(driverCatalog);
+            mDeletions.add(new GermlineDeletion(
+                    geneNames.toString(), region.chromosome(), (int) region.start(), (int) region.end(),
+                    region.depthWindowCount(), exonRankMin, exonRankMax,
+                    GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
+                    filter, cohortFrequency, reported));
+
+            // create a driver record for reportable genes
+            if(reported)
+            {
+                DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
+                        .chromosome(region.chromosome())
+                        .chromosomeBand(geneData.KaryotypeBand)
+                        .gene(geneData.GeneName)
+                        .transcript(transData.TransName)
+                        .isCanonical(transData.IsCanonical)
+                        .driver(DriverType.GERMLINE_DELETION)
+                        .category(driverGene.likelihoodType())
+                        .driverLikelihood(1)
+                        .missense(0)
+                        .nonsense(0)
+                        .splice(0)
+                        .inframe(0)
+                        .frameshift(0)
+                        .biallelic(false)
+                        .minCopyNumber(region.refNormalisedCopyNumber())
+                        .maxCopyNumber(region.refNormalisedCopyNumber())
+                        .likelihoodMethod(LikelihoodMethod.GERMLINE)
+                        .build();
+
+                mDrivers.add(driverCatalog);
+            }
+        }
     }
 }
