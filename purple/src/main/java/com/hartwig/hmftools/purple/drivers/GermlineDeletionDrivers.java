@@ -232,6 +232,9 @@ public class GermlineDeletionDrivers
             geneNames.add(geneData.GeneName);
         }
 
+        if(transcripts.isEmpty())
+            return;
+
         double germlineCopyNumber = region.observedNormalRatio() * 2;
         double tumorCopyNumber = region.refNormalisedCopyNumber();
         GermlineStatus tumorStatus = tumorCopyNumber < 0.5 ? HOM_DELETION : HET_DELETION;
@@ -249,18 +252,20 @@ public class GermlineDeletionDrivers
             filter = sj.toString();
         }
 
+        boolean anyReported = filters.isEmpty() && driverGenes.stream().anyMatch(x -> x.reportGermlineDisruption());
+
+        mDeletions.add(new GermlineDeletion(
+                geneNames.toString(), region.chromosome(), (int) region.start(), (int) region.end(),
+                region.depthWindowCount(), exonRankMin, exonRankMax,
+                GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
+                filter, cohortFrequency, anyReported));
+
         for(TranscriptData transData : transcripts)
         {
             GeneData geneData = overlappingGenes.stream().filter(x -> x.GeneId.equals(transData.GeneId)).findFirst().orElse(null);
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
             boolean reported = filters.isEmpty() && driverGene.reportGermlineDisruption();
-
-            mDeletions.add(new GermlineDeletion(
-                    geneNames.toString(), region.chromosome(), (int) region.start(), (int) region.end(),
-                    region.depthWindowCount(), exonRankMin, exonRankMax,
-                    GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
-                    filter, cohortFrequency, reported));
 
             // create a driver record for reportable genes
             if(reported)

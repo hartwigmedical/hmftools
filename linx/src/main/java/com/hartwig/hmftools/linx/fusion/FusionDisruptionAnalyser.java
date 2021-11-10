@@ -291,7 +291,7 @@ public class FusionDisruptionAnalyser
         mUniqueFusions.clear();
         mFusionFinder.reset();
 
-        if(mConfig.IsGermline)
+        if(mConfig.IsGermline && mConfig.isSingleSample())
         {
             mDisruptionFinder.findReportableDisruptions(svList, clusters);
             mDisruptionFinder.writeGermlineDisruptions(sampleId, mConfig.OutputDataPath, mConfig.UploadToDB ? mDbAccess : null);

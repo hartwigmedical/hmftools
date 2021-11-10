@@ -160,7 +160,7 @@ public class GenerateGermlineDeletionFrequency
                     if(region.Frequency < mMinSampleFrequency)
                         continue;
 
-                    writer.write(String.format("%s,%d,%d,%d", chromosome, region.Region.start(), region.Region.start(), region.Frequency));
+                    writer.write(String.format("%s,%d,%d,%d", chromosome, region.Region.start(), region.Region.end(), region.Frequency));
                     writer.newLine();
                 }
             }
