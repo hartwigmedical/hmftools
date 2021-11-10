@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -32,6 +33,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class FrontPageChapter implements ReportChapter {
@@ -132,8 +134,8 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
         summary.addCell(TableUtil.createKeyCell("Tumor mutational load:"));
         summary.addCell(TableUtil.createValueCell(tmlString()));
-        summary.addCell(TableUtil.createKeyCell("CHORD score:"));
-        summary.addCell(TableUtil.createValueCell(chordString()));
+        summary.addCell(TableUtil.createKeyCell("HR deficiency score:"));
+        summary.addCell(TableUtil.createValueCell(hrDeficiencyString()));
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
         summary.addCell(TableUtil.createKeyCell("Max complex cluster size:"));
@@ -294,11 +296,22 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String chordString() {
-        if (report.chord().hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
-            return report.chord().hrStatus().display();
+    private String hrDeficiencyString() {
+        ChordAnalysis chord = report.chord();
+        if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
+            return ChordStatus.CANNOT_BE_DETERMINED.display();
         } else {
-            return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+            String addon = Strings.EMPTY;
+            if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
+                if (chord.hrdType().contains("BRCA1")) {
+                    addon = " - BRCA1";
+                } else if (chord.hrdType().contains("BRCA2")) {
+                    addon = " - BRCA2";
+                } else {
+                    addon = chord.hrdType();
+                }
+            }
+            return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
         }
     }
 
