@@ -146,7 +146,7 @@ public class OrangeAlgo {
 
     @NotNull
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
-        Map<String, Double> mvlhPerGene = Maps.newHashMap();
+        Map<String, Double> mvlhPerGene = Maps.newTreeMap();
         List<String> lines = Files.readAllLines(new File(config.sageGermlineGeneCoverageTsv()).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] values = line.split("\t");
