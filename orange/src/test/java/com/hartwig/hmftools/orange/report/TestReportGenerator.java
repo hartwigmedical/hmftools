@@ -24,8 +24,7 @@ public class TestReportGenerator {
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
     public static void main(String[] args) throws IOException {
-        OrangeConfig config =
-                ImmutableOrangeConfig.builder().from(OrangeTestFactory.createTestOrangeConfig()).outputDir(REPORT_BASE_DIR).build();
+        OrangeConfig config = buildConfig();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
@@ -37,6 +36,11 @@ public class TestReportGenerator {
         } else {
             writer.write(reportWithTestSampleId);
         }
+    }
+
+    @NotNull
+    private static OrangeConfig buildConfig() {
+        return ImmutableOrangeConfig.builder().from(OrangeTestFactory.createTestOrangeConfig()).outputDir(REPORT_BASE_DIR).build();
     }
 
     @NotNull

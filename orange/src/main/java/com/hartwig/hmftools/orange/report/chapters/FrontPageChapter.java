@@ -72,7 +72,7 @@ public class FrontPageChapter implements ReportChapter {
 
     private void addSummaryTable(@NotNull Document document) {
         Table table = TableUtil.createReportContentTable(contentWidth(),
-                new float[] { 2, 1, 1 },
+                new float[] { 3, 2, 1 },
                 new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Cancer Type"),
                         TableUtil.createHeaderCell("QC") });
         table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
