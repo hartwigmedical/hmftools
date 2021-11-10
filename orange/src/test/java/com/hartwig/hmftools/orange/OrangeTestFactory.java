@@ -15,6 +15,10 @@ public final class OrangeTestFactory {
     private static final String REFERENCE_SAMPLE_ID = "ref_sample";
     private static final String TUMOR_SAMPLE_ID = "tumor_sample";
 
+    private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
+    private static final String COHORT_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
+    private static final String COHORT_PERCENTILES_TSV = Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
+
     private static final String RUN_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PIPELINE_VERSION_FILE = RUN_DIRECTORY + "/pipeline.version";
     private static final String REF_SAMPLE_WGS_METRICS_FILE = RUN_DIRECTORY + "/ref_sample/bam_metrics/ref_sample.wgsmetrics";
@@ -44,8 +48,6 @@ public final class OrangeTestFactory {
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/tumor_sample.protect.tsv";
 
-    private static final String DOID_JSON = Resources.getResource("doid/example_doid.json").getPath();
-
     private OrangeTestFactory() {
     }
 
@@ -60,6 +62,8 @@ public final class OrangeTestFactory {
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
+                .cohortMappingTsv(COHORT_MAPPING_TSV)
+                .cohortPercentilesTsv(COHORT_PERCENTILES_TSV)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
                 .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)

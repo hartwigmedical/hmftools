@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class CohortPercentilesFileTest {
 
-    private static final String EXAMPLE_PERCENTILE_TSV = Resources.getResource("cohort/percentile/example_percentile_file.tsv").getPath();
+    private static final String EXAMPLE_PERCENTILE_TSV = Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
 
     @Test
     public void canReadExampleCohortPercentilesTsv() throws IOException {

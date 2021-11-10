@@ -36,6 +36,8 @@ public interface OrangeConfig {
 
     // Input files used by the algorithm
     String DOID_JSON = "doid_json";
+    String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
+    String COHORT_PERCENTILES_TSV = "cohort_percentiles.tsv";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -82,6 +84,8 @@ public interface OrangeConfig {
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
+        options.addOption(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
+        options.addOption(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
@@ -136,6 +140,12 @@ public interface OrangeConfig {
 
     @NotNull
     String doidJsonFile();
+
+    @NotNull
+    String cohortMappingTsv();
+
+    @NotNull
+    String cohortPercentilesTsv();
 
     @Nullable
     String pipelineVersionFile();
@@ -250,6 +260,8 @@ public interface OrangeConfig {
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
+                .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))
+                .cohortPercentilesTsv(Config.nonOptionalFile(cmd, COHORT_PERCENTILES_TSV))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
