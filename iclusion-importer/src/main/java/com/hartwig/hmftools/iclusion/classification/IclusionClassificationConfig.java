@@ -273,6 +273,9 @@ public final class IclusionClassificationConfig {
         Set<String> flt3Set = Sets.newHashSet("FLT3-ITD");
         map.put("FLT3", flt3Set);
 
+        Set<String> ccnd2Set = Sets.newHashSet("3'UTR LOSS");
+        map.put("CCND1", ccnd2Set);
+
         return map;
     }
 }
