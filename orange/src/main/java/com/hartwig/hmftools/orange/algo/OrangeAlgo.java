@@ -260,16 +260,17 @@ public class OrangeAlgo {
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
         Evaluation evaluation = percentilesModel.percentile(svTmbObservation);
-        if (evaluation == null) {
-            LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
-        } else {
+        if (evaluation != null) {
             DecimalFormat percentage = new DecimalFormat("#'%'");
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
                     percentage.format(evaluation.panCancerPercentile() * 100),
                     percentage.format(evaluation.cancerTypePercentile() * 100),
                     evaluation.cancerType());
             evaluations.put(type, evaluation);
+        } else {
+            LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
         }
+
         return evaluations;
     }
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.cohort.percentile;
 import java.util.Collection;
 
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableEvaluation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
@@ -58,14 +59,20 @@ public class CohortPercentilesModel {
             throw new IllegalStateException("Could not find cohort '" + cohort + "' in list of percentiles!");
         }
 
-        int index = 0;
-        double refValue = percentile.values().get(index);
-        while (value > refValue && index < percentile.values().size()) {
-            refValue = percentile.values().get(index);
-            index++;
+        int startIndex = 0;
+        double refValue = percentile.values().get(startIndex);
+        while (Doubles.lessThan(refValue, value) && startIndex < percentile.values().size()) {
+            startIndex++;
+            refValue = startIndex < percentile.values().size() ? percentile.values().get(startIndex) : refValue;
         }
 
-        return (double) index / percentile.values().size();
+        int endIndex = startIndex;
+        while (!Doubles.greaterThan(refValue, value) && endIndex < percentile.values().size()) {
+            endIndex++;
+            refValue = endIndex < percentile.values().size() ? percentile.values().get(endIndex) : refValue;
+        }
+
+        return ((startIndex + endIndex) / 2D) / percentile.values().size();
     }
 
     @Nullable
