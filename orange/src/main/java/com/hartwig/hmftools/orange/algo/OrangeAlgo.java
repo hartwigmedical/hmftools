@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +65,7 @@ public class OrangeAlgo {
     public OrangeReport run(@NotNull OrangeConfig config) throws IOException {
         return ImmutableOrangeReport.builder()
                 .sampleId(config.tumorSampleId())
+                .reportDate(LocalDate.now())
                 .configuredPrimaryTumor(loadConfiguredPrimaryTumor(config))
                 .platinumVersion(determinePlatinumVersion(config))
                 .refSample(loadSampleData(config, false))

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +24,9 @@ public abstract class OrangeReport {
 
     @NotNull
     public abstract String sampleId();
+
+    @NotNull
+    public abstract LocalDate reportDate();
 
     @NotNull
     public abstract Set<DoidNode> configuredPrimaryTumor();
