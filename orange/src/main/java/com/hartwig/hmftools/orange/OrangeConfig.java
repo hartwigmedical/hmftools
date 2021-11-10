@@ -60,7 +60,6 @@ public interface OrangeConfig {
     String LINX_DRIVER_TSV = "linx_driver_tsv";
     String LINX_PLOT_DIRECTORY = "linx_plot_directory";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
-    String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
     String CUPPA_SUMMARY_PLOT = "cuppa_summary_plot";
     String CUPPA_FEATURE_PLOT = "cuppa_feature_plot";
@@ -106,7 +105,6 @@ public interface OrangeConfig {
         options.addOption(LINX_DRIVER_TSV, true, "Path towards the LINX driver TSV.");
         options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
-        options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the Cuppa conclusion TXT.");
         options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
         options.addOption(CUPPA_SUMMARY_PLOT, true, "Path towards the Cuppa report summary plot PNG.");
         options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
@@ -206,9 +204,6 @@ public interface OrangeConfig {
     String chordPredictionTxt();
 
     @NotNull
-    String cuppaConclusionTxt();
-
-    @NotNull
     String cuppaResultCsv();
 
     @NotNull
@@ -277,7 +272,6 @@ public interface OrangeConfig {
                 .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
                 .linxPlotDirectory(Config.nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
                 .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
-                .cuppaConclusionTxt(Config.nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalFile(cmd, CUPPA_FEATURE_PLOT))

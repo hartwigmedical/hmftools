@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaFactory;
-import com.hartwig.hmftools.common.cuppa.MolecularTissueOriginFile;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -126,7 +125,7 @@ public class OrangeAlgo {
 
     @NotNull
     private static OrangeSample loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
-        if (loadTumorSample){
+        if (loadTumorSample) {
             LOGGER.info("Loading tumor sample data");
         } else {
             LOGGER.info("Loading reference sample data");
@@ -165,7 +164,8 @@ public class OrangeAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv(), null,
+                config.purpleGeneCopyNumberTsv(),
+                null,
                 RefGenomeVersion.V37); // The ref genome version doesn't matter if you don't calc CN per chr arm);
     }
 
@@ -186,14 +186,12 @@ public class OrangeAlgo {
 
     @NotNull
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
-        LOGGER.info("Loading Cuppa from {}", new File(config.cuppaConclusionTxt()).getParent());
-        String cuppaTumorLocation = MolecularTissueOriginFile.read(config.cuppaConclusionTxt()).conclusion();
-        LOGGER.info(" Cuppa predicted primary tumor: {}", cuppaTumorLocation);
-
         List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
-        return CuppaFactory.build(cuppaTumorLocation, cuppaEntries);
+        CuppaData cuppaData = CuppaFactory.create(cuppaEntries);
+        LOGGER.info(" Predicted cancer type {} with likelihood {}", cuppaData.predictedCancerType(), cuppaData.bestPredictionLikelihood());
+        return cuppaData;
     }
 
     @NotNull

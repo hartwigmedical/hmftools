@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -35,6 +36,8 @@ import org.jetbrains.annotations.NotNull;
 public class FrontPageChapter implements ReportChapter {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
+    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
+
     private static final String NONE = "None";
 
     @NotNull
@@ -67,12 +70,17 @@ public class FrontPageChapter implements ReportChapter {
     private void addSummaryTable(@NotNull Document document) {
         Table table = TableUtil.createReportContentTable(contentWidth(),
                 new float[] { 2, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor"),
+                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Cancer Type"),
                         TableUtil.createHeaderCell("QC") });
         table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
-        table.addCell(TableUtil.createContentCell(report.cuppa().primaryTumor()));
+        table.addCell(TableUtil.createContentCell(toCuppaCancerType(report.cuppa())));
         table.addCell(TableUtil.createContentCell(purpleQCString()));
         document.add(TableUtil.createWrappingReportTable(table));
+    }
+
+    @NotNull
+    private static String toCuppaCancerType(@NotNull CuppaData cuppa) {
+        return cuppa.predictedCancerType() + " (" + PERCENTAGE.format(cuppa.bestPredictionLikelihood() * 100) + ")";
     }
 
     @NotNull
@@ -158,11 +166,10 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String purityString() {
-        DecimalFormat purityFormat = ReportResources.decimalFormat("#'%'");
         return String.format("%s (%s-%s)",
-                purityFormat.format(report.purple().purity() * 100),
-                purityFormat.format(report.purple().minPurity() * 100),
-                purityFormat.format(report.purple().maxPurity() * 100));
+                PERCENTAGE.format(report.purple().purity() * 100),
+                PERCENTAGE.format(report.purple().minPurity() * 100),
+                PERCENTAGE.format(report.purple().maxPurity() * 100));
     }
 
     @NotNull
@@ -260,7 +267,7 @@ public class FrontPageChapter implements ReportChapter {
             Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
             for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
                 if (virus.interpretation() != null) {
-                    viruses.add(virus.interpretation().toString());
+                    viruses.add(virus.interpretation());
                 } else {
                     viruses.add(virus.name());
                 }

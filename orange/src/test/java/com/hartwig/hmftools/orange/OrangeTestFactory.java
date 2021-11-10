@@ -38,7 +38,6 @@ public final class OrangeTestFactory {
     private static final String LINX_DRIVER_TSV = RUN_DIRECTORY + "/linx/tumor_sample.linx.drivers.tsv";
     private static final String LINX_PLOT_DIRECTORY = RUN_DIRECTORY + "/linx/plot";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
-    private static final String CUPPA_CONCLUSION_TXT = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa.conclusion.txt";
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
     private static final String CUPPA_SUMMARY_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.report.summary.png";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusbreakend/tumor_sample.virus.annotated.tsv";
@@ -83,7 +82,6 @@ public final class OrangeTestFactory {
                 .linxDriverTsv(LINX_DRIVER_TSV)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                .cuppaConclusionTxt(CUPPA_CONCLUSION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
                 .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
