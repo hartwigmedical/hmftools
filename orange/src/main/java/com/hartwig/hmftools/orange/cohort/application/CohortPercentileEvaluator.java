@@ -54,6 +54,7 @@ public class CohortPercentileEvaluator {
         LOGGER.info("Querying database");
         List<Sample> samples = SampleQuery.run(database);
         List<Observation> observations = SvTmbQuery.run(database, samples);
+        database.close();
 
         LOGGER.info("Creating percentiles model");
         CohortPercentilesModel model = createModel();

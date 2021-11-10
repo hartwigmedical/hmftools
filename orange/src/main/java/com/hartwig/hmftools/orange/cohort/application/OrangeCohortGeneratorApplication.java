@@ -76,6 +76,7 @@ public class OrangeCohortGeneratorApplication {
         LOGGER.info("Loading SV TMB from database");
         List<Observation> svTmbObservations = SvTmbQuery.run(database, samples);
         LOGGER.info(" Loaded {} SV TMBs from database", svTmbObservations.size());
+        database.close();
 
         PercentileGenerator generator = new PercentileGenerator(createCohortMapper(config));
         Multimap<PercentileType, CohortPercentiles> percentileMap = ArrayListMultimap.create();
