@@ -51,15 +51,14 @@ public class PercentileGenerator {
 
         List<Double> percentiles = Lists.newArrayList();
         double baseIndex = (double) sorted.size() / PercentileConstants.BUCKET_COUNT;
-        for (int i = 0; i < PercentileConstants.BUCKET_COUNT; i++) {
-            int index = (int) Math.max(0, Math.round((i * baseIndex) - 0.501));
+
+        percentiles.add(sorted.get(0));
+        for (int i = 1; i < PercentileConstants.BUCKET_COUNT - 1; i++) {
+            int index = (int) Math.min(sorted.size() - 1, Math.round(((i + 0.49) * baseIndex)));
             percentiles.add(sorted.get(index));
         }
+        percentiles.add(sorted.get(sorted.size() - 1));
 
-        return ImmutableCohortPercentiles.builder()
-                .cancerType(cancerType)
-                .cohortSize(sorted.size())
-                .values(percentiles)
-                .build();
+        return ImmutableCohortPercentiles.builder().cancerType(cancerType).cohortSize(sorted.size()).values(percentiles).build();
     }
 }
