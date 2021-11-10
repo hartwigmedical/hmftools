@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.extraction;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumberFile;
 import com.hartwig.hmftools.serve.extraction.exon.KnownExonFile;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPairFile;
 import com.hartwig.hmftools.serve.extraction.hotspot.KnownHotspotFile;
+import com.hartwig.hmftools.serve.sources.ckb.CkbUtil;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

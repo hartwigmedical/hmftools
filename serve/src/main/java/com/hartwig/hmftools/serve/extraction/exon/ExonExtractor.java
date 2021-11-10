@@ -128,7 +128,8 @@ public class ExonExtractor {
             if (word.contains("-")) {
                 String[] splitEvents = word.split("-");
                 int eventStart = Integer.parseInt(splitEvents[0]);
-                int eventEnd = Integer.parseInt(splitEvents[1]);
+                String eventEndString = splitEvents[1].endsWith(")") ? splitEvents[1].substring(0, splitEvents[1].length()-1) : splitEvents[1];
+                int eventEnd = Integer.parseInt(eventEndString);
                 for (int i = eventStart; i <= eventEnd; i++) {
                     exonIndices.add(i);
                 }
