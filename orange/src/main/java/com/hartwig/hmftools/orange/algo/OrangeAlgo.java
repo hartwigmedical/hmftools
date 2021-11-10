@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -74,10 +75,12 @@ public class OrangeAlgo {
 
         LOGGER.info("Reading cohort mappings from {}", config.cohortMappingTsv());
         List<CohortMapping> mappings = CohortMappingFile.read(config.cohortMappingTsv());
+        LOGGER.info(" Reading {} cohort mappings", mappings.size());
         CohortMapper mapper = new DoidCohortMapper(doidParentModel, mappings);
 
-        LOGGER.info(" Reading percentiles from {}", config.cohortPercentilesTsv());
+        LOGGER.info("Reading percentiles from {}", config.cohortPercentilesTsv());
         Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(config.cohortPercentilesTsv());
+        LOGGER.info(" Read {} percentiles", percentilesMap.values().size());
         CohortPercentilesModel percentilesModel = new CohortPercentilesModel(mapper, percentilesMap);
 
         return new OrangeAlgo(doidEntry, percentilesModel);
@@ -260,9 +263,10 @@ public class OrangeAlgo {
         if (evaluation == null) {
             LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
         } else {
+            DecimalFormat percentage = new DecimalFormat("#'%'");
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
-                    evaluation.panCancerPercentile(),
-                    evaluation.cancerTypePercentile(),
+                    percentage.format(evaluation.panCancerPercentile() * 100),
+                    percentage.format(evaluation.cancerTypePercentile() * 100),
                     evaluation.cancerType());
             evaluations.put(type, evaluation);
         }
