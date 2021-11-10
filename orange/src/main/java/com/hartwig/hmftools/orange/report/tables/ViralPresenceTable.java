@@ -31,7 +31,7 @@ public final class ViralPresenceTable {
                 new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("QC Status"),
                         TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Int"),
                         TableUtil.createHeaderCell("% Covered"), TableUtil.createHeaderCell("Mean Cov"),
-                        TableUtil.createHeaderCell("Clonal Cov") });
+                        TableUtil.createHeaderCell("Exp Clon Cov") });
 
         for (AnnotatedVirus virus : viruses) {
             table.addCell(TableUtil.createContentCell(virus.name()));
