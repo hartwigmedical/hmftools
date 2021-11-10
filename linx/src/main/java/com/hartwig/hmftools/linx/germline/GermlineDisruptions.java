@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.germline;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
@@ -194,7 +195,6 @@ public class GermlineDisruptions
             }
         }
     }
-    public static final String GERMLINE_DRIVER_CATALOG = ".linx.germline.driver.catalog.tsv";
 
     public void writeGermlineSVs(
             final List<SvDisruptionData> standardDisruptions, final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
@@ -223,6 +223,8 @@ public class GermlineDisruptions
         {
             LNX_LOGGER.info("uploading {} germline SVs to database", germlineSVs.size());
             dbAccess.writeGermlineSVs(sampleId, germlineSVs);
+
+            dbAccess.writeLinxDriverCatalog(sampleId, drivers, DRIVERS_LINX_GERMLINE);
         }
     }
 
