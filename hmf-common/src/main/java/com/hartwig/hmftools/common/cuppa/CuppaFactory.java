@@ -42,7 +42,9 @@ public final class CuppaFactory {
             }
         }
 
-        LOGGER.warn("Could not find a single entry of data type '{}'", DNA_COMBINED_DATATYPE);
+        if (best == null) {
+            LOGGER.warn("Could not find a single entry of data type '{}'", DNA_COMBINED_DATATYPE);
+        }
         return best;
     }
 
