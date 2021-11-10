@@ -35,7 +35,7 @@ public class PercentileGenerator {
 
         List<CohortPercentiles> percentiles = Lists.newArrayList();
         if (!valuesPerCancerType.isEmpty()) {
-            percentiles.add(toPercentiles(CohortConstants.PAN_CANCER_COHORT, valuesPerCancerType.values()));
+            percentiles.add(toPercentiles(CohortConstants.COHORT_PAN_CANCER, valuesPerCancerType.values()));
             for (Map.Entry<String, Collection<Double>> entry : valuesPerCancerType.asMap().entrySet()) {
                 percentiles.add(toPercentiles(entry.getKey(), entry.getValue()));
             }

@@ -31,7 +31,7 @@ public class CohortPercentilesFileTest {
         CohortPercentiles ovary = find(map.get(PercentileType.SV_TMB), "Ovary");
         assertEquals(5, ovary.values().size());
 
-        assertNotNull(find(map.get(PercentileType.SV_TMB), CohortConstants.PAN_CANCER_COHORT));
+        assertNotNull(find(map.get(PercentileType.SV_TMB), CohortConstants.COHORT_PAN_CANCER));
     }
 
     @NotNull

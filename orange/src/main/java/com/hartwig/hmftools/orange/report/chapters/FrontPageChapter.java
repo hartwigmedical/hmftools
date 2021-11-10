@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -24,6 +23,7 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
@@ -76,24 +76,13 @@ public class FrontPageChapter implements ReportChapter {
 
     private void addSummaryTable(@NotNull Document document) {
         Table table = TableUtil.createReportContentTable(contentWidth(),
-                new float[] { 3, 2, 2, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Configured Cancer Type"),
+                new float[] { 3, 2, 1 },
+                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"),
                         TableUtil.createHeaderCell("Cuppa Cancer Type"), TableUtil.createHeaderCell("QC") });
         table.addCell(TableUtil.createContentCell(toConfiguredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(TableUtil.createContentCell(toConfiguredCancerType(report.cohortEvaluations())));
         table.addCell(TableUtil.createContentCell(toCuppaCancerType(report.cuppa())));
         table.addCell(TableUtil.createContentCell(purpleQCString()));
         document.add(TableUtil.createWrappingReportTable(table));
-    }
-
-    @NotNull
-    private static String toConfiguredCancerType(@NotNull Map<PercentileType, Evaluation> cohortEvaluations) {
-        // Assuming all evaluations led to the same cancer type
-        if (cohortEvaluations.isEmpty()) {
-            return ReportResources.NOT_AVAILABLE;
-        } else {
-            return cohortEvaluations.values().iterator().next().cancerType();
-        }
     }
 
     @NotNull
@@ -336,9 +325,14 @@ public class FrontPageChapter implements ReportChapter {
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;
         if (evaluation != null) {
-            String cancerTypePercentile = PERCENTAGE.format(evaluation.cancerTypePercentile() * 100);
             String panCancerPercentile = PERCENTAGE.format(evaluation.panCancerPercentile() * 100);
-            addon = " (" + cancerTypePercentile + ", " + panCancerPercentile + ")";
+            addon = " (Pct: Pan " + panCancerPercentile;
+            if (!evaluation.cancerType().equals(CohortConstants.COHORT_OTHER) && !evaluation.cancerType()
+                    .equals(CohortConstants.COHORT_UNKNOWN)) {
+                String cancerTypePercentile = PERCENTAGE.format(evaluation.cancerTypePercentile() * 100);
+                addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
+            }
+            addon = addon + ")";
         }
 
         return svTmb + addon;

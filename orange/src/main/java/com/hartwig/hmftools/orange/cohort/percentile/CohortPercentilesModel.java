@@ -37,7 +37,7 @@ public class CohortPercentilesModel {
             return null;
         }
 
-        double panCancerPercentile = determinePercentile(percentiles, CohortConstants.PAN_CANCER_COHORT, observation.value());
+        double panCancerPercentile = determinePercentile(percentiles, CohortConstants.COHORT_PAN_CANCER, observation.value());
         Double cancerTypePercentile = null;
         String cancerType = mapper.cancerTypeForSample(observation.sample());
         if (cancerType != null) {

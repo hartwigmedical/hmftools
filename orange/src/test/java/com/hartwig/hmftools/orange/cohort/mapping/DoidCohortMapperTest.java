@@ -52,7 +52,7 @@ public class DoidCohortMapperTest {
         DoidCohortMapper mapper = createTestCohortMapper();
         Sample sample =
                 ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_OTHER.get(0)).build();
-        assertEquals(CohortConstants.OTHER_COHORT, mapper.cancerTypeForSample(sample));
+        assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForSample(sample));
     }
 
     @Nullable

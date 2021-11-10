@@ -40,9 +40,9 @@ public class DoidCohortMapper implements CohortMapper {
         if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_OTHER.contains(sample.doids())) {
             LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
                     sample.sampleId(),
-                    CohortConstants.OTHER_COHORT,
+                    CohortConstants.COHORT_OTHER,
                     sample.doids());
-            return CohortConstants.OTHER_COHORT;
+            return CohortConstants.COHORT_OTHER;
         }
 
         for (String doid : sample.doids()) {

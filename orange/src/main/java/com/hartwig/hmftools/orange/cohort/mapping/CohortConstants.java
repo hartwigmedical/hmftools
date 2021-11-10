@@ -8,8 +8,9 @@ import com.google.common.collect.Sets;
 
 public final class CohortConstants {
 
-    public static final String PAN_CANCER_COHORT = "Pan-cancer";
-    public static final String OTHER_COHORT = "Other";
+    public static final String COHORT_PAN_CANCER = "Pan-cancer";
+    public static final String COHORT_OTHER = "Other";
+    public static final String COHORT_UNKNOWN = "Unknown";
 
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_OTHER = Lists.newArrayList();
 
