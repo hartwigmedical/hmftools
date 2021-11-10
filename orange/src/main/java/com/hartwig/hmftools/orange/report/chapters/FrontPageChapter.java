@@ -39,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 public class FrontPageChapter implements ReportChapter {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
+    private static final DecimalFormat TWO_DIGITS = ReportResources.decimalFormat("#.##");
     private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
 
     private static final String NONE = "None";
@@ -177,11 +178,10 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String ploidyString() {
-        DecimalFormat ploidyFormat = ReportResources.decimalFormat("#.##");
         return String.format("%s (%s-%s)",
-                ploidyFormat.format(report.purple().ploidy()),
-                ploidyFormat.format(report.purple().minPloidy()),
-                ploidyFormat.format(report.purple().maxPloidy()));
+                TWO_DIGITS.format(report.purple().ploidy()),
+                TWO_DIGITS.format(report.purple().minPloidy()),
+                TWO_DIGITS.format(report.purple().maxPloidy()));
     }
 
     @NotNull
@@ -304,9 +304,9 @@ public class FrontPageChapter implements ReportChapter {
             String addon = Strings.EMPTY;
             if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
                 if (chord.hrdType().contains("BRCA1")) {
-                    addon = " - BRCA1";
+                    addon = " - BRCA1 (" + TWO_DIGITS.format(chord.BRCA1Value()) + ")";
                 } else if (chord.hrdType().contains("BRCA2")) {
-                    addon = " - BRCA2";
+                    addon = " - BRCA2 (" + TWO_DIGITS.format(chord.BRCA2Value()) + ")";
                 } else {
                     addon = chord.hrdType();
                 }
