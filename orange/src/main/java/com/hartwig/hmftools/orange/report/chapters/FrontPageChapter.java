@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -283,8 +284,8 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String msiString() {
-        return SINGLE_DIGIT.format(report.purple().microsatelliteIndelsPerMb()) + " (" + report.purple().microsatelliteStatus().display()
-                + ")";
+        PurpleData purple = report.purple();
+        return SINGLE_DIGIT.format(purple.microsatelliteIndelsPerMb()) + " (" + purple.microsatelliteStatus().display() + ")";
     }
 
     @NotNull
