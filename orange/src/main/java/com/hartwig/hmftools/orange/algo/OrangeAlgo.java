@@ -274,10 +274,14 @@ public class OrangeAlgo {
         LOGGER.info("Loading plots");
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
-        for (String file : new File(linxPlotDir).list()) {
-            linxDriverPlots.add(linxPlotDir + File.separator + file);
+        if (new File(linxPlotDir).exists()) {
+            for (String file : new File(linxPlotDir).list()) {
+                linxDriverPlots.add(linxPlotDir + File.separator + file);
+            }
+            LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
+        } else {
+            LOGGER.debug(" No linx plots have been loaded as plot directory {} does not exist", linxPlotDir);
         }
-        LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
 
         String kataegisPlot = config.purplePlotDirectory() + File.separator + config.tumorSampleId() + ".somatic.rainfall.png";
         if (!new File(kataegisPlot).exists()) {

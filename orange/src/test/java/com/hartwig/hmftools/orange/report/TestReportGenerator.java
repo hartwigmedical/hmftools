@@ -13,8 +13,10 @@ import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class TestReportGenerator {
@@ -24,6 +26,8 @@ public class TestReportGenerator {
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
     public static void main(String[] args) throws IOException {
+        Configurator.setRootLevel(Level.DEBUG);
+
         OrangeConfig config = buildConfig();
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
 
