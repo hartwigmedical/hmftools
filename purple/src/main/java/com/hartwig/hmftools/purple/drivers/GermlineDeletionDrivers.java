@@ -243,7 +243,7 @@ public class GermlineDeletionDrivers
                 .gene(overlappingGeneData.GeneName)
                 .transcript(transData.TransName)
                 .isCanonical(transData.IsCanonical)
-                .driver(DriverType.GERMLINE)
+                .driver(DriverType.GERMLINE_DELETION)
                 .category(driverGene.likelihoodType())
                 .driverLikelihood(1)
                 .missense(0)

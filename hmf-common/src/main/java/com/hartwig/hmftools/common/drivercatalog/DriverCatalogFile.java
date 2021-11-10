@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_MUTATION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DEL_DISRUPTION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -11,11 +13,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -128,7 +128,7 @@ public final class DriverCatalogFile
                             values[fieldsIndexMap.get("transcript")] : "")
                     .isCanonical(fieldsIndexMap.containsKey("isCanonical") ?
                             Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]) : true)
-                    .driver(DriverType.valueOf(values[fieldsIndexMap.get("driver")]))
+                    .driver(checkConvertType(values[fieldsIndexMap.get("driver")]))
                     .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
                     .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
                     .driverLikelihood(Double.parseDouble(values[fieldsIndexMap.get("driverLikelihood")]))
@@ -145,4 +145,17 @@ public final class DriverCatalogFile
 
         return drivers;
     }
+
+    public static DriverType checkConvertType(final String driverTypeStr)
+    {
+        // support old Purple and Linx names prior to splits for new germline types
+        if(driverTypeStr.equals("HOM_DISRUPTION"))
+            return HOM_DEL_DISRUPTION;
+
+        if(driverTypeStr.equals("GERMLINE"))
+            return GERMLINE_MUTATION;
+
+        return DriverType.valueOf(driverTypeStr);
+    }
+
 }

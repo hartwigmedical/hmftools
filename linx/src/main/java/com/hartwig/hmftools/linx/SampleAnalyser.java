@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.linx.SvFileLoader.loadSampleSvDataFromFile;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.linkSglMappedInferreds;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
-import static com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator.LINX_DRIVER_CATALOG;
 import static com.hartwig.hmftools.common.purple.segment.ChromosomeArm.asStr;
 
 import java.io.IOException;
@@ -396,8 +395,7 @@ public class SampleAnalyser implements Callable
             LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
 
-            final String driverCatalogFile = mConfig.OutputDataPath + mCurrentSampleId + LINX_DRIVER_CATALOG;
-            DriverCatalogFile.write(driverCatalogFile, Lists.newArrayList());
+            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, true), Lists.newArrayList());
 
             VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());

@@ -81,7 +81,7 @@ public class GermlineDrivers
                 .gene(gene)
                 .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
                 .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
-                .driver(DriverType.GERMLINE)
+                .driver(DriverType.GERMLINE_MUTATION)
                 .category(category)
                 .driverLikelihood(1)
                 .missense(missenseVariants)

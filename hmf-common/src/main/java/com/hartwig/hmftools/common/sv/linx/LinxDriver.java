@@ -26,7 +26,7 @@ public abstract class LinxDriver
 
     private static final String FILE_EXTENSION = ".linx.drivers.tsv";
     private static final String CATALOG_EXTENSION = ".linx.driver.catalog.tsv";
-    private static final String OLD_CATALOG_EXTENSION = ".driver.catalog.tsv";
+    private static final String GERMLINE_CATALOG_EXTENSION = ".linx.germline.driver.catalog.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -35,20 +35,12 @@ public abstract class LinxDriver
     }
 
     @NotNull
-    public static String generateCatalogFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateCatalogFilename(@NotNull final String basePath, @NotNull final String sample, boolean isSomatic)
     {
-        return basePath + File.separator + sample + CATALOG_EXTENSION;
-    }
-
-    @NotNull
-    public static String generateCatalogFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
-    {
-        String filename = generateCatalogFilename(basePath, sample);
-
-        if(new File(filename).exists())
-            return filename;
-
-        return basePath + File.separator + sample + OLD_CATALOG_EXTENSION;
+        if(isSomatic)
+            return basePath + File.separator + sample + CATALOG_EXTENSION;
+        else
+            return basePath + File.separator + sample + GERMLINE_CATALOG_EXTENSION;
     }
 
     @NotNull
@@ -62,8 +54,7 @@ public abstract class LinxDriver
         Files.write(new File(filename).toPath(), toLines(clusters));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<LinxDriver> drivers)
+    private static List<String> toLines(final List<LinxDriver> drivers)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -71,8 +62,7 @@ public abstract class LinxDriver
         return lines;
     }
 
-    @NotNull
-    private static List<LinxDriver> fromLines(@NotNull List<String> lines)
+    private static List<LinxDriver> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
@@ -94,8 +84,8 @@ public abstract class LinxDriver
         return drivers;
     }
 
-    @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner(LinxCluster.DELIMITER)
                 .add("clusterId")
                 .add("gene")
@@ -103,7 +93,6 @@ public abstract class LinxDriver
                 .toString();
     }
 
-    @NotNull
     private static String toString(@NotNull final LinxDriver driver)
     {
         return new StringJoiner(LinxCluster.DELIMITER)

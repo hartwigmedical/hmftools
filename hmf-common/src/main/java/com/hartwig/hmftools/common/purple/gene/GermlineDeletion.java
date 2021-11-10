@@ -56,7 +56,7 @@ public final class GermlineDeletion
         Reported = reported;
     }
 
-    private static final String EXTENSION = ".purple.germline_deletion.tsv";
+    private static final String EXTENSION = ".purple.germline.deletion.tsv";
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)

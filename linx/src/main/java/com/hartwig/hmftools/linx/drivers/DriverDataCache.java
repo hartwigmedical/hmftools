@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.isMaleSample;
@@ -91,10 +92,10 @@ public class DriverDataCache
 
         setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
-        // add records but filter out any previously added by Linx
+        // add records but filter out any previously added by Linx or any other germline
         mDriverCatalog.addAll(
                 mDbAccess.readDriverCatalog(mSampleId).stream()
-                        .filter(x -> x.driver() != DriverType.HOM_DISRUPTION)
+                        .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
                         .filter(x -> x.isCanonical())
                         .collect(Collectors.toList()));
 
@@ -148,7 +149,7 @@ public class DriverDataCache
         mIsMale = isMale;
     }
 
-    public DriverGeneData createDriverData(final BreakendGeneData gene, final TranscriptData transData)
+    public DriverGeneData createDriverData(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
     {
         GeneCopyNumber gcnData = null;
 
@@ -177,7 +178,7 @@ public class DriverDataCache
         }
 
         final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
-                .driver(DriverType.HOM_DISRUPTION)
+                .driver(driverType)
                 .category(TSG)
                 .gene(gene.geneName())
                 .transcript(transData.TransName)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.germline;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
@@ -13,20 +14,32 @@ import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.fusion.SvDisruptionData;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GermlineDisruptions
 {
@@ -178,6 +191,101 @@ public class GermlineDisruptions
                         }
                     }
                 }
+            }
+        }
+    }
+    public static final String GERMLINE_DRIVER_CATALOG = ".linx.germline.driver.catalog.tsv";
+
+    public void writeGermlineSVs(
+            final List<SvDisruptionData> standardDisruptions, final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
+    {
+        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<DriverCatalog> drivers = Lists.newArrayList();
+
+        populateGermlineSVs(standardDisruptions, germlineSVs, drivers);
+
+        if(outputDir != null)
+        {
+            try
+            {
+                // write flat files for database loading
+                LinxGermlineSv.write(LinxGermlineSv.generateFilename(outputDir, sampleId), germlineSVs);
+
+                DriverCatalogFile.write(LinxDriver.generateCatalogFilename(outputDir, sampleId, false), drivers);
+            }
+            catch(IOException e)
+            {
+                LNX_LOGGER.error("failed to write germline SV file: {}", e.toString());
+            }
+        }
+
+        if(dbAccess != null)
+        {
+            LNX_LOGGER.info("uploading {} germline SVs to database", germlineSVs.size());
+            dbAccess.writeGermlineSVs(sampleId, germlineSVs);
+        }
+    }
+
+    private void populateGermlineSVs(
+            final List<SvDisruptionData> standardDisruptions, final List<LinxGermlineSv> germlineSVs, final List<DriverCatalog> drivers)
+    {
+        final List<SvDisruptionData> allDisruptions = Lists.newArrayList(mDisruptions);
+        allDisruptions.addAll(standardDisruptions);
+
+        Set<SvVarData> processedSVs = Sets.newHashSet();
+
+        for(final SvDisruptionData disruptionData : allDisruptions)
+        {
+            final SvVarData var = disruptionData.Var;
+
+            if(processedSVs.contains(var))
+                continue;
+
+            processedSVs.add(var);
+
+            final GeneData gene = disruptionData.Gene;
+
+            StructuralVariantData svData = var.getSvData();
+
+            SvCluster cluster = var.getCluster();
+
+            int ponCount = getPonCount(var);
+            boolean reportable = isReportable(var, gene.GeneId);
+
+            // TODO: switch tumor for normal fragment counts until GRIPSS writes them both
+
+            germlineSVs.add(new LinxGermlineSv(
+                    var.chromosome(true), var.chromosome(false),
+                    var.position(true), var.position(false),
+                    var.orientation(true), var.orientation(false),
+                    gene.GeneName, var.type(), svData.filter(), svData.event(), svData.qualityScore(),
+                    svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
+                    0, 0, 0,
+                    // svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
+                    svData.insertSequence(), cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
+                    svData.startLinkedBy(), svData.endLinkedBy(), ponCount, reportable));
+
+            if(reportable)
+            {
+                drivers.add(ImmutableDriverCatalog.builder()
+                        .driver(DriverType.GERMLINE_DISRUPTION)
+                        .category(TSG)
+                        .gene(gene.GeneName)
+                        .transcript(disruptionData.Transcript.TransName)
+                        .isCanonical(disruptionData.Transcript.IsCanonical)
+                        .chromosome(gene.Chromosome)
+                        .chromosomeBand(gene.KaryotypeBand)
+                        .likelihoodMethod(LikelihoodMethod.GERMLINE)
+                        .driverLikelihood(1.0)
+                        .missense(0)
+                        .nonsense(0)
+                        .splice(0)
+                        .inframe(0)
+                        .frameshift(0)
+                        .biallelic(true)
+                        .minCopyNumber(2)
+                        .maxCopyNumber(2)
+                        .build());
             }
         }
     }

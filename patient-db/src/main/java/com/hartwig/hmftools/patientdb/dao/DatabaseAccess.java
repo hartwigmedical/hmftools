@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrginData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -31,6 +33,7 @@ import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
@@ -414,6 +417,10 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
+    public void writeGermlineSVs(@NotNull String sample, @NotNull List<LinxGermlineSv> germlineSvs) {
+        germlineVariantDAO.writeGermlineSVs(sample, germlineSvs);
+    }
+
     public void writeSignatures(@NotNull String sample, @NotNull List<SignatureAllocation> sigAllocations) {
         signatureDAO.write(sample, sigAllocations);
     }
@@ -426,17 +433,14 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }
 
-    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog) {
-        driverCatalogDAO.writeLinx(sample, somaticCatalog);
+    public void writeLinxDriverCatalog(
+            @NotNull String sample, @NotNull  List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes) {
+        driverCatalogDAO.writeLinxDrivers(sample, driverCatalog, driverTypes);
     }
 
-    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog,
-            @NotNull List<DriverCatalog> germlineCatalog) {
-        driverCatalogDAO.writePurple(sample, somaticCatalog, germlineCatalog);
-    }
-
-    public void writeGermlineDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
-        driverCatalogDAO.writeGermline(sample, driverCatalog);
+    public void writePurpleDriverCatalog(
+            @NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
+        driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {

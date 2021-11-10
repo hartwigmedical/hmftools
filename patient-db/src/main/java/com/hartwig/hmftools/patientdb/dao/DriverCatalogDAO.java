@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_GERMLINE;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
@@ -7,6 +11,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATIC
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +25,7 @@ import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep17;
 import org.jooq.InsertValuesStep19;
@@ -37,38 +43,18 @@ class DriverCatalogDAO
         this.context = context;
     }
 
-    void writeGermline(@NotNull String sample, @NotNull List<DriverCatalog> germlineCatalog)
+    void writePurpleDrivers(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog)
     {
-        deleteForSample(sample, DriverType.DRIVERS_GERMLINE);
-        insert(sample, germlineCatalog);
+        write(sample, somaticCatalog, Sets.newHashSet(DRIVERS_PURPLE_SOMATIC));
+        write(sample, germlineCatalog, Sets.newHashSet(DRIVERS_PURPLE_GERMLINE));
     }
 
-    void writeSomatic(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog)
+    void writeLinxDrivers(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes)
     {
-        Collection<DriverType> somatics = Sets.newHashSet();
-        somatics.addAll(DriverType.DRIVERS_MUTATION);
-        somatics.addAll(DriverType.DRIVERS_COPY_NUMBER);
-        write(sample, somaticCatalog, somatics);
+        write(sample, driverCatalog, driverTypes);
     }
 
-    void writePurple(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog)
-    {
-        writeSomatic(sample, somaticCatalog);
-        writeGermline(sample, germlineCatalog);
-    }
-
-    void writeLinx(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog)
-    {
-        write(sample, somaticCatalog, DriverType.DRIVERS_LINX);
-    }
-
-    void writeAll(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog)
-    {
-        deleteForSample(sample);
-        insert(sample, driverCatalog);
-    }
-
-    void write(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog, @NotNull Collection<DriverType> types)
+    void write(final String sample, final List<DriverCatalog> driverCatalog, final Collection<DriverType> types)
     {
         final List<DriverCatalog> filtered = driverCatalog.stream().filter(x -> types.contains(x.driver())).collect(Collectors.toList());
         deleteForSample(sample, types);

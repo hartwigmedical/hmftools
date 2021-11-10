@@ -38,7 +38,7 @@ class StructuralVariantClusterDAO
         this.context = context;
     }
 
-    public void writeClusters(@NotNull String sample, @NotNull List<LinxCluster> clusters)
+    public void writeClusters(final String sample, final List<LinxCluster> clusters)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -61,8 +61,8 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
-            @NotNull LinxCluster cluster)
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStep8 inserter, final String sample, final LinxCluster cluster)
     {
         inserter.values(sample,
                 timestamp,
@@ -74,7 +74,7 @@ class StructuralVariantClusterDAO
                 DatabaseUtil.checkStringLength(cluster.clusterDesc(), SVCLUSTER.CLUSTERDESC));
     }
 
-    public void writeSvData(@NotNull String sample, @NotNull List<LinxSvAnnotation> svData)
+    public void writeSvData(final String sample, final List<LinxSvAnnotation> svData)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -109,8 +109,8 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull String sample,
-            @NotNull LinxSvAnnotation svData)
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStep20 inserter, final String sample, final LinxSvAnnotation svData)
     {
         inserter.values(sample,
                 timestamp,
@@ -134,7 +134,7 @@ class StructuralVariantClusterDAO
                 svData.localTICountEnd());
     }
 
-    public void writeLinks(@NotNull String sample, @NotNull List<LinxLink> links)
+    public void writeLinks(final String sample, final List<LinxLink> links)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -168,8 +168,8 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep19 inserter, @NotNull String sample,
-            @NotNull LinxLink link)
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final LinxLink link)
     {
         inserter.values(sample,
                 timestamp,
@@ -192,7 +192,7 @@ class StructuralVariantClusterDAO
                 link.ecDna());
     }
 
-    public void writeDrivers(@NotNull String sample, @NotNull List<LinxDriver> drivers)
+    public void writeDrivers(final String sample, final List<LinxDriver> drivers)
     {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -212,8 +212,8 @@ class StructuralVariantClusterDAO
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
-            @NotNull LinxDriver driver)
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStep5 inserter, final String sample, final LinxDriver driver)
     {
         inserter.values(sample,
                 timestamp,
@@ -223,7 +223,7 @@ class StructuralVariantClusterDAO
     }
 
     @NotNull
-    public List<LinxSvAnnotation> readAnnotations(@NotNull String sample)
+    public List<LinxSvAnnotation> readAnnotations(final String sample)
     {
         List<LinxSvAnnotation> svAnnotations = Lists.newArrayList();
 
@@ -260,7 +260,7 @@ class StructuralVariantClusterDAO
     }
 
     @NotNull
-    public List<LinxCluster> readClusters(@NotNull String sample)
+    public List<LinxCluster> readClusters(final String sample)
     {
         List<LinxCluster> clusterList = Lists.newArrayList();
 
@@ -284,7 +284,7 @@ class StructuralVariantClusterDAO
     }
 
     @NotNull
-    public List<LinxDriver> readSvDrivers(@NotNull String sample)
+    public List<LinxDriver> readSvDrivers(final String sample)
     {
         List<LinxDriver> driverList = Lists.newArrayList();
 
@@ -304,7 +304,7 @@ class StructuralVariantClusterDAO
         return driverList;
     }
 
-    public void deleteClusterDataForSample(@NotNull String sample)
+    public void deleteClusterDataForSample(final String sample)
     {
         context.delete(SVCLUSTER).where(SVCLUSTER.SAMPLEID.eq(sample)).execute();
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();

@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DELETION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DISRUPTION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_MUTATION;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -60,8 +63,6 @@ public class DriverGeneAnnotator implements CohortFileInterface
     // references only
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private final VisSampleData mVisSampleData;
-
-    public static final String LINX_DRIVER_CATALOG = ".linx.driver.catalog.tsv";
 
     public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
             final CnDataLoader cnDataLoader, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
@@ -194,20 +195,14 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
     private boolean driverTypeHandled(final DriverCatalog driverGene)
     {
-        if(driverGene.driver() == GERMLINE)
-            return false;
-
-        if(driverGene.driver() == DriverType.DEL)
+        if(driverGene.driver() == DriverType.DEL || driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             return true;
 
-        if(driverGene.category() == TSG && driverGene.biallelic())
+        if(driverGene.driver() == DriverType.MUTATION && driverGene.category() == TSG && driverGene.biallelic())
         {
             // need to look for an LOH
             return true;
         }
-
-        if(driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
-            return true;
 
         return false;
     }
@@ -225,7 +220,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         // generate an empty Linx driver file even if no annotations were found
         try
         {
-            final String driverCatalogFile = mOutputDir + mSampleId + LINX_DRIVER_CATALOG;
+            final String driverCatalogFile = LinxDriver.generateCatalogFilename(mOutputDir, mSampleId, true);
             DriverCatalogFile.write(driverCatalogFile, mDataCache.getDriverCatalog());
 
             final String driversFile = LinxDriver.generateFilename(mOutputDir, mSampleId);
@@ -241,7 +236,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             final String sampleId, final DatabaseAccess dbAccess,
             final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
     {
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs);
+        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs, DRIVERS_LINX_SOMATIC);
         dbAccess.writeSvDrivers(sampleId, linxDrivers);
     }
 

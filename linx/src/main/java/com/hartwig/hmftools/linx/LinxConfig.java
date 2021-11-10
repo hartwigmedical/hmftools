@@ -149,7 +149,7 @@ public class LinxConfig
         IsGermline = cmd.hasOption(GERMLINE);
         RunFusions = cmd.hasOption(CHECK_FUSIONS);
 
-        Output = new LinxOutput(cmd, isSingleSample());
+        Output = new LinxOutput(cmd, isSingleSample() && !IsGermline);
 
         if(cmd.hasOption(REF_GENOME_VERSION))
             RG_VERSION = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));

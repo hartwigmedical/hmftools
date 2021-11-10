@@ -420,7 +420,7 @@ CREATE TABLE canonicalTranscript
     gene varchar(255) NOT NULL,
     geneId varchar(255) NOT NULL,
     chromosomeBand varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
+    chromosome varchar(10) NOT NULL,
     geneStart int not null,
     geneEnd int not null,
     transcriptId varchar(255) NOT NULL,
@@ -1009,6 +1009,42 @@ CREATE TABLE svFusion
     INDEX(fivePrimeBreakendId),
     INDEX(threePrimeBreakendId),
     INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS structuralVariantGermline;
+
+CREATE TABLE structuralVariantGermline
+(   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    chromosomeStart varchar(10) NOT NULL,
+    chromosomeEnd varchar(10),
+    positionStart int not null,
+    positionEnd int,
+    orientationStart tinyint not null,
+    orientationEnd tinyint,
+    gene varchar(50) NOT NULL,
+    type varchar(10) NOT NULL,
+    filter varchar(50) NOT NULL,
+    event varchar(50),
+    qualScore DOUBLE PRECISION,
+    germlineFragments int,
+    germlineReferenceFragmentsStart int,
+    germlineReferenceFragmentsEnd int,
+    tumorFragments int,
+    tumorReferenceFragmentsStart int,
+    tumorReferenceFragmentsEnd int,
+    insertSequence varchar(2048) not null,
+    clusterId int null,
+    clusterCount int null,
+    resolvedType VARCHAR(20),
+    linkedByStart varchar(1024),
+    linkedByEnd varchar(1024),
+    cohortFrequency int not null,
+    reported BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId, gene),
+    INDEX(gene)
 );
 
 DROP TABLE IF EXISTS signature;

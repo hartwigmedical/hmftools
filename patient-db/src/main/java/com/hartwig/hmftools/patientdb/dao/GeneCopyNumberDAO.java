@@ -160,8 +160,9 @@ class GeneCopyNumberDAO
         for(GermlineDeletion deletion : deletions)
         {
             addDeletionRecord(timestamp, inserter, sample, deletion);
-            inserter.execute();
         }
+
+        inserter.execute();
     }
 
     private static void addDeletionRecord(
@@ -187,7 +188,7 @@ class GeneCopyNumberDAO
                 timestamp);
     }
 
-    void deleteGermlineDeletionsForSample(final String sample)
+    private void deleteGermlineDeletionsForSample(final String sample)
     {
         context.delete(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).execute();
     }

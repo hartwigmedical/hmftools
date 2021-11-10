@@ -33,7 +33,7 @@ public final class ReportableHomozygousDisruptionFactory {
     @NotNull
     private static List<ReportableHomozygousDisruption> extractHomozygousDisruptions(@NotNull List<DriverCatalog> linxDriversCatalog) {
         return linxDriversCatalog.stream()
-                .filter(x -> x.driver().equals(DriverType.HOM_DISRUPTION))
+                .filter(x -> x.driver() == DriverType.HOM_DUP_DISRUPTION || x.driver() == DriverType.HOM_DEL_DISRUPTION)
                 .map(ReportableHomozygousDisruptionFactory::create)
                 .collect(Collectors.toList());
     }

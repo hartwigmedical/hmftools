@@ -43,6 +43,7 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DisruptionFinder implements CohortFileInterface
 {
@@ -100,7 +101,8 @@ public class DisruptionFinder implements CohortFileInterface
         return geneTransMap;
     }
 
-    public final List<SvDisruptionData> getDisruptions() { return mDisruptions; }
+    public List<SvDisruptionData> getDisruptions() { return mDisruptions; }
+    public GermlineDisruptions germlineDisruptions() { return mGermlineDisruptions; }
 
     private boolean matchesDisruptionGene(final String geneId)
     {
@@ -762,6 +764,11 @@ public class DisruptionFinder implements CohortFileInterface
 
         if(mIsGermline)
             mGermlineDisruptions.findGeneDeletions(clusters);
+    }
+
+    public void writeGermlineDisruptions(final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
+    {
+        mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir, dbAccess);
     }
 
     private static double getUndisruptedCopyNumber(final SvBreakend breakend)

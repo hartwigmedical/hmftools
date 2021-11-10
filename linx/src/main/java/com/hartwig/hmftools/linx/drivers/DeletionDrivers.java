@@ -304,7 +304,7 @@ public class DeletionDrivers
                 breakend, breakend.getCluster().id(), transcript.geneName(), transcript.transName(),
                 formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
 
-        DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData);
+        DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData, DriverType.HOM_DEL_DISRUPTION);
 
         if(dgData != null)
         {
@@ -353,7 +353,7 @@ public class DeletionDrivers
                     transcript.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
                     formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(jcn));
 
-            DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData);
+            DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData, DriverType.HOM_DUP_DISRUPTION);
 
             if(dgData != null)
             {
