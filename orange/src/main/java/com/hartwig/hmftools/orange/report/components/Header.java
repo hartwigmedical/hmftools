@@ -42,7 +42,7 @@ public class Header {
                 .add(new Text("G").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
                 .add(new Text("E").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
                 .add(new Text(" Report").setFont(ReportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
-                .setFixedPosition(200, page.getPageSize().getHeight() - 40, 300));
+                .setFixedPosition(175, page.getPageSize().getHeight() - 40, 300));
 
         pdfCanvas.release();
     }
