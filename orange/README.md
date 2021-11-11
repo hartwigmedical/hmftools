@@ -94,7 +94,7 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming 
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.2) 
   - Support for [Virus Interpreter v1.1](../virus-interpreter/README.md), including addition of % covered, mean coverage and expected 
   clonal coverage
   - The Cuppa best prediction is always displayed on the front page regardless of reliability of prediction.
