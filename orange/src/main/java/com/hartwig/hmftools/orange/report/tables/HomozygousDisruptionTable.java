@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.ChromosomeUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
@@ -20,21 +21,20 @@ public final class HomozygousDisruptionTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         if (homozygousDisruptions.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width,
+        Table table = TableUtil.createContent(width,
                 new float[] { 1, 1, 4 },
-                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
-                        TableUtil.createHeaderCell(Strings.EMPTY) });
+                new Cell[] { CellUtil.createHeader("Location"), CellUtil.createHeader("Gene"), CellUtil.createHeader(Strings.EMPTY) });
 
         for (ReportableHomozygousDisruption homozygousDisruption : sort(homozygousDisruptions)) {
-            table.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
-            table.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
-            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
+            table.addCell(CellUtil.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
+            table.addCell(CellUtil.createContent(homozygousDisruption.gene()));
+            table.addCell(CellUtil.createContent(Strings.EMPTY));
         }
 
-        return TableUtil.createWrappingReportTable(table, title);
+        return TableUtil.createWrapping(table, title);
     }
 
     @NotNull

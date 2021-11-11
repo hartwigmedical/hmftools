@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.geom.PageSize;
@@ -60,20 +61,20 @@ public class QualityControlChapter implements ReportChapter {
     }
 
     private void addKeyQC(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(contentWidth(),
+        Table table = TableUtil.createContent(contentWidth(),
                 new float[] { 2, 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("QC"), TableUtil.createHeaderCell("Fit Method"),
-                        TableUtil.createHeaderCell("Mean Depth"), TableUtil.createHeaderCell("Contamination"),
-                        TableUtil.createHeaderCell("Uns. CN segments"), TableUtil.createHeaderCell("Deleted Genes") });
+                new Cell[] { CellUtil.createHeader("QC"), CellUtil.createHeader("Fit Method"), CellUtil.createHeader("Mean Depth"),
+                        CellUtil.createHeader("Contamination"), CellUtil.createHeader("Uns. CN segments"),
+                        CellUtil.createHeader("Deleted Genes") });
 
-        table.addCell(TableUtil.createContentCell(purpleQCString()));
-        table.addCell(TableUtil.createContentCell(report.purple().fittedPurityMethod().toString()));
-        table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().amberMeanDepth())));
-        table.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(report.purple().qc().contamination() * 100)));
-        table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().unsupportedCopyNumberSegments())));
-        table.addCell(TableUtil.createContentCell(String.valueOf(report.purple().qc().deletedGenes())));
+        table.addCell(CellUtil.createContent(purpleQCString()));
+        table.addCell(CellUtil.createContent(report.purple().fittedPurityMethod().toString()));
+        table.addCell(CellUtil.createContent(String.valueOf(report.purple().qc().amberMeanDepth())));
+        table.addCell(CellUtil.createContent(PERCENTAGE_FORMAT.format(report.purple().qc().contamination() * 100)));
+        table.addCell(CellUtil.createContent(String.valueOf(report.purple().qc().unsupportedCopyNumberSegments())));
+        table.addCell(CellUtil.createContent(String.valueOf(report.purple().qc().deletedGenes())));
 
-        document.add(TableUtil.createWrappingReportTable(table));
+        document.add(TableUtil.createWrapping(table));
     }
 
     @NotNull
@@ -96,84 +97,83 @@ public class QualityControlChapter implements ReportChapter {
         Flagstat refFlagstat = report.refSample().flagstat();
         Flagstat tumorFlagstat = report.tumorSample().flagstat();
 
-        Table flagstat = TableUtil.createReportContentTable(contentWidth(),
+        Table flagstat = TableUtil.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell(Strings.EMPTY), TableUtil.createHeaderCell("Unique RC"),
-                        TableUtil.createHeaderCell("Secondary RC"), TableUtil.createHeaderCell("Supplementary RC"),
-                        TableUtil.createHeaderCell("Mapped Proportion") });
+                new Cell[] { CellUtil.createHeader(Strings.EMPTY), CellUtil.createHeader("Unique RC"),
+                        CellUtil.createHeader("Secondary RC"), CellUtil.createHeader("Supplementary RC"),
+                        CellUtil.createHeader("Mapped Proportion") });
 
-        flagstat.addCell(TableUtil.createContentCell("Ref Sample"));
-        flagstat.addCell(TableUtil.createContentCell(String.valueOf(refFlagstat.uniqueReadCount())));
-        flagstat.addCell(TableUtil.createContentCell(String.valueOf(refFlagstat.secondaryCount())));
-        flagstat.addCell(TableUtil.createContentCell(String.valueOf(refFlagstat.supplementaryCount())));
-        flagstat.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(refFlagstat.mappedProportion() * 100)));
+        flagstat.addCell(CellUtil.createContent("Ref Sample"));
+        flagstat.addCell(CellUtil.createContent(String.valueOf(refFlagstat.uniqueReadCount())));
+        flagstat.addCell(CellUtil.createContent(String.valueOf(refFlagstat.secondaryCount())));
+        flagstat.addCell(CellUtil.createContent(String.valueOf(refFlagstat.supplementaryCount())));
+        flagstat.addCell(CellUtil.createContent(PERCENTAGE_FORMAT.format(refFlagstat.mappedProportion() * 100)));
 
-        flagstat.addCell(TableUtil.createContentCell("Tumor Sample"));
-        flagstat.addCell(TableUtil.createContentCell(String.valueOf(tumorFlagstat.uniqueReadCount())));
-        flagstat.addCell(TableUtil.createContentCell(String.valueOf(tumorFlagstat.secondaryCount())));
-        flagstat.addCell(TableUtil.createContentCell(String.valueOf(tumorFlagstat.supplementaryCount())));
-        flagstat.addCell(TableUtil.createContentCell(PERCENTAGE_FORMAT.format(tumorFlagstat.mappedProportion() * 100)));
+        flagstat.addCell(CellUtil.createContent("Tumor Sample"));
+        flagstat.addCell(CellUtil.createContent(String.valueOf(tumorFlagstat.uniqueReadCount())));
+        flagstat.addCell(CellUtil.createContent(String.valueOf(tumorFlagstat.secondaryCount())));
+        flagstat.addCell(CellUtil.createContent(String.valueOf(tumorFlagstat.supplementaryCount())));
+        flagstat.addCell(CellUtil.createContent(PERCENTAGE_FORMAT.format(tumorFlagstat.mappedProportion() * 100)));
 
-        document.add(TableUtil.createWrappingReportTable(flagstat, "Flagstats"));
+        document.add(TableUtil.createWrapping(flagstat, "Flagstats"));
     }
 
     private void addCoverageStats(@NotNull Document document) {
         WGSMetrics refMetrics = report.refSample().metrics();
         WGSMetrics tumorMetrics = report.tumorSample().metrics();
 
-        Table coverage = TableUtil.createReportContentTable(contentWidth(),
+        Table coverage = TableUtil.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell(Strings.EMPTY), TableUtil.createHeaderCell("Mean Coverage"),
-                        TableUtil.createHeaderCell("SD Coverage"), TableUtil.createHeaderCell("Median Coverage"),
-                        TableUtil.createHeaderCell("Mad Coverage") });
+                new Cell[] { CellUtil.createHeader(Strings.EMPTY), CellUtil.createHeader("Mean Coverage"),
+                        CellUtil.createHeader("SD Coverage"), CellUtil.createHeader("Median Coverage"),
+                        CellUtil.createHeader("Mad Coverage") });
 
-        coverage.addCell(TableUtil.createContentCell("Ref Sample"));
-        coverage.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(refMetrics.meanCoverage())));
-        coverage.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(refMetrics.sdCoverage())));
-        coverage.addCell(TableUtil.createContentCell(String.valueOf(refMetrics.medianCoverage())));
-        coverage.addCell(TableUtil.createContentCell(String.valueOf(refMetrics.madCoverage())));
+        coverage.addCell(CellUtil.createContent("Ref Sample"));
+        coverage.addCell(CellUtil.createContent(SINGLE_DIGIT.format(refMetrics.meanCoverage())));
+        coverage.addCell(CellUtil.createContent(SINGLE_DIGIT.format(refMetrics.sdCoverage())));
+        coverage.addCell(CellUtil.createContent(String.valueOf(refMetrics.medianCoverage())));
+        coverage.addCell(CellUtil.createContent(String.valueOf(refMetrics.madCoverage())));
 
-        coverage.addCell(TableUtil.createContentCell("Tumor Sample"));
-        coverage.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(tumorMetrics.meanCoverage())));
-        coverage.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(tumorMetrics.sdCoverage())));
-        coverage.addCell(TableUtil.createContentCell(String.valueOf(tumorMetrics.medianCoverage())));
-        coverage.addCell(TableUtil.createContentCell(String.valueOf(tumorMetrics.madCoverage())));
+        coverage.addCell(CellUtil.createContent("Tumor Sample"));
+        coverage.addCell(CellUtil.createContent(SINGLE_DIGIT.format(tumorMetrics.meanCoverage())));
+        coverage.addCell(CellUtil.createContent(SINGLE_DIGIT.format(tumorMetrics.sdCoverage())));
+        coverage.addCell(CellUtil.createContent(String.valueOf(tumorMetrics.medianCoverage())));
+        coverage.addCell(CellUtil.createContent(String.valueOf(tumorMetrics.madCoverage())));
 
-        document.add(TableUtil.createWrappingReportTable(coverage, "Coverage Stats"));
+        document.add(TableUtil.createWrapping(coverage, "Coverage Stats"));
     }
 
     private void addExcludedPercentages(@NotNull Document document) {
         WGSMetrics refMetrics = report.refSample().metrics();
         WGSMetrics tumorMetrics = report.tumorSample().metrics();
 
-        Table percentages = TableUtil.createReportContentTable(contentWidth(),
+        Table percentages = TableUtil.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell(Strings.EMPTY), TableUtil.createHeaderCell("Adapter"),
-                        TableUtil.createHeaderCell("BaseQ"), TableUtil.createHeaderCell("Capped"), TableUtil.createHeaderCell("Dupe"),
-                        TableUtil.createHeaderCell("MapQ"), TableUtil.createHeaderCell("Overlap"), TableUtil.createHeaderCell("Unpaired"),
-                        TableUtil.createHeaderCell("Total") });
+                new Cell[] { CellUtil.createHeader(Strings.EMPTY), CellUtil.createHeader("Adapter"), CellUtil.createHeader("BaseQ"),
+                        CellUtil.createHeader("Capped"), CellUtil.createHeader("Dupe"), CellUtil.createHeader("MapQ"),
+                        CellUtil.createHeader("Overlap"), CellUtil.createHeader("Unpaired"), CellUtil.createHeader("Total") });
 
-        percentages.addCell(TableUtil.createContentCell("Ref Sample"));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcAdapter())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcBaseQ())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcCapped())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcDupe())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcMapQ())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcOverlap())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcUnpaired())));
-        percentages.addCell(TableUtil.createContentCell(percent(refMetrics.pctExcTotal())));
+        percentages.addCell(CellUtil.createContent("Ref Sample"));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcAdapter())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcBaseQ())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcCapped())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcDupe())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcMapQ())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcOverlap())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcUnpaired())));
+        percentages.addCell(CellUtil.createContent(percent(refMetrics.pctExcTotal())));
 
-        percentages.addCell(TableUtil.createContentCell("Tumor Sample"));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcAdapter())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcBaseQ())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcCapped())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcDupe())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcMapQ())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcOverlap())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcUnpaired())));
-        percentages.addCell(TableUtil.createContentCell(percent(tumorMetrics.pctExcTotal())));
+        percentages.addCell(CellUtil.createContent("Tumor Sample"));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcAdapter())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcBaseQ())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcCapped())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcDupe())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcMapQ())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcOverlap())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcUnpaired())));
+        percentages.addCell(CellUtil.createContent(percent(tumorMetrics.pctExcTotal())));
 
-        document.add(TableUtil.createWrappingReportTable(percentages, "Excluded Percentages"));
+        document.add(TableUtil.createWrapping(percentages, "Excluded Percentages"));
     }
 
     @NotNull
@@ -186,11 +186,10 @@ public class QualityControlChapter implements ReportChapter {
 
         long halfContentWidth = Math.round(contentWidth() / 2D) - 2;
         Table table = new Table(2);
-        table.addCell(TableUtil.createImageCell(ImageUtil.build(report.plots().purpleFinalCircosPlot()).setMaxWidth(halfContentWidth)));
-        table.addCell(TableUtil.createImageCell(ImageUtil.build(report.plots().purpleInputPlot()).setMaxWidth(halfContentWidth)));
-        table.addCell(TableUtil.createImageCell(ImageUtil.build(report.plots().purpleCopyNumberPlot()).setMaxWidth(halfContentWidth)));
-        table.addCell(TableUtil.createImageCell(ImageUtil.build(report.plots().purpleVariantCopyNumberPlot())
-                .setMaxWidth(halfContentWidth)));
+        table.addCell(CellUtil.createImage(ImageUtil.build(report.plots().purpleFinalCircosPlot()).setMaxWidth(halfContentWidth)));
+        table.addCell(CellUtil.createImage(ImageUtil.build(report.plots().purpleInputPlot()).setMaxWidth(halfContentWidth)));
+        table.addCell(CellUtil.createImage(ImageUtil.build(report.plots().purpleCopyNumberPlot()).setMaxWidth(halfContentWidth)));
+        table.addCell(CellUtil.createImage(ImageUtil.build(report.plots().purpleVariantCopyNumberPlot()).setMaxWidth(halfContentWidth)));
         document.add(table);
     }
 

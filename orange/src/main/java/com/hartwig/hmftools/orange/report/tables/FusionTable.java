@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
@@ -24,41 +25,49 @@ public final class FusionTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions) {
         if (fusions.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width,
+        Table table = TableUtil.createContent(width,
                 new float[] { 1, 5 },
-                new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("Details") });
+                new Cell[] { CellUtil.createHeader("Fusion"), CellUtil.createHeader("Details") });
 
         for (LinxFusion fusion : sort(fusions)) {
-            table.addCell(TableUtil.createContentCell(fusion.name()));
+            table.addCell(CellUtil.createContent(fusion.name()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
-            details.addCell(TableUtil.createKeyCell("5' End"));
-            details.addCell(TableUtil.createValueCell(
-                    fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")"));
-            details.addCell(TableUtil.createKeyCell("3' Start"));
-            details.addCell(TableUtil.createValueCell(
-                    fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")"));
-            details.addCell(TableUtil.createKeyCell("Junction CN"));
-            details.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
-            details.addCell(TableUtil.createKeyCell("RNA expression"));
-            details.addCell(TableUtil.createValueCell(ReportResources.NOT_AVAILABLE));
-            details.addCell(TableUtil.createKeyCell("Phasing"));
-            details.addCell(TableUtil.createValueCell(fusion.phased().display()));
-            details.addCell(TableUtil.createKeyCell("Reported type (DL)"));
-            details.addCell(TableUtil.createValueCell(fusion.reportedType() + " (" + fusion.likelihood().display() + ")"));
-            details.addCell(TableUtil.createKeyCell("Chain links (terminated?)"));
-            details.addCell(TableUtil.createValueCell(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
-            details.addCell(TableUtil.createKeyCell("Domains kept"));
-            details.addCell(TableUtil.createValueCell(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-"));
-            details.addCell(TableUtil.createKeyCell("Domains lost"));
-            details.addCell(TableUtil.createValueCell(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-"));
-            table.addCell(TableUtil.createContentCell(details));
+            details.addCell(CellUtil.createKey("5' End"));
+            details.addCell(CellUtil.createValue(fiveEndString(fusion)));
+            details.addCell(CellUtil.createKey("3' Start"));
+            details.addCell(CellUtil.createValue(threeStartString(fusion)));
+            details.addCell(CellUtil.createKey("Junction CN"));
+            details.addCell(CellUtil.createValue(SINGLE_DIGIT.format(fusion.junctionCopyNumber())));
+            details.addCell(CellUtil.createKey("RNA expression"));
+            details.addCell(CellUtil.createValue(ReportResources.NOT_AVAILABLE));
+            details.addCell(CellUtil.createKey("Phasing"));
+            details.addCell(CellUtil.createValue(fusion.phased().display()));
+            details.addCell(CellUtil.createKey("Reported type (DL)"));
+            details.addCell(CellUtil.createValue(fusion.reportedType() + " (" + fusion.likelihood().display() + ")"));
+            details.addCell(CellUtil.createKey("Chain links (terminated?)"));
+            details.addCell(CellUtil.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
+            details.addCell(CellUtil.createKey("Domains kept"));
+            details.addCell(CellUtil.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-"));
+            details.addCell(CellUtil.createKey("Domains lost"));
+            details.addCell(CellUtil.createValue(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-"));
+            table.addCell(CellUtil.createContent(details));
         }
 
-        return TableUtil.createWrappingReportTable(table, title);
+        return TableUtil.createWrapping(table, title);
+    }
+
+    @NotNull
+    private static String fiveEndString(@NotNull LinxFusion fusion) {
+        return fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")";
+    }
+
+    @NotNull
+    private static String threeStartString(@NotNull LinxFusion fusion) {
+        return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
     }
 
     @NotNull

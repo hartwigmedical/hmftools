@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.ChromosomeUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
@@ -23,25 +24,24 @@ public final class GeneDisruptionTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<ReportableGeneDisruption> disruptions) {
         if (disruptions.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width,
+        Table table = TableUtil.createContent(width,
                 new float[] { 1, 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
-                        TableUtil.createHeaderCell("Range"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Junction CN"),
-                        TableUtil.createHeaderCell("Undisrupted CN") });
+                new Cell[] { CellUtil.createHeader("Location"), CellUtil.createHeader("Gene"), CellUtil.createHeader("Range"),
+                        CellUtil.createHeader("Type"), CellUtil.createHeader("Junction CN"), CellUtil.createHeader("Undisrupted CN") });
 
         for (ReportableGeneDisruption disruption : sort(disruptions)) {
-            table.addCell(TableUtil.createContentCell(disruption.location()));
-            table.addCell(TableUtil.createContentCell(disruption.gene()));
-            table.addCell(TableUtil.createContentCell(disruption.range()));
-            table.addCell(TableUtil.createContentCell(disruption.type()));
-            table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(disruption.junctionCopyNumber())));
-            table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(disruption.undisruptedCopyNumber())));
+            table.addCell(CellUtil.createContent(disruption.location()));
+            table.addCell(CellUtil.createContent(disruption.gene()));
+            table.addCell(CellUtil.createContent(disruption.range()));
+            table.addCell(CellUtil.createContent(disruption.type()));
+            table.addCell(CellUtil.createContent(SINGLE_DIGIT.format(disruption.junctionCopyNumber())));
+            table.addCell(CellUtil.createContent(SINGLE_DIGIT.format(disruption.undisruptedCopyNumber())));
         }
 
-        return TableUtil.createWrappingReportTable(table, title);
+        return TableUtil.createWrapping(table, title);
     }
 
     @NotNull

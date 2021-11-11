@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
@@ -19,21 +20,20 @@ public final class StructuralDriverTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LinxDriver> drivers) {
         if (drivers.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width,
+        Table table = TableUtil.createContent(width,
                 new float[] { 1, 1, 4 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Event Type"),
-                        TableUtil.createHeaderCell(Strings.EMPTY) });
+                new Cell[] { CellUtil.createHeader("Gene"), CellUtil.createHeader("Event Type"), CellUtil.createHeader(Strings.EMPTY) });
 
         for (LinxDriver driver : sort(drivers)) {
-            table.addCell(TableUtil.createContentCell(driver.gene()));
-            table.addCell(TableUtil.createContentCell(driver.eventType()));
-            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
+            table.addCell(CellUtil.createContent(driver.gene()));
+            table.addCell(CellUtil.createContent(driver.eventType()));
+            table.addCell(CellUtil.createContent(Strings.EMPTY));
         }
 
-        return TableUtil.createWrappingReportTable(table, title);
+        return TableUtil.createWrapping(table, title);
     }
 
     @NotNull
