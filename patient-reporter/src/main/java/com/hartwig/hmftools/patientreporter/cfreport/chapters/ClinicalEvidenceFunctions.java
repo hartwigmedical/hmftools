@@ -217,7 +217,6 @@ public class ClinicalEvidenceFunctions {
         }
 
         return event;
-
     }
 
     @NotNull
