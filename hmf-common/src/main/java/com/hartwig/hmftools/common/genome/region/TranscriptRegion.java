@@ -7,7 +7,6 @@ public interface TranscriptRegion extends GenomeRegion {
     @NotNull
     String transName();
 
-    @NotNull
     boolean isCanonical();
 
     @NotNull
