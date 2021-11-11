@@ -41,12 +41,6 @@ final class FilterFactory {
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MAP2K4", "ACTIVATING MUTATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MAP3K1", "ACTIVATING MUTATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MST1R", "ACTIVATING MUTATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("NOTCH1", "ACTIVATING MUTATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("NOTCH2", "ACTIVATING MUTATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("NOTCH3", "ACTIVATING MUTATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("NOTCH4", "ACTIVATING MUTATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("NRG1", "ACTIVATING MUTATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("PIK3R1", "ACTIVATING MUTATION"));
 
         // Fusions that would not get reported anyways.
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FGFR4", "FUSION"));
