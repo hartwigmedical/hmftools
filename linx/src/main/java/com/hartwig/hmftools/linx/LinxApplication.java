@@ -89,7 +89,8 @@ public class LinxApplication
             System.exit(1);
         }
 
-        LNX_LOGGER.info("running SV analysis for {}",
+        LNX_LOGGER.info("running {} analysis for {}",
+                config.IsGermline ? "germline SV" : "SV",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
 
         FusionResources fusionResources = new FusionResources(cmd);

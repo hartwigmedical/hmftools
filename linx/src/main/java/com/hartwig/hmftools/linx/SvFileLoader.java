@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
+import static com.hartwig.hmftools.linx.germline.GermlineFilter.GERMLINE_MIN_QUAL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class SvFileLoader
         String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
 
         if(config.IsGermline)
-            return loadSvDataFromGermlineVcf(vcfFile);
+            return loadSvDataFromGermlineVcf(vcfFile, cmd);
         else
             return loadSvDataFromVcf(vcfFile);
     }
@@ -67,13 +68,15 @@ public class SvFileLoader
         return svDataList;
     }
 
-    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
+    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile, final CommandLine cmd)
     {
+        int minQualLimit = Integer.parseInt(cmd.getOptionValue(GERMLINE_MIN_QUAL, "0"));
+
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
         try
         {
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter());
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter(minQualLimit));
 
             int svId = 0;
 
@@ -100,7 +103,7 @@ public class SvFileLoader
         {
             final String filter = svRecord.filter();
 
-            if(filter.isEmpty() || filter.equals(PASS) || filter.equals(INFERRED) || (config.IsGermline && filter.equals(PON_FILTER_PON)))
+            if(filter.isEmpty() || filter.equals(PASS) || filter.equals(INFERRED) || config.IsGermline)
             {
                 svDataItems.add(new SvVarData(svRecord));
             }

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSepar
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.germline.GermlineFilter.GERMLINE_MIN_QUAL;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
@@ -147,6 +148,7 @@ public class LinxConfig
         SvVcfFile = svVcfFile;
 
         IsGermline = cmd.hasOption(GERMLINE);
+
         RunFusions = cmd.hasOption(CHECK_FUSIONS);
 
         Output = new LinxOutput(cmd, isSingleSample() && !IsGermline);
@@ -346,6 +348,7 @@ public class LinxConfig
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(KATAEGIS_FILE, true, "Kataegis data file");
         options.addOption(GERMLINE, false, "Process germline SVs");
+        options.addOption(GERMLINE_MIN_QUAL, true, "Germline SV MinQual limit");
         options.addOption(GENE_ID_FILE, true, "Limit to Ensembl gene ids specified in file");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
