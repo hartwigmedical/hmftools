@@ -7,7 +7,6 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
-import com.hartwig.hmftools.orange.report.util.VariantUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 

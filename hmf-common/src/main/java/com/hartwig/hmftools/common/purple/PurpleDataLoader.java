@@ -40,6 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class PurpleDataLoader {
+
     private static final Logger LOGGER = LogManager.getLogger(PurpleDataLoader.class);
 
     private PurpleDataLoader() {
@@ -48,26 +49,29 @@ public final class PurpleDataLoader {
     @NotNull
     public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
             @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
+            @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv)
+            throws IOException {
+        return load(tumorSample,
+                referenceSample,
+                qcFile,
+                purityTsv,
+                somaticDriverCatalogTsv,
+                somaticVariantVcf,
+                germlineDriverCatalogTsv,
+                germlineVariantVcf,
+                purpleGeneCopyNumberTsv,
+                null,
+                null);
+    }
+
+    @NotNull
+    public static PurpleData load(@NotNull String tumorSample, @Nullable String referenceSample, @NotNull String qcFile,
+            @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @Nullable String purpleGeneCopyNumberTsv,
-            @Nullable String purpleSomaticCopynumberTsv, @NotNull RefGenomeVersion refGenomeVersion) throws IOException {
+            @Nullable String purpleSomaticCopynumberTsv, @Nullable RefGenomeVersion refGenomeVersion) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", new File(purityTsv).getParent());
 
-        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
-
-        DecimalFormat purityFormat = new DecimalFormat("#'%'");
-        LOGGER.info("  QC status: {}", purityContext.qc().toString());
-        LOGGER.info("  Tumor purity: {} ({}-{})",
-                purityFormat.format(purityContext.bestFit().purity() * 100),
-                purityFormat.format(purityContext.score().minPurity() * 100),
-                purityFormat.format(purityContext.score().maxPurity() * 100));
-        LOGGER.info("  Tumor ploidy: {} ({}-{})",
-                purityContext.bestFit().ploidy(),
-                purityContext.score().minPloidy(),
-                purityContext.score().maxPloidy());
-        LOGGER.info("  Fit method: {}", purityContext.method());
-        LOGGER.info("  Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
-        LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
-        LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
+        PurityContext purityContext = readPurityContext(qcFile, purityTsv);
 
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(somaticDriverCatalogTsv);
         LOGGER.info(" Loaded {} somatic driver catalog entries from {}", somaticDriverCatalog.size(), somaticDriverCatalogTsv);
@@ -92,7 +96,7 @@ public final class PurpleDataLoader {
         LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
 
         List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
-        if (purpleSomaticCopynumberTsv != null) {
+        if (purpleSomaticCopynumberTsv != null && refGenomeVersion != null) {
             RefGenomeCoordinates refGenomeCoordinates =
                     refGenomeVersion == RefGenomeVersion.V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
             cnPerChromosome = GenerateCnPerChromosome.fromPurpleSomaticCopynumberTsv(purpleSomaticCopynumberTsv, refGenomeCoordinates);
@@ -148,6 +152,28 @@ public final class PurpleDataLoader {
                 .reportableGainsLosses(reportableGainsLosses)
                 .cnPerChromosome(cnPerChromosome)
                 .build();
+    }
+
+    @NotNull
+    private static PurityContext readPurityContext(@NotNull String qcFile, @NotNull String purityTsv) throws IOException {
+        PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
+
+        DecimalFormat purityFormat = new DecimalFormat("#'%'");
+        LOGGER.info("  QC status: {}", purityContext.qc().toString());
+        LOGGER.info("  Tumor purity: {} ({}-{})",
+                purityFormat.format(purityContext.bestFit().purity() * 100),
+                purityFormat.format(purityContext.score().minPurity() * 100),
+                purityFormat.format(purityContext.score().maxPurity() * 100));
+        LOGGER.info("  Tumor ploidy: {} ({}-{})",
+                purityContext.bestFit().ploidy(),
+                purityContext.score().minPloidy(),
+                purityContext.score().maxPloidy());
+        LOGGER.info("  Fit method: {}", purityContext.method());
+        LOGGER.info("  Whole genome duplication: {}", purityContext.wholeGenomeDuplication() ? "yes" : "no");
+        LOGGER.info("  Microsatellite status: {}", purityContext.microsatelliteStatus().display());
+        LOGGER.info("  Tumor mutational load status: {}", purityContext.tumorMutationalLoadStatus().display());
+
+        return purityContext;
     }
 
     @NotNull

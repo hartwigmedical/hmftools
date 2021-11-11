@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.orange.report.util;
+package com.hartwig.hmftools.orange.report.tables;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ChromosomeUtil {
+final class ChromosomeUtil {
 
     private ChromosomeUtil() {
     }
