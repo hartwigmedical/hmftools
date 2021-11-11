@@ -98,10 +98,11 @@ investigate potential causes for QC failure.
   - Support for [Virus Interpreter v1.1](../virus-interpreter/README.md), including addition of % covered, mean coverage and expected 
   clonal coverage
   - The Cuppa best prediction is always displayed on the front page regardless of reliability of prediction.
-  - More details about HR deficiency is displayed on front page in case sample is HR deficient
+  - More details about HR deficiency are displayed on front page in case sample is HR deficient
   - Pan-cancer and cancer-type specific percentiles for SV TMB are displayed on the front page
-  - Other regions of autosomal deletes are no longer filtered on having germline events, so all autosomal deletions are now displayed
-  regardless of whether they occurred in germline already or not. 
+  - Other autosomal regions with deletions are no longer filtered for germline events, so all autosomal deletions are now displayed
+  regardless of whether they occurred in germline already or not.
+  - Many technical and param changes described in linked release notes 
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.1)
   - Add JSON output of comprehensive platinum output
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.0)
