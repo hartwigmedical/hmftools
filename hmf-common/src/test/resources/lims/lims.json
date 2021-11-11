@@ -86,15 +86,15 @@
       "submission": "ABCDEF123",
       "project_type": "CORE",
       "project_name": "ABC",
-      "report_contact_email": "henk@hmf.nl",
-      "report_contact_name": "henk"
+      "requester_report_contact_email": "henk@hmf.nl",
+      "requester_report_contact_name": "henk"
     },
     "ABCDEF124": {
       "submission": "ABCDEF1234",
       "project_type": "RESEARCH",
       "project_name": "ABC",
-      "report_contact_email": "henk@hmf.nl",
-      "report_contact_name": "henk"
+      "requester_report_contact_email": "henk@hmf.nl",
+      "requester_report_contact_name": "henk"
     }
   }
 }

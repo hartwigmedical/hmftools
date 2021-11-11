@@ -74,7 +74,6 @@ public class LimsFactoryTest {
     }
 
     @Test
-    @Ignore
     public void readSubmissionsCorrectlyFromJsonFile() throws FileNotFoundException {
         Map<String, LimsJsonSubmissionData> dataPerSubmission =
                 LimsFactory.readLimsJsonSubmissions(LIMS_DIRECTORY + File.separator + "lims.json");
