@@ -19,8 +19,6 @@ final class FilterFactory {
         // We don't interpret "expression" evidence on WGS
         MUTATIONS_TO_FILTER.add("EXPRESSION");
 
-        // We don't consider wild-type events yet.
-        MUTATIONS_TO_FILTER.add("Wild-type");
     }
 
     private static void populateMutationKeysToFilter() {
