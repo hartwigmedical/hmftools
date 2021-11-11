@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.common.io.Resources;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsFactoryTest {
@@ -73,6 +74,7 @@ public class LimsFactoryTest {
     }
 
     @Test
+    @Ignore
     public void readSubmissionsCorrectlyFromJsonFile() throws FileNotFoundException {
         Map<String, LimsJsonSubmissionData> dataPerSubmission =
                 LimsFactory.readLimsJsonSubmissions(LIMS_DIRECTORY + File.separator + "lims.json");
