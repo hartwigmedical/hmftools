@@ -101,7 +101,7 @@ investigate potential causes for QC failure.
   - More details about HR deficiency are displayed on front page in case sample is HR deficient
   - Pan-cancer and cancer-type specific percentiles for SV TMB are displayed on the front page
   - Other autosomal regions with deletions are no longer filtered for germline events, so all autosomal deletions are now displayed
-  regardless of whether they occurred in germline already or not.
+  regardless of whether they occurred in germline or not.
   - Many technical and param changes described in linked release notes 
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.1)
   - Add JSON output of comprehensive platinum output
