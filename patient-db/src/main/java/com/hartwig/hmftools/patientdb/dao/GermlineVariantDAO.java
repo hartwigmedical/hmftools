@@ -235,7 +235,7 @@ public class GermlineVariantDAO
                 germlineSV.Type,
                 germlineSV.Filter,
                 germlineSV.EventId,
-                germlineSV.QualScore,
+                DatabaseUtil.decimal(germlineSV.QualScore),
                 germlineSV.GermlineFragments,
                 germlineSV.GermlineReferenceFragmentsStart,
                 germlineSV.GermlineReferenceFragmentsEnd,
