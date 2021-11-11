@@ -35,6 +35,7 @@ public final class IclusionClassificationConfig {
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
     private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_EVENTS = lowTumorMutationalLoadEvents();
     private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
+    private static final Set<String> HLA_EVENTS = hlaEvents();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
     private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
@@ -70,6 +71,7 @@ public final class IclusionClassificationConfig {
                 .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .lowTumorMutationalLoadEvents(LOW_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
+                .hlaEvents(HLA_EVENTS)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
                 .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
@@ -110,6 +112,7 @@ public final class IclusionClassificationConfig {
         Map<String, Set<String>> map = Maps.newHashMap();
 
         map.put("MET", Sets.newHashSet("EXON 14 SKIPPING MUTATION"));
+        map.put("EGFR", Sets.newHashSet("KINASE DOMAIN DUPLICATION (EXON 18-25)"));
 
         return map;
     }
@@ -125,6 +128,7 @@ public final class IclusionClassificationConfig {
     private static Set<String> genericGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
         set.add("MUTATION");
+        set.add("mutation");
         return set;
     }
 
@@ -158,9 +162,7 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> deletionBlacklistKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("NON-EXPRESSION");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -238,6 +240,13 @@ public final class IclusionClassificationConfig {
     }
 
     @NotNull
+    private static Set<String> hlaEvents() {
+        Set<String> set = Sets.newHashSet();
+        set.add("A*02");
+        return set;
+    }
+
+    @NotNull
     private static Set<String> hpvPositiveEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("HPV POSITIVE");
@@ -272,6 +281,9 @@ public final class IclusionClassificationConfig {
 
         Set<String> flt3Set = Sets.newHashSet("FLT3-ITD");
         map.put("FLT3", flt3Set);
+
+        Set<String> ccnd2Set = Sets.newHashSet("3'UTR LOSS");
+        map.put("CCND1", ccnd2Set);
 
         return map;
     }

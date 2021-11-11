@@ -46,34 +46,36 @@ public class ReportWriter {
 
     public void write(@NotNull OrangeReport report) throws IOException {
         writePdf(report);
-        writeApi(report);
+        writeJson(report);
     }
 
     private void writePdf(@NotNull OrangeReport report) throws IOException {
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()),
-                new ClinicalEvidenceChapter(report, reportConfig), new SomaticFindingsChapter(report),
-                new GermlineFindingsChapter(report, reportConfig.reportGermline()), new ImmunologyChapter(report),
-                new CohortComparisonChapter(report), new QualityControlChapter(report) };
+        ReportChapter[] chapters =
+                new ReportChapter[] { new FrontPageChapter(report, reportConfig.reportGermline()), new SomaticFindingsChapter(report),
+                        new GermlineFindingsChapter(report, reportConfig.reportGermline()), new ImmunologyChapter(report),
+                        new CohortComparisonChapter(report), new ClinicalEvidenceChapter(report, reportConfig),
+                        new QualityControlChapter(report) };
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters);
     }
 
-    private void writeApi(@NotNull OrangeReport report) throws IOException {
+    private void writeJson(@NotNull OrangeReport report) throws IOException {
         if (writeToDisk) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
-            LOGGER.info("Writing API report to {} ", outputFilePath);
+            LOGGER.info("Writing JSON report to {} ", outputFilePath);
             String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath));
 
             writer.write(json);
             writer.close();
         } else {
-            LOGGER.info("Generating in-memory API report");
+            LOGGER.info("Generating in-memory JSON report");
         }
     }
 
-    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters) throws IOException {
+    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters)
+            throws IOException {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 

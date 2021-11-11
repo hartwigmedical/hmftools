@@ -35,6 +35,7 @@ public class CkbClassificationConfig {
     private static final Set<String> HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS = highTumorMutationalLoadEvents();
     private static final Set<String> LOW_TUMOR_MUTATIONAL_LOAD_EVENTS = lowTumorMutationalLoadEvents();
     private static final Set<String> HR_DEFICIENCY_EVENTS = hrDeficiencyEvents();
+    private static final Set<String> HLA_EVENTS = hlaEvents();
     private static final Set<String> HPV_POSITIVE_EVENTS = hpvPositiveEvents();
     private static final Set<String> EBV_POSITIVE_EVENTS = ebvPositiveEvents();
     private static final Map<String, Set<String>> COMBINED_EVENTS_PER_GENE = combinedEventsPerGene();
@@ -70,6 +71,7 @@ public class CkbClassificationConfig {
                 .highTumorMutationalLoadEvents(HIGH_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .lowTumorMutationalLoadEvents(LOW_TUMOR_MUTATIONAL_LOAD_EVENTS)
                 .hrDeficiencyEvents(HR_DEFICIENCY_EVENTS)
+                .hlaEvents(HLA_EVENTS)
                 .hpvPositiveEvents(HPV_POSITIVE_EVENTS)
                 .ebvPositiveEvents(EBV_POSITIVE_EVENTS)
                 .combinedEventsPerGene(COMBINED_EVENTS_PER_GENE)
@@ -230,6 +232,11 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
+        return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> hlaEvents() {
         return Sets.newHashSet();
     }
 

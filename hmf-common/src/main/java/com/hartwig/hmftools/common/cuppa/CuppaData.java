@@ -9,7 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CuppaData {
 
     @NotNull
-    public abstract String primaryTumor();
+    public abstract String predictedCancerType();
+
+    public abstract double bestPredictionLikelihood();
 
     public abstract int simpleDups32To200B();
 

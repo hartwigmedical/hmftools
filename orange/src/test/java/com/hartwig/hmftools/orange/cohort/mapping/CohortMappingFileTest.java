@@ -17,7 +17,7 @@ public class CohortMappingFileTest {
     @Test
     public void canReadExampleCohortMappingTsv() throws IOException {
         List<CohortMapping> mappings = CohortMappingFile.read(EXAMPLE_MAPPING_TSV);
-        assertEquals(6, mappings.size());
+        assertEquals(7, mappings.size());
 
         CohortMapping lymphoid = find(mappings, "Lymphoid tissue");
         assertEquals(1, lymphoid.include().size());

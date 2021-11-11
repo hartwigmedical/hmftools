@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public final class SvTmbQuery {
 
             Sample sample = findSample(samplesToInclude, sampleId);
             if (sample != null) {
-                observations.add(ImmutableObservation.builder().sample(sample).value(svTmb).build());
+                observations.add(ImmutableObservation.builder().type(PercentileType.SV_TMB).sample(sample).value(svTmb).build());
             }
         }
 

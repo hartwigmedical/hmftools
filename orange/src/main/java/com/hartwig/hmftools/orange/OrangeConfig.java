@@ -36,6 +36,8 @@ public interface OrangeConfig {
 
     // Input files used by the algorithm
     String DOID_JSON = "doid_json";
+    String COHORT_MAPPING_TSV = "cohort_mapping_tsv";
+    String COHORT_PERCENTILES_TSV = "cohort_percentiles_tsv";
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
@@ -60,7 +62,6 @@ public interface OrangeConfig {
     String LINX_DRIVER_TSV = "linx_driver_tsv";
     String LINX_PLOT_DIRECTORY = "linx_plot_directory";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
-    String CUPPA_CONCLUSION_TXT = "cuppa_conclusion_txt";
     String CUPPA_RESULT_CSV = "cuppa_result_csv";
     String CUPPA_SUMMARY_PLOT = "cuppa_summary_plot";
     String CUPPA_FEATURE_PLOT = "cuppa_feature_plot";
@@ -83,6 +84,8 @@ public interface OrangeConfig {
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the ORANGE output data will be written to.");
 
         options.addOption(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
+        options.addOption(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
+        options.addOption(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
 
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version file.");
         options.addOption(REF_SAMPLE_WGS_METRICS_FILE, true, "Path towards the ref sample WGS metrics file.");
@@ -106,7 +109,6 @@ public interface OrangeConfig {
         options.addOption(LINX_DRIVER_TSV, true, "Path towards the LINX driver TSV.");
         options.addOption(LINX_PLOT_DIRECTORY, true, "Path towards the directory holding all linx plots.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
-        options.addOption(CUPPA_CONCLUSION_TXT, true, "Path towards the Cuppa conclusion TXT.");
         options.addOption(CUPPA_RESULT_CSV, true, "Path towards the Cuppa result CSV.");
         options.addOption(CUPPA_SUMMARY_PLOT, true, "Path towards the Cuppa report summary plot PNG.");
         options.addOption(CUPPA_FEATURE_PLOT, true, "Path towards the Cuppa report feature plot PNG.");
@@ -138,6 +140,12 @@ public interface OrangeConfig {
 
     @NotNull
     String doidJsonFile();
+
+    @NotNull
+    String cohortMappingTsv();
+
+    @NotNull
+    String cohortPercentilesTsv();
 
     @Nullable
     String pipelineVersionFile();
@@ -206,9 +214,6 @@ public interface OrangeConfig {
     String chordPredictionTxt();
 
     @NotNull
-    String cuppaConclusionTxt();
-
-    @NotNull
     String cuppaResultCsv();
 
     @NotNull
@@ -255,6 +260,8 @@ public interface OrangeConfig {
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
+                .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))
+                .cohortPercentilesTsv(Config.nonOptionalFile(cmd, COHORT_PERCENTILES_TSV))
                 .pipelineVersionFile(Config.optionalValue(cmd, PIPELINE_VERSION_FILE))
                 .refSampleWGSMetricsFile(Config.nonOptionalValue(cmd, REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(Config.nonOptionalValue(cmd, REF_SAMPLE_FLAGSTAT_FILE))
@@ -275,9 +282,8 @@ public interface OrangeConfig {
                 .linxBreakendTsv(Config.nonOptionalFile(cmd, LINX_BREAKEND_TSV))
                 .linxDriverCatalogTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV))
                 .linxDriverTsv(Config.nonOptionalFile(cmd, LINX_DRIVER_TSV))
-                .linxPlotDirectory(Config.nonOptionalDir(cmd, LINX_PLOT_DIRECTORY))
+                .linxPlotDirectory(Config.nonOptionalValue(cmd, LINX_PLOT_DIRECTORY))
                 .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
-                .cuppaConclusionTxt(Config.nonOptionalFile(cmd, CUPPA_CONCLUSION_TXT))
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
                 .cuppaFeaturePlot(Config.optionalFile(cmd, CUPPA_FEATURE_PLOT))

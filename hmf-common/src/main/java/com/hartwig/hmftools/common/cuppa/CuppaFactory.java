@@ -12,19 +12,40 @@ public final class CuppaFactory {
     private static final Logger LOGGER = LogManager.getLogger(CuppaFactory.class);
 
     private static final String SV_TRAIT_CATEGORY = "SV";
+    private static final String DNA_COMBINED_DATATYPE = "DNA_COMBINED";
 
     private CuppaFactory() {
     }
 
     @NotNull
-    public static CuppaData build(@NotNull String cuppaTumorLocation, @NotNull List<CuppaEntry> cuppaEntries) {
+    public static CuppaData create(@NotNull List<CuppaEntry> cuppaEntries) {
+        CuppaEntry best = findMostLikelyPrimaryTumorEntry((cuppaEntries));
+
         return ImmutableCuppaData.builder()
-                .primaryTumor(cuppaTumorLocation)
+                .predictedCancerType(best != null ? best.refCancerType() : "Undetermined")
+                .bestPredictionLikelihood(best != null ? best.refValue() : 0D)
                 .simpleDups32To200B(safeInt(cuppaEntries, "SIMPLE_DUP_32B_200B"))
                 .maxComplexSize(safeInt(cuppaEntries, "MAX_COMPLEX_SIZE"))
                 .LINECount(safeInt(cuppaEntries, "LINE"))
                 .telomericSGLs(safeInt(cuppaEntries, "TELOMERIC_SGL"))
                 .build();
+    }
+
+    @Nullable
+    private static CuppaEntry findMostLikelyPrimaryTumorEntry(@NotNull List<CuppaEntry> cuppaEntries) {
+        CuppaEntry best = null;
+        for (CuppaEntry entry : cuppaEntries) {
+            if (entry.dataType().equals(DNA_COMBINED_DATATYPE)) {
+                if (best == null || entry.refValue() > best.refValue()) {
+                    best = entry;
+                }
+            }
+        }
+
+        if (best == null) {
+            LOGGER.warn("Could not find a single entry of data type '{}'", DNA_COMBINED_DATATYPE);
+        }
+        return best;
     }
 
     private static int safeInt(@NotNull List<CuppaEntry> cuppaEntries, @NotNull String dataType) {

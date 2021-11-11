@@ -16,12 +16,12 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.Record;
 import org.jooq.Result;
 
-public final class SampleDataQuery {
+public final class SampleQuery {
 
-    private static final Logger LOGGER = LogManager.getLogger(SampleDataQuery.class);
+    private static final Logger LOGGER = LogManager.getLogger(SampleQuery.class);
     private static final String DOID_SEPARATOR = ",";
 
-    private SampleDataQuery() {
+    private SampleQuery() {
     }
 
     @NotNull

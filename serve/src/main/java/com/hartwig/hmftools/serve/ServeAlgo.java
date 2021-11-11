@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
+import com.hartwig.hmftools.serve.sources.ckb.CkbUtil;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -30,6 +32,7 @@ import com.hartwig.hmftools.serve.sources.hartwig.HartwigFileReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractorFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
+import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
@@ -63,11 +66,11 @@ public class ServeAlgo {
         }
 
         if (config.useIclusion()) {
-            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
+            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv(), config.outputDir()));
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv(), config.outputDir()));
         }
 
         if (config.useDocm()) {
@@ -110,7 +113,7 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
+    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull String outputDir) throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
@@ -118,17 +121,23 @@ public class ServeAlgo {
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ICLUSION),
                 missingDoidLookup);
 
+        String eventsTsv = outputDir + File.separator + "iClusionEventClassification.tsv";
+        IclusionUtil.writeIclusionMutationTypes(eventsTsv, trials);
+
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv) throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String outputDir) throws IOException {
         List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
         CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
+
+        String eventsTsv = outputDir + File.separator + "CkbEventClassification.tsv";
+        CkbUtil.writeEventsToTsv(eventsTsv, ckbEntries);
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries);

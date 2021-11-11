@@ -61,8 +61,8 @@ public final class ServeLocalConfigProvider {
             builder.missingDoidsMappingTsv(System.getProperty("user.home") + "/hmf/serve/curation/missing_doids_mapping.tsv");
             builder.driverGene37Tsv(System.getProperty("user.home") + "/hmf/driver_gene_panel/DriverGenePanel.37.tsv");
             builder.driverGene38Tsv(System.getProperty("user.home") + "/hmf/driver_gene_panel/DriverGenePanel.38.tsv");
-            builder.knownFusion37File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.37_v3.csv");
-            builder.knownFusion38File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.38_v3.csv");
+            builder.knownFusion37File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.37.csv");
+            builder.knownFusion38File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.38.csv");
             builder.refGenome37FastaFile(
                     System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(

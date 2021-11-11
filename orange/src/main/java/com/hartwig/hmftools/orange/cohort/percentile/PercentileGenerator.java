@@ -35,7 +35,7 @@ public class PercentileGenerator {
 
         List<CohortPercentiles> percentiles = Lists.newArrayList();
         if (!valuesPerCancerType.isEmpty()) {
-            percentiles.add(toPercentiles(CohortConstants.PAN_CANCER_COHORT, valuesPerCancerType.values()));
+            percentiles.add(toPercentiles(CohortConstants.COHORT_PAN_CANCER, valuesPerCancerType.values()));
             for (Map.Entry<String, Collection<Double>> entry : valuesPerCancerType.asMap().entrySet()) {
                 percentiles.add(toPercentiles(entry.getKey(), entry.getValue()));
             }
@@ -49,17 +49,16 @@ public class PercentileGenerator {
         List<Double> sorted = Lists.newArrayList(values);
         sorted.sort(Comparator.naturalOrder());
 
-        List<Double> percentileValues = Lists.newArrayList();
+        List<Double> percentiles = Lists.newArrayList();
         double baseIndex = (double) sorted.size() / PercentileConstants.BUCKET_COUNT;
-        for (int i = 0; i < PercentileConstants.BUCKET_COUNT; i++) {
-            int index = (int) Math.max(0, Math.round((i * baseIndex) - 0.501));
-            percentileValues.add(sorted.get(index));
-        }
 
-        return ImmutableCohortPercentiles.builder()
-                .cancerType(cancerType)
-                .cohortSize(sorted.size())
-                .percentileValues(percentileValues)
-                .build();
+        percentiles.add(sorted.get(0));
+        for (int i = 1; i < PercentileConstants.BUCKET_COUNT - 1; i++) {
+            int index = (int) Math.min(sorted.size() - 1, Math.round(((i + 0.49) * baseIndex)));
+            percentiles.add(sorted.get(index));
+        }
+        percentiles.add(sorted.get(sorted.size() - 1));
+
+        return ImmutableCohortPercentiles.builder().cancerType(cancerType).cohortSize(sorted.size()).values(percentiles).build();
     }
 }

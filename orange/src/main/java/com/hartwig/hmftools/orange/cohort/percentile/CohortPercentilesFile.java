@@ -42,6 +42,15 @@ public final class CohortPercentilesFile {
     }
 
     @NotNull
+    public static Multimap<PercentileType, CohortPercentiles> read(@NotNull String tsv) throws IOException {
+        List<String> lines = Files.readAllLines(new File(tsv).toPath());
+
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
+
+        return fromLines(fields, lines.subList(1, lines.size()));
+    }
+
+    @NotNull
     @VisibleForTesting
     static String header() {
         return new StringJoiner(FIELD_DELIMITER).add("type").add("cancerType").add("cohortSize").add("percentiles").toString();
@@ -62,7 +71,7 @@ public final class CohortPercentilesFile {
     @NotNull
     private static String toLine(@NotNull PercentileType type, @NotNull CohortPercentiles percentiles) {
         StringJoiner percentileField = new StringJoiner(PERCENTILE_DELIMITER);
-        for (double value : percentiles.percentileValues()) {
+        for (double value : percentiles.values()) {
             percentileField.add(String.valueOf(value));
         }
 
@@ -71,15 +80,6 @@ public final class CohortPercentilesFile {
                 .add(String.valueOf(percentiles.cohortSize()))
                 .add(percentileField.toString())
                 .toString();
-    }
-
-    @NotNull
-    public static Multimap<PercentileType, CohortPercentiles> read(@NotNull String tsv) throws IOException {
-        List<String> lines = Files.readAllLines(new File(tsv).toPath());
-
-        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
-
-        return fromLines(fields, lines.subList(1, lines.size()));
     }
 
     @NotNull
@@ -92,7 +92,7 @@ public final class CohortPercentilesFile {
             CohortPercentiles percentiles = ImmutableCohortPercentiles.builder()
                     .cancerType(values[fields.get("cancerType")])
                     .cohortSize(Integer.parseInt(values[fields.get("cohortSize")]))
-                    .percentileValues(toPercentileValues(values[fields.get("percentiles")]))
+                    .values(toPercentileValues(values[fields.get("percentiles")]))
                     .build();
 
             PercentileType type = PercentileType.valueOf(values[fields.get("type")]);

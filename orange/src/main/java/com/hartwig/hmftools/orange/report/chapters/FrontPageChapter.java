@@ -7,10 +7,13 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
+import com.hartwig.hmftools.common.cuppa.CuppaData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -19,6 +22,9 @@ import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
@@ -30,11 +36,15 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class FrontPageChapter implements ReportChapter {
 
     private static final DecimalFormat SINGLE_DIGIT = ReportResources.decimalFormat("#.#");
+    private static final DecimalFormat TWO_DIGITS = ReportResources.decimalFormat("#.##");
+    private static final DecimalFormat PERCENTAGE = ReportResources.decimalFormat("#'%'");
+
     private static final String NONE = "None";
 
     @NotNull
@@ -66,17 +76,22 @@ public class FrontPageChapter implements ReportChapter {
 
     private void addSummaryTable(@NotNull Document document) {
         Table table = TableUtil.createReportContentTable(contentWidth(),
-                new float[] { 2, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"), TableUtil.createHeaderCell("Cuppa Primary Tumor"),
-                        TableUtil.createHeaderCell("QC") });
-        table.addCell(TableUtil.createContentCell(toConfiguredTumorType(report.configuredPrimaryTumor())));
-        table.addCell(TableUtil.createContentCell(report.cuppa().primaryTumor()));
+                new float[] { 3, 2, 1 },
+                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"),
+                        TableUtil.createHeaderCell("Cuppa Cancer Type"), TableUtil.createHeaderCell("QC") });
+        table.addCell(TableUtil.createContentCell(toConfiguredPrimaryTumor(report.configuredPrimaryTumor())));
+        table.addCell(TableUtil.createContentCell(toCuppaCancerType(report.cuppa())));
         table.addCell(TableUtil.createContentCell(purpleQCString()));
         document.add(TableUtil.createWrappingReportTable(table));
     }
 
     @NotNull
-    private static String toConfiguredTumorType(@NotNull Set<DoidNode> nodes) {
+    private static String toCuppaCancerType(@NotNull CuppaData cuppa) {
+        return cuppa.predictedCancerType() + " (" + PERCENTAGE.format(cuppa.bestPredictionLikelihood() * 100) + ")";
+    }
+
+    @NotNull
+    private static String toConfiguredPrimaryTumor(@NotNull Set<DoidNode> nodes) {
         StringJoiner joiner = new StringJoiner(", ");
 
         for (DoidNode node : nodes) {
@@ -123,10 +138,10 @@ public class FrontPageChapter implements ReportChapter {
         summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
         summary.addCell(TableUtil.createKeyCell("Tumor mutational load:"));
         summary.addCell(TableUtil.createValueCell(tmlString()));
-        summary.addCell(TableUtil.createKeyCell("CHORD score:"));
-        summary.addCell(TableUtil.createValueCell(chordString()));
+        summary.addCell(TableUtil.createKeyCell("HR deficiency score:"));
+        summary.addCell(TableUtil.createValueCell(hrDeficiencyString()));
         summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
-        summary.addCell(TableUtil.createValueCell(Integer.toString(report.purple().svTumorMutationalBurden())));
+        summary.addCell(TableUtil.createValueCell(svTmbString()));
         summary.addCell(TableUtil.createKeyCell("Max complex cluster size:"));
         summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().maxComplexSize())));
         summary.addCell(TableUtil.createKeyCell("Telomeric SGLs:"));
@@ -158,20 +173,18 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String purityString() {
-        DecimalFormat purityFormat = ReportResources.decimalFormat("#'%'");
         return String.format("%s (%s-%s)",
-                purityFormat.format(report.purple().purity() * 100),
-                purityFormat.format(report.purple().minPurity() * 100),
-                purityFormat.format(report.purple().maxPurity() * 100));
+                PERCENTAGE.format(report.purple().purity() * 100),
+                PERCENTAGE.format(report.purple().minPurity() * 100),
+                PERCENTAGE.format(report.purple().maxPurity() * 100));
     }
 
     @NotNull
     private String ploidyString() {
-        DecimalFormat ploidyFormat = ReportResources.decimalFormat("#.##");
         return String.format("%s (%s-%s)",
-                ploidyFormat.format(report.purple().ploidy()),
-                ploidyFormat.format(report.purple().minPloidy()),
-                ploidyFormat.format(report.purple().maxPloidy()));
+                TWO_DIGITS.format(report.purple().ploidy()),
+                TWO_DIGITS.format(report.purple().minPloidy()),
+                TWO_DIGITS.format(report.purple().maxPloidy()));
     }
 
     @NotNull
@@ -260,7 +273,7 @@ public class FrontPageChapter implements ReportChapter {
             Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
             for (AnnotatedVirus virus : report.virusInterpreter().reportableViruses()) {
                 if (virus.interpretation() != null) {
-                    viruses.add(virus.interpretation().toString());
+                    viruses.add(virus.interpretation());
                 } else {
                     viruses.add(virus.name());
                 }
@@ -276,8 +289,8 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String msiString() {
-        return SINGLE_DIGIT.format(report.purple().microsatelliteIndelsPerMb()) + " (" + report.purple().microsatelliteStatus().display()
-                + ")";
+        PurpleData purple = report.purple();
+        return SINGLE_DIGIT.format(purple.microsatelliteIndelsPerMb()) + " (" + purple.microsatelliteStatus().display() + ")";
     }
 
     @NotNull
@@ -286,12 +299,43 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String chordString() {
-        if (report.chord().hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
-            return report.chord().hrStatus().display();
+    private String hrDeficiencyString() {
+        ChordAnalysis chord = report.chord();
+        if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
+            return ChordStatus.CANNOT_BE_DETERMINED.display();
         } else {
-            return SINGLE_DIGIT.format(report.chord().hrdValue()) + " (" + report.chord().hrStatus().display() + ")";
+            String addon = Strings.EMPTY;
+            if (chord.hrStatus() == ChordStatus.HR_DEFICIENT) {
+                if (chord.hrdType().contains("BRCA1")) {
+                    addon = " - BRCA1 (" + TWO_DIGITS.format(chord.BRCA1Value()) + ")";
+                } else if (chord.hrdType().contains("BRCA2")) {
+                    addon = " - BRCA2 (" + TWO_DIGITS.format(chord.BRCA2Value()) + ")";
+                } else {
+                    addon = chord.hrdType();
+                }
+            }
+            return SINGLE_DIGIT.format(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
         }
+    }
+
+    @NotNull
+    private String svTmbString() {
+        String svTmb = String.valueOf(report.purple().svTumorMutationalBurden());
+
+        Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
+        String addon = Strings.EMPTY;
+        if (evaluation != null) {
+            String panCancerPercentile = PERCENTAGE.format(evaluation.panCancerPercentile() * 100);
+            addon = " (Pan " + panCancerPercentile;
+            if (!evaluation.cancerType().equals(CohortConstants.COHORT_OTHER) && !evaluation.cancerType()
+                    .equals(CohortConstants.COHORT_UNKNOWN)) {
+                String cancerTypePercentile = PERCENTAGE.format(evaluation.cancerTypePercentile() * 100);
+                addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
+            }
+            addon = addon + ")";
+        }
+
+        return svTmb + addon;
     }
 
     @NotNull
