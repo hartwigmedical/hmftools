@@ -276,6 +276,9 @@ public final class IclusionClassificationConfig {
         Set<String> erbb2Set = Sets.newHashSet("DEL 755-759", "P780INS", "Exon 20 mutation (non-T790M)");
         map.put("ERBB2", erbb2Set);
 
+        Set<String> brafSet = Sets.newHashSet("non-V600 ACTIVATING MUTATION");
+        map.put("BRAF", brafSet);
+
         Set<String> egfrSet = Sets.newHashSet("Exon 20 mutation (non-T790M)");
         map.put("EGFR", egfrSet);
 
