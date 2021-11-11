@@ -21,10 +21,10 @@ abstract class LimsJsonSubmissionData {
     public abstract String projectName();
 
     @NotNull
-    @SerializedName("report_contact_email")
+    @SerializedName("request_report_contact_email")
     public abstract String reportContactEmail();
 
     @NotNull
-    @SerializedName("report_contact_name")
+    @SerializedName("request_report_contact_name")
     public abstract String reportContactName();
 }
