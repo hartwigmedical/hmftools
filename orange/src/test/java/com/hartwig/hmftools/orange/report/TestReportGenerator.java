@@ -40,7 +40,6 @@ public class TestReportGenerator {
 
         OrangeReport reportWithTestSampleId = removeUnreported(ImmutableOrangeReport.builder().from(report).sampleId("Test").build());
 
-
         if (!new File(REPORT_BASE_DIR).isDirectory()) {
             LOGGER.warn("{} is not a directory. Can't write to disk", REPORT_BASE_DIR);
         } else {
