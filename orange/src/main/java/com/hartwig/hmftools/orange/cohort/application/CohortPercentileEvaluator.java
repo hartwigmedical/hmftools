@@ -39,11 +39,12 @@ public class CohortPercentileEvaluator {
 
     private static final Logger LOGGER = LogManager.getLogger(CohortPercentileEvaluator.class);
 
-    private static final String DOID_JSON = "/data/resources/public/disease_ontology/201015_doid.json";
+    private static final String RESOURCE_DIR = "/data/resources/public";
+    private static final String DOID_JSON = RESOURCE_DIR + "/disease_ontology/201015_doid.json";
+    private static final String COHORT_MAPPING_TSV = RESOURCE_DIR + "/orange/cohort_mapping.tsv";
+    private static final String COHORT_PERCENTILES_TSV = RESOURCE_DIR + "/orange/cohort_percentiles.tsv";
 
-    private static final String EXPERIMENTS_DIR = "/data/experiments/orange_cohort";
-    private static final String COHORT_MAPPING_TSV = EXPERIMENTS_DIR + File.separator + "orange_cohort_mapping.tsv";
-    private static final String OUTPUT_EVALUATION_TSV = EXPERIMENTS_DIR + File.separator + "sample_sv_tmb_percentile_evaluations.tsv";
+    private static final String OUTPUT_EVALUATION_TSV = "/data/experiments/orange_cohort/sample_sv_tmb_percentile_evaluations.tsv";
 
     public static void main(String[] args) throws ParseException, IOException {
         LOGGER.info("Running ORANGE Cohort Percentile Evaluator");
@@ -80,9 +81,8 @@ public class CohortPercentileEvaluator {
 
     @NotNull
     private static CohortPercentilesModel createModel() throws IOException {
-        String percentileTsv = CohortPercentilesFile.generateOutputTsv(EXPERIMENTS_DIR);
-        LOGGER.info(" Reading percentiles from {}", percentileTsv);
-        Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(percentileTsv);
+        LOGGER.info(" Reading percentiles from {}", COHORT_PERCENTILES_TSV);
+        Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(COHORT_PERCENTILES_TSV);
 
         LOGGER.info(" Reading DOIDs from {}", DOID_JSON);
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_JSON);
