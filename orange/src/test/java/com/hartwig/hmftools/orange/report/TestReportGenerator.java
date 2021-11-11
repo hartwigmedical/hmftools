@@ -2,8 +2,10 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
@@ -12,6 +14,9 @@ import com.hartwig.hmftools.orange.OrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
+import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
+import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableEvaluation;
+import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -29,17 +34,28 @@ public class TestReportGenerator {
         Configurator.setRootLevel(Level.DEBUG);
 
         OrangeConfig config = buildConfig();
-        OrangeReport report = OrangeAlgo.fromConfig(config).run(config);
+        OrangeReport report = overwriteCohortPercentiles(OrangeAlgo.fromConfig(config).run(config));
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
 
         OrangeReport reportWithTestSampleId = removeUnreported(ImmutableOrangeReport.builder().from(report).sampleId("Test").build());
+
 
         if (!new File(REPORT_BASE_DIR).isDirectory()) {
             LOGGER.warn("{} is not a directory. Can't write to disk", REPORT_BASE_DIR);
         } else {
             writer.write(reportWithTestSampleId);
         }
+    }
+
+    @NotNull
+    private static OrangeReport overwriteCohortPercentiles(@NotNull OrangeReport report) {
+        // Need to overwrite percentiles since test code doesn't have access to real production cohort percentile files.
+        Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
+        evaluations.put(PercentileType.SV_TMB,
+                ImmutableEvaluation.builder().cancerType("Skin").panCancerPercentile(0.22).cancerTypePercentile(0.34).build());
+
+        return ImmutableOrangeReport.builder().from(report).cohortEvaluations(evaluations).build();
     }
 
     @NotNull
