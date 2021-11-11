@@ -25,7 +25,7 @@ class TransvarProcessImpl implements TransvarProcess {
     // DUPs give rise to errors in transvar but do lead to interpretable output so error can be ignored.
     private static final Set<String> ERRORS_TO_IGNORE = Sets.newHashSet("warning: unknown alternative: DUP, ignore alternative");
 
-    private static final int TRANSVAR_TIMEOUT_SEC = 90;
+    private static final int TRANSVAR_TIMEOUT_SEC = 120;
 
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
