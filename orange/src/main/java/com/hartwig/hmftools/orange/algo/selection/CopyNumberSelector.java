@@ -32,7 +32,10 @@ public final class CopyNumberSelector {
             }
         }
 
-        return maxGainPerLocation.values().stream().sorted((o1, o2) -> (int) (o2.minCopies() - o1.minCopies())).collect(Collectors.toList());
+        return maxGainPerLocation.values()
+                .stream()
+                .sorted((o1, o2) -> (int) (o2.minCopies() - o1.minCopies()))
+                .collect(Collectors.toList());
     }
 
     @NotNull
