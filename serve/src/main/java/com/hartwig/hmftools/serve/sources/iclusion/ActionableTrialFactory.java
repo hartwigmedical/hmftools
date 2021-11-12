@@ -65,7 +65,7 @@ public class ActionableTrialFactory {
     @VisibleForTesting
     static String extractDoid(@NotNull String doid) {
         String doidCorrected = doid;
-        if (doidCorrected.equals("0050586")) {
+        if (doidCorrected.equals("0050686")) {
             doidCorrected = "162";
         }
         return doidCorrected;
