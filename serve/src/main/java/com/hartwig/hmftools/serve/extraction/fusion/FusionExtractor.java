@@ -12,6 +12,7 @@ import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -107,7 +108,13 @@ public class FusionExtractor {
     @Nullable
     private static Integer extractExonIndex(@NotNull String event) {
         List<Integer> exons = Lists.newArrayList();
-        String[] words = event.split(" ");
+        String[] words = new String[0];
+        if (event.contains(" ")) {
+            words = event.split(" ");
+        } else if (event.contains("-")) {
+            words = event.split("-");
+        }
+
         for (String word : words) {
             if (isInteger(word)) {
                 exons.add(Integer.valueOf(word));

@@ -102,9 +102,7 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> specificExonEvents() {
-        Set<String> set = Sets.newHashSet();
-        set.add("EDM MUTATION");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -287,6 +285,9 @@ public final class IclusionClassificationConfig {
 
         Set<String> ccnd2Set = Sets.newHashSet("3'UTR LOSS");
         map.put("CCND1", ccnd2Set);
+
+        Set<String> poleSet = Sets.newHashSet("EDM MUTATION");
+        map.put("POLE", poleSet);
 
         return map;
     }
