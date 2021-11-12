@@ -31,8 +31,9 @@ final class FilterFactory {
         // Mutations which are inconsistent with our current gene panel
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "AMPLIFICATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MST1R", "AMPLIFICATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB4", "AMPLIFICATION"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("CSF1", "AMPLIFICATION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB4", "COPY-GAIN"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("CSF1", "COPY-GAIN"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("CSF1", "OVEREXPRESSION"));
 
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "OVEREXPRESSION"));
 
