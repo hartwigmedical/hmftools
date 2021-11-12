@@ -60,7 +60,8 @@ public final class EventExtractorFactory {
                         config.lowTumorMutationalLoadEvents(),
                         config.hrDeficiencyEvents(),
                         config.hpvPositiveEvents(),
-                        config.ebvPositiveEvents()));
+                        config.ebvPositiveEvents(),
+                        config.hlaEvents()));
     }
 
     @NotNull
