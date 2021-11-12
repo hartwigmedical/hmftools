@@ -181,7 +181,8 @@ HIGH_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome has a high t
 LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have a high tumor mutational load status
 HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
 HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
-EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found 
+EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
+IMMUNO_HLA / Evidence is applicable when there is a HLA typering
 
 ## Curation and harmonization of individual knowledgebases
 
@@ -313,6 +314,11 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- Upcoming
+  - Extend config file from source iClusion
+  - Extend config file from source CKB
+  - Update filters
+  - "Advanced solid tumor" in iClusion is mapped to DOID 162 rather than 0050686 to avoid missing it for tumors with unknown tumor type
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.6)
   - Add filter in VICC extraction to ignore evidence that does not support the direction when generating actionability.
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.5)
