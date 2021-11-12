@@ -257,14 +257,7 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Map<String, Set<String>> complexEventsPerGene() {
-        Map<String, Set<String>> map = Maps.newHashMap();
-
-        Set<String> arSet = Sets.newHashSet("V7_splice");
-        map.put("AR", arSet);
-
-        Set<String> ntrk1Set = Sets.newHashSet("V3_splice");
-        map.put("NTRK1", ntrk1Set);
-
-        return map;
+        // complex events are present in curation file
+        return Maps.newHashMap();
     }
 }
