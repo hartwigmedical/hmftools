@@ -18,9 +18,6 @@ final class ConversionFilterFactory {
         GENES_TO_EXCLUDE_FOR_CONVERSION.add("MAGEA1");
         GENES_TO_EXCLUDE_FOR_CONVERSION.add("NCOA4");
         GENES_TO_EXCLUDE_FOR_CONVERSION.add("PDE4DIP");
-
-        // This gene does exist in both 37 and 38 but its mapping is missing (not sure why).
-        GENES_TO_EXCLUDE_FOR_CONVERSION.add("MIR218-1");
     }
 
     private ConversionFilterFactory() {
