@@ -31,6 +31,8 @@ final class FilterFactory {
         // Mutations which are inconsistent with our current gene panel
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "AMPLIFICATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MST1R", "AMPLIFICATION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB4", "AMPLIFICATION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("CSF1", "AMPLIFICATION"));
 
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "OVEREXPRESSION"));
 
@@ -39,11 +41,14 @@ final class FilterFactory {
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MAP2K4", "ACTIVATING MUTATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MAP3K1", "ACTIVATING MUTATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MST1R", "ACTIVATING MUTATION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("JAK1", "ACTIVATING MUTATION"));
 
         // Fusions that would not get reported anyways.
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FGFR4", "FUSION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("RSPO4", "FUSION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("RSPO1", "FUSION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB4", "FUSION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB2", "FUSION"));
     }
 
     private FilterFactory() {
