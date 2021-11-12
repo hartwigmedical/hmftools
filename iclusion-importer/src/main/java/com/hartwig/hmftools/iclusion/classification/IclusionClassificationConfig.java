@@ -182,7 +182,7 @@ public final class IclusionClassificationConfig {
     private static Set<String> exonicDelDupFusionEvents() {
         Set<String> set = Sets.newHashSet();
         set.add("KINASE DOMAIN DUPLICATION (EXON 18-25)");
-        return Sets.newHashSet();
+        return set;
     }
 
     @NotNull
