@@ -106,6 +106,8 @@ sources | A list of sources from where the evidence has been extracted | vicc_cg
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- Upcoming
+  - Support virus interpreter v1.1
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.4)
   - Output of virus interpreter is loaded by PROTECT and matched against viral evidence
   - Evidence is determined for non-reported genomic events (amps, dels, variants, fusions, viral presence).
