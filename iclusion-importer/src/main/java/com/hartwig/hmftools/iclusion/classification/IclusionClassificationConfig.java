@@ -110,16 +110,12 @@ public final class IclusionClassificationConfig {
         Map<String, Set<String>> map = Maps.newHashMap();
 
         map.put("MET", Sets.newHashSet("EXON 14 SKIPPING MUTATION"));
-        map.put("EGFR", Sets.newHashSet("KINASE DOMAIN DUPLICATION (EXON 18-25)"));
-
         return map;
     }
 
     @NotNull
     private static Set<String> geneLevelBlacklistKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("EDM MUTATION");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -184,6 +180,8 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> exonicDelDupFusionEvents() {
+        Set<String> set = Sets.newHashSet();
+        set.add("KINASE DOMAIN DUPLICATION (EXON 18-25)");
         return Sets.newHashSet();
     }
 
