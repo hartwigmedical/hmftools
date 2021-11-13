@@ -25,6 +25,12 @@ final class FilterFactory {
         // Exon 12 for NPM1 not present in canonical transcript
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("NPM1", "EXON 12 MUTATION"));
 
+        // Events on genes while genes didn't present in driver catalog
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("MRE11", "INACTIVATING MUTATION"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("MRE11", "LOSS"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ABL1", "BCR-ABL"));
+        MUTATION_KEYS_TO_FILTER.add(new FilterKey("ABL1", "BCR-ABL T315I"));
+
         // Not a valid mutation string
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB2", "P780INS"));
 
@@ -32,9 +38,7 @@ final class FilterFactory {
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "AMPLIFICATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("MST1R", "AMPLIFICATION"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB4", "COPY-GAIN"));
-        MUTATION_KEYS_TO_FILTER.add(new FilterKey("CSF1", "COPY-GAIN"));
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("CSF1", "OVEREXPRESSION"));
-
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("FLT1", "OVEREXPRESSION"));
 
         MUTATION_KEYS_TO_FILTER.add(new FilterKey("ERBB4", "ACTIVATING MUTATION"));
@@ -55,4 +59,3 @@ final class FilterFactory {
     private FilterFactory() {
     }
 }
-
