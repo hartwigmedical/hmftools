@@ -105,7 +105,7 @@ public final class SpliceClassifier
             // CHECK - for INDELs check repeat sequence vs microhomology?
             impactType = determineIndelSpliceImpact(variant, refGenome, exon, posStrand);
 
-            if(impactType.isDisruptive() || impactType == HOMOLOGY_SHIFT)
+            if(impactType.isDisruptive())
                 spliceEffect = isDonorCandidate ? SPLICE_DONOR : SPLICE_ACCEPTOR;
 
             // gather up affected bases purely for annotation
@@ -256,6 +256,10 @@ public final class SpliceClassifier
                 }
             }
 
+            // ignore inserting bases into the acceptor create matching homology - let the realigned variant dictate the net impact
+            if(!isDonorCandidate)
+                return BASE_SHIFT;
+
             int preInsertBases = variant.Position - posRangeStart;
 
             if(preInsertBases > 0)
@@ -293,6 +297,10 @@ public final class SpliceClassifier
             if(variant.Position < posRangeStart && variant.EndPosition > posRangeEnd)
                 return REGION_DELETED;
 
+            // ignore pulling upstream exonic bases to create matching homology - let the realigned variant dictate the net impact
+            if(variant.Position < exonBoundary)
+                return BASE_SHIFT;
+
             // otherwise the DEL partially overlaps the splice region and so ref bases need only be pulled from one side or the other
             if(variant.Position >= posRangeStart)
             {
@@ -309,6 +317,7 @@ public final class SpliceClassifier
             }
             else
             {
+                // a realigned variant cannot then consider how exonic bases can be used to creating matching homology
                 if(variant.isRealignedVariant())
                     return BASE_CHANGE;
 

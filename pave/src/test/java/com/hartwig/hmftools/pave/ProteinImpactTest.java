@@ -25,6 +25,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAIN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.ImpactClassifier.checkStopStartCodons;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
 import static com.hartwig.hmftools.pave.ProteinUtils.getExtraBases;
 
 import static junit.framework.TestCase.assertEquals;
@@ -523,34 +525,6 @@ public class ProteinImpactTest
 
         assertEquals(codingStr, impactNeg.codingContext().Hgvs);
         assertEquals(proteinStr, impactNeg.proteinContext().Hgvs);
-    }
-
-    private static String getAminoAcidsCodons(final String aminoAcids, boolean reverseStrand)
-    {
-        String codonBases = "";
-
-        // A E F on reverse becomes rev(F) rev(E) rev(A)
-        for(int i = 0; i < aminoAcids.length(); ++i)
-        {
-            if(reverseStrand)
-                codonBases = reverseStrandBases(getAminoAcidCodon(aminoAcids.charAt(i))) + codonBases;
-            else
-                codonBases += getAminoAcidCodon(aminoAcids.charAt(i));
-        }
-
-        return codonBases;
-    }
-
-    private static String getAminoAcidCodon(final char aminoAcid) { return getAminoAcidCodon(aminoAcid, 0); }
-
-    private static String getAminoAcidCodon(final char aminoAcid, int index)
-    {
-        List<String> codons = AMINO_ACID_TO_CODON_MAP.get(String.valueOf(aminoAcid));
-
-        if(codons == null || index >= codons.size())
-            return "err";
-
-        return codons.get(index);
     }
 
     @Test

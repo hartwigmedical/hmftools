@@ -89,13 +89,21 @@ public class SpliceContextTest
 
         assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
 
-        // acceptor positions - delete A3 only but doesn't become a G so is ok
+        // acceptor positions - modify A3 only but doesn't become a G so is ok
+        pos = 17;
+        ref = mRefBases.substring(pos, pos + 1);
+        alt = "A";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
+
+        // acceptor positions - delete A3 and cannot pull exonic bases, so remains disruptive
         pos = 15;
         ref = mRefBases.substring(pos, pos + 3);
         alt = ref.substring(0, 1);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
+        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
 
         // deletes A3 and A2
         pos = 16;
@@ -283,12 +291,12 @@ public class SpliceContextTest
 
         assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
 
-        // now insert bases that match the A1-3 bases
+        // now insert bases that match the A1-3 bases - these will be considered disruptive before the exon
         ref = mRefBases.substring(pos, pos + 1);
         alt = mRefBases.substring(pos, pos + 3);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
+        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
 
         // starting at A2, inserting matching bases
         pos = 18;
@@ -296,7 +304,7 @@ public class SpliceContextTest
         alt = mRefBases.substring(17, 20);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
+        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataPos.posStrand()));
 
         // starting at A1 - makes no difference since inserts into exon
         pos = 19;
@@ -404,7 +412,7 @@ public class SpliceContextTest
         alt = mRefBases.substring(pos, pos + 4);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
+        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
 
         alt = ref + generateAlt(mRefBases.substring(pos + 1, pos + 4));
         var = new VariantData(CHR_1, pos, ref, alt);
@@ -417,7 +425,7 @@ public class SpliceContextTest
         alt = mRefBases.substring(pos, pos + 4);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertTrue(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
+        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
 
         alt = ref + "CCCC";
         var = new VariantData(CHR_1, pos, ref, alt);

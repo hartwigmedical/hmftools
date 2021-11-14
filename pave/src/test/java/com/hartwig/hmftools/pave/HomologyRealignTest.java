@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_I
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INTRONIC;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
 import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
@@ -179,4 +181,86 @@ public class HomologyRealignTest
         assertTrue(raImpact.hasEffect(SPLICE_ACCEPTOR));
     }
 
+    @Test
+    public void testSpliceVsFrameshiftRealignment()
+    {
+        MockRefGenome refGenome = new MockRefGenome();
+
+        int prePostGene = 10;
+        int prePostCoding = 10;
+        String refBases = generateRandomBases(prePostGene);
+
+        refBases += generateRandomBases(prePostCoding);
+
+        String codingBases = getAminoAcidCodon(START_AMINO_ACID);
+        codingBases += getAminoAcidsCodons("CFR", false);
+        codingBases += getAminoAcidCodon('G', 2); // force to 'GGG'
+        codingBases += getAminoAcidsCodons("D", false);
+        codingBases += STOP_CODON_1;
+
+        refBases += codingBases.substring(0, 10);
+        refBases += generateRandomBases(17) + "CAG"; // intron ending in splice acceptor motif with 'G'
+        refBases += codingBases.substring(10);
+
+        refBases += generateRandomBases(prePostCoding);
+        refBases += generateRandomBases(prePostGene);
+
+        // pre gene   5'UTR      M  C  F  R  intron               G  D  X  3'UTR
+        // GATCGATCGA GATCGATCGA ATGTGTTTCA  GATCGATCGATCGATCGCAG GGGGGGACTAA GATCGATCGA GATCGATCGA
+        // 0          10         20          30                   50
+
+        TranscriptData posTransData =  createTransExons(
+                GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {10, 50}, 19,
+                20, 60, false, "");
+
+        refGenome.RefGenomeMap.put(CHR_1, refBases);
+
+        ImpactClassifier classifier = new ImpactClassifier(refGenome);
+
+        // the initial variant should be splice acceptor, the second frameshift, so frameshift is selected by realignment priority rules
+        int pos = 48;
+        String ref = refBases.substring(pos, pos + 2);
+        String alt = refBases.substring(pos, pos + 1);
+
+        VariantData var = new VariantData(CHR_1, pos, ref, alt);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, "G", "G", 7);
+
+        var.setRealignedVariant(createRightAlignedVariant(var, refGenome));
+        assertTrue(var.realignedVariant() != null);
+
+        GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, posTransData.TransStart, posTransData.TransEnd);
+
+        GeneDataCache geneDataCache = new GeneDataCache("", V37, null, false, false);
+        geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
+        geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(posTransData));
+
+        findVariantImpacts(var, classifier, geneDataCache);
+
+        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
+        assertEquals(1, var.getImpacts().get(GENE_NAME_1).size());
+
+        VariantTransImpact impact = var.getImpacts().get(GENE_NAME_1).get(0);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+        assertTrue(impact.realigned());
+
+        // now test an insertion of a base at A2 which keeps the splice acceptor motif the same but with a spare extra base before the exon
+        pos = 48;
+        ref = refBases.substring(pos, pos + 1);
+        alt = "AG";
+
+        var = new VariantData(CHR_1, pos, ref, alt);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, "G", "G", 7);
+
+        var.setRealignedVariant(createRightAlignedVariant(var, refGenome));
+        assertTrue(var.realignedVariant() != null);
+
+        findVariantImpacts(var, classifier, geneDataCache);
+
+        assertTrue(var.getImpacts().containsKey(GENE_NAME_1));
+        assertEquals(1, var.getImpacts().get(GENE_NAME_1).size());
+
+        impact = var.getImpacts().get(GENE_NAME_1).get(0);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+        assertTrue(impact.realigned());
+    }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pave;
 
+import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -8,6 +10,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -67,5 +71,31 @@ public final class ImpactTestUtils
         return new VariantData(CHR_1, position, ref, alt);
     }
 
+    public static String getAminoAcidsCodons(final String aminoAcids, boolean reverseStrand)
+    {
+        String codonBases = "";
 
+        // A E F on reverse becomes rev(F) rev(E) rev(A)
+        for(int i = 0; i < aminoAcids.length(); ++i)
+        {
+            if(reverseStrand)
+                codonBases = reverseStrandBases(getAminoAcidCodon(aminoAcids.charAt(i))) + codonBases;
+            else
+                codonBases += getAminoAcidCodon(aminoAcids.charAt(i));
+        }
+
+        return codonBases;
+    }
+
+    public static String getAminoAcidCodon(final char aminoAcid) { return getAminoAcidCodon(aminoAcid, 0); }
+
+    public static String getAminoAcidCodon(final char aminoAcid, int index)
+    {
+        List<String> codons = AMINO_ACID_TO_CODON_MAP.get(String.valueOf(aminoAcid));
+
+        if(codons == null || index >= codons.size())
+            return "err";
+
+        return codons.get(index);
+    }
 }
