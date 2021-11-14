@@ -19,6 +19,7 @@ public final class CkbConstants {
         NON_EXISTING_GENES.add("MSI");
         NON_EXISTING_GENES.add("TMB");
         NON_EXISTING_GENES.add("Unknown");
+        NON_EXISTING_GENES.add("TILs");
 
         UNMAPPABLE_GENES.add("BCAR4");
         UNMAPPABLE_GENES.add("CD24");

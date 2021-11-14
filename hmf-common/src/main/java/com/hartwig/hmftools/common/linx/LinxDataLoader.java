@@ -60,6 +60,7 @@ public final class LinxDataLoader {
             drivers = LinxDriver.read(linxDriverTsv);
             LOGGER.info(" Loaded {} drivers from {}", drivers.size(), linxDriverTsv);
         }
+
         return ImmutableLinxData.builder()
                 .reportableFusions(reportableFusions)
                 .unreportedFusions(unreportedFusions)

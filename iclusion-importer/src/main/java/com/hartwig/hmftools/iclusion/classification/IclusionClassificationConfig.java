@@ -102,9 +102,7 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> specificExonEvents() {
-        Set<String> set = Sets.newHashSet();
-        set.add("EDM MUTATION");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -112,16 +110,12 @@ public final class IclusionClassificationConfig {
         Map<String, Set<String>> map = Maps.newHashMap();
 
         map.put("MET", Sets.newHashSet("EXON 14 SKIPPING MUTATION"));
-        map.put("EGFR", Sets.newHashSet("KINASE DOMAIN DUPLICATION (EXON 18-25)"));
-
         return map;
     }
 
     @NotNull
     private static Set<String> geneLevelBlacklistKeyPhrases() {
-        Set<String> set = Sets.newHashSet();
-        set.add("EDM MUTATION");
-        return set;
+        return Sets.newHashSet();
     }
 
     @NotNull
@@ -186,7 +180,9 @@ public final class IclusionClassificationConfig {
 
     @NotNull
     private static Set<String> exonicDelDupFusionEvents() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("KINASE DOMAIN DUPLICATION (EXON 18-25)");
+        return set;
     }
 
     @NotNull
@@ -276,6 +272,9 @@ public final class IclusionClassificationConfig {
         Set<String> erbb2Set = Sets.newHashSet("DEL 755-759", "P780INS", "Exon 20 mutation (non-T790M)");
         map.put("ERBB2", erbb2Set);
 
+        Set<String> brafSet = Sets.newHashSet("non-V600 ACTIVATING MUTATION");
+        map.put("BRAF", brafSet);
+
         Set<String> egfrSet = Sets.newHashSet("Exon 20 mutation (non-T790M)");
         map.put("EGFR", egfrSet);
 
@@ -284,6 +283,9 @@ public final class IclusionClassificationConfig {
 
         Set<String> ccnd2Set = Sets.newHashSet("3'UTR LOSS");
         map.put("CCND1", ccnd2Set);
+
+        Set<String> poleSet = Sets.newHashSet("EDM MUTATION");
+        map.put("POLE", poleSet);
 
         return map;
     }

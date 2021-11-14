@@ -47,6 +47,6 @@ public class ActionableTrialFactoryTest {
     @Test
     public void canExtractAndMapDoid() {
         assertEquals("0060463", ActionableTrialFactory.extractDoid("0060463"));
-        assertEquals("162", ActionableTrialFactory.extractDoid("0050586"));
+        assertEquals("162", ActionableTrialFactory.extractDoid("0050686"));
     }
 }

@@ -80,6 +80,14 @@ public final class ReportResources {
         return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
+    public static Style keyStyle() {
+        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+    }
+
+    public static Style valueStyle() {
+        return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
+    }
+
     public static Style subTextStyle() {
         return new Style().setFont(fontRegular()).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }

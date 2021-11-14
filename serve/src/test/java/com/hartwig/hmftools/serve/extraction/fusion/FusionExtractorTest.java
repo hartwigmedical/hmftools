@@ -87,15 +87,15 @@ public class FusionExtractorTest {
     @Test
     public void canExtractExonicDelDupFusions() {
         FusionExtractor fusionExtractor = testFusionExtractorWithExonicDelDupKeyPhrases(Sets.newHashSet("skip this"));
-        KnownFusionPair fusion = fusionExtractor.extract("EGFR", EventType.FUSION_PAIR, "skip this 20");
+        KnownFusionPair fusion = fusionExtractor.extract("EGFR", EventType.FUSION_PAIR, "KINASE DOMAIN DUPLICATION (EXON 18-25)");
 
         assertNotNull(fusion);
         assertEquals("EGFR", fusion.geneUp());
-        assertEquals(19, (int) fusion.minExonUp());
-        assertEquals(19, (int) fusion.maxExonUp());
+        assertEquals(25, (int) fusion.minExonUp());
+        assertEquals(26, (int) fusion.maxExonUp());
         assertEquals("EGFR", fusion.geneDown());
-        assertEquals(21, (int) fusion.minExonDown());
-        assertEquals(21, (int) fusion.maxExonDown());
+        assertEquals(14, (int) fusion.minExonDown());
+        assertEquals(18, (int) fusion.maxExonDown());
     }
 
     @Test

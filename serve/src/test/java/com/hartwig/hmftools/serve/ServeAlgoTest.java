@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
@@ -42,6 +43,7 @@ public class ServeAlgoTest {
                 .useIclusion(true)
                 .iClusionTrialTsv(ICLUSION_TRIAL_TSV)
                 .useCkb(true)
+                .outputDir(System.getProperty("user.home") + File.separator + "hmf/tmp/")
                 .ckbDir(CKB_DIR)
                 .ckbFilterTsv(CKB_FILTER_TSV)
                 .useDocm(true)
@@ -62,8 +64,7 @@ public class ServeAlgoTest {
 
         ServeAlgo algo = new ServeAlgo(RefGenomeManagerFactory.createFromServeConfig(config), DoidLookupTestFactory.dummy());
 
-        //TODO: fix test
-       // assertNotNull(algo.run(config));
+        assertNotNull(algo.run(config));
     }
 
     @NotNull

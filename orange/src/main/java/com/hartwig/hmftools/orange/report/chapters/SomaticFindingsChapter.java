@@ -17,8 +17,8 @@ import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.StructuralDriverTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
-import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
@@ -142,11 +142,11 @@ public class SomaticFindingsChapter implements ReportChapter {
             Image image = ImageUtil.build(plot);
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            table.addCell(TableUtil.createImageCell(image));
+            table.addCell(CellUtil.createImage(image));
         }
 
         if (report.plots().linxDriverPlots().size() % 2 == 1) {
-            table.addCell(TableUtil.createContentCell(Strings.EMPTY));
+            table.addCell(CellUtil.createContent(Strings.EMPTY));
         }
 
         document.add(table);

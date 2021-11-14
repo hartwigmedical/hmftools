@@ -215,12 +215,8 @@ public class ClinicalEvidenceFunctions {
         if (event.contains("p.")) {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }
-        StringJoiner sources = new StringJoiner(", ");
-        for (Knowledgebase source : evidence.sources()) {
-            sources.add(source.reportDisplay());
-        }
-        return event + " (" + sources + ")";
 
+        return event;
     }
 
     @NotNull

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.EvidenceSelector;
 import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.action.PdfAction;
@@ -75,6 +76,11 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         addTreatmentSection(document, "Other potentially interesting", unreported);
     }
 
+    @NotNull
+    private static Paragraph note(@NotNull String message) {
+        return new Paragraph(message).addStyle(ReportResources.subTextStyle());
+    }
+
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> noIclusion = EvidenceSelector.noIclusion(evidences);
         Map<String, List<ProtectEvidence>> onLabelTreatments =
@@ -90,16 +96,11 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Paragraph note(@NotNull String message) {
-        return new Paragraph(message).addStyle(ReportResources.subTextStyle());
-    }
-
-    @NotNull
     private Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap) {
-        Table treatmentTable = TableUtil.createReportContentTable(contentWidth(),
+        Table treatmentTable = TableUtil.createContent(contentWidth(),
                 new float[] { 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Treatment"), TableUtil.createHeaderCell("Responsive Evidence"),
-                        TableUtil.createHeaderCell("Resistance Evidence") });
+                new Cell[] { CellUtil.createHeader("Treatment"), CellUtil.createHeader("Responsive Evidence"),
+                        CellUtil.createHeader("Resistance Evidence") });
 
         EvidenceLevel maxReportingLevel = reportConfig.maxEvidenceLevel();
 
@@ -113,9 +114,9 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
 
         if (hasEvidence) {
-            return TableUtil.createWrappingReportTable(treatmentTable, title);
+            return TableUtil.createWrapping(treatmentTable, title);
         } else {
-            return TableUtil.createEmptyTable(title, contentWidth());
+            return TableUtil.createEmpty(title, contentWidth());
         }
     }
 
@@ -126,29 +127,29 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         for (String treatment : sortedTreatments) {
             List<ProtectEvidence> evidences = treatmentMap.get(treatment);
             if (allowedHighestLevel == highestEvidence(treatmentMap.get(treatment))) {
-                table.addCell(TableUtil.createContentCell(treatment));
+                table.addCell(CellUtil.createContent(treatment));
 
                 Table responsiveTable = new Table(1);
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
-                    Cell cell = TableUtil.createTransparentCell(display(responsive));
+                    Cell cell = CellUtil.createTransparent(display(responsive));
                     String url = url(responsive);
                     if (!url.isEmpty()) {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
                     responsiveTable.addCell(cell);
                 }
-                table.addCell(TableUtil.createContentCell(responsiveTable));
+                table.addCell(CellUtil.createContent(responsiveTable));
 
                 Table resistantTable = new Table(1);
                 for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
-                    Cell cell = TableUtil.createTransparentCell(display(resistant));
+                    Cell cell = CellUtil.createTransparent(display(resistant));
                     String url = url(resistant);
                     if (!url.isEmpty()) {
                         cell.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(url));
                     }
                     resistantTable.addCell(cell);
                 }
-                table.addCell(TableUtil.createContentCell(resistantTable));
+                table.addCell(CellUtil.createContent(resistantTable));
                 hasEvidence = true;
             }
         }

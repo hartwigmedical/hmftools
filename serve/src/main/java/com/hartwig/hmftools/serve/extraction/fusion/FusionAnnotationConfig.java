@@ -26,6 +26,16 @@ public final class FusionAnnotationConfig {
                 .build();
         map.put("EGFR-KDD", fusionEGFRKDD);
 
+        KnownFusionPair fusionEGFRKinaseDomain = ImmutableKnownFusionPair.builder()
+                .geneUp("EGFR")
+                .minExonUp(25)
+                .maxExonUp(26)
+                .geneDown("EGFR")
+                .minExonDown(14)
+                .maxExonDown(18)
+                .build();
+        map.put("KINASE DOMAIN DUPLICATION (EXON 18-25)", fusionEGFRKinaseDomain);
+
         KnownFusionPair fusionEGFRvII = ImmutableKnownFusionPair.builder()
                 .geneUp("EGFR")
                 .minExonUp(13)

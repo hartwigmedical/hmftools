@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
@@ -23,29 +24,31 @@ public final class ViralPresenceTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirus> viruses) {
         if (viruses.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width,
-                new float[] { 4, 3, 1, 1, 2, 2, 2},
-                new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("QC Status"),
-                        TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("Int"),
-                        TableUtil.createHeaderCell("% Covered"), TableUtil.createHeaderCell("Mean Cov"),
-                        TableUtil.createHeaderCell("Exp Clon Cov") });
+        Table table = TableUtil.createContent(width,
+                new float[] { 4, 3, 1, 1, 2, 2, 2 },
+                new Cell[] { CellUtil.createHeader("Virus"), CellUtil.createHeader("QC Status"), CellUtil.createHeader("Type"),
+                        CellUtil.createHeader("Int"), CellUtil.createHeader("% Covered"), CellUtil.createHeader("Mean Cov"),
+                        CellUtil.createHeader("Exp Clon Cov") });
 
         for (AnnotatedVirus virus : viruses) {
-            table.addCell(TableUtil.createContentCell(virus.name()));
-            table.addCell(TableUtil.createContentCell(virus.qcStatus().toString()));
-            table.addCell(TableUtil.createContentCell(virus.interpretation() != null ? virus.interpretation() : Strings.EMPTY));
-            table.addCell(TableUtil.createContentCell(String.valueOf(virus.integrations())));
-            table.addCell(TableUtil.createContentCell(PERCENTAGE.format(virus.percentageCovered())));
-            table.addCell(TableUtil.createContentCell(SINGLE_DIGIT.format(virus.meanCoverage())));
-
-            Double expectedClonalCoverage = virus.expectedClonalCoverage();
-            String clonalCoverageString = expectedClonalCoverage != null ? SINGLE_DIGIT.format(expectedClonalCoverage) : Strings.EMPTY;
-            table.addCell(TableUtil.createContentCell(clonalCoverageString));
+            table.addCell(CellUtil.createContent(virus.name()));
+            table.addCell(CellUtil.createContent(virus.qcStatus().toString()));
+            table.addCell(CellUtil.createContent(virus.interpretation() != null ? virus.interpretation() : Strings.EMPTY));
+            table.addCell(CellUtil.createContent(String.valueOf(virus.integrations())));
+            table.addCell(CellUtil.createContent(PERCENTAGE.format(virus.percentageCovered())));
+            table.addCell(CellUtil.createContent(SINGLE_DIGIT.format(virus.meanCoverage())));
+            table.addCell(CellUtil.createContent(expectedClonalCoverageField(virus)));
         }
 
-        return TableUtil.createWrappingReportTable(table, title);
+        return TableUtil.createWrapping(table, title);
+    }
+
+    @NotNull
+    private static String expectedClonalCoverageField(@NotNull AnnotatedVirus virus) {
+        Double expectedClonalCoverage = virus.expectedClonalCoverage();
+        return expectedClonalCoverage != null ? SINGLE_DIGIT.format(expectedClonalCoverage) : Strings.EMPTY;
     }
 }

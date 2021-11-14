@@ -36,7 +36,7 @@ public class ActionableTrialFactory {
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .urls(Sets.newHashSet("https://iclusion.org/hmf/" + trial.id()));
+                .urls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()));
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
@@ -65,7 +65,7 @@ public class ActionableTrialFactory {
     @VisibleForTesting
     static String extractDoid(@NotNull String doid) {
         String doidCorrected = doid;
-        if (doid.equals("0050586")) {
+        if (doidCorrected.equals("0050686")) {
             doidCorrected = "162";
         }
         return doidCorrected;

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
-import com.hartwig.hmftools.orange.report.util.ChromosomeUtil;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
@@ -19,23 +19,23 @@ public final class GeneCopyNumberTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<ReportableGainLoss> driverAmpsDels) {
         if (driverAmpsDels.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table table = TableUtil.createReportContentTable(width,
+        Table table = TableUtil.createContent(width,
                 new float[] { 1, 1, 1, 1, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"), TableUtil.createHeaderCell("CN") });
+                new Cell[] { CellUtil.createHeader("Chromosome"), CellUtil.createHeader("Region"), CellUtil.createHeader("Gene"),
+                        CellUtil.createHeader("Type"), CellUtil.createHeader("CN") });
 
         for (ReportableGainLoss gainLoss : sort(driverAmpsDels)) {
-            table.addCell(TableUtil.createContentCell(gainLoss.chromosome()));
-            table.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
-            table.addCell(TableUtil.createContentCell(gainLoss.gene()));
-            table.addCell(TableUtil.createContentCell(gainLoss.interpretation().display()));
-            table.addCell(TableUtil.createContentCell(String.valueOf(gainLoss.minCopies())));
+            table.addCell(CellUtil.createContent(gainLoss.chromosome()));
+            table.addCell(CellUtil.createContent(gainLoss.chromosomeBand()));
+            table.addCell(CellUtil.createContent(gainLoss.gene()));
+            table.addCell(CellUtil.createContent(gainLoss.interpretation().display()));
+            table.addCell(CellUtil.createContent(String.valueOf(gainLoss.minCopies())));
         }
 
-        return TableUtil.createWrappingReportTable(table, title);
+        return TableUtil.createWrapping(table, title);
     }
 
     @NotNull

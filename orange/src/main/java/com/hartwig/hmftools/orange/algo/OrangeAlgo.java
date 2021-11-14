@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
@@ -199,9 +198,7 @@ public class OrangeAlgo {
                 config.purpleSomaticVariantVcf(),
                 config.purpleGermlineDriverCatalogTsv(),
                 config.purpleGermlineVariantVcf(),
-                config.purpleGeneCopyNumberTsv(),
-                null,
-                RefGenomeVersion.V37); // The ref genome version doesn't matter if you don't calc CN per chr arm);
+                config.purpleGeneCopyNumberTsv());
     }
 
     @NotNull

@@ -26,6 +26,7 @@ import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileType;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.ImageUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
 import com.itextpdf.kernel.geom.PageSize;
@@ -75,14 +76,15 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     private void addSummaryTable(@NotNull Document document) {
-        Table table = TableUtil.createReportContentTable(contentWidth(),
+        Table table = TableUtil.createContent(contentWidth(),
                 new float[] { 3, 2, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Configured Primary Tumor"),
-                        TableUtil.createHeaderCell("Cuppa Cancer Type"), TableUtil.createHeaderCell("QC") });
-        table.addCell(TableUtil.createContentCell(toConfiguredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(TableUtil.createContentCell(toCuppaCancerType(report.cuppa())));
-        table.addCell(TableUtil.createContentCell(purpleQCString()));
-        document.add(TableUtil.createWrappingReportTable(table));
+                new Cell[] { CellUtil.createHeader("Configured Primary Tumor"), CellUtil.createHeader("Cuppa Cancer Type"),
+                        CellUtil.createHeader("QC") });
+
+        table.addCell(CellUtil.createContent(toConfiguredPrimaryTumor(report.configuredPrimaryTumor())));
+        table.addCell(CellUtil.createContent(toCuppaCancerType(report.cuppa())));
+        table.addCell(CellUtil.createContent(purpleQCString()));
+        document.add(TableUtil.createWrapping(table));
     }
 
     @NotNull
@@ -114,44 +116,44 @@ public class FrontPageChapter implements ReportChapter {
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        summary.addCell(TableUtil.createKeyCell("Purity:"));
-        summary.addCell(TableUtil.createValueCell(purityString()));
-        summary.addCell(TableUtil.createKeyCell("Ploidy:"));
-        summary.addCell(TableUtil.createValueCell(ploidyString()));
-        summary.addCell(TableUtil.createKeyCell("Somatic variant drivers:"));
-        summary.addCell(TableUtil.createValueCell(somaticDriverString()));
-        summary.addCell(TableUtil.createKeyCell("Germline variant drivers:"));
-        summary.addCell(TableUtil.createValueCell(germlineDriverString()));
-        summary.addCell(TableUtil.createKeyCell("Copy number drivers:"));
-        summary.addCell(TableUtil.createValueCell(copyNumberDriverString()));
-        summary.addCell(TableUtil.createKeyCell("Disruption drivers:"));
-        summary.addCell(TableUtil.createValueCell(disruptionDriverString()));
-        summary.addCell(TableUtil.createKeyCell("Fusion drivers:"));
-        summary.addCell(TableUtil.createValueCell(fusionDriverString()));
-        summary.addCell(TableUtil.createKeyCell("Viral presence:"));
-        summary.addCell(TableUtil.createValueCell(virusString()));
-        summary.addCell(TableUtil.createKeyCell("Whole genome duplicated:"));
-        summary.addCell(TableUtil.createValueCell(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
-        summary.addCell(TableUtil.createKeyCell("Microsatellite indels per Mb:"));
-        summary.addCell(TableUtil.createValueCell(msiString()));
-        summary.addCell(TableUtil.createKeyCell("Tumor mutations per Mb:"));
-        summary.addCell(TableUtil.createValueCell(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
-        summary.addCell(TableUtil.createKeyCell("Tumor mutational load:"));
-        summary.addCell(TableUtil.createValueCell(tmlString()));
-        summary.addCell(TableUtil.createKeyCell("HR deficiency score:"));
-        summary.addCell(TableUtil.createValueCell(hrDeficiencyString()));
-        summary.addCell(TableUtil.createKeyCell("Number of SVs:"));
-        summary.addCell(TableUtil.createValueCell(svTmbString()));
-        summary.addCell(TableUtil.createKeyCell("Max complex cluster size:"));
-        summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().maxComplexSize())));
-        summary.addCell(TableUtil.createKeyCell("Telomeric SGLs:"));
-        summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().telomericSGLs())));
-        summary.addCell(TableUtil.createKeyCell("Number of LINE insertions:"));
-        summary.addCell(TableUtil.createValueCell(Integer.toString(report.cuppa().LINECount())));
-        summary.addCell(TableUtil.createKeyCell("On-label treatments:"));
-        summary.addCell(TableUtil.createValueCell(onLabelTreatmentString()));
-        summary.addCell(TableUtil.createKeyCell("Off-label treatments:"));
-        summary.addCell(TableUtil.createValueCell(offLabelTreatmentString()));
+        summary.addCell(CellUtil.createKey("Purity:"));
+        summary.addCell(CellUtil.createValue(purityString()));
+        summary.addCell(CellUtil.createKey("Ploidy:"));
+        summary.addCell(CellUtil.createValue(ploidyString()));
+        summary.addCell(CellUtil.createKey("Somatic variant drivers:"));
+        summary.addCell(CellUtil.createValue(somaticDriverString()));
+        summary.addCell(CellUtil.createKey("Germline variant drivers:"));
+        summary.addCell(CellUtil.createValue(germlineDriverString()));
+        summary.addCell(CellUtil.createKey("Copy number drivers:"));
+        summary.addCell(CellUtil.createValue(copyNumberDriverString()));
+        summary.addCell(CellUtil.createKey("Disruption drivers:"));
+        summary.addCell(CellUtil.createValue(disruptionDriverString()));
+        summary.addCell(CellUtil.createKey("Fusion drivers:"));
+        summary.addCell(CellUtil.createValue(fusionDriverString()));
+        summary.addCell(CellUtil.createKey("Viral presence:"));
+        summary.addCell(CellUtil.createValue(virusString()));
+        summary.addCell(CellUtil.createKey("Whole genome duplicated:"));
+        summary.addCell(CellUtil.createValue(report.purple().wholeGenomeDuplication() ? "Yes" : "No"));
+        summary.addCell(CellUtil.createKey("Microsatellite indels per Mb:"));
+        summary.addCell(CellUtil.createValue(msiString()));
+        summary.addCell(CellUtil.createKey("Tumor mutations per Mb:"));
+        summary.addCell(CellUtil.createValue(SINGLE_DIGIT.format(report.purple().tumorMutationalBurdenPerMb())));
+        summary.addCell(CellUtil.createKey("Tumor mutational load:"));
+        summary.addCell(CellUtil.createValue(tmlString()));
+        summary.addCell(CellUtil.createKey("HR deficiency score:"));
+        summary.addCell(CellUtil.createValue(hrDeficiencyString()));
+        summary.addCell(CellUtil.createKey("Number of SVs:"));
+        summary.addCell(CellUtil.createValue(svTmbString()));
+        summary.addCell(CellUtil.createKey("Max complex cluster size:"));
+        summary.addCell(CellUtil.createValue(Integer.toString(report.cuppa().maxComplexSize())));
+        summary.addCell(CellUtil.createKey("Telomeric SGLs:"));
+        summary.addCell(CellUtil.createValue(Integer.toString(report.cuppa().telomericSGLs())));
+        summary.addCell(CellUtil.createKey("Number of LINE insertions:"));
+        summary.addCell(CellUtil.createValue(Integer.toString(report.cuppa().LINECount())));
+        summary.addCell(CellUtil.createKey("On-label treatments:"));
+        summary.addCell(CellUtil.createValue(onLabelTreatmentString()));
+        summary.addCell(CellUtil.createKey("Off-label treatments:"));
+        summary.addCell(CellUtil.createValue(offLabelTreatmentString()));
 
         Image circosImage = ImageUtil.build(report.plots().purpleFinalCircosPlot());
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -295,7 +297,8 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String tmlString() {
-        return report.purple().tumorMutationalLoad() + " (" + report.purple().tumorMutationalLoadStatus().display() + ")";
+        PurpleData purple = report.purple();
+        return purple.tumorMutationalLoad() + " (" + purple.tumorMutationalLoadStatus().display() + ")";
     }
 
     @NotNull

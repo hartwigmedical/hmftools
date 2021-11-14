@@ -31,11 +31,9 @@ public final class CohortMappingFile {
     private static List<CohortMapping> fromLines(@NotNull List<String> lines) {
         List<CohortMapping> configRules = Lists.newArrayList();
 
-        String header = lines.get(0);
-        Map<String, Integer> fields = createFieldsIndexMap(header, LINE_DELIMITER);
-        lines.remove(0);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), LINE_DELIMITER);
 
-        for (String line : lines) {
+        for (String line : lines.subList(1, lines.size())) {
             String[] values = line.split(LINE_DELIMITER, -1);
 
             configRules.add(ImmutableCohortMapping.builder()

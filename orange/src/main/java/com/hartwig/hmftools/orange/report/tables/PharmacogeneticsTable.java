@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.peach.PeachGenotype;
-import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.util.CellUtil;
 import com.hartwig.hmftools.orange.report.util.TableUtil;
-import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 
 import org.apache.logging.log4j.util.Strings;
@@ -22,25 +20,23 @@ public final class PharmacogeneticsTable {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<PeachGenotype> genotypes) {
         if (genotypes.isEmpty()) {
-            return TableUtil.createEmptyTable(title, width);
+            return TableUtil.createEmpty(title, width);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(width,
+        Table contentTable = TableUtil.createContent(width,
                 new float[] { 1, 1, 1, 2, 1 },
-                new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
-                        TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
-                        TableUtil.createHeaderCell("Source") });
+                new Cell[] { CellUtil.createHeader("Gene"), CellUtil.createHeader("Genotype"), CellUtil.createHeader("Function"),
+                        CellUtil.createHeader("Linked drugs"), CellUtil.createHeader("Source") });
 
         for (PeachGenotype genotype : sort(genotypes)) {
-            contentTable.addCell(TableUtil.createContentCell(genotype.gene()));
-            contentTable.addCell(TableUtil.createContentCell(genotype.haplotype()));
-            contentTable.addCell(TableUtil.createContentCell(genotype.function()));
-            contentTable.addCell(TableUtil.createContentCell(genotype.linkedDrugs()));
-            contentTable.addCell(TableUtil.createContentCell(new Paragraph(sourceName(genotype.urlPrescriptionInfo())).addStyle(
-                    ReportResources.urlStyle())).setAction(PdfAction.createURI(url(genotype.urlPrescriptionInfo()))));
+            contentTable.addCell(CellUtil.createContent(genotype.gene()));
+            contentTable.addCell(CellUtil.createContent(genotype.haplotype()));
+            contentTable.addCell(CellUtil.createContent(genotype.function()));
+            contentTable.addCell(CellUtil.createContent(genotype.linkedDrugs()));
+            contentTable.addCell(CellUtil.createUrl(sourceName(genotype.urlPrescriptionInfo()), url(genotype.urlPrescriptionInfo())));
         }
 
-        return TableUtil.createWrappingReportTable(contentTable, title);
+        return TableUtil.createWrapping(contentTable, title);
     }
 
     @NotNull
@@ -56,20 +52,20 @@ public final class PharmacogeneticsTable {
     }
 
     @NotNull
-    private static String url(@NotNull String urlPrescriptionInfo) {
+    private static String sourceName(@NotNull String urlPrescriptionInfo) {
         String url = extractUrl(urlPrescriptionInfo);
         if (url.startsWith("https://www.pharmgkb.org")) {
-            return url;
+            return "PHARMGKB";
         } else {
             return Strings.EMPTY;
         }
     }
 
     @NotNull
-    private static String sourceName(@NotNull String urlPrescriptionInfo) {
+    private static String url(@NotNull String urlPrescriptionInfo) {
         String url = extractUrl(urlPrescriptionInfo);
         if (url.startsWith("https://www.pharmgkb.org")) {
-            return "PHARMGKB";
+            return url;
         } else {
             return Strings.EMPTY;
         }

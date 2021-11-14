@@ -18,11 +18,11 @@ this area please refer to the specific algorithm documentation present on [https
 The front page of the ORANGE report lists all high-level stats about the sample along with genome-wide visualisations of all mutations and 
 SNV/Indel clonality. In addition to this front page, the following chapters are generated in the ORANGE report:
  
-  - [Clinical Evidence](#clinical-evidence): What genomic evidence has been found in favor of, or against, specific treatments?
   - [Somatic Findings](#somatic-findings): What potentially relevant mutations have been found in the tumor specifically?
   - [Germline Findings](#germline-findings): What potentially relevant mutations have been found in the germline DNA? 
   - [Immunology](#immunology): What can we tell about the immunogenicity of the tumor sample?
   - [Cohort Comparison](#cohort-comparison): How do the various properties of this tumor compare to existing cancer cohorts?
+  - [Clinical Evidence](#clinical-evidence): What genomic evidence has been found in favor of, or against, specific treatments?
   - [Quality Control](#quality-control): Various stats and graphs regarding the quality of the data and interpretation thereof. 
 
 ### Optional Configuration
@@ -31,14 +31,6 @@ Argument | Description
 ---|---
 disable_germline  | If set, disables the germline findings chapter and removes clinical evidence on germline events.
 max_evidence_level | If set, filters evidence down to this level. For example, if "B" is passed as a parameter, only treatments with at least A or B level evidence are displayed in the clinical evidence chapter of the report. Do note that the front page always lists the count of all evidence present, regardless of this filter setting.
-
-### Clinical Evidence 
-
-The following algo is used to render clinical evidence in the ORANGE report based on [PROTECT](../protect) output:
- 1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
- 1. Evidence is split between trials and non-trials which are further split up based on on/off label. 
- 1. Evidence is grouped by treatment and split up between responsive and resistance evidence.
- 1. Evidence is filtered based on the optional configuration (germline, max_reporting_level). 
 
 ### Somatic Findings 
 
@@ -84,6 +76,14 @@ comparison displays the prevalence of the tumor's properties with respect to the
  
 Do note that RNA features and cohort comparison thereof are only included if platinum was run in combined DNA/RNA mode.  
  
+### Clinical Evidence 
+ 
+ The following algo is used to render clinical evidence in the ORANGE report based on [PROTECT](../protect) output:
+  1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
+  1. Evidence is split between trials and non-trials which are further split up based on on/off label. 
+  1. Evidence is grouped by treatment and split up between responsive and resistance evidence.
+  1. Evidence is filtered based on the optional configuration (germline, max_reporting_level). 
+
 ### Quality Control
 
 The quality control chapter provides extensive details that can help with interpreting the overall [PURPLE](../purple) QC status or 
@@ -94,6 +94,15 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.2) 
+  - Support for [Virus Interpreter v1.1](../virus-interpreter/README.md), including addition of % covered, mean coverage and expected 
+  clonal coverage
+  - The Cuppa best prediction is always displayed on the front page regardless of reliability of prediction.
+  - More details about HR deficiency are displayed on front page in case sample is HR deficient
+  - Pan-cancer and cancer-type specific percentiles for SV TMB are displayed on the front page
+  - Other autosomal regions with deletions are no longer filtered for germline events, so all autosomal deletions are now displayed
+  regardless of whether they occurred in germline or not.
+  - Many technical and param changes described in linked release notes 
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.1)
   - Add JSON output of comprehensive platinum output
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.0)

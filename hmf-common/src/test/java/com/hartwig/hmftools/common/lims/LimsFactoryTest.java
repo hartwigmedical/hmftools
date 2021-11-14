@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.common.io.Resources;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsFactoryTest {

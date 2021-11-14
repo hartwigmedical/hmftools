@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -36,7 +37,7 @@ public final class QualityOverruleFunctions {
             }
         }
 
-        //TODO sort cnPerChromosomeData
+        List<CnPerChromosomeArmData> cnPerChromosomeDataSort = sort(cnPerChromosomeData);
 
         List<ReportableVariant> overruledVariants = Lists.newArrayList();
         Map<ReportableVariant, Boolean> newNotifyPerVariant = Maps.newHashMap();
@@ -48,17 +49,28 @@ public final class QualityOverruleFunctions {
         Map<ReportableVariant, Boolean> sortedNotifyPerVariant = newNotifyPerVariant.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
                 .notifyGermlineStatusPerVariant(sortedNotifyPerVariant)
-                .cnPerChromosome(cnPerChromosomeData)
+                .cnPerChromosome(cnPerChromosomeDataSort)
                 .build();
+    }
+
+    @NotNull
+    public static List<CnPerChromosomeArmData> sort(@NotNull List<CnPerChromosomeArmData> cnPerChromosomeArmData) {
+        return cnPerChromosomeArmData.stream().sorted((item1, item2) -> {
+            if (item1.chromosome().equals(item2.chromosome())) {
+                if (item1.chromosomeArm().equals(item2.chromosomeArm())) {
+                    return item1.chromosomeArm().compareTo(item2.chromosomeArm());
+                }
+                return item1.chromosome().compareTo(item2.chromosome());
+            } else {
+                return item1.chromosome().compareTo(item2.chromosome());
+            }
+        }).collect(Collectors.toList());
     }
 
     @NotNull
