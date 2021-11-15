@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
@@ -364,7 +365,7 @@ public final class HgvsCoding
 
         int codingBase = codingContext.CodingBase;
         int nearestExon = codingContext.NearestExonDistance;
-        int varLength = variant.Ref.length();
+        int varLength = max(variant.Ref.length(), variant.Alt.length());
 
         if(varLength == 1)
         {
@@ -413,16 +414,19 @@ public final class HgvsCoding
             if(codingContext.RegionType == INTRONIC || spansUpstreamSplice)
                 addIntronicPosition(nearestExon, sb);
 
-            addCodingBase(codingContext, codingBaseEnd, sb, true);
-
-            if(codingContext.RegionType == INTRONIC || spansDownstreamSplice)
+            if(!variant.isInsert()) // ie for mixed INDELs
             {
-                if(spansDownstreamSplice)
-                    nearestExon = codingContext.NearestExonDistance;
-                else
-                    nearestExon += varLength - 1;
+                addCodingBase(codingContext, codingBaseEnd, sb, true);
 
-                addIntronicPosition(nearestExon, codingContext.SpansCodingEnd, sb);
+                if(codingContext.RegionType == INTRONIC || spansDownstreamSplice)
+                {
+                    if(spansDownstreamSplice)
+                        nearestExon = codingContext.NearestExonDistance;
+                    else
+                        nearestExon += varLength - 1;
+
+                    addIntronicPosition(nearestExon, codingContext.SpansCodingEnd, sb);
+                }
             }
 
             sb.append(HGVS_TYPE_DEL);
