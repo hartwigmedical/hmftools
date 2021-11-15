@@ -175,8 +175,8 @@ public class ClusterMetrics
             final SvBreakend upperBreakend = breakendList.get(startIndex + 1);
 
             if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
-                    && lowerBreakend.orientation() == NEG_ORIENT && upperBreakend.orientation() == POS_ORIENT
-                    && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
+            && lowerBreakend.orientation() == NEG_ORIENT && upperBreakend.orientation() == POS_ORIENT
+            && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
             {
                 startIndex += 2;
                 continue;

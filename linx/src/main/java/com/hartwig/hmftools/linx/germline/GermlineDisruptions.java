@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.germline;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
@@ -8,7 +11,12 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
@@ -30,14 +38,17 @@ import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.fusion.SvDisruptionData;
 import com.hartwig.hmftools.linx.types.ResolvedType;
+import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -50,6 +61,8 @@ public class GermlineDisruptions
     private final List<String> mReportableGeneIds;
     private final GermlinePonCache mGermlinePonCache;
     private final List<SvDisruptionData> mDisruptions;
+
+    private final Set<SvVarData> mReportableSgls;
 
     private static final int MAX_DELETE_LENGTH = 5000000;
 
@@ -75,6 +88,8 @@ public class GermlineDisruptions
                 .collect(Collectors.toList());
 
         mDisruptions = Lists.newArrayList();
+
+        mReportableSgls = Sets.newHashSet();
     }
 
     public final List<SvDisruptionData> getDisruptions() { return mDisruptions; }
@@ -89,7 +104,7 @@ public class GermlineDisruptions
 
         final SvCluster cluster = var.getCluster();
 
-        if(!REPORTED_RESOLVED_TYPES.contains(cluster.getResolvedType()))
+        if(!mReportableSgls.contains(var) && !REPORTED_RESOLVED_TYPES.contains(cluster.getResolvedType()))
             return false;
 
         if(cluster.getSvCount() == 1)
@@ -117,13 +132,17 @@ public class GermlineDisruptions
 
         for(SvCluster cluster : clusters)
         {
-            if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DEL)
-                continue;
-
             if(cluster.getSvCount() == 1)
             {
-                if(cluster.getSV(0).type() != DEL)
+                if(cluster.getSV(0).type() == SGL)
+                {
+                    checkSglMappings(cluster.getSV(0));
                     continue;
+                }
+                else if(cluster.getSV(0).type() != DEL)
+                {
+                    continue;
+                }
             }
             else
             {
@@ -160,38 +179,161 @@ public class GermlineDisruptions
                         int delStart = breakend.position();
                         int delEnd = nextBreakend.position();
 
-                        if(delEnd - delStart > MAX_DELETE_LENGTH) // require a plausible deletion length
-                            continue;
+                        checkGeneDeletions(breakend, nextBreakend, chromosome, delStart, delEnd);
+                    }
+                }
+            }
+        }
+    }
 
-                        for(GeneData geneData : mDriverGeneDataList)
+    private void checkGeneDeletions(
+            final SvBreakend breakendStart, final SvBreakend breakendEnd, final String chromosome, int delStart, int delEnd)
+    {
+        if(delEnd - delStart > MAX_DELETE_LENGTH) // require a plausible deletion length
+            return;
+
+        for(GeneData geneData : mDriverGeneDataList)
+        {
+            if(!geneData.Chromosome.equals(chromosome))
+                continue;
+
+            if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
+            {
+                TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+
+                if(canonicalTrans == null)
+                {
+                    LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
+                    continue;
+                }
+
+                SvDisruptionData upDisruptionData = new SvDisruptionData(
+                        breakendStart.getSV(), breakendStart.usesStart(), geneData, canonicalTrans,
+                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
+
+                mDisruptions.add(upDisruptionData);
+
+                SvDisruptionData downDisruptionData = new SvDisruptionData(
+                        breakendEnd.getSV(), breakendEnd.usesStart(), geneData, canonicalTrans,
+                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM, 1.0);
+
+                mDisruptions.add(downDisruptionData);
+            }
+        }
+    }
+
+    private void checkSglMappings(final SvVarData var)
+    {
+        // look for SGLs which have mappings so as to make them a DEL or DUP candidate
+        SvBreakend breakendStart = var.getBreakend(true);
+
+        for(SglMapping mapping : var.getSglMappings())
+        {
+            if(!mapping.Chromosome.equals(breakendStart.chromosome()))
+                continue;
+
+            if(mapping.Orientation == breakendStart.orientation())
+                continue;
+
+            int posStart = 0;
+            int posEnd = 0;
+            StructuralVariantType impliedType = null;
+
+            if(mapping.Position < breakendStart.position())
+            {
+                posStart = mapping.Position;
+                posEnd = breakendStart.position();
+                impliedType = mapping.Orientation == POS_ORIENT ? DEL : DUP;
+            }
+            else
+            {
+                posStart = breakendStart.position();
+                posEnd = mapping.Position;
+                impliedType = breakendStart.orientation() == POS_ORIENT ? DEL : DUP;
+            }
+
+            if(impliedType == DEL && abs(mapping.Position - breakendStart.position()) > MAX_DELETE_LENGTH)
+                continue;
+
+            for(GeneData geneData : mDriverGeneDataList)
+            {
+                if(!geneData.Chromosome.equals(breakendStart.chromosome()))
+                    continue;
+
+                TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+
+                if(canonicalTrans == null)
+                {
+                    LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
+                    continue;
+                }
+
+                // first check whole gene deletion
+                boolean isDisruptive = false;
+
+                if(impliedType == DEL && positionsWithin(geneData.GeneStart, geneData.GeneEnd, posStart, posEnd))
+                {
+                    isDisruptive = true;
+                }
+                else
+                {
+                    if(!positionWithin(posStart, canonicalTrans.TransStart, canonicalTrans.TransEnd)
+                    && !positionWithin(posEnd, canonicalTrans.TransStart, canonicalTrans.TransEnd))
+                    {
+                        continue;
+                    }
+
+                    int exonRankStart= -1;
+                    int exonRankEnd = -1;
+
+                    for(int i = 0; i < canonicalTrans.exons().size(); ++i)
+                    {
+                        ExonData exon = canonicalTrans.exons().get(i);
+
+                        if(positionWithin(posStart, exon.Start, exon.End) || positionWithin(posEnd, exon.Start, exon.End))
                         {
-                            if(!geneData.Chromosome.equals(chromosome))
-                                continue;
+                            isDisruptive = true;
+                            break;
+                        }
 
-                            if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
-                            {
-                                TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+                        ExonData nextExon = i < canonicalTrans.exons().size() - 1 ? canonicalTrans.exons().get(i + 1) : null;
 
-                                if(canonicalTrans == null)
-                                {
-                                    LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
-                                    continue;
-                                }
+                        if(posStart > exon.End && nextExon != null && posStart < nextExon.Start)
+                        {
+                            exonRankStart = min(exon.Rank, nextExon.Rank);
+                        }
 
-                                SvDisruptionData upDisruptionData = new SvDisruptionData(
-                                        breakend.getSV(), breakend.usesStart(), geneData, canonicalTrans,
-                                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
-
-                                mDisruptions.add(upDisruptionData);
-
-                                SvDisruptionData downDisruptionData = new SvDisruptionData(
-                                        nextBreakend.getSV(), nextBreakend.usesStart(), geneData, canonicalTrans,
-                                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM, 1.0);
-
-                                mDisruptions.add(downDisruptionData);
-                            }
+                        if(posEnd > exon.End && nextExon != null && posEnd < nextExon.Start)
+                        {
+                            exonRankEnd = min(exon.Rank, nextExon.Rank);
                         }
                     }
+
+                    if(exonRankStart != exonRankEnd)
+                    {
+                        if(impliedType == DUP)
+                        {
+                            // cannot just duplicate the start of a gene
+                            if(canonicalTrans.posStrand() && exonRankStart >= 1)
+                                isDisruptive = true;
+                            else if(!canonicalTrans.posStrand() && exonRankEnd >= 1)
+                                isDisruptive = true;
+                        }
+                        else
+                        {
+                            isDisruptive = true;
+                        }
+                    }
+                }
+
+                if(isDisruptive)
+                {
+                    SvDisruptionData upDisruptionData = new SvDisruptionData(
+                            breakendStart.getSV(), breakendStart.usesStart(), geneData, canonicalTrans,
+                            new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
+
+                    mDisruptions.add(upDisruptionData);
+                    mReportableSgls.add(var);
                 }
             }
         }
@@ -229,7 +371,7 @@ public class GermlineDisruptions
         }
     }
 
-    private void populateGermlineSVs(
+    public void populateGermlineSVs(
             final List<SvDisruptionData> standardDisruptions, final List<LinxGermlineSv> germlineSVs, final List<DriverCatalog> drivers)
     {
         final List<SvDisruptionData> allDisruptions = Lists.newArrayList(mDisruptions);

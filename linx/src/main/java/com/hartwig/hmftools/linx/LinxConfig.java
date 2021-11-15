@@ -274,7 +274,7 @@ public class LinxConfig
         return true;
     }
 
-    public LinxConfig()
+    public LinxConfig(boolean isGermline)
     {
         CmdLineArgs = null;
         ProximityDistance = DEFAULT_PROXIMITY_DISTANCE;
@@ -284,7 +284,7 @@ public class LinxConfig
         SampleDataPath = "";
         SvVcfFile = "";
         UploadToDB = false;
-        IsGermline = false;
+        IsGermline = isGermline;
         FragileSiteFile = "";
         KataegisFile = "";
         LineElementFile = "";

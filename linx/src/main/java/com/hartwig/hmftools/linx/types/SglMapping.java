@@ -116,4 +116,9 @@ public class SglMapping
         return isPossibleLink(
                 Chromosome, Position, Orientation, other.Chromosome, other.Position, other.Orientation, MIN_TEMPLATED_INSERTION_LENGTH);
     }
+
+    public String toString()
+    {
+        return String.format("%s:%d:%d qual=%d", Chromosome, Position, Orientation, QualScore);
+    }
 }

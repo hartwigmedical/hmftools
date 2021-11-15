@@ -48,12 +48,27 @@ public class LinxTester
 
     public LinxTester()
     {
-        Config = new LinxConfig();
+        this(false);
+    }
+
+    public LinxTester(boolean isGermline)
+    {
+        Config = new LinxConfig(isGermline);
         Config.RequiredAnnotations.add(ALL_ANNOTATIONS);
 
         Analyser = new ClusterAnalyser(Config, null);
-        CnDataLoader = new CnDataLoader( "", null);
-        Analyser.setCnDataLoader(CnDataLoader);
+
+        if(!isGermline)
+        {
+            CnDataLoader = new CnDataLoader("", null);
+            Analyser.setCnDataLoader(CnDataLoader);
+
+            mCnSegmentBuilder = new CnSegmentBuilder();
+        }
+        else
+        {
+            mCnSegmentBuilder = null;
+        }
 
         SampleId = "TEST";
         VisData = new VisSampleData();
@@ -71,8 +86,6 @@ public class LinxTester
 
         Analyser.setSampleData(SampleId, AllVariants);
         mNextVarId = 0;
-
-        mCnSegmentBuilder = new CnSegmentBuilder();
 
         // Configurator.setRootLevel(Level.DEBUG);
     }
@@ -122,7 +135,8 @@ public class LinxTester
 
         populateChromosomeBreakendMap(AllVariants, Analyser.getState());
 
-        populateCopyNumberData(includePloidyCalcs);
+        if(!Config.IsGermline)
+            populateCopyNumberData(includePloidyCalcs);
 
         Analyser.setSampleData(SampleId, AllVariants);
         Analyser.preClusteringPreparation();
