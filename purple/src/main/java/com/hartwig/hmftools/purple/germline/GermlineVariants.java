@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
@@ -70,9 +71,8 @@ public class GermlineVariants
     }
 
     public void processAndWrite(
-            final String referenceId, final String tumorSample, final String germlineVcf,
-            @NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final Set<String> somaticReportedGenes, boolean snpEffEnrichmentEnabled) throws IOException
+            final String referenceId, final String tumorSample, final String germlineVcf, final PurityAdjuster purityAdjuster,
+            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes)
     {
         mReportableVariants.clear();
 
@@ -87,6 +87,8 @@ public class GermlineVariants
         try
         {
             VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
+
+            boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
 
             VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
                     .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
@@ -103,7 +105,7 @@ public class GermlineVariants
 
             final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                     mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                    mReferenceData.GermlineHotspots, somaticReportedGenes, snpEffEnrichmentEnabled, consumer);
+                    mReferenceData.GermlineHotspots, somaticReportedGenes, !isPaveAnnotated, consumer);
 
             writer.writeHeader(enrichment.enrichHeader(vcfReader.getFileHeader()));
             for(VariantContext context : vcfReader)

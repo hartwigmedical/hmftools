@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.variant.VariantHeader.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_ANNOATATION;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 
 import java.io.File;
@@ -145,12 +146,14 @@ public class SomaticStream implements Consumer<VariantContext>
         {
             VCFFileReader vcfReader = new VCFFileReader(new File(mInputVCF), false);
 
+            boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
+
             mVcfWriter = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
                     .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
             final SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(
-                    mConfig.RunDrivers, !mConfig.UsePaveImpacts, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
+                    mConfig.RunDrivers, !isPaveAnnotated, mConfig.SomaticFitting.clonalityBinWidth(), mConfig.Version,
                     mConfig.ReferenceId, mConfig.TumorId, mReferenceData, purityAdjuster, copyNumbers, fittedRegions,
                     mReferenceData.SomaticHotspots, mPeakModel, this::accept);
 
