@@ -49,8 +49,6 @@ public class PurpleCopyNumberFactory
     {
         mSomaticCopyNumbers.clear();
 
-        final ExtractGermlineDeletions extendGermline = new ExtractGermlineDeletions(mCobaltChromosomes);
-
         final ExtendDiploid extendDiploid =
                 new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
 

@@ -15,26 +15,44 @@ public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumb
 {
     private final ImmutableGeneCopyNumber.Builder mBuilder;
 
-    private double mMinCopyNumber = Double.MAX_VALUE;
-    private double mMinMinorAllelePloidy = Double.MAX_VALUE;
-    private double mMaxCopyNumber = -Double.MAX_VALUE;
+    private double mMinCopyNumber;
+    private double mMinMinorAllelePloidy;
+    private double mMaxCopyNumber;
     private int mSomaticCount;
 
     private PurpleCopyNumber mPrevious;
 
-    private double mPreviousCopyNumber = -Double.MAX_VALUE;
+    private double mPreviousCopyNumber;
     private HmfExonRegion mExon;
     private PurpleCopyNumber mCopyNumber;
 
-    private int mMinRegions = 0;
-    private long mMinRegionStart = 0;
-    private long mMinRegionEnd = 0;
-    private SegmentSupport mMinRegionStartSupport = SegmentSupport.NONE;
-    private SegmentSupport mMinRegionEndSupport = SegmentSupport.NONE;
-    private CopyNumberMethod mMinRegionMethod = CopyNumberMethod.UNKNOWN;
+    private int mMinRegions;
+    private long mMinRegionStart;
+    private long mMinRegionEnd;
+    private SegmentSupport mMinRegionStartSupport;
+    private SegmentSupport mMinRegionEndSupport;
+    private CopyNumberMethod mMinRegionMethod;
 
     public GeneCopyNumberBuilder(final HmfTranscriptRegion gene)
     {
+        mMinCopyNumber = Double.MAX_VALUE;
+        mMinMinorAllelePloidy = Double.MAX_VALUE;
+        mMaxCopyNumber = -Double.MAX_VALUE;
+        mSomaticCount = 0;
+
+        mPrevious = null;
+
+        mPreviousCopyNumber = -Double.MAX_VALUE;
+        mExon = null;
+        mCopyNumber = null;
+
+        mMinRegions = 0;
+        mMinRegionStart = 0;
+        mMinRegionEnd = 0;
+        mMinRegionStartSupport = SegmentSupport.NONE;
+        mMinRegionEndSupport = SegmentSupport.NONE;
+        mMinRegionMethod = CopyNumberMethod.UNKNOWN;
+
         mBuilder = ImmutableGeneCopyNumber.builder()
                 .from(gene)
                 .minRegionStart(gene.start())
@@ -53,7 +71,7 @@ public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumb
     @Override
     public void primary(final PurpleCopyNumber copyNumber)
     {
-        this.mCopyNumber = copyNumber;
+        mCopyNumber = copyNumber;
         if(mExon != null)
         {
             addOverlap(mExon, this.mCopyNumber);
@@ -63,7 +81,7 @@ public class GeneCopyNumberBuilder implements RegionZipperHandler<PurpleCopyNumb
     @Override
     public void secondary(final HmfExonRegion exon)
     {
-        this.mExon = exon;
+        mExon = exon;
         if(mCopyNumber != null)
         {
             addOverlap(this.mExon, mCopyNumber);
