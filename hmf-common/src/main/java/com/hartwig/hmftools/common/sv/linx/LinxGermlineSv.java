@@ -35,6 +35,9 @@ public final class LinxGermlineSv
     public final int TumorReferenceFragmentsStart;
     public final int TumorReferenceFragmentsEnd;
     public final String InsertSequence;
+    public final String InsertSequenceAlignments;
+    public final String InsertSequenceRepeatClass;
+    public final String InsertSequenceRepeatType;
 
     public final int ClusterId;
     public final int ClusterCount;
@@ -50,7 +53,8 @@ public final class LinxGermlineSv
             final String filter, final String eventId, final double qualScore,
             final int germlineFragments, final int germlineReferenceFragmentsStart, final int germlineReferenceFragmentsEnd,
             final int tumorFragments, final int tumorReferenceFragmentsStart, final int tumorReferenceFragmentsEnd,
-            final String insertSequence, final int clusterId, final int clusterCount, final String resolvedType,
+            final String insSeq, final String insSeqAlignments, final String insSeqRepeatClass, final String insSeqRepeatType,
+            final int clusterId, final int clusterCount, final String resolvedType,
             final String linkedByStart, final String linkedByEnd, final int cohortFrequency, final boolean reported)
     {
         ChromosomeStart = chromosomeStart;
@@ -70,7 +74,10 @@ public final class LinxGermlineSv
         TumorFragments = tumorFragments;
         TumorReferenceFragmentsStart = tumorReferenceFragmentsStart;
         TumorReferenceFragmentsEnd = tumorReferenceFragmentsEnd;
-        InsertSequence = insertSequence;
+        InsertSequence = insSeq;
+        InsertSequenceAlignments = insSeqAlignments;
+        InsertSequenceRepeatClass = insSeqRepeatClass;
+        InsertSequenceRepeatType = insSeqRepeatType;
         ClusterId = clusterId;
         ClusterCount = clusterCount;
         ResolvedType = resolvedType;
@@ -128,6 +135,9 @@ public final class LinxGermlineSv
                 .add("tumorReferenceFragmentsStart")
                 .add("tumorReferenceFragmentsEnd")
                 .add("insertSequence")
+                .add("insertSequenceAlignments")
+                .add("insertSequenceRepeatClass")
+                .add("insertSequenceRepeatType")
                 .add("clusterId")
                 .add("clusterCount")
                 .add("resolvedType")
@@ -159,6 +169,9 @@ public final class LinxGermlineSv
                 .add(String.valueOf(disruption.TumorReferenceFragmentsStart))
                 .add(String.valueOf(disruption.TumorReferenceFragmentsEnd))
                 .add(disruption.InsertSequence)
+                .add(disruption.InsertSequenceAlignments)
+                .add(disruption.InsertSequenceRepeatClass)
+                .add(disruption.InsertSequenceRepeatType)
                 .add(String.valueOf(disruption.ClusterId))
                 .add(String.valueOf(disruption.ClusterCount))
                 .add(disruption.ResolvedType)
@@ -193,7 +206,8 @@ public final class LinxGermlineSv
                     Integer.parseInt(values[fieldsIndexMap.get("tumorFragments")]),
                     Integer.parseInt(values[fieldsIndexMap.get("tumorReferenceFragmentsStart")]),
                     Integer.parseInt(values[fieldsIndexMap.get("tumorReferenceFragmentsEnd")]),
-                    values[fieldsIndexMap.get("insertSequence")],
+                    values[fieldsIndexMap.get("insertSequence")], values[fieldsIndexMap.get("insertSequenceAlignments")],
+                    values[fieldsIndexMap.get("insertSequenceRepeatClass")], values[fieldsIndexMap.get("insertSequenceRepeatType")],
                     Integer.parseInt(values[fieldsIndexMap.get("clusterId")]), Integer.parseInt(values[fieldsIndexMap.get("clusterCount")]),
                     values[fieldsIndexMap.get("resolvedType")],
                     values[fieldsIndexMap.get("linkedByStart")], values[fieldsIndexMap.get("linkedByEnd")],

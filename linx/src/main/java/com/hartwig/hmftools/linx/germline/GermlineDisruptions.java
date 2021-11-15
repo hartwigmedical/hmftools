@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
 
 import java.io.IOException;
 import java.util.List;
@@ -53,7 +54,7 @@ public class GermlineDisruptions
     private static final int MAX_DELETE_LENGTH = 5000000;
 
     private static final List<ResolvedType> REPORTED_RESOLVED_TYPES = Lists.newArrayList(
-            ResolvedType.DEL, ResolvedType.DUP, RECIP_INV, ResolvedType.SGL);
+            ResolvedType.DEL, ResolvedType.DUP, RECIP_INV, RECIP_TRANS);
 
     public GermlineDisruptions(final LinxConfig config, final EnsemblDataCache geneTransCache, final GermlinePonCache germlinePonCache)
     {
@@ -264,7 +265,8 @@ public class GermlineDisruptions
                     svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     0, 0, 0,
                     // svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
-                    svData.insertSequence(), cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
+                    svData.insertSequence(), svData.insertSequenceAlignments(), svData.insertSequenceRepeatClass(), svData.insertSequenceRepeatType(),
+                    cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
                     svData.startLinkedBy(), svData.endLinkedBy(), ponCount, reportable));
 
             if(reportable)
