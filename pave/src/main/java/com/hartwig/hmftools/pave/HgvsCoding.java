@@ -58,7 +58,7 @@ public final class HgvsCoding
 
         addTranscriptType(codingContext, sb);
 
-        if(variant.isBaseChange())
+        if(variant.isBaseChange() || variant.isMixed())
         {
             formPointMutation(variant, codingContext, sb);
         }
@@ -161,7 +161,7 @@ public final class HgvsCoding
         boolean spansDownstreamSplice = spansSplice && !spansUpstreamSplice;
 
         // if the variant doesn't cross a splice region (ie the actual deleted bases) but the range has been trimmed to match
-        // ann exon or coding region boundary, then don't move past the first ref (ie non-deleted) base
+        // an exon or coding region boundary, then don't move past the first ref (ie non-deleted) base
         boolean codingBaseRangeCapped =
                 (codingContext.Strand == POS_STRAND &&  codingContext.CodingPositionRange[SE_START] > variant.Position)
             || (codingContext.Strand == NEG_STRAND &&  codingContext.CodingPositionRange[SE_END] < variant.EndPosition);
@@ -385,6 +385,10 @@ public final class HgvsCoding
 
             int codingBaseStart = codingBase;
             int codingBaseLen = codingContext.CodingPositionRange[SE_END] - codingContext.CodingPositionRange[SE_START] + 1;
+
+            if(variant.isMixed()) // the last coding base matches the ref for these variants
+                --codingBaseLen;
+
             int codingBaseEnd = codingContext.RegionType == EXONIC ? codingBase + codingBaseLen - 1 : codingBase;
 
             // special scenarios

@@ -162,7 +162,7 @@ public class PhasedVariantsTest
         assertTrue(impact1.hasEffect(FRAMESHIFT));
 
         pos = 25;
-        ref = mRefBases.substring(pos, pos);
+        ref = mRefBases.substring(pos, pos + 1);
         alt = ref + "AAAAAAAA";
         VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
         var2.setVariantDetails(1, "", "", 0);
@@ -187,7 +187,7 @@ public class PhasedVariantsTest
         impact1 = classifyVariant(var1, transDataNeg);
 
         pos = 25;
-        ref = mRefBases.substring(pos, pos);
+        ref = mRefBases.substring(pos, pos + 1);
         alt = ref + "AAAAAAA";
         var2 = new VariantData(CHR_1, pos, ref, alt);
         var2.setVariantDetails(1, "", "", 0);

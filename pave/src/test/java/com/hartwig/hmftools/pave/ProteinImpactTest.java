@@ -347,7 +347,7 @@ public class ProteinImpactTest
         checkHgvsStrings(pos, 12, alt, FRAMESHIFT, "c.8_18delGTGACTTATTA", "p.Cys3fs");
 
         // from an insert
-        alt = "ACC";
+        alt = mRefBases.substring(pos, pos + 1) + "CC";
         checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.7_8insCC", "p.Cys3fs");
 
         // causing a stop gained: L(TTA) -> TGA, and no stop-gained identifier even if one is added
@@ -355,6 +355,20 @@ public class ProteinImpactTest
         ref = mRefBases.substring(pos, pos + 1);
         alt = ref + "GA";
         checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.16_17insGA", "p.Leu6fs");
+
+        // SNV and deletion combined: ie CT -> A, should be c.5_6delCTinsA instead of c.6delT
+        pos = 24;
+        ref = mRefBases.substring(pos, pos + 2);
+        alt = "A";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = mClassifier.classifyVariant(var, mPosTrans);
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
+        assertEquals(5, impact.codingContext().CodingBase);
+        assertEquals(1, impact.codingContext().DeletedCodingBases);
+        assertEquals("c.5_6delCTinsA", impact.codingContext().Hgvs);
+        assertEquals("p.Ala2fs", impact.proteinContext().Hgvs);
     }
 
     @Test

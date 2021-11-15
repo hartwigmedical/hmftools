@@ -78,6 +78,7 @@ public class VariantData
     public VariantData(final String chromosome, final int position, final String ref, final String alt)
     {
         Chromosome = chromosome;
+
         Position = position;
         Ref = ref;
         Alt = alt;
@@ -91,22 +92,41 @@ public class VariantData
 
         mIndelBaseDiff = Alt.length() - Ref.length();
 
-        if(isInsert())
+        if(mIndelBaseDiff != 0)
         {
-            mAltPositions = Lists.newArrayListWithExpectedSize(0);
-            EndPosition = Position + 1;
-        }
-        else if(isDeletion())
-        {
-            int count = abs(mIndelBaseDiff);
-            mAltPositions = Lists.newArrayListWithExpectedSize(count);
+            // rare case where an INDEL has the ref base change as well, eg CT -> A
+            boolean refBaseChanged = alt.charAt(0) != ref.charAt(0);
 
-            for(int i = 1; i < Ref.length(); ++i)
+            if(isInsert())
             {
-                mAltPositions.add(Position + i);
-            }
+                if(refBaseChanged)
+                {
+                    mAltPositions = Lists.newArrayListWithExpectedSize(1);
+                    mAltPositions.add(Position);
+                }
+                else
+                {
+                    mAltPositions = Lists.newArrayListWithExpectedSize(0);
+                }
 
-            EndPosition = Position + count + 1; // the first based after the deleted section
+                EndPosition = Position + 1;
+            }
+            else
+            {
+                // a deletion
+                int count = abs(mIndelBaseDiff);
+
+                int altPositions = refBaseChanged ? count + 1 : count;
+                mAltPositions = Lists.newArrayListWithExpectedSize(altPositions);
+                int altStartIndex = refBaseChanged ? 0 : 1;
+
+                for(int i = altStartIndex; i < Ref.length(); ++i)
+                {
+                    mAltPositions.add(Position + i);
+                }
+
+                EndPosition = Position + count + 1; // the first based after the deleted section
+            }
         }
         else
         {
@@ -161,6 +181,7 @@ public class VariantData
     public boolean isIndel() { return mIndelBaseDiff != 0; }
     public boolean isInsert() { return mIndelBaseDiff > 0; }
     public boolean isDeletion() { return mIndelBaseDiff < 0; }
+    public boolean isMixed() { return mIndelBaseDiff != 0 && Alt.charAt(0) != Ref.charAt(0); }
 
     public List<Integer> altPositions() { return mAltPositions; }
 
