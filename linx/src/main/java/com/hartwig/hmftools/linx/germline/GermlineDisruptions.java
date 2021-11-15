@@ -96,7 +96,7 @@ public class GermlineDisruptions
 
     private boolean isReportable(final SvVarData var, final String geneId)
     {
-        if(!var.getSvData().filter().equals(PASS))
+        if(!var.getSvData().filter().equals(PASS) && !var.getSvData().filter().equals("minQual")) // TODO: remove once GRIPSS filters lowered
             return false;
 
         if(!mReportableGeneIds.contains(geneId))
