@@ -49,6 +49,9 @@ public class BamSlicer
 
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
 
+        if(queryIntervals == null)
+            return;
+
         try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {
             while (!mConsumerHalt && iterator.hasNext())
@@ -81,6 +84,9 @@ public class BamSlicer
     public List<SAMRecord> slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals)
     {
         final List<SAMRecord> records = Lists.newArrayList();
+
+        if(queryIntervals == null)
+            return records;
 
         try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {

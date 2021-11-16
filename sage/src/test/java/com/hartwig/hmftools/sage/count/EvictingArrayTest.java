@@ -79,13 +79,6 @@ public class EvictingArrayTest
         assertEquals(handler.list.get(99).position(), 1099);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInsertEarlierThanMinCausesException()
-    {
-        testCapacityOverflow();
-        victim.computeIfAbsent(1000, EvictingArrayTest::create);
-    }
-
     static class EvictionHandler implements Consumer<GenomePosition>
     {
         private final List<GenomePosition> list = Lists.newArrayList();

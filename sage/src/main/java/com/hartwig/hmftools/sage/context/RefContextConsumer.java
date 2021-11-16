@@ -168,7 +168,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             boolean findReadContext = findReadContext(readIndex, record);
 
             final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
-            if(!refContext.reachedLimit())
+            if(refContext != null && !refContext.reachedLimit())
             {
                 final int baseQuality = baseQuality(readIndex, record, 2);
                 final ReadContext readContext =
@@ -197,9 +197,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int refBaseIndex = refIndex + i;
 
             if(!inBounds(refPosition))
-            {
                 continue;
-            }
 
             final byte refByte = refBases.Bases[refBaseIndex];
             final String ref = String.valueOf((char) refByte);
@@ -207,7 +205,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             boolean findReadContext = findReadContext(readBaseIndex, record);
 
             final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
-            if(!refContext.reachedLimit())
+            if(refContext != null && !refContext.reachedLimit())
             {
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if(readByte != refByte)
@@ -223,7 +221,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                         int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
                         for(int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++)
                         {
-
                             final String mnvRef = new String(refBases.Bases, refBaseIndex, mnvLength);
                             final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
 

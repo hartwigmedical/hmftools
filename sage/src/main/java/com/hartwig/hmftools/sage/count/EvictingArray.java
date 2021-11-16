@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.count;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -31,7 +33,9 @@ public class EvictingArray<T>
         int distanceFromMinPosition = (int) position - mMinPosition;
         if(distanceFromMinPosition < 0)
         {
-            throw new IllegalArgumentException("Cannot add position: " + position + " before min position: " + mMinPosition);
+            SG_LOGGER.warn("ignoring read with position({}) before prior position({})", position, mMinPosition);
+            return null;
+            // throw new IllegalArgumentException("Cannot add position: " + position + " before min position: " + mMinPosition);
         }
 
         if(distanceFromMinPosition >= mCapacity)
