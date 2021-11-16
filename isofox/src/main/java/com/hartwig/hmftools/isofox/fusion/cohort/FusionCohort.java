@@ -36,6 +36,7 @@ public class FusionCohort
 
     private final PassingFusions mFilters;
     private final BufferedWriter mExternalCompareWriter;
+    private final BufferedWriter mUnknownSpliceWriter;
 
     private final FusionCollection mFusionCollection;
 
@@ -56,13 +57,17 @@ public class FusionCohort
 
         mFilters = new PassingFusions(knownFusionCache, mConfig.Fusions.CohortFile);
         mExternalCompareWriter = mConfig.Fusions.ComparisonSource != null ? ExternalFusionCompare.initialiseWriter(mConfig) : null;
+        mUnknownSpliceWriter = mConfig.Fusions.FindUnknownSplice ? UnknownSpliceAnalyser.initialiseWriter(mConfig) : null;
         mFusionCollection = new FusionCollection(mConfig);
         mWriter = null;
     }
 
     public void processFusionFiles()
     {
-        if(!mConfig.Fusions.GenerateCohort && mConfig.Fusions.ComparisonSource == null && !mConfig.Fusions.WriteFilteredFusions)
+        if(!mConfig.Fusions.GenerateCohort
+        && mConfig.Fusions.ComparisonSource == null
+        && !mConfig.Fusions.WriteFilteredFusions
+        && !mConfig.Fusions.FindUnknownSplice)
         {
             ISF_LOGGER.warn("no fusion functions configured");
             return;
@@ -102,7 +107,8 @@ public class FusionCohort
             if(sampleCount >= pairsPerThread || i == totalSampleCount - 1)
             {
                 fusionTasks.add(new FusionCohortTask(
-                        taskId++, mConfig, sampleFileMap, mFilters, mFusionCollection, mWriter, mExternalCompareWriter));
+                        taskId++, mConfig, sampleFileMap, mFilters, mFusionCollection,
+                        mWriter, mExternalCompareWriter, mUnknownSpliceWriter));
 
                 sampleFileMap = null;
                 sampleCount = 0;
@@ -127,6 +133,8 @@ public class FusionCohort
             fusionTasks.forEach(x -> ExternalFusionCompare.writeResults(mExternalCompareWriter, x.getExternalCompare().getResults()));
             closeBufferedWriter(mExternalCompareWriter);
         }
+
+        closeBufferedWriter(mUnknownSpliceWriter);
 
         ISF_LOGGER.info("fusion cohort analysis complete");
     }

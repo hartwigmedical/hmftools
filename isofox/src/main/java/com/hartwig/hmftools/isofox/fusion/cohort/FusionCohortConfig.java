@@ -16,6 +16,8 @@ public class FusionCohortConfig
     private static final String WRITE_COMBINED_FUSIONS = "fusion_write_combined";
     private static final String COMPARE_UNFILTERED = "fusion_compare_unfiltered";
     private static final String REWRITE_ANNOTATED = "fusion_rewrite_annotated";
+    private static final String FIND_UNKNOWN_SPLICE = "find_unknown_splice";
+    private static final String LINE_ELEMENTS_FILE = "line_elements_file";
 
     // cohort file generation and filters
     public final boolean GenerateCohort;
@@ -30,6 +32,8 @@ public class FusionCohortConfig
 
     public final String ComparisonSource;
     public final boolean CompareUnfiltered;
+    public final boolean FindUnknownSplice;
+    public final String LineElementsFile;
 
     public FusionCohortConfig(final CommandLine cmd)
     {
@@ -40,9 +44,11 @@ public class FusionCohortConfig
         CompareUnfiltered = cmd.hasOption(COMPARE_UNFILTERED);
         RewriteAnnotatedFusions = cmd.hasOption(REWRITE_ANNOTATED);
         WriteCombinedFusions = cmd.hasOption(WRITE_COMBINED_FUSIONS);
+        FindUnknownSplice = cmd.hasOption(FIND_UNKNOWN_SPLICE);
 
         CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
         ComparisonSource = cmd.getOptionValue(FUSION_COMPARISONS);
+        LineElementsFile = cmd.getOptionValue(LINE_ELEMENTS_FILE);
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -56,6 +62,8 @@ public class FusionCohortConfig
         options.addOption(COMPARE_UNFILTERED, false, "Included unfiltered fusions in comparison with external tools");
         options.addOption(REWRITE_ANNOTATED, false, "Rewrtite all fusions with cohort and other annotations");
         options.addOption(WRITE_COMBINED_FUSIONS, false, "Write a combined file with passing fusion");
+        options.addOption(FIND_UNKNOWN_SPLICE, false, "Find known splice to unknown mappings");
+        options.addOption(LINE_ELEMENTS_FILE, true, "Line elements file");
 
         options.addOption(KNOWN_FUSIONS_FILE, true, "Known fusion file");
     }

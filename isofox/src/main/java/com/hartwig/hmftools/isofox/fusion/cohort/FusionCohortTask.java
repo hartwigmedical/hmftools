@@ -31,10 +31,12 @@ public class FusionCohortTask implements Callable
     private final BufferedWriter mCombinedFusionWriter;
     private final FusionCollection mFusionCollection;
     private final ExternalFusionCompare mExternalFusionCompare;
+    private final UnknownSpliceAnalyser mUnknownSpliceAnalyser;
 
     public FusionCohortTask(
             int taskId, final CohortConfig config, final Map<String,Path> sampleFileMap, final PassingFusions filters,
-            final FusionCollection fusionCollection, final BufferedWriter combinedFusionWriter, final BufferedWriter extCompareWriter)
+            final FusionCollection fusionCollection, final BufferedWriter combinedFusionWriter, final BufferedWriter extCompareWriter,
+            final BufferedWriter unknownSpliceWriter)
     {
         mTaskId = taskId;
         mConfig = config;
@@ -44,6 +46,7 @@ public class FusionCohortTask implements Callable
         mCombinedFusionWriter = combinedFusionWriter;
 
         mExternalFusionCompare = extCompareWriter != null ? new ExternalFusionCompare(mConfig, extCompareWriter) : null;
+        mUnknownSpliceAnalyser = unknownSpliceWriter != null ? new UnknownSpliceAnalyser(mConfig.Fusions, unknownSpliceWriter) : null;
     }
 
     public final ExternalFusionCompare getExternalCompare() { return mExternalFusionCompare; }
@@ -62,7 +65,7 @@ public class FusionCohortTask implements Callable
             final String sampleId = entry.getKey();
             final Path fusionFile = entry.getValue();
 
-            ISF_LOGGER.debug("task {}: sample({}:{}) loading fusion data", mTaskId, totalProcessed, sampleId);
+            // ISF_LOGGER.debug("task {}: sample({}:{}) loading fusion data", mTaskId, totalProcessed, sampleId);
 
             final List<FusionData> sampleFusions = FusionData.loadFromFile(fusionFile);
 
@@ -85,6 +88,11 @@ public class FusionCohortTask implements Callable
             if(mConfig.Fusions.ComparisonSource != null)
             {
                 mExternalFusionCompare.compareFusions(sampleId, sampleFusions);
+            }
+
+            if(mConfig.Fusions.FindUnknownSplice)
+            {
+                mUnknownSpliceAnalyser.compareFusions(sampleId, sampleFusions);
             }
         }
 

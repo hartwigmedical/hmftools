@@ -58,7 +58,6 @@ public class CohortDataWriter
 {
     private final LinxConfig mConfig;
 
-
     private final VisDataWriter mVisWriter;
 
     private final Map<String,BufferedWriter> mWriters;
