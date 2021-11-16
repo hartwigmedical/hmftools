@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRE
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -26,6 +27,7 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegio
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
@@ -74,6 +76,7 @@ import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
+import com.hartwig.hmftools.isofox.unmapped.UnmappedReads;
 
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
@@ -101,6 +104,7 @@ public class BamFragmentAllocator
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final ChimericReadTracker mChimericReads;
     private final SpliceSiteCounter mSpliceSiteCounter;
+    private final UnmappedReads mUnmappedReads;
     private final int[] mValidReadStartRegion;
     private final BaseDepth mBaseDepth;
 
@@ -160,6 +164,7 @@ public class BamFragmentAllocator
 
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
         mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
+        mUnmappedReads = mConfig.runFunction(UNMAPPED_READS) ? new UnmappedReads(mConfig, resultsWriter.getUnmappedReadsWriter()) : null;
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
@@ -344,6 +349,9 @@ public class BamFragmentAllocator
         {
             ISF_LOGGER.debug("specific read by ID: {}", read.toString());
         }
+
+        if(mUnmappedReads != null)
+            mUnmappedReads.processReadRecord(read, mCurrentGenes);
 
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
@@ -792,31 +800,6 @@ public class BamFragmentAllocator
         // no further classification of fragment is performed - ie they are considered supporting
         ++mEnrichedGeneFragments;
     }
-
-    /*
-    private boolean checkDuplicateEnrichedReads(final SAMRecord record)
-    {
-        if(!mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
-            return false;
-
-        if(!record.getFirstOfPairFlag())
-            return true;
-
-        ++mTotalBamReadCount;
-        ++mGeneReadCount;
-
-
-        mCurrentGenes.addCount(DUPLICATE, 1);
-
-        if(positionsWithin(record.getStart(), record.getEnd(), mCurrentGenes.getEnrichedRegion()[SE_START], mCurrentGenes.getEnrichedRegion()[SE_END]))
-        {
-            // ignore read-through fragments for enriched genes
-            ++mEnrichedGeneFragments;
-        }
-
-        return true;
-    }
-    */
 
     private void processEnrichedGeneFragments()
     {
