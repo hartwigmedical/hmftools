@@ -25,7 +25,7 @@ iclusion_password | Required: Provided by iClusion.
 iclusion_trial_tsv | Required: The path to where the trials are going to be written to.
 
 ## Version History and Download Links
-- Upcoming
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/iclusion-importer-v1.4)
   - Extend config file of events
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/iclusion-importer-v1.3)
   - This release is a bugfix release to be able to pick up DOIDs which were dropped from the API a while ago and now added back in
