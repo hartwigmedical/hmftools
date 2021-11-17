@@ -82,8 +82,7 @@ public class ChimericReadCache
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s,%s,%d,%s,%d",
                         read.isFirstOfPair(), read.isSupplementaryAlignment(), read.isReadReversed(), read.isProperPair(),
-                        read.hasSuppAlignment() ? read.getSuppAlignment().replaceAll(",", ITEM_DELIM) : "NONE",
-                        read.ReadBases, read.flags(), read.mateChromosome(), read.mateStartPosition()));
+                        read.getSuppAlignmentCsv(), read.ReadBases, read.flags(), read.mateChromosome(), read.mateStartPosition()));
 
                 mReadWriter.write(String.format(",%d,%d,%s,%s,%s",
                         read.getGeneCollectons()[SE_START], read.getGeneCollectons()[SE_END],

@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNKNOWN;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.Collections;
 import java.util.List;
@@ -155,6 +156,12 @@ public class ReadRecord
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
+
+    public String getSuppAlignmentCsv()
+    {
+        return mSupplementaryAlignment != null ? mSupplementaryAlignment.replaceAll(",", ITEM_DELIM) : "NONE";
+    }
+
     public boolean hasSuppAlignment() { return mSupplementaryAlignment != null; }
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }

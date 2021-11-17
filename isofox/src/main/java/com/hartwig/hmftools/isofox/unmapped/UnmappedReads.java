@@ -30,6 +30,8 @@ import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
+import htsjdk.samtools.SAMRecord;
+
 public class UnmappedReads
 {
     private final IsofoxConfig mConfig;
@@ -50,10 +52,10 @@ public class UnmappedReads
         mWriter = writer;
     }
 
-    public void processReadRecord(final ReadRecord read, final GeneCollection geneCollection)
+    public void processReadRecord(final ReadRecord read, final SAMRecord record, final GeneCollection geneCollection)
     {
         // find reads with sufficient soft-clipping and overlapping a splice junction
-        if(!read.containsSoftClipping())
+        if(!read.containsSoftClipping() || read.hasSuppAlignment())
             return;
 
         int scSide = read.longestSoftClippedEnd();
@@ -74,6 +76,12 @@ public class UnmappedReads
         StringJoiner transcriptInfo = new StringJoiner(ITEM_DELIM);
         GeneData geneData = null;
         boolean validSpliceFound = false;
+
+        String firstTransName = "";
+        int firstExonRank = -1;
+        boolean firstIsSpliceAcceptor = false;
+        int firstExonBoundary = -1;
+        int firstExonBoundaryDistance = -1;
 
         for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
         {
@@ -99,28 +107,55 @@ public class UnmappedReads
             boolean isSpliceAcceptor = (scSide == SE_START) == transData.posStrand();
 
             int exonBoundaryDistance = 0;
+            int exonBoundary = scSide == SE_START ? region.start() : region.end();
+            int readBoundary = read.getCoordsBoundary(scSide);
 
             if(entry.getValue() == EXON_INTRON)
             {
-                int readBoundary = read.getCoordsBoundary(scSide);
-                int exonBoundary = scSide == SE_START ? region.start() : region.end();
+                // soft-clip must be intronic
+                if(scSide == SE_START && readBoundary > exonBoundary)
+                    continue;
+                else if(scSide == SE_END && readBoundary < exonBoundary)
+                    continue;
+
                 exonBoundaryDistance = abs(readBoundary - exonBoundary);
 
                 if(exonBoundaryDistance > MAX_INTRON_DISTANCE)
                     continue;
             }
 
-            validSpliceFound = true;
+            if(!validSpliceFound)
+            {
+                validSpliceFound = true;
+                firstTransName = transData.TransName;
+                firstIsSpliceAcceptor = isSpliceAcceptor;
+                firstExonBoundary = exonBoundary;
+                firstExonBoundaryDistance = exonBoundaryDistance;
+                firstExonRank = transExonRef.ExonRank;
+            }
 
-            transcriptInfo.add(String.format("%s:%d:%s:%d",
+            transcriptInfo.add(String.format("%s:%d:%s:%d:%d",
                     transData.TransName, transExonRef.ExonRank,
-                    isSpliceAcceptor ? "acceptor" : "donor", exonBoundaryDistance));
+                    isSpliceAcceptor ? "acceptor" : "donor", exonBoundary, exonBoundaryDistance));
         }
 
-        if(validSpliceFound)
+        if(!validSpliceFound)
+            return;
+
+        // determine average base qual within the SC region
+        int totalBaseQual = 0;
+        int startIndex = scSide == SE_START ? 0 : read.Length - scLength;
+        int endIndex = scSide == SE_START ? scLength : read.Length;
+        for(int i = startIndex; i < endIndex; ++i)
         {
-            writeReadData(mWriter, read, geneData, transcriptInfo.toString(), scSide, scLength);
+            totalBaseQual += record.getBaseQualities()[i];
         }
+
+        double avgBaseQual = totalBaseQual / scLength;
+
+        writeReadData(
+                mWriter, read, geneData, transcriptInfo.toString(), scSide, scLength, avgBaseQual,
+                firstTransName, firstExonRank, firstIsSpliceAcceptor, firstExonBoundary, firstExonBoundaryDistance);
     }
 
     public static BufferedWriter createWriter(final IsofoxConfig config)
@@ -130,9 +165,9 @@ public class UnmappedReads
             final String outputFileName = config.formOutputFile(UNMAPPED_READS_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar,SoftClipLength,SoftClipSide");
-            writer.write(",GeneId,GeneName,TranscriptInfo");
-            writer.write(",MateMapped,MateChr,MatePosStart,SuppData,SoftClipBases");
+            writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar,Orientation,SoftClipLength,SoftClipSide,AvgBaseQual");
+            writer.write(",GeneId,GeneName,TransName,ExonRank,SpliceType,ExonBoundary,ExonDistance,TranscriptInfo");
+            writer.write(",MateMapped,MateChr,MatePosStart,SoftClipBases");
             writer.newLine();
             return writer;
         }
@@ -145,22 +180,24 @@ public class UnmappedReads
 
     private synchronized static void writeReadData(
             final BufferedWriter writer, final ReadRecord read, final GeneData geneData, final String transcriptInfo,
-            int scSide, int scLength)
+            int scSide, int scLength, double avgBaseQual, final String transName, int exonRank, boolean isSpliceAcceptor,
+            int exonBoundary, int exonBoundaryDistance)
     {
         try
         {
-            writer.write(String.format("%s,%s,%d,%d,%s,%d,%s",
-                    read.Id, read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), scLength, startEndStr(scSide)));
+            writer.write(String.format("%s,%s,%d,%d,%s,%d,%d,%s,%.1f",
+                    read.Id, read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.orientation(),
+                    scLength, startEndStr(scSide), avgBaseQual));
 
-            writer.write(String.format(",%s,%s,%s",
-                    geneData.GeneId, geneData.GeneName, transcriptInfo));
+            writer.write(String.format(",%s,%s,%s,%d,%s,%d,%d,%s",
+                    geneData.GeneId, geneData.GeneName, transName, exonRank, isSpliceAcceptor ? "acceptor" : "donor",
+                    exonBoundary, exonBoundaryDistance, transcriptInfo));
 
             String scBases = scSide == SE_START ?
                     Nucleotides.reverseStrandBases(read.ReadBases.substring(0, scLength)) : read.ReadBases.substring(read.ReadBases.length() - scLength);
 
-            writer.write(String.format(",%s,%s,%d,%s,%s",
-                    !read.isMateUnmapped(), read.mateChromosome(), read.mateStartPosition(),
-                    read.hasSuppAlignment() ? read.getSuppAlignment() : "NONE", scBases));
+            writer.write(String.format(",%s,%s,%d,%s",
+                    !read.isMateUnmapped(), read.mateChromosome(), read.mateStartPosition(), scBases));
 
             writer.newLine();
         }

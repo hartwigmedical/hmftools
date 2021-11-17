@@ -307,7 +307,7 @@ public class BamFragmentAllocator
         mRetainedIntronFinder.writeRetainedIntrons();
     }
 
-    private void processSamRecord(@NotNull final SAMRecord record)
+    private void processSamRecord(final SAMRecord record)
     {
         // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
         // gene collection or its preceding non-genic region
@@ -337,10 +337,19 @@ public class BamFragmentAllocator
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
-        processRead(ReadRecord.from(record));
+        ReadRecord read = ReadRecord.from(record);
+
+        if(mUnmappedReads != null)
+        {
+            mUnmappedReads.processReadRecord(read, record, mCurrentGenes);
+
+            if(mConfig.Functions.size() == 1)
+                return;
+        }
+
+        processRead(read);
     }
 
-    // private static final String LOG_READ_ID = "";
     private static final String LOG_READ_ID = "";
 
     private void processRead(ReadRecord read)
@@ -349,9 +358,6 @@ public class BamFragmentAllocator
         {
             ISF_LOGGER.debug("specific read by ID: {}", read.toString());
         }
-
-        if(mUnmappedReads != null)
-            mUnmappedReads.processReadRecord(read, mCurrentGenes);
 
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
@@ -1078,7 +1084,7 @@ public class BamFragmentAllocator
 
                     writer.write(String.format(",%s,%d,%s,%s,%s",
                             read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
-                            read.hasSuppAlignment() ? read.getSuppAlignment() : "NONE"));
+                            read.getSuppAlignmentCsv()));
 
                     writer.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s,%d,%d",
                             geneReadType, transId, transType, validTranscripts,
