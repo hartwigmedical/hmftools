@@ -754,6 +754,7 @@ CREATE TABLE geneCopyNumber
     minRegionMethod varchar(255) NOT NULL,
     minMinorAlleleCopyNumber DOUBLE PRECISION not null,
     PRIMARY KEY (id),
+    UNIQUE KEY (sampleId, chromosome, gene, transcriptId),
     INDEX(sampleId, gene),
     INDEX(gene)
 );
