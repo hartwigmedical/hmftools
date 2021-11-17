@@ -526,8 +526,8 @@ DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(20) NOT NULL,
-    chromosome varchar(20) NOT NULL,
+    sampleId varchar(31) NOT NULL,
+    chromosome varchar(31) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
     type varchar(255) NOT NULL,
