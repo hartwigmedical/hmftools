@@ -314,7 +314,7 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- Upcoming
+- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.7)
   - Extend config file from source iClusion
   - Extend config file from source CKB
   - Update filters
