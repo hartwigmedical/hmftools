@@ -818,9 +818,9 @@ CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     svId INT NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    startChromosome varchar(255) NOT NULL,
-    endChromosome varchar(255),
+    sampleId varchar(31) NOT NULL,
+    startChromosome varchar(31) NOT NULL,
+    endChromosome varchar(31),
     startPosition int not null,
     endPosition int,
     startOrientation tinyint not null,
@@ -872,7 +872,6 @@ CREATE TABLE structuralVariant
     startAnchoringSupportDistance int,
     endAnchoringSupportDistance int,
     PRIMARY KEY (id),
-    UNIQUE KEY (sampleId, startChromosome, startPosition, startOrientation, endChromosome, endPosition, endOrientation, event),
     INDEX(sampleId, svId)
 );
 

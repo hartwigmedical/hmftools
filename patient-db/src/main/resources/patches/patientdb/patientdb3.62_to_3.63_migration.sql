@@ -29,9 +29,6 @@ ALTER TABLE somaticVariant
 ALTER TABLE somaticVariant
 	ADD UNIQUE KEY (sampleId, chromosome, position, ref, alt);
 
-ALTER TABLE structuralVariant
-	ADD UNIQUE KEY (sampleId, startChromosome, startPosition, startOrientation, endChromosome, endPosition, endOrientation, event)
-
 ALTER TABLE virusAnnotation
     ADD COLUMN percentageCovered double NOT NULL AFTER interpretation;
 
