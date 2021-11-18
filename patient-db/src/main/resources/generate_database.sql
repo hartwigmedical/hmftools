@@ -14,6 +14,7 @@ CREATE TABLE baseline
     registrationDate DATE,
     informedConsentDate DATE,
     pifVersion varchar(255),
+    pifVersion varchar(255),
     inHMFDatabase BOOLEAN,
     outsideEU BOOLEAN,
     gender varchar(10),
@@ -735,8 +736,8 @@ DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
+    sampleId varchar(31) NOT NULL,
+    chromosome varchar(31) NOT NULL,
     start int not null,
     end int not null,
     gene varchar(255) NOT NULL,

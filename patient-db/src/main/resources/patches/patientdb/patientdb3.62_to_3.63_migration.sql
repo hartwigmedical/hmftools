@@ -16,6 +16,10 @@ ALTER TABLE copyNumber
 	ADD UNIQUE KEY (sampleId, chromosome, start, end);
 
 ALTER TABLE geneCopyNumber
+	MODIFY COLUMN sampleId VARCHAR(31);
+ALTER TABLE geneCopyNumber
+	MODIFY COLUMN geneCopyNumber VARCHAR(31);
+ALTER TABLE geneCopyNumber
 	ADD UNIQUE KEY (sampleId, chromosome, gene, transcriptId);
 
 ALTER TABLE somaticVariant
