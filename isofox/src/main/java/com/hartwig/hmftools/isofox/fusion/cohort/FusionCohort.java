@@ -96,7 +96,7 @@ public class FusionCohort
             final Path fusionFile = filenames.get(i);
 
             if(mConfig.Fusions.WriteCombinedFusions && mWriter == null)
-                intialiseCombinedWriter(fusionFile);
+                intialiseCombinedWriter();
 
             if(sampleFileMap == null)
                 sampleFileMap = Maps.newHashMap();
@@ -139,16 +139,12 @@ public class FusionCohort
         ISF_LOGGER.info("fusion cohort analysis complete");
     }
 
-    private void intialiseCombinedWriter(final Path fusionFile)
+    private void intialiseCombinedWriter()
     {
         final String outputFile = mConfig.formCohortFilename("combined_fusions.csv");
 
         try
         {
-            // take the fusion headers from a sample file
-            BufferedReader fileReader = new BufferedReader(new FileReader(fusionFile.toString()));
-            String fusionFileHeader = fileReader.readLine();
-
             mWriter = createBufferedWriter(outputFile, false);
             mWriter.write(String.format("SampleId,%s", FusionData.csvHeader(true)));
             mWriter.newLine();

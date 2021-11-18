@@ -2,15 +2,19 @@ package com.hartwig.hmftools.isofox.unmapped;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.START_STR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.startEndStr;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
+import com.hartwig.hmftools.isofox.fusion.FusionData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -81,7 +86,12 @@ public class UnmappedReadsAnalyser
             }
         }
 
-        ISF_LOGGER.info("loaded {} unmapped-read records", totalProcessed);
+        int totalUmrCount = mUnmappedReads.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
+        ISF_LOGGER.info("loaded {} unmapped-read records", totalUmrCount);
+
+        ISF_LOGGER.info("writing cohort unmapped-read");
+
+        writeUnmappedReads();
     }
 
     private void loadFile(final String sampleId, final Path filename)
@@ -151,7 +161,7 @@ public class UnmappedReadsAnalyser
         if(umrKeyList == null)
         {
             umrKeyList = Maps.newHashMap();
-            chrUmrs.put(umRead.GeneName, umrKeyList);
+            chrUmrs.put(umrKey, umrKeyList);
         }
 
         List<UnmappedRead> sampleReads = umrKeyList.get(sampleId);
@@ -165,4 +175,56 @@ public class UnmappedReadsAnalyser
         sampleReads.add(umRead);
     }
 
+    private void writeUnmappedReads()
+    {
+        final String outputFile = mConfig.formCohortFilename("combined_unmapped_reads.csv");
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
+            writer.write("SampleId,ReadCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
+            writer.write(",ExonBoundary,ExonDistance,Orientation,SoftClipSide,AvgBaseQual");
+            writer.write(",CohortFrequency,SoftClipBases");
+            writer.newLine();
+
+            for(Map.Entry<String,Map<String,Map<String,List<UnmappedRead>>>> chrEntry : mUnmappedReads.entrySet())
+            {
+                String chromosome = chrEntry.getKey();
+
+                for(Map<String,List<UnmappedRead>> umrSampleMap : chrEntry.getValue().values())
+                {
+                    int sampleCount = umrSampleMap.size();
+
+                    for(Map.Entry<String,List<UnmappedRead>> sampleEntry : umrSampleMap.entrySet())
+                    {
+                        String sampleId = sampleEntry.getKey();
+
+                        List<UnmappedRead> umReads = sampleEntry.getValue();
+                        int readCount = umReads.size();
+
+                        double avgBaseQual = umReads.stream().mapToDouble(x -> x.AvgBaseQual).sum() / readCount;
+
+                        UnmappedRead firstRead = umReads.get(0);
+
+                        writer.write(String.format("%s,%d,%s,%s,%s,%d,%s",
+                                sampleId, readCount, chromosome, firstRead.GeneName, firstRead.TransName, firstRead.ExonRank,
+                                firstRead.SpliceType));
+
+                        writer.write(String.format(",%d,%d,%d,%s,%.1f,%d,%s",
+                                firstRead.ExonBoundary, firstRead.ExonDistance, firstRead.Orientation, startEndStr(firstRead.ScSide),
+                                avgBaseQual, sampleCount, firstRead.ScBases));
+
+                        writer.newLine();
+                    }
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write cohort unmapped reads file({}): {}", outputFile, e.toString());
+        }
+
+    }
 }
