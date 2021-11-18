@@ -526,8 +526,8 @@ DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
-    chromosome varchar(255) NOT NULL,
+    sampleId varchar(31) NOT NULL,
+    chromosome varchar(31) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
     type varchar(255) NOT NULL,
@@ -570,6 +570,7 @@ CREATE TABLE somaticVariant
     qual double precision not null,
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE KEY (sampleId, chromosome, position, ref, alt),
     INDEX(sampleId),
     INDEX(filter),
     INDEX(type),
@@ -726,6 +727,7 @@ CREATE TABLE copyNumber
     minStart int not null,
     maxStart int not null,
     PRIMARY KEY (id),
+    UNIQUE KEY (sampleId, chromosome, start, end),
     INDEX(sampleId)
 );
 
@@ -752,6 +754,7 @@ CREATE TABLE geneCopyNumber
     minRegionMethod varchar(255) NOT NULL,
     minMinorAlleleCopyNumber DOUBLE PRECISION not null,
     PRIMARY KEY (id),
+    UNIQUE KEY (sampleId, chromosome, gene, transcriptId),
     INDEX(sampleId, gene),
     INDEX(gene)
 );
@@ -868,6 +871,7 @@ CREATE TABLE structuralVariant
     startAnchoringSupportDistance int,
     endAnchoringSupportDistance int,
     PRIMARY KEY (id),
+    UNIQUE KEY (sampleId, startChromosome, startPosition, startOrientation, endChromosome, endPosition, endOrientation, event),
     INDEX(sampleId, svId)
 );
 
