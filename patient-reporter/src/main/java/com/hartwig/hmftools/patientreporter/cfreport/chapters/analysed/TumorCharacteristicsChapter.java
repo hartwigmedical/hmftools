@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cfreport.chapters;
+package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import java.net.MalformedURLException;
 import java.text.DecimalFormat;
@@ -9,6 +9,7 @@ import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.DataLabel;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
