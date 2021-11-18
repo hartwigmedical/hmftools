@@ -14,7 +14,6 @@ CREATE TABLE baseline
     registrationDate DATE,
     informedConsentDate DATE,
     pifVersion varchar(255),
-    pifVersion varchar(255),
     inHMFDatabase BOOLEAN,
     outsideEU BOOLEAN,
     gender varchar(10),
