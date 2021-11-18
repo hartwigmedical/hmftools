@@ -259,10 +259,12 @@ public class OrangeAlgo {
         Evaluation evaluation = percentilesModel.percentile(svTmbObservation);
         if (evaluation != null) {
             DecimalFormat percentage = new DecimalFormat("#'%'");
+            String cancerType = evaluation.cancerType();
+            Double cancerTypePercentile = evaluation.cancerTypePercentile();
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
                     percentage.format(evaluation.panCancerPercentile() * 100),
-                    percentage.format(evaluation.cancerTypePercentile() * 100),
-                    evaluation.cancerType());
+                    cancerTypePercentile != null ? percentage.format(cancerTypePercentile * 100) : "NA",
+                    cancerType != null ? cancerType : "NA");
             evaluations.put(type, evaluation);
         } else {
             LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
