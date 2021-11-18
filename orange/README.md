@@ -94,6 +94,8 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- Upcoming
+ - Fix another bug with percentile determination in the absence of a cancer type
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.3)
  - Fix bug for generating reports for samples without a known cancer type
  - Fix bug when passing a Cuppa feature plot option that does not exist. 
