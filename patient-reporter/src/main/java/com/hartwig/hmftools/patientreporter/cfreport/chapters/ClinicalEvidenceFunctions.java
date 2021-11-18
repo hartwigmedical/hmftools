@@ -38,6 +38,8 @@ public class ClinicalEvidenceFunctions {
 
     private static final Set<EvidenceDirection> RESISTANT_DIRECTIONS =
             Sets.newHashSet(EvidenceDirection.RESISTANT, EvidenceDirection.PREDICTED_RESISTANT);
+    private static final Set<EvidenceDirection> RESPONSE_DIRECTIONS =
+            Sets.newHashSet(EvidenceDirection.RESPONSIVE, EvidenceDirection.PREDICTED_RESPONSIVE);
     private static final Set<EvidenceDirection> PREDICTED =
             Sets.newHashSet(EvidenceDirection.PREDICTED_RESISTANT, EvidenceDirection.PREDICTED_RESPONSIVE);
 
@@ -78,9 +80,10 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 160, 25, 35, 160 },
+                new float[] { 25, 150, 25, 40, 150, 50 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level", 1),
-                        TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1) });
+                        TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1),
+                        TableUtil.createHeaderCell("Publications", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -138,7 +141,8 @@ public class ClinicalEvidenceFunctions {
                 Table levelTable = new Table(new float[] { 1 });
                 Table responseTable = new Table(new float[] { 1, 1 });
 
-                Table responsiveTable = new Table(new float[] { 1, 1 });
+                Table responsiveTable = new Table(new float[] { 1 });
+                Table linksTable = new Table(new float[] { 1 });
 
                 for (ProtectEvidence responsive : ProtectComparator.sort(evidences)) {
                     Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
@@ -156,12 +160,16 @@ public class ClinicalEvidenceFunctions {
                     if (!evidenType.equals("trial")) {
                         String predicted = " ";
                         if (PREDICTED.contains(responsive.direction())) {
-                            predicted = "D";
+                            predicted = "E";
                         }
 
                         String resistent = " ";
                         if (RESISTANT_DIRECTIONS.contains(responsive.direction())) {
-                            resistent = "C";
+                            resistent = "F";
+                        }
+
+                        if (RESPONSE_DIRECTIONS.contains(responsive.direction())) {
+                            resistent = "F";
                         }
 
                         cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
@@ -178,17 +186,22 @@ public class ClinicalEvidenceFunctions {
                     Cell publications = TableUtil.createTransparentCell(Strings.EMPTY);
                     if (evidenType.equals("evidence")) {
                         publications = TableUtil.createTransparentCell(createLinksPublications(responsive));
-                        responsiveTable.addCell(publications);
+                        linksTable.addCell(publications);
                     } else {
-                        responsiveTable.addCell(publications);
+                        linksTable.addCell(publications);
                     }
+
                 }
 
                 if (evidenType.equals("evidence")) {
                     table.addCell(TableUtil.createContentCell(levelTable));
                     table.addCell(TableUtil.createContentCell(responseTable));
+                    table.addCell(TableUtil.createContentCell(responsiveTable));
+                    table.addCell(TableUtil.createContentCell(linksTable));
+                } else {
+                    table.addCell(TableUtil.createContentCell(responsiveTable));
+
                 }
-                table.addCell(TableUtil.createContentCell(responsiveTable));
 
                 hasEvidence = true;
             }
@@ -242,18 +255,13 @@ public class ClinicalEvidenceFunctions {
                 if (!paragraphPublications.isEmpty()) {
                     paragraphPublications.add(new Text(", "));
                 }
-                if (paragraphPublications.isEmpty()) {
-                    paragraphPublications.add(new Text("["));
-                }
+
                 paragraphPublications.add(new Text(Integer.toString(number)).addStyle(ReportResources.urlStyle())
                         .setAction(PdfAction.createURI(url))).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
 
             }
         }
 
-        if (!paragraphPublications.isEmpty()) {
-            paragraphPublications.add(new Text("]"));
-        }
         return paragraphPublications;
     }
 

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
-import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -40,7 +39,6 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class GenomicAlterationsChapter implements ReportChapter {
 
@@ -331,7 +329,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
         String title = "Tumor specific viral insertions";
 
         if (!reportViralPresence) {
-            return TableUtil.createNAReportTable(title);
+                String noConsent =
+                        "This patient did not give his/her permission for reporting of virus results’";
+                return TableUtil.createNoConsentReportTable(title, noConsent);
         } else if (viruses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
@@ -379,7 +379,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 return TableUtil.createWrappingReportTable(title, contentTable);
             }
         } else {
-            return TableUtil.createNAReportTable(title);
+            String noConsent =
+                    "This patient did not give his/her permission for reporting of pharmacogenomics results’";
+            return TableUtil.createNoConsentReportTable(title, noConsent);
         }
     }
 }
