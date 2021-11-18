@@ -272,8 +272,8 @@ class BaselineReader {
                         }
                     }
                 } else {
-                    inDatabase = null;
-                    outsideEU = null;
+                    inDatabase = true;
+                    outsideEU = true;
                 }
                 builder.informedConsentStatus(informedConsentForm.status());
                 builder.pifVersion(pifVersion);
