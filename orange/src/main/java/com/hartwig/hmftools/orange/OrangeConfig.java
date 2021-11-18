@@ -286,7 +286,7 @@ public interface OrangeConfig {
                 .chordPredictionTxt(Config.nonOptionalFile(cmd, CHORD_PREDICTION_TXT))
                 .cuppaResultCsv(Config.nonOptionalFile(cmd, CUPPA_RESULT_CSV))
                 .cuppaSummaryPlot(Config.nonOptionalFile(cmd, CUPPA_SUMMARY_PLOT))
-                .cuppaFeaturePlot(Config.optionalFile(cmd, CUPPA_FEATURE_PLOT))
+                .cuppaFeaturePlot(Config.optionalValue(cmd, CUPPA_FEATURE_PLOT))
                 .annotatedVirusTsv(Config.nonOptionalFile(cmd, ANNOTATED_VIRUS_TSV))
                 .peachGenotypeTsv(Config.nonOptionalFile(cmd, PEACH_GENOTYPE_TSV))
                 .protectEvidenceTsv(Config.nonOptionalFile(cmd, PROTECT_EVIDENCE_TSV))
