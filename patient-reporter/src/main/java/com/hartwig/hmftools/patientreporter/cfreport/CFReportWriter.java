@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -67,9 +68,7 @@ public class CFReportWriter implements ReportWriter {
                     new ReportChapter[] { new QCFailChapter(report), new QCFailPGXChapter(report), new QCFailDisclaimerChapter(report) },
                     outputFilePath);
         } else {
-            writeReport(report,
-                    new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) },
-                    outputFilePath);
+            writeReport(report, new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) }, outputFilePath);
         }
 
     }

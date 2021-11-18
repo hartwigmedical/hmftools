@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
@@ -71,8 +72,9 @@ public class QCFailReporter {
         }
 
         String wgsPurityString = null;
-        PurpleQC purpleQc = null;
+        PurpleQC purpleQc = ImmutablePurpleQC.builder().build();
         if (reason.isDeepWGSDataAvailable()) {
+            LOGGER.info("Loading PURPLE data from {}", new File(purplePurityTsv).getParent());
             PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
 
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
@@ -81,6 +83,8 @@ public class QCFailReporter {
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
             purpleQc = purityContext.qc();
         }
+
+        LOGGER.info("  QC status: {}", purpleQc.toString());
 
         List<PeachGenotype> peachGenotypesOverrule = Lists.newArrayList();
         if (reason.isDeepWGSDataAvailable()) {
