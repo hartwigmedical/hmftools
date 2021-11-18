@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.common.lims.hospital.HospitalContactData;
 import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
@@ -371,6 +373,7 @@ public class CFReportWriterTest {
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi(UDI_DI)
                 .peachGenotypes(createTestPeachGenotypes())
+                .purpleQC(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION))
                 .build();
 
         String filename = testReportFilePath(patientReport);

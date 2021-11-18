@@ -64,9 +64,16 @@ public class CFReportWriter implements ReportWriter {
     @Override
     public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         if (report.reason().isDeepWGSDataAvailable()) {
-            writeReport(report,
-                    new ReportChapter[] { new QCFailChapter(report), new QCFailPGXChapter(report), new QCFailDisclaimerChapter(report) },
-                    outputFilePath);
+            if (report.purpleQC() != null && !report.purpleQC().isEmpty()
+                    && !report.purpleQC().contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
+                writeReport(report,
+                        new ReportChapter[] { new QCFailChapter(report), new QCFailPGXChapter(report),
+                                new QCFailDisclaimerChapter(report) },
+                        outputFilePath);
+            } else {
+                writeReport(report, new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) }, outputFilePath);
+            }
+
         } else {
             writeReport(report, new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) }, outputFilePath);
         }
