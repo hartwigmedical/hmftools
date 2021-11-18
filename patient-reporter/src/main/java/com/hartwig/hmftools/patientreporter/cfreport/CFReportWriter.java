@@ -19,6 +19,8 @@ import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailChapt
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.SummaryChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.TumorCharacteristicsChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailDisclaimerChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailPGXChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -60,7 +62,16 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
-        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
+        if (report.reason().isDeepWGSDataAvailable()) {
+            writeReport(report,
+                    new ReportChapter[] { new QCFailChapter(report), new QCFailPGXChapter(report), new QCFailDisclaimerChapter(report) },
+                    outputFilePath);
+        } else {
+            writeReport(report,
+                    new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) },
+                    outputFilePath);
+        }
+
     }
 
     private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
