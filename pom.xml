@@ -21,7 +21,8 @@
         <module>amber</module>
         <module>cobalt</module>
         <module>sage</module>
-        <module>gripss_kt</module>
+        <module>gripss</module>
+        <module>gripss-kt</module>
         <module>purple</module>
         <module>linx</module>
         <module>sv-tools</module>
@@ -63,7 +64,8 @@
         <compar.version>1.0</compar.version>
         <cuppa.version>1.5</cuppa.version>
         <gene-utils.version>1.0</gene-utils.version>
-        <gripss_kt.version>1.11</gripss_kt.version>
+        <gripss.version>2.0</gripss.version>
+        <gripss-kt.version>1.11</gripss-kt.version>
         <health-checker.version>3.2</health-checker.version>
         <hmf-id-generator.version>2.8</hmf-id-generator.version>
         <iclusion-importer.version>1.4</iclusion-importer.version>
