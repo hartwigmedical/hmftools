@@ -75,7 +75,8 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull EcrfPatient patient, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId) throws IOException {
+    BaselineData read(@NotNull EcrfPatient patient, @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull String cohortId)
+            throws IOException {
 
         ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
@@ -247,25 +248,26 @@ class BaselineReader {
                             outsideEU = true;
                         } else {
                             if (pif222Values != null && pif222Values.contains(pif222)) {
-                                if (pif222 != null && pif222.equals(extractConsentConfigInfo.pif222())) {
+                                if (pif222 != null && pif222.equalsIgnoreCase(extractConsentConfigInfo.pif222())) {
                                     inDatabase = true;
                                 }
                             }
 
                             if (pif221Values != null && pif221Values.contains(pif221)) {
-                                if (pif221 != null && inDatabase != null && pif221.equals(extractConsentConfigInfo.pif221()) && inDatabase) {
+                                if (pif221 != null && inDatabase != null && pif221.equalsIgnoreCase(extractConsentConfigInfo.pif221())
+                                        && inDatabase) {
                                     outsideEU = true;
                                 }
                             }
 
                             if (pif26HMFValues != null && pif26HMFValues.contains(pif26HMF)) {
-                                if (pif26HMF != null && pif26HMF.equals(extractConsentConfigInfo.pif26HMF())) {
+                                if (pif26HMF != null && pif26HMF.equalsIgnoreCase(extractConsentConfigInfo.pif26HMF())) {
                                     inDatabase = true;
                                 }
                             }
 
                             if (pif26BUGValues != null && inDatabase != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
-                                if (pif26Bug != null && pif26Bug.equals(extractConsentConfigInfo.pif26BUG())) {
+                                if (pif26Bug != null && pif26Bug.equalsIgnoreCase(extractConsentConfigInfo.pif26BUG())) {
                                     outsideEU = true;
                                 }
                             }
