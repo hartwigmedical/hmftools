@@ -36,6 +36,10 @@ public class ClinicalEvidenceFunctions {
 
     private static final String TREATMENT_DELIMITER = " + ";
 
+    private static final String RESPONSE_SYMBOL = "\u25B2";
+    private static final String RESISTENT_SYMBOL = "\u25BC";
+    private static final String PREDICTED_SYMBOL = "P";
+
     private static final Set<EvidenceDirection> RESISTANT_DIRECTIONS =
             Sets.newHashSet(EvidenceDirection.RESISTANT, EvidenceDirection.PREDICTED_RESISTANT);
     private static final Set<EvidenceDirection> RESPONSE_DIRECTIONS =
@@ -160,17 +164,17 @@ public class ClinicalEvidenceFunctions {
                     if (!evidenType.equals("trial")) {
 
                         if (PREDICTED.contains(responsive.direction())) {
-                            cellPredicted = TableUtil.createTransparentCell(new Paragraph("P").addStyle(ReportResources.predictedStyle()));
+                            cellPredicted = TableUtil.createTransparentCell(new Paragraph(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()));
                         }
 
                         if (RESISTANT_DIRECTIONS.contains(responsive.direction())) {
                             cellResistent =
-                                    TableUtil.createTransparentCell(new Paragraph("\u25B2").addStyle(ReportResources.resistentStyle()));
+                                    TableUtil.createTransparentCell(new Paragraph(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()));
                         }
 
                         if (RESPONSE_DIRECTIONS.contains(responsive.direction())) {
                             cellResistent =
-                                    TableUtil.createTransparentCell(new Paragraph("\u25BC").addStyle(ReportResources.responseStyle()));
+                                    TableUtil.createTransparentCell(new Paragraph(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()));
                         }
 
                         cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
@@ -266,7 +270,15 @@ public class ClinicalEvidenceFunctions {
 
     @NotNull
     public static Paragraph noteGlossaryTerms() {
-        return new Paragraph("The abbreviation ‘PRD’ (mentioned after the level of evidence) indicates the evidence is predicted "
+        return new Paragraph("The symbol ( ")
+                .add(new Text(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()))
+                .add(" ) mentioned response evidence.\n")
+                .add("The symbol ( ")
+                .add(new Text(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()))
+                .add(" ) mentioned resistent evidence.\n")
+                .add("The abbreviation ( ")
+                .add(new Text(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()))
+                .add(" ) mentioned after the level of evidence) indicates the evidence is predicted "
                 + "responsive/resistent. More details about CKB can be found in their").addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text("Glossary Of Terms").addStyle(ReportResources.urlStyle())
