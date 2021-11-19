@@ -86,7 +86,7 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Table createPeachUnreliableReportTable(@NotNull String tableTitle, @NotNull String peachUnreliable) {
+    public static Table createNoConsentReportTable(@NotNull String tableTitle, @NotNull String peachUnreliable) {
         Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] {  });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);

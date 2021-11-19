@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.serve;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,6 @@ import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
-import com.hartwig.hmftools.serve.sources.ckb.CkbUtil;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
 import com.hartwig.hmftools.serve.sources.docm.DocmExtractor;
 import com.hartwig.hmftools.serve.sources.docm.DocmReader;
@@ -32,7 +30,6 @@ import com.hartwig.hmftools.serve.sources.hartwig.HartwigFileReader;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractor;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionExtractorFactory;
 import com.hartwig.hmftools.serve.sources.iclusion.IclusionReader;
-import com.hartwig.hmftools.serve.sources.iclusion.IclusionUtil;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractorFactory;
 import com.hartwig.hmftools.serve.sources.vicc.ViccReader;
@@ -121,23 +118,18 @@ public class ServeAlgo {
                 refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ICLUSION),
                 missingDoidLookup);
 
-        String eventsTsv = outputDir + File.separator + "iClusionEventClassification.tsv";
-        IclusionUtil.writeIclusionMutationTypes(eventsTsv, trials);
-
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String outputDir) throws IOException {
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String outputDir)
+            throws IOException {
         List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
-        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
-
-        String eventsTsv = outputDir + File.separator + "CkbEventClassification.tsv";
-        CkbUtil.writeEventsToTsv(eventsTsv, ckbEntries);
+        CkbExtractor extractor =
+                CkbExtractorFactory.buildCkbExtractor(config, refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries);

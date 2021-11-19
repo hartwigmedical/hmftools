@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.patientreporter.cfreport.chapters;
+package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;

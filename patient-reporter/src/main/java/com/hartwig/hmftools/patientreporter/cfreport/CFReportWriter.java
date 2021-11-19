@@ -6,20 +6,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
-import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.CircosChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.ClinicalEvidenceOffLabelChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.ClinicalEvidenceOnLabelChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.DetailsAndDisclaimerChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.ExplanationChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.GenomicAlterationsChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.QCFailChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.CircosChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.ClinicalEvidenceOffLabelChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.ClinicalEvidenceOnLabelChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.DetailsAndDisclaimerChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.ExplanationChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.GenomicAlterationsChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.SummaryChapter;
-import com.hartwig.hmftools.patientreporter.cfreport.chapters.TumorCharacteristicsChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.SummaryChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.TumorCharacteristicsChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailDisclaimerChapter;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.failed.QCFailPGXChapter;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -61,7 +63,21 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
-        writeReport(report, new ReportChapter[] { new QCFailChapter(report) }, outputFilePath);
+        if (report.reason().isDeepWGSDataAvailable()) {
+            if (report.purpleQC() != null && !report.purpleQC().isEmpty()
+                    && !report.purpleQC().contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
+                writeReport(report,
+                        new ReportChapter[] { new QCFailChapter(report), new QCFailPGXChapter(report),
+                                new QCFailDisclaimerChapter(report) },
+                        outputFilePath);
+            } else {
+                writeReport(report, new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) }, outputFilePath);
+            }
+
+        } else {
+            writeReport(report, new ReportChapter[] { new QCFailChapter(report), new QCFailDisclaimerChapter(report) }, outputFilePath);
+        }
+
     }
 
     private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)

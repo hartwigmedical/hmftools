@@ -18,8 +18,9 @@ public class Icon {
         MATCH_SPECIFIC,
         TREATMENT,
         INVALID,
-        RESISTENT_RESPONSE,
-        PREDICTED_RESPONSE;
+        RESPONSE,
+        RESISTENT,
+        PREDICTED;
 
         @NotNull
         String text() {
@@ -32,10 +33,12 @@ public class Icon {
                     return "C";
                 case LEVEL_D:
                     return "D";
-                case RESISTENT_RESPONSE:
-                    return "R";
-                case PREDICTED_RESPONSE:
-                    return "P";
+                case RESPONSE:
+                    return "F";
+                case RESISTENT:
+                    return "F";
+                case PREDICTED:
+                    return "E";
                 case MATCH_BROAD:
                     return "\u00a4";
                 case MATCH_SPECIFIC:
@@ -57,10 +60,12 @@ public class Icon {
                     return ReportResources.PALETTE_DARK_BLUE;
                 case LEVEL_D:
                     return ReportResources.PALETTE_VIOLET;
-                case RESISTENT_RESPONSE:
+                case RESPONSE:
+                    return ReportResources.PALETTE_DARK_BLUE;
+                case RESISTENT:
                     return ReportResources.PALETTE_VIOLET;
-                case PREDICTED_RESPONSE:
-                    return ReportResources.PALETTE_VIOLET;
+                case PREDICTED:
+                    return ReportResources.PALETTE_CYAN;
                 case MATCH_BROAD:
                 case MATCH_SPECIFIC:
                     return ReportResources.PALETTE_MID_BLUE;
@@ -89,11 +94,11 @@ public class Icon {
             case "D":
                 iconType = IconType.LEVEL_D;
                 break;
-            case "R":
-                iconType = IconType.RESISTENT_RESPONSE;
+            case "F":
+                iconType = IconType.RESPONSE;
                 break;
-            case "PRED":
-                iconType = IconType.PREDICTED_RESPONSE;
+            case "E":
+                iconType = IconType.PREDICTED;
                 break;
             default:
                 return new Text(Strings.EMPTY);

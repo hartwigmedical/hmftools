@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.patientreporter.cfreport.chapters;
+package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed.SummaryChapter;
 
 import org.junit.Test;
 

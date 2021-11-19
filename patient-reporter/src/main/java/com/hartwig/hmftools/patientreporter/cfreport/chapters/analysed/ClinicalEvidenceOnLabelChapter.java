@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cfreport.chapters;
+package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import java.util.List;
 import java.util.Map;
@@ -7,11 +7,11 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.itextpdf.layout.Document;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
 

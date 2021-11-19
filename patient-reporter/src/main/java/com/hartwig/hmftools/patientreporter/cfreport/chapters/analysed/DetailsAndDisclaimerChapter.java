@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.patientreporter.cfreport.chapters;
+package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.ReportSignature;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
 import com.itextpdf.io.IOException;

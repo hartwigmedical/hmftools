@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -14,7 +16,9 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContextFile;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
@@ -71,16 +75,19 @@ public class QCFailReporter {
         }
 
         String wgsPurityString = null;
-        PurpleQC purpleQc = null;
+        Set<PurpleQCStatus> purpleQc = Sets.newHashSet();
         if (reason.isDeepWGSDataAvailable()) {
+            LOGGER.info("Loading PURPLE data from {}", new File(purplePurityTsv).getParent());
             PurityContext purityContext = PurityContextFile.readWithQC(purpleQCFile, purplePurityTsv);
 
             String formattedPurity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
 
             wgsPurityString = hasReliablePurity ? formattedPurity : Lims.PURITY_NOT_RELIABLE_STRING;
-            purpleQc = purityContext.qc();
+            purpleQc = purityContext.qc().status();
         }
+
+        LOGGER.info("  QC status: {}", purpleQc.toString());
 
         List<PeachGenotype> peachGenotypesOverrule = Lists.newArrayList();
         if (reason.isDeepWGSDataAvailable()) {

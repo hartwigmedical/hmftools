@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.cfreport.chapters;
+package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
@@ -16,6 +16,7 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.hartwig.hmftools.patientreporter.cfreport.chapters.ReportChapter;
 import com.hartwig.hmftools.patientreporter.cfreport.components.InlineBarChart;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
@@ -180,9 +181,8 @@ public class SummaryChapter implements ReportChapter {
 
         String molecularTissuePrediction =
                 patientReport.molecularTissueOrigin() != null ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
-        Style dataStyleMolecularTissuePrediction = hasReliablePurity && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())
-                ? ReportResources.dataHighlightStyle()
-                : ReportResources.dataHighlightNaStyle();
+        Style dataStyleMolecularTissuePrediction =
+                hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Molecular tissue of origin prediction").addStyle(ReportResources.bodyTextStyle())));
@@ -321,22 +321,16 @@ public class SummaryChapter implements ReportChapter {
         Style pgxStyle;
         String reportedPhenotypes;
 
-        if (patientReport.sampleReport().reportPharmogenetics() && patientReport.qsFormNumber().equals(QsFormNumber.FOR_080.display())) {
+        if (patientReport.sampleReport().reportPharmogenetics() && patientReport.peachGenotypes().size() > 0) {
             pgxFunctions = Pharmacogenetics.phenotypesFunctions(patientReport.peachGenotypes());
             pgxGenes = Pharmacogenetics.phenotypesGenes(patientReport.peachGenotypes());
             pgxStyle = ReportResources.dataHighlightStyle();
             reportedPhenotypes = Integer.toString(Pharmacogenetics.countPhenotypes(patientReport.peachGenotypes()));
-        } else if (patientReport.sampleReport().reportPharmogenetics() && patientReport.qsFormNumber()
-                .equals(QsFormNumber.FOR_209.display())) {
+        } else  {
             pgxFunctions = Sets.newHashSet(DataUtil.NA_STRING);
             pgxGenes = Sets.newHashSet(DataUtil.NA_STRING);
             pgxStyle = ReportResources.dataHighlightNaStyle();
             reportedPhenotypes = DataUtil.NA_STRING;
-        } else {
-            pgxFunctions = Sets.newHashSet();
-            pgxGenes = Sets.newHashSet();
-            pgxStyle = ReportResources.dataHighlightNaStyle();
-            reportedPhenotypes = Integer.toString(0);
         }
 
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
