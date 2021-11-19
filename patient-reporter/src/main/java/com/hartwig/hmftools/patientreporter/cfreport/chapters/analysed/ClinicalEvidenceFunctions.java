@@ -272,13 +272,13 @@ public class ClinicalEvidenceFunctions {
     public static Paragraph noteGlossaryTerms() {
         return new Paragraph("The symbol ( ")
                 .add(new Text(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()))
-                .add(" ) mentioned response evidence.\n")
+                .add(" ) mmeans that the evidence is responsive.\n")
                 .add("The symbol ( ")
                 .add(new Text(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()))
-                .add(" ) mentioned resistent evidence.\n")
+                .add(" ) means that the evidence is resistant.\n")
                 .add("The abbreviation ( ")
                 .add(new Text(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()))
-                .add(" ) mentioned after the level of evidence) indicates the evidence is predicted "
+                .add(" mentioned after the level of evidence) indicates the evidence is predicted "
                 + "responsive/resistent. More details about CKB can be found in their").addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text("Glossary Of Terms").addStyle(ReportResources.urlStyle())

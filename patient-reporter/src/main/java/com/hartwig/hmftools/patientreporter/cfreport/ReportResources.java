@@ -56,7 +56,6 @@ public final class ReportResources {
     public static final DeviceRgb PALETTE_LIGHT_GREY = new DeviceRgb(205, 206, 207);
     public static final DeviceRgb PALETTE_PINK = new DeviceRgb(230, 21, 124);
     public static final DeviceRgb PALETTE_VIOLET = new DeviceRgb(156, 97, 168);
-    public static final DeviceRgb PALETTE_GREEN = new DeviceRgb(0, 191, 95);
 
     private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
     private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
@@ -103,11 +102,11 @@ public final class ReportResources {
     }
 
     public static Style responseStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_GREEN).setMarginTop(0);
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
     }
 
     public static Style resistentStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_RED).setMarginTop(0);
     }
 
     public static Style predictedStyle() {

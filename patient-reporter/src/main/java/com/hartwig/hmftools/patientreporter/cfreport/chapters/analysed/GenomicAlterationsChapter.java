@@ -331,7 +331,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (!reportViralPresence) {
                 String noConsent =
-                        "This patient did not give his/her permission for reporting of virus results’";
+                        "This patient did not give his/her permission for reporting of virus results.";
                 return TableUtil.createNoConsentReportTable(title, noConsent);
         } else if (viruses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
@@ -381,7 +381,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             }
         } else {
             String noConsent =
-                    "This patient did not give his/her permission for reporting of pharmacogenomics results’";
+                    "This patient did not give his/her permission for reporting of pharmacogenomics results.";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         }
     }
