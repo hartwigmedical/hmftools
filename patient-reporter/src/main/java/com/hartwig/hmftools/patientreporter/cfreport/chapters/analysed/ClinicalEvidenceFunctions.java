@@ -80,10 +80,10 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 150, 25, 40, 150, 50 },
+                new float[] { 25, 150, 25, 40, 150, 40 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level", 1),
                         TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1),
-                        TableUtil.createHeaderCell("Publications", 1) });
+                        TableUtil.createHeaderCell("Links", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -155,26 +155,25 @@ public class ClinicalEvidenceFunctions {
                     }
 
                     Cell cellLevel;
-                    Cell cellPredicted;
-                    Cell cellResistent;
+                    Cell cellPredicted = TableUtil.createTransparentCell(Strings.EMPTY);
+                    Cell cellResistent = TableUtil.createTransparentCell(Strings.EMPTY);
                     if (!evidenType.equals("trial")) {
-                        String predicted = " ";
+
                         if (PREDICTED.contains(responsive.direction())) {
-                            predicted = "E";
+                            cellPredicted = TableUtil.createTransparentCell(new Paragraph("P").addStyle(ReportResources.predictedStyle()));
                         }
 
-                        String resistent = " ";
                         if (RESISTANT_DIRECTIONS.contains(responsive.direction())) {
-                            resistent = "F";
+                            cellResistent =
+                                    TableUtil.createTransparentCell(new Paragraph("\u25B2").addStyle(ReportResources.resistentStyle()));
                         }
 
                         if (RESPONSE_DIRECTIONS.contains(responsive.direction())) {
-                            resistent = "F";
+                            cellResistent =
+                                    TableUtil.createTransparentCell(new Paragraph("\u25BC").addStyle(ReportResources.responseStyle()));
                         }
 
                         cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
-                        cellPredicted = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(predicted)));
-                        cellResistent = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(resistent)));
                         levelTable.addCell(cellLevel);
                         responseTable.addCell(cellResistent);
                         responseTable.addCell(cellPredicted);

@@ -101,6 +101,18 @@ public final class ReportResources {
         return createFontFromProgram(loadFontProgram(ICON_FONT_PATH));
     }
 
+    public static Style responseStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
+    }
+
+    public static Style resistentStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_CYAN).setMarginTop(0);
+    }
+
+    public static Style predictedStyle() {
+        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_VIOLET).setMarginTop(0);
+    }
+
     public static Style chapterTitleStyle() {
         return new Style().setFont(fontBold()).setFontSize(16).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
     }
