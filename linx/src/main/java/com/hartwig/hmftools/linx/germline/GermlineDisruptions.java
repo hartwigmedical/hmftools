@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
-import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.isPseudogeneDeletion;
+import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
@@ -462,9 +462,19 @@ public class GermlineDisruptions
         final List<SvDisruptionData> allDisruptions = Lists.newArrayList(mDisruptions);
         allDisruptions.addAll(standardDisruptions);
 
+        Set<SvVarData> processedSgls = Sets.newHashSet();
+
         for(final SvDisruptionData disruptionData : allDisruptions)
         {
             final SvVarData var = disruptionData.Var;
+
+            if(var.isSglBreakend())
+            {
+                if(processedSgls.contains(var))
+                    continue;
+
+                processedSgls.add(var);
+            }
 
             // reassessed with specific germline rules
             disruptionData.setReportable(isReportable(disruptionData));

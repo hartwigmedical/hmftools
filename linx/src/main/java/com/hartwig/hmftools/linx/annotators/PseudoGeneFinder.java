@@ -385,6 +385,24 @@ public class PseudoGeneFinder
         return false;
     }
 
+    public static boolean isPseudogeneDeletion(final SvVarData var, int delStart, int delEnd, final TranscriptData transData)
+    {
+        // check for a deletion matching an intron without the bounds of homology
+        int startHomologyLength = var.getSvData().startHomologySequence().length();
+        int endHomologyLength = var.getSvData().endHomologySequence().length();
+
+        for(int i = 0; i < transData.exons().size() - 1; ++i)
+        {
+            ExonData exon = transData.exons().get(i);
+            ExonData nextExon = transData.exons().get(i + 1);
+
+            if(abs(exon.End - delStart) <= startHomologyLength && abs(nextExon.Start - delEnd) <= endHomologyLength)
+                return true;
+        }
+
+        return false;
+    }
+
     private class PseudoGeneMatch
     {
         public final String Gene;

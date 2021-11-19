@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
 
@@ -796,24 +797,6 @@ public class DisruptionFinder implements CohortFileInterface
         }
 
         return cnLowSide;
-    }
-
-    public static boolean isPseudogeneDeletion(final SvVarData var, int delStart, int delEnd, final TranscriptData transData)
-    {
-        // check for a deletion matching an intron without the bounds of homology
-        int startHomologyLength = var.getSvData().startHomologySequence().length();
-        int endHomologyLength = var.getSvData().endHomologySequence().length();
-
-        for(int i = 0; i < transData.exons().size() - 1; ++i)
-        {
-            ExonData exon = transData.exons().get(i);
-            ExonData nextExon = transData.exons().get(i + 1);
-
-            if(abs(exon.End - delStart) <= startHomologyLength && abs(nextExon.Start - delEnd) <= endHomologyLength)
-                return true;
-        }
-
-        return false;
     }
 
     // used by fusion logic only
