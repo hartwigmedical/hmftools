@@ -16,19 +16,7 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
-    public static ReportableGainLoss testReportableGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
-        return ImmutableReportableGainLoss.builder()
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .gene(gene)
-                .interpretation(interpretation)
-                .minCopies(1)
-                .maxCopies(1)
-                .build();
-    }
-
-    @NotNull
-    public static ImmutablePurpleData.Builder testPurpleDataBuilder() {
+    public static PurpleData createMinimalTestPurpleData() {
         return ImmutablePurpleData.builder()
                 .qc(qcPass())
                 .fittedPurityMethod(FittedPurityMethod.NORMAL)
@@ -46,7 +34,20 @@ public final class PurpleTestFactory {
                 .tumorMutationalBurdenPerMb(0D)
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
-                .svTumorMutationalBurden(0);
+                .svTumorMutationalBurden(0)
+                .build();
+    }
+
+    @NotNull
+    public static ReportableGainLoss testReportableGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
+        return ImmutableReportableGainLoss.builder()
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(gene)
+                .interpretation(interpretation)
+                .minCopies(1)
+                .maxCopies(1)
+                .build();
     }
 
     @NotNull

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.report;
 
 import com.hartwig.hmftools.orange.OrangeConfig;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportWriterFactory {
@@ -17,6 +16,6 @@ public final class ReportWriterFactory {
 
     @NotNull
     public static ReportWriter createInMemoryWriter(@NotNull OrangeConfig config) {
-        return new ReportWriter(false, Strings.EMPTY, config.reportConfig());
+        return new ReportWriter(false, null, config.reportConfig());
     }
 }

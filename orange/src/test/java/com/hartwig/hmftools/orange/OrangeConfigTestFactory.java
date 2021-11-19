@@ -8,7 +8,7 @@ import com.hartwig.hmftools.orange.report.ReportConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class OrangeTestFactory {
+public final class OrangeConfigTestFactory {
 
     private static final String MELANOMA_DOID = "8923";
 
@@ -48,7 +48,7 @@ public final class OrangeTestFactory {
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String PROTECT_EVIDENCE_TSV = RUN_DIRECTORY + "/protect/tumor_sample.protect.tsv";
 
-    private OrangeTestFactory() {
+    private OrangeConfigTestFactory() {
     }
 
     @NotNull
