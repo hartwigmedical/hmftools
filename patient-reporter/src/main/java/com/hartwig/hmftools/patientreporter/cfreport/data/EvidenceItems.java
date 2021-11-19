@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.data;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public final class EvidenceItems {
 
     private static final Logger LOGGER = LogManager.getLogger(EvidenceItems.class);
+    private static final String NONE = "None";
 
     private EvidenceItems() {
     }
@@ -77,11 +80,31 @@ public final class EvidenceItems {
         return events.size();
     }
 
-    public static int uniqueTherapyCount(@NotNull List<ProtectEvidence> evidenceItems) {
+    @NotNull
+    public static String onLabelTreatmentString(@NotNull List<ProtectEvidence> protect) {
+        return treatmentString(protect, true, false);
+    }
+
+    @NotNull
+    private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel, boolean reportGermline) {
+        Set<EvidenceLevel> levels = Sets.newTreeSet(Comparator.naturalOrder());
         Set<String> treatments = Sets.newHashSet();
-        for (ProtectEvidence evidence : evidenceItems) {
-            treatments.add(evidence.treatment());
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.onLabel() == requireOnLabel && (reportGermline || !evidence.germline())) {
+                treatments.add(evidence.treatment());
+                levels.add(evidence.level());
+            }
         }
-        return treatments.size();
+
+        if (treatments.isEmpty()) {
+            return NONE;
+        } else {
+            StringJoiner joiner = new StringJoiner(", ");
+            for (EvidenceLevel level : levels) {
+                joiner.add(level.toString());
+            }
+
+            return treatments.size() + " (" + joiner.toString() + ")";
+        }
     }
 }

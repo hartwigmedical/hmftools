@@ -138,7 +138,8 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "Only viruses for which DNA integration is detected are reported." }))
+                .add(createContentDiv(new String[] { "Only clinical relevant viruses for which DNA integration is detected or the "
+                        + "minial coverage of the viral genome is above 90% are reported." }))
                 .add(createContentDivWithLinkThree("The list of viruses that are considered can be found on ",
                         "https://resources.hartwigmedicalfoundation.nl ",
                         "in directory 'Patient-Reporting'.",

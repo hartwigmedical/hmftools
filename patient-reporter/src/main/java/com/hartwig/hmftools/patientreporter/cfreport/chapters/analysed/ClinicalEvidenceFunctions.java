@@ -272,7 +272,7 @@ public class ClinicalEvidenceFunctions {
     public static Paragraph noteGlossaryTerms() {
         return new Paragraph("The symbol ( ")
                 .add(new Text(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()))
-                .add(" ) mmeans that the evidence is responsive.\n")
+                .add(" ) means that the evidence is responsive.\n")
                 .add("The symbol ( ")
                 .add(new Text(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()))
                 .add(" ) means that the evidence is resistant.\n")
