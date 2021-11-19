@@ -337,12 +337,12 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Genes with haplotypes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
 
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
+
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
-
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
 
         div.add(table);
 
