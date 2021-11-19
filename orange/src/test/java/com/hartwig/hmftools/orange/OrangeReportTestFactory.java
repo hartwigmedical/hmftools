@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.orange;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
+import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
@@ -49,7 +54,11 @@ public final class OrangeReportTestFactory {
 
     @NotNull
     public static OrangeReport createProperTestReport() {
-        return ImmutableOrangeReport.builder().from(createMinimalTestReport()).purple(createTestPurpleData()).build();
+        return ImmutableOrangeReport.builder()
+                .from(createMinimalTestReport())
+                .purple(createTestPurpleData())
+                .protect(createTestProtectData())
+                .build();
     }
 
     @NotNull
@@ -81,11 +90,33 @@ public final class OrangeReportTestFactory {
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(ImmutableReportableVariant.builder()
                         .from(VariantTestFactory.createTestReportableVariant())
+                        .gene("ARID1A")
+                        .canonicalHgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
+                        .build())
+                .addReportableSomaticVariants(ImmutableReportableVariant.builder()
+                        .from(VariantTestFactory.createTestReportableVariant())
                         .gene("USH2A")
                         .canonicalHgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                        .build())
+                .addReportableSomaticVariants(ImmutableReportableVariant.builder()
+                        .from(VariantTestFactory.createTestReportableVariant())
+                        .gene("USH2A")
+                        .canonicalHgvsCodingImpact("c.11712-884A>T")
                         .localPhaseSet(42256)
                         .build())
                 .build();
 
+    }
+
+    @NotNull
+    private static List<ProtectEvidence> createTestProtectData() {
+        List<ProtectEvidence> evidences = Lists.newArrayList();
+
+        evidences.add(ImmutableProtectEvidence.builder()
+                .from(ProtectTestFactory.createTestProtectEvidence())
+                .genomicEvent("USH2A c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                .build());
+
+        return evidences;
     }
 }
