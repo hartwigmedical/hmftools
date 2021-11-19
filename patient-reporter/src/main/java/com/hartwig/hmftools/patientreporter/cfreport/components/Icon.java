@@ -17,10 +17,7 @@ public class Icon {
         MATCH_BROAD,
         MATCH_SPECIFIC,
         TREATMENT,
-        INVALID,
-        RESPONSE,
-        RESISTENT,
-        PREDICTED;
+        INVALID;
 
         @NotNull
         String text() {
@@ -33,12 +30,6 @@ public class Icon {
                     return "C";
                 case LEVEL_D:
                     return "D";
-                case RESPONSE:
-                    return "F";
-                case RESISTENT:
-                    return "F";
-                case PREDICTED:
-                    return "E";
                 case MATCH_BROAD:
                     return "\u00a4";
                 case MATCH_SPECIFIC:
@@ -60,12 +51,6 @@ public class Icon {
                     return ReportResources.PALETTE_DARK_BLUE;
                 case LEVEL_D:
                     return ReportResources.PALETTE_VIOLET;
-                case RESPONSE:
-                    return ReportResources.PALETTE_DARK_BLUE;
-                case RESISTENT:
-                    return ReportResources.PALETTE_VIOLET;
-                case PREDICTED:
-                    return ReportResources.PALETTE_CYAN;
                 case MATCH_BROAD:
                 case MATCH_SPECIFIC:
                     return ReportResources.PALETTE_MID_BLUE;
@@ -93,12 +78,6 @@ public class Icon {
                 break;
             case "D":
                 iconType = IconType.LEVEL_D;
-                break;
-            case "F":
-                iconType = IconType.RESPONSE;
-                break;
-            case "E":
-                iconType = IconType.PREDICTED;
                 break;
             default:
                 return new Text(Strings.EMPTY);
