@@ -138,9 +138,13 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "Only clinical relevant viruses for which DNA integration is detected or the "
-                        + "minial coverage of the viral genome is above 90% are reported." }))
-                .add(createContentDivWithLinkThree("The list of viruses that are considered can be found on ",
+                .add(createContentDiv(new String[] { "The virus species should be potentially reportable (i.e., the species should "
+                        + "be present in our reporting database that contains viral species that are deemed clinically "
+                        + "relevant and thus potentially reportable (HPV, MCV, HBV, EBV, and HHV-8)) and one of the below is true:",
+                "- DNA integration for the virus can be detected, OR when none DNA integration can be found",
+                "- >=90% of the viral genome is covered.",
+                "- coverage of the virus is higher than expected clonal mean coverage"}))
+                .add(createContentDivWithLinkThree("The viruses db that are considered can be found on ",
                         "https://resources.hartwigmedicalfoundation.nl ",
                         "in directory 'Patient-Reporting'.",
                         "https://resources.hartwigmedicalfoundation.nl")));
