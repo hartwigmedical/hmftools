@@ -42,7 +42,6 @@ public final class ReportResources {
 
     public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full side panel)
     public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
-    public static final float CONTENT_WIDTH_WIDE_SUMMARY = 320; // Width of the content on a narrow page (page without full side panel)
     public static final float CONTENT_WIDTH_WIDE_SMALL = 240; // Width of the content on a narrow page (page with full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
