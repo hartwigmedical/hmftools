@@ -2,14 +2,18 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -143,20 +147,19 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell(4, 2).setHeight(TABLE_SPACER_HEIGHT));
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(analysis().tumorSpecificEvidence());
-        int therapyCount = EvidenceItems.uniqueTherapyCount(analysis().tumorSpecificEvidence());
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(therapyEventCount, therapyCount, "treatment(s)"));
+        table.addCell(createTreatmentIndicationCell(therapyEventCount, EvidenceItems.onLabelTreatmentString(analysis().tumorSpecificEvidence()), "treatment(s)"));
 
         int trialEventCount = ClinicalTrials.uniqueEventCount(analysis().clinicalTrials());
         int trialCount = ClinicalTrials.uniqueTrialCount(analysis().clinicalTrials());
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with clinical trial eligibility").addStyle(
                 ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(trialEventCount, trialCount, "trial(s)"));
-
+        table.addCell(createStudyIndicationCell(trialEventCount, trialCount, "trial(s)"));
         div.add(table);
 
         reportDocument.add(div);
     }
+
 
     private void renderTumorCharacteristics(@NotNull Document reportDocument) {
         boolean hasReliablePurity = analysis().hasReliablePurity();
@@ -337,12 +340,12 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Genes with haplotypes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(pgxGenes)).addStyle(pgxStyle));
 
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
+
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
                 .add(new Paragraph("Functions of the haplotypes").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(pgxFunctions)).addStyle(pgxStyle));
-
-        table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of reported haplotypes").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createMiddleAlignedCell().add(createHighlightParagraph(reportedPhenotypes).addStyle(pgxStyle)));
 
         div.add(table);
 
@@ -387,7 +390,22 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Cell createTreatmentIndicationCell(int eventCount, int treatmentCount, @NotNull String treatmentsName) {
+    private static Cell createTreatmentIndicationCell(int eventCount, @NotNull String  treatmentCount, @NotNull String treatmentsName) {
+        String treatmentText;
+        Style style;
+        if (eventCount > 0) {
+            treatmentText = String.format("%d | %s %s", eventCount, treatmentCount, treatmentsName);
+            style = ReportResources.dataHighlightStyle();
+        } else {
+            treatmentText = DataUtil.NONE_STRING;
+            style = ReportResources.dataHighlightNaStyle();
+        }
+
+        return createMiddleAlignedCell().add(createHighlightParagraph(treatmentText)).addStyle(style);
+    }
+
+    @NotNull
+    private static Cell createStudyIndicationCell(int eventCount, int  treatmentCount, @NotNull String treatmentsName) {
         String treatmentText;
         Style style;
         if (eventCount > 0) {

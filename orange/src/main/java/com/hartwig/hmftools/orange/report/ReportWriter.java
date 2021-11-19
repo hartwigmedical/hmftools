@@ -27,18 +27,19 @@ import com.itextpdf.layout.property.AreaBreakType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ReportWriter {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportWriter.class);
 
     private final boolean writeToDisk;
-    @NotNull
+    @Nullable
     private final String outputDir;
     @NotNull
     private final ReportConfig reportConfig;
 
-    ReportWriter(final boolean writeToDisk, @NotNull final String outputDir, @NotNull final ReportConfig reportConfig) {
+    ReportWriter(final boolean writeToDisk, @Nullable final String outputDir, @NotNull final ReportConfig reportConfig) {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
         this.reportConfig = reportConfig;
@@ -61,7 +62,7 @@ public class ReportWriter {
     }
 
     private void writeJson(@NotNull OrangeReport report) throws IOException {
-        if (writeToDisk) {
+        if (writeToDisk && outputDir != null) {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
             String json = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create().toJson(report);

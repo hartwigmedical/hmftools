@@ -120,7 +120,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
         }
     }
 
-    private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
+    private boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             @NotNull EvidenceLevel allowedHighestLevel) {
         Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet());
         boolean hasEvidence = false;
@@ -129,7 +129,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
             if (allowedHighestLevel == highestEvidence(treatmentMap.get(treatment))) {
                 table.addCell(CellUtil.createContent(treatment));
 
-                Table responsiveTable = new Table(1);
+                Table responsiveTable = TableUtil.createContent(contentWidth() / 3, new float[] { 1 }, new Cell[] {});
                 for (ProtectEvidence responsive : filterOnDirections(evidences, RESPONSIVE_DIRECTIONS)) {
                     Cell cell = CellUtil.createTransparent(display(responsive));
                     String url = url(responsive);
@@ -140,7 +140,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
                 }
                 table.addCell(CellUtil.createContent(responsiveTable));
 
-                Table resistantTable = new Table(1);
+                Table resistantTable = TableUtil.createContent(contentWidth() / 3, new float[] { 1 }, new Cell[] {});
                 for (ProtectEvidence resistant : filterOnDirections(evidences, RESISTANT_DIRECTIONS)) {
                     Cell cell = CellUtil.createTransparent(display(resistant));
                     String url = url(resistant);

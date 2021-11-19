@@ -19,16 +19,6 @@ public class FlagstatQCTest {
 
     @NotNull
     private static Flagstat withMappedProportion(double mappedProportion) {
-        return ImmutableFlagstat.builder()
-                .uniqueReadCount(0L)
-                .secondaryCount(0L)
-                .supplementaryCount(0L)
-                .duplicateProportion(0D)
-                .mappedProportion(mappedProportion)
-                .pairedInSequencingProportion(0D)
-                .properlyPairedProportion(0D)
-                .withItselfAndMateMappedProportion(0D)
-                .singletonProportion(0D)
-                .build();
+        return ImmutableFlagstat.builder().from(FlagstatTestFactory.createMinimalTestFlagstat()).mappedProportion(mappedProportion).build();
     }
 }

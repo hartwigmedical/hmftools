@@ -42,7 +42,6 @@ public final class ReportResources {
 
     public static final float CONTENT_WIDTH_NARROW = 330; // Width of the content on a narrow page (page with full side panel)
     public static final float CONTENT_WIDTH_WIDE = 510; // Width of the content on a narrow page (page without full side panel)
-    public static final float CONTENT_WIDTH_WIDE_SUMMARY = 320; // Width of the content on a narrow page (page without full side panel)
     public static final float CONTENT_WIDTH_WIDE_SMALL = 240; // Width of the content on a narrow page (page with full side panel)
 
     public static final DeviceRgb PALETTE_WHITE = new DeviceRgb(255, 255, 255);
@@ -100,6 +99,18 @@ public final class ReportResources {
     public static PdfFont iconFont() {
         // Cannot be created statically as every PDF needs their own private font objects.
         return createFontFromProgram(loadFontProgram(ICON_FONT_PATH));
+    }
+
+    public static Style responseStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
+    }
+
+    public static Style resistentStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_RED).setMarginTop(0);
+    }
+
+    public static Style predictedStyle() {
+        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_VIOLET).setMarginTop(0);
     }
 
     public static Style chapterTitleStyle() {

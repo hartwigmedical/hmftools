@@ -31,7 +31,6 @@ public final class CellUtil {
     @NotNull
     public static Cell createTransparent(@NotNull String text) {
         Cell cell = createBorderlessBase();
-        cell.setBorderBottom(Border.NO_BORDER);
         cell.addStyle(ReportResources.tableContentStyle());
         cell.add(new Paragraph(text));
         return cell;
@@ -90,7 +89,6 @@ public final class CellUtil {
     private static Cell createBorderlessBase() {
         Cell cell = new Cell();
         cell.setBorder(Border.NO_BORDER);
-        cell.setKeepTogether(true);
         return cell;
     }
 }

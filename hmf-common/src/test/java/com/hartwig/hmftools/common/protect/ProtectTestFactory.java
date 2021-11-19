@@ -12,6 +12,11 @@ public final class ProtectTestFactory {
     }
 
     @NotNull
+    public static ProtectEvidence createTestProtectEvidence() {
+        return testEvidenceBuilder().build();
+    }
+
+    @NotNull
     public static ImmutableProtectEvidence.Builder testEvidenceBuilder() {
         return ImmutableProtectEvidence.builder()
                 .genomicEvent(Strings.EMPTY)

@@ -38,10 +38,12 @@ final class VariantUtil {
     private static int extractCodonField(@NotNull String hgvsCoding) {
         StringBuilder codonAppender = new StringBuilder();
         boolean noDigitFound = true;
-        // hgvsCoding starts with "c.", we need to skip that...
-        int index = 2;
+
+        int startIndex = findStartIndex(hgvsCoding);
+        int index = startIndex;
         while (noDigitFound && index < hgvsCoding.length()) {
-            if ((Character.toString(hgvsCoding.charAt(index)).equals("-") && index == 2) || Character.isDigit(hgvsCoding.charAt(index))) {
+            boolean isMinusSign = Character.toString(hgvsCoding.charAt(index)).equals("-");
+            if ((isMinusSign && index == startIndex) || Character.isDigit(hgvsCoding.charAt(index))) {
                 codonAppender.append(hgvsCoding.charAt(index));
             } else {
                 noDigitFound = false;
@@ -55,6 +57,11 @@ final class VariantUtil {
         } else {
             return Integer.parseInt(codon);
         }
+    }
+
+    private static int findStartIndex(@NotNull String hgvsCoding) {
+        // hgvsCoding starts with either "c." or "c.*", we need to skip that...
+        return hgvsCoding.startsWith("c.*") ? 3 : 2;
     }
 
     @NotNull

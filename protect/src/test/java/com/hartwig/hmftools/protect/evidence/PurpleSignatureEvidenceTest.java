@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -59,6 +60,10 @@ public class PurpleSignatureEvidenceTest {
 
     @NotNull
     private static PurpleData createPurpleData(@NotNull MicrosatelliteStatus msStatus, @NotNull TumorMutationalStatus tmlStatus) {
-        return PurpleTestFactory.testPurpleDataBuilder().microsatelliteStatus(msStatus).tumorMutationalLoadStatus(tmlStatus).build();
+        return ImmutablePurpleData.builder()
+                .from(PurpleTestFactory.createMinimalTestPurpleData())
+                .microsatelliteStatus(msStatus)
+                .tumorMutationalLoadStatus(tmlStatus)
+                .build();
     }
 }

@@ -39,7 +39,7 @@ public class QCFailPGXChapter implements ReportChapter {
     @Override
     @NotNull
     public String name() {
-        return "pharmagenetics";
+        return "Pharmacogenetics";
     }
 
     @Override

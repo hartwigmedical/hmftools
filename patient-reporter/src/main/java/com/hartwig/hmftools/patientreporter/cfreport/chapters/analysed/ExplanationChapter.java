@@ -60,18 +60,18 @@ public class ExplanationChapter implements ReportChapter {
                         " is used to annotate "
                                 + "variants of all types with clinical evidence, with a hyperlink to the specific evidence items when "
                                 + "available. The evidence is gathered from CKB without further checks or interpretation. "
-                                + "This also means that if a certain evidence item or drug-biomarker is missing from the knowledge bases "
-                                + "it will also not be included in this report. \nMore details about CKB can be found in their Glossary "
+                                + "This also means that if a certain evidence item or drug- biomarker is missing from the knowledgebase "
+                                + "it will also not be included in this report.\n More details about CKB can be found in their Glossary "
                                 + "Of Terms.", "(https://ckbhome.jax.org/about/glossaryOfTerms)", ""
                                 + "https://ckbhome.jax.org/", "https://ckbhome.jax.org/about/glossaryOfTerms"))
                 .add(createContentDivWithLinkThree("Clinical trials are matched against the iClusion database ", "https://iclusion.org",
                         " including a link to the specific trial.\n",
                         "https://iclusion.org"))
                 .add(createContentDiv(new String[] {
-                        "Hartwig Medical Foundation is not responsible for the content of the " + "knowledge bases used to generate this "
+                        "Hartwig Medical Foundation is not responsible for the content of the " + "knowledgebases used to generate this "
                                 + "report. Furthermore, Hartwig Medical Foundation is not liable and cannot be held accountable for any "
-                                + "incorrectness, incompleteness or error of any other kind in the knowledge bases, or the external "
-                                + "software used to harmonize and curate the knowledge bases." })));
+                                + "incorrectness, incompleteness or error of any other kind in the knowledgebases, or the external "
+                                + "software used to harmonize and curate the knowledgebases." })));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDiv(new String[] {
@@ -138,11 +138,14 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "Only viruses for which DNA integration is detected are reported." }))
-                .add(createContentDivWithLinkThree("The list of viruses that are considered can be found on ",
-                        "https://resources.hartwigmedicalfoundation.nl ",
-                        "in directory 'Patient-Reporting'.",
-                        "https://resources.hartwigmedicalfoundation.nl")));
+                .add(createContentDiv(new String[] { "Virusses will be reported if they are present in our reporting database as "
+                        + "clinically relevant (HPV, MCV, HBV, EBV and HHV-8) and DNA integration for the virus can be detected. "
+                        + "If the virus is clinically relevant and no DNA integration is found, the following conditions must be met:\n"
+                        + "- Percentage covered of the viral genome is >90%\n"
+                        + "- Coverage of the virus is higher than the expected clonal mean coverage\n",
+                        "Reporting of EBV is independent of tumor integration. This means that to be reportable, the viral EBV"
+                        + " genome must be covered >90% and the coverage of the virus must be higher than the expected clonal "
+                        + "mean coverage."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDivWithLinkThree("See the directory 'Patient Reporting' in ",

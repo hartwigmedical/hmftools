@@ -64,6 +64,7 @@ public class CFReportWriter implements ReportWriter {
     @Override
     public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         if (report.reason().isDeepWGSDataAvailable()) {
+            //TODO: fix logica didn't work
             if (report.purpleQC() != null && !report.purpleQC().isEmpty()
                     && !report.purpleQC().contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
                 writeReport(report,
