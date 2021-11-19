@@ -138,16 +138,14 @@ public class ExplanationChapter implements ReportChapter {
         table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
         table.addCell(TableUtil.createLayoutCell()
-                .add(createContentDiv(new String[] { "The virus species should be potentially reportable (i.e., the species should "
-                        + "be present in our reporting database that contains viral species that are deemed clinically "
-                        + "relevant and thus potentially reportable (HPV, MCV, HBV, EBV, and HHV-8)) and one of the below is true:",
-                "- DNA integration for the virus can be detected, OR when none DNA integration can be found",
-                "- >=90% of the viral genome is covered.",
-                "- coverage of the virus is higher than expected clonal mean coverage"}))
-                .add(createContentDivWithLinkThree("The viruses db that are considered can be found on ",
-                        "https://resources.hartwigmedicalfoundation.nl ",
-                        "in directory 'Patient-Reporting'.",
-                        "https://resources.hartwigmedicalfoundation.nl")));
+                .add(createContentDiv(new String[] { "Virusses will be reported if they are present in our reporting database as "
+                        + "clinically relevant (HPV, MCV, HBV, EBV and HHV-8) and DNA integration for the virus can be detected. "
+                        + "If the virus is clinically relevant and no DNA integration is found, the following conditions must be met:\n"
+                        + "- Percentage covered of the viral genome is >90%\n"
+                        + "- Coverage of the virus is higher than the expected clonal mean coverage\n"
+                        + "Reporting of EBV is independent of tumor integration. This means that to be reportable, the viral EBV"
+                        + " genome must be covered >90% and the coverage of the virus must be higher than the expected clonal "
+                        + "mean coverage."})));
         table.addCell(TableUtil.createLayoutCell());
         table.addCell(TableUtil.createLayoutCell()
                 .add(createContentDivWithLinkThree("See the directory 'Patient Reporting' in ",
