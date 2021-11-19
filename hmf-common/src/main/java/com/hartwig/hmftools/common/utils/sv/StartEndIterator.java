@@ -11,6 +11,7 @@ public class StartEndIterator
     public static final String END_STR = "end";
 
     public static boolean isStart(int iter) { return iter == SE_START; }
+    public static String startEndStr(int iter) { return iter == SE_START ? START_STR : END_STR; }
 
     public static int seIndex(boolean isStart) { return isStart ? SE_START : SE_END; }
 

@@ -43,7 +43,6 @@ public class AltSjCohortAnalyser
     private final AltSjWriter mWriter;
 
     private final AltSjFilter mAltSjFilter;
-    private final Map<String,Integer> mFieldsMap;
 
     // map of chromosomes to a map of genes to a list of alternate splice junctions
     private final Map<String,Map<String,List<AltSjCohortData>>> mAltSpliceJunctions;
@@ -57,7 +56,6 @@ public class AltSjCohortAnalyser
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
-        mFieldsMap = Maps.newHashMap();
 
         mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
         mMinCancerSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_CANCER_SAMPLES, "0"));

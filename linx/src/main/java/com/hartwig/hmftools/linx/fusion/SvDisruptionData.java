@@ -24,6 +24,7 @@ public class SvDisruptionData
     public final double UndisruptedCopyNumber;
 
     private boolean mReportable;
+    private boolean mPseudogeneDeletion;
 
     public SvDisruptionData(
             final SvVarData var, boolean isStart, final GeneData gene, final TranscriptData transcript, final int[] exons,
@@ -31,17 +32,22 @@ public class SvDisruptionData
     {
         Var = var;
         IsStart = isStart;
-        mReportable = true;
         Gene = gene;
         Transcript = transcript;
         Exons = exons;
         CodingType = codingType;
         RegionType = regionType;
         UndisruptedCopyNumber = undisruptedCopyNumber;
+
+        mReportable = true;
+        mPseudogeneDeletion = false;
     }
 
     public boolean reportable() { return mReportable; }
     public void setReportable(boolean reportable) { mReportable = reportable; }
+
+    public boolean isPseudogeneDeletion() { return mPseudogeneDeletion; }
+    public void markPseudogeneDeletion() { mPseudogeneDeletion = true; }
 
     public String toString() { return String.format("%s: reportable(%s) gene(%s)",
             Var.toString(), mReportable, Gene.GeneName); }

@@ -240,20 +240,6 @@ public class PseudoGeneFinder
         return pseudoMatches;
     }
 
-    private boolean hasHomologyMismatch(final SvVarData var, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
-    {
-        if(var.isSglBreakend())
-            return false;
-
-        final Integer homOffsetStart = getHomologyOffset(var.getBreakend(true), pairMatchesMap, selectedTransId);
-        final Integer homOffsetEnd = getHomologyOffset(var.getBreakend(false), pairMatchesMap, selectedTransId);
-
-        if(homOffsetStart == null || homOffsetEnd == null)
-            return false;
-
-        return homOffsetStart != homOffsetEnd;
-    }
-
     private Integer getHomologyOffset(
             final SvBreakend breakend, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {
@@ -394,6 +380,24 @@ public class PseudoGeneFinder
                     return true;
                 }
             }
+        }
+
+        return false;
+    }
+
+    public static boolean isPseudogeneDeletion(final SvVarData var, int delStart, int delEnd, final TranscriptData transData)
+    {
+        // check for a deletion matching an intron without the bounds of homology
+        int startHomologyLength = var.getSvData().startHomologySequence().length();
+        int endHomologyLength = var.getSvData().endHomologySequence().length();
+
+        for(int i = 0; i < transData.exons().size() - 1; ++i)
+        {
+            ExonData exon = transData.exons().get(i);
+            ExonData nextExon = transData.exons().get(i + 1);
+
+            if(abs(exon.End - delStart) <= startHomologyLength && abs(nextExon.Start - delEnd) <= endHomologyLength)
+                return true;
         }
 
         return false;

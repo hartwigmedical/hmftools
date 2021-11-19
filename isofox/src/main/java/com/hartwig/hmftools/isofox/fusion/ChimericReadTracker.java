@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -27,6 +28,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.fusion.KnownFusionData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -80,7 +84,31 @@ public class ChimericReadTracker
     public final Set<Integer> getJunctionPositions() { return mJunctionPositions; }
     public final List<List<ReadRecord>> getLocalChimericReads() { return mLocalChimericReads; }
     public ChimericStats getStats() { return mChimericStats; }
-    public void addKnownPairGeneIds(final List<String[]> geneIds) { mKnownPairGeneIds.addAll(geneIds); }
+
+    public boolean isChimeric(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate, boolean isMultiMapped)
+    {
+        if(read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection())
+            return true;
+
+        if(!isDuplicate && !isMultiMapped && enabled() && (read1.containsSplit() || read2.containsSplit()))
+        {
+            return setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
+        }
+
+        return false;
+    }
+
+    public void registerKnownFusionPairs(final EnsemblDataCache geneTransCache)
+    {
+        for(final KnownFusionData knownPair : mConfig.Fusions.KnownFusions.getDataByType(KNOWN_PAIR))
+        {
+            final GeneData upGene = geneTransCache.getGeneDataByName(knownPair.FiveGene);
+            final GeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
+
+            if(upGene != null && downGene != null)
+                mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
+        }
+    }
 
     public void initialise(final GeneCollection geneCollection)
     {

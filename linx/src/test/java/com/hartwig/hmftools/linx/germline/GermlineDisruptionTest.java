@@ -45,9 +45,8 @@ import org.junit.Test;
 public class GermlineDisruptionTest
 {
     private final LinxTester mLinx;
-
+    private final EnsemblDataCache mGeneDataCache;
     private final DisruptionFinder mDisruptionFinder;
-    private final GermlineDisruptions mGermlineDisruptions;
 
     public GermlineDisruptionTest()
     {
@@ -55,18 +54,16 @@ public class GermlineDisruptionTest
 
         mLinx.Config.DriverGenes.add(createDriverGene(GENE_NAME_1));
 
-        EnsemblDataCache geneTransCache = createGeneDataCache();
+        mGeneDataCache = createGeneDataCache();
 
         String chromosome = CHR_1;
         String geneId = GENE_ID_1;
-        addTestGeneData(geneTransCache, chromosome, geneId, GENE_NAME_1);
+        addTestGeneData(mGeneDataCache, chromosome, geneId, GENE_NAME_1);
 
-        mLinx.initialiseFusions(geneTransCache);
+        mLinx.initialiseFusions(mGeneDataCache);
 
         mDisruptionFinder = mLinx.FusionAnalyser.getDisruptionFinder();
         mDisruptionFinder.addDisruptionGene(geneId);
-
-        mGermlineDisruptions = mDisruptionFinder.germlineDisruptions();
     }
 
     @Test
@@ -154,6 +151,28 @@ public class GermlineDisruptionTest
 
         germlineSVs = getGermlineSVs();
         assertTrue(germlineSVs.isEmpty());
+
+        // evaluate on its own even if clustered with something else
+        mLinx.clearClustersAndSVs();
+
+        var = createSgl(mLinx.nextVarId(), CHR_1, 11500,POS_ORIENT);
+        var.getSglMappings().add(new SglMapping(CHR_1, 13500, NEG_ORIENT, "", 1));
+
+        SvVarData var2 = createSgl(mLinx.nextVarId(), CHR_1, 15000,POS_ORIENT);
+
+        mLinx.AllVariants.add(var);
+        mLinx.AllVariants.add(var2);
+
+        mLinx.preClusteringInit();
+        mLinx.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, mLinx.Analyser.getClusters().size());
+
+        mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
+
+        germlineSVs = getGermlineSVs();
+        assertEquals(1, germlineSVs.size());
+        assertTrue(germlineSVs.get(0).Reported);
     }
 
     @Test
@@ -191,10 +210,30 @@ public class GermlineDisruptionTest
         assertTrue(germlineSVs.isEmpty());
     }
 
+    @Test
+    public void testPseudogeneDeletions()
+    {
+        // DEL deleting an intron
+        SvVarData var1 = createDel(mLinx.nextVarId(), CHR_1, 11200,12000);
+
+        mLinx.AllVariants.add(var1);
+
+        mLinx.preClusteringInit();
+        mLinx.Analyser.clusterAndAnalyse();
+
+        setSvGeneData(mLinx.AllVariants, mGeneDataCache, true, false);
+        mLinx.FusionAnalyser.annotateTranscripts(mLinx.AllVariants, true);
+
+        mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
+
+        List<LinxGermlineSv> germlineSVs = getGermlineSVs();
+        assertEquals(1, germlineSVs.size());
+        assertFalse(germlineSVs.get(0).Reported);
+    }
 
     private List<LinxGermlineSv> getGermlineSVs()
     {
-        List<SvDisruptionData> standardDisruptions = Lists.newArrayList();
+        List<SvDisruptionData> standardDisruptions = mDisruptionFinder.getDisruptions();
         List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
 

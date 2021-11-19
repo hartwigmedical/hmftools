@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRE
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -26,6 +27,7 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegio
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
@@ -69,11 +71,13 @@ import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
+import com.hartwig.hmftools.isofox.expression.ExpressionReadTracker;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadTracker;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
+import com.hartwig.hmftools.isofox.unmapped.UnmappedReads;
 
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
@@ -96,11 +100,12 @@ public class BamFragmentAllocator
     private int mTotalBamReadCount;
     private int mNextGeneCountLog;
 
-    private final List<CategoryCountsData> mTransComboData;
+    private final ExpressionReadTracker mExpressionReadTracker;
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final ChimericReadTracker mChimericReads;
     private final SpliceSiteCounter mSpliceSiteCounter;
+    private final UnmappedReads mUnmappedReads;
     private final int[] mValidReadStartRegion;
     private final BaseDepth mBaseDepth;
 
@@ -109,12 +114,12 @@ public class BamFragmentAllocator
     private final boolean mStatsOnly;
 
     private final BufferedWriter mReadDataWriter;
-    private final GcRatioCounts mGcRatioCounts;
-    private final GcRatioCounts mGeneGcRatioCounts;
     private int mEnrichedGeneFragments;
     private final DuplicateReadTracker mDuplicateTracker;
-    private final List<String[]> mKnownPairGeneIds;
     private ChrBaseRegion mExcludedRegion;
+
+    private static final int GENE_LOG_COUNT = 5000000;
+    private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -122,7 +127,6 @@ public class BamFragmentAllocator
 
         mCurrentGenes = null;
         mFragmentReads = new FragmentTracker();
-        mTransComboData = Lists.newArrayList();
 
         mRunFusions = mConfig.Functions.contains(FUSIONS);
         mFusionsOnly = mConfig.runFusionsOnly();
@@ -150,37 +154,30 @@ public class BamFragmentAllocator
         mDuplicateTracker = new DuplicateReadTracker(mConfig.MarkDuplicates);
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
-        mGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
-        mGeneGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
         mBaseDepth = new BaseDepth();
         mChimericReads = new ChimericReadTracker(mConfig);
         mSpliceSiteCounter = new SpliceSiteCounter(resultsWriter.getSpliceSiteWriter());
 
-        mKnownPairGeneIds = Lists.newArrayList();
-
+        mExpressionReadTracker = new ExpressionReadTracker(mConfig);
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
         mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
+        mUnmappedReads = mConfig.runFunction(UNMAPPED_READS) ? new UnmappedReads(mConfig, resultsWriter.getUnmappedReadsWriter()) : null;
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
 
-    public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
-    public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
+    public final GcRatioCounts getGcRatioCounts() { return mExpressionReadTracker.getGcRatioCounts(); }
+    public final GcRatioCounts getGeneGcRatioCounts() { return mExpressionReadTracker.getGeneGcRatioCounts(); }
     public BaseDepth getBaseDepth() { return mBaseDepth; }
     public final ChimericReadTracker getChimericReadTracker() { return mChimericReads; }
     public final SpliceSiteCounter getSpliceSiteCounter() { return mSpliceSiteCounter; }
 
-    private static int GENE_LOG_COUNT = 5000000;
-
     public void clearCache()
     {
         mFragmentReads.clear();
-        mTransComboData.clear();
         mChimericReads.clear();
 
-        if(mGeneGcRatioCounts != null)
-            mGeneGcRatioCounts.clearCounts();
-
+        mExpressionReadTracker.setGeneData(null);
         mAltSpliceJunctionFinder.setGeneData(null);
         mRetainedIntronFinder.setGeneData(null);
         mSpliceSiteCounter.clear();
@@ -189,8 +186,6 @@ public class BamFragmentAllocator
         mCurrentGenes = null;
         mExcludedRegion = null;
     }
-
-    private static final int NON_GENIC_BASE_DEPTH_WIDTH = 250000;
 
     public void produceBamCounts(final GeneCollection geneCollection, final ChrBaseRegion geneRegion)
     {
@@ -209,6 +204,9 @@ public class BamFragmentAllocator
         mBaseDepth.initialise(baseDepthRange);
 
         mChimericReads.initialise(mCurrentGenes);
+
+        if(mExpressionReadTracker.enabled())
+            mExpressionReadTracker.setGeneData(mCurrentGenes);
 
         if(mAltSpliceJunctionFinder.enabled())
             mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
@@ -247,62 +245,7 @@ public class BamFragmentAllocator
                 String.format("%.3f", mBaseDepth.basesWithDepthPerc()), mBaseDepth.maxDepth());
     }
 
-    private void processChimericNovelJunctions()
-    {
-        if(!mAltSpliceJunctionFinder.enabled() || mChimericReads.getLocalChimericReads().isEmpty())
-            return;
-
-        final List<Integer> invalidTrans = Lists.newArrayList();
-
-        for(final List<ReadRecord> reads : mChimericReads.getLocalChimericReads())
-        {
-            ReadRecord read1 = null;
-            ReadRecord read2 = null;
-
-            if(reads.size() == 2)
-            {
-                read1 = reads.get(0);
-                read2 = reads.get(1);
-            }
-            else if(reads.size() == 3)
-            {
-                for(ReadRecord read : reads)
-                {
-                    if(read.hasSuppAlignment())
-                    {
-                        if(read1 == null)
-                        {
-                            read1 = read;
-                        }
-                        else
-                        {
-                            read2 = read;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if(read1 == null || read2 == null)
-                continue;
-
-            int readPosMin = min(read1.PosStart, read2.PosStart);
-            int readPosMax = max(read1.PosEnd, read2.PosEnd);
-
-            final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
-            mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
-        }
-    }
-
-    public void annotateNovelLocations()
-    {
-        recordNovelLocationReadDepth();
-        mAltSpliceJunctionFinder.prioritiseGenes();
-        mAltSpliceJunctionFinder.writeAltSpliceJunctions();
-        mRetainedIntronFinder.writeRetainedIntrons();
-    }
-
-    private void processSamRecord(@NotNull final SAMRecord record)
+    private void processSamRecord(final SAMRecord record)
     {
         // to avoid double-processing of reads overlapping 2 (or more) gene collections, only process them if they start in this
         // gene collection or its preceding non-genic region
@@ -332,10 +275,19 @@ public class BamFragmentAllocator
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
-        processRead(ReadRecord.from(record));
+        ReadRecord read = ReadRecord.from(record);
+
+        if(mUnmappedReads != null)
+        {
+            mUnmappedReads.processReadRecord(read, record, mCurrentGenes);
+
+            if(mConfig.Functions.size() == 1)
+                return;
+        }
+
+        processRead(read);
     }
 
-    // private static final String LOG_READ_ID = "";
     private static final String LOG_READ_ID = "";
 
     private void processRead(ReadRecord read)
@@ -404,12 +356,8 @@ public class BamFragmentAllocator
         boolean isDuplicate = read1.isDuplicate() || read2.isDuplicate();
         int minMapQuality = min(read1.mapQuality(), read2.mapQuality());
         boolean isMultiMapped = minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD;
-        boolean isChimeric = read1.isChimeric() || read2.isChimeric() || !read1.withinGeneCollection() || !read2.withinGeneCollection();
 
-        if(!isChimeric && !isDuplicate && !isMultiMapped && mChimericReads.enabled() && (read1.containsSplit() || read2.containsSplit()))
-        {
-            isChimeric = setHasMultipleKnownSpliceGenes(Lists.newArrayList(read1, read2), mKnownPairGeneIds);
-        }
+        boolean isChimeric = mChimericReads.isChimeric(read1, read2, isDuplicate, isMultiMapped);
 
         if(mStatsOnly)
         {
@@ -584,13 +532,7 @@ public class BamFragmentAllocator
 
             if(fragmentType == UNSPLICED)
             {
-                List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
-
-                if(!unsplicedGeneIds.isEmpty())
-                {
-                    CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-                    addGcCounts(catCounts, commonMappings, minMapQuality);
-                }
+                mExpressionReadTracker.processUnsplicedGenes(overlapGenes, validTranscripts, commonMappings, minMapQuality);
             }
         }
         else
@@ -668,14 +610,10 @@ public class BamFragmentAllocator
                 }
 
                 // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
-                processValidTranscript(transId, Lists.newArrayList(read1, read2), isUniqueTrans);
+                mExpressionReadTracker.processValidTranscript(transId, Lists.newArrayList(read1, read2), isUniqueTrans);
             }
 
-            List<String> unsplicedGeneIds = comboTransMatchType == FragmentMatchType.SHORT ?
-                    overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
-
-            CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-            addGcCounts(catCounts, commonMappings, minMapQuality);
+            mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, minMapQuality);
         }
 
         mCurrentGenes.addCount(fragmentType, 1);
@@ -793,132 +731,16 @@ public class BamFragmentAllocator
         ++mEnrichedGeneFragments;
     }
 
-    /*
-    private boolean checkDuplicateEnrichedReads(final SAMRecord record)
-    {
-        if(!mCurrentGenes.inEnrichedRegion(record.getStart(), record.getEnd()))
-            return false;
-
-        if(!record.getFirstOfPairFlag())
-            return true;
-
-        ++mTotalBamReadCount;
-        ++mGeneReadCount;
-
-
-        mCurrentGenes.addCount(DUPLICATE, 1);
-
-        if(positionsWithin(record.getStart(), record.getEnd(), mCurrentGenes.getEnrichedRegion()[SE_START], mCurrentGenes.getEnrichedRegion()[SE_END]))
-        {
-            // ignore read-through fragments for enriched genes
-            ++mEnrichedGeneFragments;
-        }
-
-        return true;
-    }
-    */
-
     private void processEnrichedGeneFragments()
     {
         // add to overall counts - since these are within a single exon, consider them supporting the transcript + unspliced
         mCurrentGenes.addCount(TOTAL, mEnrichedGeneFragments);
         mCurrentGenes.addCount(TRANS_SUPPORTING, mEnrichedGeneFragments);
 
-        // add to category counts
-        final int[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
-        final List<String> unsplicedGeneIds = mCurrentGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END], true)
-                .stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
-
-        final List<Integer> transIds = mCurrentGenes.getEnrichedTranscripts().stream().map(x -> new Integer(x.TransId)).collect(Collectors.toList());
-        CategoryCountsData catCounts = getCategoryCountsData(transIds, unsplicedGeneIds);
-
-        // compute and cache GC data
-        double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, mCurrentGenes.chromosome(), Lists.newArrayList(mCurrentGenes.getEnrichedRegion()));
-
-        int[] gcRatioIndices = { -1, -1 };
-        double[] gcRatioCounts = { 0, 0 };
-
-        if(mGcRatioCounts != null)
-        {
-            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
-            gcRatioCounts[0] *= mEnrichedGeneFragments;
-            gcRatioCounts[1] *= mEnrichedGeneFragments;
-        }
-
-        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, mEnrichedGeneFragments);
+        mExpressionReadTracker.processEnrichedGeneFragments(mEnrichedGeneFragments);
     }
 
-    public List<CategoryCountsData> getTransComboData() { return mTransComboData; }
-
-    private CategoryCountsData getCategoryCountsData(final List<Integer> transcripts, final List<String> geneIds)
-    {
-        CategoryCountsData transComboCounts = mTransComboData.stream()
-                .filter(x -> x.matches(transcripts, geneIds)).findFirst().orElse(null);
-
-        if(transComboCounts == null)
-        {
-            transComboCounts = new CategoryCountsData(transcripts, geneIds);
-
-            if(mGcRatioCounts != null && mConfig.ApplyGcBiasAdjust)
-                transComboCounts.initialiseGcRatioCounts(mGcRatioCounts.getCounts().length);
-
-            mTransComboData.add(transComboCounts);
-        }
-
-        return transComboCounts;
-    }
-
-    private void processValidTranscript(int transId, final List<ReadRecord> reads, boolean isUniqueTrans)
-    {
-        final List<RegionReadData> processedRegions = Lists.newArrayList();
-
-        for(ReadRecord read : reads)
-        {
-            List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
-                    .filter(x -> x.getKey().hasTransId(transId))
-                    .filter(x -> validExonMatch(x.getValue()))
-                    .map(x -> x.getKey()).collect(Collectors.toList());
-
-            for(RegionReadData region : regions)
-            {
-                if(!processedRegions.contains(region))
-                {
-                    // register a read against this valid transcript region
-                    region.addTranscriptReadMatch(transId, isUniqueTrans);
-                }
-            }
-
-            // any adjacent reads can record a splice junction count
-            if(regions.size() > 1 && read.getTranscriptClassification(transId) == SPLICE_JUNCTION)
-            {
-                for(int r1 = 0; r1 < regions.size() - 1; ++r1)
-                {
-                    RegionReadData region1 = regions.get(r1);
-
-                    for(int r2 = r1 + 1; r2 < regions.size(); ++r2)
-                    {
-                        RegionReadData region2 = regions.get(r2);
-
-                        if(processedRegions.contains(region1) && processedRegions.contains(region2))
-                            continue;
-
-                        if(region1.getPostRegions().contains(region2))
-                        {
-                            region1.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
-                            region2.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
-                        }
-                        else if(region1.getPreRegions().contains(region2))
-                        {
-                            region1.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
-                            region2.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
-                        }
-                    }
-                }
-            }
-
-            regions.forEach(x -> processedRegions.add(x));
-        }
-    }
+    public List<CategoryCountsData> getTransComboData() { return mExpressionReadTracker.getTransComboData(); }
 
     private void processIntronicReads(final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2)
     {
@@ -932,71 +754,65 @@ public class BamFragmentAllocator
             return;
         }
 
-        List<String> unsplicedGeneIds = genes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
-
-        if(!unsplicedGeneIds.isEmpty())
-        {
-            CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
-
-            List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
-            addGcCounts(catCounts, readRegions, min(read1.mapQuality(), read2.mapQuality()));
-        }
+        mExpressionReadTracker.processIntronicReads(genes, read1, read2);
 
         mCurrentGenes.addCount(UNSPLICED, 1);
     }
 
-    private void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions, int minMapQuality)
+    private void processChimericNovelJunctions()
     {
-        int[] gcRatioIndices = { -1, -1 };
-        double[] gcRatioCounts = { 0, 0 };
+        // examine chimeric reads to see if they can instead be handled as novel alternate splicing
+        if(!mAltSpliceJunctionFinder.enabled() || mChimericReads.getLocalChimericReads().isEmpty())
+            return;
 
-        if (mGcRatioCounts != null)
+        final List<Integer> invalidTrans = Lists.newArrayList();
+
+        for(final List<ReadRecord> reads : mChimericReads.getLocalChimericReads())
         {
-            double gcRatio = calcGcRatioFromReadRegions(mConfig.RefGenome, mCurrentGenes.chromosome(), readRegions);
-            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
-        }
+            ReadRecord read1 = null;
+            ReadRecord read2 = null;
 
-        double fragmentCount = 1;
-
-        if(minMapQuality <= MULTI_MAP_QUALITY_THRESHOLD && mConfig.ApplyMapQualityAdjust)
-        {
-            if(minMapQuality == 3)
-                fragmentCount = 0.5;
-            else if(minMapQuality == 2)
-                fragmentCount = 0.33;
-            else if(minMapQuality == 1)
-                fragmentCount = 0.2;
-            else
-                fragmentCount = 0.1;
-
-            mCurrentGenes.addCount(LOW_MAP_QUAL, 1);
-        }
-
-        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, fragmentCount);
-    }
-
-    private void addGcCounts(final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, double count)
-    {
-        if(mGcRatioCounts != null)
-        {
-            for(int i = 0; i < gcRatioIndices.length; ++i)
+            if(reads.size() == 2)
             {
-                if (gcRatioIndices[i] >= 0)
+                read1 = reads.get(0);
+                read2 = reads.get(1);
+            }
+            else if(reads.size() == 3)
+            {
+                for(ReadRecord read : reads)
                 {
-                    mGcRatioCounts.addGcRatioCount(gcRatioIndices[i], gcRatioCounts[i]);
-                    mGeneGcRatioCounts.addGcRatioCount(gcRatioIndices[i], gcRatioCounts[i]);
+                    if(read.hasSuppAlignment())
+                    {
+                        if(read1 == null)
+                        {
+                            read1 = read;
+                        }
+                        else
+                        {
+                            read2 = read;
+                            break;
+                        }
+                    }
                 }
             }
 
-            if(mConfig.ApplyGcBiasAdjust)
-                catCounts.addGcRatioCounts(count, gcRatioIndices, gcRatioCounts);
-            else
-                catCounts.addCounts(count);
+            if(read1 == null || read2 == null)
+                continue;
+
+            int readPosMin = min(read1.PosStart, read2.PosStart);
+            int readPosMax = max(read1.PosEnd, read2.PosEnd);
+
+            final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, false);
+            mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTrans);
         }
-        else
-        {
-            catCounts.addCounts(count);
-        }
+    }
+
+    public void annotateNovelLocations()
+    {
+        recordNovelLocationReadDepth();
+        mAltSpliceJunctionFinder.prioritiseGenes();
+        mAltSpliceJunctionFinder.writeAltSpliceJunctions();
+        mRetainedIntronFinder.writeRetainedIntrons();
     }
 
     private void recordNovelLocationReadDepth()
@@ -1024,15 +840,7 @@ public class BamFragmentAllocator
 
     public void registerKnownFusionPairs(final EnsemblDataCache geneTransCache)
     {
-        for(final KnownFusionData knownPair : mConfig.Fusions.KnownFusions.getDataByType(KNOWN_PAIR))
-        {
-            final GeneData upGene = geneTransCache.getGeneDataByName(knownPair.FiveGene);
-            final GeneData downGene = geneTransCache.getGeneDataByName(knownPair.ThreeGene);
-            if(upGene != null && downGene != null)
-                mKnownPairGeneIds.add(new String[] { upGene.GeneId, downGene.GeneId });
-        }
-
-        mChimericReads.addKnownPairGeneIds(mKnownPairGeneIds);
+        mChimericReads.registerKnownFusionPairs(geneTransCache);
     }
 
     public static BufferedWriter createReadDataWriter(final IsofoxConfig config)
@@ -1095,7 +903,7 @@ public class BamFragmentAllocator
 
                     writer.write(String.format(",%s,%d,%s,%s,%s",
                             read.mateChromosome(), read.mateStartPosition(), read.isFirstOfPair(), read.isReadReversed(),
-                            read.hasSuppAlignment() ? read.getSuppAlignment() : "NONE"));
+                            read.getSuppAlignmentCsv()));
 
                     writer.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s,%d,%d",
                             geneReadType, transId, transType, validTranscripts,

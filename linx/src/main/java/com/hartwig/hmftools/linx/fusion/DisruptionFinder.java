@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -11,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
+import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DISRUPTION;
 
@@ -411,7 +414,13 @@ public class DisruptionFinder implements CohortFileInterface
 
         // both chain ends must start in non-genic regions
         if(!genesStart.isEmpty() || !genesEnd.isEmpty())
-            return;
+        {
+            if(genesStart.stream().anyMatch(x -> x.transcripts().stream().anyMatch(y -> y.isDisruptive())))
+                return;
+
+            if(genesEnd.stream().anyMatch(x -> x.transcripts().stream().anyMatch(y -> y.isDisruptive())))
+                return;
+        }
 
         for(final LinkedPair pair : chain.getLinkedPairs())
         {
@@ -748,6 +757,12 @@ public class DisruptionFinder implements CohortFileInterface
                                 transcript.codingType(), transcript.regionType(), transcript.undisruptedCopyNumber());
 
                         disruptionData.setReportable(true);
+
+                        if(var.type() == DEL
+                        && isPseudogeneDeletion(var, var.position(true), var.position(false), transcript.TransData))
+                        {
+                            disruptionData.markPseudogeneDeletion();
+                        }
 
                         mDisruptions.add(disruptionData);
 

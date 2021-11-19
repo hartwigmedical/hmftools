@@ -9,6 +9,7 @@ public enum IsofoxFunction
     FUSIONS,
     STATISTICS,
     READ_COUNTS,
-    NEO_EPITOPES;
+    NEO_EPITOPES,
+    UNMAPPED_READS;
 
 }
