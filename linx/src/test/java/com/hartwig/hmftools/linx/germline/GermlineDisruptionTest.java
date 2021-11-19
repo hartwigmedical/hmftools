@@ -154,6 +154,30 @@ public class GermlineDisruptionTest
 
         germlineSVs = getGermlineSVs();
         assertTrue(germlineSVs.isEmpty());
+
+        // evaluate on its own even if clustered with something else
+        mLinx.clearClustersAndSVs();
+
+        var = createSgl(mLinx.nextVarId(), CHR_1, 11500,POS_ORIENT);
+        var.getSglMappings().add(new SglMapping(CHR_1, 13500, NEG_ORIENT, "", 1));
+
+        SvVarData var2 = createSgl(mLinx.nextVarId(), CHR_1, 15000,POS_ORIENT);
+
+        mLinx.AllVariants.add(var);
+        mLinx.AllVariants.add(var2);
+
+        mLinx.preClusteringInit();
+        mLinx.Analyser.clusterAndAnalyse();
+
+        assertEquals(1, mLinx.Analyser.getClusters().size());
+
+        mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
+
+        germlineSVs = getGermlineSVs();
+        assertEquals(1, germlineSVs.size());
+        assertTrue(germlineSVs.get(0).Reported);
+
+        // ignore pseudogene
     }
 
     @Test

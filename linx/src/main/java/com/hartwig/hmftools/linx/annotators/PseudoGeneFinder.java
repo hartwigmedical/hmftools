@@ -240,20 +240,6 @@ public class PseudoGeneFinder
         return pseudoMatches;
     }
 
-    private boolean hasHomologyMismatch(final SvVarData var, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
-    {
-        if(var.isSglBreakend())
-            return false;
-
-        final Integer homOffsetStart = getHomologyOffset(var.getBreakend(true), pairMatchesMap, selectedTransId);
-        final Integer homOffsetEnd = getHomologyOffset(var.getBreakend(false), pairMatchesMap, selectedTransId);
-
-        if(homOffsetStart == null || homOffsetEnd == null)
-            return false;
-
-        return homOffsetStart != homOffsetEnd;
-    }
-
     private Integer getHomologyOffset(
             final SvBreakend breakend, final Map<LinkedPair,List<PseudoGeneMatch>> pairMatchesMap, int selectedTransId)
     {

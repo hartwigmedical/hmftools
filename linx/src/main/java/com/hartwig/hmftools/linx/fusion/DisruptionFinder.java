@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
@@ -411,7 +413,13 @@ public class DisruptionFinder implements CohortFileInterface
 
         // both chain ends must start in non-genic regions
         if(!genesStart.isEmpty() || !genesEnd.isEmpty())
-            return;
+        {
+            if(genesStart.stream().anyMatch(x -> x.transcripts().stream().anyMatch(y -> y.isDisruptive())))
+                return;
+
+            if(genesEnd.stream().anyMatch(x -> x.transcripts().stream().anyMatch(y -> y.isDisruptive())))
+                return;
+        }
 
         for(final LinkedPair pair : chain.getLinkedPairs())
         {
@@ -749,6 +757,12 @@ public class DisruptionFinder implements CohortFileInterface
 
                         disruptionData.setReportable(true);
 
+                        if(var.type() == DEL
+                        && isPseudogeneDeletion(var, var.position(true), var.position(false), transcript.TransData))
+                        {
+                            disruptionData.markPseudogeneDeletion();
+                        }
+
                         mDisruptions.add(disruptionData);
 
                         if(mVisSampleData != null)
@@ -782,6 +796,24 @@ public class DisruptionFinder implements CohortFileInterface
         }
 
         return cnLowSide;
+    }
+
+    public static boolean isPseudogeneDeletion(final SvVarData var, int delStart, int delEnd, final TranscriptData transData)
+    {
+        // check for a deletion matching an intron without the bounds of homology
+        int startHomologyLength = var.getSvData().startHomologySequence().length();
+        int endHomologyLength = var.getSvData().endHomologySequence().length();
+
+        for(int i = 0; i < transData.exons().size() - 1; ++i)
+        {
+            ExonData exon = transData.exons().get(i);
+            ExonData nextExon = transData.exons().get(i + 1);
+
+            if(abs(exon.End - delStart) <= startHomologyLength && abs(nextExon.Start - delEnd) <= endHomologyLength)
+                return true;
+        }
+
+        return false;
     }
 
     // used by fusion logic only

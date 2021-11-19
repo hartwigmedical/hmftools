@@ -15,11 +15,11 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
+import static com.hartwig.hmftools.linx.fusion.DisruptionFinder.isPseudogeneDeletion;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_TRANS;
@@ -64,7 +64,9 @@ public class GermlineDisruptions
 
     private final Set<SvVarData> mReportableSgls;
 
-    private static final int MAX_DELETE_LENGTH = 5000000;
+    private static final int MAX_DELETE_LENGTH = 3000000;
+    private static final int MAX_SGL_MAPPED_LENGTH = 500000;
+    private static final String FILTER_PSEUDOGENE = "PSEUDOGENE";
 
     private static final List<ResolvedType> REPORTED_RESOLVED_TYPES = Lists.newArrayList(
             ResolvedType.DEL, ResolvedType.DUP, RECIP_INV, RECIP_TRANS);
@@ -92,14 +94,14 @@ public class GermlineDisruptions
         mReportableSgls = Sets.newHashSet();
     }
 
-    public final List<SvDisruptionData> getDisruptions() { return mDisruptions; }
-
-    private boolean isReportable(final SvVarData var, final String geneId)
+    private boolean isReportable(final SvDisruptionData disruptionData)
     {
-        if(!var.getSvData().filter().equals(PASS) && !var.getSvData().filter().equals("minQual")) // TODO: remove once GRIPSS filters lowered
+        final SvVarData var = disruptionData.Var;
+
+        if(!var.getSvData().filter().equals(PASS))
             return false;
 
-        if(!mReportableGeneIds.contains(geneId))
+        if(!mReportableGeneIds.contains(disruptionData.Gene.GeneId))
             return false;
 
         final SvCluster cluster = var.getCluster();
@@ -118,6 +120,9 @@ public class GermlineDisruptions
                 return false;
         }
 
+        if(disruptionData.isPseudogeneDeletion())
+            return false;
+
         return true;
     }
 
@@ -129,97 +134,91 @@ public class GermlineDisruptions
     public void findGeneDeletions(final List<SvCluster> clusters)
     {
         mDisruptions.clear();
+        mReportableSgls.clear();
 
         for(SvCluster cluster : clusters)
         {
-            if(cluster.getSvCount() == 1)
+            if(cluster.getTypeCount(SGL) > 0)
             {
-                if(cluster.getSV(0).type() == SGL)
-                {
-                    checkSglMappings(cluster.getSV(0));
-                    continue;
-                }
-                else if(cluster.getSV(0).type() != DEL)
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                // must be fully chained and not LINE
-                if(cluster.getResolvedType() == LINE)
-                    continue;
-
-                if(!cluster.isFullyChained(true))
-                    continue;
+                cluster.getSVs().stream().filter(x -> x.type() == SGL).forEach(x -> checkSglMappings(x));
             }
 
-            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DEL)
+                continue;
+
+            checkClusterGeneDeletions(cluster);
+        }
+    }
+
+    private void checkClusterGeneDeletions(final SvCluster cluster)
+    {
+        // must be fully chained (if not a single DEL) and not LINE
+        if(cluster.getResolvedType() == LINE)
+            return;
+
+        if(cluster.getSvCount() > 1 && !cluster.isFullyChained(true))
+            return;
+
+        for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        {
+            final String chromosome = entry.getKey();
+            final List<SvBreakend> breakendList = entry.getValue();
+
+            int startIndex = findStartIndex(breakendList);
+            int endIndex = findEndIndex(breakendList);
+
+            // find stand-alone DELs and clustered deletion bridges, then look within them for driver genes which have been deleted
+            for(int i = startIndex; i <= endIndex - 1; ++i)
             {
-                final String chromosome = entry.getKey();
-                final List<SvBreakend> breakendList = entry.getValue();
+                final SvBreakend breakend = breakendList.get(i);
+                final SvVarData var = breakend.getSV();
+                final SvBreakend nextBreakend = breakendList.get(i + 1);
 
-                int startIndex = findStartIndex(breakendList);
-                int endIndex = findEndIndex(breakendList);
+                boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
 
-                // find stand-alone DELs and clustered deletion bridges, then look within them for driver genes which have been deleted
-                for(int i = startIndex; i <= endIndex - 1; ++i)
+                boolean isSimpleDel = !isDB && var.type() == DEL
+                        && breakend.orientation() == 1 && nextBreakend.getSV() == var;
+
+                if(isDB || isSimpleDel)
                 {
-                    final SvBreakend breakend = breakendList.get(i);
-                    final SvVarData var = breakend.getSV();
-                    final SvBreakend nextBreakend = breakendList.get(i + 1);
+                    int delStart = breakend.position();
+                    int delEnd = nextBreakend.position();
 
-                    boolean isDB = breakend.getDBLink() != null && breakend.getDBLink() == nextBreakend.getDBLink();
+                    if(delEnd - delStart > MAX_DELETE_LENGTH) // require a plausible deletion length
+                        return;
 
-                    boolean isSimpleDel = !isDB && var.type() == DEL
-                            && breakend.orientation() == 1 && nextBreakend.getSV() == var;
-
-                    if(isDB || isSimpleDel)
+                    for(GeneData geneData : mDriverGeneDataList)
                     {
-                        int delStart = breakend.position();
-                        int delEnd = nextBreakend.position();
+                        if(!geneData.Chromosome.equals(chromosome))
+                            continue;
 
-                        checkGeneDeletions(breakend, nextBreakend, chromosome, delStart, delEnd);
+                        if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
+                        {
+                            TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
+
+                            if(canonicalTrans == null)
+                            {
+                                LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
+                                continue;
+                            }
+
+                            SvDisruptionData upDisruptionData = new SvDisruptionData(
+                                    breakend.getSV(), breakend.usesStart(), geneData, canonicalTrans,
+                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
+
+                            mDisruptions.add(upDisruptionData);
+
+                            SvDisruptionData downDisruptionData = new SvDisruptionData(
+                                    nextBreakend.getSV(), nextBreakend.usesStart(), geneData, canonicalTrans,
+                                    new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM, 1.0);
+
+                            mDisruptions.add(downDisruptionData);
+                        }
                     }
                 }
             }
         }
-    }
 
-    private void checkGeneDeletions(
-            final SvBreakend breakendStart, final SvBreakend breakendEnd, final String chromosome, int delStart, int delEnd)
-    {
-        if(delEnd - delStart > MAX_DELETE_LENGTH) // require a plausible deletion length
-            return;
-
-        for(GeneData geneData : mDriverGeneDataList)
-        {
-            if(!geneData.Chromosome.equals(chromosome))
-                continue;
-
-            if(positionsWithin(geneData.GeneStart, geneData.GeneEnd, delStart, delEnd))
-            {
-                TranscriptData canonicalTrans = mGeneTransCache.getTranscriptData(geneData.GeneId, "");
-
-                if(canonicalTrans == null)
-                {
-                    LNX_LOGGER.error("gene({}:{}) missing canonical transcript", geneData.GeneId, geneData.GeneName);
-                    continue;
-                }
-
-                SvDisruptionData upDisruptionData = new SvDisruptionData(
-                        breakendStart.getSV(), breakendStart.usesStart(), geneData, canonicalTrans,
-                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
-
-                mDisruptions.add(upDisruptionData);
-
-                SvDisruptionData downDisruptionData = new SvDisruptionData(
-                        breakendEnd.getSV(), breakendEnd.usesStart(), geneData, canonicalTrans,
-                        new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, DOWNSTREAM, 1.0);
-
-                mDisruptions.add(downDisruptionData);
-            }
-        }
     }
 
     private void checkSglMappings(final SvVarData var)
@@ -252,7 +251,7 @@ public class GermlineDisruptions
                 impliedType = breakendStart.orientation() == POS_ORIENT ? DEL : DUP;
             }
 
-            if(impliedType == DEL && abs(mapping.Position - breakendStart.position()) > MAX_DELETE_LENGTH)
+            if(impliedType == DEL && abs(mapping.Position - breakendStart.position()) > MAX_SGL_MAPPED_LENGTH)
                 continue;
 
             for(GeneData geneData : mDriverGeneDataList)
@@ -328,11 +327,16 @@ public class GermlineDisruptions
 
                 if(isDisruptive)
                 {
-                    SvDisruptionData upDisruptionData = new SvDisruptionData(
+                    SvDisruptionData disruptionData = new SvDisruptionData(
                             breakendStart.getSV(), breakendStart.usesStart(), geneData, canonicalTrans,
                             new int[] { 1, canonicalTrans.exons().size() + 1 }, UNKNOWN, UPSTREAM, 1.0);
 
-                    mDisruptions.add(upDisruptionData);
+                    if(impliedType == DEL && isPseudogeneDeletion(var, posStart, posEnd, canonicalTrans))
+                    {
+                        disruptionData.markPseudogeneDeletion();
+                    }
+
+                    mDisruptions.add(disruptionData);
                     mReportableSgls.add(var);
                 }
             }
@@ -395,15 +399,25 @@ public class GermlineDisruptions
             SvCluster cluster = var.getCluster();
 
             int ponCount = getPonCount(var);
-            boolean reportable = isReportable(var, gene.GeneId);
+            boolean reportable = isReportable(disruptionData);
 
             // TODO: switch tumor for normal fragment counts until GRIPSS writes them both
+
+            String filters = svData.filter();
+
+            if(disruptionData.isPseudogeneDeletion())
+            {
+                if(filters.equals(PASS))
+                    filters = FILTER_PSEUDOGENE;
+                else
+                    filters += ";" + FILTER_PSEUDOGENE;
+            }
 
             germlineSVs.add(new LinxGermlineSv(
                     var.chromosome(true), var.chromosome(false),
                     var.position(true), var.position(false),
                     var.orientation(true), var.orientation(false),
-                    gene.GeneName, var.type(), svData.filter(), svData.event(), svData.qualityScore(),
+                    gene.GeneName, var.type(), filters, svData.event(), svData.qualityScore(),
                     svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     0, 0, 0,
                     // svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
@@ -451,10 +465,9 @@ public class GermlineDisruptions
         for(final SvDisruptionData disruptionData : allDisruptions)
         {
             final SvVarData var = disruptionData.Var;
-            final GeneData gene = disruptionData.Gene;
 
             // reassessed with specific germline rules
-            disruptionData.setReportable(isReportable(var, gene.GeneId));
+            disruptionData.setReportable(isReportable(disruptionData));
 
             StringBuilder sb = new StringBuilder();
 
