@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.gripss.links.TransitiveLinkFinder.MAX_TRANSIT
 
 import java.util.List;
 
-import com.hartwig.hmftools.gripss.Breakend;
+import com.hartwig.hmftools.gripss.common.Breakend;
 
 public class TransitiveLink // previously 'Node'
 {

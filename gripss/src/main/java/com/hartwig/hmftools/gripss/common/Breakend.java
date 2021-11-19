@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.common;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.gripss.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 
 import htsjdk.variant.variantcontext.Genotype;

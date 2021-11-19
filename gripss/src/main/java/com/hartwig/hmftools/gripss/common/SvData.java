@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.common;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;

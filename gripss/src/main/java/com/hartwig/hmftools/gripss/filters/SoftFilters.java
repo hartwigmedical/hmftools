@@ -37,8 +37,8 @@ import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
 import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
 
-import com.hartwig.hmftools.gripss.Breakend;
-import com.hartwig.hmftools.gripss.SvData;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.VcfUtils;
 
 public class SoftFilters

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.gripss.common.Interval;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;

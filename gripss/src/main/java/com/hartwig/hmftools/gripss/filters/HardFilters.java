@@ -1,16 +1,16 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.gripss.filters.CommonFilters.isPolyATSequence;
-import static com.hartwig.hmftools.gripss.SvData.hasLength;
+import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
 
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.gripss.GenotypeIds;
+import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.HotspotCache;
-import com.hartwig.hmftools.gripss.SvData;
+import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.VcfUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;

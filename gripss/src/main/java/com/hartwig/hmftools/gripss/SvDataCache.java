@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.SvData;
 
 import org.apache.commons.compress.utils.Lists;
 

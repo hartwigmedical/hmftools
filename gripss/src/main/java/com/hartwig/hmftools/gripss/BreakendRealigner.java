@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.VariantAltInsertCoords.formPairedAltString;
-import static com.hartwig.hmftools.gripss.VariantAltInsertCoords.formSingleAltString;
+import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
+import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIRPOS;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_REALIGN;
@@ -11,6 +11,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.Interval;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;

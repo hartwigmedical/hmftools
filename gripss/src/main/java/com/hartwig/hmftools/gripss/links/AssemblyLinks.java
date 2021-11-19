@@ -9,8 +9,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.gripss.Breakend;
-import com.hartwig.hmftools.gripss.SvData;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.SvData;
 
 public class AssemblyLinks
 {

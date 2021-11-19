@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.gripss.Breakend;
+import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.SvDataCache;
 
 public class TransitiveLinkFinder

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.gripss.Breakend;
+import com.hartwig.hmftools.gripss.common.Breakend;
 
 public class LinkStore
 {

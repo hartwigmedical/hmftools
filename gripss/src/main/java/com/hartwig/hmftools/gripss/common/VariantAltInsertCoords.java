@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.common;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.BREAKEND_REGEX;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;

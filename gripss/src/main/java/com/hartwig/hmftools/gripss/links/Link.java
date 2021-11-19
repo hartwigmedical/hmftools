@@ -5,8 +5,8 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
-import com.hartwig.hmftools.gripss.Breakend;
-import com.hartwig.hmftools.gripss.SvData;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.SvData;
 
 public class Link
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.common;
 
 public class GenotypeIds
 {

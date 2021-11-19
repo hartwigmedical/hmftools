@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.gripss.Breakend;
-import com.hartwig.hmftools.gripss.SvData;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.SvDataCache;
 
 import org.apache.commons.compress.utils.Lists;
