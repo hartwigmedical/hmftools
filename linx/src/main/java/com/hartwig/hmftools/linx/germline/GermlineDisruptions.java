@@ -452,7 +452,7 @@ public class GermlineDisruptions
 
     public static String csvHeader()
     {
-        return (",Filter,QualScore,PonCount,NormRefFragsStart,NormRefFragsEnd,NormVarFrags");
+        return (",Filter,QualScore,PonCount,IsPseudogene,NormRefFragsStart,NormRefFragsEnd,NormVarFrags");
     }
 
     public List<String> formCohortData(final String sampleId, final List<SvDisruptionData> standardDisruptions)
@@ -471,8 +471,9 @@ public class GermlineDisruptions
 
             StringBuilder sb = new StringBuilder();
 
-            sb.append(String.format("%s,%s,%s,%.2f,%d",
-                    sampleId, disruptionData.asCsv(), var.getSvData().filter(), var.getSvData().qualityScore(), getPonCount(var)));
+            sb.append(String.format("%s,%s,%s,%.2f,%d,%s",
+                    sampleId, disruptionData.asCsv(), var.getSvData().filter(), var.getSvData().qualityScore(), getPonCount(var),
+                    disruptionData.isPseudogeneDeletion()));
 
             sb.append(String.format(",%d,%d,%d",
                     var.getSvData().startTumorReferenceFragmentCount(), var.getSvData().endTumorReferenceFragmentCount(),
