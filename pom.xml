@@ -58,7 +58,6 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
         <amber.version>3.5</amber.version>
-        <vicc-importer.version>1.1</vicc-importer.version>
         <ckb-importer.version>1.1</ckb-importer.version>
         <cobalt.version>1.12</cobalt.version>
         <compar.version>1.0</compar.version>
@@ -70,20 +69,21 @@
         <iclusion-importer.version>1.4</iclusion-importer.version>
         <isofox.version>1.3</isofox.version>
         <lilac.version>1.0</lilac.version>
-        <sage.version>3.0</sage.version>
-        <sv-tools.version>1.0</sv-tools.version>
         <linx.version>1.17</linx.version>
         <neo.version>1.0</neo.version>
+        <orange.version>1.4</orange.version>
         <paddle.version>1.0</paddle.version>
         <patient-db.version>3.62</patient-db.version>
-        <purple.version>3.2</purple.version>
-        <serve.version>1.7</serve.version>
-        <protect.version>1.5</protect.version>
-        <sigs.version>1.0</sigs.version>
-        <pave.version>1.0</pave.version>
-        <orange.version>1.4</orange.version>
         <patient-reporter.version>7.24</patient-reporter.version>
+        <pave.version>1.0</pave.version>
+        <protect.version>1.5</protect.version>
+        <purple.version>3.2</purple.version>
+        <sage.version>3.0</sage.version>
+        <sigs.version>1.0</sigs.version>
+        <serve.version>1.7</serve.version>
+        <sv-tools.version>1.0</sv-tools.version>
         <telo.version>1.0</telo.version>
+        <vicc-importer.version>1.1</vicc-importer.version>
         <virus-interpreter.version>1.1</virus-interpreter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
