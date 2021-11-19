@@ -251,7 +251,7 @@ public class GermlineDisruptions
                 impliedType = breakendStart.orientation() == POS_ORIENT ? DEL : DUP;
             }
 
-            if(impliedType == DEL && abs(mapping.Position - breakendStart.position()) > MAX_SGL_MAPPED_LENGTH)
+            if(abs(mapping.Position - breakendStart.position()) > MAX_SGL_MAPPED_LENGTH)
                 continue;
 
             for(GeneData geneData : mDriverGeneDataList)
