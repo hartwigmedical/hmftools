@@ -23,8 +23,17 @@ public class ReportWriterTest {
     }
 
     @Test
-    public void canGenerateTestReportFromTestData() throws IOException {
-        OrangeReport report = OrangeReportTestFactory.createTestReport();
+    public void canGenerateTestReportFromMinimalTestData() throws IOException {
+        OrangeReport report = OrangeReportTestFactory.createMinimalTestReport();
+
+        ReportWriter writer = new ReportWriter(false, null, ImmutableReportConfig.builder().reportGermline(true).build());
+
+        writer.write(report);
+    }
+
+    @Test
+    public void canGenerateTestReportFromProperTestData() throws IOException {
+        OrangeReport report = OrangeReportTestFactory.createProperTestReport();
 
         ReportWriter writer = new ReportWriter(false, null, ImmutableReportConfig.builder().reportGermline(true).build());
 

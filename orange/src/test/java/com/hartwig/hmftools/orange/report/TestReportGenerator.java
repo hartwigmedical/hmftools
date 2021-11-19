@@ -52,7 +52,7 @@ public class TestReportGenerator {
     @NotNull
     private static OrangeReport buildReport(@NotNull OrangeConfig config) throws IOException {
         if (USE_MOCK_DATA_FOR_REPORT) {
-            return OrangeReportTestFactory.createTestReport();
+            return OrangeReportTestFactory.createProperTestReport();
         }
 
         OrangeReport report = OrangeAlgo.fromConfig(config).run(config);

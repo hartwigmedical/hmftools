@@ -8,7 +8,11 @@ import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
+import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.VariantTestFactory;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangePlots;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
@@ -28,7 +32,7 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
-    public static OrangeReport createTestReport() {
+    public static OrangeReport createMinimalTestReport() {
         return ImmutableOrangeReport.builder()
                 .sampleId(TEST_SAMPLE)
                 .reportDate(LocalDate.of(2021, 11, 19))
@@ -39,8 +43,13 @@ public final class OrangeReportTestFactory {
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(ChordTestFactory.createMinimalTestChordAnalysis())
                 .cuppa(CuppaTestFactory.createMinimalCuppaData())
-                .plots(createTestOrangePlots())
+                .plots(createMinimalOrangePlots())
                 .build();
+    }
+
+    @NotNull
+    public static OrangeReport createProperTestReport() {
+        return ImmutableOrangeReport.builder().from(createMinimalTestReport()).purple(createTestPurpleData()).build();
     }
 
     @NotNull
@@ -52,7 +61,7 @@ public final class OrangeReportTestFactory {
     }
 
     @NotNull
-    private static OrangePlots createTestOrangePlots() {
+    private static OrangePlots createMinimalOrangePlots() {
         return ImmutableOrangePlots.builder()
                 .sageReferenceBQRPlot(DUMMY_IMAGE)
                 .sageTumorBQRPlot(DUMMY_IMAGE)
@@ -64,5 +73,19 @@ public final class OrangeReportTestFactory {
                 .purplePurityRangePlot(DUMMY_IMAGE)
                 .cuppaSummaryPlot(DUMMY_IMAGE)
                 .build();
+    }
+
+    @NotNull
+    private static PurpleData createTestPurpleData() {
+        return ImmutablePurpleData.builder()
+                .from(PurpleTestFactory.createMinimalTestPurpleData())
+                .addReportableSomaticVariants(ImmutableReportableVariant.builder()
+                        .from(VariantTestFactory.createTestReportableVariant())
+                        .gene("USH2A")
+                        .canonicalHgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                        .localPhaseSet(42256)
+                        .build())
+                .build();
+
     }
 }
