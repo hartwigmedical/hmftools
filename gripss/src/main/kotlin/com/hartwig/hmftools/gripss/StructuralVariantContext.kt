@@ -328,7 +328,17 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     fun inexactHomologyEnd(): Int { return context.inexactHomologyEnd(); }
 
     fun breakendAssemblyReadPairsFilter(): Boolean {
-        return isSingle && context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()
+        if(!isSingle)
+            return false
+
+        if(context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()) {
+            if (context.strandBias() >= 0.1 && context.strandBias() <= 0.9) // ok if no strand bias
+                return false
+            else
+                return true
+        }
+
+        return false
     }
 
     fun minLengthFilter(minSize: Int): Boolean {

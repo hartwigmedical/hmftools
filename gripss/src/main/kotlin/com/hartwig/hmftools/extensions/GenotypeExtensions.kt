@@ -3,7 +3,16 @@ package com.hartwig.hmftools.extensions
 import htsjdk.variant.variantcontext.Genotype
 
 fun Genotype.qual(isSingleBreakEnd: Boolean): Double {
-    return if (isSingleBreakEnd) requireAttributeAsDouble("BQ") else requireAttributeAsDouble("QUAL")
+    if(isSingleBreakEnd)
+    {
+        var bqQual = requireAttributeAsDouble("BQ")
+        var bumQual = attributeAsDouble("BUMQ", 0.0)
+        return bqQual - bumQual
+    }
+    else
+    {
+        return requireAttributeAsDouble("QUAL")
+    }
 }
 
 fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShort: Boolean): Double {
@@ -27,11 +36,18 @@ fun Genotype.refSupportRead(): Int = requireAttributeAsInt("REF")
 fun Genotype.refSupportReadPair(): Int = requireAttributeAsInt("REFPAIR")
 
 fun Genotype.fragmentSupport(isSingleBreakEnd: Boolean): Int {
-    val attribute = when (isSingleBreakEnd) {
-        true -> "BVF"
-        false -> "VF"
+
+    if(isSingleBreakEnd)
+    {
+        var bumCount = attributeAsInt("BUM", 0)
+        var bvf = requireAttributeAsInt("BVF")
+
+        return if (bvf == bumCount) 0 else bvf
     }
-    return requireAttributeAsInt(attribute)
+    else
+    {
+        return requireAttributeAsInt("VF")
+    }
 }
 
 fun Genotype.requireAttributeAsDouble(attribute: String): Double {

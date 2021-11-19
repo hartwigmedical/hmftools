@@ -46,7 +46,7 @@ class StructuralVariantContextTest {
 
     @Test
     fun testBreakendAssemblyReadPair() {
-        val single = sgl()
+        val single = sgl().setAttribute("SB", 0.95)
         assertTrue(single.toSv().breakendAssemblyReadPairsFilter())
         assertTrue(single.setAttribute("BASSR", 1).setAttribute("BAQ", 1).toSv().breakendAssemblyReadPairsFilter())
         assertFalse(single.setAttribute("BASRP", 1).toSv().breakendAssemblyReadPairsFilter())
@@ -303,7 +303,8 @@ class StructuralVariantContextTest {
     }
 
     private fun VariantContext.qual(qual: Int): VariantContext {
-        return this.addGenotypeAttribute("QUAL", 0.0, qual.toDouble()).addGenotypeAttribute("BQ", 0.0, qual.toDouble())
+        return this.addGenotypeAttribute("QUAL", 0.0, qual.toDouble())
+                .addGenotypeAttribute("BQ", 0.0, qual.toDouble())
     }
 
     private fun VariantContext.setViralSequenceAlignment(): VariantContext {
