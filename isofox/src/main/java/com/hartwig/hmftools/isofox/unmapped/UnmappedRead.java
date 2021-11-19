@@ -18,6 +18,9 @@ public class UnmappedRead
     public final String SpliceType;
     public final String ScBases;
 
+    public static final String SPLICE_TYPE_ACCEPTOR = "acceptor";
+    public static final String SPLICE_TYPE_DONOR = "donor";
+
     public UnmappedRead(
             final String readId, final ChrBaseRegion readRegion, final byte orientation, final int scLength, final int scSide,
             final double avgBaseQual, final String geneName, final String transName, final int exonRank, final int exonBoundary,

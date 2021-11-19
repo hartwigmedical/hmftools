@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegio
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
+import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_ACCEPTOR;
+import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_DONOR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -57,6 +59,8 @@ public class UnmappedReads
         // find reads with sufficient soft-clipping and overlapping a splice junction
         if(!read.containsSoftClipping() || read.hasSuppAlignment())
             return;
+
+        // TODO: cache unmapped reads and check there are no supplementaries at that location
 
         int scSide = read.longestSoftClippedEnd();
 
@@ -106,6 +110,13 @@ public class UnmappedReads
             // work out distance from SC to
             boolean isSpliceAcceptor = (scSide == SE_START) == transData.posStrand();
 
+            // ignore
+            if(isSpliceAcceptor && transExonRef.ExonRank == 1)
+                continue;
+
+            if(!isSpliceAcceptor && transExonRef.ExonRank == transData.exons().size())
+                continue;
+
             int exonBoundaryDistance = 0;
             int exonBoundary = scSide == SE_START ? region.start() : region.end();
             int readBoundary = read.getCoordsBoundary(scSide);
@@ -136,7 +147,7 @@ public class UnmappedReads
 
             transcriptInfo.add(String.format("%s:%d:%s:%d:%d",
                     transData.TransName, transExonRef.ExonRank,
-                    isSpliceAcceptor ? "acceptor" : "donor", exonBoundary, exonBoundaryDistance));
+                        isSpliceAcceptor ? SPLICE_TYPE_ACCEPTOR : SPLICE_TYPE_DONOR, exonBoundary, exonBoundaryDistance));
         }
 
         if(!validSpliceFound)
