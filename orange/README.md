@@ -95,6 +95,8 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - Upcoming
+ - Fix a formatting problem in clinical evidence in case of very long genomic events
+ - Support display of variants with coding impact in 3' UTR region of a gene. 
  - Fix another bug with percentile determination in the absence of a cancer type
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.3)
  - Fix bug for generating reports for samples without a known cancer type
