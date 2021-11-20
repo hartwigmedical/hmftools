@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
 import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
 
 import java.util.List;
@@ -28,6 +30,11 @@ public class VcfUtils
     public static final String VT_BEID = "BEID";
     public static final String VT_BEIDL = "BEIDL";
     public static final String VT_HOMSEQ = "HOMSEQ";
+    public static final String VT_BUM = "BUM";
+    public static final String VT_BUMQ = "BUMQ";
+
+    public static final String VT_MATE_ID = MATE_ID;
+    public static final String VT_PAR_ID = PAR_ID;
 
     public static final String VT_AS = "AS";
     public static final String VT_CAS = "CAS";
@@ -80,13 +87,13 @@ public class VcfUtils
     public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
     {
         Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : (int)value;
+        return value == null ? defaultVaue : Integer.valueOf(value.toString());
     }
 
     public static double getGenotypeAttributeAsDouble(final Genotype genotype, final String attribute, double defaultVaue)
     {
         Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : (double)value;
+        return value == null ? defaultVaue : Double.valueOf(value.toString());
     }
 
     public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)

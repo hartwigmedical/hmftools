@@ -41,9 +41,9 @@ public class StructuralVariantFactory
     public static final String SVTYPE = "SVTYPE";
     public static final String PON_FILTER_PON = "PON";
     public static final String IMPRECISE = "IMPRECISE";
+    public static final String MATE_ID = "MATEID";
+    public static final String PAR_ID = "PARID";
 
-    private static final String MATE_ID = "MATEID";
-    private static final String PAR_ID = "PARID";
     private static final String INS_SEQ = "SVINSSEQ";
     private static final String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
     private static final String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
@@ -74,7 +74,6 @@ public class StructuralVariantFactory
     public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
 
     private final Map<String,VariantContext> mUnmatchedVariants = Maps.newHashMap();
-
     private final List<StructuralVariant> mCompleteVariants = Lists.newArrayList();
 
     private final CompoundFilter mFilter;
@@ -85,6 +84,12 @@ public class StructuralVariantFactory
         mFilter.add(new HumanChromosomeFilter());
         mFilter.add(new ExcludeCNVFilter());
         mFilter.add(filter);
+    }
+
+    public void clear()
+    {
+        mCompleteVariants.clear();
+        mUnmatchedVariants.clear();
     }
 
     public static boolean isSingleBreakend(final VariantContext context)

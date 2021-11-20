@@ -62,15 +62,16 @@ public class GripssApplication
     private final SvDataCache mSvDataCache;
     private final Map<FilterType,Integer> mFilterCounts;
 
-    public GripssApplication(final CommandLine cmd)
+    public GripssApplication(
+            final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
     {
-        mConfig = new GripssConfig(cmd);
-        mFilterConstants = FilterConstants.from(cmd);
+        mConfig = config;
+        mFilterConstants = filterConstants;
 
         mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
         mHardFilteredVcfIds = Sets.newHashSet();
 
-        mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        mRefGenome = refGenome;
 
         GM_LOGGER.info("loading reference data");
         mPonCache = new PonCache(cmd, mConfig.RestrictedChromosomes);
@@ -85,6 +86,15 @@ public class GripssApplication
         mFilterCounts = Maps.newHashMap();
     }
 
+    public static GripssApplication fromCommandArgs(final CommandLine cmd)
+    {
+        GripssConfig config = new GripssConfig(cmd);
+        FilterConstants filterConstants = FilterConstants.from(cmd);
+        RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+
+        return new GripssApplication(config, filterConstants, refGenome, cmd);
+    }
+
     public void run()
     {
         processVcf(mConfig.VcfFile);
@@ -95,9 +105,6 @@ public class GripssApplication
         try
         {
             GM_LOGGER.info("processing germline VCF({})", vcfFile);
-
-            // TODO: only in place in run in a cohort mode, but then would be threaded anyway?
-            clearSampleData();
 
             final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                     vcfFile, new VCFCodec(), false);
@@ -111,14 +118,14 @@ public class GripssApplication
 
             mRealigner = new BreakendRealigner(mRefGenome, genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
-            if(mConfig.tumorOnly())
+            if(!mConfig.tumorOnly())
             {
                 GM_LOGGER.info("sample({}) genetype info: ref({}: {}) tumor({}: {})",
-                        genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
+                        mConfig.SampleId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
             }
             else
             {
-                GM_LOGGER.info("sample({}) tumor genetype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
+                GM_LOGGER.info("sample({}) tumor genetype info({}: {})", mConfig.SampleId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
             }
 
             reader.iterator().forEach(x -> processVariant(x, genotypeIds));
@@ -212,7 +219,7 @@ public class GripssApplication
         val allRescues = dsbRescues + dsbRescueMobileElements + assemblyRescues + transitiveRescues
         */
 
-        GM_LOGGER.info("writing output VCF file: {}", mConfig.OutputVcfFile);
+        // GM_LOGGER.info("writing output VCF file: {}", mConfig.OutputVcfFile);
 
         /*
         logger.info("Writing file: ${config.outputVcf}")
@@ -245,7 +252,7 @@ public class GripssApplication
         }
     }
 
-    private void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
+    public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
         GM_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
 
@@ -263,7 +270,10 @@ public class GripssApplication
         if(mateId != null)
         {
             if(mHardFilteredVcfIds.contains(mateId))
+            {
+                mHardFilteredVcfIds.remove(mateId);
                 return; // already filtered
+            }
         }
 
         if(mHardFilters.isFiltered(variant, genotypeIds))
@@ -333,15 +343,17 @@ public class GripssApplication
         return sv;
     }
 
-    private void clearSampleData()
+    // testing methods only
+    public void clearState()
     {
-        /*
+        mFilterCounts.clear();
+        mHardFilteredVcfIds.clear();
         mProcessedVariants = 0;
-        mSampleSvData.clear();
-        mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
-        mLinkAnalyser.clear();
-         */
+        mSvFactory.clear();
     }
+
+    public Set<String> getHardFilteredVcfIds() { return mHardFilteredVcfIds; }
+    public SvDataCache getSvDataCache() { return mSvDataCache; }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
@@ -352,10 +364,10 @@ public class GripssApplication
 
         setLogLevel(cmd);
 
-        GripssApplication gripssApplication = new GripssApplication(cmd);
-        gripssApplication.run();
+        GripssApplication gripss = GripssApplication.fromCommandArgs(cmd);
+        gripss.run();
 
-        GM_LOGGER.info("VCF processing complete");
+        GM_LOGGER.info("Gripss run complete");
     }
 
     @NotNull
