@@ -330,6 +330,8 @@ public class PurpleApplication
 
         somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions);
 
+        sampleData.SvCache.write(purityAdjuster, copyNumbers);
+
         final Set<String> reportedGenes = somaticStream.reportedGenes();
 
         if(!sampleDataFiles.GermlineVcfFile.isEmpty())
