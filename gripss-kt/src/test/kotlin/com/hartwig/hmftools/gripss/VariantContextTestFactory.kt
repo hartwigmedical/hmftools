@@ -103,7 +103,9 @@ object VariantContextTestFactory {
     }
 
     fun VariantContext.fragmentSupport(normal: Int, tumor: Int): VariantContext {
-        return addGenotypeAttribute("BVF", normal, tumor).addGenotypeAttribute("VF", normal, tumor)
+        return addGenotypeAttribute("BVF", normal, tumor)
+                .addGenotypeAttribute("BSC", normal, tumor) // since for SGLs, requires at least one of the non-BUM fields to be set
+                .addGenotypeAttribute("VF", normal, tumor)
     }
 }
 

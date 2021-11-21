@@ -39,10 +39,13 @@ fun Genotype.fragmentSupport(isSingleBreakEnd: Boolean): Int {
 
     if(isSingleBreakEnd)
     {
-        var bumCount = attributeAsInt("BUM", 0)
+        var bscCount = attributeAsInt("BSC", 0)
+        var basrpCount = attributeAsInt("BASRP", 0)
+        var bassrCount = attributeAsInt("BASSR", 0)
+
         var bvf = requireAttributeAsInt("BVF")
 
-        return if (bvf == bumCount) 0 else bvf
+        return if (bscCount == 0 && basrpCount == 0 && bassrCount == 0) 0 else bvf
     }
     else
     {
