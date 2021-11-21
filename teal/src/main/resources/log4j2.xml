@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %c{1} | %t\ | %level | %M | %msg%n"/>
+        </Console>
+        <File name="File" fileName="/tmp/teal.log" immediateFlush="false" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %c{1} | %t\ | %level | %M | %msg%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>
