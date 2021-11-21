@@ -11,20 +11,14 @@ import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.FilterType;
-import com.hartwig.hmftools.gripss.filters.HardFilters;
 import com.hartwig.hmftools.gripss.filters.SoftFilters;
 import com.hartwig.hmftools.gripss.links.AlternatePath;
 import com.hartwig.hmftools.gripss.links.AlternatePathFinder;
@@ -51,14 +45,12 @@ public class GripssApplication
 
     private final PonCache mPonCache;
     private final HotspotCache mHotspotCache;
-    private final HardFilters mHardFilters;
+    private final VariantBuilder mVariantBuilder;
     private final SoftFilters mSoftFilters;
     private final RefGenomeInterface mRefGenome;
     private BreakendRealigner mRealigner;
 
     private int mProcessedVariants;
-    private StructuralVariantFactory mSvFactory;
-    private final Set<String> mHardFilteredVcfIds;
     private final SvDataCache mSvDataCache;
     private final Map<FilterType,Integer> mFilterCounts;
 
@@ -68,16 +60,13 @@ public class GripssApplication
         mConfig = config;
         mFilterConstants = filterConstants;
 
-        mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
-        mHardFilteredVcfIds = Sets.newHashSet();
-
         mRefGenome = refGenome;
 
         GM_LOGGER.info("loading reference data");
         mPonCache = new PonCache(cmd, mConfig.RestrictedChromosomes);
         mHotspotCache = new HotspotCache(cmd);
 
-        mHardFilters = new HardFilters(mFilterConstants, mHotspotCache);
+        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache);
         mSoftFilters = new SoftFilters(mFilterConstants);
         mRealigner = null;
 
@@ -130,8 +119,8 @@ public class GripssApplication
 
             reader.iterator().forEach(x -> processVariant(x, genotypeIds));
 
-            GM_LOGGER.info("sample({}) read VCF: unmatched({}) results({})",
-                    mConfig.SampleId, mSvFactory.unmatched().size(), mSvFactory.results().size());
+            GM_LOGGER.info("sample({}) read VCF: unmatched({}) complete({}) hardFiltered({})",
+                    mConfig.SampleId, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
 
             if(mSvDataCache.getSvList().isEmpty())
                 return;
@@ -238,7 +227,8 @@ public class GripssApplication
         */
 
         // summary logging
-        int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
+        // int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
+        int hardFiltered = mVariantBuilder.hardFilteredCount();
 
         GM_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",
                 mConfig.SampleId, mProcessedVariants, hardFiltered, mSvDataCache.getSvList().size());
@@ -260,69 +250,18 @@ public class GripssApplication
 
         if(mProcessedVariants > 0 && (mProcessedVariants % 100000) == 0)
         {
-            GM_LOGGER.debug("sample({}) processed {} variants, VCF-unmatched({})",
-                    mConfig.SampleId, mProcessedVariants, mSvFactory.unmatched().size());
+            GM_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
         }
 
-        // first check hard-filters which only operate on raw variant context info
-        String mateId = StructuralVariantFactory.mateId(variant);
+        SvData svData = mVariantBuilder.checkCreateVariant(variant, genotypeIds);
 
-        if(mateId != null)
-        {
-            if(mHardFilteredVcfIds.contains(mateId))
-            {
-                mHardFilteredVcfIds.remove(mateId);
-                return; // already filtered
-            }
-        }
-
-        if(mHardFilters.isFiltered(variant, genotypeIds))
-        {
-            if(mateId != null)
-            {
-                // other breakend not already filtered otherwise will have exited earlier, so either cached or not seen yet
-                // no point in keeping the other breakend if cached
-                if(mSvFactory.hasUnmatchedVariant(mateId))
-                {
-                    mSvFactory.removeUnmatchedVariant(mateId);
-                    return;
-                }
-
-                mHardFilteredVcfIds.add(variant.getID());
-            }
-            else
-            {
-                // mate ID not set or a single breakend, but either way no need to register hard-filtered ID
-            }
-
-            registerFilter(FilterType.HARD_FILTERED);
+        if(svData == null)
             return;
-        }
-
-        int currentSvCount = mSvFactory.results().size();
-        mSvFactory.addVariantContext(variant);
-
-        // wait for both breakends to be added
-        if(currentSvCount == mSvFactory.results().size())
-            return;
-
-        final StructuralVariant sv = popLastSv(); // get and clear from storage
-
-        if(sv == null)
-            return;
-
-        // check hard filters again on the pair of breakends to ensure they both match a known pair
-        if(!mHardFilters.keepHotspotVariant(sv))
-        {
-            registerFilter(FilterType.HARD_FILTERED);
-            return;
-        }
 
         // optionally filter out by config
-        if(mConfig.excludeVariant(sv))
+        if(mConfig.excludeVariant(svData))
             return;
 
-        SvData svData = new SvData(sv, genotypeIds);
         mSvDataCache.addSvData(svData);
     }
 
@@ -332,28 +271,13 @@ public class GripssApplication
         mFilterCounts.put(type, count != null ? count + 1 : 1);
     }
 
-    private final StructuralVariant popLastSv()
-    {
-        if(mSvFactory.results().isEmpty())
-            return null;
-
-        StructuralVariant sv = mSvFactory.results().get(0);
-        mSvFactory.results().remove(0);
-
-        return sv;
-    }
-
     // testing methods only
     public void clearState()
     {
         mFilterCounts.clear();
-        mHardFilteredVcfIds.clear();
         mProcessedVariants = 0;
-        mSvFactory.clear();
+        mVariantBuilder.clearState();
     }
-
-    public Set<String> getHardFilteredVcfIds() { return mHardFilteredVcfIds; }
-    public SvDataCache getSvDataCache() { return mSvDataCache; }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {

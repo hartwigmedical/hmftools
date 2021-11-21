@@ -21,7 +21,7 @@ import org.apache.commons.cli.Options;
 
 public class HotspotCache
 {
-    private final Map<String,List<KnownHotspot>> mHotspotRegions;
+    private final Map<String,List<KnownHotspot>> mHotspotRegions; // keyed by chromosome start
 
     private static final String KNOWN_HOTSPOT_FILE = "known_hotspot_file";
 
@@ -33,6 +33,19 @@ public class HotspotCache
         {
             loadFile(cmd.getOptionValue(KNOWN_HOTSPOT_FILE));
         }
+    }
+
+    public void addHotspot(final KnownHotspot hotspot)
+    {
+        List<KnownHotspot> hotspots = mHotspotRegions.get(hotspot.RegionStart.Chromosome);
+
+        if(hotspots == null)
+        {
+            hotspots = Lists.newArrayList();
+            mHotspotRegions.put(hotspot.RegionStart.Chromosome, hotspots);
+        }
+
+        hotspots.add(hotspot);
     }
 
     public boolean matchesHotspot(final StructuralVariant sv)
@@ -143,9 +156,9 @@ public class HotspotCache
         public boolean matches(final StructuralVariant sv)
         {
             return RegionStart.containsPosition(sv.chromosome(true), sv.position(true).intValue())
-                    && OrientStart == sv.orientation(true)
-                    && RegionEnd.containsPosition(sv.chromosome(false), sv.position(false).intValue())
-                    && OrientEnd == sv.orientation(false);
+                && OrientStart == sv.orientation(true)
+                && RegionEnd.containsPosition(sv.chromosome(false), sv.position(false).intValue())
+                && OrientEnd == sv.orientation(false);
         }
     }
 }

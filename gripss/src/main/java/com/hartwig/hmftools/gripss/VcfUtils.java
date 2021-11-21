@@ -42,6 +42,7 @@ public class VcfUtils
 
     public static final String VT_EVENT = "EVENT";
     public static final String VT_ASRP = "ASRP";
+    public static final String VT_ASSR = "ASSR";
     public static final String VT_SB = "SB";
     public static final String VT_BVF = "BVF";
     public static final String VT_REFPAIR = "REFPAIR";

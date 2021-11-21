@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.gripss.common.SvData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -72,11 +73,11 @@ public class GripssConfig
 
     public boolean tumorOnly() { return ReferenceId.isEmpty(); }
 
-    public boolean excludeVariant(final StructuralVariant sv)
+    public boolean excludeVariant(final SvData sv)
     {
         // optionally filter out all but specified chromosomes
-        if(!RestrictedChromosomes.isEmpty() && !RestrictedChromosomes.contains(sv.chromosome(true))
-        && (sv.type() == SGL || !RestrictedChromosomes.contains(sv.chromosome(false))))
+        if(!RestrictedChromosomes.isEmpty() && !RestrictedChromosomes.contains(sv.chromosomeStart())
+        && (sv.type() == SGL || !RestrictedChromosomes.contains(sv.chromosomeEnd())))
         {
             return true;
         }

@@ -51,17 +51,18 @@ public class VariantAltInsertCoords
                 if(match.group(1).length() > 0)
                 {
                     String initialSequence = match.group(1).substring(1);
-                    insertSeq = initialSequence.substring(ref.length());
+                    insertSeq = !initialSequence.isEmpty() ? initialSequence.substring(ref.length()) : "";
                     alt = altString.substring(0, 1);
                 }
                 else
                 {
                     String finalSequence = match.group(4).substring(0, match.group(4).length() - 1);
-                    insertSeq = finalSequence.substring(0, finalSequence.length() - ref.length());
+                    insertSeq = !finalSequence.isEmpty() ? finalSequence.substring(0, finalSequence.length() - ref.length()) : "";
                     alt = altString.substring(altString.length() - 1);
                 }
 
-                orientation = match.group(2).equals("]") ? POS_ORIENT : NEG_ORIENT;
+                String orientStr = match.group(2);
+                orientation = orientStr.equals("]") ? POS_ORIENT : NEG_ORIENT;
 
                 String[] chrPos = match.group(3).split(":");
                 chromosome = chrPos[0];

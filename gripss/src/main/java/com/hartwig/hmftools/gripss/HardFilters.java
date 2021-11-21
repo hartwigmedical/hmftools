@@ -1,29 +1,22 @@
-package com.hartwig.hmftools.gripss.filters;
+package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.gripss.filters.CommonFilters.isPolyATSequence;
-import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
 
-import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
-import com.hartwig.hmftools.gripss.HotspotCache;
-import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.VcfUtils;
+import com.hartwig.hmftools.gripss.filters.FilterConstants;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class HardFilters
 {
     private final FilterConstants mFilterConstants;
-    private final HotspotCache mHotspotCache;
 
-    public HardFilters(final FilterConstants filterConstants, final HotspotCache hotspotCache)
+    public HardFilters(final FilterConstants filterConstants)
     {
         mFilterConstants = filterConstants;
-        mHotspotCache = hotspotCache;
     }
 
     public boolean isFiltered(final VariantContext variant, final GenotypeIds genotypeIds)
@@ -32,25 +25,13 @@ public class HardFilters
         // - below min tumor qual
         // - excessive normal support
 
-        boolean failsFilters = false;
-
         if(belowMinQual(variant, genotypeIds))
-        {
-            failsFilters = true;
-        }
-        else if(hasExcessiveReferenceSupport(variant, genotypeIds))
-        {
-            failsFilters = true;
-        }
-
-        if(!failsFilters)
-            return false;
-
-        if(StructuralVariantFactory.isSingleBreakend(variant))
             return true;
 
-        // keep if matches a hotspot region (without knowing the other end yet)
-        return !mHotspotCache.matchesHotspotBreakend(variant.getContig(), variant.getStart());
+        if(hasExcessiveReferenceSupport(variant, genotypeIds))
+            return true;
+
+        return false;
     }
 
     private boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds)
@@ -77,14 +58,5 @@ public class HardFilters
         return false;
     }
 
-    public boolean keepHotspotVariant(final StructuralVariant sv)
-    {
-        // check hotspot rescue
-        if(hasLength(sv.type()) && SvData.length(sv) < FilterConstants.SHORT_RESCUE_LENGTH)
-            return false;
-        else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
-            return false;
 
-        return mHotspotCache.matchesHotspot(sv);
-    }
 }

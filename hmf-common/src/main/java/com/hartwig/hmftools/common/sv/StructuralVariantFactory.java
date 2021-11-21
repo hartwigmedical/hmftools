@@ -134,10 +134,9 @@ public class StructuralVariantFactory
     public static String mateId(@NotNull VariantContext context)
     {
         String mate = context.getAttributeAsString(MATE_ID, null);
+
         if(mate == null)
-        {
             return context.getAttributeAsString(PAR_ID, null);
-        }
 
         return mate;
     }
