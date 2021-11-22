@@ -10,7 +10,7 @@ import java.util.*
 class SoftFilterStore(private val filters: Map<String, Set<String>>) {
 
     companion object {
-        operator fun invoke(config: GripssFilterConfig, comparator: ContigComparator, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
+        operator fun invoke(config: GripssFilterConfig, variants: List<StructuralVariantContext>, ponFiltered: Set<String>, hotspots: Set<String>): SoftFilterStore {
             val filters = mutableMapOf<String, Set<String>>()
             for (variant in variants) {
                 if (!hotspots.contains(variant.vcfId)) {
@@ -18,7 +18,7 @@ class SoftFilterStore(private val filters: Map<String, Set<String>>) {
                     if (ponFiltered.contains(variant.vcfId)) {
                         variantFilters.add(PON)
                     }
-                    variantFilters.addAll(variant.softFilters(config, comparator))
+                    variantFilters.addAll(variant.softFilters(config))
                     if (variantFilters.isNotEmpty()) {
                         filters[variant.vcfId] = variantFilters
                     }

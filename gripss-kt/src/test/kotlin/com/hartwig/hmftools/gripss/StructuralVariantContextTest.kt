@@ -104,8 +104,8 @@ class StructuralVariantContextTest {
         assertTrue(sgl.tumorQualFilter(config.hardMinTumorQual))
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
         assertFalse(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
-        assertTrue(sgl.isHardFilter(config, contigComparator, true))
-        assertTrue(sgl.isHardFilter(config, contigComparator, false))
+        assertTrue(sgl.isHardFilter(config, true))
+        assertTrue(sgl.isHardFilter(config, false))
     }
 
     @Test
@@ -121,8 +121,8 @@ class StructuralVariantContextTest {
         assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
         assertTrue(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport))
 
-        assertFalse(sgl.isHardFilter(config, contigComparator, true))
-        assertTrue(sgl.isHardFilter(config, contigComparator, false))
+        assertFalse(sgl.isHardFilter(config, true))
+        assertTrue(sgl.isHardFilter(config, false))
     }
 
     @Test
@@ -137,8 +137,8 @@ class StructuralVariantContextTest {
         assertTrue(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
         assertFalse(sgl.normalSupportRelativeFilter(config.softMaxNormalRelativeSupport))
 
-        assertFalse(sgl.isHardFilter(config, contigComparator, true))
-        assertFalse(sgl.isHardFilter(config, contigComparator, false))
+        assertFalse(sgl.isHardFilter(config, true))
+        assertFalse(sgl.isHardFilter(config, false))
     }
 
     @Test
@@ -151,8 +151,8 @@ class StructuralVariantContextTest {
         assertFalse(sgl.normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport))
         assertTrue(sgl.normalSupportRelativeFilter(config.hardMaxNormalRelativeSupport))
 
-        assertFalse(sgl.isHardFilter(config, contigComparator, true))
-        assertTrue(sgl.isHardFilter(config, contigComparator, false))
+        assertFalse(sgl.isHardFilter(config, true))
+        assertTrue(sgl.isHardFilter(config, false))
     }
 
 

@@ -218,7 +218,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
 
     fun assemblies(): List<String> = context.assemblies()
 
-    fun isHardFilter(config: GripssFilterConfig, comparator: ContigComparator, isHotspot: Boolean): Boolean {
+    fun isHardFilter(config: GripssFilterConfig, isHotspot: Boolean): Boolean {
         if (tumorQualFilter(config.hardMinTumorQual)) {
             return true
         }
@@ -234,7 +234,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         return (normalSupportAbsoluteFilter(config.hardMaxNormalAbsoluteSupport) && normalSupportRelativeFilter(config.softMaxNormalRelativeSupport))
     }
 
-    fun softFilters(config: GripssFilterConfig, comparator: ContigComparator): Set<String> {
+    fun softFilters(config: GripssFilterConfig): Set<String> {
         val result = mutableSetOf<String>()
 
         if (normalCoverageFilter(config.minNormalCoverage)) {
