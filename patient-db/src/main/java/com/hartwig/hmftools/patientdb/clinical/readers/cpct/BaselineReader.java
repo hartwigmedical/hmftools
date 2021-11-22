@@ -243,31 +243,38 @@ class BaselineReader {
                         String pif26HMF = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26HMF);
                         String pif26Bug = informedConsentItemGroup.readItemString(FIELD_INFORMED_CONSENT_PIF26BUG);
 
+                        String pif222alternated = pif222 != null ? pif222.toLowerCase() : pif222;
+                        String pif221alternated = pif221 != null ? pif221.toLowerCase() : pif221;
+                        String pif26HMFalternated = pif26HMF != null ? pif26HMF.toLowerCase() : pif26HMF;
+                        String pif26Bugalternated = pif26Bug != null ? pif26Bug.toLowerCase() : pif26Bug;
+
+
+
                         if (pif222Values == null && pif221Values == null && pif26HMFValues == null && pif26BUGValues == null) {
                             inDatabase = true;
                             outsideEU = true;
                         } else {
-                            if (pif222Values != null && pif222Values.contains(pif222)) {
-                                if (pif222 != null && pif222.equalsIgnoreCase(extractConsentConfigInfo.pif222())) {
+                            if (pif222Values != null && pif222Values.contains(pif222alternated)) {
+                                if (pif222alternated != null && pif222alternated.equalsIgnoreCase(extractConsentConfigInfo.pif222())) {
                                     inDatabase = true;
                                 }
                             }
 
-                            if (pif221Values != null && pif221Values.contains(pif221)) {
-                                if (pif221 != null && inDatabase != null && pif221.equalsIgnoreCase(extractConsentConfigInfo.pif221())
+                            if (pif221Values != null && pif221Values.contains(pif221alternated)) {
+                                if (pif221alternated != null && inDatabase != null && pif221alternated.equalsIgnoreCase(extractConsentConfigInfo.pif221())
                                         && inDatabase) {
                                     outsideEU = true;
                                 }
                             }
 
-                            if (pif26HMFValues != null && pif26HMFValues.contains(pif26HMF)) {
-                                if (pif26HMF != null && pif26HMF.equalsIgnoreCase(extractConsentConfigInfo.pif26HMF())) {
+                            if (pif26HMFValues != null && pif26HMFValues.contains(pif26HMFalternated)) {
+                                if (pif26HMFalternated != null && pif26HMFalternated.equalsIgnoreCase(extractConsentConfigInfo.pif26HMF())) {
                                     inDatabase = true;
                                 }
                             }
 
-                            if (pif26BUGValues != null && inDatabase != null && pif26BUGValues.contains(pif26Bug) && inDatabase) {
-                                if (pif26Bug != null && pif26Bug.equalsIgnoreCase(extractConsentConfigInfo.pif26BUG())) {
+                            if (pif26BUGValues != null && inDatabase != null && pif26BUGValues.contains(pif26Bugalternated) && inDatabase) {
+                                if (pif26Bugalternated != null && pif26Bugalternated.equalsIgnoreCase(extractConsentConfigInfo.pif26BUG())) {
                                     outsideEU = true;
                                 }
                             }
