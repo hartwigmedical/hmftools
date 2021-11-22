@@ -45,6 +45,7 @@ public class VcfUtils
     public static final String VT_ASSR = "ASSR";
     public static final String VT_SB = "SB";
     public static final String VT_BVF = "BVF";
+    public static final String VT_BSC = "BSC";
     public static final String VT_REFPAIR = "REFPAIR";
     public static final String VT_CIPOS = CIPOS;
     public static final String VT_CIRPOS = "CIRPOS";

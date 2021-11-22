@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -135,30 +135,4 @@ public class HotspotCache
         options.addOption(KNOWN_HOTSPOT_FILE, true, "Optional: write all batch-run output files");
     }
 
-    private class KnownHotspot
-    {
-        public final ChrBaseRegion RegionStart;
-        public final Byte OrientStart;
-        public final ChrBaseRegion RegionEnd;
-        public final Byte OrientEnd;
-        public final String GeneInfo;
-
-        public KnownHotspot(
-                final ChrBaseRegion regionStart, final Byte orientStart, final ChrBaseRegion regionEnd, final Byte orientEnd, final String geneInfo)
-        {
-            RegionStart = regionStart;
-            OrientStart = orientStart;
-            RegionEnd = regionEnd;
-            OrientEnd = orientEnd;
-            GeneInfo = geneInfo;
-        }
-
-        public boolean matches(final StructuralVariant sv)
-        {
-            return RegionStart.containsPosition(sv.chromosome(true), sv.position(true).intValue())
-                && OrientStart == sv.orientation(true)
-                && RegionEnd.containsPosition(sv.chromosome(false), sv.position(false).intValue())
-                && OrientEnd == sv.orientation(false);
-        }
-    }
 }

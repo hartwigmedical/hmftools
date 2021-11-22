@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
+import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -89,10 +90,16 @@ public class VariantBuilder
             if(mateHotspotCandidate)
             {
                 mHotspotCandidateVcfIds.remove(mateId);
+                ++mHardFilteredCount;
             }
             else if(mSvFactory.hasUnmatchedVariant(mateId))
             {
                 mSvFactory.removeUnmatchedVariant(mateId);
+                ++mHardFilteredCount;
+            }
+            else
+            {
+                mHardFilteredVcfIds.add(variant.getID());
             }
 
             return null;

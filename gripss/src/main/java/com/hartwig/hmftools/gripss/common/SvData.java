@@ -38,7 +38,6 @@ public class SvData
     private final List<FilterType> mFilters;
 
     private int mPonCount;
-    private String mHotspotGeneInfo;
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
@@ -61,7 +60,6 @@ public class SvData
         mFilters = Lists.newArrayList();
 
         mPonCount = 0;
-        mHotspotGeneInfo = "";
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
@@ -107,11 +105,6 @@ public class SvData
 
     public void setPonCount(int count) { mPonCount = count; }
     public int getPonCount() { return mPonCount; }
-
-    public void setHotspotGeneInfo(final String info) { mHotspotGeneInfo = info; }
-    public String getHotspotGeneInfo() { return mHotspotGeneInfo; }
-
-    public boolean hasLength() { return hasLength(mType); }
 
     public static boolean hasLength(final StructuralVariantType type)
     {

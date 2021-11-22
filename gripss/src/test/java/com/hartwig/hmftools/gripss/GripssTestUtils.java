@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASSR;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEID;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEIDL;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_BSC;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BUM;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BUMQ;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
@@ -85,12 +86,12 @@ public class GripssTestUtils
         String altEnd = formPairedAltString(ref, insSeq, chrStart, posStart, orientEnd, orientStart);
 
         pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd);
-        pair[SE_END] = createBreakend(vcfStart, chrStart, posStart, ref, altEnd, vcfStart);
+        pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart);
 
         return pair;
     }
 
-    public static VariantContext createSglBreakends(
+    public static VariantContext createSglBreakend(
             final String eventId, final String chromosome, int position, byte orientation, final String ref, final String insSeq)
     {
         String vcfId = vcfId(eventId, true);
@@ -121,6 +122,8 @@ public class GripssTestUtils
         Map<String,Object> tumorAttributes = makeGenotypeAttributes(qual);
 
         tumorAttributes.put(VT_VF, 100); // indicating a somatic variant
+        tumorAttributes.put(VT_BVF, 100);
+        tumorAttributes.put(VT_BSC, 100);
 
         Genotype gtNormal = new GenotypeBuilder()
                 .attributes(refAttributes)
@@ -180,7 +183,7 @@ public class GripssTestUtils
         attributes.put(VT_ASRP, 1);
         attributes.put(VT_ASSR, 1);
         attributes.put(VT_BUM, 0);
-        attributes.put(VT_BVF, 1);
+        attributes.put(VT_BVF, 100);
         attributes.put(VT_REF, 1);
 
         attributes.put(VT_IC, 0);
@@ -223,6 +226,7 @@ public class GripssTestUtils
         attributes.put(VT_ASSR, 1);
         attributes.put(VT_BUM, 0);
         attributes.put(VT_BVF, 1);
+        attributes.put(VT_BSC, 1);
 
         // other
         attributes.put(VT_IC, 0);
