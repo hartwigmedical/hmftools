@@ -1,11 +1,18 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
-import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
@@ -21,6 +28,7 @@ public class VcfUtils
     public static final String VT_QUAL = "QUAL";
     public static final String VT_SR = "SR";
     public static final String VT_BQ = "BQ";
+    public static final String VT_BAQ = "BAQ";
     public static final String VT_SRQ = "SRQ";
     public static final String VT_VF = "VF";
     public static final String VT_RP = "RP";
@@ -46,10 +54,13 @@ public class VcfUtils
     public static final String VT_SB = "SB";
     public static final String VT_BVF = "BVF";
     public static final String VT_BSC = "BSC";
+    public static final String VT_BASRP = "BASRP";
+    public static final String VT_BASSR = "BASSR";
     public static final String VT_REFPAIR = "REFPAIR";
     public static final String VT_CIPOS = CIPOS;
     public static final String VT_CIRPOS = "CIRPOS";
     public static final String VT_REALIGN = "REALIGN";
+    public static final String VT_IMPRECISE = IMPRECISE;
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {
@@ -78,7 +89,7 @@ public class VcfUtils
 
         if(tumorOrdinal < 0 || (!referenceId.isEmpty() && referenceOrdinal < 0))
         {
-            GM_LOGGER.error("missing sample names in VCF: {}", vcfSampleNames);
+            GR_LOGGER.error("missing sample names in VCF: {}", vcfSampleNames);
             return null;
         }
 
@@ -107,6 +118,19 @@ public class VcfUtils
         return new Interval(values.get(0), values.get(1));
     }
 
+    public static int sglFragmentCount(final Genotype genotype)
+    {
+        int bsc = getGenotypeAttributeAsInt(genotype, VT_BSC, 0);
+        int basrp = getGenotypeAttributeAsInt(genotype, VT_BASRP, 0);
+        int bassr = getGenotypeAttributeAsInt(genotype, VT_BASSR, 0);
+        int bvf = getGenotypeAttributeAsInt(genotype, VT_BVF, 0);
+
+        if(bsc == 0 && basrp == 0 && bassr == 0)
+            return 0;
+        else
+            return bvf;
+    }
+
     public static List<String> parseAssemblies(final VariantContext variantContext)
     {
         List<String> assemblies = Lists.newArrayList();
@@ -131,4 +155,44 @@ public class VcfUtils
 
         return assemblies;
     }
+
+    public static String stripBam(final String sampleId)
+    {
+        return sampleId.replaceAll("_dedup.realigned.bam","")
+                .replaceAll(".sorted", "")
+                .replaceAll(".bam", "");
+    }
+
+    public static List<String> findVcfFiles(final String batchRunRootDir)
+    {
+        // current prod examples
+        // structuralVariants/gridss/CPCT02030278R_CPCT02030278T/CPCT02030278R_CPCT02030278T.gridss.vcf.gz
+        // structural_caller/WIDE01010356T.gridss.unfiltered.vcf.gz
+        final List<String> vcfFiles = Lists.newArrayList();
+
+        try
+        {
+            final Stream<Path> stream = Files.walk(Paths.get(batchRunRootDir), 5, FileVisitOption.FOLLOW_LINKS);
+
+            vcfFiles.addAll(stream.filter(x -> !x.toFile().isDirectory())
+                    .map(x -> x.toFile().toString())
+                    .filter(x -> matchesGridssVcf(x))
+                    .collect(Collectors.toList()));
+
+            GR_LOGGER.info("found {} VCF files", vcfFiles.size());
+        }
+        catch (Exception e)
+        {
+            GR_LOGGER.error("failed find directories for batchDir({}) run: {}", batchRunRootDir, e.toString());
+        }
+
+        return vcfFiles;
+    }
+
+    private static boolean matchesGridssVcf(final String filename)
+    {
+        return filename.endsWith(".gridss.vcf") || filename.endsWith(".gridss.unfiltered.vcf")
+                || filename.endsWith(".gridss.vcf.gz") || filename.endsWith(".gridss.unfiltered.vcf.gz");
+    }
+
 }

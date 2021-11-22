@@ -2,7 +2,7 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -135,7 +135,7 @@ public class CsvFileWriter
         }
         catch (final IOException e)
         {
-            GM_LOGGER.error("error writing CSV output file: {}", e.toString());
+            GR_LOGGER.error("error writing CSV output file: {}", e.toString());
         }
     }
 

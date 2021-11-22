@@ -18,10 +18,13 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.gripss.common.SvData;
+import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GripssConfig
 {
@@ -42,6 +45,8 @@ public class GripssConfig
     private static final String SCOPE = "scope";
 
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
+
+    public static final Logger GR_LOGGER = LogManager.getLogger(GripssApplication.class);
 
     public GripssConfig(final CommandLine cmd)
     {
@@ -101,5 +106,6 @@ public class GripssConfig
 
         PonCache.addCmdLineArgs(options);
         HotspotCache.addCmdLineArgs(options);
+        FilterConstants.addCmdLineArgs(options);
     }
 }

@@ -86,7 +86,7 @@ public class BreakendRealigner
     private Interval[] centreAlignConfidenceIntervals(final Breakend breakend)
     {
         // val mate = variantType as Paired
-        final Breakend otherBreakend = null;
+        final Breakend otherBreakend = breakend.otherBreakend();
 
         // TODO
         boolean invertStart = breakend.Orientation == otherBreakend.Orientation;

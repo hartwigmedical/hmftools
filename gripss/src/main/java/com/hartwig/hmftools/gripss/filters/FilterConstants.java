@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 
 public class FilterConstants
 {
@@ -125,4 +126,23 @@ public class FilterConstants
         PonDistance = ponDistance;
         PolyGcRegion = polyGcRegion;
     }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        options.addOption(HARD_MIN_TUMOR_QUAL_CFG, true, "Hard min tumor qual");
+        options.addOption(HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG, true, "Hard max normal absolute support");
+        options.addOption(HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG, true, "Hard max normal relative support");
+        options.addOption(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, true, "Soft max normal relative support");
+        options.addOption(MIN_NORMAL_COVERAGE_CFG, true, "Min normal coverage");
+        options.addOption(MIN_TUMOR_AF_CFG, true, "Min tumor allelic frequency");
+        options.addOption(MAX_SHORT_STRAND_BIAS_CFG, true, "Max short strand bias");
+        options.addOption(MIN_QUAL_BREAK_END_CFG, true, "Min qual break end");
+        options.addOption(MIN_QUAL_BREAK_POINT_CFG, true, "Min qual break point");
+        options.addOption(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, true, "Min qual rescue mobile element insertions");
+        options.addOption(MAX_HOM_LENGTH_SHORT_INV_CFG, true, "Max homology length short inversion");
+        options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_CFG, true, "Max inexact homology length short del");
+        options.addOption(MIN_LENGTH_CFG, true, "Min length");
+        options.addOption(PON_DISTANCE, true, "PON permitted margin");
+    }
+
 }

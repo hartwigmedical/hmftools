@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
+import com.hartwig.hmftools.gripss.filters.HardFilters;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 import htsjdk.variant.variantcontext.VariantContext;

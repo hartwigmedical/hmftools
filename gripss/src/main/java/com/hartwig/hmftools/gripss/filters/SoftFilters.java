@@ -8,6 +8,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASRP;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASSR;
+import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_C_INSERT;
@@ -55,6 +59,9 @@ public class SoftFilters
         // breakend filters
         for(int se = SE_START; se <= SE_END; ++se)
         {
+            if(sv.isSgl() && se == SE_END)
+                continue;
+
             Breakend breakend = sv.breakends()[se];
 
             if(normalCoverage(breakend))
@@ -79,7 +86,7 @@ public class SoftFilters
                 breakend.addFilter(DISCORDANT_PAIR_SUPPORT);
 
             if(shortDelInsertArtifact(sv, breakend))
-                sv.addFilter(SHORT_DEL_INS_ARTIFACT);
+                breakend.addFilter(SHORT_DEL_INS_ARTIFACT);
         }
 
         // SV filters
@@ -125,7 +132,7 @@ public class SoftFilters
     {
         int tumorFrags = breakend.TumorFragments;
         int readPairSupport = (sv.isSgl() || !sv.isShortLocal()) ? breakend.ReferencePairReads : 0;
-        int totalSupport = tumorFrags + breakend.ReferenceReads + readPairSupport;
+        double totalSupport = tumorFrags + breakend.ReferenceReads + readPairSupport;
         double alleleFrequency = totalSupport > 0 ? tumorFrags / totalSupport : 0;
 
         return alleleFrequency < mFilterConstants.MinTumorAf;
@@ -159,8 +166,11 @@ public class SoftFilters
         }
         else
         {
-            if(mFilterConstants.PolyGcRegion.containsPosition(sv.chromosomeEnd(), sv.posEnd()));
-            return true;
+            if(mFilterConstants.PolyGcRegion.containsPosition(sv.chromosomeStart(), sv.posStart())
+            || mFilterConstants.PolyGcRegion.containsPosition(sv.chromosomeEnd(), sv.posEnd()))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -190,14 +200,20 @@ public class SoftFilters
 
     private boolean breakendAssemblyReadPairs(final Breakend breakend)
     {
-        // TODO
-        /*
-                fun breakendAssemblyReadPairs(): Boolean {
-        return isSingle && context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()
+        if(!breakend.isSgl())
+            return false;
+
+        int basrp = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_BASRP, 0);
+        int bassr = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_BASSR, 0);
+        double baq = getGenotypeAttributeAsDouble(breakend.TumorGenotype, VT_BAQ, 0);
+
+        boolean basrpInconsistent = basrp == 0 && bassr == 0 && baq > 0;
+
+        if(basrp == 0 && !basrpInconsistent)
+        {
+            double strandBias = getGenotypeAttributeAsDouble(breakend.TumorGenotype, VT_SB, 0.5);
+            return strandBias < 0.1 || strandBias > 0.9;
         }
-
-
-         */
 
         return false;
     }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -248,17 +248,17 @@ public class PonCache
 
                 if(lastRegion != null && lastRegion.end() > regionStart.end())
                 {
-                    GM_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegion, regionStart);
+                    GR_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegion, regionStart);
                 }
 
                 lastRegion = regionStart;
             }
 
-            GM_LOGGER.info("loaded {} germline SV PON records from file({})", itemCount, filename);
+            GR_LOGGER.info("loaded {} germline SV PON records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
-            GM_LOGGER.error("failed to load germline SV PON file({}): {}", filename, e.toString());
+            GR_LOGGER.error("failed to load germline SV PON file({}): {}", filename, e.toString());
             return;
         }
     }
@@ -305,17 +305,17 @@ public class PonCache
                 
                 if(lastRegion != null && lastRegion.start() > region.start())
                 {
-                    GM_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, region);
+                    GR_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, region);
                 }
 
                 lastRegion = region;
             }
 
-            GM_LOGGER.info("loaded {} germline SGL PON records from file", itemCount, filename);
+            GR_LOGGER.info("loaded {} germline SGL PON records from file", itemCount, filename);
         }
         catch(IOException e)
         {
-            GM_LOGGER.error("failed to load germline SGL PON file({}): {}", filename, e.toString());
+            GR_LOGGER.error("failed to load germline SGL PON file({}): {}", filename, e.toString());
             return;
         }
     }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.gripss.links;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.gripss.GermlineUtils.GM_LOGGER;
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.util.List;
 import java.util.Map;
@@ -42,7 +42,7 @@ public class AssemblyLinks
             }
         }
 
-        GM_LOGGER.debug("found {} unique assemblies", assemblyBreakendMap.size());
+        GR_LOGGER.debug("found {} unique assemblies", assemblyBreakendMap.size());
 
         LinkStore assemblyLinkStore = new LinkStore();
 

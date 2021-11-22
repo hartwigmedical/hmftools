@@ -3,6 +3,9 @@ package com.hartwig.hmftools.gripss.common;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.gripss.VcfUtils.sglFragmentCount;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
@@ -104,9 +107,9 @@ public class Breakend
             final VariantContext variantContext, final int referenceOrdinal, final int tumorOrdinal)
     {
         final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
-        final Genotype refGenotype = referenceOrdinal > 0 ? variantContext.getGenotype(referenceOrdinal) : null;
+        final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
-        final String qualTag = type == SGL ? VT_BQ : VT_QUAL;
+        final String qualTag = type == SGL ? VT_BAQ : VT_QUAL;
         final String fragsTag = type == SGL ? VT_BVF : VT_VF;
         double qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
 
@@ -116,12 +119,12 @@ public class Breakend
 
         if(refGenotype != null)
         {
-            refFrags = VcfUtils.getGenotypeAttributeAsInt(refGenotype, fragsTag, 0);
-            refReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VT_REF, 0);
-            refPairReads = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VT_REFPAIR, 0);
+            refFrags = type == SGL ? sglFragmentCount(refGenotype) : getGenotypeAttributeAsInt(refGenotype, fragsTag, 0);
+            refReads = getGenotypeAttributeAsInt(refGenotype, VT_REF, 0);
+            refPairReads = getGenotypeAttributeAsInt(refGenotype, VT_REFPAIR, 0);
         }
 
-        int tumorFrags = VcfUtils.getGenotypeAttributeAsInt(tumorGenotype, fragsTag, 0);
+        int tumorFrags = type == SGL ? sglFragmentCount(tumorGenotype) : getGenotypeAttributeAsInt(tumorGenotype, fragsTag, 0);
 
         return new Breakend(
                 svData, isStart, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype,

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASRP;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASSR;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEID;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEIDL;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
@@ -57,6 +59,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 
 import htsjdk.variant.variantcontext.Allele;
@@ -73,9 +79,61 @@ public class GripssTestUtils
 
     public static final double DEFAULT_QUAL = 1000;
 
+    public static SvData createSv(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String insSeq, final GenotypeIds genotypeIds)
+    {
+        return createSv(eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, insSeq, genotypeIds,
+                null, null, null);
+    }
+
+    public static SvData createSv(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String insSeq, final GenotypeIds genotypeIds, final Map<String,Object> commonOverrides, final Map<String,Object> refOverrides,
+            final Map<String,Object> tumorOverrides)
+    {
+        String ref = "A";
+
+        VariantContext[] contexts = createSvBreakends(
+                eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
+
+        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        return new SvData(sv, genotypeIds);
+    }
+
+    public static SvData createSgl(
+            final String eventId, final String chromosome, int position, byte orientation, final String insSeq, final GenotypeIds genotypeIds)
+    {
+        return createSgl(
+                eventId, chromosome, position, orientation, insSeq, genotypeIds, null, null, null);
+    }
+
+    public static SvData createSgl(
+            final String eventId, final String chromosome, int position, byte orientation, final String insSeq, final GenotypeIds genotypeIds,
+            final Map<String,Object> commonOverrides, final Map<String,Object> refOverrides, final Map<String,Object> tumorOverrides)
+    {
+        String ref = "A";
+
+        VariantContext context = createSglBreakend(
+                eventId, chromosome, position, orientation, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
+
+        StructuralVariant sv = StructuralVariantFactory.createSingleBreakend(context);
+        return new SvData(sv, genotypeIds);
+    }
+
     public static VariantContext[] createSvBreakends(
             final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
             final String ref, final String insSeq)
+    {
+        return createSvBreakends(
+                eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq,
+                null, null, null);
+    }
+
+    public static VariantContext[] createSvBreakends(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String ref, final String insSeq, final Map<String,Object> commonOverrides, final Map<String,Object> refOverrides,
+            final Map<String,Object> tumorOverrides)
     {
         String vcfStart = vcfId(eventId, true);
         String vcfEnd = vcfId(eventId, false);
@@ -85,8 +143,8 @@ public class GripssTestUtils
         String altStart = formPairedAltString(ref, insSeq, chrEnd, posEnd, orientStart, orientEnd);
         String altEnd = formPairedAltString(ref, insSeq, chrStart, posStart, orientEnd, orientStart);
 
-        pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd);
-        pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart);
+        pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd, commonOverrides, refOverrides, tumorOverrides);
+        pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart, commonOverrides, refOverrides, tumorOverrides);
 
         return pair;
     }
@@ -94,15 +152,23 @@ public class GripssTestUtils
     public static VariantContext createSglBreakend(
             final String eventId, final String chromosome, int position, byte orientation, final String ref, final String insSeq)
     {
+        return createSglBreakend(eventId, chromosome, position, orientation, ref, insSeq, null, null, null);
+    }
+
+    public static VariantContext createSglBreakend(
+            final String eventId, final String chromosome, int position, byte orientation, final String ref, final String insSeq,
+            final Map<String,Object> commonOverrides, final Map<String,Object> refOverrides, final Map<String,Object> tumorOverrides)
+    {
         String vcfId = vcfId(eventId, true);
 
         String alt = formSingleAltString(ref, insSeq, orientation);
 
-        return createBreakend(vcfId, chromosome, position, ref, alt, null);
+        return createBreakend(vcfId, chromosome, position, ref, alt, null, commonOverrides, refOverrides, tumorOverrides);
     }
 
     public static VariantContext createBreakend(
-            final String vcfId, final String chromosome, int position, final String ref, final String alt, final String mateId)
+            final String vcfId, final String chromosome, int position, final String ref, final String alt, final String mateId,
+            final Map<String,Object> commonOverrides, final Map<String,Object> refOverrides, final Map<String,Object> tumorOverrides)
     {
         VariantContextBuilder builder = new VariantContextBuilder();
 
@@ -113,17 +179,28 @@ public class GripssTestUtils
 
         double qual = DEFAULT_QUAL;
 
-        Map<String,Object> attributes = makeCommonAttributes(vcfId, qual);
+        Map<String,Object> commonAttributes = makeCommonAttributes(vcfId, qual);
+
+        if(commonOverrides != null)
+            commonAttributes.putAll(commonOverrides);
 
         if(mateId != null)
-            attributes.put(VT_PAR_ID, mateId);
+            commonAttributes.put(VT_PAR_ID, mateId);
 
         Map<String,Object> refAttributes = makeGenotypeAttributes(qual);
         Map<String,Object> tumorAttributes = makeGenotypeAttributes(qual);
 
-        tumorAttributes.put(VT_VF, 100); // indicating a somatic variant
+        // defaults to indicate a somatic variant
+        tumorAttributes.put(VT_VF, 100);
         tumorAttributes.put(VT_BVF, 100);
         tumorAttributes.put(VT_BSC, 100);
+        tumorAttributes.put(VT_SR, 1);
+
+        if(refOverrides != null)
+            refAttributes.putAll(refOverrides);
+
+        if(tumorOverrides != null)
+            tumorAttributes.putAll(tumorOverrides);
 
         Genotype gtNormal = new GenotypeBuilder()
                 .attributes(refAttributes)
@@ -157,7 +234,7 @@ public class GripssTestUtils
                 .stop(position)
                 .alleles(alleles)
                 .genotypes(genotypesContext)
-                .attributes(attributes)
+                .attributes(commonAttributes)
                 .log10PError(logError)
                 .filter(filters)
                 .make(true);
@@ -172,6 +249,7 @@ public class GripssTestUtils
         // quals
         attributes.put(VT_QUAL, qual);
         attributes.put(VT_BQ, qual);
+        attributes.put(VT_BAQ, qual);
         attributes.put(VT_SRQ, qual);
         attributes.put(VT_RPQ, qual);
         attributes.put(VT_BUMQ, 0);
@@ -184,7 +262,6 @@ public class GripssTestUtils
         attributes.put(VT_ASSR, 1);
         attributes.put(VT_BUM, 0);
         attributes.put(VT_BVF, 100);
-        attributes.put(VT_REF, 1);
 
         attributes.put(VT_IC, 0);
         attributes.put(VT_BEID, "");
@@ -214,12 +291,13 @@ public class GripssTestUtils
         // quals
         attributes.put(VT_QUAL, qual);
         attributes.put(VT_BQ, qual);
+        attributes.put(VT_BAQ, qual);
         attributes.put(VT_SRQ, qual);
         attributes.put(VT_RPQ, qual);
         attributes.put(VT_BUMQ, 0);
 
         // read counts
-        attributes.put(VT_SR, 1);
+        attributes.put(VT_SR, 0);
         attributes.put(VT_VF, 1);
         attributes.put(VT_RP, 1);
         attributes.put(VT_ASRP, 1);
@@ -227,10 +305,10 @@ public class GripssTestUtils
         attributes.put(VT_BUM, 0);
         attributes.put(VT_BVF, 1);
         attributes.put(VT_BSC, 1);
+        attributes.put(VT_REF, 10);
 
         // other
         attributes.put(VT_IC, 0);
-        attributes.put(VT_REF, 1);
         attributes.put(VT_BEID, "");
         attributes.put(VT_BEIDL, "");
         attributes.put(VT_HOMSEQ, "");

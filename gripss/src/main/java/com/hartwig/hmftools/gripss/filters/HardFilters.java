@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
 
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.gripss.VcfUtils;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
-import com.hartwig.hmftools.gripss.filters.FilterConstants;
 
 import htsjdk.variant.variantcontext.VariantContext;
 

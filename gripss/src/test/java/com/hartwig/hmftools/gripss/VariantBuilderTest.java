@@ -229,8 +229,6 @@ public class VariantBuilderTest
 
         assertEquals(0, mBuilder.hardFilteredCount());
         assertEquals(0, mBuilder.incompleteSVs());
-
     }
-
 
 }
