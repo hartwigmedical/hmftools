@@ -66,13 +66,13 @@ public class VirusEvidence {
             @NotNull VirusConstants interpretationToInclude) {
         List<AnnotatedVirus> virusesWithInterpretation = Lists.newArrayList();
         for (AnnotatedVirus virus : virusInterpreterData.reportableViruses()) {
-            if (virus.interpretation().equals(interpretationToInclude.name())) {
+            if (virus.interpretation() != null && virus.interpretation().equals(interpretationToInclude.name())) {
                 virusesWithInterpretation.add(virus);
             }
         }
 
         for (AnnotatedVirus virus : virusInterpreterData.unreportedViruses()) {
-            if (virus.interpretation().equals(interpretationToInclude.name())) {
+            if (virus.interpretation() != null && virus.interpretation().equals(interpretationToInclude.name())) {
                 virusesWithInterpretation.add(virus);
             }
         }
