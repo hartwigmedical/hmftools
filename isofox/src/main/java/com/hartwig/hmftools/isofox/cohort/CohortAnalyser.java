@@ -28,7 +28,7 @@ import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
 import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
-import com.hartwig.hmftools.isofox.unmapped.UnmappedReadsAnalyser;
+import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -84,7 +84,7 @@ public class CohortAnalyser
 
                 case UNMAPPED_READS:
                 {
-                    UnmappedReadsAnalyser umrAnalyser = new UnmappedReadsAnalyser(mConfig, mCmdLineArgs);
+                    UmrCohortAnalyser umrAnalyser = new UmrCohortAnalyser(mConfig, mCmdLineArgs);
                     umrAnalyser.processSampleFiles();
                     break;
                 }

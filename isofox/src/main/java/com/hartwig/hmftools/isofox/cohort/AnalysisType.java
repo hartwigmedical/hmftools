@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_I
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESULTS_FILE;
-import static com.hartwig.hmftools.isofox.unmapped.UnmappedReads.UNMAPPED_READS_FILE_ID;
+import static com.hartwig.hmftools.isofox.unmapped.UmrFinder.UNMAPPED_READS_FILE_ID;
 
 public enum AnalysisType
 {

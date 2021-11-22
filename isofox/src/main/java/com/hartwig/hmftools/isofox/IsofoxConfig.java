@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUB_ITEM_DELIM;
+import static com.hartwig.hmftools.isofox.unmapped.UmrCohortFrequency.UMR_COHORT_FREQUENCY_FILE;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,6 +141,7 @@ public class IsofoxConfig
 
     public final String ExpCountsFile;
     public final String NeoEpitopeFile;
+    public final String UnmappedCohortFreqFile;
     public final String ExpGcRatiosFile;
     public final boolean ApplyExpectedRates;
     public final boolean ApplyFragmentLengthAdjust;
@@ -273,6 +275,7 @@ public class IsofoxConfig
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
         ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
         NeoEpitopeFile = cmd.getOptionValue(NEO_EPITOPE_FILE);
+        UnmappedCohortFreqFile = cmd.getOptionValue(UMR_COHORT_FREQUENCY_FILE);
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
 
@@ -513,6 +516,7 @@ public class IsofoxConfig
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
         NeoEpitopeFile = null;
+        UnmappedCohortFreqFile = null;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -573,6 +577,7 @@ public class IsofoxConfig
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
         options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(NEO_EPITOPE_FILE, true, "File with neo-epitopes to measure fragment support");
+        options.addOption(UMR_COHORT_FREQUENCY_FILE, true, "Unmapped reads cohort frequency file");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(SINGLE_MAP_QUAL, true, "Optional - map quality for reads mapped to a single location (default=255)");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");

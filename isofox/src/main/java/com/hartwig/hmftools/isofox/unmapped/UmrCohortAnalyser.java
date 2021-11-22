@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.isofox.unmapped;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -30,12 +30,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.isofox.fusion.FusionData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public class UnmappedReadsAnalyser
+public class UmrCohortAnalyser
 {
     private final CohortConfig mConfig;
 
@@ -49,7 +48,7 @@ public class UnmappedReadsAnalyser
     private static final String UMR_MIN_SAMPLES = "umr_min_samples";
     private static final String UMR_MIN_FRAGS = "umr_min_frags";
 
-    public UnmappedReadsAnalyser(final CohortConfig config, final CommandLine cmd)
+    public UmrCohortAnalyser(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mUnmappedReads = Maps.newHashMap();
@@ -109,7 +108,7 @@ public class UnmappedReadsAnalyser
 
             lines.remove(0);
 
-            // int geneId = fieldsIndexMap.get(FLD_GENE_ID);
+            int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsIndexMap.get(FLD_GENE_NAME);
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get("PosStart");
@@ -125,6 +124,9 @@ public class UnmappedReadsAnalyser
             int exonBoundaryIndex = fieldsIndexMap.get("ExonBoundary");
             int exonDistIndex = fieldsIndexMap.get("ExonDistance");
             int scBasesIndex = fieldsIndexMap.get("SoftClipBases");
+            int mateIndex = fieldsIndexMap.get("MateCoords");
+            int cohortFreqIndex = fieldsIndexMap.get("CohortFreq");
+            int matchesSuppIndex = fieldsIndexMap.get("MatchesSupp");
 
             for(String data : lines)
             {
@@ -135,9 +137,10 @@ public class UnmappedReadsAnalyser
                         new ChrBaseRegion(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex])),
                         Byte.parseByte(values[orientIndex]), Integer.parseInt(values[scLengthIndex]),
                         values[scSideIndex].equals(START_STR) ? SE_START : SE_END,
-                        Double.parseDouble(values[abqIndex]), values[geneNameIndex], values[transIndex],
+                        Double.parseDouble(values[abqIndex]), values[geneIdIndex], values[geneNameIndex], values[transIndex],
                         Integer.parseInt(values[exonRankIndex]), Integer.parseInt(values[exonBoundaryIndex]),
-                        Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex]);
+                        Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex], values[mateIndex],
+                        Integer.parseInt(values[cohortFreqIndex]), Boolean.parseBoolean(values[matchesSuppIndex]));
 
                 // could filter these in the BAM reading process
                 if(umRead.ExonRank == 1 && umRead.SpliceType.equals(SPLICE_TYPE_ACCEPTOR))
@@ -164,7 +167,7 @@ public class UnmappedReadsAnalyser
             mUnmappedReads.put(umRead.ReadRegion.Chromosome, chrUmrs);
         }
 
-        String umrKey = umRead.formKey();
+        String umrKey = umRead.positionKey();
         Map<String,List<UnmappedRead>> umrKeyList = chrUmrs.get(umrKey);
 
         if(umrKeyList == null)

@@ -42,7 +42,7 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.novel.SpliceSiteCounter;
-import com.hartwig.hmftools.isofox.unmapped.UnmappedReads;
+import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
 
 public class ResultsWriter
 {
@@ -153,7 +153,7 @@ public class ResultsWriter
                 mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
 
             if(mConfig.runFunction(UNMAPPED_READS))
-                mUnamppedReadsWriter = UnmappedReads.createWriter(mConfig);
+                mUnamppedReadsWriter = UmrFinder.createWriter(mConfig);
         }
     }
 
