@@ -305,6 +305,7 @@ class StructuralVariantContextTest {
     private fun VariantContext.qual(qual: Int): VariantContext {
         return this.addGenotypeAttribute("QUAL", 0.0, qual.toDouble())
                 .addGenotypeAttribute("BQ", 0.0, qual.toDouble())
+                .addGenotypeAttribute("BAQ", 0.0, qual.toDouble())
     }
 
     private fun VariantContext.setViralSequenceAlignment(): VariantContext {

@@ -75,10 +75,12 @@ object VariantContextTestFactory {
     fun VariantContext.addQual(qual: Double): VariantContext {
         val normalBuilder = GenotypeBuilder(this.getGenotype(0))
         normalBuilder.attribute("BQ", qual)
+        normalBuilder.attribute("BAQ", qual)
         normalBuilder.attribute("QUAL", qual)
 
         val tumorBuilder = GenotypeBuilder(this.getGenotype(1))
         tumorBuilder.attribute("BQ", qual)
+        tumorBuilder.attribute("BAQ", qual)
         tumorBuilder.attribute("QUAL", qual)
 
         val builder = VariantContextBuilder(this)

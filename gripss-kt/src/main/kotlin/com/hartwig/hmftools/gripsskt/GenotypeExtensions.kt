@@ -5,9 +5,8 @@ import htsjdk.variant.variantcontext.Genotype
 fun Genotype.qual(isSingleBreakEnd: Boolean): Double {
     if(isSingleBreakEnd)
     {
-        var bqQual = requireAttributeAsDouble("BQ")
-        var bumQual = attributeAsDouble("BUMQ", 0.0)
-        return bqQual - bumQual
+        // var bqQual = requireAttributeAsDouble("BQ") // not always just use BAQ
+        return attributeAsDouble("BAQ", 0.0)
     }
     else
     {
