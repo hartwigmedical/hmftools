@@ -1,9 +1,16 @@
 package com.hartwig.hmftools.gripss.common;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.VcfUtils.sglFragmentCount;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
@@ -55,6 +62,7 @@ public class Breakend
 
     public final Interval ConfidenceInterval;
     public final Interval RemoteConfidenceInterval;
+    public final int[] InexactHomology;
 
     private final SvData mSvData;
     private final List<FilterType> mFilters;
@@ -95,6 +103,15 @@ public class Breakend
         OtherChromosome = altInsertCoords.Chromsome;
         OtherPosition = altInsertCoords.Position;
         OtherOrientation = altInsertCoords.Orientation;
+
+        InexactHomology = new int[SE_PAIR];
+
+        if(context.hasAttribute(VT_IHOMPOS))
+        {
+            final List<Integer> ihompos = context.getAttributeAsIntList(VT_IHOMPOS, 0);
+            InexactHomology[SE_START] = ihompos.get(0);
+            InexactHomology[SE_END] = ihompos.get(1);
+        }
 
         mFilters = Lists.newArrayList();
         mAssemblies = parseAssemblies(context);
@@ -161,6 +178,7 @@ public class Breakend
     public boolean negOrient() { return Orientation == NEG_ORIENT; }
 
     public int insertSequenceLength() { return InsertSequence.length(); }
+    public int inexactHomologyLength() { return max(InexactHomology[SE_END] - InexactHomology[SE_START], 0); }
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }

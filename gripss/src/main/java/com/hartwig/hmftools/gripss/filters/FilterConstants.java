@@ -52,6 +52,8 @@ public class FilterConstants
     public static final int DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = 1000;
     public static final int DEFAULT_MAX_HOM_LENGTH_SHORT_INV = 6;
     public static final int DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL = 5;
+    public static final int INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH = 100;
+    public static final int INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH = 800;
     public static final int DEFAULT_MIN_LENGTH = 32;
     public static final int DEFAULT_PON_DISTANCE = 3;
 

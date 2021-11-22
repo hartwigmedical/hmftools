@@ -38,6 +38,7 @@ public class VcfUtils
     public static final String VT_BEID = "BEID";
     public static final String VT_BEIDL = "BEIDL";
     public static final String VT_HOMSEQ = "HOMSEQ";
+    public static final String VT_IHOMPOS = "IHOMPOS";
     public static final String VT_BUM = "BUM";
     public static final String VT_BUMQ = "BUMQ";
 

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASRP;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASSR;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_IMPRECISE;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_REF;
@@ -22,30 +23,32 @@ import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
 import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsDouble;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINC_00486_V37;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
+import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_HOM_LENGTH_SHORT_INV;
+import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_INEXACT_HOM_LENGTH_SHORT_DEL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_POLY_A_HOM_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_POLY_G_LENGTH;
+import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_DEL_INS_ARTIFACT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_NORMAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_SUPPORT;
+import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_STRAND_BIAS;
 
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.SoftFilters;
 
 import org.junit.Test;
@@ -231,12 +234,43 @@ public class SoftFiltersTest
 
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
-        // MAX_POLY_A_HOM_LENGTH
-        commonOverrides.put(VT_HOMSEQ, POLY_A_HOMOLOGY);
+        // MAX_HOM_LENGTH_SHORT_INV
+        commonOverrides.put(VT_HOMSEQ, "AGCGATAA");
 
-        sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
+        sv = createSv(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 130, POS_ORIENT, POS_ORIENT, "", mGenotypeIds,
+                commonOverrides, refOverrides, tumorOverrides);
+
         mSoftFilters.applyFilters(sv);
-        assertTrue(sv.getFilters().contains(MAX_POLY_A_HOM_LENGTH));
+        assertTrue(sv.getFilters().contains(MAX_HOM_LENGTH_SHORT_INV));
+
+        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+        // inexactHomologyLengthShortDel
+        commonOverrides.put(VT_IHOMPOS, Lists.newArrayList(-5, 8));
+
+        sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
+        mSoftFilters.applyFilters(sv);
+        assertTrue(sv.breakendStart().getFilters().contains(MAX_INEXACT_HOM_LENGTH_SHORT_DEL));
+
+        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+        // strandBias
+        commonOverrides.put(VT_SB, 0.99);
+
+        sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
+        mSoftFilters.applyFilters(sv);
+        assertTrue(sv.breakendStart().getFilters().contains(SHORT_STRAND_BIAS));
+
+        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+        // min length
+        sv = createSv(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 120, POS_ORIENT, NEG_ORIENT, "", mGenotypeIds,
+                commonOverrides, refOverrides, tumorOverrides);
+
+        mSoftFilters.applyFilters(sv);
+        assertTrue(sv.getFilters().contains(MIN_LENGTH));
     }
 
 
