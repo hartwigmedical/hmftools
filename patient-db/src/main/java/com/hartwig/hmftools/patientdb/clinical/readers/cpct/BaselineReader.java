@@ -248,8 +248,6 @@ class BaselineReader {
                         String pif26HMFalternated = pif26HMF != null ? pif26HMF.toLowerCase() : pif26HMF;
                         String pif26Bugalternated = pif26Bug != null ? pif26Bug.toLowerCase() : pif26Bug;
 
-
-
                         if (pif222Values == null && pif221Values == null && pif26HMFValues == null && pif26BUGValues == null) {
                             inDatabase = true;
                             outsideEU = true;
