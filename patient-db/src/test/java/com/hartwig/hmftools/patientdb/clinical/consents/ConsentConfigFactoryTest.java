@@ -27,20 +27,20 @@ public class ConsentConfigFactoryTest {
         assertNull(consentConfig1.pif222Values());
         assertEquals("",consentConfig1.pif221());
         assertNull(consentConfig1.pif221Values());
-        assertEquals("Ja",consentConfig1.pif26HMF());
-        assertEquals(Lists.newArrayList("Ja", "Nee"), consentConfig1.pif26HMFValues());
-        assertEquals("Ja",consentConfig1.pif26BUG());
-        assertEquals(Lists.newArrayList("Ja", "Nee"), consentConfig1.pif26BUGValues());
+        assertEquals("ja",consentConfig1.pif26HMF());
+        assertEquals(Lists.newArrayList("ja", "nee"), consentConfig1.pif26HMFValues());
+        assertEquals("ja",consentConfig1.pif26BUG());
+        assertEquals(Lists.newArrayList("ja", "nee"), consentConfig1.pif26BUGValues());
 
         ConsentConfig consentConfig2 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("2");
         assertEquals("2", consentConfig2.pifVersion());
         assertEquals(Lists.newArrayList("CPCT"), consentConfig2.cohort());
         assertNull(consentConfig2.inHMF());
         assertNull(consentConfig2.outsideEU());
-        assertEquals("Yes",consentConfig2.pif222());
-        assertEquals(Lists.newArrayList("Yes", "No"), consentConfig2.pif222Values());
-        assertEquals("Yes",consentConfig2.pif221());
-        assertEquals(Lists.newArrayList("Yes", "No"), consentConfig2.pif221Values());
+        assertEquals("yes",consentConfig2.pif222());
+        assertEquals(Lists.newArrayList("yes", "no"), consentConfig2.pif222Values());
+        assertEquals("yes",consentConfig2.pif221());
+        assertEquals(Lists.newArrayList("yes", "no"), consentConfig2.pif221Values());
         assertNull(consentConfig2.pif26HMF());
         assertNull(consentConfig2.pif26HMFValues());
         assertNull(consentConfig2.pif26BUG());
