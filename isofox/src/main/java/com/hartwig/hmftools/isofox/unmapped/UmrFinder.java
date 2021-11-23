@@ -1,54 +1,48 @@
 package com.hartwig.hmftools.isofox.unmapped;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.scalb;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.startEndStr;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
-import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_ACCEPTOR;
-import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_DONOR;
-import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.positionKey;
+import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.UMR_NO_MATE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import org.apache.commons.compress.utils.Lists;
-
-import htsjdk.samtools.SAMRecord;
-
 public class UmrFinder
 {
     private final IsofoxConfig mConfig;
+    private final boolean mEnabled;
     private final UmrCohortFrequency mCohortFrequency;
     private GeneCollection mGenes;
-    private final List<UnmappedRead> mCandidateReads;
     private final Set<String> mSupplementaryReadKeys;
+
+    private final List<UnmappedRead> mCandidateReads;
 
     private final BufferedWriter mWriter;
 
@@ -59,15 +53,19 @@ public class UmrFinder
 
     public UmrFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
+        mEnabled = config.runFunction(UNMAPPED_READS);
         mConfig = config;
         mCohortFrequency = new UmrCohortFrequency(config.UnmappedCohortFreqFile);
 
-        mCandidateReads = Lists.newArrayList();
+        // mCandidateReads = Lists.newArrayList();
         mSupplementaryReadKeys = Sets.newHashSet();
+        mCandidateReads = Lists.newArrayList();
         mGenes = null;
 
         mWriter = writer;
     }
+
+    public boolean enabled() { return mEnabled; }
 
     public void setGeneData(final GeneCollection genes)
     {
@@ -76,28 +74,111 @@ public class UmrFinder
         mSupplementaryReadKeys.clear();
     }
 
-    public void processReadRecord(final ReadRecord read, final SAMRecord record)
+    public void processReads(final ReadRecord read1, final ReadRecord read2, boolean isChimeric)
+    {
+        if(!mEnabled)
+            return;
+
+        // check chimeric reads for soft-clips on or near an exon boundary to exclude these from the candidate unmapped collection
+        UnmappedRead umRead1 = evaluateRead(read1);
+        UnmappedRead umRead2 = evaluateRead(read2);
+
+        if(umRead1 == null && umRead2 == null)
+            return;
+
+        // make note of any supplementary read (ie fusion candidate) and exclude any read matching one
+        if(isChimeric)
+        {
+            if(umRead1 != null)
+                mSupplementaryReadKeys.add(umRead1.positionKey());
+
+            if(umRead2 != null)
+                mSupplementaryReadKeys.add(umRead2.positionKey());
+
+            return;
+        }
+
+        // exclude the unmapped read(s) if:
+        // a) they have soft-clips on both sides
+        // b) one read is past the unmapped soft-clip side
+
+        if(umRead1 != null && umRead2 != null && umRead1.matches(umRead2))
+        {
+            // both reads support the same junction
+        }
+        else
+        {
+            if(umRead1 != null && !isValidReadPair(umRead1, read2))
+                return;
+
+            if(umRead2 != null && !isValidReadPair(umRead2, read1))
+                return;
+        }
+
+        if(umRead1 != null)
+            mCandidateReads.add(umRead1);
+
+        if(umRead2 != null)
+            mCandidateReads.add(umRead2);
+    }
+
+    private boolean isValidReadPair(final UnmappedRead umRead, final ReadRecord otherRead)
+    {
+        int otherScSidePosition = otherRead.getCoordsBoundary(umRead.ScSide);
+
+        if(umRead.ScSide == SE_START && otherScSidePosition < umRead.ReadRegion.start())
+            return false;
+
+        if(umRead.ScSide == SE_END && otherScSidePosition > umRead.ReadRegion.end())
+            return false;
+
+        if(otherRead.isSoftClipped(switchIndex(umRead.ScSide)))
+            return false;
+
+        return true;
+    }
+
+    public void processUnpairedReads(final FragmentTracker fragmentTracker)
+    {
+        for(Object object : fragmentTracker.getValues())
+        {
+            final ReadRecord read = (ReadRecord)object;
+
+            if(read.hasSuppAlignment())
+                continue;
+
+            UnmappedRead umRead = evaluateRead(read);
+
+            if(umRead != null)
+                mCandidateReads.add(umRead);
+        }
+    }
+
+    public UnmappedRead evaluateRead(final ReadRecord read)
     {
         // find reads with sufficient soft-clipping and overlapping a splice junction
         if(!read.containsSoftClipping())
-            return;
+            return null;
 
-        int scSide = read.longestSoftClippedEnd();
+        int scLengthStart = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
+        int scLengthEnd = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
 
-        int scLength = scSide == SE_START ?
-                read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+        if(scLengthStart == 0 && scLengthEnd == 0)
+            return null;
+
+        int scSide = scLengthStart > scLengthEnd ? SE_START : SE_END;
+
+        int scLength = scSide == SE_START ? scLengthStart : scLengthEnd;
 
         if(scLength < MIN_SOFT_CLIP_LENGTH)
-            return;
+            return null;
 
         final List<RegionReadData> overlappingRegions = findOverlappingRegions(mGenes.getExonRegions(), read);
 
         if(overlappingRegions.isEmpty())
-            return;
+            return null;
 
         read.processOverlappingRegions(overlappingRegions);
-
-        // StringJoiner transcriptInfo = new StringJoiner(ITEM_DELIM);
 
         TranscriptData selectedTransData = null;
         int exonRank = -1;
@@ -123,30 +204,26 @@ public class UmrFinder
             // work out distance from SC to
             boolean isSpliceAcceptor = (scSide == SE_START) == transData.posStrand();
 
-            // ignore
+            // ignore start and end of transcript
             if(isSpliceAcceptor && transExonRef.ExonRank == 1)
                 continue;
 
             if(!isSpliceAcceptor && transExonRef.ExonRank == transData.exons().size())
                 continue;
 
-            int boundaryDistance = 0;
             int regionBoundary = scSide == SE_START ? region.start() : region.end();
             int readBoundary = read.getCoordsBoundary(scSide);
 
-            if(entry.getValue() == EXON_INTRON)
-            {
-                // soft-clip must be intronic
-                if(scSide == SE_START && readBoundary > regionBoundary)
-                    continue;
-                else if(scSide == SE_END && readBoundary < regionBoundary)
-                    continue;
+            // soft-clip must be intronic if the read spans into the intron
+            if(scSide == SE_START && readBoundary > regionBoundary)
+                continue;
+            else if(scSide == SE_END && readBoundary < regionBoundary)
+                continue;
 
-                boundaryDistance = abs(readBoundary - regionBoundary);
+            int boundaryDistance = abs(readBoundary - regionBoundary);
 
-                if(boundaryDistance > MAX_INTRON_DISTANCE)
-                    continue;
-            }
+            if(boundaryDistance > MAX_INTRON_DISTANCE)
+                continue;
 
             if(selectedTransData == null || !selectedTransData.IsCanonical && transData.IsCanonical)
             {
@@ -156,31 +233,10 @@ public class UmrFinder
                 exonBoundaryDistance = boundaryDistance;
                 exonRank = transExonRef.ExonRank;
             }
-
-            /*
-            transcriptInfo.add(String.format("%s:%d:%s:%d:%d",
-                    transData.TransName, transExonRef.ExonRank,
-                        isSpliceAcceptor ? SPLICE_TYPE_ACCEPTOR : SPLICE_TYPE_DONOR, exonBoundary, exonBoundaryDistance));
-             */
         }
 
         if(selectedTransData == null)
-            return;
-
-        String posKey = positionKey(read.orientation(), scSide, exonBoundary);
-
-        // make note of any supplementary read (ie fusion candidate) and exclude any read matching one
-        if(read.hasSuppAlignment())
-        {
-            mSupplementaryReadKeys.add(posKey);
-            return;
-        }
-
-        int cohortFrequency = mCohortFrequency.getCohortFrequency(read.Chromosome, posKey);
-
-        // for now, filter these
-        //if(cohortFrequency > 0)
-        //    return;
+            return null;
 
         final String geneId = selectedTransData.GeneId;
         GeneData geneData = mGenes.genes().stream()
@@ -194,7 +250,7 @@ public class UmrFinder
         int endIndex = scSide == SE_START ? scLength : read.Length;
         for(int i = startIndex; i < endIndex; ++i)
         {
-            totalBaseQual += record.getBaseQualities()[i];
+            totalBaseQual += read.baseQualities()[i];
         }
 
         double avgBaseQual = totalBaseQual / scLength;
@@ -202,27 +258,31 @@ public class UmrFinder
         String scBases = scSide == SE_START ?
                 Nucleotides.reverseStrandBases(read.ReadBases.substring(0, scLength)) : read.ReadBases.substring(read.ReadBases.length() - scLength);
 
-        String mateCoords = String.format("%s:%d", read.mateChromosome(), read.mateStartPosition());
+        if(scBases.contains("N"))
+            return null;
+
+        String mateCoords = read.isMateUnmapped() ?
+                UMR_NO_MATE : String.format("%s:%d", read.mateChromosome(), read.mateStartPosition());
 
         UnmappedRead umRead = new UnmappedRead(
-                read.Id, new ChrBaseRegion(read.Chromosome, read.PosStart, read.PosEnd), read.orientation(), scLength,
+                read.Id, new ChrBaseRegion(read.Chromosome, read.PosStart, read.PosEnd), scLength,
                 scSide, avgBaseQual, geneData.GeneId, geneData.GeneName, selectedTransData.TransName, exonRank, exonBoundary,
-                exonBoundaryDistance, spliceType, scBases, mateCoords, cohortFrequency, false);
+                exonBoundaryDistance, spliceType, scBases, mateCoords, 0, false);
 
-        mCandidateReads.add(umRead);
+        return umRead;
     }
 
     public void writeUnmappedReads()
     {
-        /*
-        List<UnmappedRead> filteredReads = mCandidateReads.stream()
-                .filter(x -> !mSupplementaryReadKeys.contains(x.positionKey()))
-                .collect(Collectors.toList());
-
-        writeReadData(mWriter, filteredReads);
-        */
-
         mCandidateReads.forEach(x -> x.MatchesSupplementary = mSupplementaryReadKeys.contains(x.positionKey()));
+
+        /*
+        int cohortFrequency = mCohortFrequency.getCohortFrequency(read.Chromosome, umRead.positionKey());
+
+        // for now, filter these
+        //if(cohortFrequency > 0)
+        //    return;
+        */
 
         writeReadData(mWriter, mCandidateReads);
     }

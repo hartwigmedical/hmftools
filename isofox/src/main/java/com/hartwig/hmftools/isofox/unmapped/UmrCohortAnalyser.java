@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilename
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_ACCEPTOR;
+import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.UMR_NO_MATE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -125,7 +126,6 @@ public class UmrCohortAnalyser
             int posStartIndex = fieldsIndexMap.get("ReadStart");
             int posEndIndex = fieldsIndexMap.get("ReadEnd");
             int spliceTypeIndex = fieldsIndexMap.get("SpliceType");
-            int orientIndex = fieldsIndexMap.get("Orientation");
             int scLengthIndex = fieldsIndexMap.get("SoftClipLength");
             int scSideIndex = fieldsIndexMap.get("SoftClipSide");
             int abqIndex = fieldsIndexMap.get("AvgBaseQual");
@@ -145,8 +145,7 @@ public class UmrCohortAnalyser
                 UnmappedRead umRead = new UnmappedRead(
                         values[readIndex],
                         new ChrBaseRegion(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex])),
-                        Byte.parseByte(values[orientIndex]), Integer.parseInt(values[scLengthIndex]),
-                        values[scSideIndex].equals(START_STR) ? SE_START : SE_END,
+                        Integer.parseInt(values[scLengthIndex]), values[scSideIndex].equals(START_STR) ? SE_START : SE_END,
                         Double.parseDouble(values[abqIndex]), values[geneIdIndex], values[geneNameIndex], values[transIndex],
                         Integer.parseInt(values[exonRankIndex]), Integer.parseInt(values[exonBoundaryIndex]),
                         Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex],
@@ -206,7 +205,7 @@ public class UmrCohortAnalyser
         try
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
-            writer.write("SampleId,FragmentCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
+            writer.write("SampleId,FragmentCount,UnpairedCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
             writer.write(",ExonBoundary,ExonDistance,Orientation,SoftClipSide,AvgBaseQual");
             writer.write(",CohortFrequency,SoftClipBases,GeneTPM,HasSuppMatch");
             writer.newLine();
@@ -231,6 +230,7 @@ public class UmrCohortAnalyser
 
                         double geneTpm = 0;
                         boolean hasSuppMatch = false;
+                        int unpairedCount = 0;
 
                         for(UnmappedRead umRead : umReads)
                         {
@@ -244,6 +244,9 @@ public class UmrCohortAnalyser
 
                             readIds.add(umRead.ReadId);
                             hasSuppMatch |= umRead.MatchesSupplementary;
+
+                            if(umRead.MateCoords.equals(UMR_NO_MATE))
+                                ++unpairedCount;
                         }
 
                         StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
@@ -255,12 +258,12 @@ public class UmrCohortAnalyser
 
                         UnmappedRead firstRead = umReads.get(0);
 
-                        writer.write(String.format("%s,%d,%s,%s,%s,%d,%s",
-                                sampleId, fragmentCount, chromosome, genesStr.toString(), firstRead.TransName, firstRead.ExonRank,
-                                firstRead.SpliceType));
+                        writer.write(String.format("%s,%d,%d,%s,%s,%s,%d,%s",
+                                sampleId, fragmentCount, unpairedCount, chromosome, genesStr.toString(), firstRead.TransName,
+                                firstRead.ExonRank, firstRead.SpliceType));
 
-                        writer.write(String.format(",%d,%d,%d,%s,%.1f,%d,%s,%4.3e,%s",
-                                firstRead.ExonBoundary, firstRead.ExonDistance, firstRead.Orientation, startEndStr(firstRead.ScSide),
+                        writer.write(String.format(",%d,%d,%s,%.1f,%d,%s,%4.3e,%s",
+                                firstRead.ExonBoundary, firstRead.ExonDistance, startEndStr(firstRead.ScSide),
                                 avgBaseQual, sampleCount, firstRead.ScBases, geneTpm, hasSuppMatch));
 
                         writer.newLine();

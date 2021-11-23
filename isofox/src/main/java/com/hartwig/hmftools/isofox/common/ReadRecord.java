@@ -66,6 +66,7 @@ public class ReadRecord
     private String mSupplementaryAlignment;
     private boolean mHasInterGeneSplit;
     private short mMapQuality;
+    private byte[] mBaseQualities;
 
     private final Map<Integer,Integer> mJunctionDepth;
 
@@ -128,6 +129,7 @@ public class ReadRecord
         mHasInterGeneSplit = false;
         mMapQuality = 0;
         mJunctionDepth = Maps.newHashMap();
+        mBaseQualities = null;
     }
 
     public int range() { return PosEnd - PosStart; }
@@ -166,6 +168,9 @@ public class ReadRecord
 
     public void setMapQuality(short mapQuality) { mMapQuality = mapQuality; }
     public short mapQuality() { return mMapQuality; }
+
+    public void setBaseQualities(final byte[] qualities) { mBaseQualities = qualities; }
+    public byte[] baseQualities() { return mBaseQualities; }
 
     public boolean isMultiMapped() { return mMapQuality <= MULTI_MAP_QUALITY_THRESHOLD; }
 
@@ -850,5 +855,4 @@ public class ReadRecord
         return String.format("range(%s: %d -> %d, range=%d) length(%d) cigar(%s) id(%s)",
                 Chromosome, PosStart, PosEnd, range(), Length, Cigar != null ? Cigar.toString() : "", Id);
     }
-
 }
