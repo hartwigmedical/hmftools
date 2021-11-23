@@ -39,19 +39,17 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-class RecoveredVariantFactory implements AutoCloseable
+public class RecoveredVariantFactory implements AutoCloseable
 {
     public static final Set<String> DO_NOT_RESCUE =
             Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_TUMOR_AF);
-
-    // private static final Comparator<RecoveredVariant> QUALITY_COMPARATOR = comparingDouble(x -> x.context().getPhredScaledQual());
 
     private final AbstractFeatureReader<VariantContext, LineIterator> mReader;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
     private final int mMinMateQual;
     private final int mMinSglQual;
 
-    RecoveredVariantFactory(
+    public RecoveredVariantFactory(
             final PurityAdjuster purityAdjuster, final String recoveryVCF,
             final int minMateQual, final int minSglQual)
     {
@@ -96,9 +94,8 @@ class RecoveredVariantFactory implements AutoCloseable
         return Optional.of(topVariant);
     }
 
-    @NotNull
-    private List<RecoveredVariant> recoverAllVariantAtIndex(int expectedOrientation, double unexplainedCopyNumberChange, int index,
-            @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+    private List<RecoveredVariant> recoverAllVariantAtIndex(
+            int expectedOrientation, double unexplainedCopyNumberChange, int index, final List<PurpleCopyNumber> copyNumbers) throws IOException
     {
         assert (index > 1);
 
@@ -163,14 +160,14 @@ class RecoveredVariantFactory implements AutoCloseable
                 && Doubles.greaterOrEqual(ploidy, RECOVERY_MIN_PLOIDY);
     }
 
-    private int uncertainty(@NotNull final VariantContext context)
+    private int uncertainty(final VariantContext context)
     {
         final int homlen = 2 * context.getAttributeAsInt("HOMLEN", 0);
         final int cipos = cipos(context);
         return Math.max(homlen, cipos);
     }
 
-    private int cipos(@NotNull final VariantContext context)
+    private int cipos(final VariantContext context)
     {
         int max = RECOVERY_MIN_MATE_UNCERTAINTY;
         if(context.hasAttribute("IMPRECISE"))
@@ -194,7 +191,7 @@ class RecoveredVariantFactory implements AutoCloseable
         return max;
     }
 
-    private boolean hasPotential(@NotNull final StructuralVariant variant, @NotNull final List<PurpleCopyNumber> copyNumbers)
+    private boolean hasPotential(final StructuralVariant variant, final List<PurpleCopyNumber> copyNumbers)
     {
         StructuralVariantLeg start = variant.start();
         StructuralVariantLeg end = variant.end();
@@ -222,8 +219,7 @@ class RecoveredVariantFactory implements AutoCloseable
         return true;
     }
 
-    private boolean isInRangeOfCopyNumberSegment(@NotNull final StructuralVariantLeg leg,
-            @NotNull final List<PurpleCopyNumber> copyNumbers)
+    private boolean isInRangeOfCopyNumberSegment(final StructuralVariantLeg leg, final List<PurpleCopyNumber> copyNumbers)
     {
         final Predicate<PurpleCopyNumber> chrRange = copyNumber -> copyNumber.chromosome().equals(leg.chromosome());
         final Predicate<PurpleCopyNumber> posRange =
@@ -231,8 +227,7 @@ class RecoveredVariantFactory implements AutoCloseable
         return copyNumbers.stream().anyMatch(chrRange.and(posRange));
     }
 
-    @NotNull
-    private List<VariantContext> findVariants(@NotNull final String chromosome, final long lowerBound, final long upperBound)
+    private List<VariantContext> findVariants(final String chromosome, final long lowerBound, final long upperBound)
             throws IOException
     {
         return mReader.query(chromosome, (int) lowerBound, (int) upperBound)
@@ -242,7 +237,7 @@ class RecoveredVariantFactory implements AutoCloseable
     }
 
     @VisibleForTesting
-    static boolean isAppropriatelyFiltered(@NotNull VariantContext variantContext)
+    static boolean isAppropriatelyFiltered(VariantContext variantContext)
     {
         final Set<String> filters = variantContext.getFilters();
         return !filters.isEmpty() && filters.stream().noneMatch(DO_NOT_RESCUE::contains);
@@ -258,7 +253,7 @@ class RecoveredVariantFactory implements AutoCloseable
                 .orElseThrow(() -> new IOException("Unable to find mateId " + id + " between " + min + " and " + max));
     }
 
-    static String mateLocation(@NotNull final String alt)
+    static String mateLocation(final String alt)
     {
         final String bracket;
         if(alt.contains("["))
@@ -285,13 +280,11 @@ class RecoveredVariantFactory implements AutoCloseable
         return null;
     }
 
-    @Nullable
     static String mateChromosome(@Nullable String mate)
     {
         return mate == null || !mate.contains(":") ? null : mate.split(":")[0];
     }
 
-    @Nullable
     private static Long matePosition(@Nullable String mate)
     {
         return mate == null || !mate.contains(":") ? null : Long.valueOf(mate.split(":")[1]);

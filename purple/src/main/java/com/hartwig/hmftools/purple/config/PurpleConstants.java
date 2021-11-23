@@ -18,7 +18,7 @@ public class PurpleConstants
 
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
-    public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 800;
+    public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
     public static final double RECOVERY_MIN_LENGTH = 1000;
     public static final double RECOVERY_MIN_PLOIDY = 0.5;
     public static final double RECOVERY_MIN_PLOIDY_PERC = 0.5;
