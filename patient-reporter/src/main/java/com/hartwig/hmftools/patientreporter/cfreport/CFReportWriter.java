@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.patientreporter.cfreport;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.patientreporter.OutputFileUtil;
 import com.hartwig.hmftools.patientreporter.PatientReport;
 import com.hartwig.hmftools.patientreporter.ReportWriter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
@@ -80,6 +84,38 @@ public class CFReportWriter implements ReportWriter {
         }
 
     }
+
+    public void writeJsonFailedFile(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
+        writeReportDataToJson(report, outputFilePath);
+
+    }
+
+    public void writeJsonAnalysedFile(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
+        writeReportDataToJson(report, outputFilePath);
+
+    }
+
+    public void writeReportDataToJson(@NotNull PatientReport report, @NotNull String outputDirData) throws IOException {
+        if (writeToFile) {
+            String outputFileData = outputDirData + File.separator + OutputFileUtil.generateOutputFileNameForJson(report);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
+            writer.write(convertToJson(report));
+            writer.close();
+            LOGGER.info(" Created report data json file at {} ", outputFileData);
+        }
+    }
+
+    @VisibleForTesting
+    @NotNull
+    public String convertToJson(@NotNull PatientReport report) {
+        return new GsonBuilder().serializeNulls()
+                .serializeSpecialFloatingPointValues()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create()
+                .toJson(report);
+    }
+
 
     private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
             throws IOException {

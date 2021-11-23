@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.patientreporter;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -90,7 +86,7 @@ public class PatientReporterApplication {
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating reporting db and writing report data");
 
-            writeReportDataToJson(report);
+            reportWriter.writeJsonAnalysedFile(report, config.outputDirData());
 
             new ReportingDb().appendAnalysedReport(report, config.outputDirData());
         }
@@ -119,29 +115,10 @@ public class PatientReporterApplication {
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating reporting db and writing report data");
 
-            writeReportDataToJson(report);
+            reportWriter.writeQCFailReport(report, config.outputDirData());
 
             new ReportingDb().appendQCFailReport(report, config.outputDirReport());
         }
-    }
-
-    private void writeReportDataToJson(@NotNull PatientReport report) throws IOException {
-        String outputFileData = config.outputDirData() + File.separator + OutputFileUtil.generateOutputFileNameForJson(report);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileData));
-        writer.write(convertToJson(report));
-        writer.close();
-        LOGGER.info(" Created report data json file at {} ", outputFileData);
-    }
-
-    @VisibleForTesting
-    @NotNull
-    static String convertToJson(@NotNull PatientReport report) {
-        return new GsonBuilder().serializeNulls()
-                .serializeSpecialFloatingPointValues()
-                .setPrettyPrinting()
-                .disableHtmlEscaping()
-                .create()
-                .toJson(report);
     }
 
     @NotNull
