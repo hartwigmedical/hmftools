@@ -2,11 +2,10 @@ package com.hartwig.hmftools.gripsskt
 
 import htsjdk.variant.variantcontext.Genotype
 
-fun Genotype.qual(isSingleBreakEnd: Boolean): Double {
+fun Genotype.qual(isSingleBreakEnd: Boolean, isLineInsertion: Boolean): Double {
     if(isSingleBreakEnd)
     {
-        // var bqQual = requireAttributeAsDouble("BQ") // not always just use BAQ
-        return attributeAsDouble("BAQ", 0.0)
+        return if (isLineInsertion) attributeAsDouble("BQ", 0.0) else attributeAsDouble("BAQ", 0.0)
     }
     else
     {

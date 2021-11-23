@@ -181,9 +181,8 @@ sealed class VariantType(val eventType: EventType) {
             return true
         }
 
-        if (truncatedInsertSequence.contentEquals(polyChar)) {
+        if (truncatedInsertSequence.contains(polyChar))
             return true
-        }
 
         return false
     }

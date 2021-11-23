@@ -21,7 +21,7 @@ class VariantTypeTest {
         isMobileElementInsertion("C", ".AAAAAAAAAAC")
         isNotMobileElementInsert("C", ".GAAAAAAAAAC")
 
-        isNotMobileElementInsert("C", ".AAAAAAAAAAGAAAAAC")
+        isNotMobileElementInsert("C", ".AAAAAAAGAAGAAAAAC")
         isMobileElementInsertion("C", ".AAAAAAAAAAGAAAAAAC")
     }
 

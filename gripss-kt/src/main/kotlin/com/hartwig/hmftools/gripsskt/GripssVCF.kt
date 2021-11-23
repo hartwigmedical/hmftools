@@ -12,6 +12,7 @@ const val IMPRECISE = "imprecise"
 const val SHORT_SR_NORMAL = "shortSRNormalSupport"
 const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
+const val SGL_STRAND_BIAS = "sglStrandBias"
 const val SHORT_DEL_INS_ARTIFACT = "smallDelInsertionArtifact"
 
 const val MAX_POLY_G_LENGTH = "maxPolyGLength"

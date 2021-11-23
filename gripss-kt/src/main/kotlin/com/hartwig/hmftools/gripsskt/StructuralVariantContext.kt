@@ -56,8 +56,7 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
     val start = context.start
-    val tumorQual = tumorGenotype.qual(isSingle)
-    val normalQual = normalGenotype?.qual(isSingle) ?: 0
+    val tumorQual = tumorGenotype.qual(isSingle, isMobileElementInsertion)
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
@@ -289,9 +288,12 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(SHORT_STRAND_BIAS)
         }
 
-        if (discordantPairSupportFilter() || breakendAssemblyReadPairsFilter()) {
+        if (discordantPairSupportFilter()) {
             result.add(DISCORDANT_PAIR_SUPPORT)
         }
+
+        if(singleStrandBias())
+            result.add(SGL_STRAND_BIAS)
 
 
         if (minLengthFilter(config.minLength)) {
@@ -326,18 +328,14 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     fun inexactHomologyStart(): Int { return context.inexactHomologyStart(); }
     fun inexactHomologyEnd(): Int { return context.inexactHomologyEnd(); }
 
-    fun breakendAssemblyReadPairsFilter(): Boolean {
+    fun singleStrandBias(): Boolean {
         if(!isSingle)
             return false
 
-        if(context.breakendAssemblyReadPairs() == 0 && !context.breakendAssemblyReadPairsIsInconsistent()) {
-            if (context.strandBias() >= 0.1 && context.strandBias() <= 0.9) // ok if no strand bias
-                return false
-            else
-                return true
-        }
+        if(isMobileElementInsertion)
+            return false
 
-        return false
+        return context.strandBias() < 0.05 || context.strandBias() > 0.95
     }
 
     fun minLengthFilter(minSize: Int): Boolean {
@@ -376,11 +374,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
         }
 
-        return !isSingle && !isShort
-                && normalGenotype.readPairs() == 0
-                && normalGenotype.assemblyReadPairs() == 0
-                && tumorGenotype.readPairs() == 0
-                && tumorGenotype.assemblyReadPairs() == 0
+        if(isSingle)
+            return false
+
+        return !isShort && normalGenotype.readPairs() == 0 && normalGenotype.assemblyReadPairs() == 0
+                && tumorGenotype.readPairs() == 0 && tumorGenotype.assemblyReadPairs() == 0
     }
 
     fun impreciseFilter(): Boolean {

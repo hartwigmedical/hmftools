@@ -72,7 +72,6 @@ data class LinkRescue(val rescues: Set<String>) {
                         }
                     }
                 }
-
             }
 
             return LinkRescue(rescues)
