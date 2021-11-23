@@ -57,6 +57,7 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         metaData.add(VCFFilterHeaderLine(MAX_NORMAL_RELATIVE_SUPPORT, "Too many support reads from the normal sample relative to the tumor"))
         metaData.add(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Insufficient normal coverage to determine somatic status"))
         metaData.add(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint"))
+        metaData.add(VCFFilterHeaderLine(SGL_STRAND_BIAS, "Single breakend with excessive strand bias and not a mobile line insertion"))
         metaData.add(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
         metaData.add(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artifact"))
         metaData.add(VCFFilterHeaderLine(MAX_POLY_A_HOM_LENGTH, "Homology containing long polyA or polyT run"))
