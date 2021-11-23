@@ -45,6 +45,8 @@ import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
 import com.hartwig.hmftools.isofox.novel.cohort.RecurrentVariantFinder;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
+import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
+import com.hartwig.hmftools.isofox.unmapped.UnmappedRead;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -241,6 +243,7 @@ public class CohortConfig
         SpliceSiteCache.addCmdLineOptions(options);
         AltSjCohortMatrix.addCmdLineOptions(options);
         RecurrentVariantFinder.addCmdLineOptions(options);
+        UmrCohortAnalyser.addCmdLineOptions(options);
 
         addDatabaseCmdLineArgs(options);
 

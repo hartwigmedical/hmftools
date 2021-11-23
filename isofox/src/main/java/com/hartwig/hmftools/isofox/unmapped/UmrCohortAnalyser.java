@@ -3,6 +3,8 @@ package com.hartwig.hmftools.isofox.unmapped;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_GENE;
+import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -28,6 +30,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -42,11 +45,14 @@ public class UmrCohortAnalyser
     private final int mMinSampleThreshold;
     private final int mMinFragments;
 
+    private final RnaExpressionMatrix mGeneExpression;
+
     // map of chromosomes to a map of splice-boundary keys to a map of samples to a list of unmapped reads
     private final Map<String,Map<String,Map<String,List<UnmappedRead>>>> mUnmappedReads;
 
     private static final String UMR_MIN_SAMPLES = "umr_min_samples";
     private static final String UMR_MIN_FRAGS = "umr_min_frags";
+    private static final String GENE_EXPRESSION_FILE = "gene_expression_file";
 
     public UmrCohortAnalyser(final CohortConfig config, final CommandLine cmd)
     {
@@ -55,12 +61,16 @@ public class UmrCohortAnalyser
 
         mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(UMR_MIN_SAMPLES, "0"));
         mMinFragments = Integer.parseInt(cmd.getOptionValue(UMR_MIN_FRAGS, "0"));
+
+        mGeneExpression = cmd.hasOption(GENE_EXPRESSION_FILE) ?
+                new RnaExpressionMatrix(cmd.getOptionValue(GENE_EXPRESSION_FILE), EXPRESSION_SCOPE_GENE) : null;
     }
 
     public static void addCmdLineOptions(final Options options)
     {
         options.addOption(UMR_MIN_SAMPLES, true, "Min number of samples to report an unmapped read");
         options.addOption(UMR_MIN_FRAGS, true, "Min frag count ...");
+        options.addOption(GENE_EXPRESSION_FILE, true, "Min frag count ...");
     }
 
     public void processSampleFiles()
@@ -111,9 +121,9 @@ public class UmrCohortAnalyser
             int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsIndexMap.get(FLD_GENE_NAME);
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStartIndex = fieldsIndexMap.get("PosStart");
             int readIndex = fieldsIndexMap.get("ReadId");
-            int posEndIndex = fieldsIndexMap.get("PosEnd");
+            int posStartIndex = fieldsIndexMap.get("ReadStart");
+            int posEndIndex = fieldsIndexMap.get("ReadEnd");
             int spliceTypeIndex = fieldsIndexMap.get("SpliceType");
             int orientIndex = fieldsIndexMap.get("Orientation");
             int scLengthIndex = fieldsIndexMap.get("SoftClipLength");
@@ -124,9 +134,9 @@ public class UmrCohortAnalyser
             int exonBoundaryIndex = fieldsIndexMap.get("ExonBoundary");
             int exonDistIndex = fieldsIndexMap.get("ExonDistance");
             int scBasesIndex = fieldsIndexMap.get("SoftClipBases");
-            int mateIndex = fieldsIndexMap.get("MateCoords");
-            int cohortFreqIndex = fieldsIndexMap.get("CohortFreq");
-            int matchesSuppIndex = fieldsIndexMap.get("MatchesSupp");
+            Integer mateIndex = fieldsIndexMap.get("MateCoords");
+            Integer cohortFreqIndex = fieldsIndexMap.get("CohortFreq");
+            Integer matchesSuppIndex = fieldsIndexMap.get("MatchesSupp");
 
             for(String data : lines)
             {
@@ -139,8 +149,10 @@ public class UmrCohortAnalyser
                         values[scSideIndex].equals(START_STR) ? SE_START : SE_END,
                         Double.parseDouble(values[abqIndex]), values[geneIdIndex], values[geneNameIndex], values[transIndex],
                         Integer.parseInt(values[exonRankIndex]), Integer.parseInt(values[exonBoundaryIndex]),
-                        Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex], values[mateIndex],
-                        Integer.parseInt(values[cohortFreqIndex]), Boolean.parseBoolean(values[matchesSuppIndex]));
+                        Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex],
+                        mateIndex != null ? values[mateIndex] : "",
+                        cohortFreqIndex != null ? Integer.parseInt(values[cohortFreqIndex]) : 0,
+                        matchesSuppIndex != null ? Boolean.parseBoolean(values[matchesSuppIndex]) : false);
 
                 // could filter these in the BAM reading process
                 if(umRead.ExonRank == 1 && umRead.SpliceType.equals(SPLICE_TYPE_ACCEPTOR))
@@ -196,7 +208,7 @@ public class UmrCohortAnalyser
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("SampleId,FragmentCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
             writer.write(",ExonBoundary,ExonDistance,Orientation,SoftClipSide,AvgBaseQual");
-            writer.write(",CohortFrequency,SoftClipBases");
+            writer.write(",CohortFrequency,SoftClipBases,GeneTPM,HasSuppMatch");
             writer.newLine();
 
             for(Map.Entry<String,Map<String,Map<String,List<UnmappedRead>>>> chrEntry : mUnmappedReads.entrySet())
@@ -217,10 +229,21 @@ public class UmrCohortAnalyser
                         Set<String> readIds = Sets.newHashSet();
                         Set<String> genes = Sets.newHashSet();
 
+                        double geneTpm = 0;
+                        boolean hasSuppMatch = false;
+
                         for(UnmappedRead umRead : umReads)
                         {
-                            genes.add(umRead.GeneName);
+                            if(!genes.contains(umRead.GeneName))
+                            {
+                                genes.add(umRead.GeneName);
+
+                                if(mGeneExpression != null)
+                                    geneTpm += mGeneExpression.getExpression(umRead.GeneId, sampleId);
+                            }
+
                             readIds.add(umRead.ReadId);
+                            hasSuppMatch |= umRead.MatchesSupplementary;
                         }
 
                         StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
@@ -236,9 +259,9 @@ public class UmrCohortAnalyser
                                 sampleId, fragmentCount, chromosome, genesStr.toString(), firstRead.TransName, firstRead.ExonRank,
                                 firstRead.SpliceType));
 
-                        writer.write(String.format(",%d,%d,%d,%s,%.1f,%d,%s",
+                        writer.write(String.format(",%d,%d,%d,%s,%.1f,%d,%s,%4.3e,%s",
                                 firstRead.ExonBoundary, firstRead.ExonDistance, firstRead.Orientation, startEndStr(firstRead.ScSide),
-                                avgBaseQual, sampleCount, firstRead.ScBases));
+                                avgBaseQual, sampleCount, firstRead.ScBases, geneTpm, hasSuppMatch));
 
                         writer.newLine();
                     }
@@ -251,6 +274,5 @@ public class UmrCohortAnalyser
         {
             ISF_LOGGER.error("failed to write cohort unmapped reads file({}): {}", outputFile, e.toString());
         }
-
     }
 }
