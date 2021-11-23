@@ -106,6 +106,8 @@ sources | A list of sources from where the evidence has been extracted | vicc_cg
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.6)
+  - Fix bug of virusses when no interpretation is present 
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.5)
   - Support virus interpreter v1.1
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.4)
