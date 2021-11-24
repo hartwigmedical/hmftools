@@ -295,6 +295,8 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         if(singleStrandBias())
             result.add(SGL_STRAND_BIAS)
 
+        if(singleInsertSequenceMinLength())
+            result.add(SGL_INS_SEQ_MIN_LENGTH)
 
         if (minLengthFilter(config.minLength)) {
             result.add(MIN_LENGTH)
@@ -336,6 +338,16 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
 
         return context.strandBias() < 0.05 || context.strandBias() > 0.95
+    }
+
+    fun singleInsertSequenceMinLength(): Boolean {
+        if(!isSingle)
+            return false
+
+        if(isMobileElementInsertion)
+            return false
+
+        return variantType.insertSequence.length < 16
     }
 
     fun minLengthFilter(minSize: Int): Boolean {

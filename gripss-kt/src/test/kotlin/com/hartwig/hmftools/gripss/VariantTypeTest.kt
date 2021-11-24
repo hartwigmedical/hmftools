@@ -10,7 +10,7 @@ class VariantTypeTest {
     fun testMobileElementInsertion(){
         isNotMobileElementInsert("T", "TTTTTTTTTT.")
         isNotMobileElementInsert("C", "CTTTTTTTTT.")
-        isMobileElementInsertion("C", "CTTTTTTTTTT.")
+        // isMobileElementInsertion("C", "CTTTTTTTTTT.") // no longer allow 10+ consequetive bases
         isNotMobileElementInsert("C", "CTTTTTTTTTG.")
 
         isNotMobileElementInsert("C", "CTTTTTTTTTGTTTTTT.")
@@ -18,7 +18,6 @@ class VariantTypeTest {
 
         isNotMobileElementInsert("A", ".AAAAAAAAAA")
         isNotMobileElementInsert("C", ".AAAAAAAAAC")
-        isMobileElementInsertion("C", ".AAAAAAAAAAC")
         isNotMobileElementInsert("C", ".GAAAAAAAAAC")
 
         isNotMobileElementInsert("C", ".AAAAAAAGAAGAAAAAC")

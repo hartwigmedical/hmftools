@@ -13,6 +13,7 @@ const val SHORT_SR_NORMAL = "shortSRNormalSupport"
 const val SHORT_SR_SUPPORT = "shortSRTumorSupport"
 const val SHORT_STRAND_BIAS = "shortStrandBias"
 const val SGL_STRAND_BIAS = "sglStrandBias"
+const val SGL_INS_SEQ_MIN_LENGTH = "sglInsertSequenceMinLength"
 const val SHORT_DEL_INS_ARTIFACT = "smallDelInsertionArtifact"
 
 const val MAX_POLY_G_LENGTH = "maxPolyGLength"
@@ -58,6 +59,7 @@ class GripssVCF(outputVCF: String, dictionary: SAMSequenceDictionary) : AutoClos
         metaData.add(VCFFilterHeaderLine(MIN_NORMAL_COVERAGE, "Insufficient normal coverage to determine somatic status"))
         metaData.add(VCFFilterHeaderLine(SHORT_STRAND_BIAS, "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint"))
         metaData.add(VCFFilterHeaderLine(SGL_STRAND_BIAS, "Single breakend with excessive strand bias and not a mobile line insertion"))
+        metaData.add(VCFFilterHeaderLine(SGL_INS_SEQ_MIN_LENGTH, "Single breakend with too short insert sequence"))
         metaData.add(VCFFilterHeaderLine(MIN_QUAL, "Insufficient quality"))
         metaData.add(VCFFilterHeaderLine(MAX_POLY_G_LENGTH, "Single breakend containing long polyC or polyG run. Likely to be an artifact"))
         metaData.add(VCFFilterHeaderLine(MAX_POLY_A_HOM_LENGTH, "Homology containing long polyA or polyT run"))
