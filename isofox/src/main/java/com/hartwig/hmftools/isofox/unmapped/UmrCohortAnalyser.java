@@ -206,7 +206,7 @@ public class UmrCohortAnalyser
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("SampleId,FragmentCount,UnpairedCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
-            writer.write(",ExonBoundary,ExonDistance,Orientation,SoftClipSide,AvgBaseQual");
+            writer.write(",ExonBoundary,ExonDistance,SoftClipSide,AvgBaseQual");
             writer.write(",CohortFrequency,SoftClipBases,GeneTPM,HasSuppMatch");
             writer.newLine();
 

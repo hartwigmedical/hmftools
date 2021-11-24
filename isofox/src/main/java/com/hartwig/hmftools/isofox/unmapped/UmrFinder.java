@@ -144,13 +144,15 @@ public class UmrFinder
         {
             final ReadRecord read = (ReadRecord)object;
 
-            if(read.hasSuppAlignment())
-                continue;
-
             UnmappedRead umRead = evaluateRead(read);
 
             if(umRead != null)
-                mCandidateReads.add(umRead);
+            {
+                if(read.isChimeric())
+                    mSupplementaryReadKeys.add(umRead.positionKey());
+                else
+                    mCandidateReads.add(umRead);
+            }
         }
     }
 
@@ -307,6 +309,9 @@ public class UmrFinder
 
     private synchronized static void writeReadData(final BufferedWriter writer, final List<UnmappedRead> unmappedReads)
     {
+        if(writer == null)
+            return;
+
         try
         {
             for(UnmappedRead umRead : unmappedReads)

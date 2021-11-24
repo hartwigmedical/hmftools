@@ -138,7 +138,7 @@ public class BamFragmentAllocator
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
         // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
-        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(NOVEL_LOCATIONS);
+        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(NOVEL_LOCATIONS) || mConfig.runFunction(UNMAPPED_READS);
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
