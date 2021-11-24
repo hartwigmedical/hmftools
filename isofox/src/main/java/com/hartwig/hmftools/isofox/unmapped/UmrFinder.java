@@ -40,8 +40,8 @@ public class UmrFinder
     private final boolean mEnabled;
     private final UmrCohortFrequency mCohortFrequency;
     private GeneCollection mGenes;
-    private final Set<String> mSupplementaryReadKeys;
 
+    private final Set<String> mChimericReadKeys;
     private final List<UnmappedRead> mCandidateReads;
 
     private final BufferedWriter mWriter;
@@ -58,7 +58,7 @@ public class UmrFinder
         mCohortFrequency = new UmrCohortFrequency(config.UnmappedCohortFreqFile);
 
         // mCandidateReads = Lists.newArrayList();
-        mSupplementaryReadKeys = Sets.newHashSet();
+        mChimericReadKeys = Sets.newHashSet();
         mCandidateReads = Lists.newArrayList();
         mGenes = null;
 
@@ -67,11 +67,14 @@ public class UmrFinder
 
     public boolean enabled() { return mEnabled; }
 
+    public Set<String> getSupplementaryReadKeys() { return mChimericReadKeys; }
+    public List<UnmappedRead> getCandidateReads() { return mCandidateReads; }
+
     public void setGeneData(final GeneCollection genes)
     {
         mGenes = genes;
         mCandidateReads.clear();
-        mSupplementaryReadKeys.clear();
+        mChimericReadKeys.clear();
     }
 
     public void processReads(final ReadRecord read1, final ReadRecord read2, boolean isChimeric)
@@ -90,10 +93,10 @@ public class UmrFinder
         if(isChimeric)
         {
             if(umRead1 != null)
-                mSupplementaryReadKeys.add(umRead1.positionKey());
+                mChimericReadKeys.add(umRead1.positionKey());
 
             if(umRead2 != null)
-                mSupplementaryReadKeys.add(umRead2.positionKey());
+                mChimericReadKeys.add(umRead2.positionKey());
 
             return;
         }
@@ -149,7 +152,7 @@ public class UmrFinder
             if(umRead != null)
             {
                 if(read.isChimeric())
-                    mSupplementaryReadKeys.add(umRead.positionKey());
+                    mChimericReadKeys.add(umRead.positionKey());
                 else
                     mCandidateReads.add(umRead);
             }
@@ -247,15 +250,20 @@ public class UmrFinder
                 .findFirst().orElse(null);
 
         // determine average base qual within the SC region
-        int totalBaseQual = 0;
-        int startIndex = scSide == SE_START ? 0 : read.Length - scLength;
-        int endIndex = scSide == SE_START ? scLength : read.Length;
-        for(int i = startIndex; i < endIndex; ++i)
-        {
-            totalBaseQual += read.baseQualities()[i];
-        }
+        double avgBaseQual = 0;
 
-        double avgBaseQual = totalBaseQual / scLength;
+        if(read.baseQualities() != null)
+        {
+            int totalBaseQual = 0;
+            int startIndex = scSide == SE_START ? 0 : read.Length - scLength;
+            int endIndex = scSide == SE_START ? scLength : read.Length;
+            for(int i = startIndex; i < endIndex; ++i)
+            {
+                totalBaseQual += read.baseQualities()[i];
+            }
+
+            avgBaseQual = totalBaseQual / scLength;
+        }
 
         String scBases = scSide == SE_START ?
                 Nucleotides.reverseStrandBases(read.ReadBases.substring(0, scLength)) : read.ReadBases.substring(read.ReadBases.length() - scLength);
@@ -274,9 +282,14 @@ public class UmrFinder
         return umRead;
     }
 
+    public void markChimericMatches()
+    {
+        mCandidateReads.forEach(x -> x.MatchesChimeric = mChimericReadKeys.contains(x.positionKey()));
+    }
+
     public void writeUnmappedReads()
     {
-        mCandidateReads.forEach(x -> x.MatchesSupplementary = mSupplementaryReadKeys.contains(x.positionKey()));
+        markChimericMatches();
 
         /*
         int cohortFrequency = mCohortFrequency.getCohortFrequency(read.Chromosome, umRead.positionKey());

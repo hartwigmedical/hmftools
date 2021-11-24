@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_GENE;
-import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_TRANS;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -136,7 +135,7 @@ public class UmrCohortAnalyser
             int scBasesIndex = fieldsIndexMap.get("SoftClipBases");
             Integer mateIndex = fieldsIndexMap.get("MateCoords");
             Integer cohortFreqIndex = fieldsIndexMap.get("CohortFreq");
-            Integer matchesSuppIndex = fieldsIndexMap.get("MatchesSupp");
+            Integer matchesSuppIndex = fieldsIndexMap.get("MatchesChimeric");
 
             for(String data : lines)
             {
@@ -207,7 +206,7 @@ public class UmrCohortAnalyser
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("SampleId,FragmentCount,UnpairedCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
             writer.write(",ExonBoundary,ExonDistance,SoftClipSide,AvgBaseQual");
-            writer.write(",CohortFrequency,SoftClipBases,GeneTPM,HasSuppMatch");
+            writer.write(",CohortFrequency,SoftClipBases,GeneTPM,HasChimericMatch");
             writer.newLine();
 
             for(Map.Entry<String,Map<String,Map<String,List<UnmappedRead>>>> chrEntry : mUnmappedReads.entrySet())
@@ -243,7 +242,7 @@ public class UmrCohortAnalyser
                             }
 
                             readIds.add(umRead.ReadId);
-                            hasSuppMatch |= umRead.MatchesSupplementary;
+                            hasSuppMatch |= umRead.MatchesChimeric;
 
                             if(umRead.MateCoords.equals(UMR_NO_MATE))
                                 ++unpairedCount;

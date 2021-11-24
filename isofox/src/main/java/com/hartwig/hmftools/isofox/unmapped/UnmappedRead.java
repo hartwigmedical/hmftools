@@ -24,7 +24,7 @@ public class UnmappedRead
     public final String ScBases;
     public final String MateCoords;
     public final int CohortFrequency;
-    public boolean MatchesSupplementary;
+    public boolean MatchesChimeric;
 
     private final String mPosKey;
 
@@ -36,7 +36,7 @@ public class UnmappedRead
             final String readId, final ChrBaseRegion readRegion, final int scLength, final int scSide,
             final double avgBaseQual, final String geneId, final String geneName, final String transName, final int exonRank,
             final int exonBoundary, final int exonDistance, final String spliceType, final String scBases, final String mateCoords,
-            final int cohortFrequency, final boolean matchesSupplementary)
+            final int cohortFrequency, final boolean matchesChimeric)
     {
         ReadId = readId;
         ReadRegion = readRegion;
@@ -53,7 +53,7 @@ public class UnmappedRead
         ScBases = scBases;
         MateCoords = mateCoords;
         CohortFrequency = cohortFrequency;
-        MatchesSupplementary = matchesSupplementary;
+        MatchesChimeric = matchesChimeric;
 
         mPosKey = positionKey(ScSide, ExonBoundary);
     }
@@ -78,7 +78,7 @@ public class UnmappedRead
         sj.add("SoftClipBases");
         sj.add("MateCoords");
         sj.add("CohortFreq");
-        sj.add("MatchesSupp");
+        sj.add("MatchesChimeric");
 
         return sj.toString();
     }
@@ -103,7 +103,7 @@ public class UnmappedRead
         sj.add(ScBases);
         sj.add(MateCoords);
         sj.add(String.valueOf(CohortFrequency));
-        sj.add(String.valueOf(MatchesSupplementary));
+        sj.add(String.valueOf(MatchesChimeric));
 
         return sj.toString();
     }
