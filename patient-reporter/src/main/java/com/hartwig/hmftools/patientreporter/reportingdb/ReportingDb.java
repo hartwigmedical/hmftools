@@ -38,16 +38,27 @@ public class ReportingDb {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
 
+            String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+            String reportDate = ReportResources.REPORT_DATE;
+            GenomicAnalysis analysis = report.genomicAnalysis();
+
+            String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
+            boolean hasReliableQuality = analysis.hasReliableQuality();
+            boolean hasReliablePurity = analysis.hasReliablePurity();
+
+
             if (report.sampleReport().cohort().reportConclusion() && report.clinicalSummary().isEmpty()) {
                 LOGGER.warn("Skipping addition to reporting db, missing summary for sample '{}'!", sampleId);
+                writeApiUpdateJson(outputDirectory,
+                        tumorBarcode,
+                        sampleId,
+                        cohort,
+                        "report_without_conclusion",
+                        reportDate,
+                        purity,
+                        hasReliableQuality,
+                        hasReliablePurity);
             } else {
-                String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-                String reportDate = ReportResources.REPORT_DATE;
-                GenomicAnalysis analysis = report.genomicAnalysis();
-
-                String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
-                boolean hasReliableQuality = analysis.hasReliableQuality();
-                boolean hasReliablePurity = analysis.hasReliablePurity();
 
                 String reportType;
                 if (hasReliablePurity && analysis.impliedPurity() > ReportResources.PURITY_CUTOFF) {
