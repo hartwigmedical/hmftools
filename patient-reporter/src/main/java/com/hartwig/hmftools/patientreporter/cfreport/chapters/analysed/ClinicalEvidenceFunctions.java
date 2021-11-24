@@ -84,10 +84,10 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 150, 25, 40, 150, 40 },
+                new float[] { 25, 140, 25, 40, 140, 60 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level", 1),
                         TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1),
-                        TableUtil.createHeaderCell("Links", 1) });
+                        TableUtil.createHeaderCell("Evidence links", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -164,17 +164,17 @@ public class ClinicalEvidenceFunctions {
                     if (!evidenType.equals("trial")) {
 
                         if (PREDICTED.contains(responsive.direction())) {
-                            cellPredicted = TableUtil.createTransparentCell(new Paragraph(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()));
+                            cellPredicted = TableUtil.createTransparentCell(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle());
                         }
 
                         if (RESISTANT_DIRECTIONS.contains(responsive.direction())) {
                             cellResistent =
-                                    TableUtil.createTransparentCell(new Paragraph(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()));
+                                    TableUtil.createTransparentCell(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle());
                         }
 
                         if (RESPONSE_DIRECTIONS.contains(responsive.direction())) {
                             cellResistent =
-                                    TableUtil.createTransparentCell(new Paragraph(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()));
+                                    TableUtil.createTransparentCell(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle());
                         }
 
                         cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
