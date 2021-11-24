@@ -9,6 +9,8 @@ import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.cuppa.CuppaTestFactory;
 import com.hartwig.hmftools.common.flagstat.FlagstatTestFactory;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
+import com.hartwig.hmftools.common.linx.LinxData;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
@@ -16,6 +18,8 @@ import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.VariantTestFactory;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
@@ -57,6 +61,7 @@ public final class OrangeReportTestFactory {
         return ImmutableOrangeReport.builder()
                 .from(createMinimalTestReport())
                 .purple(createTestPurpleData())
+                .linx(createTestLinxData())
                 .protect(createTestProtectData())
                 .build();
     }
@@ -106,6 +111,21 @@ public final class OrangeReportTestFactory {
                         .build())
                 .build();
 
+    }
+
+    @NotNull
+    private static LinxData createTestLinxData() {
+        LinxFusion fusion = ImmutableLinxFusion.builder().from(LinxTestFactory.createMinimalTestFusion()).build();
+        return ImmutableLinxData.builder()
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .addReportableFusions(fusion)
+                .build();
     }
 
     @NotNull
