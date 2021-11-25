@@ -42,35 +42,41 @@ public class UmrCohortAnalyser
     private final CohortConfig mConfig;
 
     // other config
-    private final int mMinSampleThreshold;
-    private final int mMinFragments;
-
     private final RnaExpressionMatrix mGeneExpression;
 
     // map of chromosomes to a map of splice-boundary keys to a map of samples to a list of unmapped reads
     private final Map<String,Map<String,Map<String,List<UnmappedRead>>>> mUnmappedReads;
 
-    private static final String UMR_MIN_SAMPLES = "umr_min_samples";
-    private static final String UMR_MIN_FRAGS = "umr_min_frags";
+    private final LineElementMatcher mLineElementMatcher;
+    private final boolean mCombineFrequencies;
+
+    private static final String LINX_DIRECTORY = "linx_dir";
     private static final String GENE_EXPRESSION_FILE = "gene_expression_file";
+    private static final String COMBINE_FREQUENCIES = "combine_frequencies";
+    private static final String LINX_DIR = "linx_dir";
+    private static final String SV_VCF_FILE = "sv_vcf";
 
     public UmrCohortAnalyser(final CohortConfig config, final CommandLine cmd)
     {
         mConfig = config;
         mUnmappedReads = Maps.newHashMap();
 
-        mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(UMR_MIN_SAMPLES, "0"));
-        mMinFragments = Integer.parseInt(cmd.getOptionValue(UMR_MIN_FRAGS, "0"));
-
         mGeneExpression = cmd.hasOption(GENE_EXPRESSION_FILE) ?
                 new RnaExpressionMatrix(cmd.getOptionValue(GENE_EXPRESSION_FILE), EXPRESSION_SCOPE_GENE) : null;
+
+        mLineElementMatcher = cmd.hasOption(LINX_DIR) && cmd.hasOption(SV_VCF_FILE) ?
+                new LineElementMatcher(cmd.getOptionValue(LINX_DIR), cmd.getOptionValue(SV_VCF_FILE)) : null;
+
+        mCombineFrequencies = cmd.hasOption(COMBINE_FREQUENCIES);
     }
 
     public static void addCmdLineOptions(final Options options)
     {
-        options.addOption(UMR_MIN_SAMPLES, true, "Min number of samples to report an unmapped read");
-        options.addOption(UMR_MIN_FRAGS, true, "Min frag count ...");
-        options.addOption(GENE_EXPRESSION_FILE, true, "Min frag count ...");
+        options.addOption(LINX_DIRECTORY, true, "Path to Linx files");
+        options.addOption(GENE_EXPRESSION_FILE, true, "Gene expression file for cohort");
+        options.addOption(COMBINE_FREQUENCIES, false, "Determine cohort frequencies for slice candidates");
+        options.addOption(LINX_DIR, true, "Linx data directory");
+        options.addOption(SV_VCF_FILE, true, "Structural variant VCF");
     }
 
     public void processSampleFiles()
@@ -91,12 +97,25 @@ public class UmrCohortAnalyser
 
             loadFile(sampleId, umrFile);
 
-            int totalUmrCount = mUnmappedReads.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
-
-            if(totalUmrCount >= nextLog)
+            if(mCombineFrequencies)
             {
-                ISF_LOGGER.debug("cached unmapped-read count({})", totalUmrCount);
-                nextLog += 100000;
+                int totalUmrCount = mUnmappedReads.values().stream().mapToInt(x -> x.values().stream().mapToInt(y -> y.size()).sum()).sum();
+
+                if(totalUmrCount >= nextLog)
+                {
+                    ISF_LOGGER.debug("cached unmapped-read count({})", totalUmrCount);
+                    nextLog += 100000;
+                }
+            }
+            else
+            {
+                mLineElementMatcher.findMatches(sampleId, mUnmappedReads);
+                mUnmappedReads.clear();
+            }
+
+            if(i > 0 && (i % 100) == 0)
+            {
+                ISF_LOGGER.debug("processed {} samples", i);
             }
         }
 
