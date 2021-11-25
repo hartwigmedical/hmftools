@@ -207,8 +207,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
             if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display())) {
                 if (patientReport.genomicAnalysis().impliedPurity() < 0.20) {
                     reportDocument.add(createCharacteristicDisclaimerDiv(
-                            "The molecular tissue of origin predication is reliable to low tumor"
-                                    + " purity, however the results should be interpret with caution."));
+                            "Due to the low tumor purity, the molecular tissue of origin prediction should be interpreted with caution."));
                 }
 
                 try {
