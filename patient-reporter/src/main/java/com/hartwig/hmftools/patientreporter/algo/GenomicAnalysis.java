@@ -2,12 +2,14 @@ package com.hartwig.hmftools.patientreporter.algo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -24,6 +26,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class GenomicAnalysis {
+
+    public abstract Set<PurpleQCStatus> purpleQCStatus();
 
     public abstract double impliedPurity();
 

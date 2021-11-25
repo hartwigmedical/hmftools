@@ -42,7 +42,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -62,7 +62,7 @@ public class CFReportWriterTest {
                 .comments(COLO_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.FAIL_CONTAMINATION);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -75,7 +75,7 @@ public class CFReportWriterTest {
                 .comments(COLO_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createAllDisabledCohortConfig("COLO"))
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -89,7 +89,7 @@ public class CFReportWriterTest {
                 .comments(COLO_COMMENT_STRING_CORRECTED)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -103,7 +103,7 @@ public class CFReportWriterTest {
                 .reportGermline(true)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -119,7 +119,7 @@ public class CFReportWriterTest {
                 .includeSummary(false)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -136,7 +136,7 @@ public class CFReportWriterTest {
                 .hasReliablePurity(true)
                 .limsCohortConfig(LimsCohortTestFactory.createCOLOCohortConfig())
                 .build();
-        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config);
+        AnalysedPatientReport colo829Report = ExampleAnalysisTestFactory.createWithCOLO829Data(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(colo829Report, testReportFilePath(colo829Report));
@@ -149,7 +149,7 @@ public class CFReportWriterTest {
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -161,7 +161,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("ACTN_FULL")
                 .limsCohortConfig(LimsCohortTestFactory.createACTINCohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -173,7 +173,7 @@ public class CFReportWriterTest {
         ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("CORE01_FULL")
                 .limsCohortConfig(LimsCohortTestFactory.createCORECohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -186,7 +186,7 @@ public class CFReportWriterTest {
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createWIDECohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -199,7 +199,7 @@ public class CFReportWriterTest {
                 .comments(FULL_TABLES_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createCOREDBCohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -214,7 +214,7 @@ public class CFReportWriterTest {
                 .qcForNumber(QsFormNumber.FOR_209)
                 .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -229,7 +229,7 @@ public class CFReportWriterTest {
                 .qcForNumber(QsFormNumber.FOR_209)
                 .limsCohortConfig(LimsCohortTestFactory.createCPCTCohortConfig())
                 .build();
-        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config);
+        AnalysedPatientReport patientReport = ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS);
 
         CFReportWriter writer = testCFReportWriter();
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath(patientReport));
@@ -244,7 +244,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -255,7 +255,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                LimsCohortTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -266,7 +266,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                LimsCohortTestFactory.createCOREDBCohortConfig());
+                LimsCohortTestFactory.createCOREDBCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -277,7 +277,7 @@ public class CFReportWriterTest {
                 QCFailReason.TECHNICAL_FAILURE,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -288,7 +288,7 @@ public class CFReportWriterTest {
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
     @Test
@@ -299,7 +299,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -310,7 +310,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig());
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -321,7 +321,7 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCORECohortConfig());
+                LimsCohortTestFactory.createCORECohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test
@@ -332,12 +332,12 @@ public class CFReportWriterTest {
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createWIDECohortConfig());
+                LimsCohortTestFactory.createWIDECohortConfig(), PurpleQCStatus.PASS);
     }
 
     private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity,
             @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments,
-            @NotNull LimsCohortConfig limsCohortConfig) throws IOException {
+            @NotNull LimsCohortConfig limsCohortConfig, @NotNull PurpleQCStatus purpleQCStatus) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId("x")
                 .refSampleBarcode("FR12123488")
@@ -385,7 +385,7 @@ public class CFReportWriterTest {
                 .logoCompanyPath(testReportData.logoCompanyPath())
                 .udiDi(UDI_DI)
                 .peachGenotypes(createTestPeachGenotypes())
-                .purpleQC(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION))
+                .purpleQC(Sets.newHashSet(purpleQCStatus))
                 .build();
 
         String filename = testReportFilePath(patientReport);

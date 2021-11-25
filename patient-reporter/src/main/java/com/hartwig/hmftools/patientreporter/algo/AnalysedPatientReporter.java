@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
@@ -84,9 +85,11 @@ public class AnalysedPatientReporter {
 
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
-        List<PeachGenotype> peachGenotypes = loadPeachData(config.peachGenotypeTsv());
-        List<PeachGenotype> peachGenotypesOverrule =
-                sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
+        List<PeachGenotype> peachGenotypes = overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
+                ? Lists.newArrayList()
+                : loadPeachData(config.peachGenotypeTsv());
+
+        List<PeachGenotype> peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
 
         AnalysedPatientReport report = ImmutableAnalysedPatientReport.builder()
                 .sampleReport(sampleReport)
@@ -94,7 +97,9 @@ public class AnalysedPatientReporter {
                 .clinicalSummary(clinicalSummary)
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(overruledAnalysis)
-                .molecularTissueOrigin(qcForm.equals(QsFormNumber.FOR_080.display()) ? molecularTissueOrigin : null)
+                .molecularTissueOrigin(overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
+                        ? null
+                        : molecularTissueOrigin)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
