@@ -21,40 +21,6 @@ public final class ClinicalTrials {
     private ClinicalTrials() {
     }
 
-    @NotNull
-    public static List<ProtectEvidence> sort(@NotNull List<ProtectEvidence> trials) {
-        return trials.stream().sorted((item1, item2) -> {
-            if (item1.genomicEvent().equals(item2.genomicEvent())) {
-                return item1.treatment().compareTo(item2.treatment());
-            } else {
-                return item1.genomicEvent().compareTo(item2.genomicEvent());
-            }
-        }).collect(Collectors.toList());
-    }
-
-    @NotNull
-    public static String source(@NotNull ProtectEvidence evidence) {
-        assert evidence.sources().contains(Knowledgebase.ICLUSION);
-
-        StringJoiner joiner = new StringJoiner(",");
-        for (Knowledgebase source : evidence.sources()) {
-            joiner.add(source.reportDisplay());
-        }
-        return joiner.toString();
-    }
-
-    @NotNull
-    public static String trialUrl(@NotNull ProtectEvidence evidence) {
-        assert evidence.sources().contains(Knowledgebase.ICLUSION);
-
-        if (evidence.urls().isEmpty()) {
-            LOGGER.warn("No URL configured for trial evidence '{}'", evidence);
-            return Strings.EMPTY;
-        }
-
-        return evidence.urls().iterator().next();
-    }
-
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> trials) {
         Set<String> events = Sets.newHashSet();
         for (ProtectEvidence trial : trials) {
@@ -69,5 +35,17 @@ public final class ClinicalTrials {
             acronyms.add(trial.treatment());
         }
         return acronyms.size();
+    }
+
+    @NotNull
+    public static String createLinkiClusion(@NotNull ProtectEvidence evidence) {
+        String link = Strings.EMPTY;
+        for (String url : evidence.urls()) {
+            if (url.contains("iclusion")) {
+                link = url;
+            }
+        }
+        //We assume iClusion has one link
+        return link;
     }
 }

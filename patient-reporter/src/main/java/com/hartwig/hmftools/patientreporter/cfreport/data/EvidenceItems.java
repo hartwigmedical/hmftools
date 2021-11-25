@@ -10,6 +10,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
+import com.itextpdf.kernel.pdf.action.PdfAction;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Text;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,54 +26,6 @@ public final class EvidenceItems {
     private static final String NONE = "None";
 
     private EvidenceItems() {
-    }
-
-    @NotNull
-    public static List<ProtectEvidence> sort(@NotNull List<ProtectEvidence> evidenceItems) {
-        return evidenceItems.stream().sorted((item1, item2) -> {
-            if (item1.level().equals(item2.level())) {
-                if (item1.genomicEvent().equals(item2.genomicEvent())) {
-                    return item1.genomicEvent().compareTo(item2.genomicEvent());
-                } else {
-                    return item1.genomicEvent().compareTo(item2.genomicEvent());
-                }
-            } else {
-                return item1.level().name().compareTo(item2.level().name());
-            }
-        }).collect(Collectors.toList());
-    }
-
-    @NotNull
-    public static String sources(@NotNull ProtectEvidence evidence) {
-        StringJoiner sourceString = new StringJoiner(",");
-        for (Knowledgebase source: evidence.sources()) {
-            sourceString.add(source.reportDisplay());
-        }
-
-        return sourceString.toString();
-    }
-
-    @NotNull
-    public static String evidenceUrl(@NotNull ProtectEvidence evidence) {
-        if (evidence.urls().isEmpty()) {
-            LOGGER.warn("No URL configured for evidence '{}'", evidence);
-            return Strings.EMPTY;
-        }
-
-        // We prefer pubmed URLs over all other URLs so if there is one pubmed then we use that.
-        for (String url : evidence.urls()) {
-            if (url.contains("pubmed")) {
-                return url;
-            }
-        }
-
-        // If there are no pubmeds, and the first url refers to google we remove it.
-        String url = evidence.urls().iterator().next();
-        if (url.contains("google")) {
-            return Strings.EMPTY;
-        } else {
-            return url;
-        }
     }
 
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> evidenceItems) {
@@ -107,4 +63,24 @@ public final class EvidenceItems {
             return treatments.size() + " (" + joiner.toString() + ")";
         }
     }
+
+    @NotNull
+    public static Paragraph createLinksPublications(@NotNull ProtectEvidence evidence) {
+        Paragraph paragraphPublications = new Paragraph();
+        int number = 0;
+        for (String url : evidence.urls()) {
+            if (!url.contains("google")) {
+                //Google urls are filtered out
+                number += 1;
+                if (!paragraphPublications.isEmpty()) {
+                    paragraphPublications.add(new Text(", "));
+                }
+
+                paragraphPublications.add(new Text(Integer.toString(number)).addStyle(ReportResources.urlStyle())
+                        .setAction(PdfAction.createURI(url))).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
+            }
+        }
+        return paragraphPublications;
+    }
+
 }
