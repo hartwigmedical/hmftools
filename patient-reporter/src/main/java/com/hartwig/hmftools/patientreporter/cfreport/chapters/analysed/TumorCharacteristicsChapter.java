@@ -204,7 +204,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         if (patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
 
             String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().plotPath();
-            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display())) {
+            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display()) || patientReport.qsFormNumber()
+                    .equals(QsFormNumber.FOR_080.display())) {
                 if (patientReport.genomicAnalysis().impliedPurity() < 0.20) {
                     reportDocument.add(createCharacteristicDisclaimerDiv(
                             "Due to the low tumor purity, the molecular tissue of origin prediction should be interpreted with caution."));
