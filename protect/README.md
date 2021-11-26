@@ -110,6 +110,7 @@ urls | A list of urls with additional information about the evidence | https://p
   - Fix bug of virusses when no interpretation is present 
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.5)
   - Support virus interpreter v1.1
+  - Use all called somatic variants in PROTECT, but all unreported events with evidence will set to none reportable 
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.4)
   - Output of virus interpreter is loaded by PROTECT and matched against viral evidence
   - Evidence is determined for non-reported genomic events (amps, dels, variants, fusions, viral presence).
