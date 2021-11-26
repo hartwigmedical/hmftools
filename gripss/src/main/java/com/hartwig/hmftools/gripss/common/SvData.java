@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_SIZE;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_EVENT;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 
 import java.util.List;
 

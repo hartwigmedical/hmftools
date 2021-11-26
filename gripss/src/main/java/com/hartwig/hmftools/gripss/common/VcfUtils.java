@@ -1,10 +1,13 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.common;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINE_POLY_AT_REQ;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINE_POLY_AT_TEST_LEN;
 
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
@@ -25,22 +28,33 @@ import htsjdk.variant.vcf.VCFHeader;
 public class VcfUtils
 {
     // VCF fields used by Gripss
+
+    // qual-related
     public static final String VT_QUAL = "QUAL";
-    public static final String VT_SR = "SR";
     public static final String VT_BQ = "BQ";
     public static final String VT_BAQ = "BAQ";
     public static final String VT_SRQ = "SRQ";
+    public static final String VT_RPQ = "RPQ";
+    public static final String VT_BUMQ = "BUMQ";
+
+    // read counts
+    public static final String VT_SR = "SR";
     public static final String VT_VF = "VF";
+    public static final String VT_BVF = "BVF";
     public static final String VT_RP = "RP";
     public static final String VT_IC = "IC";
-    public static final String VT_RPQ = "RPQ";
     public static final String VT_REF = "REF";
+    public static final String VT_BUM = "BUM";
+    public static final String VT_ASRP = "ASRP";
+    public static final String VT_ASSR = "ASSR";
+    public static final String VT_BASRP = "BASRP";
+    public static final String VT_BASSR = "BASSR";
+
+    // other links and info
     public static final String VT_BEID = "BEID";
     public static final String VT_BEIDL = "BEIDL";
     public static final String VT_HOMSEQ = "HOMSEQ";
     public static final String VT_IHOMPOS = "IHOMPOS";
-    public static final String VT_BUM = "BUM";
-    public static final String VT_BUMQ = "BUMQ";
 
     public static final String VT_MATE_ID = MATE_ID;
     public static final String VT_PAR_ID = PAR_ID;
@@ -50,13 +64,8 @@ public class VcfUtils
     public static final String VT_RAS = "RAS";
 
     public static final String VT_EVENT = "EVENT";
-    public static final String VT_ASRP = "ASRP";
-    public static final String VT_ASSR = "ASSR";
     public static final String VT_SB = "SB";
-    public static final String VT_BVF = "BVF";
     public static final String VT_BSC = "BSC";
-    public static final String VT_BASRP = "BASRP";
-    public static final String VT_BASSR = "BASSR";
     public static final String VT_REFPAIR = "REFPAIR";
     public static final String VT_CIPOS = CIPOS;
     public static final String VT_CIRPOS = "CIRPOS";
@@ -155,6 +164,37 @@ public class VcfUtils
         }
 
         return assemblies;
+    }
+
+    public static boolean isMobileLineElement(final byte orientation, final String insertSequence)
+    {
+        int insSeqLength = insertSequence.length();
+        if(insSeqLength < LINE_POLY_AT_TEST_LEN)
+            return false;
+
+        final char polyATChar = orientation == POS_ORIENT ? 'T' : 'A';
+
+        int allowedNonRequiredChars = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
+
+
+        for(int i = 0; i < LINE_POLY_AT_TEST_LEN; ++i)
+        {
+            if(orientation == POS_ORIENT)
+            {
+                if(insertSequence.charAt(i) != polyATChar)
+                    --allowedNonRequiredChars;
+            }
+            else
+            {
+                if(insertSequence.charAt(insSeqLength - i - 1) != polyATChar)
+                    --allowedNonRequiredChars;
+            }
+
+            if(allowedNonRequiredChars < 0)
+                return false;
+        }
+
+        return true;
     }
 
     public static String stripBam(final String sampleId)

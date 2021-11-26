@@ -35,6 +35,12 @@ public class FilterConstants
     public static final int SHORT_CALLING_SIZE = 1000;
     public static final int HOM_INV_LENGTH = 40;
 
+    public static final int LINE_POLY_AT_TEST_LEN = 18;
+    public static final int LINE_POLY_AT_REQ = 16;
+    public static final int SGL_INS_SEQ_MIN_LENGTH = 16;
+    public static final double SGL_MIN_STRAND_BIAS = 0.05;
+    public static final double SGL_MAX_STRAND_BIAS = 0.95;
+
     public static final String POLY_G_INSERT = "GGGGGGGGGGGGGGGG";
     public static final String POLY_C_INSERT = "CCCCCCCCCCCCCCCC";
     public static final String POLY_A_HOMOLOGY = "AAAAAAA";

@@ -3,9 +3,9 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REALIGN;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
 
 import java.util.List;
 

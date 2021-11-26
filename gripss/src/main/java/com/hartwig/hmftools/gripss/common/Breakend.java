@@ -8,28 +8,27 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IHOMPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.gripss.VcfUtils.sglFragmentCount;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.isMobileLineElement;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
-import static com.hartwig.hmftools.gripss.VcfUtils.parseAssemblies;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.parseAssemblies;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.gripss.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -63,6 +62,7 @@ public class Breakend
     public final Interval ConfidenceInterval;
     public final Interval RemoteConfidenceInterval;
     public final int[] InexactHomology;
+    public final boolean IsLineInsertion;
 
     private final SvData mSvData;
     private final List<FilterType> mFilters;
@@ -72,8 +72,7 @@ public class Breakend
 
     public Breakend(
             final SvData svData, final boolean isStart, final VariantContext context, final String chromosome, final int position, final byte orientation,
-            final Genotype refGenotype, final Genotype tumorGenotype, final double qual, final int tumorFragments,
-            final int refFrags, final int refReads, final int refPairReads)
+            final Genotype refGenotype, final Genotype tumorGenotype, final int tumorFragments, final int refFrags, final int refReads, final int refPairReads)
     {
         mSvData = svData;
         VcfId = context.getID();
@@ -85,7 +84,6 @@ public class Breakend
 
         RefGenotype = refGenotype;
         TumorGenotype = tumorGenotype;
-        Qual = qual;
         TumorFragments = tumorFragments;
         ReferenceFragments = refFrags;
         ReferenceReads = refReads;
@@ -103,6 +101,18 @@ public class Breakend
         OtherChromosome = altInsertCoords.Chromsome;
         OtherPosition = altInsertCoords.Position;
         OtherOrientation = altInsertCoords.Orientation;
+
+        IsLineInsertion = isMobileLineElement(orientation, InsertSequence);
+
+        if(mSvData.type() == SGL)
+        {
+            final String qualTag = IsLineInsertion ? VT_BQ : VT_BAQ;
+            Qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
+        }
+        else
+        {
+            Qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
+        }
 
         InexactHomology = new int[SE_PAIR];
 
@@ -126,9 +136,7 @@ public class Breakend
         final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
-        final String qualTag = type == SGL ? VT_BAQ : VT_QUAL;
         final String fragsTag = type == SGL ? VT_BVF : VT_VF;
-        double qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
 
         int refFrags = 0;
         int refReads = 0;
@@ -145,14 +153,14 @@ public class Breakend
 
         return new Breakend(
                 svData, isStart, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype,
-                qual, tumorFrags, refFrags, refReads, refPairReads);
+                tumorFrags, refFrags, refReads, refPairReads);
     }
 
     public static Breakend realigned(final Breakend original, final VariantContext newContext, final int newPosition)
     {
         Breakend newBreakend = new Breakend(
                 original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orientation, original.RefGenotype,
-                original.TumorGenotype, original.Qual, original.TumorFragments, original.ReferenceFragments, original.ReferenceReads,
+                original.TumorGenotype, original.TumorFragments, original.ReferenceFragments, original.ReferenceReads,
                 original.ReferencePairReads);
 
         newBreakend.markRealigned();

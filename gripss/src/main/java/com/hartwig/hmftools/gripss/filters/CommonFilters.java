@@ -3,7 +3,7 @@ package com.hartwig.hmftools.gripss.filters;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_T;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_RESCUE_LENGTH;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 
 import htsjdk.variant.variantcontext.VariantContext;
 

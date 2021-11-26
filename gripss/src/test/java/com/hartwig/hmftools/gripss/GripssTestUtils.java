@@ -1,40 +1,39 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_AS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASSR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEID;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEIDL;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BSC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BUM;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BUMQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CAS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_EVENT;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_PAR_ID;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_RAS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_RP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_RPQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SRQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEID;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEIDL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BSC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BUM;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BUMQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CAS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_PAR_ID;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RAS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RPQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SRQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT;
@@ -53,7 +52,6 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DI
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINC_00486_V37;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,6 +74,8 @@ public class GripssTestUtils
 {
     public static final String CHR_1 = "1";
     public static final String CHR_2 = "2";
+    public static final String LINE_INSERT_SEQ_A = "AAAAAAAAAAAAAAAAAAAA";
+    public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 
     public static final double DEFAULT_QUAL = 1000;
 

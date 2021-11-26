@@ -14,10 +14,13 @@ import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_2;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.DEFAULT_QUAL;
+import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_A;
+import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
+import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSglBreakend;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSvBreakends;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -127,6 +130,17 @@ public class VariantBuilderTest
         assertEquals(100, sgl.posStart());
         assertEquals(POS_ORIENT, sgl.orientStart());
         assertEquals(SGL, sgl.type());
+        assertFalse(sgl.breakendStart().IsLineInsertion);
+
+        sglContext = createSglBreakend(mIdGenerator.nextEventId(), CHR_1, 100, POS_ORIENT, "A", LINE_INSERT_SEQ_T);
+
+        sgl = mBuilder.checkCreateVariant(sglContext, mGenotypeIds);
+        assertTrue(sgl.breakendStart().IsLineInsertion);
+
+        sglContext = createSglBreakend(mIdGenerator.nextEventId(), CHR_1, 100, NEG_ORIENT, "A", LINE_INSERT_SEQ_A);
+
+        sgl = mBuilder.checkCreateVariant(sglContext, mGenotypeIds);
+        assertTrue(sgl.breakendStart().IsLineInsertion);
 
         assertEquals(0, mBuilder.hardFilteredCount());
         assertEquals(0, mBuilder.incompleteSVs());

@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASSR;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASSR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH;
@@ -19,6 +19,9 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOG
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_C_INSERT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_INSERT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_T_HOMOLOGY;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_INS_SEQ_MIN_LENGTH;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_MAX_STRAND_BIAS;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_MIN_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_SIZE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
@@ -31,21 +34,25 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_INSERT_SEQ_MIN_LENGTH;
+import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_DEL_INS_ARTIFACT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_NORMAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_STRAND_BIAS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
 
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.VcfUtils;
+import com.hartwig.hmftools.gripss.common.VcfUtils;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class SoftFilters
 {
@@ -84,8 +91,14 @@ public class SoftFilters
             if(shortSplitReadNormal(sv, breakend))
                 breakend.addFilter(SHORT_SR_NORMAL);
 
-            if(discordantPairSupport(sv, breakend) || breakendAssemblyReadPairs(breakend))
+            if(discordantPairSupport(sv, breakend))
                 breakend.addFilter(DISCORDANT_PAIR_SUPPORT);
+
+            if(singleStrandBias(breakend))
+                breakend.addFilter(SGL_STRAND_BIAS);
+
+            if(singleInsertSequenceMinLength(breakend))
+                breakend.addFilter(SGL_INSERT_SEQ_MIN_LENGTH);
 
             if(shortDelInsertArtifact(sv, breakend))
                 breakend.addFilter(SHORT_DEL_INS_ARTIFACT);
@@ -195,24 +208,27 @@ public class SoftFilters
         return breakend.inexactHomologyLength() > mFilterConstants.MaxInexactHomLengthShortDel;
     }
 
-    private boolean breakendAssemblyReadPairs(final Breakend breakend)
+    private static double calcStrandBias(final VariantContext variantContext)
     {
-        if(!breakend.isSgl())
+        double strandBias = variantContext.getAttributeAsDouble(VT_SB, 0.5);
+        return max(strandBias, 1 - strandBias);
+    }
+
+    private boolean singleStrandBias(final Breakend breakend)
+    {
+        if(!breakend.isSgl() || breakend.IsLineInsertion)
             return false;
 
-        int basrp = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_BASRP, 0);
-        int bassr = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_BASSR, 0);
-        double baq = getGenotypeAttributeAsDouble(breakend.TumorGenotype, VT_BAQ, 0);
+        double strandBias = calcStrandBias(breakend.Context);
+        return strandBias < SGL_MIN_STRAND_BIAS || strandBias > SGL_MAX_STRAND_BIAS;
+    }
 
-        boolean basrpInconsistent = basrp == 0 && bassr == 0 && baq > 0;
+    private boolean singleInsertSequenceMinLength(final Breakend breakend)
+    {
+        if(!breakend.isSgl() || breakend.IsLineInsertion)
+            return false;
 
-        if(basrp == 0 && !basrpInconsistent)
-        {
-            double strandBias = getGenotypeAttributeAsDouble(breakend.TumorGenotype, VT_SB, 0.5);
-            return strandBias < 0.1 || strandBias > 0.9;
-        }
-
-        return false;
+        return breakend.InsertSequence.length() < SGL_INS_SEQ_MIN_LENGTH;
     }
 
     private boolean imprecise(final SvData sv)

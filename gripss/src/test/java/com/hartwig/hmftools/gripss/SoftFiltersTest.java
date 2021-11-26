@@ -5,24 +5,24 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
-import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_2;
+import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASSR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IHOMPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IMPRECISE;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASSR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINC_00486_V37;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
@@ -36,11 +36,13 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_DEL_INS_ARTIFACT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_NORMAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_STRAND_BIAS;
 
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.Map;
@@ -176,7 +178,6 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // discordant support
-
         refOverrides.put(VT_REFPAIR, 0);
         refOverrides.put(VT_ASRP, 0);
         tumorOverrides.put(VT_REFPAIR, 0);
@@ -188,13 +189,29 @@ public class SoftFiltersTest
 
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
-        tumorOverrides.put(VT_BASRP, 0);
-        tumorOverrides.put(VT_BASSR, 1);
-        tumorOverrides.put(VT_SB, 0.99);
+        // single strand bias
+        commonOverrides.put(VT_SB, 0.99);
+
+        sv = createSingle(commonOverrides, refOverrides, tumorOverrides);
+
+        SvData svLine = createSgl(
+                mIdGenerator.nextEventId(), CHR_1, 100, POS_ORIENT, LINE_INSERT_SEQ_T, mGenotypeIds,
+                commonOverrides, refOverrides, tumorOverrides);
+
+        mSoftFilters.applyFilters(sv);
+        assertTrue(sv.breakendStart().getFilters().contains(SGL_STRAND_BIAS));
+
+        mSoftFilters.applyFilters(svLine);
+        assertFalse(svLine.breakendStart().getFilters().contains(SGL_STRAND_BIAS));
+
+        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+        // single insert sequence min length
+        commonOverrides.put(VT_SB, 0.99);
 
         sv = createSingle(commonOverrides, refOverrides, tumorOverrides);
         mSoftFilters.applyFilters(sv);
-        assertTrue(sv.breakendStart().getFilters().contains(DISCORDANT_PAIR_SUPPORT));
+        assertTrue(sv.breakendStart().getFilters().contains(SGL_STRAND_BIAS));
 
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
