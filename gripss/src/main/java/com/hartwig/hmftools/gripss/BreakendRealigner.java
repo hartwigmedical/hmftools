@@ -112,8 +112,7 @@ public class BreakendRealigner
 
         int newStart = updatedPosition(breakend.Position, breakend.ConfidenceInterval, newCipos);
 
-        String newRef = mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart);
-        // getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
+        String newRef = toStandardNucleotides(mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart));
 
         // val mate = variantType as Paired
         // String newAlt = ""; // mate.altString(newRef);
@@ -141,9 +140,7 @@ public class BreakendRealigner
         Interval newCipos = sideAlignConfidenceInterval(breakend.Orientation, breakend.ConfidenceInterval);
         int newStart = updatedPosition(breakend.Position, breakend.ConfidenceInterval, newCipos);
 
-        String newRef = mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart);
-        // getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
-        // TODO: understand unambiguousNucleotides
+        String newRef = toStandardNucleotides(mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart));
 
         // val mate = variantType as Single
         // String newAlt = ""; // mate.altString(newRef);
@@ -188,5 +185,23 @@ public class BreakendRealigner
             return new Interval(0, cipos.End - cipos.Start);
         else
             return new Interval(cipos.Start - cipos.End, 0);
+    }
+
+    private static final List<Character> VALID_BASES = Lists.newArrayList('A', 'G', 'C', 'T', 'N');
+
+    private static String toStandardNucleotides(final String bases)
+    {
+        StringBuilder newBases = new StringBuilder(bases.length());
+
+        for(int i = 0; i < bases.length(); ++i)
+        {
+            char base = newBases.charAt(i);
+            if(VALID_BASES.contains(newBases.charAt(i)))
+                newBases.append(base);
+            else
+                newBases.append('N');
+        }
+
+        return newBases.toString();
     }
 }
