@@ -183,7 +183,7 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         String molecularTissuePrediction =
-                patientReport.molecularTissueOrigin() != null ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
+                patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity() ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
         Style dataStyleMolecularTissuePrediction =
                 hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 

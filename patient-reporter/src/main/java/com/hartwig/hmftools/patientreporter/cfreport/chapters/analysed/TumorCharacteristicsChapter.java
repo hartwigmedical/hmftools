@@ -201,21 +201,26 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         reportDocument.add(createCharacteristicDiv("Molecular tissue of origin prediction"));
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10 }));
         table.setWidth(contentWidth());
-        if (patientReport.molecularTissueOrigin() != null) {
+        if (patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity()) {
+
             String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().plotPath();
-            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display())) {
-                reportDocument.add(createCharacteristicDisclaimerDiv("This is a low purity sample. Be carefully fith interpreting this "
-                        + "data"));
-            }
-            try {
-                reportDocument.add(createCharacteristicDiv("")); // For better display plot
-                Image circosImage = new Image(ImageDataFactory.create(molecularTissueOriginPlot));
-                circosImage.setMaxHeight(250);
-                circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-                circosImage.setMarginBottom(8);
-                reportDocument.add(circosImage);
-            } catch (MalformedURLException e) {
-                throw new IOException("Failed to read molecular tissue origin plot image at " + molecularTissueOriginPlot);
+            if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display()) || patientReport.qsFormNumber()
+                    .equals(QsFormNumber.FOR_080.display())) {
+                if (patientReport.genomicAnalysis().impliedPurity() < 0.20) {
+                    reportDocument.add(createCharacteristicDisclaimerDiv(
+                            "Due to the low tumor purity, the molecular tissue of origin prediction should be interpreted with caution."));
+                }
+
+                try {
+                    reportDocument.add(createCharacteristicDiv("")); // For better display plot
+                    Image circosImage = new Image(ImageDataFactory.create(molecularTissueOriginPlot));
+                    circosImage.setMaxHeight(250);
+                    circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+                    circosImage.setMarginBottom(8);
+                    reportDocument.add(circosImage);
+                } catch (MalformedURLException e) {
+                    throw new IOException("Failed to read molecular tissue origin plot image at " + molecularTissueOriginPlot);
+                }
             }
 
             reportDocument.add(createCharacteristicDiv(""));

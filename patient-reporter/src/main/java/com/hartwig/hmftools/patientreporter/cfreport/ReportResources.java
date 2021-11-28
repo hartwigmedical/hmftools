@@ -102,15 +102,15 @@ public final class ReportResources {
     }
 
     public static Style responseStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLUE).setMarginTop(0);
+        return new Style().setFont(fontBold()).setFontSize(8).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     public static Style resistentStyle() {
-        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_RED).setMarginTop(0);
+        return new Style().setFont(fontBold()).setFontSize(8).setFontColor(ReportResources.PALETTE_RED);
     }
 
     public static Style predictedStyle() {
-        return new Style().setFont(fontBold()).setFontSize(7).setFontColor(ReportResources.PALETTE_VIOLET).setMarginTop(0);
+        return new Style().setFont(fontBold()).setFontSize(8).setFontColor(ReportResources.PALETTE_VIOLET);
     }
 
     public static Style chapterTitleStyle() {

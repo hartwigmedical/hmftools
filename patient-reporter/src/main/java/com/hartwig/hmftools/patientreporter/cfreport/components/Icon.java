@@ -105,6 +105,6 @@ public class Icon {
             return new Text("");
         }
 
-        return new Text(iconType.text()).setFont(ReportResources.iconFont()).setFontColor(color).setCharacterSpacing(1);
+        return new Text(iconType.text()).setFont(ReportResources.iconFont()).setFontColor(color);
     }
 }

@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -75,11 +76,12 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport createTestReport() {
-        return createWithCOLO829Data(new ExampleAnalysisConfig.Builder().build());
+        return createWithCOLO829Data(new ExampleAnalysisConfig.Builder().build(), PurpleQCStatus.PASS);
     }
 
     @NotNull
-    public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config) {
+    public static AnalysedPatientReport createWithCOLO829Data(@NotNull ExampleAnalysisConfig config,
+            @NotNull PurpleQCStatus purpleQCStatus) {
         String pipelineVersion = "5.22";
         double averageTumorPloidy = 3.1;
         int tumorMutationalLoad = 189;
@@ -129,6 +131,7 @@ public final class ExampleAnalysisTestFactory {
         }
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
+                .purpleQCStatus(Sets.newHashSet(purpleQCStatus))
                 .impliedPurity(config.impliedTumorPurity())
                 .hasReliablePurity(config.hasReliablePurity())
                 .hasReliableQuality(true)
@@ -177,13 +180,13 @@ public final class ExampleAnalysisTestFactory {
     }
 
     @NotNull
-    public static AnalysedPatientReport createAnalysisWithAllTablesFilledIn(@NotNull ExampleAnalysisConfig config) {
-        AnalysedPatientReport coloReport = createWithCOLO829Data(config);
+    public static AnalysedPatientReport createAnalysisWithAllTablesFilledIn(@NotNull ExampleAnalysisConfig config,
+            @NotNull PurpleQCStatus purpleQCStatus) {
+        AnalysedPatientReport coloReport = createWithCOLO829Data(config, purpleQCStatus);
 
         List<LinxFusion> fusions = createTestFusions();
         List<AnnotatedVirus> viruses = createTestAnnotatedViruses();
         List<ReportableHomozygousDisruption> homozygousDisruptions = createTestHomozygousDisruptions();
-        List<PeachGenotype> peachGenotypes = createTestPeachGenotypes();
 
         GenomicAnalysis analysis = ImmutableGenomicAnalysis.builder()
                 .from(coloReport.genomicAnalysis())

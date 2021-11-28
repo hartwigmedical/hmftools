@@ -76,6 +76,7 @@ public class GenomicAnalyzer {
         List<ProtectEvidence> nonTrialsOffLabel = ReportableEvidenceItemFactory.extractNonTrialsOffLabel(reportableEvidenceItems);
 
         return ImmutableGenomicAnalysis.builder()
+                .purpleQCStatus(purpleData.qc().status())
                 .impliedPurity(purpleData.purity())
                 .hasReliablePurity(purpleData.hasReliablePurity())
                 .hasReliableQuality(purpleData.hasReliableQuality())

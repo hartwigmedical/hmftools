@@ -7,9 +7,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -127,28 +125,6 @@ public class FusionEvidenceTest {
 
     @NotNull
     private static ImmutableLinxFusion.Builder linxFusionBuilder() {
-        return ImmutableLinxFusion.builder()
-                .fivePrimeBreakendId(0)
-                .threePrimeBreakendId(0)
-                .name(Strings.EMPTY)
-                .reportedType(Strings.EMPTY)
-                .phased(FusionPhasedType.INFRAME)
-                .likelihood(FusionLikelihoodType.HIGH)
-                .chainLength(0)
-                .chainLinks(0)
-                .chainTerminated(true)
-                .domainsKept(Strings.EMPTY)
-                .domainsLost(Strings.EMPTY)
-                .skippedExonsUp(0)
-                .skippedExonsDown(0)
-                .fusedExonUp(0)
-                .fusedExonDown(0)
-                .geneStart(Strings.EMPTY)
-                .geneContextStart(Strings.EMPTY)
-                .geneTranscriptStart(Strings.EMPTY)
-                .geneEnd(Strings.EMPTY)
-                .geneContextEnd(Strings.EMPTY)
-                .geneTranscriptEnd(Strings.EMPTY)
-                .junctionCopyNumber(0D);
+        return ImmutableLinxFusion.builder().from(LinxTestFactory.createMinimalTestFusion());
     }
 }

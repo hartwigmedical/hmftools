@@ -90,7 +90,7 @@ public class QCFailReporter {
         LOGGER.info("  QC status: {}", purpleQc.toString());
 
         List<PeachGenotype> peachGenotypesOverrule = Lists.newArrayList();
-        if (reason.isDeepWGSDataAvailable()) {
+        if (reason.isDeepWGSDataAvailable() && !purpleQc.contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
             List<PeachGenotype> peachGenotypes = loadPeachData(peachGenotypeTsv);
             peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
         }

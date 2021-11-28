@@ -105,9 +105,13 @@ abstract class LimsJsonSampleData {
     @NotNull
     @Value.Derived
     public String labProcedures() {
-        Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
-        Matcher matcher = pattern.matcher(labSopVersions());
-        if (matcher.find()) {
+        Pattern patternOld = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
+        Pattern patternNew = Pattern.compile("PREP(\\d+)V(\\d+)-ENR(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
+        Matcher matcherOld = patternOld.matcher(labSopVersions());
+        Matcher matcherNew = patternNew.matcher(labSopVersions());
+        if (matcherNew.find()) {
+            return labSopVersions();
+        } else if (matcherOld.find()) {
             return labSopVersions();
         } else {
             return Lims.NOT_AVAILABLE_STRING;

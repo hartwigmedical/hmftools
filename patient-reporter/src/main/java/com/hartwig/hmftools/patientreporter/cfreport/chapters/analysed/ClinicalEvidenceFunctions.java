@@ -3,7 +3,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -11,13 +10,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.patientreporter.algo.ProtectComparator;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.Icon;
 import com.hartwig.hmftools.patientreporter.cfreport.components.TableUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.ClinicalTrials;
+import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
@@ -84,10 +83,10 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 150, 25, 40, 150, 40 },
+                new float[] { 25, 140, 25, 40, 140, 60 },
                 new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level", 1),
                         TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1),
-                        TableUtil.createHeaderCell("Links", 1) });
+                        TableUtil.createHeaderCell("Evidence links", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -112,7 +111,6 @@ public class ClinicalEvidenceFunctions {
             if (addEvidenceWithMaxLevel(treatmentTable, treatmentMap, level, evidenType)) {
                 hasEvidence = true;
             }
-
         }
 
         if (hasEvidence) {
@@ -148,14 +146,15 @@ public class ClinicalEvidenceFunctions {
                 Table responsiveTable = new Table(new float[] { 1 });
                 Table linksTable = new Table(new float[] { 1 });
 
-                for (ProtectEvidence responsive : ProtectComparator.sort(evidences)) {
+                for (ProtectEvidence responsive : sort(evidences)) {
                     Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
 
                     if (!evidenType.equals("trial")) {
                         cellGenomic.addStyle(ReportResources.urlStyle())
                                 .setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
                     } else {
-                        cellGenomic.addStyle(ReportResources.urlStyle()).setAction(PdfAction.createURI(createLinkiClusion(responsive)));
+                        cellGenomic.addStyle(ReportResources.urlStyle())
+                                .setAction(PdfAction.createURI(ClinicalTrials.createLinkiClusion(responsive)));
                     }
 
                     Cell cellLevel;
@@ -164,17 +163,15 @@ public class ClinicalEvidenceFunctions {
                     if (!evidenType.equals("trial")) {
 
                         if (PREDICTED.contains(responsive.direction())) {
-                            cellPredicted = TableUtil.createTransparentCell(new Paragraph(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()));
+                            cellPredicted = TableUtil.createTransparentCell(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle());
                         }
 
                         if (RESISTANT_DIRECTIONS.contains(responsive.direction())) {
-                            cellResistent =
-                                    TableUtil.createTransparentCell(new Paragraph(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()));
+                            cellResistent = TableUtil.createTransparentCell(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle());
                         }
 
                         if (RESPONSE_DIRECTIONS.contains(responsive.direction())) {
-                            cellResistent =
-                                    TableUtil.createTransparentCell(new Paragraph(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()));
+                            cellResistent = TableUtil.createTransparentCell(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle());
                         }
 
                         cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
@@ -188,12 +185,11 @@ public class ClinicalEvidenceFunctions {
 
                     Cell publications = TableUtil.createTransparentCell(Strings.EMPTY);
                     if (evidenType.equals("evidence")) {
-                        publications = TableUtil.createTransparentCell(createLinksPublications(responsive));
+                        publications = TableUtil.createTransparentCell(EvidenceItems.createLinksPublications(responsive));
                         linksTable.addCell(publications);
                     } else {
                         linksTable.addCell(publications);
                     }
-
                 }
 
                 if (evidenType.equals("evidence")) {
@@ -236,42 +232,27 @@ public class ClinicalEvidenceFunctions {
     }
 
     @NotNull
-    private static String createLinkiClusion(@NotNull ProtectEvidence evidence) {
-        String link = Strings.EMPTY;
-        for (String url : evidence.urls()) {
-            if (url.contains("iclusion")) {
-                link = url;
-            }
-        }
-        //We assume iClusion has one link
-        return link;
-    }
-
-    @NotNull
-    private static Paragraph createLinksPublications(@NotNull ProtectEvidence evidence) {
-        Paragraph paragraphPublications = new Paragraph();
-        int number = 0;
-        for (String url : evidence.urls()) {
-            if (!url.contains("google")) {
-                //Google urls are filtered out
-                number += 1;
-                if (!paragraphPublications.isEmpty()) {
-                    paragraphPublications.add(new Text(", "));
+    public static List<ProtectEvidence> sort(@NotNull List<ProtectEvidence> evidenceItems) {
+        return evidenceItems.stream().sorted((item1, item2) -> {
+            if (item1.treatment().equals(item2.treatment())) {
+                if (item1.level().equals(item2.level())) {
+                    if (item1.direction().equals(item2.direction())) {
+                        return item1.direction().compareTo(item2.direction());
+                    } else {
+                        return item1.direction().compareTo(item2.direction());
+                    }
+                } else {
+                    return item1.level().compareTo(item2.level());
                 }
-
-                paragraphPublications.add(new Text(Integer.toString(number)).addStyle(ReportResources.urlStyle())
-                        .setAction(PdfAction.createURI(url))).setFixedLeading(ReportResources.BODY_TEXT_LEADING);
-
+            } else {
+                return item1.treatment().compareTo(item2.treatment());
             }
-        }
-
-        return paragraphPublications;
+        }).collect(Collectors.toList());
     }
 
     @NotNull
     public static Paragraph noteGlossaryTerms() {
-        return new Paragraph("The symbol ( ")
-                .add(new Text(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()))
+        return new Paragraph("The symbol ( ").add(new Text(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()))
                 .add(" ) means that the evidence is responsive.\n")
                 .add("The symbol ( ")
                 .add(new Text(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()))
@@ -279,7 +260,8 @@ public class ClinicalEvidenceFunctions {
                 .add("The abbreviation ( ")
                 .add(new Text(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()))
                 .add(" mentioned after the level of evidence) indicates the evidence is predicted "
-                + "responsive/resistent. More details about CKB can be found in their").addStyle(ReportResources.subTextStyle())
+                        + "responsive/resistent. More details about CKB can be found in their")
+                .addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
                 .add(new Text("Glossary Of Terms").addStyle(ReportResources.urlStyle())
                         .setAction(PdfAction.createURI("https://ckbhome.jax.org/about/glossaryOfTerms")))

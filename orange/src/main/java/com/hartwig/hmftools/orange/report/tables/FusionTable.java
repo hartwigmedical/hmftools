@@ -54,7 +54,8 @@ public final class FusionTable {
             details.addCell(CellUtil.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-"));
             details.addCell(CellUtil.createKey("Domains lost"));
             details.addCell(CellUtil.createValue(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-"));
-            table.addCell(CellUtil.createContent(details));
+            // Need to keep this details table to avoid page-wrapping that cuts through the middle of a single fusion
+            table.addCell(CellUtil.createContent(details).setKeepTogether(true));
         }
 
         return TableUtil.createWrapping(table, title);

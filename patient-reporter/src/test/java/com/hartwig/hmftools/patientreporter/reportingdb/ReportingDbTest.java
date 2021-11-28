@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortTestFactory;
 import com.hartwig.hmftools.common.lims.reportingdb.ReportingDatabase;
 import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -48,11 +49,15 @@ public class ReportingDbTest {
         File expectedOutput = new File("/tmp/CPCT01_SUCCESS_FR12345678_dna_analysis_report_api-update.json");
         Files.deleteIfExists(expectedOutput.toPath());
         assertFalse(expectedOutput.exists());
-        reportingDb.appendAnalysedReport(ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config), "/tmp");
+        reportingDb.appendAnalysedReport(ExampleAnalysisTestFactory.createAnalysisWithAllTablesFilledIn(config, PurpleQCStatus.PASS),
+                "/tmp");
         assertTrue(expectedOutput.exists());
 
-        Map<String, Object> output = new GsonBuilder().serializeNulls().serializeSpecialFloatingPointValues().create()
-                .fromJson(join("\n", Files.readAllLines(expectedOutput.toPath())), new TypeToken<Map<String, Object>>(){}.getType());
+        Map<String, Object> output = new GsonBuilder().serializeNulls()
+                .serializeSpecialFloatingPointValues()
+                .create()
+                .fromJson(join("\n", Files.readAllLines(expectedOutput.toPath())), new TypeToken<Map<String, Object>>() {
+                }.getType());
         assertEquals(output.get("has_reliable_quality"), true);
         assertEquals(output.get("has_reliable_purity"), true);
         assertEquals(output.get("purity"), 1.0);

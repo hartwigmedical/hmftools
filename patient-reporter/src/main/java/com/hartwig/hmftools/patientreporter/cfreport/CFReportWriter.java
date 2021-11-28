@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.GsonBuilder;
@@ -68,9 +69,8 @@ public class CFReportWriter implements ReportWriter {
     @Override
     public void writeQCFailReport(@NotNull QCFailReport report, @NotNull String outputFilePath) throws IOException {
         if (report.reason().isDeepWGSDataAvailable()) {
-            //TODO: fix logica didn't work
-            if (report.purpleQC() != null && !report.purpleQC().isEmpty()
-                    && !report.purpleQC().contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
+            Set<PurpleQCStatus> purpleQCStatuses = report.purpleQC();
+            if (purpleQCStatuses != null && !purpleQCStatuses.contains(PurpleQCStatus.FAIL_CONTAMINATION)) {
                 writeReport(report,
                         new ReportChapter[] { new QCFailChapter(report), new QCFailPGXChapter(report),
                                 new QCFailDisclaimerChapter(report) },
