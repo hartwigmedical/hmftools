@@ -116,7 +116,7 @@ public class ClinicalEvidenceFunctions {
         if (hasEvidence) {
             return TableUtil.createWrappingReportTable(title, treatmentTable);
         } else {
-            return TableUtil.createEmptyTable(title, contentWidth);
+            return  TableUtil.createNoneReportTable(title);
         }
     }
 

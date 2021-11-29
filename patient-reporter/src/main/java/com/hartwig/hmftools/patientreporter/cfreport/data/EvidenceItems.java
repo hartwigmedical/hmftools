@@ -31,7 +31,9 @@ public final class EvidenceItems {
     public static int uniqueEventCount(@NotNull List<ProtectEvidence> evidenceItems) {
         Set<String> events = Sets.newHashSet();
         for (ProtectEvidence evidence : evidenceItems) {
-            events.add(evidence.genomicEvent());
+            if (evidence.level().equals(EvidenceLevel.A) || evidence.level().equals(EvidenceLevel.B)) {
+                events.add(evidence.genomicEvent());
+            }
         }
         return events.size();
     }
@@ -47,8 +49,10 @@ public final class EvidenceItems {
         Set<String> treatments = Sets.newHashSet();
         for (ProtectEvidence evidence : evidences) {
             if (evidence.onLabel() == requireOnLabel && (reportGermline || !evidence.germline())) {
-                treatments.add(evidence.treatment());
-                levels.add(evidence.level());
+                if (evidence.level().equals(EvidenceLevel.A) || evidence.level().equals(EvidenceLevel.B)) {
+                    treatments.add(evidence.treatment());
+                    levels.add(evidence.level());
+                }
             }
         }
 
@@ -57,7 +61,9 @@ public final class EvidenceItems {
         } else {
             StringJoiner joiner = new StringJoiner(", ");
             for (EvidenceLevel level : levels) {
-                joiner.add(level.toString());
+                if (level.equals(EvidenceLevel.A) || level.equals(EvidenceLevel.B)) {
+                    joiner.add(level.toString());
+                }
             }
 
             return treatments.size() + " (" + joiner.toString() + ")";

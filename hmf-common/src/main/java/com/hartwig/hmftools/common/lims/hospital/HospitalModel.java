@@ -80,7 +80,13 @@ public abstract class HospitalModel {
 
     @Nullable
     private HospitalPersons findPersonsForStudy(@NotNull String hospitalId, @NotNull LimsCohortConfig cohort) {
-        switch (cohort.cohortId()) {
+        String cohorts;
+        if (cohort.cohortId().startsWith("COREDB")) {
+            cohorts = "COREDB";
+        } else {
+            cohorts = cohort.cohortId();
+        }
+        switch (cohorts) {
             case "CPCT":
             case "CPCTpancreas":
                 return hospitalPersonsCPCT().get(hospitalId);
