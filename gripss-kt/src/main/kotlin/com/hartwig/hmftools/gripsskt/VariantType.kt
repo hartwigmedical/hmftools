@@ -181,6 +181,4 @@ sealed class VariantType(val eventType: EventType) {
 
         return false
     }
-
-
 }
