@@ -2,6 +2,9 @@ package com.hartwig.hmftools.isofox.unmapped;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -15,7 +18,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
@@ -29,7 +31,7 @@ public class LineElementMatcher
     private final String mLinxDir;
     private final String mSvVcfFile;
 
-    private final Map<UnmappedRead,List<StructuralVariant>> mUmrMatchedVariants;
+    private final Map<String,List<StructuralVariant>> mUmrMatchedVariants; // UMR position key to matched SVs
 
     private static final int MAX_DISTANCE = 10000;
 
@@ -40,9 +42,9 @@ public class LineElementMatcher
         mUmrMatchedVariants = Maps.newHashMap();
     }
 
-    public final List<StructuralVariant> getUmrMatch(final UnmappedRead umRead)
+    public List<StructuralVariant> getUmrMatch(final String posKey)
     {
-        return mUmrMatchedVariants.get(umRead);
+        return mUmrMatchedVariants.get(posKey);
     }
 
     public void findMatches(
@@ -55,11 +57,9 @@ public class LineElementMatcher
         {
             for(Map.Entry<String, Map<String, List<UnmappedRead>>> umrSampleMap : positionMaps.entrySet())
             {
-                String posKey = umrSampleMap.getKey();
-
                 List<UnmappedRead> umReads = umrSampleMap.getValue().get(sampleId);
 
-                umReads.forEach(x -> findMatch(x, variants));
+                findMatch(umReads.get(0), variants);
             }
         }
     }
@@ -70,10 +70,13 @@ public class LineElementMatcher
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                if(variant.type() == SGL && se == SE_END)
+                if((variant.type() == SGL || variant.type() == INF) && se == SE_END)
                     continue;
 
                 StructuralVariantLeg leg = se == SE_START ? variant.start() : variant.end();
+
+                if(!umRead.ReadRegion.Chromosome.equals(leg.chromosome()))
+                    continue;
 
                 if(abs(leg.position() - umRead.ExonBoundary) <= MAX_DISTANCE)
                 {
@@ -81,7 +84,7 @@ public class LineElementMatcher
                     if(matchedSVs == null)
                     {
                         matchedSVs = Lists.newArrayList();
-                        mUmrMatchedVariants.put(umRead, matchedSVs);
+                        mUmrMatchedVariants.put(umRead.positionKey(), matchedSVs);
                     }
 
                     matchedSVs.add(variant);
@@ -111,6 +114,7 @@ public class LineElementMatcher
 
             StructuralVariantFileLoader.fromFile(svVcfFile, new AlwaysPassFilter()).stream()
                     .filter(x -> lineVcfIds.contains(x.id()))
+                    .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS) || x.filter().equals(INFERRED))
                     .forEach(x -> variants.add(x));
 
             ISF_LOGGER.info("sample({}) loaded {} line variants", sampleId, variants.size());

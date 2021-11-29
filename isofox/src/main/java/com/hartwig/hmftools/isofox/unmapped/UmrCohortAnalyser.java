@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_GENE;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -31,6 +32,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
@@ -50,6 +52,8 @@ public class UmrCohortAnalyser
     private final LineElementMatcher mLineElementMatcher;
     private final boolean mCombineFrequencies;
 
+    private final BufferedWriter mWriter;
+
     private static final String LINX_DIRECTORY = "linx_dir";
     private static final String GENE_EXPRESSION_FILE = "gene_expression_file";
     private static final String COMBINE_FREQUENCIES = "combine_frequencies";
@@ -68,6 +72,8 @@ public class UmrCohortAnalyser
                 new LineElementMatcher(cmd.getOptionValue(LINX_DIR), cmd.getOptionValue(SV_VCF_FILE)) : null;
 
         mCombineFrequencies = cmd.hasOption(COMBINE_FREQUENCIES);
+
+        mWriter = initialiseWriter();
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -86,7 +92,6 @@ public class UmrCohortAnalyser
         if(!formSampleFilenames(mConfig, UNMAPPED_READS, filenames))
             return;
 
-        int totalProcessed = 0;
         int nextLog = 100000;
 
         // load each sample's alt SJs and consolidate into a single list
@@ -110,6 +115,7 @@ public class UmrCohortAnalyser
             else
             {
                 mLineElementMatcher.findMatches(sampleId, mUnmappedReads);
+                writeUnmappedReads();
                 mUnmappedReads.clear();
             }
 
@@ -124,7 +130,10 @@ public class UmrCohortAnalyser
 
         ISF_LOGGER.info("writing cohort unmapped-read");
 
-        writeUnmappedReads();
+        if(mCombineFrequencies)
+            writeUnmappedReads();
+
+        closeBufferedWriter(mWriter);
     }
 
     private void loadFile(final String sampleId, final Path filename)
@@ -163,7 +172,7 @@ public class UmrCohortAnalyser
                 UnmappedRead umRead = new UnmappedRead(
                         values[readIndex],
                         new ChrBaseRegion(values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex])),
-                        Integer.parseInt(values[scLengthIndex]), values[scSideIndex].equals(START_STR) ? SE_START : SE_END,
+                        Integer.parseInt(values[scLengthIndex]), Integer.parseInt(values[scSideIndex]),
                         Double.parseDouble(values[abqIndex]), values[geneIdIndex], values[geneNameIndex], values[transIndex],
                         Integer.parseInt(values[exonRankIndex]), Integer.parseInt(values[exonBoundaryIndex]),
                         Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex],
@@ -216,7 +225,7 @@ public class UmrCohortAnalyser
         sampleReads.add(umRead);
     }
 
-    private void writeUnmappedReads()
+    private BufferedWriter initialiseWriter()
     {
         final String outputFile = mConfig.formCohortFilename("combined_unmapped_reads.csv");
 
@@ -225,9 +234,32 @@ public class UmrCohortAnalyser
             BufferedWriter writer = createBufferedWriter(outputFile, false);
             writer.write("SampleId,FragmentCount,UnpairedCount,Chromosome,GeneName,TransName,ExonRank,SpliceType");
             writer.write(",ExonBoundary,ExonDistance,SoftClipSide,AvgBaseQual");
-            writer.write(",CohortFrequency,SoftClipBases,GeneTPM,HasChimericMatch");
+            writer.write(",SoftClipBases,GeneTPM,HasChimericMatch");
+
+            if(mCombineFrequencies)
+                writer.write(",CohortFrequency");
+
+            if(mLineElementMatcher != null)
+                writer.write(",SvLinxMatches");
+
             writer.newLine();
 
+            return writer;
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to initialise cohort unmapped reads file({}): {}", outputFile, e.toString());
+            return null;
+        }
+    }
+
+    private void writeUnmappedReads()
+    {
+        if(mWriter == null)
+            return;
+
+        try
+        {
             for(Map.Entry<String,Map<String,Map<String,List<UnmappedRead>>>> chrEntry : mUnmappedReads.entrySet())
             {
                 String chromosome = chrEntry.getKey();
@@ -241,6 +273,24 @@ public class UmrCohortAnalyser
                         String sampleId = sampleEntry.getKey();
 
                         List<UnmappedRead> umReads = sampleEntry.getValue();
+                        UnmappedRead firstRead = umReads.get(0);
+
+                        String matchedSVsInfo = "";
+                        if(mLineElementMatcher != null)
+                        {
+                            List<StructuralVariant> matchedSVs = mLineElementMatcher.getUmrMatch(firstRead.positionKey());
+
+                            if(matchedSVs == null)
+                                continue;
+
+                            StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+                            // VcfId:Type:Position:OtherPos
+                            matchedSVs.forEach(x -> sj.add(String.format("%s:%s:%d:%d",
+                                    x.id(), x.type(), x.position(true), x.end() != null ? x.position(false) : 0)));
+
+                            matchedSVsInfo = sj.toString();
+                        }
 
                         // de-dup reads by fragment and across genes sharing the same exon boundary using readId
                         Set<String> readIds = Sets.newHashSet();
@@ -274,26 +324,33 @@ public class UmrCohortAnalyser
 
                         double avgBaseQual = umReads.stream().mapToDouble(x -> x.AvgBaseQual).sum() / umReads.size();
 
-                        UnmappedRead firstRead = umReads.get(0);
-
-                        writer.write(String.format("%s,%d,%d,%s,%s,%s,%d,%s",
+                        mWriter.write(String.format("%s,%d,%d,%s,%s,%s,%d,%s",
                                 sampleId, fragmentCount, unpairedCount, chromosome, genesStr.toString(), firstRead.TransName,
                                 firstRead.ExonRank, firstRead.SpliceType));
 
-                        writer.write(String.format(",%d,%d,%s,%.1f,%d,%s,%4.3e,%s",
+                        mWriter.write(String.format(",%d,%d,%s,%.1f,%s,%4.3e,%s",
                                 firstRead.ExonBoundary, firstRead.ExonDistance, startEndStr(firstRead.ScSide),
-                                avgBaseQual, sampleCount, firstRead.ScBases, geneTpm, hasSuppMatch));
+                                avgBaseQual, firstRead.ScBases, geneTpm, hasSuppMatch));
 
-                        writer.newLine();
+                        if(mCombineFrequencies)
+                        {
+                            mWriter.write(String.format(",%d", sampleCount));
+                        }
+
+                        if(mLineElementMatcher != null)
+                        {
+                            mWriter.write(String.format(",%s", matchedSVsInfo));
+                        }
+
+                        mWriter.newLine();
                     }
                 }
             }
 
-            writer.close();
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to write cohort unmapped reads file({}): {}", outputFile, e.toString());
+            ISF_LOGGER.error("failed to write cohort unmapped reads file: {}", e.toString());
         }
     }
 }
