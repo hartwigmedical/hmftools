@@ -115,7 +115,7 @@ public class PatientReporterApplication {
         if (!config.onlyCreatePDF()) {
             LOGGER.debug("Updating reporting db and writing report data");
 
-            reportWriter.writeQCFailReport(report, config.outputDirData());
+            reportWriter.writeJsonFailedFile(report, config.outputDirData());
 
             new ReportingDb().appendQCFailReport(report, config.outputDirReport());
         }
