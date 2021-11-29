@@ -150,7 +150,8 @@ public class SoftFilters
         double totalSupport = tumorFrags + breakend.ReferenceReads + readPairSupport;
         double alleleFrequency = totalSupport > 0 ? tumorFrags / totalSupport : 0;
 
-        return alleleFrequency < mFilterConstants.MinTumorAf;
+        double afThreshold = sv.isSgl() ? mFilterConstants.MinTumorAfBreakend : mFilterConstants.MinTumorAfBreakpoint;
+        return alleleFrequency < afThreshold;
     }
 
     private boolean shortDelInsertArtifact(final SvData sv, final Breakend breakend)
@@ -163,10 +164,12 @@ public class SoftFilters
 
     private boolean minQuality(final SvData sv, final Breakend breakend)
     {
-        if(sv.isSgl())
-            return breakend.Qual < mFilterConstants.MinQualBreakend;
-        else
-            return breakend.Qual < mFilterConstants.MinQualBreakpoint;
+        double qualThreshold = sv.isSgl() ? mFilterConstants.MinQualBreakend : mFilterConstants.MinQualBreakpoint;
+
+        if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
+            qualThreshold *= 0.5;
+
+        return breakend.Qual < qualThreshold;
     }
 
     private boolean polyGCInsert(final SvData sv)

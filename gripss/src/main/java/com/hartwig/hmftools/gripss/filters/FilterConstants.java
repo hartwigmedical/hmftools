@@ -16,7 +16,8 @@ public class FilterConstants
     public final double HardMaxNormalRelativeSupport;
     public final double SoftMaxNormalRelativeSupport;
     public final double MinNormalCoverage;
-    public final double MinTumorAf;
+    public final double MinTumorAfBreakend;
+    public final double MinTumorAfBreakpoint;
     public final double MaxShortStrandBias;
     public final int MinQualBreakend;
     public final int MinQualBreakpoint;
@@ -26,6 +27,7 @@ public class FilterConstants
     public final int MinLength;
     public final int PonDistance;
     public final ChrBaseRegion PolyGcRegion;
+    public final ChrBaseRegion LowQualRegion;
 
     // filter which only apply when reference is present:
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
@@ -52,6 +54,7 @@ public class FilterConstants
     public static final double DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT = 0.03;
     public static final double DEFAULT_MIN_NORMAL_COVERAGE = 8;
     public static final double DEFAULT_MIN_TUMOR_AF = 0.005;
+    public static final double DEFAULT_MIN_TUMOR_AF_SGL = 0.015;
     public static final double DEFAULT_MAX_SHORT_STRAND_BIAS = 0.95;
     public static final int DEFAULT_MIN_QUAL_BREAK_END = 1000;
     public static final int DEFAULT_MIN_QUAL_BREAK_POINT = 400;
@@ -68,6 +71,9 @@ public class FilterConstants
 
     public static final ChrBaseRegion LINC_00486_V37 = new ChrBaseRegion("2", 33141260, 33141700);
     public static final ChrBaseRegion LINC_00486_V38 = new ChrBaseRegion("chr2", 32916190, 32916630);
+
+    public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
+    public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
     // config overrides
     public static final String HARD_MIN_TUMOR_QUAL_CFG = "hard_min_tumor_qual";
@@ -98,7 +104,7 @@ public class FilterConstants
                 Double.parseDouble(cmd.getOptionValue(
                         SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, String.valueOf(DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT))),
                 Double.parseDouble(cmd.getOptionValue(MIN_NORMAL_COVERAGE_CFG, String.valueOf(DEFAULT_MIN_NORMAL_COVERAGE))),
-                Double.parseDouble(cmd.getOptionValue(MIN_TUMOR_AF_CFG, String.valueOf(DEFAULT_MIN_TUMOR_AF))),
+                DEFAULT_MIN_TUMOR_AF_SGL, Double.parseDouble(cmd.getOptionValue(MIN_TUMOR_AF_CFG, String.valueOf(DEFAULT_MIN_TUMOR_AF))),
                 Double.parseDouble(cmd.getOptionValue(MAX_SHORT_STRAND_BIAS_CFG, String.valueOf(DEFAULT_MAX_SHORT_STRAND_BIAS))),
                 Integer.parseInt(cmd.getOptionValue(MIN_QUAL_BREAK_END_CFG, String.valueOf(DEFAULT_MIN_QUAL_BREAK_END))),
                 Integer.parseInt(cmd.getOptionValue(MIN_QUAL_BREAK_POINT_CFG, String.valueOf(DEFAULT_MIN_QUAL_BREAK_POINT))),
@@ -109,21 +115,22 @@ public class FilterConstants
                         MAX_INEXACT_HOM_LENGTH_SHORT_DEL_CFG, String.valueOf(DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL))),
                 Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
                 Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
-                refGenVersion == V37 ? LINC_00486_V37 : LINC_00486_V38);
+                refGenVersion == V37 ? LINC_00486_V37 : LINC_00486_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
     }
 
     public FilterConstants(
             int minTumorQual, int hardMaxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMaxNormalRelativeSupport,
-            double minNormalCoverage, double minTumorAf, double maxShortStrandBias, int minQualBreakend, int minQualBreakpoint,
-            int minQualRescueLine, int maxHomLengthShortInv, int maxInexactHomLengthShortDel, int minLength, int ponDistance,
-            final ChrBaseRegion polyGcRegion)
+            double minNormalCoverage, double minTumorAfBreakend, double minTumorAfBreakpoint, double maxShortStrandBias,
+            int minQualBreakend, int minQualBreakpoint, int minQualRescueLine, int maxHomLengthShortInv, int maxInexactHomLengthShortDel,
+            int minLength, int ponDistance, final ChrBaseRegion polyGcRegion, final ChrBaseRegion lowQualRegion)
     {
         MinTumorQual = minTumorQual;
         HardMaxNormalAbsoluteSupport = hardMaxNormalAbsoluteSupport;
         HardMaxNormalRelativeSupport = hardMaxNormalRelativeSupport;
         SoftMaxNormalRelativeSupport = softMaxNormalRelativeSupport;
         MinNormalCoverage = minNormalCoverage;
-        MinTumorAf = minTumorAf;
+        MinTumorAfBreakend = minTumorAfBreakend;
+        MinTumorAfBreakpoint = minTumorAfBreakpoint;
         MaxShortStrandBias = maxShortStrandBias;
         MinQualBreakend = minQualBreakend;
         MinQualBreakpoint = minQualBreakpoint;
@@ -133,6 +140,7 @@ public class FilterConstants
         MinLength = minLength;
         PonDistance = ponDistance;
         PolyGcRegion = polyGcRegion;
+        LowQualRegion = lowQualRegion;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -142,7 +150,7 @@ public class FilterConstants
         options.addOption(HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG, true, "Hard max normal relative support");
         options.addOption(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, true, "Soft max normal relative support");
         options.addOption(MIN_NORMAL_COVERAGE_CFG, true, "Min normal coverage");
-        options.addOption(MIN_TUMOR_AF_CFG, true, "Min tumor allelic frequency");
+        options.addOption(MIN_TUMOR_AF_CFG, true, "Min tumor allelic frequency for non-SGLs");
         options.addOption(MAX_SHORT_STRAND_BIAS_CFG, true, "Max short strand bias");
         options.addOption(MIN_QUAL_BREAK_END_CFG, true, "Min qual break end");
         options.addOption(MIN_QUAL_BREAK_POINT_CFG, true, "Min qual break point");
