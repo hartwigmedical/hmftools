@@ -44,14 +44,11 @@ public class ClinicalEvidenceOnLabelChapter implements ReportChapter {
         List<ProtectEvidence> reportedStudies = analysis.clinicalTrials();
         addTrialSection(document, "Tumor type specific clinical trials (NL)", reportedStudies);
         document.add(ClinicalEvidenceFunctions.note("Potential eligibility for DRUP is dependent on tumor type details therefore "
-                + "certain tumor types may not be eligible for the DRUP."));
-        document.add(ClinicalEvidenceFunctions.note(""));
+                + "certain tumor types may not be eligible for the DRUP.\n"));
         document.add(ClinicalEvidenceFunctions.note("The iClusion knowledgebase is used to annotate DNA aberrations for potential "
                 + "clinical study eligibility. Please note clinical study eligibility depends on multiple patient and tumor "
-                + "characteristics of which only the DNA aberrations are considered in this report. "));
-        document.add(ClinicalEvidenceFunctions.note(""));
+                + "characteristics of which only the DNA aberrations are considered in this report. \n"));
         document.add(ClinicalEvidenceFunctions.noteEvidence());
-        document.add(ClinicalEvidenceFunctions.note(""));
         document.add(ClinicalEvidenceFunctions.noteGlossaryTerms());
     }
 
