@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss.links;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.util.List;
@@ -42,8 +43,6 @@ public class AssemblyLinks
             }
         }
 
-        GR_LOGGER.debug("found {} unique assemblies", assemblyBreakendMap.size());
-
         LinkStore assemblyLinkStore = new LinkStore();
 
         for(Map.Entry<String,List<Breakend>> entry : assemblyBreakendMap.entrySet())
@@ -59,14 +58,27 @@ public class AssemblyLinks
             {
                 Breakend breakend1 = breakends.get(i);
 
-                for(int j = i + 1; j < breakends.size() - 1; ++j)
+                for(int j = i + 1; j < breakends.size(); ++j)
                 {
                     Breakend breakend2 = breakends.get(j);
 
                     if(breakend1.sv() == breakend2.sv())
                         continue;
 
-                    String linkId = String.format("%d-%d", assembly, linkCounter++);
+                    // integrity check that the breakends face and are on the same chromosome
+                    if(!breakend1.Chromosome.equals(breakend2.Chromosome))
+                        continue;
+
+                    if(breakend1.Orientation == breakend2.Orientation)
+                        continue;
+
+                    if(breakend1.Position < breakend2.Position && breakend1.Orientation == POS_ORIENT)
+                        continue;
+
+                    if(breakend2.Position < breakend1.Position && breakend2.Orientation == POS_ORIENT)
+                        continue;
+
+                    String linkId = String.format("%s-%d", assembly, linkCounter++);
 
                     Link newLink = Link.from(linkId, breakend1, breakend2);
                     assemblyLinkStore.addLink(breakend1, newLink);

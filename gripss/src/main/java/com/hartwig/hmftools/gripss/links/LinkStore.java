@@ -67,4 +67,8 @@ public class LinkStore
         return sj.toString();
     }
 
+    public void clear()
+    {
+        mBreakendLinksMap.clear();
+    }
 }

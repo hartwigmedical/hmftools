@@ -206,6 +206,11 @@ public class Breakend
         return totalSupport > 0 ? tumorFrags / totalSupport : 0;
     }
 
+    public String toString()
+    {
+        return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orientation);
+    }
+
     /*
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }

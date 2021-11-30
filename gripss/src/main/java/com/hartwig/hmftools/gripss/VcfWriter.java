@@ -18,11 +18,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.filters.FilterType;
-import com.hartwig.hmftools.gripss.links.Link;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -33,6 +31,8 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class VcfWriter
 {
@@ -53,8 +53,9 @@ public class VcfWriter
         mFilterCache = filterCache;
         mDataCache = dataCache;
 
-        final String unfilteredVcf = config.OutputDir + config.SampleId + "gripss.vcf.gz";
-        final String filteredVcf = config.OutputDir + config.SampleId + "gripss.filtered.vcf.gz";
+        final String suffix = config.OutputId != null ? "." + config.OutputId + ".vcf.gz" : ".vcf.gz";
+        final String unfilteredVcf = config.OutputDir + config.SampleId + ".gripss" + suffix;
+        final String filteredVcf = config.OutputDir + config.SampleId + ".gripss.filtered" + suffix;
 
         mFilteredWriter = new VariantContextWriterBuilder()
                 .setReferenceDictionary(vcfHeader.getSequenceDictionary())
@@ -87,13 +88,20 @@ public class VcfWriter
                     FilterType.vcfName(filter), FilterType.vcfInfoString(filter)));
         }
 
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_REALIGN, "Variant was realigned"));
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_EVENT_TYPE, "Structural variant type"));
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_TAF, "Tumor allelic frequency (fragment support / total support)"));
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_ALT_PATH, "Alternate path"));
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_LOCAL_LINKED_BY, "Breakend linking information"));
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_REMOTE_LINKED_BY, "Partner breakend linking information"));
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_HOTSPOT, "Variant is a hotspot"));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_REALIGN, 1, VCFHeaderLineType.Flag, "Variant was realigned"));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_EVENT_TYPE, 1, VCFHeaderLineType.String, "Structural variant type"));
+
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                VT_TAF, 1, VCFHeaderLineType.Float,"Tumor allelic frequency (fragment support / total support)"));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"));
+
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                VT_LOCAL_LINKED_BY, 1, VCFHeaderLineType.String, "Breakend linking information"));
+
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                VT_REMOTE_LINKED_BY, 1, VCFHeaderLineType.String, "Partner breakend linking information"));
+
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_HOTSPOT, 1, VCFHeaderLineType.Flag, "Variant is a hotspot"));
 
         // writer.writeHeader(VCFHeader(metaData, samples))
         writer.writeHeader(newHeader);
@@ -154,13 +162,17 @@ public class VcfWriter
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
         builder.log10PError(breakend.Qual / -10.0)
-                .attribute(VT_TAF, breakend.allelicFrequency())
-                .attribute(VT_LOCAL_LINKED_BY, localLinks)
-                .attribute(VT_REMOTE_LINKED_BY, remoteLinks)
+                .attribute(VT_TAF, String.format("%.4f", breakend.allelicFrequency()))
                 .attribute(VT_HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
                 .attribute(VT_EVENT_TYPE, breakend.type());
 
-        if(!altPathStr.isEmpty())
+        if(!localLinks.isEmpty())
+            builder.attribute(VT_REMOTE_LINKED_BY, localLinks);
+
+        if(!remoteLinks.isEmpty())
+            builder.attribute(VT_LOCAL_LINKED_BY, remoteLinks);
+
+        if(altPathStr != null && !altPathStr.isEmpty())
             builder.attribute(VT_ALT_PATH, altPathStr);
 
         List<FilterType> filters = mFilterCache.getBreakendFilters(breakend);

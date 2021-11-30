@@ -42,7 +42,7 @@ public enum FilterType
             case MIN_NORMAL_COVERAGE: return "minNormalCoverage";
             case SHORT_STRAND_BIAS: return "shortStrandBias";
             case SGL_STRAND_BIAS: return "sglStrandBias";
-            case MIN_QUAL: return "Insufficient quality";
+            case MIN_QUAL: return "minQual";
             case MAX_POLY_G_LENGTH: return "maxPolyGLength";
             case MAX_POLY_A_HOM_LENGTH: return "maxPolyAHomLength";
             case IMPRECISE: return "imprecise";

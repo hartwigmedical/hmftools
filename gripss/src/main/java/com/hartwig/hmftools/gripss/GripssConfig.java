@@ -8,7 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import java.util.Arrays;
@@ -35,7 +36,7 @@ public class GripssConfig
     public final String VcfFile;
 
     public final String OutputDir;
-    // public final String Scope;
+    public final String OutputId;
     public final List<String> RestrictedChromosomes;
 
     private static final String SAMPLE = "sample";
@@ -53,6 +54,7 @@ public class GripssConfig
         SampleId = cmd.getOptionValue(SAMPLE);
         ReferenceId = cmd.getOptionValue(REFERENCE);
         OutputDir = parseOutputDir(cmd);
+        OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
         RefGenVersion = cmd.hasOption(REF_GENOME_VERSION) ? RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)) : V37;
@@ -72,6 +74,7 @@ public class GripssConfig
         RefGenVersion = refGenVersion;
         VcfFile = vcfFile;
         OutputDir = null;
+        OutputId = null;
         RestrictedChromosomes = Lists.newArrayList();
     }
 
@@ -98,7 +101,7 @@ public class GripssConfig
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(SCOPE, true, "Scope: germline or somatic");
 
-        addOutputDir(options);
+        addOutputOptions(options);
         addLoggingOptions(options);
         addRefGenomeConfig(options);
 

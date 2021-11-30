@@ -3,6 +3,8 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
@@ -103,6 +105,19 @@ public class GripssTestUtils
         return new SvData(sv, genotypeIds);
     }
 
+    public static SvData createSv(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String insSeq, final GenotypeIds genotypeIds, final Map<String,Object> attributesStart, final Map<String,Object> attributesEnd)
+    {
+        String ref = "A";
+
+        VariantContext[] contexts = createSvBreakends(
+                eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, attributesStart, attributesEnd);
+
+        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        return new SvData(sv, genotypeIds);
+    }
+
     public static SvData createSgl(
             final String eventId, final String chromosome, int position, byte orientation, final String insSeq, final GenotypeIds genotypeIds)
     {
@@ -147,6 +162,24 @@ public class GripssTestUtils
 
         pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd, commonOverrides, refOverrides, tumorOverrides);
         pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart, commonOverrides, refOverrides, tumorOverrides);
+
+        return pair;
+    }
+
+    public static VariantContext[] createSvBreakends(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String ref, final String insSeq, final Map<String,Object> attributesStart, final Map<String,Object> attributesEnd)
+    {
+        String vcfStart = vcfId(eventId, true);
+        String vcfEnd = vcfId(eventId, false);
+
+        VariantContext[] pair = new VariantContext[SE_PAIR];
+
+        String altStart = formPairedAltString(ref, insSeq, chrEnd, posEnd, orientStart, orientEnd);
+        String altEnd = formPairedAltString(ref, insSeq, chrStart, posStart, orientEnd, orientStart);
+
+        pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd, attributesStart, null, null);
+        pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart, attributesEnd, null, null);
 
         return pair;
     }
@@ -344,5 +377,21 @@ public class GripssTestUtils
                 DEFAULT_PON_DISTANCE,
                 LINC_00486_V37,
                 PMS2_V37);
+    }
+
+    public static Map<String,Object> buildLinkAttributes(final String beid, final String beidl)
+    {
+        Map<String,Object> attributes = Maps.newHashMap();
+        attributes.put(VT_AS, 2); // set automatically from assembly strings
+        attributes.put(VT_BEID, beid);
+        attributes.put(VT_BEIDL, beidl);
+        return attributes;
+    }
+
+    public static void loadSvDataCache(final SvDataCache dataCache, final List<SvData> svDataList)
+    {
+        dataCache.clear();
+        svDataList.forEach(x -> dataCache.addSvData(x));
+        dataCache.buildBreakendMap();
     }
 }

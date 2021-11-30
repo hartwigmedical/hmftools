@@ -195,8 +195,8 @@ public class BreakendRealigner
 
         for(int i = 0; i < bases.length(); ++i)
         {
-            char base = newBases.charAt(i);
-            if(VALID_BASES.contains(newBases.charAt(i)))
+            char base = bases.charAt(i);
+            if(VALID_BASES.contains(base))
                 newBases.append(base);
             else
                 newBases.append('N');

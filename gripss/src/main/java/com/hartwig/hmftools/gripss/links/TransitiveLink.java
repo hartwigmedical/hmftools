@@ -42,8 +42,8 @@ public class TransitiveLink // previously 'Node'
 
         for (Link link : links)
         {
-            mMinDistance += link.MinDistance;
-            mMaxDistance += link.MaxDistance;
+            mMinDistance += link.minDistance();
+            mMaxDistance += link.maxDistance();
         }
     }
 

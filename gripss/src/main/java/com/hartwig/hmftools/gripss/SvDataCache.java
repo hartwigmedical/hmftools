@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.filters.FilterType;
 
 public class SvDataCache
 {
@@ -112,5 +111,11 @@ public class SvDataCache
         }
 
         return closeBreakends;
+    }
+
+    public void clear()
+    {
+        mChromosomeBreakends.clear();
+        mSvData.clear();
     }
 }
