@@ -35,10 +35,6 @@ public class SvData
     private final boolean mImprecise;
     private final boolean mIsShortLocal;
 
-    private final List<FilterType> mFilters;
-
-    private int mPonCount;
-
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
         mId = sv.startContext().getAttributeAsString(VT_EVENT, sv.id());
@@ -56,10 +52,6 @@ public class SvData
         mBreakends = new Breakend[] { breakendStart, breakendEnd };
 
         mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
-
-        mFilters = Lists.newArrayList();
-
-        mPonCount = 0;
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
@@ -94,17 +86,6 @@ public class SvData
 
     public boolean isShortLocal() { return mIsShortLocal; }
     public boolean imprecise() { return mImprecise; }
-
-    public List<FilterType> getFilters() { return mFilters; }
-
-    public void addFilter(final FilterType filter)
-    {
-        if(!mFilters.contains(filter))
-            mFilters.add(filter);
-    }
-
-    public void setPonCount(int count) { mPonCount = count; }
-    public int getPonCount() { return mPonCount; }
 
     public static boolean hasLength(final StructuralVariantType type)
     {

@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.gripss.filters;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_T;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -13,11 +18,13 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.gripss.common.SvData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class HotspotCache
 {
@@ -48,17 +55,54 @@ public class HotspotCache
         hotspots.add(hotspot);
     }
 
-    public boolean matchesHotspot(final StructuralVariant sv)
+    public boolean isHotspotVariant(final SvData sv)
     {
-        if(sv.type() == StructuralVariantType.SGL)
+        // check hotspot rescue
+        if(sv.isSgl())
             return false;
 
-        List<KnownHotspot> regions = mHotspotRegions.get(sv.chromosome(true));
+        if(hasLength(sv.type()) && sv.length() < FilterConstants.SHORT_RESCUE_LENGTH)
+            return false;
+
+        if(isPolyATSequence(sv.contextStart()) || (sv.contextEnd() != null && isPolyATSequence(sv.contextEnd())))
+            return false;
+
+        return matchesHotspot(sv.chromosomeStart(), sv.chromosomeEnd(), sv.posStart(), sv.posEnd(), sv.orientStart(), sv.orientEnd());
+    }
+
+    public boolean isHotspotVariant(final StructuralVariant sv)
+    {
+        // check hotspot rescue
+        if(sv.type() == SGL)
+            return false;
+
+        if(hasLength(sv.type()) && SvData.length(sv) < FilterConstants.SHORT_RESCUE_LENGTH)
+            return false;
+
+        else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
+            return false;
+
+        return matchesHotspot(
+                sv.chromosome(true), sv.chromosome(false),
+                sv.position(true).intValue(), sv.position(false).intValue(),
+                sv.orientation(true), sv.orientation(false));
+    }
+
+
+    private static boolean isPolyATSequence(final VariantContext variant)
+    {
+        final String homology = variant.getAttributeAsString(VT_HOMSEQ, "");
+        return homology.contains(POLY_A) || homology.contains(POLY_T);
+    }
+
+    private boolean matchesHotspot(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
+    {
+        List<KnownHotspot> regions = mHotspotRegions.get(chrStart);
         if(regions != null)
         {
             for(KnownHotspot region : regions)
             {
-                if(region.matches(sv))
+                if(region.matches(chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd))
                     return true;
             }
         }

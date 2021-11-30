@@ -6,16 +6,17 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-
-import org.apache.commons.compress.utils.Lists;
+import com.hartwig.hmftools.gripss.filters.FilterType;
 
 public class SvDataCache
 {
     private final List<SvData> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
+
 
     public SvDataCache()
     {

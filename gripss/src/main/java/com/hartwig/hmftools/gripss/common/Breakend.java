@@ -65,7 +65,6 @@ public class Breakend
     public final boolean IsLineInsertion;
 
     private final SvData mSvData;
-    private final List<FilterType> mFilters;
     private final List<String> mAssemblies;
     private boolean mReligned;
     private int mChrLocationIndex;
@@ -123,7 +122,6 @@ public class Breakend
             InexactHomology[SE_END] = ihompos.get(1);
         }
 
-        mFilters = Lists.newArrayList();
         mAssemblies = parseAssemblies(context);
         mReligned = false;
         mChrLocationIndex = -1;
@@ -190,14 +188,6 @@ public class Breakend
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }
-
-    public List<FilterType> getFilters() { return mFilters; }
-
-    public void addFilter(final FilterType filter)
-    {
-        if(!mFilters.contains(filter))
-            mFilters.add(filter);
-    }
 
     public List<String> getAssemblies() { return mAssemblies; }
 

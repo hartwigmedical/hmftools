@@ -9,24 +9,23 @@ import com.hartwig.hmftools.gripss.common.Breakend;
 
 public class LinkStore
 {
-    private final Map<String,List<Link>> mBreakendLinksMap;
+    private final Map<Breakend,List<Link>> mBreakendLinksMap;
 
     public LinkStore()
     {
         mBreakendLinksMap = Maps.newHashMap();
     }
 
-    public Map<String,List<Link>> getBreakendLinksMap() { return mBreakendLinksMap; }
+    public Map<Breakend,List<Link>> getBreakendLinksMap() { return mBreakendLinksMap; }
 
-    public List<Link> getBreakendLinks(final Breakend breakend) { return mBreakendLinksMap.get(breakend.VcfId); }
-    public List<Link> getBreakendLinks(final String breakendId) { return mBreakendLinksMap.get(breakendId); }
+    public List<Link> getBreakendLinks(final Breakend breakend) { return mBreakendLinksMap.get(breakend); }
 
     public static LinkStore from(final LinkStore store1, final LinkStore store2)
     {
         LinkStore newStore = new LinkStore();
         newStore.getBreakendLinksMap().putAll(store1.getBreakendLinksMap());
 
-        for(Map.Entry<String,List<Link>> entry : store2.getBreakendLinksMap().entrySet())
+        for(Map.Entry<Breakend,List<Link>> entry : store2.getBreakendLinksMap().entrySet())
         {
             List<Link> links = newStore.getBreakendLinksMap().get(entry.getKey());
 
@@ -45,16 +44,11 @@ public class LinkStore
 
     public void addLink(final Breakend breakend, final Link link)
     {
-        addLink(breakend.VcfId, link);
-    }
-
-    public void addLink(final String breakendId, final Link link)
-    {
-        List<Link> links = mBreakendLinksMap.get(breakendId);
+        List<Link> links = mBreakendLinksMap.get(breakend);
         if(links ==  null)
         {
             links = Lists.newArrayList();
-            mBreakendLinksMap.put(breakendId, links);
+            mBreakendLinksMap.put(breakend, links);
         }
 
         links.add(link);

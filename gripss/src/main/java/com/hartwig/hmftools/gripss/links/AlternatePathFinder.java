@@ -43,11 +43,11 @@ public class AlternatePathFinder
 
                 if(!transLinks.isEmpty())
                 {
-                    AlternatePath altPath = new AlternatePath(breakend.VcfId, otherBreakend.VcfId, transLinks);
+                    AlternatePath altPath = new AlternatePath(breakend, otherBreakend, transLinks);
 
                     List<Link> reversedLinks = Lists.newArrayList();
                     transLinks.forEach(x -> reversedLinks.add(0, x.reverse()));
-                    AlternatePath reverseAltPath = new AlternatePath(otherBreakend.VcfId, breakend.VcfId, reversedLinks);
+                    AlternatePath reverseAltPath = new AlternatePath(otherBreakend, breakend, reversedLinks);
 
                     alternatePaths.put(breakend.VcfId, altPath);
                     alternatePaths.put(otherBreakend.VcfId, reverseAltPath);
@@ -72,7 +72,7 @@ public class AlternatePathFinder
 
         for(AlternatePath altPath : alternatePaths)
         {
-            idPathMap.put(altPath.VcfId, altPath.pathString());
+            idPathMap.put(altPath.First.VcfId, altPath.pathString());
         }
 
         return idPathMap;

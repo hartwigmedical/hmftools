@@ -8,10 +8,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASRP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASSR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH;
@@ -48,6 +44,11 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.gripss.FilterCache;
+import com.hartwig.hmftools.gripss.SvDataCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.common.VcfUtils;
@@ -63,68 +64,79 @@ public class SoftFilters
         mFilterConstants = filterConstants;
     }
 
-    public void applyFilters(final SvData sv)
+    public void applyFilters(final SvData sv, final FilterCache filterCache)
     {
-        // breakend filters
+        if(filterCache.isHotspot(sv))
+            return;
+
+        List<FilterType> beStartFilters = null;
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(sv.isSgl() && se == SE_END)
                 continue;
 
+            List<FilterType> filters = Lists.newArrayList();
+
+            if(se == SE_START)
+                beStartFilters = filters;
+
             Breakend breakend = sv.breakends()[se];
 
             if(normalCoverage(breakend))
-                breakend.addFilter(MIN_NORMAL_COVERAGE);
+                filters.add(MIN_NORMAL_COVERAGE);
 
             if(normalRelativeSupport(breakend))
-                breakend.addFilter(MAX_NORMAL_RELATIVE_SUPPORT);
+                filters.add(MAX_NORMAL_RELATIVE_SUPPORT);
 
             if(allelicFrequency(sv, breakend))
-                breakend.addFilter(MIN_TUMOR_AF);
+                filters.add(MIN_TUMOR_AF);
 
             if(minQuality(sv, breakend))
-                breakend.addFilter(MIN_QUAL);
+                filters.add(MIN_QUAL);
 
             if(shortSplitReadTumor(sv, breakend))
-                breakend.addFilter(SHORT_SR_SUPPORT);
+                filters.add(SHORT_SR_SUPPORT);
 
             if(shortSplitReadNormal(sv, breakend))
-                breakend.addFilter(SHORT_SR_NORMAL);
+                filters.add(SHORT_SR_NORMAL);
 
             if(discordantPairSupport(sv, breakend))
-                breakend.addFilter(DISCORDANT_PAIR_SUPPORT);
+                filters.add(DISCORDANT_PAIR_SUPPORT);
 
             if(singleStrandBias(breakend))
-                breakend.addFilter(SGL_STRAND_BIAS);
+                filters.add(SGL_STRAND_BIAS);
 
             if(singleInsertSequenceMinLength(breakend))
-                breakend.addFilter(SGL_INSERT_SEQ_MIN_LENGTH);
+                filters.add(SGL_INSERT_SEQ_MIN_LENGTH);
 
             if(shortDelInsertArtifact(sv, breakend))
-                breakend.addFilter(SHORT_DEL_INS_ARTIFACT);
+                filters.add(SHORT_DEL_INS_ARTIFACT);
 
             if(inexactHomologyLengthShortDel(sv, breakend))
-                breakend.addFilter(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
+                filters.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
 
             if(strandBias(sv, breakend))
-                breakend.addFilter(SHORT_STRAND_BIAS);
+                filters.add(SHORT_STRAND_BIAS);
+
+            if((se == SE_END && beStartFilters.contains(IMPRECISE)) || imprecise(sv))
+                filters.add(IMPRECISE);
+
+            if((se == SE_END && beStartFilters.contains(MAX_POLY_G_LENGTH)) || polyGCInsert(sv))
+                filters.add(MAX_POLY_G_LENGTH);
+
+            if((se == SE_END && beStartFilters.contains(MAX_POLY_A_HOM_LENGTH)) || polyATHomology(sv))
+                filters.add(MAX_POLY_A_HOM_LENGTH);
+
+            if((se == SE_END && beStartFilters.contains(MAX_HOM_LENGTH_SHORT_INV)) || homologyLengthFilterShortInversion(sv))
+                filters.add(MAX_HOM_LENGTH_SHORT_INV);
+
+            if((se == SE_END && beStartFilters.contains(MIN_LENGTH)) || minLength(sv))
+                filters.add(MIN_LENGTH);
+
+            if(!filters.isEmpty())
+                filterCache.addBreakendFilters(breakend, filters);
         }
-
-        // SV filters
-        if(imprecise(sv))
-            sv.addFilter(IMPRECISE);
-
-        if(polyGCInsert(sv))
-            sv.addFilter(MAX_POLY_G_LENGTH);
-
-        if(polyATHomology(sv))
-            sv.addFilter(MAX_POLY_A_HOM_LENGTH);
-
-        if(homologyLengthFilterShortInversion(sv))
-            sv.addFilter(MAX_HOM_LENGTH_SHORT_INV);
-
-        if(minLength(sv))
-            sv.addFilter(MIN_LENGTH);
     }
 
     private boolean normalCoverage(final Breakend breakend)

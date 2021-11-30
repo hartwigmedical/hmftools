@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
-import static com.hartwig.hmftools.gripss.filters.CommonFilters.isPolyATSequence;
-import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
 
 import java.util.Set;
 
@@ -138,7 +136,7 @@ public class VariantBuilder
         if(hotspotCandidate || mateHotspotCandidate)
         {
             // check whether this SV can be rescued as a hotspot
-            if(!keepHotspotVariant(sv))
+            if(!mHotspotCache.isHotspotVariant(sv))
             {
                 ++mHardFilteredCount;
                 return null;
@@ -146,17 +144,6 @@ public class VariantBuilder
         }
 
         return new SvData(sv, genotypeIds);
-    }
-
-    private boolean keepHotspotVariant(final StructuralVariant sv)
-    {
-        // check hotspot rescue
-        if(hasLength(sv.type()) && SvData.length(sv) < FilterConstants.SHORT_RESCUE_LENGTH)
-            return false;
-        else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
-            return false;
-
-        return mHotspotCache.matchesHotspot(sv);
     }
 
     private final StructuralVariant popLastSv()

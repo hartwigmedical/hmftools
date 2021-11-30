@@ -7,11 +7,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.filters.FilterType.HARD_FILTERED;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
@@ -21,6 +24,8 @@ import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.SoftFilters;
+import com.hartwig.hmftools.gripss.links.AlternatePath;
+import com.hartwig.hmftools.gripss.links.AlternatePathFinder;
 import com.hartwig.hmftools.gripss.links.AssemblyLinks;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
@@ -51,7 +56,7 @@ public class GripssApplication
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
-    private final Map<FilterType,Integer> mFilterCounts;
+    private final FilterCache mFilterCache;
 
     public GripssApplication(
             final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
@@ -71,7 +76,7 @@ public class GripssApplication
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();
-        mFilterCounts = Maps.newHashMap();
+        mFilterCache = new FilterCache();
     }
 
     public static GripssApplication fromCommandArgs(final CommandLine cmd)
@@ -143,23 +148,10 @@ public class GripssApplication
                     }
                 }
 
-                // CHECK: annotate with the PON - or can this be done at the very end only for variants written to file?
-                svData.setPonCount(mPonCache.getPonCount(svData));
+                mFilterCache.checkHotspotFilter(mHotspotCache, svData);
+                mFilterCache.checkPonFilter(mPonCache, svData);
 
-                mSoftFilters.applyFilters(svData);
-
-                if(GR_LOGGER.isDebugEnabled())
-                {
-                    svData.getFilters().forEach(x -> registerFilter(x));
-
-                    svData.breakendStart().getFilters().forEach(x -> registerFilter(x));
-
-                    if(!svData.isSgl())
-                        svData.breakendEnd().getFilters().forEach(x -> registerFilter(x));
-                }
-
-                // TODO maintain or ditch?
-                // softFilters.forEach(x -> registerFilter(x));
+                mSoftFilters.applyFilters(svData, mFilterCache);
             }
         }
         catch(IOException e)
@@ -181,22 +173,30 @@ public class GripssApplication
         val combinedTransitiveAssemblyLinks = LinkStore(assemblyLinks, transitiveLinks)
         */
 
-        /*
         List<AlternatePath> alternatePaths = AlternatePathFinder.findPaths(mSvDataCache, assemblyLinkStore);
         Map<String,String> idPathMap = AlternatePathFinder.createIdToPathMap(alternatePaths);
         LinkStore transitiveLinkStore = AlternatePath.createLinkStore(alternatePaths);
+
+        // CHECK: how links from 2 stores are combined, ie compare with Kotlin method flatten
         LinkStore combinedTransitiveAssemblyLinks = LinkStore.from(assemblyLinkStore, transitiveLinkStore);
-        */
 
         GR_LOGGER.info("paired break end de-duplication");
 
+        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache, mFilterCache);
+
         // val dedupPair = DedupPair(initialFilters, alternatePaths, variantStore)
+        duplicateFinder.findDuplicateSVs(alternatePaths);
+
         // val softFiltersAfterPairedDedup = initialFilters.update(dedupPair.duplicates, dedupPair.rescue)
+        mFilterCache.updateFilters(duplicateFinder.rescueBreakends(), duplicateFinder.duplicateBreakends());
 
         GR_LOGGER.info("single break end de-duplication");
 
         // val dedupSingle = DedupSingle(variantStore, softFiltersAfterPairedDedup, combinedTransitiveAssemblyLinks)
+        duplicateFinder.findDuplicateSingles(combinedTransitiveAssemblyLinks);
+
         // val softFiltersAfterSingleDedup = softFiltersAfterPairedDedup.update(dedupSingle.duplicates, setOf())
+        mFilterCache.updateFilters(Sets.newHashSet(), duplicateFinder.duplicateSglBreakends());
 
         GR_LOGGER.info("Finding double stranded break links");
         // val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
@@ -210,12 +210,15 @@ public class GripssApplication
         val allRescues = dsbRescues + dsbRescueMobileElements + assemblyRescues + transitiveRescues
         */
 
-        // GR_LOGGER.info("writing output VCF file: {}", mConfig.OutputVcfFile);
-
         /*
         logger.info("Writing file: ${config.outputVcf}")
         val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
+
+        // update soft-filter map from softFiltersAfterSingleDedup with all rescue info
+        // NOTE: softFiltersAfterSingleDedup is then not used again
+
         val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
+
         fileWriter.writeHeader(version.version(), fileReader.fileHeader, outputSampleNames)
         for (variant in variantStore.selectAll()) {
 
@@ -223,13 +226,18 @@ public class GripssApplication
             val remoteLinkedBy = combinedLinks[variant.mateId]
             val altPath = alternatePathsStringsByVcfId[variant.vcfId]
 
+            // combine soft-filters for the pair of breakends
             val filters = finalFilters.filters(variant.vcfId, variant.mateId)
+
             fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
         }
         */
 
+
+        VcfWriter writer = new VcfWriter(mConfig);
+        writer.write();
+
         // summary logging
-        // int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
         int hardFiltered = mVariantBuilder.hardFilteredCount();
 
         GR_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",
@@ -237,7 +245,18 @@ public class GripssApplication
 
         if(GR_LOGGER.isDebugEnabled())
         {
-            for(Map.Entry<FilterType,Integer> entry : mFilterCounts.entrySet())
+            Map<FilterType,Integer> filterCounts = Maps.newHashMap();
+
+            for(List<FilterType> filters : mFilterCache.getBreakendFilters().values())
+            {
+                for(FilterType type : filters)
+                {
+                    Integer count = filterCounts.get(type);
+                    filterCounts.put(type, count != null ? count + 1 : 1);
+                }
+            }
+
+            for(Map.Entry<FilterType,Integer> entry : filterCounts.entrySet())
             {
                 GR_LOGGER.debug("soft filter {}: count({})", entry.getKey(), entry.getValue());
             }
@@ -267,16 +286,9 @@ public class GripssApplication
         mSvDataCache.addSvData(svData);
     }
 
-    private void registerFilter(final FilterType type)
-    {
-        Integer count = mFilterCounts.get(type);
-        mFilterCounts.put(type, count != null ? count + 1 : 1);
-    }
-
     // testing methods only
     public void clearState()
     {
-        mFilterCounts.clear();
         mProcessedVariants = 0;
         mVariantBuilder.clearState();
     }
