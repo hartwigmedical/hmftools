@@ -25,6 +25,7 @@ public class SvDataCache
     }
 
     public List<SvData> getSvList() { return mSvData; }
+    public Map<String,List<Breakend>> getBreakendMap() { return mChromosomeBreakends; }
 
     public void addSvData(final SvData sv) { mSvData.add(sv); }
 
@@ -32,7 +33,6 @@ public class SvDataCache
     {
         for(SvData sv : mSvData)
         {
-            // keep SGL breakends?
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 Breakend breakend = sv.breakends()[se];

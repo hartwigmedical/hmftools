@@ -3,6 +3,8 @@ package com.hartwig.hmftools.gripsskt.store
 import com.hartwig.hmftools.gripsskt.ContigComparator
 import com.hartwig.hmftools.gripsskt.StructuralVariantContext
 
+// NOTE: only known fusion pairs are loaded and check - promiscuous locations alone are not
+
 class HotspotStore(private val store: LocationStore) {
     companion object {
         operator fun invoke(compare: ContigComparator, pairedHotspots: List<Breakpoint>): HotspotStore {

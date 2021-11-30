@@ -1,26 +1,137 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ALT_PATH;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT_TYPE;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_TAF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.HARD_FILTERED;
+import static com.hartwig.hmftools.gripss.filters.FilterType.PON;
+
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.gripss.common.Breakend;
+import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.gripss.filters.FilterType;
+import com.hartwig.hmftools.gripss.links.Link;
+import com.hartwig.hmftools.gripss.links.LinkStore;
+
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFilterHeaderLine;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class VcfWriter
 {
     private final GripssConfig mConfig;
+    private final GenotypeIds mGenotypeIds;
+    private final SvDataCache mDataCache;
+    private final FilterCache mFilterCache;
 
-    public VcfWriter(final GripssConfig config)
+    private final VariantContextWriter mUnfilteredWriter;
+    private final VariantContextWriter mFilteredWriter;
+
+    public VcfWriter(
+            final GripssConfig config, final VCFHeader vcfHeader, final String gripssVersion, final GenotypeIds genotypeIds,
+            final SvDataCache dataCache, final FilterCache filterCache)
     {
         mConfig = config;
+        mGenotypeIds = genotypeIds;
+        mFilterCache = filterCache;
+        mDataCache = dataCache;
+
+        final String unfilteredVcf = config.OutputDir + config.SampleId + "gripss.vcf.gz";
+        final String filteredVcf = config.OutputDir + config.SampleId + "gripss.filtered.vcf.gz";
+
+        mFilteredWriter = new VariantContextWriterBuilder()
+                .setReferenceDictionary(vcfHeader.getSequenceDictionary())
+                .setOutputFile(filteredVcf)
+                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                .build();
+
+        mUnfilteredWriter = new VariantContextWriterBuilder()
+                .setReferenceDictionary(vcfHeader.getSequenceDictionary())
+                .setOutputFile(unfilteredVcf)
+                .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
+                .build();
+
+        writeHeader(mFilteredWriter, vcfHeader, gripssVersion);
+        writeHeader(mUnfilteredWriter, vcfHeader, gripssVersion);
     }
 
-    public void write()
+    private void writeHeader(
+            final VariantContextWriter writer, final VCFHeader vcfHeader, final String gripssVersion)
     {
-        String outputFile = mConfig.OutputDir + "gripss.filtered.vcf.gz";
-        GR_LOGGER.info("writing output VCF file: {}", outputFile);
+        VCFHeader newHeader = new VCFHeader(vcfHeader);
+        newHeader.addMetaDataLine(new VCFHeaderLine("gripssVersion", gripssVersion));
 
+        for(FilterType filter : FilterType.values())
+        {
+            if(filter == HARD_FILTERED || filter == FilterType.PASS)
+                continue;
+
+            newHeader.addMetaDataLine(new VCFFilterHeaderLine(
+                    FilterType.vcfName(filter), FilterType.vcfInfoString(filter)));
+        }
+
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_REALIGN, "Variant was realigned"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_EVENT_TYPE, "Structural variant type"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_TAF, "Tumor allelic frequency (fragment support / total support)"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_ALT_PATH, "Alternate path"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_LOCAL_LINKED_BY, "Breakend linking information"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_REMOTE_LINKED_BY, "Partner breakend linking information"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(VT_HOTSPOT, "Variant is a hotspot"));
+
+        // writer.writeHeader(VCFHeader(metaData, samples))
+        writer.writeHeader(newHeader);
+    }
+
+    public void write(final LinkStore combinedLinks, final Map<String,String> idPathMap)
+    {
+        for(HumanChromosome humanChromosome : HumanChromosome.values())
+        {
+            String chromosome = humanChromosome.toString();
+
+            if(mConfig.RefGenVersion == V38)
+                chromosome = RefGenomeFunctions.enforceChrPrefix(chromosome);
+
+            List<Breakend> breakendList = mDataCache.getBreakendMap().get(chromosome);
+
+            if(breakendList == null)
+                continue;
+
+            for(Breakend breakend : breakendList)
+            {
+                String localLinks = combinedLinks.getBreakendLinksStr(breakend);
+                String remoteLinks = "";
+
+                Breakend otherBreakend = breakend.otherBreakend();
+
+                if(otherBreakend != null)
+                {
+                    remoteLinks = combinedLinks.getBreakendLinksStr(otherBreakend);
+                }
+
+                String altPathStr = idPathMap.get(breakend.VcfId);
+
+                writeBreakend(breakend, localLinks, remoteLinks, altPathStr);
+            }
+
+        }
         /*
-        logger.info("Writing file: ${config.outputVcf}")
-        val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
-        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
-        fileWriter.writeHeader(version.version(), fileReader.fileHeader, outputSampleNames)
         for (variant in variantStore.selectAll()) {
 
             val localLinkedBy = combinedLinks[variant.vcfId]
@@ -31,23 +142,46 @@ public class VcfWriter
             fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
         }
         */
+    }
 
-        // combine transitive, assembly and DSB links into a single set - where combining is done by VCF id, or link pair IDs??
+    private void writeBreakend(final Breakend breakend, final String localLinks, final String remoteLinks, final String altPathStr)
+    {
+        List<Genotype> genotypes = Lists.newArrayList(breakend.Context.getGenotype(mGenotypeIds.TumorOrdinal));
 
+        if(mGenotypeIds.hasReference())
+            genotypes.add(breakend.Context.getGenotype(mGenotypeIds.ReferenceOrdinal));
 
+        VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
-        // write variants in chromosome & position order, ie using chromosome map and breakend  list
+        builder.log10PError(breakend.Qual / -10.0)
+                .attribute(VT_TAF, breakend.allelicFrequency())
+                .attribute(VT_LOCAL_LINKED_BY, localLinks)
+                .attribute(VT_REMOTE_LINKED_BY, remoteLinks)
+                .attribute(VT_HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
+                .attribute(VT_EVENT_TYPE, breakend.type());
 
+        if(!altPathStr.isEmpty())
+            builder.attribute(VT_ALT_PATH, altPathStr);
+
+        List<FilterType> filters = mFilterCache.getBreakendFilters(breakend);
+
+        if(filters == null)
+            builder.filter(PASS);
+        else
+            filters.forEach(x -> builder.filter(FilterType.vcfName(x)));
+
+        VariantContext variantContext = builder.make();
+
+        mUnfilteredWriter.add(variantContext);
+
+        if(filters.size() == 1 && (filters.contains(PASS) || filters.contains(PON)))
+            mFilteredWriter.add(variantContext);
     }
 
     /*
         fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
         val genotypesToWrite = mutableListOf(tumorGenotype)
         normalGenotype?.let { x -> genotypesToWrite.add(x) }
-
-        // genotypes are of type FastGenotype, which is a 3rd-party class
-
-        // need to record if the SV matches a known fusion pair
 
         val builder = VariantContextBuilder(context).genotypes(genotypesToWrite).filters()
         builder.log10PError(tumorQual / -10.0)
@@ -67,5 +201,11 @@ public class VcfWriter
     }
 
      */
+
+    public void close()
+    {
+        mFilteredWriter.close();
+        mUnfilteredWriter.close();
+    }
 
 }

@@ -197,6 +197,15 @@ public class Breakend
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }
 
+
+    public double allelicFrequency()
+    {
+        int tumorFrags = TumorFragments;
+        int readPairSupport = (isSgl() || !mSvData.isShortLocal()) ? ReferencePairReads : 0;
+        double totalSupport = tumorFrags + ReferenceReads + readPairSupport;
+        return totalSupport > 0 ? tumorFrags / totalSupport : 0;
+    }
+
     /*
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
     val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }

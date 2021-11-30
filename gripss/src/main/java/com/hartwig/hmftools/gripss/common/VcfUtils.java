@@ -69,8 +69,15 @@ public class VcfUtils
     public static final String VT_REFPAIR = "REFPAIR";
     public static final String VT_CIPOS = CIPOS;
     public static final String VT_CIRPOS = "CIRPOS";
-    public static final String VT_REALIGN = "REALIGN";
     public static final String VT_IMPRECISE = IMPRECISE;
+
+    public static final String VT_REALIGN = "REALIGN";
+    public static final String VT_LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
+    public static final String VT_EVENT_TYPE = "EVENT_TYPE";
+    public static final String VT_TAF = "TAF";
+    public static final String VT_ALT_PATH = "ALT_PATH";
+    public static final String VT_HOTSPOT = "HOTSPOT";
+    public static final String VT_REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {

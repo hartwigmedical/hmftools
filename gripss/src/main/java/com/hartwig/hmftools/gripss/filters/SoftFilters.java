@@ -157,10 +157,7 @@ public class SoftFilters
 
     private boolean allelicFrequency(final SvData sv, final Breakend breakend)
     {
-        int tumorFrags = breakend.TumorFragments;
-        int readPairSupport = (sv.isSgl() || !sv.isShortLocal()) ? breakend.ReferencePairReads : 0;
-        double totalSupport = tumorFrags + breakend.ReferenceReads + readPairSupport;
-        double alleleFrequency = totalSupport > 0 ? tumorFrags / totalSupport : 0;
+        double alleleFrequency = breakend.allelicFrequency();
 
         double afThreshold = sv.isSgl() ? mFilterConstants.MinTumorAfBreakend : mFilterConstants.MinTumorAfBreakpoint;
         return alleleFrequency < afThreshold;

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
@@ -18,7 +19,8 @@ import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 public class FilterCache
 {
-    private final Map<Breakend, List<FilterType>> mBreakendFilters; // empty if a breakend is not filtered
+    private final Map<Breakend,List<FilterType>> mBreakendFilters; // empty if a breakend is not filtered
+    private final Set<Breakend> mDuplicateBreakends;
 
     private final List<SvData> mHotspots;
 
@@ -26,7 +28,33 @@ public class FilterCache
     {
         mBreakendFilters = Maps.newHashMap();
         mHotspots = Lists.newArrayList();
+        mDuplicateBreakends = Sets.newHashSet();
     }
+
+    public List<SvData> getHotspots() { return mHotspots; }
+    public boolean isHotspot(final SvData sv) { return mHotspots.contains(sv); }
+
+    public Map<Breakend,List<FilterType>> getBreakendFilters() { return mBreakendFilters; }
+
+    public List<FilterType> getBreakendFilters(final Breakend breakend) { return mBreakendFilters.get(breakend); }
+    public boolean hasFilters(final Breakend breakend) { return mBreakendFilters.containsKey(breakend); }
+
+    public boolean hasFilter(final SvData sv, final FilterType filter)
+    {
+        List<FilterType> filters = getBreakendFilters(sv.breakendStart());
+        if(filters != null && filters.contains(filter))
+            return true;
+
+        if(sv.isSgl())
+            return false;
+
+        filters = getBreakendFilters(sv.breakendStart());
+        return filters != null && filters.contains(filter);
+    }
+
+    public Set<Breakend> getDuplicateBreakends() { return mDuplicateBreakends; }
+
+
 
     public void checkPonFilter(final PonCache ponCache, final SvData sv)
     {
@@ -44,20 +72,6 @@ public class FilterCache
         if(hotspotCache.isHotspotVariant(sv))
             mHotspots.add(sv);
     }
-
-    public void clear()
-    {
-        mBreakendFilters.clear();
-        mHotspots.clear();
-    }
-
-    public List<SvData> getHotspots() { return mHotspots; }
-    public boolean isHotspot(final SvData sv) { return mHotspots.contains(sv); }
-
-    public Map<Breakend,List<FilterType>> getBreakendFilters() { return mBreakendFilters; }
-
-    public List<FilterType> getBreakendFilters(final Breakend breakend) { return mBreakendFilters.get(breakend); }
-    public boolean hasFilters(final Breakend breakend) { return mBreakendFilters.containsKey(breakend); }
 
     public void addBreakendFilters(final Breakend breakend, final List<FilterType> filters)
     {
@@ -101,5 +115,12 @@ public class FilterCache
         // add duplicate filter and remove any rescued breakends
         rescuedBreakends.forEach(x -> mBreakendFilters.remove(x));
         duplicateBreakends.forEach(x -> addBreakendFilter(x, DEDUP));
+        mDuplicateBreakends.addAll(duplicateBreakends);
+    }
+
+    public void clear()
+    {
+        mBreakendFilters.clear();
+        mHotspots.clear();
     }
 }

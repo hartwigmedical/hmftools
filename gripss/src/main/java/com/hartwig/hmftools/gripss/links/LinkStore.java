@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss.links;
 
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -52,6 +53,18 @@ public class LinkStore
         }
 
         links.add(link);
+    }
+
+    public String getBreakendLinksStr(final Breakend breakend)
+    {
+        List<Link> links = mBreakendLinksMap.get(breakend);
+
+        if(links == null || links.isEmpty())
+            return "";
+
+        StringJoiner sj = new StringJoiner(",");
+        links.forEach(x -> sj.add(x.Id));
+        return sj.toString();
     }
 
 }

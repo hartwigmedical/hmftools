@@ -77,4 +77,18 @@ public class AlternatePathFinder
 
         return idPathMap;
     }
+
+    public static LinkStore createLinkStore(final List<AlternatePath> alternatePaths)
+    {
+        LinkStore linkStore = new LinkStore();
+
+        for(AlternatePath altPath : alternatePaths)
+        {
+            List<Link> transLinks = altPath.transitiveLinks();
+            transLinks.forEach(x -> linkStore.addLink(altPath.First, x));
+        }
+
+        return linkStore;
+    }
+
 }
