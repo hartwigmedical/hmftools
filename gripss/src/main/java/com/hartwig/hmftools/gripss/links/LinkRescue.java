@@ -87,6 +87,9 @@ public final class LinkRescue
         // call recursively on all other breakends that this one is linked to, and their SV's other breakend
         List<Link> links = linkStore.getBreakendLinks(breakend);
 
+        if(links == null)
+            return;
+
         for(Link link : links)
         {
             Breakend linkedBreakend = link.otherBreakend(breakend);

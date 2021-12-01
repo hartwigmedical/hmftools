@@ -285,7 +285,28 @@ public class TransitiveLinkFinder
                     transLink.remainingAssemblyJumps(), transLink.remainingTransitiveJumps() - 1, newLinks));
         }
 
-        /*
+        return transLinks;
+    }
+
+    private static boolean areCandidateLink(final Breakend first, final Breakend second)
+    {
+        if(first.Orientation == second.Orientation)
+            return false;
+
+        if(first.posOrient())
+        {
+            // other breakend must be less by the min TI length
+            // val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
+            return second.maxPosition() <= first.minPosition() - MIN_TRANSITIVE_DISTANCE;
+        }
+        else
+        {
+            // val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
+            return second.minPosition() >= first.maxPosition() + MIN_TRANSITIVE_DISTANCE;
+        }
+    }
+
+            /*
         private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
             val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
             val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
@@ -318,24 +339,4 @@ public class TransitiveLinkFinder
         return result
             */
 
-        return transLinks;
-    }
-
-    private static boolean areCandidateLink(final Breakend first, final Breakend second)
-    {
-        if(first.Orientation == second.Orientation)
-            return false;
-
-        if(first.posOrient())
-        {
-            // other breakend must be less by the min TI length
-            // val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
-            return second.maxPosition() <= first.minPosition() - MIN_TRANSITIVE_DISTANCE;
-        }
-        else
-        {
-            // val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
-            return second.minPosition() >= first.maxPosition() + MIN_TRANSITIVE_DISTANCE;
-        }
-    }
 }

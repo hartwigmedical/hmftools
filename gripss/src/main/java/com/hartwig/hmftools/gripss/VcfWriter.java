@@ -81,7 +81,7 @@ public class VcfWriter
 
         for(FilterType filter : FilterType.values())
         {
-            if(filter == HARD_FILTERED || filter == FilterType.PASS)
+            if(filter == HARD_FILTERED)
                 continue;
 
             newHeader.addMetaDataLine(new VCFFilterHeaderLine(
