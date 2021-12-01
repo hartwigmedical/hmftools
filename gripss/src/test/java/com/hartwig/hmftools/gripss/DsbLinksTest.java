@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.buildLinkAttributes;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.links.DsbLinkFinder.findBreaks;
 

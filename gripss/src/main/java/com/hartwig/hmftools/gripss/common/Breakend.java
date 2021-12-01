@@ -91,7 +91,7 @@ public class Breakend
         ConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIPOS);
         RemoteConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIRPOS);
 
-        Ref = context.getAlleles().get(0).getDisplayString();;
+        Ref = context.getAlleles().get(0).getDisplayString();
 
         final VariantAltInsertCoords altInsertCoords = parseRefAlt(context.getAlleles().get(1).getDisplayString(), Ref);
         Alt = altInsertCoords.Alt;
@@ -178,7 +178,6 @@ public class Breakend
     // convenience
     public boolean isSgl() { return mSvData.isSgl(); }
     public StructuralVariantType type() { return mSvData.type(); }
-    public String svId() { return mSvData.id(); }
     public boolean imprecise() { return mSvData.imprecise(); }
     public boolean posOrient() { return Orientation == POS_ORIENT; }
     public boolean negOrient() { return Orientation == NEG_ORIENT; }

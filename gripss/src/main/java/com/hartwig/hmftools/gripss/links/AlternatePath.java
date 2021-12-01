@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.gripss.links.Link.LINK_TYPE_PAIR;
+import static com.hartwig.hmftools.gripss.links.TransitiveLink.TRANS_LINK_PREFIX;
+
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -28,8 +31,7 @@ public class AlternatePath
 
     public List<Link> transitiveLinks()
     {
-        // TODO: either make 'trs' a constant or add a link type
-        return Links.stream().filter(x -> x.Id.startsWith("trs")).collect(Collectors.toList());
+        return Links.stream().filter(x -> x.Id.startsWith(TRANS_LINK_PREFIX)).collect(Collectors.toList());
     }
 
     public String pathString()
@@ -43,7 +45,7 @@ public class AlternatePath
             if (i == 0)
                 sj.add(link.breakendStart().VcfId);
 
-            if (link.Id.equals("PAIR"))
+            if (link.Id.equals(LINK_TYPE_PAIR))
                 sj.add("-");
             else
                 sj.add(String.format("<%s>", link.Id));
@@ -52,6 +54,11 @@ public class AlternatePath
         }
 
         return sj.toString();
+    }
+
+    public String toString()
+    {
+        return String.format("breaks(%s - %s) links(%d)", First, Second, Links.size());
     }
 
 }

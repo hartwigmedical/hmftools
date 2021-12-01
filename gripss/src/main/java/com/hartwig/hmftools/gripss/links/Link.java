@@ -13,6 +13,8 @@ public class Link
     public final String Id;
     private final Breakend[] mBreakends;
 
+    public static final String LINK_TYPE_PAIR = "PAIR"; // used a single SV, not pairs of breakends from different SVs
+
     public Link(final String id, final Breakend first, final Breakend second)
     {
         Id = id;
@@ -21,7 +23,7 @@ public class Link
 
     public static Link from(final SvData sv)
     {
-        return new Link("SV", sv.breakendStart(), sv.breakendEnd());
+        return new Link(LINK_TYPE_PAIR, sv.breakendStart(), sv.breakendEnd());
     }
 
     public static Link from(final String linkId, final Breakend first, final Breakend second)

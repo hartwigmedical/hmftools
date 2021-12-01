@@ -22,6 +22,8 @@ public class TransitiveLink // previously 'Node'
     private int mMinDistance;
     private int mMaxDistance;
 
+    public static final String TRANS_LINK_PREFIX = "trs";
+
     public TransitiveLink(final String prefix, final Breakend start, final Breakend end, final List<Link> links)
     {
         this(prefix, start, end, MAX_ASSEMBLY_JUMPS, MAX_TRANSITIVE_JUMPS, links);
@@ -75,6 +77,11 @@ public class TransitiveLink // previously 'Node'
         return true;
     }
 
+    public String toString()
+    {
+        return String.format("%s breaks(%s - %s) links(%d)", mPrefix, breakendStart(),  breakendEnd(), mLinks.size());
+    }
+
     /*
     fun transitiveNodes(assemblyLinkStore: LinkStore, variantStore: VariantStore): List<Node> {
     }
@@ -116,8 +123,8 @@ public class TransitiveLink // previously 'Node'
             targetMaxStart += additionalAllowance;
         }
 
-        int otherMinStart = target.minPosition();
-        int otherMaxStart = target.maxPosition();
+        int otherMinStart = other.minPosition();
+        int otherMaxStart = other.maxPosition();
 
         if(other.posOrient())
         {
@@ -147,5 +154,4 @@ public class TransitiveLink // previously 'Node'
 
         return otherMinStart <= targetMaxStart && otherMaxStart >= targetMinStart;
     }
-
 }
