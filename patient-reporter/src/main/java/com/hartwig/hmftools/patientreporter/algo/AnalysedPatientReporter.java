@@ -33,7 +33,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class AnalysedPatientReporter {
 
@@ -41,9 +40,12 @@ public class AnalysedPatientReporter {
 
     @NotNull
     private final AnalysedReportData reportData;
+    @NotNull
+    private final String reportDate;
 
-    public AnalysedPatientReporter(@NotNull final AnalysedReportData reportData) {
+    public AnalysedPatientReporter(@NotNull final AnalysedReportData reportData, @NotNull final String reportDate) {
         this.reportData = reportData;
+        this.reportDate = reportDate;
     }
 
     @NotNull
@@ -108,6 +110,7 @@ public class AnalysedPatientReporter {
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .udiDi(reportData.udiDi())
                 .peachGenotypes(peachGenotypesOverrule)
+                .reportDate(reportDate)
                 .build();
 
         printReportState(report);

@@ -62,4 +62,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @Override
     @NotNull
     public abstract String logoCompanyPath();
+
+    @Override
+    @NotNull
+    public abstract String reportDate();
 }

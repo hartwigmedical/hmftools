@@ -2,12 +2,14 @@ package com.hartwig.hmftools.patientreporter;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumor;
 import com.hartwig.hmftools.common.clinical.PatientPrimaryTumorFile;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReporter;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedReportData;
@@ -50,14 +52,17 @@ public class PatientReporterApplication {
             throw new IllegalArgumentException("Unexpected error, check inputs");
         }
 
-        new PatientReporterApplication(config).run();
+        new PatientReporterApplication(config, DataUtil.formatDate(LocalDate.now())).run();
     }
 
     @NotNull
     private final PatientReporterConfig config;
+    @NotNull
+    private final String reportDate;
 
-    private PatientReporterApplication(@NotNull final PatientReporterConfig config) {
+    private PatientReporterApplication(@NotNull final PatientReporterConfig config, @NotNull final String reportDate) {
         this.config = config;
+        this.reportDate = reportDate;
     }
 
     private void run() throws IOException {
@@ -74,7 +79,7 @@ public class PatientReporterApplication {
 
     private void generateAnalysedReport(@NotNull SampleMetadata sampleMetadata) throws IOException {
         AnalysedReportData reportData = buildAnalysedReportData(config);
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData);
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(reportData, reportDate);
 
         AnalysedPatientReport report = reporter.run(sampleMetadata, config);
 
@@ -93,7 +98,7 @@ public class PatientReporterApplication {
     }
 
     private void generateQCFail(@NotNull SampleMetadata sampleMetadata) throws IOException {
-        QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config));
+        QCFailReporter reporter = new QCFailReporter(buildBaseReportData(config), reportDate);
         QCFailReport report = reporter.run(config.qcFailReason(),
                 sampleMetadata,
                 config.purplePurityTsv(),
