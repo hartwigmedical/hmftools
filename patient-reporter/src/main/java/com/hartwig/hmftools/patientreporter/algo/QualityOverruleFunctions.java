@@ -48,7 +48,7 @@ public final class QualityOverruleFunctions {
 
         Map<ReportableVariant, Boolean> sortedNotifyPerVariant = newNotifyPerVariant.entrySet()
                 .stream()
-                .sorted(Map.Entry.comparingByValue())
+                .sorted(Map.Entry.comparingByKey())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
         return ImmutableGenomicAnalysis.builder()
