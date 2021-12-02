@@ -30,7 +30,7 @@ public enum FilterType
         {
             case PASS: return "PASS";
             case PON: return "PON";
-            case DEDUP: return "deduplication";
+            case DEDUP: return "dedup";
             case MIN_LENGTH: return "minLength";
             case MAX_INEXACT_HOM_LENGTH_SHORT_DEL: return "maxInexactHomLengthShortDel";
             case MAX_HOM_LENGTH_SHORT_INV: return "maxHomLengthShortInv";
@@ -42,6 +42,7 @@ public enum FilterType
             case MIN_NORMAL_COVERAGE: return "minNormalCoverage";
             case SHORT_STRAND_BIAS: return "shortStrandBias";
             case SGL_STRAND_BIAS: return "sglStrandBias";
+            case SGL_INSERT_SEQ_MIN_LENGTH: return "sglInsertSequenceMinLength";
             case MIN_QUAL: return "minQual";
             case MAX_POLY_G_LENGTH: return "maxPolyGLength";
             case MAX_POLY_A_HOM_LENGTH: return "maxPolyAHomLength";
@@ -81,6 +82,8 @@ public enum FilterType
                 return "Short event with excessive strand bias in split reads/soft clipped reads overlapping breakpoint";
             case SGL_STRAND_BIAS:
                 return "Single breakend with excessive strand bias and not a mobile line insertion";
+            case SGL_INSERT_SEQ_MIN_LENGTH:
+                return "Single breakend with too short insert sequence";
             case MIN_QUAL:
                 return "Insufficient quality";
             case MAX_POLY_G_LENGTH:

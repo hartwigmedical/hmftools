@@ -23,12 +23,14 @@ public class FilterCache
     private final Set<Breakend> mDuplicateBreakends;
 
     private final List<SvData> mHotspots;
+    private int mPonFiltered;
 
     public FilterCache()
     {
         mBreakendFilters = Maps.newHashMap();
         mHotspots = Lists.newArrayList();
         mDuplicateBreakends = Sets.newHashSet();
+        mPonFiltered = 0;
     }
 
     public List<SvData> getHotspots() { return mHotspots; }
@@ -54,7 +56,7 @@ public class FilterCache
 
     public Set<Breakend> getDuplicateBreakends() { return mDuplicateBreakends; }
 
-
+    public int ponFilteredCount() { return mPonFiltered; }
 
     public void checkPonFilter(final PonCache ponCache, final SvData sv)
     {
@@ -64,6 +66,7 @@ public class FilterCache
 
             if(!sv.isSgl())
                 addBreakendFilter(sv.breakendEnd(), PON);
+            ++mPonFiltered;
         }
     }
 
@@ -121,6 +124,8 @@ public class FilterCache
     public void clear()
     {
         mBreakendFilters.clear();
+        mDuplicateBreakends.clear();
         mHotspots.clear();
+        mPonFiltered = 0;
     }
 }

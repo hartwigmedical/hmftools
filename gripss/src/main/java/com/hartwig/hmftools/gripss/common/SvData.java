@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.common;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -7,6 +9,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_SIZE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
@@ -27,10 +30,10 @@ public class SvData
     private final StructuralVariantType mType;
 
     private final int mReferenceOrdinal;
-    private final int mTumorOrdinal;
     private final Breakend[] mBreakends;
 
     // repeatedly used values for filtering are cached
+    private final int[] mInexactHomology;
     private final String mInsertSequence;
     private final boolean mImprecise;
     private final boolean mIsShortLocal;
@@ -41,7 +44,6 @@ public class SvData
 
         mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
-        mTumorOrdinal = genotypeIds.TumorOrdinal;
 
         Breakend breakendStart = Breakend.from(
                 this, mType, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
@@ -55,6 +57,14 @@ public class SvData
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
+
+        mInexactHomology = new int[] {0, 0};
+        if(sv.startContext().hasAttribute(VT_IHOMPOS))
+        {
+            List<Integer> values = sv.startContext().getAttributeAsIntList(VT_IHOMPOS, 0);
+            mInexactHomology[SE_START] = abs(values.get(0));
+            mInexactHomology[SE_END] = abs(values.get(1));
+        }
     }
 
     public String id() { return mId; }
@@ -104,6 +114,7 @@ public class SvData
 
     public String startHomology() { return contextStart().getAttributeAsString(VT_HOMSEQ, ""); }
     public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(VT_HOMSEQ, "") : ""; }
+    public int[] inexactHomology() { return mInexactHomology; }
 
     public String toString()
     {

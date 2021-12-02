@@ -31,6 +31,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
@@ -96,10 +97,10 @@ public class VcfWriter
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                VT_LOCAL_LINKED_BY, 1, VCFHeaderLineType.String, "Breakend linking information"));
+                VT_LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                VT_REMOTE_LINKED_BY, 1, VCFHeaderLineType.String, "Partner breakend linking information"));
+                VT_REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_HOTSPOT, 1, VCFHeaderLineType.Flag, "Variant is a hotspot"));
 
