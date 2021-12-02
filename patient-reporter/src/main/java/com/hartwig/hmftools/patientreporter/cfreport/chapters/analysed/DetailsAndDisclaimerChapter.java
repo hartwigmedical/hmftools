@@ -80,7 +80,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraphTwice("The results in this report have been obtained between ",
                 DataUtil.formatNullableString(earliestArrivalDate),
                 " and ",
-                ReportResources.REPORT_DATE));
+                patientReport.reportDate()));
 
         div.add(createContentParagraphTwice("This experiment is performed on the tumor sample which arrived on ",
                 DataUtil.formatDate(sampleReport.tumorArrivalDate()),

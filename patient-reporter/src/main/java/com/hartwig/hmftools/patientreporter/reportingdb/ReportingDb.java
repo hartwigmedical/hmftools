@@ -12,8 +12,6 @@ import java.util.Map;
 
 import com.google.gson.GsonBuilder;
 import com.hartwig.hmftools.common.lims.cohort.LimsCohortConfig;
-import com.hartwig.hmftools.common.lims.reportingdb.ReportingDatabase;
-import com.hartwig.hmftools.common.lims.reportingdb.ReportingEntry;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -27,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 public class ReportingDb {
 
     private static final Logger LOGGER = LogManager.getLogger(ReportingDb.class);
-
     private static final String NA_STRING = "N/A";
 
     public ReportingDb() {
@@ -39,7 +36,7 @@ public class ReportingDb {
             LimsCohortConfig cohort = report.sampleReport().cohort();
 
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-            String reportDate = ReportResources.REPORT_DATE;
+
             GenomicAnalysis analysis = report.genomicAnalysis();
 
             String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
@@ -54,7 +51,7 @@ public class ReportingDb {
                         sampleId,
                         cohort,
                         "report_without_conclusion",
-                        reportDate,
+                        report.reportDate(),
                         purity,
                         hasReliableQuality,
                         hasReliablePurity);
@@ -76,7 +73,7 @@ public class ReportingDb {
                         sampleId,
                         cohort,
                         reportType,
-                        reportDate,
+                        report.reportDate(),
                         purity,
                         hasReliableQuality,
                         hasReliablePurity);
@@ -111,11 +108,10 @@ public class ReportingDb {
             String sampleId = report.sampleReport().tumorSampleId();
             LimsCohortConfig cohort = report.sampleReport().cohort();
             String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-            String reportDate = ReportResources.REPORT_DATE;
 
             String reportType = report.isCorrectedReport() ? report.reason().identifier() + "_corrected" : report.reason().identifier();
 
-            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, reportDate, NA_STRING, null, null);
+            writeApiUpdateJson(outputDirectory, tumorBarcode, sampleId, cohort, reportType, report.reportDate(), NA_STRING, null, null);
 
         }
     }

@@ -40,9 +40,11 @@ public class QCFailReporter {
 
     @NotNull
     private final QCFailReportData reportData;
+    private final String reportDate;
 
-    public QCFailReporter(@NotNull final QCFailReportData reportData) {
+    public QCFailReporter(@NotNull final QCFailReportData reportData, @NotNull final String reportDate) {
         this.reportData = reportData;
+        this.reportDate = reportDate;
     }
 
     @NotNull
@@ -109,6 +111,7 @@ public class QCFailReporter {
                 .udiDi(reportData.udiDi())
                 .peachGenotypes(peachGenotypesOverrule)
                 .purpleQC(purpleQc)
+                .reportDate(reportDate)
                 .build();
     }
 

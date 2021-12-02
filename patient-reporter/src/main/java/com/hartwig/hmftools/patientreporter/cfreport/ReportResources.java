@@ -33,7 +33,6 @@ public final class ReportResources {
 
     static final String METADATA_TITLE = "HMF Sequencing Report v" + PatientReporterApplication.VERSION;
     static final String METADATA_AUTHOR = HARTWIG_NAME;
-    public static final String REPORT_DATE = DataUtil.formatDate(LocalDate.now());
 
     static final float PAGE_MARGIN_TOP = 150; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 55.5f;

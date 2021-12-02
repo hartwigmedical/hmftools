@@ -138,7 +138,7 @@ public class QCFailDisclaimerChapter implements ReportChapter {
         return createContentParagraphTwice("The results in this report have been obtained between ",
                 earliestArrivalDate != null ? earliestArrivalDate : DataUtil.NA_STRING,
                 " and ",
-                ReportResources.REPORT_DATE);
+                failReport.reportDate());
     }
 
     @NotNull

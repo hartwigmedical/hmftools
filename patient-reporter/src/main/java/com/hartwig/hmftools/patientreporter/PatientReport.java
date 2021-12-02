@@ -70,4 +70,7 @@ public interface PatientReport {
 
     @NotNull
     List<PeachGenotype> peachGenotypes();
+
+    @NotNull
+    String reportDate();
 }

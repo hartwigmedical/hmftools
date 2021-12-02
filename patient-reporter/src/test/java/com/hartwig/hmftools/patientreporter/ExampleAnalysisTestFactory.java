@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.FusionPhasedType;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
@@ -89,6 +90,7 @@ public final class ExampleAnalysisTestFactory {
         double microsatelliteIndelsPerMb = 0.12;
         double chordHrdValue = 0D;
         ChordStatus chordStatus = ChordStatus.HR_PROFICIENT;
+        String reportDate = DataUtil.formatDate(LocalDate.now());
 
         ReportData reportData = PatientReporterTestFactory.loadTestReportData();
 
@@ -176,6 +178,7 @@ public final class ExampleAnalysisTestFactory {
                 .logoCompanyPath(reportData.logoCompanyPath())
                 .pipelineVersion(pipelineVersion)
                 .peachGenotypes(peachGenotypes)
+                .reportDate(reportDate)
                 .build();
     }
 
