@@ -51,10 +51,6 @@ public class AlternatePathFinder
 
                     alternatePaths.put(breakend.VcfId, altPath);
                     alternatePaths.put(otherBreakend.VcfId, reverseAltPath);
-
-                    // result[variant.vcfId] = alternatePath
-                    // result[variant.mateId] = reverseAlternatePath
-                    // logger.debug("Found alternate mapping of $variant CIPOS:${variant.confidenceInterval} IMPRECISE:${variant.imprecise} -> ${alternatePath.pathString()}")
                 }
                 else
                 {
@@ -66,13 +62,13 @@ public class AlternatePathFinder
         return alternatePaths.values().stream().collect(Collectors.toList());
     }
 
-    public static Map<String,String> createIdToPathMap(final List<AlternatePath> alternatePaths)
+    public static Map<Breakend,String> createPathMap(final List<AlternatePath> alternatePaths)
     {
-        Map<String,String> idPathMap = Maps.newHashMap();
+        Map<Breakend,String> idPathMap = Maps.newHashMap();
 
         for(AlternatePath altPath : alternatePaths)
         {
-            idPathMap.put(altPath.First.VcfId, altPath.pathString());
+            idPathMap.put(altPath.First, altPath.pathString());
         }
 
         return idPathMap;

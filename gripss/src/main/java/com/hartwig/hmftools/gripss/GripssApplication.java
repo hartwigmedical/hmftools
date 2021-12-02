@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.filters.FilterType.HARD_FILTERED;
 import static com.hartwig.hmftools.gripss.links.LinkRescue.findRescuedDsbLineInsertions;
 
 import java.io.IOException;
@@ -240,31 +239,13 @@ public class GripssApplication
         LinkStore combinedLinks = LinkStore.from(combinedTransitiveAssemblyLinks, dsbLinkStore);
         // val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
 
-
-        /*
-        logger.info("Writing file: ${config.outputVcf}")
-
-        fileWriter.writeHeader(version.version(), fileReader.fileHeader, outputSampleNames)
-        for (variant in variantStore.selectAll()) {
-
-            val localLinkedBy = combinedLinks[variant.vcfId]
-            val remoteLinkedBy = combinedLinks[variant.mateId]
-            val altPath = alternatePathsStringsByVcfId[variant.vcfId]
-
-            // combine soft-filters for the pair of breakends
-            val filters = finalFilters.filters(variant.vcfId, variant.mateId)
-
-            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
-        }
-        */
-
         GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
 
         final VersionInfo version = new VersionInfo("gripss.version");
 
         VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache, mFilterCache);
 
-        Map<String,String> idPathMap = AlternatePathFinder.createIdToPathMap(alternatePaths);
+        Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
 
         writer.write(combinedLinks, idPathMap);
         writer.close();

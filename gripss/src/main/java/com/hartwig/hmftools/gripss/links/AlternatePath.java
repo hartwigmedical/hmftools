@@ -11,6 +11,8 @@ import com.hartwig.hmftools.gripss.common.Breakend;
 
 public class AlternatePath
 {
+    // an alternative path is modelled as the pair of breakends from the same SV, in a specific order
+    // and the set of links made by other SVs that start and end at the same locations
     public final Breakend First;
     public final Breakend Second;
     public final List<Link> Links;
@@ -20,13 +22,6 @@ public class AlternatePath
         First = first;
         Second = second;
         Links = links;
-    }
-
-    public List<String> pathVcfIds()
-    {
-        List<String> pathStrings = Links.stream().map(x -> x.breakendStart().VcfId).collect(Collectors.toList());
-        pathStrings.add(Links.get(Links.size() - 1).breakendEnd().VcfId);
-        return pathStrings;
     }
 
     public List<Link> transitiveLinks()

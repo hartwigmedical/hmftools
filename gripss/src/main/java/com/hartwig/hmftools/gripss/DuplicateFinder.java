@@ -3,7 +3,6 @@ package com.hartwig.hmftools.gripss;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
@@ -56,6 +55,8 @@ public class DuplicateFinder
                 {
                     mDuplicateBreakends.add(first);
                 }
+
+                // no need to rescue the linked variant since is already passing (ie anyInAltPathPasses is true)
             }
             else
             {
@@ -97,7 +98,7 @@ public class DuplicateFinder
             
             Breakend breakend = sv.breakendStart();
             
-            boolean isPass = mFilterCache.hasFilters(breakend);
+            boolean isPass = !mFilterCache.hasFilters(breakend);
 
             List<Breakend> nearbyBreakends = mDataCache.selectOthersNearby(
                     breakend, MAX_DEDUP_SGL_ADDITIONAL_DISTANCE, MAX_DEDUP_SGL_SEEK_DISTANCE);
@@ -135,28 +136,9 @@ public class DuplicateFinder
                         mSingleDuplicates.add(otherBreakend.otherBreakend());
                 }
             }
-
-            /*
-            val exactPositionFilter = { other: StructuralVariantContext -> other.start >= sgl.minStart && other.start <= sgl.maxStart }
-            val duplicateFilter = { other: StructuralVariantContext -> other.orientation == sgl.orientation && (other.precise || exactPositionFilter(other)) }
-            val others = variantStore.selectOthersNearby(sgl, MAX_DEDUP_SGL_ADDITIONAL_DISTANCE, MAX_DEDUP_SGL_SEEK_DISTANCE, duplicateFilter)
-            if (!others.all { x -> keepSingle(sglPasses, sgl, x, softFilterStore, linkStore) }) {
-                duplicates.add(sgl.vcfId)
-            } else {
-                others.forEach { x ->
-                    x.vcfId.let { duplicates.add(it) }
-                    x.mateId?.let { duplicates.add(it) }
-                }
-            }
-
-             */
-
         }
-        
     }
 
-
-    
     private static boolean isDuplicateCandidate(final Breakend breakend, final Breakend otherBreakend)
     {
         return breakend.Orientation == otherBreakend.Orientation && (!otherBreakend.imprecise() || isExactPosition(otherBreakend));
@@ -180,47 +162,11 @@ public class DuplicateFinder
 
         return original.Qual > alternative.Qual;
     }
-    
-    /*
 
-        class DedupSingle(val duplicates: Set<String>) {
-
-    companion object {
-
-        operator fun invoke(variantStore: VariantStore, softFilterStore: SoftFilterStore, linkStore: LinkStore): DedupSingle {
-            val duplicates = mutableSetOf<String>()
-
-            for (sgl in variantStore.selectAll().filter { x -> x.isSingle }) {
-                val sglPasses = softFilterStore.isPassing(sgl.vcfId)
-
-                val exactPositionFilter = { other: StructuralVariantContext -> other.start >= sgl.minStart && other.start <= sgl.maxStart }
-                val duplicateFilter = { other: StructuralVariantContext -> other.orientation == sgl.orientation && (other.precise || exactPositionFilter(other)) }
-                val others = variantStore.selectOthersNearby(sgl, MAX_DEDUP_SGL_ADDITIONAL_DISTANCE, MAX_DEDUP_SGL_SEEK_DISTANCE, duplicateFilter)
-                if (!others.all { x -> keepSingle(sglPasses, sgl, x, softFilterStore, linkStore) }) {
-                    duplicates.add(sgl.vcfId)
-                } else {
-                    others.forEach { x ->
-                        x.vcfId.let { duplicates.add(it) }
-                        x.mateId?.let { duplicates.add(it) }
-                    }
-                }
-            }
-            return DedupSingle(duplicates)
-        }
-
-        private fun keepSingle(originalPass: Boolean, original: StructuralVariantContext, alternative: StructuralVariantContext, softFilterStore: SoftFilterStore, linkStore: LinkStore): Boolean {
-            if (linkStore.linkedVariants(alternative.vcfId).isNotEmpty()) {
-                return false
-            }
-
-            val alternativePass = softFilterStore.isPassing(alternative.vcfId)
-            if (originalPass != alternativePass) {
-                return originalPass
-            }
-
-            return original.tumorQual > alternative.tumorQual
-        }
+    public void clear()
+    {
+        mDuplicateBreakends.clear();
+        mSingleDuplicates.clear();
+        mRescueBreakends.clear();
     }
-
-     */
 }

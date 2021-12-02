@@ -107,7 +107,7 @@ public class VcfWriter
         writer.writeHeader(newHeader);
     }
 
-    public void write(final LinkStore combinedLinks, final Map<String,String> idPathMap)
+    public void write(final LinkStore combinedLinks, final Map<Breakend,String> idPathMap)
     {
         for(HumanChromosome humanChromosome : HumanChromosome.values())
         {
@@ -133,7 +133,7 @@ public class VcfWriter
                     remoteLinks = combinedLinks.getBreakendLinksStr(otherBreakend);
                 }
 
-                String altPathStr = idPathMap.get(breakend.VcfId);
+                String altPathStr = idPathMap.get(breakend);
 
                 writeBreakend(breakend, localLinks, remoteLinks, altPathStr);
             }
