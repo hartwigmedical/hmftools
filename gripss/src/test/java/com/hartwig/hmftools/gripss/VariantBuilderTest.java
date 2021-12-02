@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_REF_ID;
-import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
+import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
+import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_2;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.DEFAULT_QUAL;
@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSglBreakend;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSvBreakends;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 
 import static junit.framework.TestCase.assertEquals;
@@ -181,7 +182,7 @@ public class VariantBuilderTest
 
         // SGL hard-filtered
         VariantContext sglContext = createSglBreakend(mIdGenerator.nextEventId(), CHR_1, 100, POS_ORIENT, "A", "");
-        sglContext.getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
+        sglContext.getGenotype(1).getExtendedAttributes().put(VT_BAQ, 1);
 
         SvData sgl = mBuilder.checkCreateVariant(sglContext, mGenotypeIds);
         assertNull(sgl);
@@ -244,5 +245,4 @@ public class VariantBuilderTest
         assertEquals(0, mBuilder.hardFilteredCount());
         assertEquals(0, mBuilder.incompleteSVs());
     }
-
 }

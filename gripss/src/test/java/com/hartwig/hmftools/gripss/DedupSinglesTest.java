@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class DedupSinglesTest
 {
-    private final GripssTestApplication mGripss;
+    private final GripssTestApp mGripss;
     private final SvDataCache mDataCache;
     private final FilterCache mFilterCache;
     private final DuplicateFinder mDuplicateFinder;
@@ -36,7 +36,7 @@ public class DedupSinglesTest
 
     public DedupSinglesTest()
     {
-        mGripss = new GripssTestApplication();
+        mGripss = new GripssTestApp();
         mDataCache = new SvDataCache();
         mFilterCache = new FilterCache();
         mDuplicateFinder = new DuplicateFinder(mDataCache, mFilterCache);
@@ -51,7 +51,7 @@ public class DedupSinglesTest
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, var2));
 
@@ -70,7 +70,7 @@ public class DedupSinglesTest
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, tumorAttributes);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, tumorAttributes);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, var2));
 
@@ -89,7 +89,7 @@ public class DedupSinglesTest
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, tumorAttributes);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, tumorAttributes);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, var2));
 
@@ -108,7 +108,7 @@ public class DedupSinglesTest
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, var2));
 
@@ -126,7 +126,7 @@ public class DedupSinglesTest
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 89, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, var2));
 
@@ -141,11 +141,11 @@ public class DedupSinglesTest
 
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         SvData sgl2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 102, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, sgl1, sgl2));
 
@@ -162,11 +162,11 @@ public class DedupSinglesTest
     {
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         SvData sgl2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 102, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(sgl1, sgl2));
 
@@ -185,11 +185,11 @@ public class DedupSinglesTest
 
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, tumorAttributes);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, tumorAttributes);
 
         SvData sgl2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 102, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(sgl1, sgl2));
 
@@ -203,11 +203,11 @@ public class DedupSinglesTest
     {
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         SvData sgl2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 102, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(sgl1, sgl2));
 
@@ -220,14 +220,14 @@ public class DedupSinglesTest
     {
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 90, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         Map<String, Object> commonAttributes = Maps.newHashMap();
         commonAttributes.put(VT_IMPRECISE, "true");
 
         SvData sgl2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 101, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, commonAttributes, null, null);
+                mGripss.GenotypeIds, commonAttributes, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(sgl1, sgl2));
 
@@ -247,11 +247,11 @@ public class DedupSinglesTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, commonAttributes, null, tumorAttributes);
+                mGripss.GenotypeIds, commonAttributes, null, tumorAttributes);
 
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 90, POS_ORIENT, "",
-                mGripss.mGenotypeIds, DEFAULT_ATTRIBUTES, null, null);
+                mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         loadSvDataCache(mDataCache, Lists.newArrayList(var1, sgl1));
 

@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.loadSvDataCache;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
@@ -13,13 +12,11 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.links.AlternatePath;
 import com.hartwig.hmftools.gripss.links.Link;
 
@@ -27,14 +24,14 @@ import org.junit.Test;
 
 public class DedupSVsTest
 {
-    private final GripssTestApplication mGripss;
+    private final GripssTestApp mGripss;
     private final SvDataCache mDataCache;
     private final FilterCache mFilterCache;
     private final DuplicateFinder mDuplicateFinder;
 
     public DedupSVsTest()
     {
-        mGripss = new GripssTestApplication();
+        mGripss = new GripssTestApp();
         mDataCache = new SvDataCache();
         mFilterCache = new FilterCache();
         mDuplicateFinder = new DuplicateFinder(mDataCache, mFilterCache);
@@ -75,7 +72,7 @@ public class DedupSVsTest
 
         var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 1000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, tumorAttributes);
+                mGripss.GenotypeIds, null, null, tumorAttributes);
 
         var2 = mGripss.createDel(CHR_1, 100, 1000, null, null);
 

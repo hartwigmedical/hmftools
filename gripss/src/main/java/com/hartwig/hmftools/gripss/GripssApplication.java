@@ -113,7 +113,7 @@ public class GripssApplication
             System.exit(1);
         }
 
-        mRealigner = new BreakendRealigner(mRefGenome, genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+        mRealigner = new BreakendRealigner(mRefGenome);
 
         if(!mConfig.tumorOnly())
         {
@@ -142,15 +142,21 @@ public class GripssApplication
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
+                    if(svData.isSgl() && se == SE_END)
+                        continue;
+
                     Breakend realignedBreakend = mRealigner.realign(breakends[se], svData.isSgl(), svData.imprecise());
 
                     if(realignedBreakend.realigned())
                     {
                         breakends[se] = realignedBreakend;
 
-                        int otherSe = switchIndex(se);
-                        Breakend realignedRemoteBreakend = mRealigner.realignRemote(breakends[otherSe], realignedBreakend);
-                        breakends[otherSe] = realignedRemoteBreakend;
+                        if(!svData.isSgl())
+                        {
+                            int otherSe = switchIndex(se);
+                            Breakend realignedRemoteBreakend = mRealigner.realignRemote(breakends[otherSe], realignedBreakend);
+                            breakends[otherSe] = realignedRemoteBreakend;
+                        }
                     }
                 }
 

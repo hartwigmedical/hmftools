@@ -3,10 +3,8 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_REF_ID;
-import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
+import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
+import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
@@ -271,7 +269,7 @@ public class GripssTestUtils
                 .genotypes(genotypesContext)
                 .attributes(commonAttributes)
                 .log10PError(logError)
-                .filter(filters)
+                .unfiltered()
                 .make(true);
     }
 
@@ -313,8 +311,6 @@ public class GripssTestUtils
         attributes.put(VT_CIPOS, Lists.newArrayList(0, 0));
         attributes.put(VT_CIRPOS, Lists.newArrayList(0, 0));
         attributes.put("SVTYPE", "BND");
-
-        // attributes.put(VT_REALIGN, );
 
         return attributes;
     }

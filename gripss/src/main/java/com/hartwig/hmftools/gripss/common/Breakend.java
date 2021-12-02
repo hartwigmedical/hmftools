@@ -180,7 +180,6 @@ public class Breakend
     public StructuralVariantType type() { return mSvData.type(); }
     public boolean imprecise() { return mSvData.imprecise(); }
     public boolean posOrient() { return Orientation == POS_ORIENT; }
-    public boolean negOrient() { return Orientation == NEG_ORIENT; }
 
     public int insertSequenceLength() { return InsertSequence.length(); }
     public int inexactHomologyLength() { return max(InexactHomology[SE_END] - InexactHomology[SE_START], 0); }

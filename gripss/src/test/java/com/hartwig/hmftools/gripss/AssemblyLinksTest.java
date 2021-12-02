@@ -5,18 +5,12 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_2;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.buildLinkAttributes;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEID;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEIDL;
 
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.Map;
-
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.links.AssemblyLinks;
 import com.hartwig.hmftools.gripss.links.LinkStore;
@@ -25,11 +19,11 @@ import org.junit.Test;
 
 public class AssemblyLinksTest
 {
-    private final GripssTestApplication mGripss;
+    private final GripssTestApp mGripss;
 
     public AssemblyLinksTest()
     {
-        mGripss = new GripssTestApplication();
+        mGripss = new GripssTestApp();
     }
 
     @Test

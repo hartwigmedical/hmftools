@@ -26,11 +26,11 @@ import org.junit.Test;
 
 public class DsbLinksTest
 {
-    private final GripssTestApplication mGripss;
+    private final GripssTestApp mGripss;
 
     public DsbLinksTest()
     {
-        mGripss = new GripssTestApplication();
+        mGripss = new GripssTestApp();
     }
 
     @Test

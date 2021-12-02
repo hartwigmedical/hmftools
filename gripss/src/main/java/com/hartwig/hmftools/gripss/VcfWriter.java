@@ -139,17 +139,6 @@ public class VcfWriter
             }
 
         }
-        /*
-        for (variant in variantStore.selectAll()) {
-
-            val localLinkedBy = combinedLinks[variant.vcfId]
-            val remoteLinkedBy = combinedLinks[variant.mateId]
-            val altPath = alternatePathsStringsByVcfId[variant.vcfId]
-
-            val filters = finalFilters.filters(variant.vcfId, variant.mateId)
-            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
-        }
-        */
     }
 
     private void writeBreakend(final Breakend breakend, final String localLinks, final String remoteLinks, final String altPathStr)
@@ -186,33 +175,9 @@ public class VcfWriter
 
         mUnfilteredWriter.add(variantContext);
 
-        if(filters.size() == 1 && (filters.contains(PASS) || filters.contains(PON)))
+        if(builder.getFilters().size() == 1 && (builder.getFilters().contains(PASS) || builder.getFilters().contains(PON)))
             mFilteredWriter.add(variantContext);
     }
-
-    /*
-        fun context(localLink: String, remoteLink: String, altPath: String?, isHotspot: Boolean, filters: Set<String>): VariantContext {
-        val genotypesToWrite = mutableListOf(tumorGenotype)
-        normalGenotype?.let { x -> genotypesToWrite.add(x) }
-
-        val builder = VariantContextBuilder(context).genotypes(genotypesToWrite).filters()
-        builder.log10PError(tumorQual / -10.0)
-                .attribute(TAF, tumorAF)
-                .attribute(LOCAL_LINKED_BY, localLink)
-                .attribute(REMOTE_LINKED_BY, remoteLink)
-                .attribute(HOTSPOT, isHotspot)
-                .attribute(EVENTTYPE,variantType.eventType)
-
-        altPath?.let { x -> builder.attribute(ALT_PATH, x) }
-        filters.forEach { x -> builder.filter(x) }
-        if (filters.isEmpty()) {
-            builder.filter(PASS)
-        }
-
-        return builder.make()
-    }
-
-     */
 
     public void close()
     {

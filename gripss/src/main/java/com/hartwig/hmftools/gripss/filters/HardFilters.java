@@ -1,13 +1,21 @@
 package com.hartwig.hmftools.gripss.filters;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.isMobileLineElement;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;
 import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class HardFilters
@@ -24,30 +32,62 @@ public class HardFilters
         // the following hard filters are applied:
         // - below min tumor qual
         // - excessive normal support
+        boolean isSgl = StructuralVariantFactory.isSingleBreakend(variant);
 
-        if(belowMinQual(variant, genotypeIds))
+        if(belowMinQual(variant, genotypeIds, isSgl))
             return true;
 
-        if(hasExcessiveReferenceSupport(variant, genotypeIds))
+        if(hasExcessiveReferenceSupport(variant, genotypeIds, isSgl))
             return true;
 
         return false;
     }
 
-    private boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds)
+    private boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
-        double qual = VcfUtils.getGenotypeAttributeAsDouble(variant.getGenotype(genotypeIds.TumorOrdinal), VT_QUAL, 0);
+        Genotype tumorGenotype = variant.getGenotype(genotypeIds.TumorOrdinal);
+        double qual;
+
+        if(isSgl)
+        {
+            // FIXME: won't work for tumor-only passing in ref
+            String ref = variant.getAlleles().get(0).getDisplayString();
+            final VariantAltInsertCoords altInsertCoords = parseRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
+
+            boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orientation, altInsertCoords.InsertSequence);
+
+            final String qualTag = isLineInsertion ? VT_BQ : VT_BAQ;
+            qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
+        }
+        else
+        {
+            qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
+        }
+
         return qual < mFilterConstants.MinTumorQual;
     }
 
-    private boolean hasExcessiveReferenceSupport(final VariantContext variant, final GenotypeIds genotypeIds)
+    private boolean hasExcessiveReferenceSupport(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
         if(!genotypeIds.hasReference())
             return false;
 
-        final String supportTag = StructuralVariantFactory.isSingleBreakend(variant) ? VT_BVF : VT_VF;
-        int refFrags = VcfUtils.getGenotypeAttributeAsInt(variant.getGenotype(genotypeIds.ReferenceOrdinal), supportTag, 0);
-        int tumorFrags = VcfUtils.getGenotypeAttributeAsInt(variant.getGenotype(genotypeIds.TumorOrdinal), supportTag, 0);
+        Genotype refGenotype = variant.getGenotype(genotypeIds.ReferenceOrdinal);
+        Genotype tumorGenotype = variant.getGenotype(genotypeIds.TumorOrdinal);
+
+        int refFrags;
+        int tumorFrags;
+
+        if(isSgl)
+        {
+            refFrags = sglFragmentCount(refGenotype);
+            tumorFrags = sglFragmentCount(tumorGenotype);
+        }
+        else
+        {
+            refFrags = VcfUtils.getGenotypeAttributeAsInt(refGenotype, VT_VF, 0);
+            tumorFrags = VcfUtils.getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);
+        }
 
         if(refFrags > mFilterConstants.HardMaxNormalRelativeSupport * tumorFrags)
             return true;

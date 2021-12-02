@@ -9,25 +9,16 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.links.DsbLinkFinder.findBreaks;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.links.AlternatePath;
-import com.hartwig.hmftools.gripss.links.AlternatePathFinder;
 import com.hartwig.hmftools.gripss.links.AssemblyLinks;
 import com.hartwig.hmftools.gripss.links.Link;
 import com.hartwig.hmftools.gripss.links.LinkStore;
@@ -37,11 +28,11 @@ import org.junit.Test;
 
 public class TransitiveLinksTest
 {
-    private final GripssTestApplication mGripss;
+    private final GripssTestApp mGripss;
 
     public TransitiveLinksTest()
     {
-        mGripss = new GripssTestApplication();
+        mGripss = new GripssTestApp();
     }
 
     @Test
@@ -56,19 +47,19 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, tumorOverrides);
+                mGripss.GenotypeIds, attributeOverrides, null, tumorOverrides);
 
         tumorOverrides.put(VT_QUAL, 100);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1001, 2001, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, tumorOverrides);
+                mGripss.GenotypeIds, null, null, tumorOverrides);
 
         tumorOverrides.put(VT_QUAL, 1000);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1002, 2002, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, tumorOverrides);
+                mGripss.GenotypeIds, null, null, tumorOverrides);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -94,11 +85,11 @@ public class TransitiveLinksTest
 
         SvData dup = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1002, 1024, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvData ins = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 1001, POS_ORIENT, NEG_ORIENT, "AGAGGAAGAGTATTATTAGACAG",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -119,21 +110,21 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null);
+                mGripss.GenotypeIds, attributeOverrides, null);
 
         attributeOverrides = buildLinkAttributes("asm1", "1");
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 1400, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, attributeOverrides);
+                mGripss.GenotypeIds, null, attributeOverrides);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1600, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null);
+                mGripss.GenotypeIds, attributeOverrides, null);
 
         SvData var4 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 1500, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, null);
+                mGripss.GenotypeIds, null, null, null);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -158,15 +149,15 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 1490, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1510, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null);
+                mGripss.GenotypeIds, attributeOverrides, null);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -185,15 +176,15 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 565345, 580840, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 565616, 567359, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 567170, 580634, NEG_ORIENT, POS_ORIENT, "TAGTAGAGTTGCTTGTACTTGG",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -215,23 +206,23 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, tumorOverrides);
+                mGripss.GenotypeIds, null, null, tumorOverrides);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 1400, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var4 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1600, 2000, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var5 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 1500, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, null);
+                mGripss.GenotypeIds, null, null, null);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -254,15 +245,15 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null, tumorOverrides);
+                mGripss.GenotypeIds, null, null, tumorOverrides);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvDataCache dataCache = new SvDataCache();
 
@@ -283,23 +274,23 @@ public class TransitiveLinksTest
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 5000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, attributeOverrides, null, null);
+                mGripss.GenotypeIds, attributeOverrides, null, null);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 4000, 5000, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var4 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 2500, 3500, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvData var5 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 2500, 3500, POS_ORIENT, NEG_ORIENT, "",
-                mGripss.mGenotypeIds, null, null);
+                mGripss.GenotypeIds, null, null);
 
         SvDataCache dataCache = new SvDataCache();
 
