@@ -236,13 +236,24 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
             table.addCell(TableUtil.createLayoutCell());
 
-            table.addCell(TableUtil.createLayoutCell()
-                    .add(new Div().add(createContentParagraph("The left plot",
-                            " shows the likelihoods (similarity) for all the origin "
-                                    + "types analyzed by the molecular tissue of origin prediction tool. Only when the likelihood is ≥80% "
-                                    + "(a peak in the green outer band of the plot), a reliable prediction (with >93% accuracy) can be drawn. "
-                                    + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin, but this is less strong "
-                                    + "and there is lower confidence."))));
+            if (patientReport.genomicAnalysis().impliedPurity() < 0.20) {
+                table.addCell(TableUtil.createLayoutCell()
+                        .add(new Div().add(createContentParagraph("The left plot",
+                                " shows the likelihoods (similarity) for all the origin "
+                                        + "types analyzed by the molecular tissue of origin prediction tool. Only when the likelihood is ≥80% "
+                                        + "(a peak in the green outer band of the plot), a reliable prediction (with >75% accuracy) can be drawn. "
+                                        + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin, but this is less strong "
+                                        + "and there is lower confidence."))));
+            } else {
+                table.addCell(TableUtil.createLayoutCell()
+                        .add(new Div().add(createContentParagraph("The left plot",
+                                " shows the likelihoods (similarity) for all the origin "
+                                        + "types analyzed by the molecular tissue of origin prediction tool. Only when the likelihood is ≥80% "
+                                        + "(a peak in the green outer band of the plot), a reliable prediction (with >95% accuracy) can be drawn. "
+                                        + "Lower likelihoods (<80%) suggest there is similarity with that tissue of origin, but this is less strong "
+                                        + "and there is lower confidence."))));
+            }
+
 
             table.addCell(TableUtil.createLayoutCell());
 
@@ -277,12 +288,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         return div;
     }
 
+
     @NotNull
     private Div createCharacteristicDisclaimerDiv(@NotNull String title) {
         Div div = new Div();
         div.setKeepTogether(true);
 
-        div.add(new Paragraph(title).addStyle(ReportResources.smallBodyHeadingStyle()));
+        div.add(new Paragraph(title).addStyle(ReportResources.smallBodyHeadingDisclaimerStyle()));
         return div;
     }
 

@@ -137,6 +137,10 @@ public final class ReportResources {
         return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
+    public static Style smallBodyHeadingDisclaimerStyle() {
+        return new Style().setFont(fontBold()).setFontSize(10).setFontColor(ReportResources.PALETTE_RED);
+    }
+
     public static Style smallBodyTextStyle() {
         return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_BLACK);
     }
