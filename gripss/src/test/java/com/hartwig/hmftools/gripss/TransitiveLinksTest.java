@@ -61,19 +61,13 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1002, 2002, POS_ORIENT, NEG_ORIENT, "",
                 mGripss.GenotypeIds, null, null, tumorOverrides);
 
-        SvDataCache dataCache = new SvDataCache();
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3));
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3));
-
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         List<Link> links = transLinkFinder.findTransitiveLinks(var1.breakendStart());
         assertEquals(1, links.size());
         assertEquals(var3.breakendStart(), links.get(0).breakendStart());
         assertEquals(var3.breakendEnd(), links.get(0).breakendEnd());
-
-        //List<AlternatePath> alternatePaths = AlternatePathFinder.findPaths(dataCache, new LinkStore());
-        //LinkStore transitiveLinkStore = AlternatePathFinder.createLinkStore(alternatePaths);
-        // assertTrue(!transitiveLinkStore.getBreakendLinksMap().isEmpty());
     }
 
     @Test
@@ -91,11 +85,9 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 1001, POS_ORIENT, NEG_ORIENT, "AGAGGAAGAGTATTATTAGACAG",
                 mGripss.GenotypeIds, attributeOverrides, null, null);
 
-        SvDataCache dataCache = new SvDataCache();
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(dup, ins));
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(dup, ins));
-
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         assertEquals(1, transLinkFinder.findTransitiveLinks(dup.breakendStart()).size());
         assertEquals(1, transLinkFinder.findTransitiveLinks(ins.breakendStart()).size());
         assertEquals(1, transLinkFinder.findTransitiveLinks(dup.breakendEnd()).size());
@@ -126,18 +118,16 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, 1500, POS_ORIENT, "",
                 mGripss.GenotypeIds, null, null, null);
 
-        SvDataCache dataCache = new SvDataCache();
-
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3, var4));
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3, var4));
 
         // first without any assembled links
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         List<Link> links = transLinkFinder.findTransitiveLinks(var1.breakendStart());
         assertEquals(3, links.size());
 
         LinkStore assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2, var3, var4));
 
-        transLinkFinder = new TransitiveLinkFinder(dataCache, assemblyLinks);
+        transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, assemblyLinks);
         assertTrue(transLinkFinder.findTransitiveLinks(var1.breakendStart()).isEmpty());
     }
 
@@ -159,11 +149,9 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1510, 2000, POS_ORIENT, NEG_ORIENT, "",
                 mGripss.GenotypeIds, attributeOverrides, null);
 
-        SvDataCache dataCache = new SvDataCache();
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3));
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3));
-
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         assertTrue(transLinkFinder.findTransitiveLinks(var1.breakendStart()).isEmpty());
     }
 
@@ -186,11 +174,9 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 567170, 580634, NEG_ORIENT, POS_ORIENT, "TAGTAGAGTTGCTTGTACTTGG",
                 mGripss.GenotypeIds, null, null);
 
-        SvDataCache dataCache = new SvDataCache();
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3));
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3));
-
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         List<Link> links = transLinkFinder.findTransitiveLinks(var1.breakendStart());
         assertEquals(3, links.size());
     }
@@ -224,12 +210,10 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, 1500, POS_ORIENT, "",
                 mGripss.GenotypeIds, null, null, null);
 
-        SvDataCache dataCache = new SvDataCache();
-
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3, var4, var5));
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3, var4, var5));
 
         // first without any assembled links
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         List<Link> links = transLinkFinder.findTransitiveLinks(var1.breakendStart());
         assertEquals(1, links.size());
     }
@@ -255,11 +239,9 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
                 mGripss.GenotypeIds, null, null);
 
-        SvDataCache dataCache = new SvDataCache();
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3));
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3));
-
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         List<Link> links = transLinkFinder.findTransitiveLinks(var1.breakendStart());
         assertEquals(1, links.size());
         assertEquals(var3.breakendStart(), links.get(0).breakendStart());
@@ -292,17 +274,15 @@ public class TransitiveLinksTest
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 2500, 3500, POS_ORIENT, NEG_ORIENT, "",
                 mGripss.GenotypeIds, null, null);
 
-        SvDataCache dataCache = new SvDataCache();
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3, var4));
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3, var4));
-
-        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(dataCache, new LinkStore());
+        TransitiveLinkFinder transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, new LinkStore());
         assertTrue(!transLinkFinder.findTransitiveLinks(var1.breakendStart()).isEmpty());
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3, var5));
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3, var5));
         assertTrue(!transLinkFinder.findTransitiveLinks(var1.breakendStart()).isEmpty());
 
-        GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3, var4, var5));
+        GripssTestUtils.loadSvDataCache(mGripss.DataCache, Lists.newArrayList(var1, var2, var3, var4, var5));
         assertTrue(transLinkFinder.findTransitiveLinks(var1.breakendStart()).isEmpty());
     }
 }

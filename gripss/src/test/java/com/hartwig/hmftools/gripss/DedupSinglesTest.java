@@ -37,8 +37,8 @@ public class DedupSinglesTest
     public DedupSinglesTest()
     {
         mGripss = new GripssTestApp();
-        mDataCache = new SvDataCache();
-        mFilterCache = new FilterCache();
+        mDataCache = mGripss.DataCache;
+        mFilterCache = mGripss.FilterCache;
         mDuplicateFinder = new DuplicateFinder(mDataCache, mFilterCache);
 
         DEFAULT_ATTRIBUTES.put(VT_CIPOS, new int[] {-10,10});

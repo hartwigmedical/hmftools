@@ -43,7 +43,7 @@ public class DsbLinksTest
         LinkStore assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2));
         assertTrue(assemblyLinks.getBreakendLinksMap().isEmpty());
 
-        SvDataCache dataCache = new SvDataCache();
+        SvDataCache dataCache = mGripss.DataCache;
 
         GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2));
 
@@ -114,7 +114,7 @@ public class DsbLinksTest
         LinkStore assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2, var3));
         assertTrue(assemblyLinks.getBreakendLinksMap().isEmpty());
 
-        SvDataCache dataCache = new SvDataCache();
+        SvDataCache dataCache = mGripss.DataCache;
 
         GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3));
 
@@ -137,7 +137,7 @@ public class DsbLinksTest
         LinkStore assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2, var3));
         assertTrue(assemblyLinks.getBreakendLinksMap().isEmpty());
 
-        SvDataCache dataCache = new SvDataCache();
+        SvDataCache dataCache = mGripss.DataCache;
 
         GripssTestUtils.loadSvDataCache(dataCache, Lists.newArrayList(var1, var2, var3));
 

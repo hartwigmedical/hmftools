@@ -183,7 +183,6 @@ public class VcfUtils
 
         int allowedNonRequiredChars = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
 
-
         for(int i = 0; i < LINE_POLY_AT_TEST_LEN; ++i)
         {
             if(orientation == POS_ORIENT)

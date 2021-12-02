@@ -14,6 +14,8 @@ public class GripssTestApp
     public final MockRefGenome RefGenome;
     public final VcfIdGenerator IdGen;
     public final GenotypeIds GenotypeIds;
+    public final SvDataCache DataCache;
+    public final FilterCache FilterCache;
 
     public static final String TEST_SAMPLE_ID = "TUMOR_ID";
     public static final String TEST_REF_ID = "REF_ID";
@@ -23,6 +25,8 @@ public class GripssTestApp
         IdGen = new VcfIdGenerator();
         RefGenome = new MockRefGenome();
         GenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
+        DataCache = new SvDataCache();
+        FilterCache = new FilterCache();
     }
 
     // convenience builders for each type

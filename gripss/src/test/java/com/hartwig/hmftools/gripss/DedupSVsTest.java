@@ -32,8 +32,8 @@ public class DedupSVsTest
     public DedupSVsTest()
     {
         mGripss = new GripssTestApp();
-        mDataCache = new SvDataCache();
-        mFilterCache = new FilterCache();
+        mDataCache = mGripss.DataCache;
+        mFilterCache = mGripss.FilterCache;
         mDuplicateFinder = new DuplicateFinder(mDataCache, mFilterCache);
     }
 

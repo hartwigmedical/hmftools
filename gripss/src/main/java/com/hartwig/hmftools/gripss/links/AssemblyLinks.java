@@ -80,9 +80,7 @@ public class AssemblyLinks
 
                     String linkId = String.format("%s-%d", assembly, linkCounter++);
 
-                    Link newLink = Link.from(linkId, breakend1, breakend2);
-                    assemblyLinkStore.addLink(breakend1, newLink);
-                    assemblyLinkStore.addLink(breakend2, newLink);
+                    assemblyLinkStore.addLinks(linkId, breakend1, breakend2);
                 }
             }
         }
