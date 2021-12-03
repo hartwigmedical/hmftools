@@ -87,7 +87,7 @@ public class AnalysedPatientReporter {
 
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
-        List<PeachGenotype> peachGenotypes = overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
+        List<PeachGenotype> peachGenotypes = overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION) && !overruledAnalysis.hasReliablePurity()
                 ? Lists.newArrayList()
                 : loadPeachData(config.peachGenotypeTsv());
 

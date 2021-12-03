@@ -20,17 +20,18 @@ public interface PatientReport {
         String userName = Strings.EMPTY;
         String trainedEmployee = " (trained IT employee)";
         String combinedUserName = Strings.EMPTY;
-        if (systemUser.equals("lieke") || systemUser.equals("liekeschoenmaker")) {
+        if (systemUser.equals("lieke") || systemUser.equals("liekeschoenmaker") || systemUser.equals("lschoenmaker")) {
             userName = "Lieke Schoenmaker";
             combinedUserName = userName + trainedEmployee;
-        } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn")) {
+        } else if (systemUser.equals("korneel") || systemUser.equals("korneelduyvesteyn") || systemUser.equals("kduyvesteyn")) {
             userName = "Korneel Duyvesteyn";
             combinedUserName = userName + trainedEmployee;
         } else if (systemUser.equals("sandra") || systemUser.equals("sandravandenbroek") || systemUser.equals("sandravdbroek")
-                || systemUser.equals("s_vandenbroek")) {
+                || systemUser.equals("s_vandenbroek") || systemUser.equals("svandenbroek")) {
             userName = "Sandra van den Broek";
             combinedUserName = userName + trainedEmployee;
-        } else if (systemUser.equals("daphne") || systemUser.equals("d_vanbeek") || systemUser.equals("daphnevanbeek")) {
+        } else if (systemUser.equals("daphne") || systemUser.equals("d_vanbeek") || systemUser.equals("daphnevanbeek")
+                || systemUser.equals("dvanbeek")) {
             userName = "Daphne van Beek";
             combinedUserName = userName + trainedEmployee;
         } else if (systemUser.equals("root")) {
