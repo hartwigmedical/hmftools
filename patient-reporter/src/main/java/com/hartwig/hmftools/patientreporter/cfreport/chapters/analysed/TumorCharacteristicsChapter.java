@@ -206,7 +206,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
             String molecularTissueOriginPlot = patientReport.molecularTissueOrigin().plotPath();
             if (patientReport.qsFormNumber().equals(QsFormNumber.FOR_209.display()) || patientReport.qsFormNumber()
                     .equals(QsFormNumber.FOR_080.display())) {
-                if (patientReport.genomicAnalysis().impliedPurity() < 0.20) {
+                if (patientReport.genomicAnalysis().impliedPurity() < ReportResources.PURITY_CUTOFF) {
                     reportDocument.add(createCharacteristicDisclaimerDiv(
                             "Due to the low tumor purity, the molecular tissue of origin prediction should be interpreted with caution."));
                 }
@@ -236,7 +236,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
             table.addCell(TableUtil.createLayoutCell());
 
-            if (patientReport.genomicAnalysis().impliedPurity() < 0.20) {
+            if (patientReport.genomicAnalysis().impliedPurity() < ReportResources.PURITY_CUTOFF) {
                 table.addCell(TableUtil.createLayoutCell()
                         .add(new Div().add(createContentParagraph("The left plot",
                                 " shows the likelihoods (similarity) for all the origin "
