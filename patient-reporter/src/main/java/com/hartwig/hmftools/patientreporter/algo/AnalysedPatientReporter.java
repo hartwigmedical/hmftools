@@ -87,7 +87,7 @@ public class AnalysedPatientReporter {
 
         LOGGER.info(" Molecular tissue origin conclusion: {}", molecularTissueOrigin.conclusion());
 
-        List<PeachGenotype> peachGenotypes = overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION) && !overruledAnalysis.hasReliablePurity()
+        List<PeachGenotype> peachGenotypes = overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
                 ? Lists.newArrayList()
                 : loadPeachData(config.peachGenotypeTsv());
 
@@ -100,8 +100,7 @@ public class AnalysedPatientReporter {
                 .pipelineVersion(pipelineVersion)
                 .genomicAnalysis(overruledAnalysis)
                 .molecularTissueOrigin(overruledAnalysis.purpleQCStatus().contains(PurpleQCStatus.FAIL_CONTAMINATION)
-                        ? null
-                        : molecularTissueOrigin)
+                        || !overruledAnalysis.hasReliablePurity() ? null : molecularTissueOrigin)
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
