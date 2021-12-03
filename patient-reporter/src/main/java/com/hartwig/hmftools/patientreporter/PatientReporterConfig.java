@@ -133,7 +133,7 @@ public interface PatientReporterConfig {
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
-        options.addOption(REQUIRE_PIPELINE_VERSION_FILE, true, "Boolean for determine pipeline version file is requierde");
+        options.addOption(REQUIRE_PIPELINE_VERSION_FILE, false, "Boolean for determine pipeline version file is requierde");
         options.addOption(PIPELINE_VERSION_FILE, true, "Path towards the pipeline version (optional)");
         options.addOption(EXPECTED_PIPELINE_VERSION, true, "String of the expected pipeline version");
         options.addOption(OVERRIDE_PIPELINE_VERSION, false, "if set, the check for pipeline version is overridden");
