@@ -168,7 +168,7 @@ public class SoftFilters
         if(sv.type() != DEL || sv.length() >= SHORT_CALLING_SIZE)
             return false;
 
-        return breakend.Alt.length() - 1 == breakend.insertSequenceLength();
+        return sv.length() - 1 == breakend.insertSequenceLength();
     }
 
     private boolean minQuality(final SvData sv, final Breakend breakend)

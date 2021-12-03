@@ -179,7 +179,7 @@ public class GripssApplication
 
         mSvDataCache.buildBreakendMap();
 
-        GR_LOGGER.info("appying PON filters");
+        GR_LOGGER.info("applying PON filters");
 
         for(List<Breakend> chrBreakendList : mSvDataCache.getBreakendMap().values())
         {
@@ -254,6 +254,8 @@ public class GripssApplication
         // summary logging
         if(GR_LOGGER.isDebugEnabled())
         {
+            mFilterCache.logRescuedBreakendFilters();
+
             Map<FilterType,Integer> filterCounts = Maps.newHashMap();
 
             for(List<FilterType> filters : mFilterCache.getBreakendFilters().values())

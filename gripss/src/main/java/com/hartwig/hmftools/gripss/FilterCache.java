@@ -2,12 +2,14 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DEDUP;
 import static com.hartwig.hmftools.gripss.filters.FilterType.PON;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.gripss.filters.HotspotCache;
 public class FilterCache
 {
     private final Map<Breakend,List<FilterType>> mBreakendFilters; // empty if a breakend is not filtered
+    private final Map<Breakend,List<FilterType>> mRescuedBreakendFilters; // for debug, the types of filters that a breakend was rescued from
     private final Set<Breakend> mDuplicateBreakends;
 
     private final List<SvData> mHotspots;
@@ -28,6 +31,7 @@ public class FilterCache
     public FilterCache()
     {
         mBreakendFilters = Maps.newHashMap();
+        mRescuedBreakendFilters = Maps.newHashMap();
         mHotspots = Lists.newArrayList();
         mDuplicateBreakends = Sets.newHashSet();
         mPonFiltered = 0;
@@ -37,6 +41,7 @@ public class FilterCache
     public boolean isHotspot(final SvData sv) { return mHotspots.contains(sv); }
 
     public Map<Breakend,List<FilterType>> getBreakendFilters() { return mBreakendFilters; }
+    public Map<Breakend,List<FilterType>> getRescuedBreakendFilters() { return mRescuedBreakendFilters; }
 
     public List<FilterType> getBreakendFilters(final Breakend breakend) { return mBreakendFilters.get(breakend); }
     public boolean hasFilters(final Breakend breakend) { return mBreakendFilters.containsKey(breakend); }
@@ -91,40 +96,78 @@ public class FilterCache
             filters.add(filter);
     }
 
-    public List<FilterType> getSvFilters(final SvData sv)
+    public void updateFilters(final Set<Breakend> rescuedBreakends, final Set<Breakend> duplicateBreakends)
     {
-        List<FilterType> combinedFilters = Lists.newArrayList();
+        // add duplicate filter and remove any rescued breakends
+        for(Breakend breakend : rescuedBreakends)
+        {
+            List<FilterType> filters = mBreakendFilters.get(breakend);
+
+            if(filters != null)
+            {
+                mRescuedBreakendFilters.put(breakend, filters);
+                mBreakendFilters.remove(breakend);
+            }
+        }
+
+        duplicateBreakends.forEach(x -> addBreakendFilter(x, DEDUP));
+        mDuplicateBreakends.addAll(duplicateBreakends);
+    }
+
+    public List<FilterType> combineSvFilters(final SvData sv)
+    {
+        if(sv.isSgl())
+            return getBreakendFilters(sv.breakendStart());
+
+        // take the union of the filters for an SV
+        List<FilterType> combinedFilters = null;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
             Breakend breakend = sv.breakends()[se];
-
-            if(breakend == null)
-                continue;
 
             List<FilterType> breakendFilters = mBreakendFilters.get(breakend);
 
             if(breakendFilters == null)
                 continue;
 
-            breakendFilters.stream().filter(x -> !combinedFilters.contains(x)).forEach(x -> combinedFilters.add(x));
+            if(combinedFilters == null)
+            {
+                combinedFilters = Lists.newArrayList(breakendFilters);
+                continue;
+            }
+
+            for(FilterType filter : breakendFilters)
+            {
+                if(!combinedFilters.contains(filter))
+                    combinedFilters.add(filter);
+            }
         }
 
         return combinedFilters;
     }
 
-    public void updateFilters(final Set<Breakend> rescuedBreakends, final Set<Breakend> duplicateBreakends)
+    public void logRescuedBreakendFilters()
     {
-        // add duplicate filter and remove any rescued breakends
-        rescuedBreakends.forEach(x -> mBreakendFilters.remove(x));
-        duplicateBreakends.forEach(x -> addBreakendFilter(x, DEDUP));
-        mDuplicateBreakends.addAll(duplicateBreakends);
+        if(!GR_LOGGER.isDebugEnabled())
+            return;
+
+        for(Map.Entry<Breakend,List<FilterType>> entry : mRescuedBreakendFilters.entrySet())
+        {
+            Breakend breakend = entry.getKey();
+            List<FilterType> filters = entry.getValue();
+            StringJoiner sj = new StringJoiner(";");
+            filters.forEach(x -> sj.add(FilterType.vcfName(x)));
+
+            GR_LOGGER.debug("breakend({}) rescued from filters({})", breakend, sj.toString());
+        }
     }
 
     public void clear()
     {
         mBreakendFilters.clear();
         mDuplicateBreakends.clear();
+        mRescuedBreakendFilters.clear();
         mHotspots.clear();
         mPonFiltered = 0;
     }

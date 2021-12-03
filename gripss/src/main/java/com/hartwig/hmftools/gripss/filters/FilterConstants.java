@@ -56,9 +56,9 @@ public class FilterConstants
     public static final double DEFAULT_MIN_TUMOR_AF = 0.005;
     public static final double DEFAULT_MIN_TUMOR_AF_SGL = 0.015;
     public static final double DEFAULT_MAX_SHORT_STRAND_BIAS = 0.95;
-    public static final int DEFAULT_MIN_QUAL_BREAK_END = 1000;
+    public static final int DEFAULT_MIN_QUAL_BREAK_END = 500;
     public static final int DEFAULT_MIN_QUAL_BREAK_POINT = 400;
-    public static final int DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = 1000;
+    public static final int DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = 500;
     public static final int DEFAULT_MAX_HOM_LENGTH_SHORT_INV = 6;
     public static final int DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL = 5;
     public static final int INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH = 100;

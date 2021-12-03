@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DISTANCE;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -39,7 +40,7 @@ public class PonCache
 
     public PonCache(final CommandLine cmd)
     {
-        this(Integer.parseInt(cmd.getOptionValue(GERMLINE_PON_MARGIN, "0")),
+        this(Integer.parseInt(cmd.getOptionValue(GERMLINE_PON_MARGIN, String.valueOf(DEFAULT_PON_DISTANCE))),
                 cmd.getOptionValue(GERMLINE_PON_BED_SV_FILE),
                 cmd.getOptionValue(GERMLINE_PON_BED_SGL_FILE));
     }
@@ -256,8 +257,9 @@ public class PonCache
                     lastRegion = null;
                 }
 
-                ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(items[1]), Integer.parseInt(items[2]));
-                ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]), Integer.parseInt(items[5]));
+                // note BED start position adjustment
+                ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
+                ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]) + 1, Integer.parseInt(items[5]));
 
                 Byte orientStart = items[8].equals("+") ? POS_ORIENT : NEG_ORIENT;
                 Byte orientEnd = items[9].equals("+") ? POS_ORIENT : NEG_ORIENT;
@@ -314,7 +316,7 @@ public class PonCache
                     lastRegion = null;
                 }
 
-                BaseRegion region = new BaseRegion(Integer.parseInt(items[1]), Integer.parseInt(items[2]));
+                BaseRegion region = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
 
                 Byte orient = items[5].equals("+") ? POS_ORIENT : NEG_ORIENT;
                 int ponCount = Integer.parseInt(items[4]);

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ALT_PATH;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT_TYPE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
@@ -16,10 +17,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
@@ -110,6 +113,8 @@ public class VcfWriter
 
     public void write(final LinkStore combinedLinks, final Map<Breakend,String> idPathMap)
     {
+        final Map<SvData,List<FilterType>> svFiltersMap = Maps.newHashMap(); // to avoid collating SV filters twice
+
         for(HumanChromosome humanChromosome : HumanChromosome.values())
         {
             String chromosome = humanChromosome.toString();
@@ -136,13 +141,14 @@ public class VcfWriter
 
                 String altPathStr = idPathMap.get(breakend);
 
-                writeBreakend(breakend, localLinks, remoteLinks, altPathStr);
+                writeBreakend(breakend, svFiltersMap, localLinks, remoteLinks, altPathStr);
             }
-
         }
     }
 
-    private void writeBreakend(final Breakend breakend, final String localLinks, final String remoteLinks, final String altPathStr)
+    private void writeBreakend(
+            final Breakend breakend, final Map<SvData,List<FilterType>> svFiltersMap,
+            final String localLinks, final String remoteLinks, final String altPathStr)
     {
         List<Genotype> genotypes = Lists.newArrayList(breakend.Context.getGenotype(mGenotypeIds.TumorOrdinal));
 
@@ -165,18 +171,38 @@ public class VcfWriter
         if(altPathStr != null && !altPathStr.isEmpty())
             builder.attribute(VT_ALT_PATH, altPathStr);
 
-        List<FilterType> filters = mFilterCache.getBreakendFilters(breakend);
+        final SvData sv = breakend.sv();
 
-        if(filters == null)
-            builder.filter(PASS);
+        List<FilterType> svFilters;
+
+        if(sv.isSgl())
+        {
+            svFilters = mFilterCache.getBreakendFilters(breakend);
+        }
+        else if(breakend == sv.breakendStart())
+        {
+            svFilters = mFilterCache.combineSvFilters(sv);
+            svFiltersMap.put(sv, svFilters); // cache to avoid a second collation
+        }
         else
-            filters.forEach(x -> builder.filter(FilterType.vcfName(x)));
+        {
+            svFilters = svFiltersMap.get(sv);
+        }
+
+        if(svFilters == null)
+        {
+            builder.filter(PASS);
+        }
+        else
+        {
+            svFilters.forEach(x -> builder.filter(FilterType.vcfName(x)));
+        }
 
         VariantContext variantContext = builder.make();
 
         mUnfilteredWriter.add(variantContext);
 
-        if(builder.getFilters().size() == 1 && (builder.getFilters().contains(PASS) || builder.getFilters().contains(PON)))
+        if(svFilters == null || (svFilters.size() == 1 && svFilters.get(0) == PON))
             mFilteredWriter.add(variantContext);
     }
 

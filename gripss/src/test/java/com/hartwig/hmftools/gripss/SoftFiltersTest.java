@@ -233,7 +233,10 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // short DEL artefact
-        sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
+        sv = createSv(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 110, POS_ORIENT, NEG_ORIENT, "AGCTAGCTA",
+                mGenotypeIds, commonOverrides, refOverrides, tumorOverrides);
+
         applyFilters(sv);
         assertTrue(hasFilter(sv.breakendStart(), SHORT_DEL_INS_ARTIFACT));
 

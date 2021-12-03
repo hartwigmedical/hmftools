@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -105,6 +106,22 @@ public class VariantBuilderTest
         assertEquals(NEG_ORIENT, inv.orientStart());
         assertEquals(NEG_ORIENT, inv.orientEnd());
         assertEquals(INV, inv.type());
+
+        contexts = createSvBreakends(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 101, POS_ORIENT, NEG_ORIENT, "A", "AAAAGT");
+
+        SvData ins = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
+        assertNull(ins);
+        ins = mBuilder.checkCreateVariant(contexts[SE_END], mGenotypeIds);
+        assertNotNull(ins);
+
+        assertEquals(CHR_1, ins.chromosomeStart());
+        assertEquals(CHR_1, ins.chromosomeEnd());
+        assertEquals(100, ins.posStart());
+        assertEquals(101, ins.posEnd());
+        assertEquals(POS_ORIENT, ins.orientStart());
+        assertEquals(NEG_ORIENT, ins.orientEnd());
+        assertEquals(INS, ins.type());
 
         contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_2, 100, 200, NEG_ORIENT, NEG_ORIENT, "A", "");
