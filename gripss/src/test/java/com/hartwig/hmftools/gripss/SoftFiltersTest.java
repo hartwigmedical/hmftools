@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
@@ -195,9 +196,9 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // discordant support
-        refOverrides.put(VT_REFPAIR, 0);
+        refOverrides.put(VT_RP, 0);
         refOverrides.put(VT_ASRP, 0);
-        tumorOverrides.put(VT_REFPAIR, 0);
+        tumorOverrides.put(VT_RP, 0);
         tumorOverrides.put(VT_ASRP, 0);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);

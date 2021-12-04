@@ -104,7 +104,7 @@ public class GripssApplication
 
         VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
 
-        GR_LOGGER.info("sample({}) processing germline VCF({})", mConfig.SampleId, vcfFile);
+        GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
         GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 

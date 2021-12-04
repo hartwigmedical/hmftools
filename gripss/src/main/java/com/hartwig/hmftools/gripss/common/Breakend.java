@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
@@ -15,7 +14,6 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAs
 import static com.hartwig.hmftools.gripss.common.VcfUtils.isMobileLineElement;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
@@ -26,10 +24,8 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.parseAssemblies;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.gripss.filters.FilterType;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -46,8 +42,6 @@ public class Breakend
     public final double Qual;
     public final int TumorFragments;
     public final int ReferenceFragments;
-    public final int ReferenceReads;
-    public final int ReferencePairReads;
 
     public final Genotype RefGenotype;
     public final Genotype TumorGenotype;
@@ -91,14 +85,10 @@ public class Breakend
         if(refGenotype != null)
         {
             ReferenceFragments = isSgl ? sglFragmentCount(refGenotype) : getGenotypeAttributeAsInt(refGenotype, VT_VF, 0);
-            ReferenceReads = getGenotypeAttributeAsInt(refGenotype, VT_REF, 0);
-            ReferencePairReads = getGenotypeAttributeAsInt(refGenotype, VT_REFPAIR, 0);
         }
         else
         {
             ReferenceFragments = 0;
-            ReferenceReads = 0;
-            ReferencePairReads = 0;
         }
 
         TumorFragments = isSgl ? sglFragmentCount(tumorGenotype) : getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);

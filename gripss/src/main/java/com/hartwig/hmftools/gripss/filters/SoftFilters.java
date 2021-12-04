@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH;
@@ -48,7 +50,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.gripss.FilterCache;
-import com.hartwig.hmftools.gripss.SvDataCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.common.VcfUtils;
@@ -144,7 +145,10 @@ public class SoftFilters
         if(breakend.RefGenotype == null)
             return false;
 
-         return breakend.ReferenceFragments + breakend.ReferenceReads + breakend.ReferencePairReads < mFilterConstants.MinNormalCoverage;
+        int refSupportReads = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_REF, 0);
+        int refSupportReadPairs = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_REFPAIR, 0);
+
+        return breakend.ReferenceFragments + refSupportReads + refSupportReadPairs < mFilterConstants.MinNormalCoverage;
     }
 
     private boolean normalRelativeSupport(final Breakend breakend)
@@ -292,9 +296,9 @@ public class SoftFilters
         if(sv.isSgl() || sv.isShortLocal())
             return false;
 
-        return breakend.ReferencePairReads == 0
+        return VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, VT_RP, 0) == 0
                 && VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASRP, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_REFPAIR, 0) == 0
+                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_RP, 0) == 0
                 && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0;
     }
 
