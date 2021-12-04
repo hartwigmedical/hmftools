@@ -106,6 +106,8 @@ sources | A list of sources from where the evidence has been extracted | vicc_cg
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.7)
+  - Add filter for gene level matches to require coding or splicing impact 
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.6)
   - Fix bug in case of viruses being presented to PROTECT with no interpretation 
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.5)
