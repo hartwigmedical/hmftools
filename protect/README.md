@@ -107,10 +107,10 @@ urls | A list of urls with additional information about the evidence | https://p
 
 ## Version History and Download Links
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.6)
-  - Fix bug of virusses when no interpretation is present 
+  - Fix bug in case of viruses being presented to PROTECT with no interpretation 
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.5)
   - Support virus interpreter v1.1
-  - Use all called somatic variants in PROTECT, but all unreported events with evidence will set to none reportable 
+  - Use all called somatic variants in PROTECT, but all unreported events with evidence will set to not-reportable 
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.4)
   - Output of virus interpreter is loaded by PROTECT and matched against viral evidence
   - Evidence is determined for non-reported genomic events (amps, dels, variants, fusions, viral presence).
