@@ -63,6 +63,7 @@ public class Breakend
     public final Interval RemoteConfidenceInterval;
     public final int[] InexactHomology;
     public final boolean IsLineInsertion;
+    public final double AllelicFrequency;
 
     private final SvData mSvData;
     private final List<String> mAssemblies;
@@ -70,8 +71,8 @@ public class Breakend
     private int mChrLocationIndex;
 
     public Breakend(
-            final SvData svData, final boolean isStart, final VariantContext context, final String chromosome, final int position, final byte orientation,
-            final Genotype refGenotype, final Genotype tumorGenotype, final int tumorFragments, final int refFrags, final int refReads, final int refPairReads)
+            final SvData svData, final boolean isStart, final VariantContext context, final String chromosome, final int position,
+            final byte orientation, final Genotype refGenotype, final Genotype tumorGenotype)
     {
         mSvData = svData;
         VcfId = context.getID();
@@ -83,10 +84,28 @@ public class Breakend
 
         RefGenotype = refGenotype;
         TumorGenotype = tumorGenotype;
-        TumorFragments = tumorFragments;
-        ReferenceFragments = refFrags;
-        ReferenceReads = refReads;
-        ReferencePairReads = refPairReads;
+
+        // NOTE: SvData is only partially constructed so becareful which fields are used
+        boolean isSgl = mSvData.type() == SGL;
+
+        if(refGenotype != null)
+        {
+            ReferenceFragments = isSgl ? sglFragmentCount(refGenotype) : getGenotypeAttributeAsInt(refGenotype, VT_VF, 0);
+            ReferenceReads = getGenotypeAttributeAsInt(refGenotype, VT_REF, 0);
+            ReferencePairReads = getGenotypeAttributeAsInt(refGenotype, VT_REFPAIR, 0);
+        }
+        else
+        {
+            ReferenceFragments = 0;
+            ReferenceReads = 0;
+            ReferencePairReads = 0;
+        }
+
+        TumorFragments = isSgl ? sglFragmentCount(tumorGenotype) : getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);
+
+        int readPairSupport = (isSgl || !mSvData.isShortLocal()) ? getGenotypeAttributeAsInt(tumorGenotype, VT_REFPAIR, 0) : 0;
+        double totalSupport = TumorFragments + getGenotypeAttributeAsInt(tumorGenotype, VT_REF, 0) + readPairSupport;
+        AllelicFrequency = totalSupport > 0 ? TumorFragments / totalSupport : 0;
 
         ConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIPOS);
         RemoteConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIRPOS);
@@ -128,38 +147,21 @@ public class Breakend
     }
 
     public static Breakend from(
-            final SvData svData, final StructuralVariantType type, final boolean isStart, final StructuralVariantLeg svLeg,
+            final SvData svData, final boolean isStart, final StructuralVariantLeg svLeg,
             final VariantContext variantContext, final int referenceOrdinal, final int tumorOrdinal)
     {
         final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
-        final String fragsTag = type == SGL ? VT_BVF : VT_VF;
-
-        int refFrags = 0;
-        int refReads = 0;
-        int refPairReads = 0;
-
-        if(refGenotype != null)
-        {
-            refFrags = type == SGL ? sglFragmentCount(refGenotype) : getGenotypeAttributeAsInt(refGenotype, fragsTag, 0);
-            refReads = getGenotypeAttributeAsInt(refGenotype, VT_REF, 0);
-            refPairReads = getGenotypeAttributeAsInt(refGenotype, VT_REFPAIR, 0);
-        }
-
-        int tumorFrags = type == SGL ? sglFragmentCount(tumorGenotype) : getGenotypeAttributeAsInt(tumorGenotype, fragsTag, 0);
-
         return new Breakend(
-                svData, isStart, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype,
-                tumorFrags, refFrags, refReads, refPairReads);
+                svData, isStart, variantContext, svLeg.chromosome(), (int)svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype);
     }
 
     public static Breakend realigned(final Breakend original, final VariantContext newContext, final int newPosition)
     {
         Breakend newBreakend = new Breakend(
-                original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orientation, original.RefGenotype,
-                original.TumorGenotype, original.TumorFragments, original.ReferenceFragments, original.ReferenceReads,
-                original.ReferencePairReads);
+                original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orientation,
+                original.RefGenotype, original.TumorGenotype);
 
         newBreakend.markRealigned();
         return newBreakend;
@@ -195,24 +197,8 @@ public class Breakend
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }
 
-
-    public double allelicFrequency()
-    {
-        int tumorFrags = TumorFragments;
-        int readPairSupport = (isSgl() || !mSvData.isShortLocal()) ? ReferencePairReads : 0;
-        double totalSupport = tumorFrags + ReferenceReads + readPairSupport;
-        return totalSupport > 0 ? tumorFrags / totalSupport : 0;
-    }
-
     public String toString()
     {
         return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orientation);
     }
-
-    /*
-    val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
-    val endBreakend: Breakend? = (variantType as? Paired)?.let { Breakend(it.otherChromosome, it.otherPosition + remoteConfidenceInterval.first, it.otherPosition + remoteConfidenceInterval.second, it.endOrientation) }
-     */
-
-
 }

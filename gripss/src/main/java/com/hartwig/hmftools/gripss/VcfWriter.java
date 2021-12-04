@@ -158,15 +158,19 @@ public class VcfWriter
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
         builder.log10PError(breakend.Qual / -10.0)
-                .attribute(VT_TAF, String.format("%.4f", breakend.allelicFrequency()))
+                .attribute(VT_TAF, String.format("%.3f", breakend.AllelicFrequency))
                 .attribute(VT_HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
                 .attribute(VT_EVENT_TYPE, breakend.type());
 
         if(!localLinks.isEmpty())
-            builder.attribute(VT_REMOTE_LINKED_BY, localLinks);
+            builder.attribute(VT_LOCAL_LINKED_BY, localLinks);
+        else
+            builder.attribute(VT_LOCAL_LINKED_BY, "");
 
         if(!remoteLinks.isEmpty())
-            builder.attribute(VT_LOCAL_LINKED_BY, remoteLinks);
+            builder.attribute(VT_REMOTE_LINKED_BY, remoteLinks);
+        else
+            builder.attribute(VT_REMOTE_LINKED_BY, "");
 
         if(altPathStr != null && !altPathStr.isEmpty())
             builder.attribute(VT_ALT_PATH, altPathStr);

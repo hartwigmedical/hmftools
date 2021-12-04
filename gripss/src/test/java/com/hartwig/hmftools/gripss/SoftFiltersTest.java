@@ -152,7 +152,7 @@ public class SoftFiltersTest
 
         // min allele frequency
         tumorOverrides.put(VT_VF, 2);
-        refOverrides.put(VT_REF, 1000);
+        tumorOverrides.put(VT_REF, 1000);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);

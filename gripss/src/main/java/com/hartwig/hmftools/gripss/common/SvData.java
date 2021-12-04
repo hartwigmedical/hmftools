@@ -45,15 +45,15 @@ public class SvData
         mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
+        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && (sv.end().position() - sv.start().position()) < SHORT_CALLING_SIZE;
+
         Breakend breakendStart = Breakend.from(
-                this, mType, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+                this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
         Breakend breakendEnd = sv.end() != null ?
-                Breakend.from(this, mType, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+                Breakend.from(this, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
 
         mBreakends = new Breakend[] { breakendStart, breakendEnd };
-
-        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();

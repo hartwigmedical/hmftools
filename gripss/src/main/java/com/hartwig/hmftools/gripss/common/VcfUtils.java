@@ -73,7 +73,7 @@ public class VcfUtils
 
     public static final String VT_REALIGN = "REALIGN";
     public static final String VT_LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-    public static final String VT_EVENT_TYPE = "EVENT_TYPE";
+    public static final String VT_EVENT_TYPE = "EVENTTYPE";
     public static final String VT_TAF = "TAF";
     public static final String VT_ALT_PATH = "ALT_PATH";
     public static final String VT_HOTSPOT = "HOTSPOT";
@@ -202,44 +202,4 @@ public class VcfUtils
 
         return true;
     }
-
-    public static String stripBam(final String sampleId)
-    {
-        return sampleId.replaceAll("_dedup.realigned.bam","")
-                .replaceAll(".sorted", "")
-                .replaceAll(".bam", "");
-    }
-
-    public static List<String> findVcfFiles(final String batchRunRootDir)
-    {
-        // current prod examples
-        // structuralVariants/gridss/CPCT02030278R_CPCT02030278T/CPCT02030278R_CPCT02030278T.gridss.vcf.gz
-        // structural_caller/WIDE01010356T.gridss.unfiltered.vcf.gz
-        final List<String> vcfFiles = Lists.newArrayList();
-
-        try
-        {
-            final Stream<Path> stream = Files.walk(Paths.get(batchRunRootDir), 5, FileVisitOption.FOLLOW_LINKS);
-
-            vcfFiles.addAll(stream.filter(x -> !x.toFile().isDirectory())
-                    .map(x -> x.toFile().toString())
-                    .filter(x -> matchesGridssVcf(x))
-                    .collect(Collectors.toList()));
-
-            GR_LOGGER.info("found {} VCF files", vcfFiles.size());
-        }
-        catch (Exception e)
-        {
-            GR_LOGGER.error("failed find directories for batchDir({}) run: {}", batchRunRootDir, e.toString());
-        }
-
-        return vcfFiles;
-    }
-
-    private static boolean matchesGridssVcf(final String filename)
-    {
-        return filename.endsWith(".gridss.vcf") || filename.endsWith(".gridss.unfiltered.vcf")
-                || filename.endsWith(".gridss.vcf.gz") || filename.endsWith(".gridss.unfiltered.vcf.gz");
-    }
-
 }

@@ -39,7 +39,7 @@ public class PonTest
         for(int i = 0; i < 16; ++i)
         {
             mPonCache.addPonSvRegion(
-                    new ChrBaseRegion(CHR_1, startPos, startPos + ponBuffer), POS_ORIENT,
+                    CHR_1, new BaseRegion(startPos, startPos + ponBuffer), POS_ORIENT,
                     new ChrBaseRegion(CHR_1, endPos, endPos + ponBuffer), NEG_ORIENT, 1);
 
             startPos += ponGap;
@@ -69,6 +69,31 @@ public class PonTest
 
         var1 = mGripss.createDel(CHR_1, 5087, 6023, commonAttributes, commonAttributes);
         assertFalse(mPonCache.getPonCount(var1) > 0);
+
+        // now test with ranges that are smaller and larger and inexact variations
+        mPonCache.clear();
+
+        mPonCache.addPonSvRegion(
+                CHR_1, new BaseRegion(100, 102), POS_ORIENT,
+                new ChrBaseRegion(CHR_1, 200, 210), NEG_ORIENT, 1);
+
+        mPonCache.addPonSvRegion(
+                CHR_1, new BaseRegion(101, 102), POS_ORIENT,
+                new ChrBaseRegion(CHR_1, 150, 151), NEG_ORIENT, 1);
+
+        mPonCache.addPonSvRegion(
+                CHR_1, new BaseRegion(102, 104), POS_ORIENT,
+                new ChrBaseRegion(CHR_1, 200, 210), NEG_ORIENT, 1);
+
+        // first SV will not match and move the index ahead of where the second one needs to match
+        var1 = mGripss.createDel(CHR_1, 108, 305, null, null);
+        assertFalse(mPonCache.getPonCount(var1) > 0);
+
+        commonAttributes.put(VT_IHOMPOS, new int[] {-20, 20});
+
+        var1 = mGripss.createDel(CHR_1, 110, 205, commonAttributes, commonAttributes);
+        assertTrue(mPonCache.getPonCount(var1) > 0);
+
     }
 
     @Test
