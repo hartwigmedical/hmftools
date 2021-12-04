@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.common;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
@@ -176,14 +178,15 @@ public class VcfUtils
     public static boolean isMobileLineElement(final byte orientation, final String insertSequence)
     {
         int insSeqLength = insertSequence.length();
-        if(insSeqLength < LINE_POLY_AT_TEST_LEN)
+        if(insSeqLength < LINE_POLY_AT_REQ)
             return false;
 
         final char polyATChar = orientation == POS_ORIENT ? 'T' : 'A';
 
-        int allowedNonRequiredChars = LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ;
+        int testLength = min(LINE_POLY_AT_TEST_LEN, insSeqLength);
+        int allowedNonRequiredChars = testLength - LINE_POLY_AT_REQ;
 
-        for(int i = 0; i < LINE_POLY_AT_TEST_LEN; ++i)
+        for(int i = 0; i < testLength; ++i)
         {
             if(orientation == POS_ORIENT)
             {
