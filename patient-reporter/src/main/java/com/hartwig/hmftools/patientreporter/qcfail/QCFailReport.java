@@ -58,5 +58,9 @@ public abstract class QCFailReport implements PatientReport {
     @NotNull
     @Override
     public abstract List<PeachGenotype> peachGenotypes();
+
+    @NotNull
+    @Override
+    public abstract String reportDate();
 }
 

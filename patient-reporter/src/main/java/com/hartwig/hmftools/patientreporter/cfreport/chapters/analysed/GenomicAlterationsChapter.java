@@ -90,8 +90,6 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
         reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(),
-                hasReliablePurity,
-                patientReport.qsFormNumber(),
                 sampleReport.reportPharmogenetics()));
     }
 
@@ -354,8 +352,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean hasReliablePurity,
-            @NotNull String qsFormNumber, boolean reportPeach) {
+    private static Table createPeachGenotypesTable(@NotNull List<PeachGenotype> peachGenotypes, boolean reportPeach) {
         String title = "Pharmacogenetics";
 
         if (reportPeach) {

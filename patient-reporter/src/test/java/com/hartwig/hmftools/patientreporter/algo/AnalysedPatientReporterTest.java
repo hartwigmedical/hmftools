@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
 import com.hartwig.hmftools.patientreporter.PatientReporterConfig;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
@@ -22,7 +24,8 @@ public class AnalysedPatientReporterTest {
 
     @Test
     public void canRunOnRunDirectory() throws IOException {
-        AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData());
+        AnalysedPatientReporter reporter = new AnalysedPatientReporter(PatientReporterTestFactory.loadTestAnalysedReportData(),
+                DataUtil.formatDate(LocalDate.now()));
         PatientReporterConfig config = PatientReporterTestFactory.createTestReporterConfig();
 
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()

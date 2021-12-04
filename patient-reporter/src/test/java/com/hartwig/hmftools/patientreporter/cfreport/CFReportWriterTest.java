@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.lims.hospital.ImmutableHospitalContactData;
 import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisConfig;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
@@ -386,6 +387,7 @@ public class CFReportWriterTest {
                 .udiDi(UDI_DI)
                 .peachGenotypes(createTestPeachGenotypes())
                 .purpleQC(Sets.newHashSet(purpleQCStatus))
+                .reportDate(DataUtil.formatDate(LocalDate.now()))
                 .build();
 
         String filename = testReportFilePath(patientReport);
