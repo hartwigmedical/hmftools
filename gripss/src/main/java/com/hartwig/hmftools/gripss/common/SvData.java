@@ -45,6 +45,8 @@ public class SvData
         mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
+        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && (sv.end().position() - sv.start().position()) < SHORT_CALLING_SIZE;
+
         Breakend breakendStart = Breakend.from(
                 this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
@@ -63,14 +65,15 @@ public class SvData
             mInexactHomology[SE_START] = abs(values.get(0));
             mInexactHomology[SE_END] = abs(values.get(1));
         }
-
-        mIsShortLocal = false;
-        onPositionsUpdated();
     }
 
     public void onPositionsUpdated()
     {
         mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
+
+        mBreakends[SE_START].setAllelicFrequency();
+        if(mBreakends[SE_END] != null)
+            mBreakends[SE_END].setAllelicFrequency();
     }
 
     public String id() { return mId; }

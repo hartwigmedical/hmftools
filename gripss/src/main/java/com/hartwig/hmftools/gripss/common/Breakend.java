@@ -57,11 +57,11 @@ public class Breakend
     public final Interval RemoteConfidenceInterval;
     public final int[] InexactHomology;
     public final boolean IsLineInsertion;
-    public final double AllelicFrequency;
 
     private final SvData mSvData;
     private final List<String> mAssemblies;
     private boolean mReligned;
+    public double mAllelicFrequency;
     private int mChrLocationIndex;
 
     public Breakend(
@@ -93,9 +93,7 @@ public class Breakend
 
         TumorFragments = isSgl ? sglFragmentCount(tumorGenotype) : getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);
 
-        int readPairSupport = (isSgl || !mSvData.isShortLocal()) ? getGenotypeAttributeAsInt(tumorGenotype, VT_REFPAIR, 0) : 0;
-        double totalSupport = TumorFragments + getGenotypeAttributeAsInt(tumorGenotype, VT_REF, 0) + readPairSupport;
-        AllelicFrequency = totalSupport > 0 ? TumorFragments / totalSupport : 0;
+        setAllelicFrequency();
 
         ConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIPOS);
         RemoteConfidenceInterval = VcfUtils.confidenceInterval(context, VT_CIRPOS);
@@ -165,6 +163,16 @@ public class Breakend
             return null;
 
         return IsStart ? mSvData.breakendEnd() : mSvData.breakendStart();
+    }
+
+    public double allelicFrequency() { return mAllelicFrequency; }
+
+    public void setAllelicFrequency()
+    {
+        int readPairSupport = (mSvData.isSgl() || !mSvData.isShortLocal()) ? getGenotypeAttributeAsInt(TumorGenotype, VT_REFPAIR, 0) : 0;
+        int refSupport = getGenotypeAttributeAsInt(TumorGenotype, VT_REF, 0);
+        double totalSupport = TumorFragments + refSupport + readPairSupport;
+        mAllelicFrequency = totalSupport > 0 ? TumorFragments / totalSupport : 0;
     }
 
     // convenience

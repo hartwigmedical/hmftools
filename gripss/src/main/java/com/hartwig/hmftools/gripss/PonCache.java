@@ -119,7 +119,6 @@ public class PonCache
             PonSvRegion region = regions.get(mCurrentSvIndex);
 
             if(region.RegionStart.overlaps(svStart))
-            // if(region.withinStartRegion(posStart, startMargin))
             {
                 // test the PON entries around this position
                 ChrBaseRegion svEnd = new ChrBaseRegion(
@@ -145,8 +144,6 @@ public class PonCache
             final List<PonSvRegion> regions, final SvData var, final BaseRegion svStart, final ChrBaseRegion svEnd, int startIndex)
     {
         // search and up and down from this entry point for a PON match
-        int posStart = var.posStart();
-
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
@@ -177,9 +174,7 @@ public class PonCache
 
     private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var)
     {
-        // int posStart = var.posStart();
         final int[] inexactHom = var.inexactHomology();
-        // int startMargin = inexactHom[SE_START] + mPositionMargin;
 
         BaseRegion svStart = new BaseRegion(
                 var.posStart() + var.breakendStart().ConfidenceInterval.Start - inexactHom[SE_START] - mPositionMargin,
@@ -190,7 +185,6 @@ public class PonCache
             PonSglRegion region = regions.get(mCurrentSglIndex);
 
             if(region.Region.overlaps(svStart))
-            // if(region.withinRegion(posStart, startMargin))
             {
                 // test the PON entries around this position
                 return findSglPonMatch(regions, var, svStart, mCurrentSglIndex);
@@ -212,8 +206,6 @@ public class PonCache
     private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var, final BaseRegion svStart, int startIndex)
     {
         // search and up and down from this entry point for a PON match
-        //int posStart = var.posStart();
-        // int startMargin = var.inexactHomology()[SE_START] + mPositionMargin;
 
         for(int i = 0; i <= 1; ++i)
         {
@@ -232,9 +224,6 @@ public class PonCache
 
                 if(region.matches(svStart, var.orientStart()))
                     return region.PonCount;
-
-                //if(region.matches(var, startMargin))
-                //    return region.PonCount;
 
                 if(searchUp)
                     ++currentIndex;
@@ -447,7 +436,7 @@ public class PonCache
 
         public String toString()
         {
-            return String.format("region({}:{} - {}) orients({} - {}) pon({})", RegionStart, RegionEnd, OrientStart, OrientEnd, PonCount);
+            return String.format("region(%s - %s) orients(%d - %d) pon(%d)", RegionStart, RegionEnd, OrientStart, OrientEnd, PonCount);
         }
     }
 
@@ -476,7 +465,7 @@ public class PonCache
 
         public String toString()
         {
-            return String.format("region({}:{}) orient({}) pon({})", Region, Orient, PonCount);
+            return String.format("region(%s) orient(%d) pon(%d)", Region, Orient, PonCount);
         }
 
     }

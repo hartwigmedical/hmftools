@@ -2,7 +2,6 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ALT_PATH;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT_TYPE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
@@ -158,7 +157,7 @@ public class VcfWriter
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
         builder.log10PError(breakend.Qual / -10.0)
-                .attribute(VT_TAF, String.format("%.3f", breakend.AllelicFrequency))
+                .attribute(VT_TAF, String.format("%.4f", breakend.allelicFrequency()))
                 .attribute(VT_HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
                 .attribute(VT_EVENT_TYPE, breakend.type());
 

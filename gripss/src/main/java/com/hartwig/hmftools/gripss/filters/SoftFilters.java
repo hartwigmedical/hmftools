@@ -162,7 +162,7 @@ public class SoftFilters
     private boolean allelicFrequency(final SvData sv, final Breakend breakend)
     {
         double afThreshold = sv.isSgl() ? mFilterConstants.MinTumorAfBreakend : mFilterConstants.MinTumorAfBreakpoint;
-        return breakend.AllelicFrequency < afThreshold;
+        return breakend.allelicFrequency() < afThreshold;
     }
 
     private boolean shortDelInsertArtifact(final SvData sv, final Breakend breakend)
