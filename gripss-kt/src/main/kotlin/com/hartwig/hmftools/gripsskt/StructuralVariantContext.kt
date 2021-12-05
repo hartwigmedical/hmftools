@@ -138,7 +138,9 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
 
         val mate = variantType as Paired
-        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(mate.otherPosition, newRef)))
+        val refAllele = Allele.create(newRef, true)
+        val altAllele = Allele.create(mate.altString(mate.otherPosition, newRef))
+        val alleles = listOf(refAllele, altAllele)
 
         val variantContextBuilder = VariantContextBuilder(context)
                 .start(newStart.toLong())
