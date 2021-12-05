@@ -28,7 +28,7 @@ public class VariantBuilder
 
     public VariantBuilder(final FilterConstants filterConstants, final HotspotCache hotspotCache)
     {
-        mHardFilters = new HardFilters(filterConstants);
+        mHardFilters = filterConstants != null ? new HardFilters(filterConstants) : null;
         mHotspotCache = hotspotCache;
 
         mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
@@ -53,7 +53,7 @@ public class VariantBuilder
         // each SV breakend can be a) not hard-filtered, b) hard-filtered but a hotspot candidate or c) neither
         // and if it's not a single then these 3 scenarios need to be considered together for the pair of breakends
         // if either are hard-filtered and not hotspot candidates, then drop them both
-        boolean hardFiltered = mHardFilters.isFiltered(variant, genotypeIds);
+        boolean hardFiltered = mHardFilters != null ? mHardFilters.isFiltered(variant, genotypeIds) : false;
 
         if(StructuralVariantFactory.isSingleBreakend(variant))
         {

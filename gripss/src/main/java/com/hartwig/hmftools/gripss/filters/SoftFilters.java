@@ -167,10 +167,11 @@ public class SoftFilters
 
     private boolean shortDelInsertArtifact(final SvData sv, final Breakend breakend)
     {
-        if(sv.type() != DEL || sv.length() >= SHORT_CALLING_SIZE)
+        if(sv.type() != DEL)
             return false;
 
-        return sv.length() - 1 == breakend.insertSequenceLength();
+        int length = sv.length(); // lengths of 1 were treated as INS in gripsKT even without an insert sequence
+        return length < SHORT_CALLING_SIZE && length > 1 && (length - 1 == breakend.insertSequenceLength());
     }
 
     private boolean minQuality(final SvData sv, final Breakend breakend)
@@ -307,9 +308,9 @@ public class SoftFilters
         if(sv.type() == DEL)
             return sv.length() + sv.insertSequence().length() - 1 < mFilterConstants.MinLength;
         else if(sv.type() == DUP)
-            return sv.length() + sv.insertSequence().length() + 1 < mFilterConstants.MinLength;
+            return sv.length() + sv.insertSequence().length()  < mFilterConstants.MinLength;
         else if(sv.type() == INS)
-            return sv.length() + sv.insertSequence().length() < mFilterConstants.MinLength;
+            return sv.length() + sv.insertSequence().length() + 1 < mFilterConstants.MinLength;
         else
             return false;
     }

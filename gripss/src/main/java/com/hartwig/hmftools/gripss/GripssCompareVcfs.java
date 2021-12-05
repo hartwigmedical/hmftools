@@ -17,9 +17,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
@@ -64,10 +66,10 @@ public class GripssCompareVcfs
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        mOriginalSvData = Maps.newHashMap();
+        mOriginalSvData = Maps.newLinkedHashMap();
         mNewSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(FilterConstants.from(cmd), new HotspotCache(cmd));
+        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd));
 
         mWriter = initialiseWriter();
     }
@@ -80,7 +82,7 @@ public class GripssCompareVcfs
             return;
         }
 
-        GR_LOGGER.info("loading original VCF({})", mOriginalSvData);
+        GR_LOGGER.info("loading original VCF({})", mOriginalVcf);
         loadVariants(mOriginalVcf, mOriginalSvData);
 
         GR_LOGGER.info("loading new VCF({})", mNewVcf);
@@ -139,16 +141,6 @@ public class GripssCompareVcfs
 
             matchedSvs.add(newSv);
 
-            /*
-            StringJoiner diffTypes = new StringJoiner(";");
-            StringJoiner diffDetails = new StringJoiner(";");
-
-            if(!findDiffs(origSv, newsSv, diffTypes, diffDetails))
-                continue;
-
-            writeDiffs(origSv, newsSv, diffTypes.toString(), diffDetails.toString());
-            */
-
             boolean hasDiff = false;
 
             if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
@@ -171,10 +163,12 @@ public class GripssCompareVcfs
                     Set<String> origFilters = origStart.Context.getFilters();
                     Set<String> newFilters = newStart.Context.getFilters();
 
-                    if((!origFilters.isEmpty() || !newFilters.isEmpty())
-                    && origFilters.size() != newFilters.size() || origFilters.stream().anyMatch(x -> !newFilters.contains(x)))
+                    Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
+                    Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
+
+                    if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
                     {
-                        writeDiffs(origSv, newSv, "FILTERS", filtersStr(origFilters), filtersStr(newFilters));
+                        writeDiffs(origSv, newSv, "FILTERS", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
                         hasDiff = true;
                     }
                 }
@@ -194,40 +188,6 @@ public class GripssCompareVcfs
         }
 
         GR_LOGGER.info("diffTotal({})", diffCount);
-    }
-
-    private boolean findDiffs(final SvData origSv, final SvData newSv, final StringJoiner diffTypes, final StringJoiner diffDetails)
-    {
-        if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
-        || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
-        {
-            diffTypes.add("COORDS");
-            diffDetails.add(String.format("new=%s)", makeSvCoords(newSv)));
-        }
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(origSv.isSgl() && se == SE_END)
-                continue;
-
-            Breakend origStart = origSv.breakends()[se];
-            Breakend newStart = newSv.breakends()[se];
-
-            if(se == SE_START)
-            {
-                Set<String> origFilters = origStart.Context.getFilters();
-                Set<String> newFilters = newStart.Context.getFilters();
-
-                if((!origFilters.isEmpty() || !newFilters.isEmpty())
-                && origFilters.size() != newFilters.size() || origFilters.stream().anyMatch(x -> !newFilters.contains(x)))
-                {
-                    diffTypes.add("FILTERS");
-                    diffDetails.add(String.format("orig=%s new=%s", filtersStr(origFilters), filtersStr(newFilters)));
-                }
-            }
-        }
-
-        return diffTypes.length() > 0;
     }
 
     private String filtersStr(final Set<String> filters)
@@ -252,7 +212,7 @@ public class GripssCompareVcfs
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("SvId,Coords,DiffType,OrigValue,NewValue");
+            writer.write("SvId,Coords,Type,DiffType,OrigValue,NewValue");
             writer.newLine();
 
             return writer;
@@ -269,9 +229,10 @@ public class GripssCompareVcfs
         try
         {
             String coords = origSv != null ? makeSvCoords(origSv) : makeSvCoords(newSv);
+            StructuralVariantType type = origSv != null ? origSv.type() : newSv.type();
 
-            mWriter.write(String.format("%s,%s,%s,%s,%s",
-                    origSv != null ? origSv.id() : newSv.id(), coords,  diffType, origValue, newValue));
+            mWriter.write(String.format("%s,%s,%s,%s,%s,%s",
+                    origSv != null ? origSv.id() : newSv.id(), coords, type, diffType, origValue, newValue));
 
             mWriter.newLine();
         }
@@ -292,6 +253,40 @@ public class GripssCompareVcfs
             return String.format("%s:%d:%d-%s:%d:%d",
                     sv.chromosomeStart(), sv.posStart(), sv.orientStart(), sv.chromosomeEnd(), sv.posEnd(), sv.orientEnd());
         }
+    }
+
+    private boolean findDiffs(final SvData origSv, final SvData newSv, final StringJoiner diffTypes, final StringJoiner diffDetails)
+    {
+        if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
+                || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
+        {
+            diffTypes.add("COORDS");
+            diffDetails.add(String.format("new=%s)", makeSvCoords(newSv)));
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(origSv.isSgl() && se == SE_END)
+                continue;
+
+            Breakend origStart = origSv.breakends()[se];
+            Breakend newStart = newSv.breakends()[se];
+
+            if(se == SE_START)
+            {
+                Set<String> origFilters = origStart.Context.getFilters();
+                Set<String> newFilters = newStart.Context.getFilters();
+
+                if((!origFilters.isEmpty() || !newFilters.isEmpty())
+                        && origFilters.size() != newFilters.size() || origFilters.stream().anyMatch(x -> !newFilters.contains(x)))
+                {
+                    diffTypes.add("FILTERS");
+                    diffDetails.add(String.format("orig=%s new=%s", filtersStr(origFilters), filtersStr(newFilters)));
+                }
+            }
+        }
+
+        return diffTypes.length() > 0;
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

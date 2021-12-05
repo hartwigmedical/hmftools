@@ -166,6 +166,8 @@ public class GripssApplication
                         Breakend realignedRemoteBreakend = mRealigner.realignRemote(breakends[otherSe], realignedBreakend);
                         breakends[otherSe] = realignedRemoteBreakend;
                     }
+
+                    svData.onPositionsUpdated();
                 }
             }
 

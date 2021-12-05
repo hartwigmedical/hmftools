@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -21,6 +22,8 @@ import com.hartwig.hmftools.gripss.common.SvData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+
+import jdk.nashorn.internal.runtime.regexp.RegExp;
 
 public class PonCache
 {
@@ -105,22 +108,30 @@ public class PonCache
 
     private int findPonMatch(final List<PonSvRegion> regions, final SvData var)
     {
-        int posStart = var.posStart();
         final int[] inexactHom = var.inexactHomology();
-        int startMargin = inexactHom[SE_START] + mPositionMargin;
+
+        BaseRegion svStart = new BaseRegion(
+                var.posStart() + var.breakendStart().ConfidenceInterval.Start - inexactHom[SE_START] - mPositionMargin,
+                var.posStart() + var.breakendStart().ConfidenceInterval.End + inexactHom[SE_START] + mPositionMargin);
 
         for(; mCurrentSvIndex < regions.size(); ++mCurrentSvIndex)
         {
             PonSvRegion region = regions.get(mCurrentSvIndex);
 
-            if(region.withinStartRegion(posStart, startMargin))
+            if(region.RegionStart.overlaps(svStart))
+            // if(region.withinStartRegion(posStart, startMargin))
             {
                 // test the PON entries around this position
-                return findPonMatch(regions, var, mCurrentSvIndex);
+                ChrBaseRegion svEnd = new ChrBaseRegion(
+                        var.chromosomeEnd(),
+                        var.posEnd() + var.breakendEnd().ConfidenceInterval.Start - inexactHom[SE_END] - mPositionMargin,
+                        var.posEnd() + var.breakendEnd().ConfidenceInterval.End + inexactHom[SE_END] + mPositionMargin);
+
+                return findPonMatch(regions, var, svStart, svEnd, mCurrentSvIndex);
             }
 
             // exit if the PON is now past this point and retreat one position
-            if(region.RegionStart.start() > posStart)
+            if(region.RegionStart.start() > svStart.end())
                 break;
         }
 
@@ -130,13 +141,11 @@ public class PonCache
         return 0;
     }
 
-    private int findPonMatch(final List<PonSvRegion> regions, final SvData var, int startIndex)
+    private int findPonMatch(
+            final List<PonSvRegion> regions, final SvData var, final BaseRegion svStart, final ChrBaseRegion svEnd, int startIndex)
     {
         // search and up and down from this entry point for a PON match
         int posStart = var.posStart();
-
-        int startMargin = var.inexactHomology()[SE_START] + mPositionMargin;
-        int endMargin = var.inexactHomology()[SE_END] + mPositionMargin;
 
         for(int i = 0; i <= 1; ++i)
         {
@@ -147,13 +156,13 @@ public class PonCache
             {
                 PonSvRegion region = regions.get(currentIndex);
 
-                if(searchUp && posStart + startMargin < region.RegionStart.start())
+                if(searchUp && region.RegionStart.start() > svStart.end())
                     break;
 
-                if(!searchUp && posStart - startMargin > region.RegionStart.end())
+                if(!searchUp && region.RegionStart.end() < svStart.start())
                     break;
 
-                if(region.matches(var, startMargin, endMargin))
+                if(region.matches(svStart, svEnd, var.orientStart(), var.orientEnd()))
                     return region.PonCount;
 
                 if(searchUp)
@@ -168,22 +177,27 @@ public class PonCache
 
     private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var)
     {
-        int posStart = var.posStart();
+        // int posStart = var.posStart();
         final int[] inexactHom = var.inexactHomology();
-        int startMargin = inexactHom[SE_START] + mPositionMargin;
+        // int startMargin = inexactHom[SE_START] + mPositionMargin;
+
+        BaseRegion svStart = new BaseRegion(
+                var.posStart() + var.breakendStart().ConfidenceInterval.Start - inexactHom[SE_START] - mPositionMargin,
+                var.posStart() + var.breakendStart().ConfidenceInterval.End + inexactHom[SE_START] + mPositionMargin);
 
         for(; mCurrentSglIndex < regions.size(); ++mCurrentSglIndex)
         {
             PonSglRegion region = regions.get(mCurrentSglIndex);
 
-            if(region.withinRegion(posStart, startMargin))
+            if(region.Region.overlaps(svStart))
+            // if(region.withinRegion(posStart, startMargin))
             {
                 // test the PON entries around this position
-                return findSglPonMatch(regions, var, mCurrentSglIndex);
+                return findSglPonMatch(regions, var, svStart, mCurrentSglIndex);
             }
 
             // exit if the PON is now past this point and retreat one position
-            if(region.Region.start() > posStart)
+            if(region.Region.start() > svStart.end())
             {
                 if(mCurrentSglIndex > 0)
                     --mCurrentSglIndex;
@@ -195,11 +209,11 @@ public class PonCache
         return 0;
     }
 
-    private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var, int startIndex)
+    private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var, final BaseRegion svStart, int startIndex)
     {
         // search and up and down from this entry point for a PON match
-        int posStart = var.posStart();
-        int startMargin = var.inexactHomology()[SE_START] + mPositionMargin;
+        //int posStart = var.posStart();
+        // int startMargin = var.inexactHomology()[SE_START] + mPositionMargin;
 
         for(int i = 0; i <= 1; ++i)
         {
@@ -210,14 +224,17 @@ public class PonCache
             {
                 PonSglRegion region = regions.get(currentIndex);
 
-                if(searchUp && posStart + startMargin < region.Region.start())
+                if(searchUp && region.Region.start() > svStart.end())
                     break;
 
-                if(!searchUp && posStart - startMargin > region.Region.end())
+                if(!searchUp && region.Region.end() < svStart.start())
                     break;
 
-                if(region.matches(var, startMargin))
+                if(region.matches(svStart, var.orientStart()))
                     return region.PonCount;
+
+                //if(region.matches(var, startMargin))
+                //    return region.PonCount;
 
                 if(searchUp)
                     ++currentIndex;
@@ -405,6 +422,7 @@ public class PonCache
             PonCount = ponCount;
         }
 
+        /*
         public boolean withinStartRegion(int position, int margin)
         {
             return position >= RegionStart.start() - margin && position <= RegionStart.end() + margin;
@@ -419,6 +437,12 @@ public class PonCache
                 return false;
 
             return OrientStart == var.orientStart() && OrientEnd == var.orientEnd();
+        }
+        */
+
+        public boolean matches(final BaseRegion svStart, final ChrBaseRegion svEnd, byte orientStart, byte orientEnd)
+        {
+            return RegionStart.overlaps(svStart) && RegionEnd.overlaps(svEnd) && OrientStart == orientStart && OrientEnd == orientEnd;
         }
 
         public String toString()
@@ -445,9 +469,9 @@ public class PonCache
             return position >= Region.start() - margin && position <= Region.end() + margin;
         }
 
-        public boolean matches(final SvData var, int margin)
+        public boolean matches(final BaseRegion svRegion, byte orientation)
         {
-            return withinRegion(var.posStart(), margin) && Orient == var.orientStart();
+            return Region.overlaps(svRegion) && Orient == orientation;
         }
 
         public String toString()

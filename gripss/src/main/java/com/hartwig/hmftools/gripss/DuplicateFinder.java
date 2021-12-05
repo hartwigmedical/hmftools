@@ -141,12 +141,12 @@ public class DuplicateFinder
 
     private static boolean isDuplicateCandidate(final Breakend breakend, final Breakend otherBreakend)
     {
-        return breakend.Orientation == otherBreakend.Orientation && (!otherBreakend.imprecise() || isExactPosition(otherBreakend));
+        return breakend.Orientation == otherBreakend.Orientation && (!otherBreakend.imprecise() || isExactPosition(breakend, otherBreakend));
     }
 
-    private static boolean isExactPosition(final Breakend breakend)
+    private static boolean isExactPosition(final Breakend breakend, final Breakend otherBreakend)
     {
-        return breakend.Position >= breakend.minPosition() && breakend.Position <= breakend.maxPosition(); 
+        return otherBreakend.Position >= breakend.minPosition() && otherBreakend.Position <= breakend.maxPosition();
     }
 
     private boolean keepSingle(
