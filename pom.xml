@@ -73,12 +73,12 @@
         <lilac.version>1.0</lilac.version>
         <linx.version>1.17</linx.version>
         <neo.version>1.0</neo.version>
-        <orange.version>1.4</orange.version>
+        <orange.version>1.5</orange.version>
         <paddle.version>1.0</paddle.version>
-        <patient-db.version>3.63</patient-db.version>
+        <patient-db.version>3.64</patient-db.version>
         <patient-reporter.version>7.24</patient-reporter.version>
         <pave.version>1.0</pave.version>
-        <protect.version>1.7</protect.version>
+        <protect.version>1.8</protect.version>
         <purple.version>3.2</purple.version>
         <sage.version>3.0</sage.version>
         <sigs.version>1.0</sigs.version>
