@@ -85,7 +85,7 @@ open class LocationStore(private val compare: ContigComparator, private val sing
 
     fun contains(breakpoint: Breakpoint, inexactHomStart: Int, inexactHomEnd: Int): Boolean {
         if (compare.compare(breakpoint.startBreakend, breakpoint.endBreakend) > 0) {
-            return contains(Breakpoint(breakpoint.endBreakend, breakpoint.startBreakend), inexactHomStart, inexactHomEnd)
+            return contains(Breakpoint(breakpoint.endBreakend, breakpoint.startBreakend), inexactHomEnd, inexactHomStart)
         }
 
         val keys = breakpoint.locationKey()
