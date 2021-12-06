@@ -157,23 +157,23 @@ public class VariantEvidenceTest {
 
     @Test
     public void canDetermineVariantEvidenceForGenes() {
-        String gene1 = "gene1";
-        String gene2 = "gene2";
-        String gene3 = "gene3";
+        String activatedGene = "gene1";
+        String inactivatedGene = "gene2";
+        String amplifiedGene = "gene3";
 
         ActionableGene actionableGene1 = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
-                .gene(gene1)
+                .gene(activatedGene)
                 .event(GeneLevelEvent.ACTIVATION)
                 .build();
         ActionableGene actionableGene2 = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
-                .gene(gene2)
+                .gene(inactivatedGene)
                 .event(GeneLevelEvent.INACTIVATION)
                 .build();
         ActionableGene actionableGene3 = ImmutableActionableGene.builder()
                 .from(ServeTestFactory.createTestActionableGene())
-                .gene(gene3)
+                .gene(amplifiedGene)
                 .event(GeneLevelEvent.AMPLIFICATION)
                 .build();
 
@@ -182,22 +182,37 @@ public class VariantEvidenceTest {
                 Lists.newArrayList(),
                 Lists.newArrayList(actionableGene1, actionableGene2, actionableGene3));
 
-        ReportableVariant base = VariantTestFactory.createTestReportableVariant();
-        ReportableVariant variantMatchGene1 = ImmutableReportableVariant.builder().from(base).gene(gene1).driverLikelihood(1D).build();
-        ReportableVariant variantLowDriverGene2 = ImmutableReportableVariant.builder().from(base).gene(gene2).driverLikelihood(0D).build();
-        ReportableVariant variantMatchGene3 = ImmutableReportableVariant.builder().from(base).gene(gene3).driverLikelihood(0D).build();
-        ReportableVariant variantOtherGene = ImmutableReportableVariant.builder().from(base).gene("other").driverLikelihood(1D).build();
+        ReportableVariant driverOnActivatedGene = withGeneAndDriverLikelihood(activatedGene, 1D);
+        ReportableVariant passengerOnInactivatedGene = withGeneAndDriverLikelihood(inactivatedGene, 0D);
+        ReportableVariant driverOnAmplifiedGene = withGeneAndDriverLikelihood(amplifiedGene, 0D);
+        ReportableVariant driverOnOtherGene = withGeneAndDriverLikelihood("other", 1D);
 
-        List<ProtectEvidence> evidenceItems =
-                variantEvidence.evidence(Lists.newArrayList(variantMatchGene1, variantLowDriverGene2, variantMatchGene3, variantOtherGene),
-                        Lists.newArrayList(),
-                        Lists.newArrayList());
+        List<ReportableVariant> reportableVariants =
+                Lists.newArrayList(driverOnActivatedGene, passengerOnInactivatedGene, driverOnAmplifiedGene, driverOnOtherGene);
+
+        List<SomaticVariant> unreportedVariants = Lists.newArrayList(SomaticVariantTestBuilderFactory.create()
+                .reported(false)
+                .gene(activatedGene)
+                .canonicalCodingEffect(CodingEffect.NONE)
+                .build());
+
+        List<ProtectEvidence> evidenceItems = variantEvidence.evidence(reportableVariants, Lists.newArrayList(), unreportedVariants);
 
         assertEquals(2, evidenceItems.size());
         assertTrue(evidenceItems.get(0).reported());
-        assertEquals(variantMatchGene1.genomicEvent(), evidenceItems.get(0).genomicEvent());
+        assertEquals(driverOnActivatedGene.genomicEvent(), evidenceItems.get(0).genomicEvent());
 
         assertFalse(evidenceItems.get(1).reported());
-        assertEquals(variantLowDriverGene2.genomicEvent(), evidenceItems.get(1).genomicEvent());
+        assertEquals(passengerOnInactivatedGene.genomicEvent(), evidenceItems.get(1).genomicEvent());
+    }
+
+    @NotNull
+    private static ReportableVariant withGeneAndDriverLikelihood(@NotNull String gene, double driverLikelihood) {
+        return ImmutableReportableVariant.builder()
+                .from(VariantTestFactory.createTestReportableVariant())
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .gene(gene)
+                .driverLikelihood(driverLikelihood)
+                .build();
     }
 }
