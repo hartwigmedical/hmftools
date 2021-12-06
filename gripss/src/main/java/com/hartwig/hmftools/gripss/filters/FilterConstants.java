@@ -32,7 +32,7 @@ public class FilterConstants
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
 
     // default filter values
-    public static final int SHORT_RESCUE_LENGTH = 1000;
+    public static final int SHORT_RESCUE_LENGTH = 10000;
     public static final int SHORT_CALLING_SIZE = 1000;
     public static final int HOM_INV_LENGTH = 40;
 

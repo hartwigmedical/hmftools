@@ -180,7 +180,7 @@ public class TransitiveLinkFinder
         {
             for(Link assemblyLink : unfilteredAssemblyLinks)
             {
-                if(!transLink.links().contains(assemblyLink))
+                if(transLink.links().contains(assemblyLink))
                     continue;
 
                 Breakend otherBreakend = assemblyLink.otherBreakend(transBreakend);
@@ -275,7 +275,7 @@ public class TransitiveLinkFinder
             Breakend pairedOtherBreakend = otherBreakend.otherBreakend();
 
             List<Link> newLinks = Lists.newArrayList(transLink.links());
-            String linkPrefix = String.format("%s{%d - %d}", transLink.prefix(), MAX_TRANSITIVE_JUMPS, transLink.remainingTransitiveJumps());
+            String linkPrefix = String.format("%s{%d-%d}", transLink.prefix(), MAX_TRANSITIVE_JUMPS, transLink.remainingTransitiveJumps());
             Link transitiveLink = Link.from(linkPrefix, transBreakend, otherBreakend);
             newLinks.add(transitiveLink);
             newLinks.add(Link.from(otherBreakend.sv()));

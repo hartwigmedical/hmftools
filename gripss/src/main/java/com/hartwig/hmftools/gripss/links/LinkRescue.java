@@ -38,14 +38,16 @@ public final class LinkRescue
             if(linkedBreakends.isEmpty())
                 continue;
 
-            List<Breakend> linkedRescueCandidates = linkedBreakends.stream()
-                    .filter(x -> isRescueCandidate(x, filterCache, rescueShortSVs))
-                    .collect(Collectors.toList());
+            boolean hasValidPassing = linkedBreakends.stream()
+                    .anyMatch(x -> !filterCache.hasFilters(x) && isRescueCandidate(x, filterCache, rescueShortSVs));
 
-            if(linkedRescueCandidates.stream().anyMatch(x -> !filterCache.hasFilters(x)))
+            if(hasValidPassing)
             {
-                for(Breakend linkedBreakend : linkedRescueCandidates)
+                for(Breakend linkedBreakend : linkedBreakends)
                 {
+                    if(!isRescueCandidate(linkedBreakend, filterCache, rescueShortSVs))
+                        continue;
+
                     rescuedBreakends.add(linkedBreakend);
 
                     Breakend otherLinkedBreakend = linkedBreakend.otherBreakend();

@@ -278,7 +278,7 @@ public class GripssApplication
 
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
-        GR_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
+        // GR_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
 
         ++mProcessedVariants;
 
