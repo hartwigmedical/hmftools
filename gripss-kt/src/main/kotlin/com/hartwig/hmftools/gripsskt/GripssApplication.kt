@@ -164,7 +164,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
                 // only test the PON once per SV, on the start breakend
                 val mate = variantStore.select(breakend.mateId!!)
 
-                if(contigComparator.compare(breakend, mate) < 0)
+                if(contigComparator.compare(breakend, mate) <= 0)
                 {
                     if(ponStore.contains(breakend))
                     {

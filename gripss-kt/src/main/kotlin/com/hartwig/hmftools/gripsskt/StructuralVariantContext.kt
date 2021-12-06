@@ -277,9 +277,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(MAX_HOM_LENGTH_SHORT_INV)
         }
 
+        /* decommissioned in v1.12
         if (inexactHomologyLengthShortDelFilter(config.maxInexactHomLengthShortDel)) {
             result.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL)
         }
+         */
 
         if (shortSplitReadTumorFilter()) {
             result.add(SHORT_SR_SUPPORT)
