@@ -16,14 +16,14 @@ java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssApplication
    -breakpoint_pon /path/to/gridss_pon_breakpoint.bedpe \
    -breakpoint_hotspot /path/to/KnownFusionPairs.bedpe \
    -input_vcf /path/to/SAMPLE_T.gridss.unfiltered.vcf.gz \
-   -output_vcf /path/to/SAMPLE_T.gridss.somatic.vcf.gz 
+   -output_vcf /path/to/SAMPLE_T.gripss.vcf.gz 
 ```
 
 We typically then hard-filter all but PON filtered from the somatic file with the following command:
 ```
 java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssHardFilterApplicationKt \
-   -input_vcf /path/to/SAMPLE_T.gridss.somatic.vcf.gz \
-   -output_vcf /path/to/SAMPLE_T.gridss.somatic.filtered.vcf.gz 
+   -input_vcf /path/to/SAMPLE_T.gripss.vcf.gz \
+   -output_vcf /path/to/SAMPLE_T.gripss.filtered.vcf.gz 
 ```
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
