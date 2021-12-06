@@ -168,7 +168,7 @@ public class FusionTranscriptTest
         Assert.assertEquals(3, trans.getAlternativePhasing().size());
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_1);
         assertTrue(exonsSkipped != null && exonsSkipped == 2);
-        exonsSkipped = trans.getAlternativePhasing().get(PHASE_NONE);
+        exonsSkipped = trans.getAlternativePhasing().get(POST_CODING_PHASE);
         assertTrue(exonsSkipped != null && exonsSkipped == 3);
         exonsSkipped = trans.getAlternativePhasing().get(PHASE_2);
         assertTrue(exonsSkipped != null && exonsSkipped == 1);

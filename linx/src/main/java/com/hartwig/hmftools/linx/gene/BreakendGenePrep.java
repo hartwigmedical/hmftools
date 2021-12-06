@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
 
 import java.util.List;
 import java.util.Map;
@@ -200,7 +201,7 @@ public class BreakendGenePrep
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
         boolean isUpstream = (transcript.gene().strand() * orientation) > 0;
-        boolean forwardStrand = (transcript.gene().strand() == POS_STRAND);
+        boolean forwardStrand = transcript.TransData.posStrand();
 
         Map<Integer,Integer> alternativePhasing = transcript.getAlternativePhasing();
         alternativePhasing.clear();
@@ -212,16 +213,26 @@ public class BreakendGenePrep
         {
             if(isUpstream == forwardStrand)
             {
-                if (exonData.Start > position || transRank == exonData.Rank)
+                if(exonData.Start > position || transRank == exonData.Rank)
                     break;
             }
             else
             {
-                if (position > exonData.End || transRank == exonData.Rank)
+                if(position > exonData.End || transRank == exonData.Rank)
                     continue;
             }
 
             int exonPhase = isUpstream ? exonData.PhaseEnd : exonData.PhaseStart;
+
+            if(exonPhase == PHASE_NONE && !transcript.TransData.nonCoding())
+            {
+                // switch to -2 as per the 3'UTR convention
+                if(forwardStrand && exonData.End > transcript.TransData.CodingEnd)
+                    exonPhase = POST_CODING_PHASE;
+                else if(!forwardStrand && exonData.Start < transcript.TransData.CodingStart)
+                    exonPhase = POST_CODING_PHASE;
+            }
+
             int exonsSkipped;
 
             if(isUpstream)

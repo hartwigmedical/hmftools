@@ -256,7 +256,7 @@ public class BreakendTransData
 
     public boolean isCanonical() { return TransData.IsCanonical; }
 
-    public final Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
+    public Map<Integer,Integer> getAlternativePhasing() { return mAlternativePhasing; }
 
     public void setSpliceAcceptorDistance(boolean isPrevious, Integer distance)
     {
