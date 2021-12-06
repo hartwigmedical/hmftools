@@ -13,7 +13,6 @@ public enum FilterType
     MAX_POLY_G_LENGTH,
     MAX_POLY_A_HOM_LENGTH,
     MAX_HOM_LENGTH_SHORT_INV,
-    MAX_INEXACT_HOM_LENGTH_SHORT_DEL,
     SHORT_SR_SUPPORT,
     SHORT_SR_NORMAL,
     SHORT_STRAND_BIAS,
@@ -32,7 +31,6 @@ public enum FilterType
             case PON: return "PON";
             case DEDUP: return "dedup";
             case MIN_LENGTH: return "minLength";
-            case MAX_INEXACT_HOM_LENGTH_SHORT_DEL: return "maxInexactHomLengthShortDel";
             case MAX_HOM_LENGTH_SHORT_INV: return "maxHomLengthShortInv";
             case SHORT_SR_SUPPORT: return "shortSRTumorSupport";
             case SHORT_SR_NORMAL: return "shortSRNormalSupport";
@@ -60,8 +58,6 @@ public enum FilterType
                 return "Event is duplicate of another";
             case MIN_LENGTH:
                 return "Event is too short";
-            case MAX_INEXACT_HOM_LENGTH_SHORT_DEL:
-                return "Short deletion that appears to be a ligation artifact";
             case MAX_HOM_LENGTH_SHORT_INV:
                 return "Short inversion with significant sequence homology";
             case SHORT_SR_SUPPORT:

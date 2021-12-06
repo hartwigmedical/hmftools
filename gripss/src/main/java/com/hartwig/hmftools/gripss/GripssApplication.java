@@ -250,7 +250,7 @@ public class GripssApplication
 
         Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
 
-        writer.write(combinedLinks, idPathMap);
+        writer.write(combinedLinks, idPathMap, vcfHeader);
         writer.close();
 
         // summary logging

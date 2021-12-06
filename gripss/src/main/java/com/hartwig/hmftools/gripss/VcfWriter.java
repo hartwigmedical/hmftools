@@ -25,6 +25,7 @@ import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -110,13 +111,13 @@ public class VcfWriter
         writer.writeHeader(newHeader);
     }
 
-    public void write(final LinkStore combinedLinks, final Map<Breakend,String> idPathMap)
+    public void write(final LinkStore combinedLinks, final Map<Breakend,String> idPathMap, final VCFHeader vcfHeader)
     {
         final Map<SvData,List<FilterType>> svFiltersMap = Maps.newHashMap(); // to avoid collating SV filters twice
 
-        for(HumanChromosome humanChromosome : HumanChromosome.values())
+        for(SAMSequenceRecord seqRecord : vcfHeader.getSequenceDictionary().getSequences())
         {
-            String chromosome = humanChromosome.toString();
+            String chromosome = seqRecord.getContig();
 
             if(mConfig.RefGenVersion == V38)
                 chromosome = RefGenomeFunctions.enforceChrPrefix(chromosome);
