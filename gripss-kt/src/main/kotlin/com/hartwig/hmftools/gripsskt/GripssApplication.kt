@@ -176,7 +176,6 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         }
 
         return ponFilteredBreakends
-        // return variants.filter { ponStore.contains(it) }.map { it.vcfId }.toSet()
     }
 
     private fun hardFilterAndRealign(fileReader: VCFFileReader, ordinals: Pair<Int, Int>, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {
