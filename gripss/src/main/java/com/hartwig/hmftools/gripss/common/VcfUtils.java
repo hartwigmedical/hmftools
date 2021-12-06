@@ -1,10 +1,15 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.common;
+
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINE_POLY_AT_REQ;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINE_POLY_AT_TEST_LEN;
 
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
@@ -25,22 +30,33 @@ import htsjdk.variant.vcf.VCFHeader;
 public class VcfUtils
 {
     // VCF fields used by Gripss
+
+    // qual-related
     public static final String VT_QUAL = "QUAL";
-    public static final String VT_SR = "SR";
     public static final String VT_BQ = "BQ";
     public static final String VT_BAQ = "BAQ";
     public static final String VT_SRQ = "SRQ";
+    public static final String VT_RPQ = "RPQ";
+    public static final String VT_BUMQ = "BUMQ";
+
+    // read counts
+    public static final String VT_SR = "SR";
     public static final String VT_VF = "VF";
+    public static final String VT_BVF = "BVF";
     public static final String VT_RP = "RP";
     public static final String VT_IC = "IC";
-    public static final String VT_RPQ = "RPQ";
     public static final String VT_REF = "REF";
+    public static final String VT_BUM = "BUM";
+    public static final String VT_ASRP = "ASRP";
+    public static final String VT_ASSR = "ASSR";
+    public static final String VT_BASRP = "BASRP";
+    public static final String VT_BASSR = "BASSR";
+
+    // other links and info
     public static final String VT_BEID = "BEID";
     public static final String VT_BEIDL = "BEIDL";
     public static final String VT_HOMSEQ = "HOMSEQ";
     public static final String VT_IHOMPOS = "IHOMPOS";
-    public static final String VT_BUM = "BUM";
-    public static final String VT_BUMQ = "BUMQ";
 
     public static final String VT_MATE_ID = MATE_ID;
     public static final String VT_PAR_ID = PAR_ID;
@@ -50,18 +66,20 @@ public class VcfUtils
     public static final String VT_RAS = "RAS";
 
     public static final String VT_EVENT = "EVENT";
-    public static final String VT_ASRP = "ASRP";
-    public static final String VT_ASSR = "ASSR";
     public static final String VT_SB = "SB";
-    public static final String VT_BVF = "BVF";
     public static final String VT_BSC = "BSC";
-    public static final String VT_BASRP = "BASRP";
-    public static final String VT_BASSR = "BASSR";
     public static final String VT_REFPAIR = "REFPAIR";
     public static final String VT_CIPOS = CIPOS;
     public static final String VT_CIRPOS = "CIRPOS";
-    public static final String VT_REALIGN = "REALIGN";
     public static final String VT_IMPRECISE = IMPRECISE;
+
+    public static final String VT_REALIGN = "REALIGN";
+    public static final String VT_LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
+    public static final String VT_EVENT_TYPE = "EVENTTYPE";
+    public static final String VT_TAF = "TAF";
+    public static final String VT_ALT_PATH = "ALT_PATH";
+    public static final String VT_HOTSPOT = "HOTSPOT";
+    public static final String VT_REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {
@@ -157,43 +175,34 @@ public class VcfUtils
         return assemblies;
     }
 
-    public static String stripBam(final String sampleId)
+    public static boolean isMobileLineElement(final byte orientation, final String insertSequence)
     {
-        return sampleId.replaceAll("_dedup.realigned.bam","")
-                .replaceAll(".sorted", "")
-                .replaceAll(".bam", "");
-    }
+        int insSeqLength = insertSequence.length();
+        if(insSeqLength < LINE_POLY_AT_REQ)
+            return false;
 
-    public static List<String> findVcfFiles(final String batchRunRootDir)
-    {
-        // current prod examples
-        // structuralVariants/gridss/CPCT02030278R_CPCT02030278T/CPCT02030278R_CPCT02030278T.gridss.vcf.gz
-        // structural_caller/WIDE01010356T.gridss.unfiltered.vcf.gz
-        final List<String> vcfFiles = Lists.newArrayList();
+        final char polyATChar = orientation == POS_ORIENT ? 'T' : 'A';
 
-        try
+        int testLength = min(LINE_POLY_AT_TEST_LEN, insSeqLength);
+        int allowedNonRequiredChars = testLength - LINE_POLY_AT_REQ;
+
+        for(int i = 0; i < testLength; ++i)
         {
-            final Stream<Path> stream = Files.walk(Paths.get(batchRunRootDir), 5, FileVisitOption.FOLLOW_LINKS);
+            if(orientation == POS_ORIENT)
+            {
+                if(insertSequence.charAt(i) != polyATChar)
+                    --allowedNonRequiredChars;
+            }
+            else
+            {
+                if(insertSequence.charAt(insSeqLength - i - 1) != polyATChar)
+                    --allowedNonRequiredChars;
+            }
 
-            vcfFiles.addAll(stream.filter(x -> !x.toFile().isDirectory())
-                    .map(x -> x.toFile().toString())
-                    .filter(x -> matchesGridssVcf(x))
-                    .collect(Collectors.toList()));
-
-            GR_LOGGER.info("found {} VCF files", vcfFiles.size());
-        }
-        catch (Exception e)
-        {
-            GR_LOGGER.error("failed find directories for batchDir({}) run: {}", batchRunRootDir, e.toString());
+            if(allowedNonRequiredChars < 0)
+                return false;
         }
 
-        return vcfFiles;
+        return true;
     }
-
-    private static boolean matchesGridssVcf(final String filename)
-    {
-        return filename.endsWith(".gridss.vcf") || filename.endsWith(".gridss.unfiltered.vcf")
-                || filename.endsWith(".gridss.vcf.gz") || filename.endsWith(".gridss.unfiltered.vcf.gz");
-    }
-
 }

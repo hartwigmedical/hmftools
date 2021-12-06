@@ -56,6 +56,9 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     val mateId: String? = context.mate()
     val confidenceInterval = context.confidenceInterval()
     val start = context.start
+
+    val inLowQualRegion = inLowQualRegion()
+
     val tumorQual = tumorGenotype.qual(isSingle, isMobileElementInsertion)
 
     val startBreakend: Breakend = Breakend(contig, start + confidenceInterval.first, start + confidenceInterval.second, orientation)
@@ -297,6 +300,8 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         if(singleStrandBias())
             result.add(SGL_STRAND_BIAS)
 
+        if(singleInsertSequenceMinLength())
+            result.add(SGL_INS_SEQ_MIN_LENGTH)
 
         if (minLengthFilter(config.minLength)) {
             result.add(MIN_LENGTH)
@@ -306,7 +311,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun qualFilter(minQualBreakEnd: Int, minQualBreakPoint: Int): Boolean {
-        val minQual = if (isSingle) minQualBreakEnd else minQualBreakPoint
+        var minQual = if (isSingle) minQualBreakEnd else minQualBreakPoint
+
+        if(inLowQualRegion)
+            minQual = minQual / 2
+
         return tumorQual < minQual.toDouble()
     }
 
@@ -338,6 +347,16 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             return false
 
         return context.strandBias() < 0.05 || context.strandBias() > 0.95
+    }
+
+    fun singleInsertSequenceMinLength(): Boolean {
+        if(!isSingle)
+            return false
+
+        if(isMobileElementInsertion)
+            return false
+
+        return variantType.insertSequence.length < 16
     }
 
     fun minLengthFilter(minSize: Int): Boolean {
@@ -392,7 +411,10 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     }
 
     fun allelicFrequencyFilter(minTumorAf: Double): Boolean {
-        return tumorAF < minTumorAf
+        if(isSingle)
+            return tumorAF < 0.015 // turn into config in new GRIPSS
+        else
+            return tumorAF < minTumorAf
     }
 
     fun shortDelInsertArtifact(): Boolean {
@@ -446,6 +468,19 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
     private fun Cipos.invert(): Cipos {
         return Pair(-this.second, -this.first)
     }
+
+    private fun inLowQualRegion(): Boolean
+    {
+        // ENSG00000122512	PMS2	7	-1	6012870	6048756
+        if(contig.equals("7") || contig.equals("chr7"))
+        {
+            if(start > 6002870 && start < 6058756)
+                return true
+        }
+
+        return false
+    }
+
 
 
 }

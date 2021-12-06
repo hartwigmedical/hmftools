@@ -32,8 +32,6 @@ Nucleotide and amino acid allele defintions are available here:
 - https://www.ebi.ac.uk/ipd/imgt/hla/download.html
 - ftp://ftp.ebi.ac.uk/pub/databases/ipd/imgt/hla/
 
-
-
 The required files are A_nuc.txt, B_nuc.txt, C_nuc.txt, Y_nuc.txt, A_prot.txt, B_prot.txt and C_prot.txt.
 
 Convert these definition files to the reference files used by Lilac with the following command:

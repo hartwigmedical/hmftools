@@ -28,4 +28,11 @@ public class KnownHotspot
             && RegionEnd.containsPosition(sv.chromosome(false), sv.position(false).intValue())
             && OrientEnd == sv.orientation(false);
     }
+
+    public boolean matches(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
+    {
+        return RegionStart.containsPosition(chrStart, posStart) && OrientStart == orientStart
+                && RegionEnd.containsPosition(chrEnd, posEnd) && OrientEnd == orientEnd;
+    }
+
 }

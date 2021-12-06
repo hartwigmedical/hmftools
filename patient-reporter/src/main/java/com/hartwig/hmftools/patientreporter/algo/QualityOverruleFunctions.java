@@ -1,19 +1,14 @@
 package com.hartwig.hmftools.patientreporter.algo;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.patientreporter.QsFormNumber;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,15 +41,10 @@ public final class QualityOverruleFunctions {
             newNotifyPerVariant.put(overruled.variant(), overruled.notifyVariant());
         }
 
-        Map<ReportableVariant, Boolean> sortedNotifyPerVariant = newNotifyPerVariant.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-
         return ImmutableGenomicAnalysis.builder()
                 .from(genomicAnalysis)
                 .reportableVariants(overruledVariants)
-                .notifyGermlineStatusPerVariant(sortedNotifyPerVariant)
+                .notifyGermlineStatusPerVariant(newNotifyPerVariant)
                 .cnPerChromosome(cnPerChromosomeDataSort)
                 .build();
     }
@@ -111,7 +101,7 @@ public final class QualityOverruleFunctions {
                 .from(variant)
                 .totalCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? flooredCopyNumber : Double.NaN)
                 .alleleCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? variant.alleleCopyNumber() : Double.NaN)
-                .minorAlleleCopyNumber(hasReliablePurity ? variant.minorAlleleCopyNumber() : Double.NaN)
+                .minorAlleleCopyNumber(hasReliablePurity && roundedCopyNumber >= 1 ? variant.minorAlleleCopyNumber() : Double.NaN)
                 .biallelic(hasReliablePurity && roundedCopyNumber >= 1 ? variant.biallelic() : null)
                 .build();
     }

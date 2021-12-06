@@ -8,10 +8,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BASSR;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH;
@@ -19,6 +17,9 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOG
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_C_INSERT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_INSERT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_T_HOMOLOGY;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_INS_SEQ_MIN_LENGTH;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_MAX_STRAND_BIAS;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.SGL_MIN_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_SIZE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
@@ -31,21 +32,29 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_INSERT_SEQ_MIN_LENGTH;
+import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_DEL_INS_ARTIFACT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_NORMAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_STRAND_BIAS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.VcfUtils.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.getGenotypeAttributeAsInt;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.gripss.FilterCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.VcfUtils;
+import com.hartwig.hmftools.gripss.common.VcfUtils;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class SoftFilters
 {
@@ -56,62 +65,79 @@ public class SoftFilters
         mFilterConstants = filterConstants;
     }
 
-    public void applyFilters(final SvData sv)
+    public void applyFilters(final SvData sv, final FilterCache filterCache)
     {
-        // breakend filters
+        if(filterCache.isHotspot(sv))
+            return;
+
+        List<FilterType> beStartFilters = null;
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(sv.isSgl() && se == SE_END)
                 continue;
 
+            List<FilterType> filters = Lists.newArrayList();
+
+            if(se == SE_START)
+                beStartFilters = filters;
+
             Breakend breakend = sv.breakends()[se];
 
             if(normalCoverage(breakend))
-                breakend.addFilter(MIN_NORMAL_COVERAGE);
+                filters.add(MIN_NORMAL_COVERAGE);
 
             if(normalRelativeSupport(breakend))
-                breakend.addFilter(MAX_NORMAL_RELATIVE_SUPPORT);
+                filters.add(MAX_NORMAL_RELATIVE_SUPPORT);
 
             if(allelicFrequency(sv, breakend))
-                breakend.addFilter(MIN_TUMOR_AF);
+                filters.add(MIN_TUMOR_AF);
 
             if(minQuality(sv, breakend))
-                breakend.addFilter(MIN_QUAL);
+                filters.add(MIN_QUAL);
 
             if(shortSplitReadTumor(sv, breakend))
-                breakend.addFilter(SHORT_SR_SUPPORT);
+                filters.add(SHORT_SR_SUPPORT);
 
             if(shortSplitReadNormal(sv, breakend))
-                breakend.addFilter(SHORT_SR_NORMAL);
+                filters.add(SHORT_SR_NORMAL);
 
-            if(discordantPairSupport(sv, breakend) || breakendAssemblyReadPairs(breakend))
-                breakend.addFilter(DISCORDANT_PAIR_SUPPORT);
+            if(discordantPairSupport(sv, breakend))
+                filters.add(DISCORDANT_PAIR_SUPPORT);
+
+            if(singleStrandBias(breakend))
+                filters.add(SGL_STRAND_BIAS);
+
+            if(singleInsertSequenceMinLength(breakend))
+                filters.add(SGL_INSERT_SEQ_MIN_LENGTH);
 
             if(shortDelInsertArtifact(sv, breakend))
-                breakend.addFilter(SHORT_DEL_INS_ARTIFACT);
+                filters.add(SHORT_DEL_INS_ARTIFACT);
 
             if(inexactHomologyLengthShortDel(sv, breakend))
-                breakend.addFilter(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
+                filters.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
 
             if(strandBias(sv, breakend))
-                breakend.addFilter(SHORT_STRAND_BIAS);
+                filters.add(SHORT_STRAND_BIAS);
+
+            if((se == SE_END && beStartFilters.contains(IMPRECISE)) || imprecise(sv))
+                filters.add(IMPRECISE);
+
+            if((se == SE_END && beStartFilters.contains(MAX_POLY_G_LENGTH)) || polyGCInsert(sv))
+                filters.add(MAX_POLY_G_LENGTH);
+
+            if((se == SE_END && beStartFilters.contains(MAX_POLY_A_HOM_LENGTH)) || polyATHomology(sv))
+                filters.add(MAX_POLY_A_HOM_LENGTH);
+
+            if((se == SE_END && beStartFilters.contains(MAX_HOM_LENGTH_SHORT_INV)) || homologyLengthFilterShortInversion(sv))
+                filters.add(MAX_HOM_LENGTH_SHORT_INV);
+
+            if((se == SE_END && beStartFilters.contains(MIN_LENGTH)) || minLength(sv))
+                filters.add(MIN_LENGTH);
+
+            if(!filters.isEmpty())
+                filterCache.addBreakendFilters(breakend, filters);
         }
-
-        // SV filters
-        if(imprecise(sv))
-            sv.addFilter(IMPRECISE);
-
-        if(polyGCInsert(sv))
-            sv.addFilter(MAX_POLY_G_LENGTH);
-
-        if(polyATHomology(sv))
-            sv.addFilter(MAX_POLY_A_HOM_LENGTH);
-
-        if(homologyLengthFilterShortInversion(sv))
-            sv.addFilter(MAX_HOM_LENGTH_SHORT_INV);
-
-        if(minLength(sv))
-            sv.addFilter(MIN_LENGTH);
     }
 
     private boolean normalCoverage(final Breakend breakend)
@@ -119,7 +145,10 @@ public class SoftFilters
         if(breakend.RefGenotype == null)
             return false;
 
-         return breakend.ReferenceFragments + breakend.ReferenceReads + breakend.ReferencePairReads < mFilterConstants.MinNormalCoverage;
+        int refSupportReads = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_REF, 0);
+        int refSupportReadPairs = getGenotypeAttributeAsInt(breakend.RefGenotype, VT_REFPAIR, 0);
+
+        return breakend.ReferenceFragments + refSupportReads + refSupportReadPairs < mFilterConstants.MinNormalCoverage;
     }
 
     private boolean normalRelativeSupport(final Breakend breakend)
@@ -132,28 +161,27 @@ public class SoftFilters
 
     private boolean allelicFrequency(final SvData sv, final Breakend breakend)
     {
-        int tumorFrags = breakend.TumorFragments;
-        int readPairSupport = (sv.isSgl() || !sv.isShortLocal()) ? breakend.ReferencePairReads : 0;
-        double totalSupport = tumorFrags + breakend.ReferenceReads + readPairSupport;
-        double alleleFrequency = totalSupport > 0 ? tumorFrags / totalSupport : 0;
-
-        return alleleFrequency < mFilterConstants.MinTumorAf;
+        double afThreshold = sv.isSgl() ? mFilterConstants.MinTumorAfBreakend : mFilterConstants.MinTumorAfBreakpoint;
+        return breakend.allelicFrequency() < afThreshold;
     }
 
     private boolean shortDelInsertArtifact(final SvData sv, final Breakend breakend)
     {
-        if(sv.type() != DEL || sv.length() >= SHORT_CALLING_SIZE)
+        if(sv.type() != DEL)
             return false;
 
-        return breakend.Alt.length() - 1 == breakend.insertSequenceLength();
+        int length = sv.length(); // lengths of 1 were treated as INS in gripsKT even without an insert sequence
+        return length < SHORT_CALLING_SIZE && length > 1 && (length - 1 == breakend.insertSequenceLength());
     }
 
     private boolean minQuality(final SvData sv, final Breakend breakend)
     {
-        if(sv.isSgl())
-            return breakend.Qual < mFilterConstants.MinQualBreakend;
-        else
-            return breakend.Qual < mFilterConstants.MinQualBreakpoint;
+        double qualThreshold = sv.isSgl() ? mFilterConstants.MinQualBreakend : mFilterConstants.MinQualBreakpoint;
+
+        if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
+            qualThreshold *= 0.5;
+
+        return breakend.Qual < qualThreshold;
     }
 
     private boolean polyGCInsert(final SvData sv)
@@ -195,24 +223,27 @@ public class SoftFilters
         return breakend.inexactHomologyLength() > mFilterConstants.MaxInexactHomLengthShortDel;
     }
 
-    private boolean breakendAssemblyReadPairs(final Breakend breakend)
+    private static double calcStrandBias(final VariantContext variantContext)
     {
-        if(!breakend.isSgl())
+        double strandBias = variantContext.getAttributeAsDouble(VT_SB, 0.5);
+        return max(strandBias, 1 - strandBias);
+    }
+
+    private boolean singleStrandBias(final Breakend breakend)
+    {
+        if(!breakend.isSgl() || breakend.IsLineInsertion)
             return false;
 
-        int basrp = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_BASRP, 0);
-        int bassr = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_BASSR, 0);
-        double baq = getGenotypeAttributeAsDouble(breakend.TumorGenotype, VT_BAQ, 0);
+        double strandBias = calcStrandBias(breakend.Context);
+        return strandBias < SGL_MIN_STRAND_BIAS || strandBias > SGL_MAX_STRAND_BIAS;
+    }
 
-        boolean basrpInconsistent = basrp == 0 && bassr == 0 && baq > 0;
+    private boolean singleInsertSequenceMinLength(final Breakend breakend)
+    {
+        if(!breakend.isSgl() || breakend.IsLineInsertion)
+            return false;
 
-        if(basrp == 0 && !basrpInconsistent)
-        {
-            double strandBias = getGenotypeAttributeAsDouble(breakend.TumorGenotype, VT_SB, 0.5);
-            return strandBias < 0.1 || strandBias > 0.9;
-        }
-
-        return false;
+        return breakend.InsertSequence.length() < SGL_INS_SEQ_MIN_LENGTH;
     }
 
     private boolean imprecise(final SvData sv)
@@ -266,9 +297,9 @@ public class SoftFilters
         if(sv.isSgl() || sv.isShortLocal())
             return false;
 
-        return breakend.ReferencePairReads == 0
+        return VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, VT_RP, 0) == 0
                 && VcfUtils.getGenotypeAttributeAsInt(breakend.RefGenotype, VT_ASRP, 0) == 0
-                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_REFPAIR, 0) == 0
+                && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_RP, 0) == 0
                 && VcfUtils.getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_ASRP, 0) == 0;
     }
 
@@ -277,9 +308,9 @@ public class SoftFilters
         if(sv.type() == DEL)
             return sv.length() + sv.insertSequence().length() - 1 < mFilterConstants.MinLength;
         else if(sv.type() == DUP)
-            return sv.length() + sv.insertSequence().length() + 1 < mFilterConstants.MinLength;
+            return sv.length() + sv.insertSequence().length()  < mFilterConstants.MinLength;
         else if(sv.type() == INS)
-            return sv.length() + sv.insertSequence().length() < mFilterConstants.MinLength;
+            return sv.length() + sv.insertSequence().length() + 1 < mFilterConstants.MinLength;
         else
             return false;
     }

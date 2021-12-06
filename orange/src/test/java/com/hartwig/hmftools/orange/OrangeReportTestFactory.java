@@ -110,7 +110,6 @@ public final class OrangeReportTestFactory {
                         .localPhaseSet(42256)
                         .build())
                 .build();
-
     }
 
     @NotNull

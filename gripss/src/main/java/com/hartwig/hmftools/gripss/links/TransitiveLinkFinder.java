@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.gripss.links.TransitiveLink.TRANS_LINK_PREFIX;
+
 import java.util.ArrayDeque;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class TransitiveLinkFinder
     private static final int MAX_VARIANTS = 500000;
     private static final int MAX_ALTERNATIVES = 25;
     private static final int MAX_ALTERNATIVES_SEEK_DISTANCE = 1000;
-    private static final int MAX_ALTERNATIVES_ADDITIONAL_DISTANCE = 0;
+    private static final int MAX_ALTERNATIVES_ADDITIONAL_DISTANCE = MAX_ALTERNATIVES_SEEK_DISTANCE;
 
     private static final int MIN_TRANSITIVE_DISTANCE = 30;
     private static final int MAX_TRANSITIVE_SEEK_DISTANCE = 2000;
@@ -49,7 +51,7 @@ public class TransitiveLinkFinder
 
         // logger.debug("Examining ${alternativeStarts.size} alternative(s) to variant $target")
 
-        String tranksLinkPrefix = "trs" + breakend.VcfId;
+        String tranksLinkPrefix = String.format("%s_%s_",TRANS_LINK_PREFIX, breakend.VcfId);
 
         ArrayDeque assemblyTransLinks = new ArrayDeque<TransitiveLink>();
         ArrayDeque transLinks = new ArrayDeque<TransitiveLink>();
@@ -100,19 +102,15 @@ public class TransitiveLinkFinder
 
             if(node.matchesTarget(target))
             {
-                // Return first (breath-wise) completely assembled link we see
+                // return the first (breath-wise) completely assembled link
                 return node.links();
             }
-
 
             List<TransitiveLink> newAssemblyTransLinks = createAssemblyNodes(node);
             newAssemblyTransLinks.forEach(x -> assemblyTransLinks.add(x));
 
             List<TransitiveLink> newTransLinks = createTransitiveNodes(node);
             newTransLinks.forEach(x -> transLinks.add(x));
-
-            // node.assemblyNodes(assemblyLinkStore, variantStore).forEach { assemblyNodes.addLast(it) }
-            // node.transitiveNodes(assemblyLinkStore, variantStore).forEach { transitiveNodes.addLast(it) }
         }
         else
         {
@@ -128,9 +126,6 @@ public class TransitiveLinkFinder
 
             List<TransitiveLink> newTransLinks = createTransitiveNodes(node);
             newTransLinks.forEach(x -> transLinks.add(x));
-
-            // node.assemblyNodes(assemblyLinkStore, variantStore).forEach { transitiveNodes.addLast(it) }
-            // node.transitiveNodes(assemblyLinkStore, variantStore).forEach { transitiveNodes.addLast(it) }
         }
 
         return findLinks(target, assemblyTransLinks, transLinks, matchedTransLinks);
@@ -181,26 +176,29 @@ public class TransitiveLinkFinder
 
         List<Link> assemblyLinkedBreakends = Lists.newArrayList();
 
-        for(Link assemblyLink : unfilteredAssemblyLinks)
+        if(unfilteredAssemblyLinks != null)
         {
-            if(!transLink.links().contains(assemblyLink))
-                continue;
-
-            Breakend otherBreakend = assemblyLink.otherBreakend(transBreakend);
-
-            // add in order of quality of the other breakend
-            int index = 0;
-            while(index < assemblyLinkedBreakends.size())
+            for(Link assemblyLink : unfilteredAssemblyLinks)
             {
-                Breakend otherLinkBreakend = assemblyLinkedBreakends.get(index).otherBreakend(transBreakend);
+                if(!transLink.links().contains(assemblyLink))
+                    continue;
 
-                if(otherBreakend.Qual > otherLinkBreakend.Qual)
-                    break;
+                Breakend otherBreakend = assemblyLink.otherBreakend(transBreakend);
 
-                ++index;
+                // add in order of quality of the other breakend
+                int index = 0;
+                while(index < assemblyLinkedBreakends.size())
+                {
+                    Breakend otherLinkBreakend = assemblyLinkedBreakends.get(index).otherBreakend(transBreakend);
+
+                    if(otherBreakend.Qual > otherLinkBreakend.Qual)
+                        break;
+
+                    ++index;
+                }
+
+                assemblyLinkedBreakends.add(index, assemblyLink);
             }
-
-            assemblyLinkedBreakends.add(index, assemblyLink);
         }
 
         for(Link assemblyLink : assemblyLinkedBreakends)
@@ -287,7 +285,28 @@ public class TransitiveLinkFinder
                     transLink.remainingAssemblyJumps(), transLink.remainingTransitiveJumps() - 1, newLinks));
         }
 
-        /*
+        return transLinks;
+    }
+
+    private static boolean areCandidateLink(final Breakend first, final Breakend second)
+    {
+        if(first.Orientation == second.Orientation)
+            return false;
+
+        if(first.posOrient())
+        {
+            // other breakend must be less by the min TI length
+            // val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
+            return second.maxPosition() <= first.minPosition() - MIN_TRANSITIVE_DISTANCE;
+        }
+        else
+        {
+            // val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
+            return second.minPosition() >= first.maxPosition() + MIN_TRANSITIVE_DISTANCE;
+        }
+    }
+
+            /*
         private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
             val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
             val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
@@ -320,22 +339,4 @@ public class TransitiveLinkFinder
         return result
             */
 
-        return transLinks;
-    }
-
-    private static boolean areCandidateLink(final Breakend first, final Breakend second)
-    {
-        if(first.Orientation == second.Orientation)
-            return false;
-
-        if(first.posOrient())
-        {
-            // other breakend must be higher by the min TI length
-            return second.minPosition() >= first.maxPosition() + MIN_TRANSITIVE_DISTANCE;
-        }
-        else
-        {
-            return second.maxPosition() <= first.minPosition() - MIN_TRANSITIVE_DISTANCE;
-        }
-    }
 }

@@ -1,33 +1,32 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.gripss.links.Link.LINK_TYPE_PAIR;
+import static com.hartwig.hmftools.gripss.links.TransitiveLink.TRANS_LINK_PREFIX;
+
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.gripss.common.Breakend;
+
 public class AlternatePath
 {
-    public final String VcfId;
-    public final String MateId;
+    // an alternative path is modelled as the pair of breakends from the same SV, in a specific order
+    // and the set of links made by other SVs that start and end at the same locations
+    public final Breakend First;
+    public final Breakend Second;
     public final List<Link> Links;
 
-    public AlternatePath(final String vcfId, final String mateId, final List<Link> links)
+    public AlternatePath(final Breakend first, final Breakend second, final List<Link> links)
     {
-        VcfId = vcfId;
-        MateId = mateId;
+        First = first;
+        Second = second;
         Links = links;
-    }
-
-    public List<String> pathVcfIds()
-    {
-        List<String> pathStrings = Links.stream().map(x -> x.breakendStart().VcfId).collect(Collectors.toList());
-        pathStrings.add(Links.get(Links.size() - 1).breakendEnd().VcfId);
-        return pathStrings;
     }
 
     public List<Link> transitiveLinks()
     {
-        // TODO: either make 'trs' a constant or add a link type
-        return Links.stream().filter(x -> x.Id.startsWith("trs")).collect(Collectors.toList());
+        return Links.stream().filter(x -> x.Id.startsWith(TRANS_LINK_PREFIX)).collect(Collectors.toList());
     }
 
     public String pathString()
@@ -41,7 +40,7 @@ public class AlternatePath
             if (i == 0)
                 sj.add(link.breakendStart().VcfId);
 
-            if (link.Id.equals("PAIR"))
+            if (link.Id.equals(LINK_TYPE_PAIR))
                 sj.add("-");
             else
                 sj.add(String.format("<%s>", link.Id));
@@ -52,17 +51,9 @@ public class AlternatePath
         return sj.toString();
     }
 
-    public static LinkStore createLinkStore(final List<AlternatePath> alternatePaths)
+    public String toString()
     {
-        LinkStore linkStore = new LinkStore();
-
-        for(AlternatePath altPath : alternatePaths)
-        {
-            List<Link> transLinks = altPath.transitiveLinks();
-            transLinks.forEach(x -> linkStore.addLink(altPath.VcfId, x));
-        }
-
-        return linkStore;
+        return String.format("breaks(%s - %s) links(%d)", First, Second, Links.size());
     }
 
 }

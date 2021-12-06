@@ -1,40 +1,39 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_REF_ID;
-import static com.hartwig.hmftools.gripss.GripssTestApplication.TEST_SAMPLE_ID;
+import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
+import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_AS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_ASSR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEID;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BEIDL;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BSC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BUM;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BUMQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_BVF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CAS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_EVENT;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_PAR_ID;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_RAS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_RP;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_RPQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_SRQ;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_VF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEID;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEIDL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BSC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BUM;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BUMQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CAS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_PAR_ID;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RAS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RPQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SRQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT;
@@ -49,11 +48,12 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_QU
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_QUAL_BREAK_POINT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_TUMOR_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_TUMOR_AF_SGL;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DISTANCE;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINC_00486_V37;
+import static com.hartwig.hmftools.gripss.filters.FilterConstants.PMS2_V37;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,6 +76,8 @@ public class GripssTestUtils
 {
     public static final String CHR_1 = "1";
     public static final String CHR_2 = "2";
+    public static final String LINE_INSERT_SEQ_A = "AAAAAAAAAAAAAAAAAAAA";
+    public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 
     public static final double DEFAULT_QUAL = 1000;
 
@@ -96,6 +98,19 @@ public class GripssTestUtils
 
         VariantContext[] contexts = createSvBreakends(
                 eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
+
+        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        return new SvData(sv, genotypeIds);
+    }
+
+    public static SvData createSv(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String insSeq, final GenotypeIds genotypeIds, final Map<String,Object> attributesStart, final Map<String,Object> attributesEnd)
+    {
+        String ref = "A";
+
+        VariantContext[] contexts = createSvBreakends(
+                eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, attributesStart, attributesEnd);
 
         StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
         return new SvData(sv, genotypeIds);
@@ -145,6 +160,24 @@ public class GripssTestUtils
 
         pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd, commonOverrides, refOverrides, tumorOverrides);
         pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart, commonOverrides, refOverrides, tumorOverrides);
+
+        return pair;
+    }
+
+    public static VariantContext[] createSvBreakends(
+            final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
+            final String ref, final String insSeq, final Map<String,Object> attributesStart, final Map<String,Object> attributesEnd)
+    {
+        String vcfStart = vcfId(eventId, true);
+        String vcfEnd = vcfId(eventId, false);
+
+        VariantContext[] pair = new VariantContext[SE_PAIR];
+
+        String altStart = formPairedAltString(ref, insSeq, chrEnd, posEnd, orientStart, orientEnd);
+        String altEnd = formPairedAltString(ref, insSeq, chrStart, posStart, orientEnd, orientStart);
+
+        pair[SE_START] = createBreakend(vcfStart, chrStart, posStart, ref, altStart, vcfEnd, attributesStart, null, null);
+        pair[SE_END] = createBreakend(vcfEnd, chrEnd, posEnd, ref, altEnd, vcfStart, attributesEnd, null, null);
 
         return pair;
     }
@@ -236,7 +269,7 @@ public class GripssTestUtils
                 .genotypes(genotypesContext)
                 .attributes(commonAttributes)
                 .log10PError(logError)
-                .filter(filters)
+                .unfiltered()
                 .make(true);
     }
 
@@ -278,8 +311,6 @@ public class GripssTestUtils
         attributes.put(VT_CIPOS, Lists.newArrayList(0, 0));
         attributes.put(VT_CIRPOS, Lists.newArrayList(0, 0));
         attributes.put("SVTYPE", "BND");
-
-        // attributes.put(VT_REALIGN, );
 
         return attributes;
     }
@@ -330,6 +361,7 @@ public class GripssTestUtils
                 DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT,
                 DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT,
                 DEFAULT_MIN_NORMAL_COVERAGE,
+                DEFAULT_MIN_TUMOR_AF_SGL,
                 DEFAULT_MIN_TUMOR_AF,
                 DEFAULT_MAX_SHORT_STRAND_BIAS,
                 DEFAULT_MIN_QUAL_BREAK_END,
@@ -339,6 +371,23 @@ public class GripssTestUtils
                 DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL,
                 DEFAULT_MIN_LENGTH,
                 DEFAULT_PON_DISTANCE,
-                LINC_00486_V37);
+                LINC_00486_V37,
+                PMS2_V37);
+    }
+
+    public static Map<String,Object> buildLinkAttributes(final String beid, final String beidl)
+    {
+        Map<String,Object> attributes = Maps.newHashMap();
+        attributes.put(VT_AS, 2); // set automatically from assembly strings
+        attributes.put(VT_BEID, beid);
+        attributes.put(VT_BEIDL, beidl);
+        return attributes;
+    }
+
+    public static void loadSvDataCache(final SvDataCache dataCache, final List<SvData> svDataList)
+    {
+        dataCache.clear();
+        svDataList.forEach(x -> dataCache.addSvData(x));
+        dataCache.buildBreakendMap();
     }
 }

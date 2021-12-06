@@ -6,16 +6,16 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class SvDataCache
 {
     private final List<SvData> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
+
 
     public SvDataCache()
     {
@@ -24,6 +24,7 @@ public class SvDataCache
     }
 
     public List<SvData> getSvList() { return mSvData; }
+    public Map<String,List<Breakend>> getBreakendMap() { return mChromosomeBreakends; }
 
     public void addSvData(final SvData sv) { mSvData.add(sv); }
 
@@ -31,7 +32,6 @@ public class SvDataCache
     {
         for(SvData sv : mSvData)
         {
-            // keep SGL breakends?
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 Breakend breakend = sv.breakends()[se];
@@ -111,5 +111,11 @@ public class SvDataCache
         }
 
         return closeBreakends;
+    }
+
+    public void clear()
+    {
+        mChromosomeBreakends.clear();
+        mSvData.clear();
     }
 }

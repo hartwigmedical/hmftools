@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.chromosomeRank;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_REALIGN;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
 
 import java.util.List;
 
@@ -21,41 +22,10 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 public class BreakendRealigner
 {
     private final RefGenomeInterface mRefGenome;
-    private final int mReferenceOrdinal;
-    private final int mTumorOrdinal;
 
-    // comparator: ContigComparator
-
-    public BreakendRealigner(final RefGenomeInterface refGenome, final int referenceOrdinal, final int tumorOrdinal)
+    public BreakendRealigner(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
-        mReferenceOrdinal = referenceOrdinal;
-        mTumorOrdinal = tumorOrdinal;
-    }
-
-    public Breakend realignRemote(final Breakend breakend, final Breakend realignedOther)
-    {
-        Allele refAllele = breakend.Context.getReference();
-
-        List<Allele> alleles = Lists.newArrayList();
-        alleles.add(refAllele);
-
-        // TODO
-        // val mate = variantType as Paired
-        // String newAlt = ""; // mate.altString(other.Position, refAllele.displayString)
-
-        String newAlt = formPairedAltString(
-                refAllele.getDisplayString(), breakend.InsertSequence,
-                breakend.OtherChromosome, realignedOther.Position, breakend.Orientation, realignedOther.Orientation);
-
-        alleles.add(Allele.create(newAlt));
-
-        VariantContext newContext = new VariantContextBuilder(breakend.Context)
-                .alleles(alleles)
-                .attribute(VT_CIRPOS, Lists.newArrayList(breakend.ConfidenceInterval.Start, breakend.ConfidenceInterval.End))
-                .make();
-
-        return Breakend.realigned(breakend, newContext, breakend.Position);
     }
 
     public Breakend realign(final Breakend breakend, boolean isSgl, boolean imprecise)
@@ -83,19 +53,52 @@ public class BreakendRealigner
         return breakend;
     }
 
+    public Breakend realignRemote(final Breakend breakend, final Breakend realignedOther)
+    {
+        Allele refAllele = breakend.Context.getReference();
+
+        List<Allele> alleles = Lists.newArrayList();
+        alleles.add(refAllele);
+
+        String newAlt = formPairedAltString(
+                refAllele.getDisplayString(), breakend.InsertSequence,
+                breakend.OtherChromosome, realignedOther.Position, breakend.Orientation, realignedOther.Orientation);
+
+        alleles.add(Allele.create(newAlt));
+
+        VariantContext newContext = new VariantContextBuilder(breakend.Context)
+                .alleles(alleles)
+                .attribute(VT_CIRPOS, Lists.newArrayList(realignedOther.ConfidenceInterval.Start, realignedOther.ConfidenceInterval.End))
+                .make();
+
+        return Breakend.realigned(breakend, newContext, breakend.Position);
+    }
+
     private Interval[] centreAlignConfidenceIntervals(final Breakend breakend)
     {
         // val mate = variantType as Paired
         final Breakend otherBreakend = breakend.otherBreakend();
 
-        // TODO
-        boolean invertStart = breakend.Orientation == otherBreakend.Orientation;
-        // && comparator.compare(contig, start, mate.otherChromosome, mate.otherPosition) > 0
+        boolean invertStart;
+
+        if(breakend.Orientation == otherBreakend.Orientation)
+        {
+            // comparator: -ve if chromosome is lower or if positon is lower
+            if(breakend.Chromosome.equals(otherBreakend.Chromosome))
+                invertStart = breakend.Position > otherBreakend.Position;
+            else
+                invertStart = chromosomeRank(breakend.Chromosome) > chromosomeRank(otherBreakend.Chromosome);
+        }
+        else
+        {
+            invertStart = false;
+        }
 
         boolean invertEnd = breakend.Orientation == otherBreakend.Orientation && !invertStart;
 
         Interval centeredCipos = centreAlignConfidenceInterval(invertStart, breakend.ConfidenceInterval);
         Interval centeredRemoteCipos = centreAlignConfidenceInterval(invertEnd, breakend.RemoteConfidenceInterval);
+
         return new Interval[] { centeredCipos, centeredRemoteCipos };
     }
 
@@ -112,14 +115,13 @@ public class BreakendRealigner
 
         int newStart = updatedPosition(breakend.Position, breakend.ConfidenceInterval, newCipos);
 
-        String newRef = mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart);
-        // getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
+        String newRef = toStandardNucleotides(mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart));
 
-        // val mate = variantType as Paired
-        // String newAlt = ""; // mate.altString(newRef);
+        final Breakend otherBreakend = breakend.otherBreakend();
 
         String newAlt = formPairedAltString(
-                newRef, breakend.InsertSequence, breakend.OtherChromosome, breakend.Position, breakend.Orientation, breakend.OtherOrientation);
+                newRef, otherBreakend.InsertSequence, otherBreakend.OtherChromosome, otherBreakend.Position,
+                breakend.Orientation, otherBreakend.Orientation);
 
         List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(newRef, true));
@@ -141,14 +143,9 @@ public class BreakendRealigner
         Interval newCipos = sideAlignConfidenceInterval(breakend.Orientation, breakend.ConfidenceInterval);
         int newStart = updatedPosition(breakend.Position, breakend.ConfidenceInterval, newCipos);
 
-        String newRef = mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart);
-        // getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
-        // TODO: understand unambiguousNucleotides
+        String newRef = toStandardNucleotides(mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart));
 
-        // val mate = variantType as Single
-        // String newAlt = ""; // mate.altString(newRef);
         String newAlt = formSingleAltString(newRef, breakend.InsertSequence, breakend.Orientation);
-        // val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(newRef)))
 
         List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(newRef, true));
@@ -188,5 +185,23 @@ public class BreakendRealigner
             return new Interval(0, cipos.End - cipos.Start);
         else
             return new Interval(cipos.Start - cipos.End, 0);
+    }
+
+    private static final List<Character> VALID_BASES = Lists.newArrayList('A', 'G', 'C', 'T', 'N');
+
+    private static String toStandardNucleotides(final String bases)
+    {
+        StringBuilder newBases = new StringBuilder(bases.length());
+
+        for(int i = 0; i < bases.length(); ++i)
+        {
+            char base = bases.charAt(i);
+            if(VALID_BASES.contains(base))
+                newBases.append(base);
+            else
+                newBases.append('N');
+        }
+
+        return newBases.toString();
     }
 }

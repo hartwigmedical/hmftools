@@ -9,7 +9,7 @@ public class VcfIdGenerator
 
     public VcfIdGenerator()
     {
-        mEventId = 1;
+        mEventId = 0;
     }
 
     public String nextVcfId(boolean isFirst)

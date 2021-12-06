@@ -67,11 +67,12 @@ public class StructuralVariantFactory
     private static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
     private static final String ANCHOR_SUPPORT_CIGAR = "SC";
 
-    // Must match the small deldup threshold in scripts/gridss/gridss.config.R
+    // Must match the small deldup threshold in Gripss
     private static final int SMALL_DELDUP_SIZE = 1000;
 
     public static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
     public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
+    private static final byte SINGLE_BREAKEND_BYTE = 46;
 
     private final Map<String,VariantContext> mUnmatchedVariants = Maps.newHashMap();
     private final List<StructuralVariant> mCompleteVariants = Lists.newArrayList();
@@ -94,8 +95,8 @@ public class StructuralVariantFactory
 
     public static boolean isSingleBreakend(final VariantContext context)
     {
-        final StructuralVariantType type = type(context);
-        return type.equals(BND) && SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches();
+        final byte[] altBases = context.getAlternateAllele(0).getDisplayBases();
+        return altBases.length > 0 && (altBases[0] == SINGLE_BREAKEND_BYTE || altBases[altBases.length - 1] == SINGLE_BREAKEND_BYTE);
     }
 
     public void addVariantContext(final VariantContext context)
@@ -105,8 +106,9 @@ public class StructuralVariantFactory
             final StructuralVariantType type = type(context);
             if(type.equals(BND))
             {
-                final boolean isSingleBreakend = SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches();
-                if(isSingleBreakend)
+                // final boolean isSingleBreakend = SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches();
+
+                if(isSingleBreakend(context))
                 {
                     mCompleteVariants.add(createSingleBreakend(context));
                 }
@@ -336,14 +338,12 @@ public class StructuralVariantFactory
     @NotNull
     public static StructuralVariant createSingleBreakend(@NotNull VariantContext context)
     {
-        Preconditions.checkArgument(BND.equals(type(context)));
-        Preconditions.checkArgument(SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches());
-
         final List<Double> af = context.hasAttribute(BPI_AF)
                 ? context.getAttributeAsDoubleList(BPI_AF, 0.0)
                 : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = context.getAlternateAllele(0).getDisplayString();
+
         // local orientation determined by the positioning of the anchoring bases
         final byte orientation = (byte) (alt.startsWith(".") ? -1 : 1);
         final int refLength = context.getReference().length();

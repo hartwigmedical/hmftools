@@ -7,15 +7,21 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.links.LinkRescue.findRescuedDsbLineInsertions;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
+import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
@@ -23,6 +29,8 @@ import com.hartwig.hmftools.gripss.filters.SoftFilters;
 import com.hartwig.hmftools.gripss.links.AlternatePath;
 import com.hartwig.hmftools.gripss.links.AlternatePathFinder;
 import com.hartwig.hmftools.gripss.links.AssemblyLinks;
+import com.hartwig.hmftools.gripss.links.DsbLinkFinder;
+import com.hartwig.hmftools.gripss.links.LinkRescue;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
 import org.apache.commons.cli.CommandLine;
@@ -52,7 +60,7 @@ public class GripssApplication
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
-    private final Map<FilterType,Integer> mFilterCounts;
+    private final FilterCache mFilterCache;
 
     public GripssApplication(
             final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
@@ -63,7 +71,7 @@ public class GripssApplication
         mRefGenome = refGenome;
 
         GR_LOGGER.info("loading reference data");
-        mPonCache = new PonCache(cmd, mConfig.RestrictedChromosomes);
+        mPonCache = new PonCache(cmd);
         mHotspotCache = new HotspotCache(cmd);
 
         mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache);
@@ -72,7 +80,7 @@ public class GripssApplication
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();
-        mFilterCounts = Maps.newHashMap();
+        mFilterCache = new FilterCache();
     }
 
     public static GripssApplication fromCommandArgs(final CommandLine cmd)
@@ -91,154 +99,177 @@ public class GripssApplication
 
     private void processVcf(final String vcfFile)
     {
+        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
+                vcfFile, new VCFCodec(), false);
+
+        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+
+        GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
+
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
+
+        if(genotypeIds == null)
+        {
+            System.exit(1);
+        }
+
+        mRealigner = new BreakendRealigner(mRefGenome);
+
+        if(!mConfig.tumorOnly())
+        {
+            GR_LOGGER.info("genetype info: ref({}: {}) tumor({}: {})",
+                    genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
+        }
+        else
+        {
+            GR_LOGGER.info("tumor genetype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
+        }
+
         try
         {
-            GR_LOGGER.info("processing germline VCF({})", vcfFile);
-
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                    vcfFile, new VCFCodec(), false);
-
-            GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds((VCFHeader)reader.getHeader(), mConfig.ReferenceId, mConfig.SampleId);
-
-            if(genotypeIds == null)
-            {
-                System.exit(1);
-            }
-
-            mRealigner = new BreakendRealigner(mRefGenome, genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
-
-            if(!mConfig.tumorOnly())
-            {
-                GR_LOGGER.info("sample({}) genetype info: ref({}: {}) tumor({}: {})",
-                        mConfig.SampleId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
-            }
-            else
-            {
-                GR_LOGGER.info("sample({}) tumor genetype info({}: {})", mConfig.SampleId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
-            }
-
             reader.iterator().forEach(x -> processVariant(x, genotypeIds));
-
-            GR_LOGGER.info("sample({}) read VCF: unmatched({}) complete({}) hardFiltered({})",
-                    mConfig.SampleId, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
-
-            if(mSvDataCache.getSvList().isEmpty())
-                return;
-
-            for(final SvData svData : mSvDataCache.getSvList())
-            {
-                // realign breakends
-                final Breakend[] breakends = svData.breakends();
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    Breakend realignedBreakend = mRealigner.realign(breakends[se], svData.isSgl(), svData.imprecise());
-
-                    if(realignedBreakend.realigned())
-                    {
-                        breakends[se] = realignedBreakend;
-
-                        int otherSe = switchIndex(se);
-                        Breakend realignedRemoteBreakend = mRealigner.realignRemote(breakends[otherSe], realignedBreakend);
-                        breakends[otherSe] = realignedRemoteBreakend;
-                    }
-                }
-
-                // CHECK: annotate with the PON - or can this be done at the very end only for variants written to file?
-                svData.setPonCount(mPonCache.getPonCount(svData));
-
-                mSoftFilters.applyFilters(svData);
-
-                if(GR_LOGGER.isDebugEnabled())
-                {
-                    svData.getFilters().forEach(x -> registerFilter(x));
-
-                    svData.breakendStart().getFilters().forEach(x -> registerFilter(x));
-
-                    if(!svData.isSgl())
-                        svData.breakendEnd().getFilters().forEach(x -> registerFilter(x));
-                }
-
-                // TODO maintain or ditch?
-                // softFilters.forEach(x -> registerFilter(x));
-            }
         }
         catch(IOException e)
         {
             GR_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
         }
 
+        GR_LOGGER.info("read VCF: breakends({}) unmatched({}) complete({}) hardFiltered({})",
+                mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
+
+        if(mSvDataCache.getSvList().isEmpty())
+            return;
+
+        GR_LOGGER.info("applying soft-filters and realignment");
+        int realignedCount = 0;
+
+        for(final SvData svData : mSvDataCache.getSvList())
+        {
+            // realign breakends
+            final Breakend[] breakends = svData.breakends();
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(svData.isSgl() && se == SE_END)
+                    continue;
+
+                Breakend realignedBreakend = mRealigner.realign(breakends[se], svData.isSgl(), svData.imprecise());
+
+                if(realignedBreakend.realigned())
+                {
+                    ++realignedCount;
+                    breakends[se] = realignedBreakend;
+
+                    if(!svData.isSgl())
+                    {
+                        int otherSe = switchIndex(se);
+                        Breakend realignedRemoteBreakend = mRealigner.realignRemote(breakends[otherSe], realignedBreakend);
+                        breakends[otherSe] = realignedRemoteBreakend;
+                    }
+
+                    svData.onPositionsUpdated();
+                }
+            }
+
+            mFilterCache.checkHotspotFilter(mHotspotCache, svData);
+
+            mSoftFilters.applyFilters(svData, mFilterCache);
+        }
+
+        GR_LOGGER.info("soft-filtered({}) hotspots({}) realigned({})",
+                mFilterCache.getBreakendFilters().size(), mFilterCache.getHotspots().size(), realignedCount);
+
         mSvDataCache.buildBreakendMap();
+
+        GR_LOGGER.info("applying PON filters");
+
+        for(List<Breakend> chrBreakendList : mSvDataCache.getBreakendMap().values())
+        {
+            for(Breakend breakend : chrBreakendList)
+            {
+                if(breakend == breakend.sv().breakendEnd()) // skip testing the same SV again
+                    continue;
+
+                mFilterCache.checkPonFilter(mPonCache, breakend.sv());
+            }
+        }
+
+        GR_LOGGER.debug("pon filtered count({})", mFilterCache.ponFilteredCount());
 
         GR_LOGGER.info("finding assembly links");
         LinkStore assemblyLinkStore = AssemblyLinks.buildAssembledLinks(mSvDataCache.getSvList());
+        GR_LOGGER.debug("found {} assembly links", assemblyLinkStore.getBreakendLinksMap().size());
 
         GR_LOGGER.info("finding alternative paths and transitive links");
-        /*
-        logger.info("Finding transitive links")
-        val alternatePaths: Collection<AlternatePath> = AlternatePath(assemblyLinks, variantStore)
-        val alternatePathsStringsByVcfId = alternatePaths.associate { x -> Pair(x.vcfId, x.pathString()) }
-        val transitiveLinks = LinkStore(alternatePaths.flatMap { x -> x.transitiveLinks() })
-        val combinedTransitiveAssemblyLinks = LinkStore(assemblyLinks, transitiveLinks)
-        */
 
-        /*
         List<AlternatePath> alternatePaths = AlternatePathFinder.findPaths(mSvDataCache, assemblyLinkStore);
-        Map<String,String> idPathMap = AlternatePathFinder.createIdToPathMap(alternatePaths);
-        LinkStore transitiveLinkStore = AlternatePath.createLinkStore(alternatePaths);
+        LinkStore transitiveLinkStore = AlternatePathFinder.createLinkStore(alternatePaths);
+
+        GR_LOGGER.debug("found {} alternate paths and {} transitive links",
+                alternatePaths.size(), transitiveLinkStore.getBreakendLinksMap().size());
+
         LinkStore combinedTransitiveAssemblyLinks = LinkStore.from(assemblyLinkStore, transitiveLinkStore);
-        */
 
-        GR_LOGGER.info("paired break end de-duplication");
+        GR_LOGGER.info("deduplication of paired end single breakends");
+        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache, mFilterCache);
 
-        // val dedupPair = DedupPair(initialFilters, alternatePaths, variantStore)
-        // val softFiltersAfterPairedDedup = initialFilters.update(dedupPair.duplicates, dedupPair.rescue)
+        duplicateFinder.findDuplicateSVs(alternatePaths);
 
-        GR_LOGGER.info("single break end de-duplication");
+        mFilterCache.updateFilters(duplicateFinder.rescueBreakends(), duplicateFinder.duplicateBreakends());
 
-        // val dedupSingle = DedupSingle(variantStore, softFiltersAfterPairedDedup, combinedTransitiveAssemblyLinks)
-        // val softFiltersAfterSingleDedup = softFiltersAfterPairedDedup.update(dedupSingle.duplicates, setOf())
+        duplicateFinder.findDuplicateSingles(combinedTransitiveAssemblyLinks);
 
-        GR_LOGGER.info("Finding double stranded break links");
-        // val dsbLinks = DsbLink(variantStore, assemblyLinks, softFiltersAfterSingleDedup.duplicates())
+        mFilterCache.updateFilters(Sets.newHashSet(), duplicateFinder.duplicateSglBreakends());
+
+        GR_LOGGER.debug("found {} SV duplications and {} SGL duplications",
+                duplicateFinder.duplicateBreakends().size(), duplicateFinder.duplicateSglBreakends().size());
+
+        GR_LOGGER.info("finding double stranded break links");
+        LinkStore dsbLinkStore = DsbLinkFinder.findBreaks(mSvDataCache, assemblyLinkStore, mFilterCache.getDuplicateBreakends());
+
+        GR_LOGGER.debug("found {} double stranded breaks", dsbLinkStore.getBreakendLinksMap().size());
 
         GR_LOGGER.info("rescuing linked variants");
-        /*
-        val dsbRescues = LinkRescue.rescueDsb(dsbLinks, softFiltersAfterSingleDedup, variantStore).rescues
-        val dsbRescueMobileElements = LinkRescue.rescueDsbMobileElementInsertion(config.filterConfig, dsbLinks, softFiltersAfterSingleDedup, variantStore).rescues
-        val assemblyRescues = LinkRescue.rescueAssembly(assemblyLinks, softFiltersAfterSingleDedup, variantStore).rescues
-        val transitiveRescues = LinkRescue.rescueTransitive(transitiveLinks, softFiltersAfterSingleDedup, variantStore).rescues
-        val allRescues = dsbRescues + dsbRescueMobileElements + assemblyRescues + transitiveRescues
-        */
 
-        // GR_LOGGER.info("writing output VCF file: {}", mConfig.OutputVcfFile);
+        Set<Breakend> rescuedBreakends = LinkRescue.findRescuedBreakends(dsbLinkStore, mFilterCache, false);
+        rescuedBreakends.addAll(findRescuedDsbLineInsertions(dsbLinkStore, mFilterCache, mFilterConstants.MinQualRescueLine));
+        rescuedBreakends.addAll(LinkRescue.findRescuedBreakends(assemblyLinkStore, mFilterCache, true));
+        rescuedBreakends.addAll(LinkRescue.findRescuedBreakends(transitiveLinkStore, mFilterCache, true));
 
-        /*
-        logger.info("Writing file: ${config.outputVcf}")
-        val combinedLinks = LinkStore(combinedTransitiveAssemblyLinks, dsbLinks)
-        val finalFilters: SoftFilterStore = softFiltersAfterSingleDedup.update(setOf(), allRescues)
-        fileWriter.writeHeader(version.version(), fileReader.fileHeader, outputSampleNames)
-        for (variant in variantStore.selectAll()) {
+        GR_LOGGER.debug("rescued {} linked variants", rescuedBreakends.size());
 
-            val localLinkedBy = combinedLinks[variant.vcfId]
-            val remoteLinkedBy = combinedLinks[variant.mateId]
-            val altPath = alternatePathsStringsByVcfId[variant.vcfId]
+        mFilterCache.updateFilters(rescuedBreakends, Sets.newHashSet());
 
-            val filters = finalFilters.filters(variant.vcfId, variant.mateId)
-            fileWriter.writeVariant(variant.context(localLinkedBy, remoteLinkedBy, altPath, hotspots.contains(variant.vcfId), filters))
-        }
-        */
+        LinkStore combinedLinks = LinkStore.from(combinedTransitiveAssemblyLinks, dsbLinkStore);
+
+        GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
+
+        final VersionInfo version = new VersionInfo("gripss.version");
+
+        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache, mFilterCache);
+
+        Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
+
+        writer.write(combinedLinks, idPathMap);
+        writer.close();
 
         // summary logging
-        // int hardFiltered = mFilterCounts.values().stream().mapToInt(x -> x.intValue()).sum();
-        int hardFiltered = mVariantBuilder.hardFilteredCount();
-
-        GR_LOGGER.info("sample({}) read {} variants: hardFiltered({}) cached({})",
-                mConfig.SampleId, mProcessedVariants, hardFiltered, mSvDataCache.getSvList().size());
-
         if(GR_LOGGER.isDebugEnabled())
         {
-            for(Map.Entry<FilterType,Integer> entry : mFilterCounts.entrySet())
+            mFilterCache.logRescuedBreakendFilters();
+
+            Map<FilterType,Integer> filterCounts = Maps.newHashMap();
+
+            for(List<FilterType> filters : mFilterCache.getBreakendFilters().values())
+            {
+                for(FilterType type : filters)
+                {
+                    Integer count = filterCounts.get(type);
+                    filterCounts.put(type, count != null ? count + 1 : 1);
+                }
+            }
+
+            for(Map.Entry<FilterType,Integer> entry : filterCounts.entrySet())
             {
                 GR_LOGGER.debug("soft filter {}: count({})", entry.getKey(), entry.getValue());
             }
@@ -268,16 +299,9 @@ public class GripssApplication
         mSvDataCache.addSvData(svData);
     }
 
-    private void registerFilter(final FilterType type)
-    {
-        Integer count = mFilterCounts.get(type);
-        mFilterCounts.put(type, count != null ? count + 1 : 1);
-    }
-
     // testing methods only
     public void clearState()
     {
-        mFilterCounts.clear();
         mProcessedVariants = 0;
         mVariantBuilder.clearState();
     }

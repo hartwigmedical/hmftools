@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.common;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -7,9 +9,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_SIZE;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_EVENT;
-import static com.hartwig.hmftools.gripss.VcfUtils.VT_HOMSEQ;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 
 import java.util.List;
 
@@ -27,17 +30,13 @@ public class SvData
     private final StructuralVariantType mType;
 
     private final int mReferenceOrdinal;
-    private final int mTumorOrdinal;
     private final Breakend[] mBreakends;
 
     // repeatedly used values for filtering are cached
+    private final int[] mInexactHomology;
     private final String mInsertSequence;
     private final boolean mImprecise;
-    private final boolean mIsShortLocal;
-
-    private final List<FilterType> mFilters;
-
-    private int mPonCount;
+    private boolean mIsShortLocal;
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
@@ -45,24 +44,36 @@ public class SvData
 
         mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
-        mTumorOrdinal = genotypeIds.TumorOrdinal;
+
+        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && (sv.end().position() - sv.start().position()) < SHORT_CALLING_SIZE;
 
         Breakend breakendStart = Breakend.from(
-                this, mType, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+                this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
 
         Breakend breakendEnd = sv.end() != null ?
-                Breakend.from(this, mType, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+                Breakend.from(this, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
 
         mBreakends = new Breakend[] { breakendStart, breakendEnd };
 
-        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
-
-        mFilters = Lists.newArrayList();
-
-        mPonCount = 0;
-
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
+
+        mInexactHomology = new int[] {0, 0};
+        if(sv.startContext().hasAttribute(VT_IHOMPOS))
+        {
+            List<Integer> values = sv.startContext().getAttributeAsIntList(VT_IHOMPOS, 0);
+            mInexactHomology[SE_START] = abs(values.get(0));
+            mInexactHomology[SE_END] = abs(values.get(1));
+        }
+    }
+
+    public void onPositionsUpdated()
+    {
+        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
+
+        mBreakends[SE_START].setAllelicFrequency();
+        if(mBreakends[SE_END] != null)
+            mBreakends[SE_END].setAllelicFrequency();
     }
 
     public String id() { return mId; }
@@ -95,17 +106,6 @@ public class SvData
     public boolean isShortLocal() { return mIsShortLocal; }
     public boolean imprecise() { return mImprecise; }
 
-    public List<FilterType> getFilters() { return mFilters; }
-
-    public void addFilter(final FilterType filter)
-    {
-        if(!mFilters.contains(filter))
-            mFilters.add(filter);
-    }
-
-    public void setPonCount(int count) { mPonCount = count; }
-    public int getPonCount() { return mPonCount; }
-
     public static boolean hasLength(final StructuralVariantType type)
     {
         return type == INS || type == INV || type == DEL || type == DUP;
@@ -123,6 +123,7 @@ public class SvData
 
     public String startHomology() { return contextStart().getAttributeAsString(VT_HOMSEQ, ""); }
     public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(VT_HOMSEQ, "") : ""; }
+    public int[] inexactHomology() { return mInexactHomology; }
 
     public String toString()
     {

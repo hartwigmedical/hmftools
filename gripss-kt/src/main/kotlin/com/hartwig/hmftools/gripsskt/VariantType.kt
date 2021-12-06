@@ -166,26 +166,19 @@ sealed class VariantType(val eventType: EventType) {
 
         val repeatChar: Char
         val truncatedInsertSequence: String
-        val polyChar: String
+
         if (startOrientation == 1.toByte()) {
             repeatChar = 'T'
-            truncatedInsertSequence = insertSequence.take(20)
-            polyChar = POLY_T
+            truncatedInsertSequence = insertSequence.take(18)
         } else {
             repeatChar = 'A'
-            truncatedInsertSequence = insertSequence.takeLast(20)
-            polyChar = POLY_A
+            truncatedInsertSequence = insertSequence.takeLast(18)
         }
 
         if (truncatedInsertSequence.filter { x:Char -> x == repeatChar }.length >= 16) {
             return true
         }
 
-        if (truncatedInsertSequence.contains(polyChar))
-            return true
-
         return false
     }
-
-
 }

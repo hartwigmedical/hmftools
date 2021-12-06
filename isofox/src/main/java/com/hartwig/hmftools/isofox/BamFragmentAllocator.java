@@ -103,6 +103,7 @@ public class BamFragmentAllocator
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
     private final boolean mStatsOnly;
+    private final boolean mUnmappedOnly;
 
     private final BufferedWriter mReadDataWriter;
     private int mEnrichedGeneFragments;
@@ -122,6 +123,7 @@ public class BamFragmentAllocator
         mRunFusions = mConfig.Functions.contains(FUSIONS);
         mFusionsOnly = mConfig.runFusionsOnly();
         mStatsOnly = mConfig.runStatisticsOnly();
+        mUnmappedOnly = mConfig.runFunction(UNMAPPED_READS) && mConfig.Functions.size() == 1;
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
@@ -136,7 +138,7 @@ public class BamFragmentAllocator
         // duplicates aren't counted towards fusions so can be ignored if only running fusions
         // reads with supplementary alignment data are only used for fusions
         boolean keepDuplicates = mConfig.runFunction(TRANSCRIPT_COUNTS);
-        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(NOVEL_LOCATIONS);
+        boolean keepSupplementaries = mRunFusions || mConfig.runFunction(NOVEL_LOCATIONS) || mConfig.runFunction(UNMAPPED_READS);
         boolean keepSecondaries = mConfig.ApplyMapQualityAdjust;
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
@@ -152,7 +154,7 @@ public class BamFragmentAllocator
         mExpressionReadTracker = new ExpressionReadTracker(mConfig);
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
         mRetainedIntronFinder = new RetainedIntronFinder(mConfig, resultsWriter.getRetainedIntronWriter());
-        mUmrFinder = mConfig.runFunction(UNMAPPED_READS) ? new UmrFinder(mConfig, resultsWriter.getUnmappedReadsWriter()) : null;
+        mUmrFinder = new UmrFinder(mConfig, resultsWriter.getUnmappedReadsWriter());
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
@@ -205,7 +207,7 @@ public class BamFragmentAllocator
         if(mRetainedIntronFinder.enabled())
             mRetainedIntronFinder.setGeneData(mCurrentGenes);
 
-        if(mUmrFinder != null)
+        if(mUmrFinder.enabled())
             mUmrFinder.setGeneData(mCurrentGenes);
 
         mValidReadStartRegion[SE_START] = geneRegion.start();
@@ -234,8 +236,11 @@ public class BamFragmentAllocator
             processChimericNovelJunctions();
         }
 
-        if(mUmrFinder != null)
+        if(mUmrFinder.enabled())
+        {
+            mUmrFinder.processUnpairedReads(mFragmentReads);
             mUmrFinder.writeUnmappedReads();
+        }
 
         ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
                 mCurrentGenes.geneNames(), mGeneReadCount, mBaseDepth.basesWithDepth(),
@@ -274,13 +279,8 @@ public class BamFragmentAllocator
 
         ReadRecord read = ReadRecord.from(record);
 
-        if(mUmrFinder != null)
-        {
-            mUmrFinder.processReadRecord(read, record);
-
-            if(mConfig.Functions.size() == 1)
-                return;
-        }
+        if(mUmrFinder.enabled())
+            read.setBaseQualities(record.getBaseQualities());
 
         processRead(read);
     }
@@ -313,7 +313,7 @@ public class BamFragmentAllocator
 
         final List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
 
-        if (!overlappingRegions.isEmpty())
+        if(!overlappingRegions.isEmpty())
         {
             read.processOverlappingRegions(overlappingRegions);
         }
@@ -389,6 +389,7 @@ public class BamFragmentAllocator
             if(!isMultiMapped)
                 processChimericReadPair(read1, read2);
 
+            mUmrFinder.processReads(read1, read2, true);
             return;
         }
 
@@ -403,6 +404,11 @@ public class BamFragmentAllocator
             if (mFusionsOnly)
                 return;
         }
+
+        mUmrFinder.processReads(read1, read2, false);
+
+        if(mUnmappedOnly)
+            return;
 
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);

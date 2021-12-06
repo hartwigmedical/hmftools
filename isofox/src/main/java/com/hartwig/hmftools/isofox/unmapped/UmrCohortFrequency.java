@@ -26,9 +26,9 @@ public class UmrCohortFrequency
         loadFile(cohortFile);
     }
 
-    public int getCohortFrequency(final String chromosome, final byte orientation, final int scSide, final int exonBoundary)
+    public int getCohortFrequency(final String chromosome, final int scSide, final int exonBoundary)
     {
-        return getCohortFrequency(chromosome, positionKey(orientation, scSide, exonBoundary));
+        return getCohortFrequency(chromosome, positionKey(scSide, exonBoundary));
     }
 
     public int getCohortFrequency(final String chromosome, final String positionKey)
@@ -55,7 +55,6 @@ public class UmrCohortFrequency
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int orientIndex = fieldsIndexMap.get("Orientation");
             int scSideIndex = fieldsIndexMap.get("SoftClipSide");
             int exonBoundaryIndex = fieldsIndexMap.get("ExonBoundary");
             int cohortFreqIndex = fieldsIndexMap.get("CohortFreq");
@@ -69,7 +68,6 @@ public class UmrCohortFrequency
 
                 String chromosome = values[chrIndex];
 
-                byte orientation = Byte.parseByte(values[orientIndex]);
                 int scSide = Integer.parseInt(values[scSideIndex]);
                 int exonBoundary = Integer.parseInt(values[exonBoundaryIndex]);
                 int cohortFreq = Integer.parseInt(values[cohortFreqIndex]);
@@ -82,7 +80,7 @@ public class UmrCohortFrequency
                     mCohortFrequency.put(chromosome, locationMap);
                 }
 
-                locationMap.put(positionKey(orientation, scSide, exonBoundary), cohortFreq);
+                locationMap.put(positionKey(scSide, exonBoundary), cohortFreq);
                 ++count;
             }
 

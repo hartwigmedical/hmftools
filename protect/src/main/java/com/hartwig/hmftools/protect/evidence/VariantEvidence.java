@@ -111,6 +111,13 @@ public class VariantEvidence {
                 && variant.position() <= range.end() && meetsMutationTypeFilter(variant, range.mutationType());
     }
 
+    private static boolean geneMatch(@NotNull Variant variant, @NotNull ActionableGene gene) {
+        assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
+                || gene.event() == GeneLevelEvent.ANY_MUTATION;
+
+        return gene.gene().equals(variant.gene()) && meetsMutationTypeFilter(variant, MutationTypeFilter.ANY);
+    }
+
     private static boolean meetsMutationTypeFilter(@NotNull Variant variant, @NotNull MutationTypeFilter filter) {
         CodingEffect effect = variant.canonicalCodingEffect();
         switch (filter) {
@@ -141,12 +148,5 @@ public class VariantEvidence {
 
     private static boolean isDelete(@NotNull Variant variant) {
         return variant.type() == VariantType.INDEL && variant.alt().length() < variant.ref().length();
-    }
-
-    private static boolean geneMatch(@NotNull Variant variant, @NotNull ActionableGene gene) {
-        assert gene.event() == GeneLevelEvent.ACTIVATION || gene.event() == GeneLevelEvent.INACTIVATION
-                || gene.event() == GeneLevelEvent.ANY_MUTATION;
-
-        return gene.gene().equals(variant.gene());
     }
 }

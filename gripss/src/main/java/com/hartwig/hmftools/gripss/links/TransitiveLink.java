@@ -22,6 +22,8 @@ public class TransitiveLink // previously 'Node'
     private int mMinDistance;
     private int mMaxDistance;
 
+    public static final String TRANS_LINK_PREFIX = "trs";
+
     public TransitiveLink(final String prefix, final Breakend start, final Breakend end, final List<Link> links)
     {
         this(prefix, start, end, MAX_ASSEMBLY_JUMPS, MAX_TRANSITIVE_JUMPS, links);
@@ -42,8 +44,8 @@ public class TransitiveLink // previously 'Node'
 
         for (Link link : links)
         {
-            mMinDistance += link.MinDistance;
-            mMaxDistance += link.MaxDistance;
+            mMinDistance += link.minDistance();
+            mMaxDistance += link.maxDistance();
         }
     }
 
@@ -75,19 +77,10 @@ public class TransitiveLink // previously 'Node'
         return true;
     }
 
-    /*
-    fun transitiveNodes(assemblyLinkStore: LinkStore, variantStore: VariantStore): List<Node> {
+    public String toString()
+    {
+        return String.format("%s breaks(%s - %s) links(%d)", mPrefix, breakendStart(),  breakendEnd(), mLinks.size());
     }
-
-    private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
-        val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
-        val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
-        val directionFilter: SvFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
-        val transitiveFilter: SvFilter = { other -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
-
-        return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }.sortByQualDesc()
-    }
-     */
 
     public static boolean isAlternative(final Breakend target, final Breakend other)
     {
@@ -116,8 +109,8 @@ public class TransitiveLink // previously 'Node'
             targetMaxStart += additionalAllowance;
         }
 
-        int otherMinStart = target.minPosition();
-        int otherMaxStart = target.maxPosition();
+        int otherMinStart = other.minPosition();
+        int otherMaxStart = other.maxPosition();
 
         if(other.posOrient())
         {
@@ -147,5 +140,4 @@ public class TransitiveLink // previously 'Node'
 
         return otherMinStart <= targetMaxStart && otherMaxStart >= targetMinStart;
     }
-
 }

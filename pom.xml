@@ -65,7 +65,7 @@
         <cuppa.version>1.5</cuppa.version>
         <gene-utils.version>1.0</gene-utils.version>
         <gripss.version>2.0</gripss.version>
-        <gripss-kt.version>1.11</gripss-kt.version>
+        <gripss-kt.version>1.12</gripss-kt.version>
         <health-checker.version>3.2</health-checker.version>
         <hmf-id-generator.version>2.8</hmf-id-generator.version>
         <iclusion-importer.version>1.4</iclusion-importer.version>
@@ -78,7 +78,7 @@
         <patient-db.version>3.63</patient-db.version>
         <patient-reporter.version>7.24</patient-reporter.version>
         <pave.version>1.0</pave.version>
-        <protect.version>1.6</protect.version>
+        <protect.version>1.7</protect.version>
         <purple.version>3.2</purple.version>
         <sage.version>3.0</sage.version>
         <sigs.version>1.0</sigs.version>

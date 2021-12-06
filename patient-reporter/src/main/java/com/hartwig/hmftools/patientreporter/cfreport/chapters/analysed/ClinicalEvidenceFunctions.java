@@ -116,7 +116,7 @@ public class ClinicalEvidenceFunctions {
         if (hasEvidence) {
             return TableUtil.createWrappingReportTable(title, treatmentTable);
         } else {
-            return TableUtil.createEmptyTable(title, contentWidth);
+            return  TableUtil.createNoneReportTable(title);
         }
     }
 
@@ -253,17 +253,15 @@ public class ClinicalEvidenceFunctions {
     @NotNull
     public static Paragraph noteGlossaryTerms() {
         return new Paragraph("The symbol ( ").add(new Text(RESPONSE_SYMBOL).addStyle(ReportResources.responseStyle()))
-                .add(" ) means that the evidence is responsive.\n")
-                .add("The symbol ( ")
+                .add(" ) means that the evidence is responsive. The symbol ( ")
                 .add(new Text(RESISTENT_SYMBOL).addStyle(ReportResources.resistentStyle()))
-                .add(" ) means that the evidence is resistant.\n")
-                .add("The abbreviation ( ")
+                .add(" ) means that the evidence is resistant. The abbreviation ( ")
                 .add(new Text(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle()))
                 .add(" mentioned after the level of evidence) indicates the evidence is predicted "
                         + "responsive/resistent. More details about CKB can be found in their")
                 .addStyle(ReportResources.subTextStyle())
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING)
-                .add(new Text("Glossary Of Terms").addStyle(ReportResources.urlStyle())
+                .add(new Text(" Glossary Of Terms").addStyle(ReportResources.urlStyle())
                         .setAction(PdfAction.createURI("https://ckbhome.jax.org/about/glossaryOfTerms")))
                 .setFixedLeading(ReportResources.BODY_TEXT_LEADING);
     }

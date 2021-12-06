@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
-import static com.hartwig.hmftools.gripss.filters.CommonFilters.isPolyATSequence;
-import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
 
 import java.util.Set;
 
@@ -30,7 +28,7 @@ public class VariantBuilder
 
     public VariantBuilder(final FilterConstants filterConstants, final HotspotCache hotspotCache)
     {
-        mHardFilters = new HardFilters(filterConstants);
+        mHardFilters = filterConstants != null ? new HardFilters(filterConstants) : null;
         mHotspotCache = hotspotCache;
 
         mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
@@ -55,7 +53,7 @@ public class VariantBuilder
         // each SV breakend can be a) not hard-filtered, b) hard-filtered but a hotspot candidate or c) neither
         // and if it's not a single then these 3 scenarios need to be considered together for the pair of breakends
         // if either are hard-filtered and not hotspot candidates, then drop them both
-        boolean hardFiltered = mHardFilters.isFiltered(variant, genotypeIds);
+        boolean hardFiltered = mHardFilters != null ? mHardFilters.isFiltered(variant, genotypeIds) : false;
 
         if(StructuralVariantFactory.isSingleBreakend(variant))
         {
@@ -138,7 +136,7 @@ public class VariantBuilder
         if(hotspotCandidate || mateHotspotCandidate)
         {
             // check whether this SV can be rescued as a hotspot
-            if(!keepHotspotVariant(sv))
+            if(!mHotspotCache.isHotspotVariant(sv))
             {
                 ++mHardFilteredCount;
                 return null;
@@ -146,17 +144,6 @@ public class VariantBuilder
         }
 
         return new SvData(sv, genotypeIds);
-    }
-
-    private boolean keepHotspotVariant(final StructuralVariant sv)
-    {
-        // check hotspot rescue
-        if(hasLength(sv.type()) && SvData.length(sv) < FilterConstants.SHORT_RESCUE_LENGTH)
-            return false;
-        else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
-            return false;
-
-        return mHotspotCache.matchesHotspot(sv);
     }
 
     private final StructuralVariant popLastSv()

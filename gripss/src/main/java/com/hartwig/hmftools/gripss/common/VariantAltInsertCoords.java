@@ -36,11 +36,13 @@ public class VariantAltInsertCoords
         {
             alt = altString.substring(altString.length() - 1);
             insertSeq = altString.substring(ref.length(), altString.length() - 1);
+            orientation = NEG_ORIENT;
         }
         else if(altString.endsWith("."))
         {
             alt = altString.substring(0, 1);
             insertSeq = altString.substring(1, altString.length() - ref.length());
+            orientation = POS_ORIENT;
         }
         else
         {
@@ -50,13 +52,13 @@ public class VariantAltInsertCoords
             {
                 if(match.group(1).length() > 0)
                 {
-                    String initialSequence = match.group(1).substring(1);
+                    String initialSequence = match.group(1);
                     insertSeq = !initialSequence.isEmpty() ? initialSequence.substring(ref.length()) : "";
                     alt = altString.substring(0, 1);
                 }
                 else
                 {
-                    String finalSequence = match.group(4).substring(0, match.group(4).length() - 1);
+                    String finalSequence = match.group(4);
                     insertSeq = !finalSequence.isEmpty() ? finalSequence.substring(0, finalSequence.length() - ref.length()) : "";
                     alt = altString.substring(altString.length() - 1);
                 }
