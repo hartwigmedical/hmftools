@@ -107,7 +107,9 @@ urls | A list of urls with additional information about the evidence | https://p
 
 ## Version History and Download Links
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.8)
- - Support for [PAVE](../pave/README.md) 
+  - Support for [PAVE](../pave/README.md). 
+  - Handle multiple drivers per gene where non-canonical transcripts are included. 
+  Current behaviour is to ignore non-canonical transcript drivers. 
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.7)
   - Add filter for gene level matches to require coding or splicing impact 
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.6)

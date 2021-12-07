@@ -95,15 +95,16 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.5)
- - Support for [PAVE](../pave/README.md)
- - Support for proper fusion table rendering in case fusions are wrapped over multiple pages. 
+  - Support for [PAVE](../pave/README.md)
+  - Handle multiple drivers per gene where non-canonical transcripts are included. Current behaviour is to ignore non-canonical transcript drivers.
+  - Support for proper fusion table rendering in case fusions are wrapped over multiple pages. 
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.4)
- - Fix a formatting problem in clinical evidence in case of very long genomic events
- - Support display of variants with coding impact relative to the 3' UTR region of a gene. 
- - Fix another bug with percentile determination in the absence of a cancer type
+  - Fix a formatting problem in clinical evidence in case of very long genomic events
+  - Support display of variants with coding impact relative to the 3' UTR region of a gene. 
+  - Fix another bug with percentile determination in the absence of a cancer type
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.3)
- - Fix bug for generating reports for samples without a known cancer type
- - Fix bug when passing a Cuppa feature plot image that does not exist. 
+  - Fix bug for generating reports for samples without a known cancer type
+  - Fix bug when passing a Cuppa feature plot image that does not exist. 
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.2) 
   - Support for [Virus Interpreter v1.1](../virus-interpreter/README.md), including addition of % covered, mean coverage and expected 
   clonal coverage
