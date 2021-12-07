@@ -69,6 +69,7 @@ import com.hartwig.hmftools.purple.drivers.GermlineDeletionDrivers;
 import com.hartwig.hmftools.purple.drivers.GermlineDrivers;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.purple.fitting.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
@@ -372,6 +373,7 @@ public class PurpleApplication
         PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
         GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
+        PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorSample), somaticPeaks);
         GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorSample), germlineDeletions);
 
         if(mDbAccess != null)
