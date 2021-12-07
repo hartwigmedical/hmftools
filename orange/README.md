@@ -94,6 +94,9 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.5)
+ - Support for [PAVE](../pave/README.md)
+ - Support for proper fusion table rendering in case fusions are wrapped over multiple pages. 
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.4)
  - Fix a formatting problem in clinical evidence in case of very long genomic events
  - Support display of variants with coding impact relative to the 3' UTR region of a gene. 
