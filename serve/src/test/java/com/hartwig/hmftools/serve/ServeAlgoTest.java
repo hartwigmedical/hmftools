@@ -44,6 +44,8 @@ public class ServeAlgoTest {
                 .useCkb(true)
                 .ckbDir(CKB_DIR)
                 .ckbFilterTsv(CKB_FILTER_TSV)
+                .useActin(false)
+                .actinTrailTsv("")
                 .useDocm(true)
                 .docmTsv(DOCM_TSV)
                 .useHartwigCohort(true)
