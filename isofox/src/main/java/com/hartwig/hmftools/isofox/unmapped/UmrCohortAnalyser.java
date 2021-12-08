@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.SPLICE_TYPE_ACCEPTOR;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.UMR_NO_MATE;
+import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.baseQualsFromString;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -51,12 +52,14 @@ public class UmrCohortAnalyser
 
     private final LineElementMatcher mLineElementMatcher;
     private final boolean mCombineFrequencies;
+    private final boolean mGroupBySequence;
 
     private final BufferedWriter mWriter;
 
     private static final String LINX_DIRECTORY = "linx_dir";
     private static final String GENE_EXPRESSION_FILE = "gene_expression_file";
     private static final String COMBINE_FREQUENCIES = "combine_frequencies";
+    private static final String GROUP_BY_SEQUENCE = "group_by_sequence";
     private static final String LINX_DIR = "linx_dir";
     private static final String SV_VCF_FILE = "sv_vcf";
 
@@ -72,6 +75,7 @@ public class UmrCohortAnalyser
                 new LineElementMatcher(cmd.getOptionValue(LINX_DIR), cmd.getOptionValue(SV_VCF_FILE)) : null;
 
         mCombineFrequencies = cmd.hasOption(COMBINE_FREQUENCIES);
+        mGroupBySequence = cmd.hasOption(GROUP_BY_SEQUENCE);
 
         mWriter = initialiseWriter();
     }
@@ -81,6 +85,7 @@ public class UmrCohortAnalyser
         options.addOption(LINX_DIRECTORY, true, "Path to Linx files");
         options.addOption(GENE_EXPRESSION_FILE, true, "Gene expression file for cohort");
         options.addOption(COMBINE_FREQUENCIES, false, "Determine cohort frequencies for slice candidates");
+        options.addOption(GROUP_BY_SEQUENCE, false, "Form consensus soft-clip sequences");
         options.addOption(LINX_DIR, true, "Linx data directory");
         options.addOption(SV_VCF_FILE, true, "Structural variant VCF");
     }
@@ -114,7 +119,9 @@ public class UmrCohortAnalyser
             }
             else
             {
-                mLineElementMatcher.findMatches(sampleId, mUnmappedReads);
+                if(mLineElementMatcher != null)
+                    mLineElementMatcher.findMatches(sampleId, mUnmappedReads);
+
                 writeUnmappedReads();
                 mUnmappedReads.clear();
             }
@@ -161,6 +168,7 @@ public class UmrCohortAnalyser
             int exonBoundaryIndex = fieldsIndexMap.get("ExonBoundary");
             int exonDistIndex = fieldsIndexMap.get("ExonDistance");
             int scBasesIndex = fieldsIndexMap.get("SoftClipBases");
+            int scBaseQualsIndex = fieldsIndexMap.get("SoftClipBaseQuals");
             Integer mateIndex = fieldsIndexMap.get("MateCoords");
             Integer cohortFreqIndex = fieldsIndexMap.get("CohortFreq");
             Integer matchesSuppIndex = fieldsIndexMap.get("MatchesChimeric");
@@ -176,13 +184,8 @@ public class UmrCohortAnalyser
                         Double.parseDouble(values[abqIndex]), values[geneIdIndex], values[geneNameIndex], values[transIndex],
                         Integer.parseInt(values[exonRankIndex]), Integer.parseInt(values[exonBoundaryIndex]),
                         Integer.parseInt(values[exonDistIndex]), values[spliceTypeIndex], values[scBasesIndex],
-                        mateIndex != null ? values[mateIndex] : "",
-                        cohortFreqIndex != null ? Integer.parseInt(values[cohortFreqIndex]) : 0,
-                        matchesSuppIndex != null ? Boolean.parseBoolean(values[matchesSuppIndex]) : false);
-
-                // could filter these in the BAM reading process
-                if(umRead.ExonRank == 1 && umRead.SpliceType.equals(SPLICE_TYPE_ACCEPTOR))
-                    continue;
+                        baseQualsFromString(values[scBaseQualsIndex], values[scBasesIndex].length()),
+                        values[mateIndex], Boolean.parseBoolean(values[matchesSuppIndex]));
 
                 addUnmappedRead(sampleId, umRead);
             }
@@ -242,6 +245,9 @@ public class UmrCohortAnalyser
             if(mLineElementMatcher != null)
                 writer.write(",SvLinxMatches");
 
+            if(mGroupBySequence)
+                writer.write(",ExactMatchReads,AssignedTotal,HighQualPerc");
+
             writer.newLine();
 
             return writer;
@@ -258,93 +264,167 @@ public class UmrCohortAnalyser
         if(mWriter == null)
             return;
 
+        for(Map.Entry<String,Map<String,Map<String,List<UnmappedRead>>>> chrEntry : mUnmappedReads.entrySet())
+        {
+            for(Map<String,List<UnmappedRead>> umrSampleMap : chrEntry.getValue().values())
+            {
+                int sampleCount = umrSampleMap.size();
+
+                for(Map.Entry<String,List<UnmappedRead>> sampleEntry : umrSampleMap.entrySet())
+                {
+                    String sampleId = sampleEntry.getKey();
+                    List<UnmappedRead> umReads = sampleEntry.getValue();
+
+                    if(mGroupBySequence)
+                        writeLocationSequences(sampleId, umReads);
+                    else
+                        writeLocationReads(sampleId, umReads, sampleCount);
+                }
+            }
+        }
+    }
+
+    private void writeLocationReads(final String sampleId, final List<UnmappedRead> umReads, int cohortSampleCount)
+    {
         try
         {
-            for(Map.Entry<String,Map<String,Map<String,List<UnmappedRead>>>> chrEntry : mUnmappedReads.entrySet())
+            UnmappedRead firstRead = umReads.get(0);
+            String chromosome = firstRead.ReadRegion.Chromosome;
+
+            String matchedSVsInfo = mLineElementMatcher != null ? mLineElementMatcher.formUmrMatchString(firstRead.positionKey()) : "";
+
+            // de-dup reads by fragment and across genes sharing the same exon boundary using readId
+            Set<String> readIds = Sets.newHashSet();
+            Set<String> genes = Sets.newHashSet();
+
+            double geneTpm = 0;
+            boolean hasSuppMatch = false;
+            int unpairedCount = 0;
+
+            for(UnmappedRead umRead : umReads)
             {
-                String chromosome = chrEntry.getKey();
-
-                for(Map<String,List<UnmappedRead>> umrSampleMap : chrEntry.getValue().values())
+                if(!genes.contains(umRead.GeneName))
                 {
-                    int sampleCount = umrSampleMap.size();
+                    genes.add(umRead.GeneName);
 
-                    for(Map.Entry<String,List<UnmappedRead>> sampleEntry : umrSampleMap.entrySet())
-                    {
-                        String sampleId = sampleEntry.getKey();
-
-                        List<UnmappedRead> umReads = sampleEntry.getValue();
-                        UnmappedRead firstRead = umReads.get(0);
-
-                        String matchedSVsInfo = "";
-                        if(mLineElementMatcher != null)
-                        {
-                            List<StructuralVariant> matchedSVs = mLineElementMatcher.getUmrMatch(firstRead.positionKey());
-
-                            if(matchedSVs == null)
-                                continue;
-
-                            StringJoiner sj = new StringJoiner(ITEM_DELIM);
-
-                            // VcfId:Type:Position:OtherPos
-                            matchedSVs.forEach(x -> sj.add(String.format("%s:%s:%d:%d",
-                                    x.id(), x.type(), x.position(true), x.end() != null ? x.position(false) : 0)));
-
-                            matchedSVsInfo = sj.toString();
-                        }
-
-                        // de-dup reads by fragment and across genes sharing the same exon boundary using readId
-                        Set<String> readIds = Sets.newHashSet();
-                        Set<String> genes = Sets.newHashSet();
-
-                        double geneTpm = 0;
-                        boolean hasSuppMatch = false;
-                        int unpairedCount = 0;
-
-                        for(UnmappedRead umRead : umReads)
-                        {
-                            if(!genes.contains(umRead.GeneName))
-                            {
-                                genes.add(umRead.GeneName);
-
-                                if(mGeneExpression != null)
-                                    geneTpm += mGeneExpression.getExpression(umRead.GeneId, sampleId);
-                            }
-
-                            readIds.add(umRead.ReadId);
-                            hasSuppMatch |= umRead.MatchesChimeric;
-
-                            if(umRead.MateCoords.equals(UMR_NO_MATE))
-                                ++unpairedCount;
-                        }
-
-                        StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
-                        genes.forEach(x -> genesStr.add(x));
-
-                        int fragmentCount = readIds.size();
-
-                        double avgBaseQual = umReads.stream().mapToDouble(x -> x.AvgBaseQual).sum() / umReads.size();
-
-                        mWriter.write(String.format("%s,%d,%d,%s,%s,%s,%d,%s",
-                                sampleId, fragmentCount, unpairedCount, chromosome, genesStr.toString(), firstRead.TransName,
-                                firstRead.ExonRank, firstRead.SpliceType));
-
-                        mWriter.write(String.format(",%d,%d,%s,%.1f,%s,%4.3e,%s",
-                                firstRead.ExonBoundary, firstRead.ExonDistance, startEndStr(firstRead.ScSide),
-                                avgBaseQual, firstRead.ScBases, geneTpm, hasSuppMatch));
-
-                        if(mCombineFrequencies)
-                        {
-                            mWriter.write(String.format(",%d", sampleCount));
-                        }
-
-                        if(mLineElementMatcher != null)
-                        {
-                            mWriter.write(String.format(",%s", matchedSVsInfo));
-                        }
-
-                        mWriter.newLine();
-                    }
+                    if(mGeneExpression != null)
+                        geneTpm += mGeneExpression.getExpression(umRead.GeneId, sampleId);
                 }
+
+                readIds.add(umRead.ReadId);
+                hasSuppMatch |= umRead.MatchesChimeric;
+
+                if(umRead.MateCoords.equals(UMR_NO_MATE))
+                    ++unpairedCount;
+            }
+
+            StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
+            genes.forEach(x -> genesStr.add(x));
+
+            int fragmentCount = readIds.size();
+
+            double avgBaseQual = umReads.stream().mapToDouble(x -> x.AvgBaseQual).sum() / umReads.size();
+
+            mWriter.write(String.format("%s,%d,%d,%s,%s,%s,%d,%s",
+                    sampleId, fragmentCount, unpairedCount, chromosome, genesStr.toString(), firstRead.TransName,
+                    firstRead.ExonRank, firstRead.SpliceType));
+
+            mWriter.write(String.format(",%d,%d,%s,%.1f,%s,%4.3e,%s",
+                    firstRead.ExonBoundary, firstRead.ExonDistance, startEndStr(firstRead.ScSide),
+                    avgBaseQual, firstRead.ScBases, geneTpm, hasSuppMatch));
+
+            if(mCombineFrequencies)
+            {
+                mWriter.write(String.format(",%d", cohortSampleCount));
+            }
+
+            if(mLineElementMatcher != null)
+            {
+                mWriter.write(String.format(",%s", matchedSVsInfo));
+            }
+
+            mWriter.newLine();
+
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write cohort unmapped reads file: {}", e.toString());
+        }
+    }
+
+    private void writeLocationSequences(final String sampleId, final List<UnmappedRead> umReads)
+    {
+        try
+        {
+            SequenceTracker sequenceTracker = new SequenceTracker();
+            umReads.forEach(x -> sequenceTracker.processRead(x));
+            sequenceTracker.reconcileSequences();
+
+            UnmappedRead firstRead = umReads.get(0);
+
+            String chromosome = firstRead.ReadRegion.Chromosome;
+
+            String matchedSVsInfo = mLineElementMatcher != null ? mLineElementMatcher.formUmrMatchString(firstRead.positionKey()) : "";
+
+            Set<String> genes = Sets.newHashSet();
+
+            double geneTpm = 0;
+
+            for(UnmappedRead umRead : umReads)
+            {
+                if(!genes.contains(umRead.GeneName))
+                {
+                    genes.add(umRead.GeneName);
+
+                    if(mGeneExpression != null)
+                        geneTpm += mGeneExpression.getExpression(umRead.GeneId, sampleId);
+                }
+            }
+
+            StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
+            genes.forEach(x -> genesStr.add(x));
+
+            List<ConsensusSequence> sequences = sequenceTracker.getSequences();
+
+            for(ConsensusSequence sequence : sequences)
+            {
+                final List<UnmappedRead> assignedReads = sequence.allMatchedReads();
+
+                // de-dup reads by fragment and across genes sharing the same exon boundary using readId
+                Set<String> readIds = Sets.newHashSet();
+                boolean hasSuppMatch = false;
+                int unpairedCount = 0;
+
+                for(UnmappedRead umRead : assignedReads)
+                {
+                    readIds.add(umRead.ReadId);
+                    hasSuppMatch |= umRead.MatchesChimeric;
+
+                    if(umRead.MateCoords.equals(UMR_NO_MATE))
+                        ++unpairedCount;
+                }
+
+                int fragmentCount = readIds.size();
+
+                double avgBaseQual = assignedReads.stream().mapToDouble(x -> x.AvgBaseQual).sum() / assignedReads.size();
+
+                mWriter.write(String.format("%s,%d,%d,%s,%s,%s,%d,%s",
+                        sampleId, fragmentCount, unpairedCount, chromosome, genesStr.toString(), firstRead.TransName,
+                        firstRead.ExonRank, firstRead.SpliceType));
+
+                mWriter.write(String.format(",%d,%d,%s,%.1f,%s,%4.3e,%s",
+                        firstRead.ExonBoundary, firstRead.ExonDistance, startEndStr(firstRead.ScSide),
+                        avgBaseQual, sequence.getSequenceString(), geneTpm, hasSuppMatch));
+
+                if(mLineElementMatcher != null)
+                {
+                    mWriter.write(String.format(",%s", matchedSVsInfo));
+                }
+
+                mWriter.write(String.format(",%d,%.2f,%.2f",
+                        sequence.exactMatchReads().size(), sequence.assignedReadTotal(), sequence.calcHighQualPercent()));
+
+                mWriter.newLine();
             }
 
         }
@@ -353,4 +433,5 @@ public class UmrCohortAnalyser
             ISF_LOGGER.error("failed to write cohort unmapped reads file: {}", e.toString());
         }
     }
+
 }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.unmapped;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.startEndStr;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.StringJoiner;
 
@@ -22,8 +23,8 @@ public class UnmappedRead
     public final int ExonDistance;
     public final String SpliceType;
     public final String ScBases;
+    public final byte[] ScBasesQuals;
     public final String MateCoords;
-    public final int CohortFrequency;
     public boolean MatchesChimeric;
 
     private final String mPosKey;
@@ -32,11 +33,14 @@ public class UnmappedRead
     public static final String SPLICE_TYPE_DONOR = "donor";
     public static final String UMR_NO_MATE = "NO_MATE";
 
+    public static final int MAX_BASE_QUAL = 36;
+    public static final char MAX_BASE_QUAL_ID = 'm';
+
     public UnmappedRead(
             final String readId, final ChrBaseRegion readRegion, final int scLength, final int scSide,
             final double avgBaseQual, final String geneId, final String geneName, final String transName, final int exonRank,
-            final int exonBoundary, final int exonDistance, final String spliceType, final String scBases, final String mateCoords,
-            final int cohortFrequency, final boolean matchesChimeric)
+            final int exonBoundary, final int exonDistance, final String spliceType, final String scBases, final byte[] scBasesQuals,
+            final String mateCoords, final boolean matchesChimeric)
     {
         ReadId = readId;
         ReadRegion = readRegion;
@@ -51,8 +55,8 @@ public class UnmappedRead
         ExonDistance = exonDistance;
         SpliceType = spliceType;
         ScBases = scBases;
+        ScBasesQuals = scBasesQuals;
         MateCoords = mateCoords;
-        CohortFrequency = cohortFrequency;
         MatchesChimeric = matchesChimeric;
 
         mPosKey = positionKey(ScSide, ExonBoundary);
@@ -75,10 +79,10 @@ public class UnmappedRead
         sj.add("ExonRank");
         sj.add("ExonBoundary");
         sj.add("ExonDistance");
-        sj.add("SoftClipBases");
         sj.add("MateCoords");
-        sj.add("CohortFreq");
         sj.add("MatchesChimeric");
+        sj.add("SoftClipBases");
+        sj.add("SoftClipBaseQuals");
 
         return sj.toString();
     }
@@ -100,10 +104,53 @@ public class UnmappedRead
         sj.add(String.valueOf(ExonRank));
         sj.add(String.valueOf(ExonBoundary));
         sj.add(String.valueOf(ExonDistance));
-        sj.add(ScBases);
         sj.add(MateCoords);
-        sj.add(String.valueOf(CohortFrequency));
         sj.add(String.valueOf(MatchesChimeric));
+        sj.add(ScBases);
+        sj.add(baseQualsToString(ScBasesQuals));
+
+        return sj.toString();
+    }
+
+    public static byte[] baseQualsFromString(final String qualString, int baseCount)
+    {
+        byte[] quals = new byte[baseCount];
+
+        int index = 0;
+
+        for(int i = 0; i < baseCount; ++i)
+        {
+            char qual = qualString.charAt(index);
+
+            if(qual == MAX_BASE_QUAL_ID)
+            {
+                quals[i] = MAX_BASE_QUAL;
+                ++index;
+            }
+            else
+            {
+                quals[i] = Byte.parseByte(qualString.substring(index, index + 2));
+                index += 2;
+            }
+        }
+
+        return quals;
+    }
+
+    public static String baseQualsToString(final byte[] quals)
+    {
+        if(quals == null || quals.length == 0)
+            return "";
+
+        StringJoiner sj = new StringJoiner("");
+
+        for(int i = 0; i < quals.length; ++i)
+        {
+            if(quals[i] == MAX_BASE_QUAL)
+                sj.add(String.valueOf(MAX_BASE_QUAL_ID));
+            else
+                sj.add(String.format("%02d", quals[i]));
+        }
 
         return sj.toString();
     }

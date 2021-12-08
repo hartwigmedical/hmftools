@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
@@ -24,12 +27,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.test.GeneTestUtils;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.unmapped.UmrFinder;
 import com.hartwig.hmftools.isofox.unmapped.UnmappedRead;
 
@@ -92,6 +93,8 @@ public class UnmappedReadsTest
         ReadRecord[] reads = createReadPair(1, mGenes, mGenes, 151, 200, 100, 169,
                 createCigar(0, 50, 20), createCigar(0, 70, 0), POS_ORIENT, NEG_ORIENT);
 
+        setInsertSizes(reads);
+
         mUmrFinder.processReads(reads[0], reads[1], false);
 
         assertEquals(1, mUmrFinder.getCandidateReads().size());
@@ -113,12 +116,21 @@ public class UnmappedReadsTest
         assertTrue(umRead.MatchesChimeric);
     }
 
+    private void setInsertSizes(final ReadRecord[] reads)
+    {
+        int minPos = min(reads[0].PosStart, reads[1].PosStart);
+        int maxPos = max(reads[0].PosEnd, reads[1].PosEnd);
+        reads[0].setFragmentInsertSize(maxPos - minPos + 1);
+        reads[1].setFragmentInsertSize(maxPos - minPos + 1);
+    }
+
     @Test
     public void testInvalidReads()
     {
         // reads without soft clips or not sufficient
         ReadRecord[] reads = createReadPair(1, mGenes, mGenes, 120, 191, 300, 359,
                 createCigar(0, 70, 0), createCigar(10, 60, 0), POS_ORIENT, NEG_ORIENT);
+        setInsertSizes(reads);
 
         mUmrFinder.processReads(reads[0], reads[1], false);
 
@@ -127,6 +139,7 @@ public class UnmappedReadsTest
         // soft-clips on both sides of an exon
         reads = createReadPair(1, mGenes, mGenes, 381, 400, 300, 339,
                 createCigar(0, 20, 50), createCigar(30, 40, 0), POS_ORIENT, NEG_ORIENT);
+        setInsertSizes(reads);
 
         mUmrFinder.processReads(reads[0], reads[1], false);
 
@@ -135,6 +148,7 @@ public class UnmappedReadsTest
         // read past the SC boundary
         reads = createReadPair(1, mGenes, mGenes, 381, 400, 450, 519,
                 createCigar(0, 20, 50), createCigar(0, 70, 0), POS_ORIENT, NEG_ORIENT);
+        setInsertSizes(reads);
 
         mUmrFinder.processReads(reads[0], reads[1], false);
 
@@ -142,6 +156,7 @@ public class UnmappedReadsTest
 
         reads = createReadPair(1, mGenes, mGenes, 250, 319, 300, 339,
                 createCigar(0, 70, 50), createCigar(30, 40, 0), POS_ORIENT, NEG_ORIENT);
+        setInsertSizes(reads);
 
         mUmrFinder.processReads(reads[0], reads[1], false);
 
@@ -150,6 +165,16 @@ public class UnmappedReadsTest
         // more than 5 bases into the intron
         reads = createReadPair(1, mGenes, mGenes, 387, 406, 320, 389,
                 createCigar(0, 20, 50), createCigar(0, 70, 0), POS_ORIENT, NEG_ORIENT);
+        setInsertSizes(reads);
+
+        mUmrFinder.processReads(reads[0], reads[1], false);
+
+        assertTrue(mUmrFinder.getCandidateReads().isEmpty());
+
+        // likely adapter due to short insert size
+        reads = createReadPair(1, mGenes, mGenes, 385, 404, 360, 390,
+                createCigar(0, 20, 50), createCigar(0, 31, 0), POS_ORIENT, NEG_ORIENT);
+        setInsertSizes(reads);
 
         mUmrFinder.processReads(reads[0], reads[1], false);
 

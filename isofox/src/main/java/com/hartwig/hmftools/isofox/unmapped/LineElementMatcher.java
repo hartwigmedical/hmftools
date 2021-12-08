@@ -9,11 +9,13 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -40,6 +42,22 @@ public class LineElementMatcher
         mLinxDir = linxDir;
         mSvVcfFile = svVcfFile;
         mUmrMatchedVariants = Maps.newHashMap();
+    }
+
+    public String formUmrMatchString(final String posKey)
+    {
+        List<StructuralVariant> matchedSVs = getUmrMatch(posKey);
+
+        if(matchedSVs == null)
+            return "";
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        // VcfId:Type:Position:OtherPos
+        matchedSVs.forEach(x -> sj.add(String.format("%s:%s:%d:%d",
+                x.id(), x.type(), x.position(true), x.end() != null ? x.position(false) : 0)));
+
+        return sj.toString();
     }
 
     public List<StructuralVariant> getUmrMatch(final String posKey)

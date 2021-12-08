@@ -421,7 +421,7 @@ public class ReadRecord
         }
     }
 
-    private boolean likelyAdaperSoftClipping()
+    public boolean likelyAdaperSoftClipping()
     {
         return mFragmentInsertSize < Length;
     }
