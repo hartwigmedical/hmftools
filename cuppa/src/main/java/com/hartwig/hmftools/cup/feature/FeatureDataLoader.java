@@ -113,7 +113,7 @@ public class FeatureDataLoader
 
             if(Files.exists(Paths.get(viralAnnotationFilename)))
             {
-                virusAnnotations.addAll(AnnotatedVirusFile.read(viralAnnotationFilename));
+                AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(x -> x.reported()).forEach(x -> virusAnnotations.add(x));
             }
 
             if(Files.exists(Paths.get(viralInsertFilename)))
