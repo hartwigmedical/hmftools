@@ -18,6 +18,11 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
+import com.hartwig.hmftools.serve.sources.actin.ActinExtractor;
+import com.hartwig.hmftools.serve.sources.actin.ActinExtractorFactory;
+import com.hartwig.hmftools.serve.sources.actin.ActinTrial;
+import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
+import com.hartwig.hmftools.serve.sources.actin.reader.ActinTrialFile;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
@@ -68,6 +73,10 @@ public class ServeAlgo {
 
         if (config.useCkb()) {
             extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv(), config.outputDir()));
+        }
+
+        if (config.useActin()) {
+            //extractions.add();
         }
 
         if (config.useDocm()) {
@@ -133,6 +142,19 @@ public class ServeAlgo {
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries);
+    }
+
+    @NotNull
+    private ExtractionResult extractActinKnowledge(@NotNull String actinTrialTsv)
+            throws IOException {
+        List<ActinTrial> actinEntries = ActinTrialFile.read(actinTrialTsv);
+
+        EventClassifierConfig config = ActinClassificationConfig.build();
+        ActinExtractor extractor =
+                ActinExtractorFactory.buildActinExtractor(config, refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ACTIN));
+
+        LOGGER.info("Running ACTIN knowledge extraction");
+        return extractor.extract(actinEntries);
     }
 
     @NotNull

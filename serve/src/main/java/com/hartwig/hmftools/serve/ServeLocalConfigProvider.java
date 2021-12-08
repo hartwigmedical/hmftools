@@ -24,6 +24,7 @@ public final class ServeLocalConfigProvider {
                 .useVicc(false)
                 .useIclusion(false)
                 .useCkb(false)
+                .useActin(false)
                 .useDocm(false)
                 .docmTsv(Strings.EMPTY)
                 .useHartwigCurated(false)
@@ -38,6 +39,7 @@ public final class ServeLocalConfigProvider {
             builder.ckbDir("/data/common/dbs/ckb/210514_flex_dump");
             builder.ckbFilterTsv("/data/common/dbs/serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv("/data/common/dbs/iclusion/iclusion_trials_prod.tsv");
+            builder.actinTrailTsv("");
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
             builder.missingDoidsMappingTsv("/data/common/dbs/serve/curation/missing_doids_mapping.tsv");
@@ -56,6 +58,7 @@ public final class ServeLocalConfigProvider {
             builder.ckbDir(System.getProperty("user.home") + "/hmf/serve/ckb");
             builder.ckbFilterTsv(System.getProperty("user.home") + "/hmf/serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv(System.getProperty("user.home") + "/hmf/serve/iclusion/iclusion_trials_prod.tsv");
+            builder.actinTrailTsv("");
 
             builder.outputDir(System.getProperty("user.home") + "/hmf/tmp/serve");
             builder.missingDoidsMappingTsv(System.getProperty("user.home") + "/hmf/serve/curation/missing_doids_mapping.tsv");
