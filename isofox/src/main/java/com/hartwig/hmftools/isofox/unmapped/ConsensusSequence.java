@@ -22,7 +22,7 @@ public class ConsensusSequence
 
     private final Map<Integer,Map<Character,Integer>> mLowBaseQualCounts; // map of index to base character to count of that base
 
-    private static final int MAX_SEQUENCE = 101;
+    private static final int MAX_SEQUENCE = 152;
     private static final int MIN_QUAL = 30;
     private static final char UNSET = '.';
 

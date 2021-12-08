@@ -55,6 +55,7 @@ public class UmrCohortAnalyser
     private final boolean mGroupBySequence;
 
     private final BufferedWriter mWriter;
+    private final BufferedWriter mBlatWriter;
 
     private static final String LINX_DIRECTORY = "linx_dir";
     private static final String GENE_EXPRESSION_FILE = "gene_expression_file";
@@ -62,6 +63,7 @@ public class UmrCohortAnalyser
     private static final String GROUP_BY_SEQUENCE = "group_by_sequence";
     private static final String LINX_DIR = "linx_dir";
     private static final String SV_VCF_FILE = "sv_vcf";
+    private static final String WRITE_BLAT_FILE = "write_blat";
 
     public UmrCohortAnalyser(final CohortConfig config, final CommandLine cmd)
     {
@@ -78,6 +80,7 @@ public class UmrCohortAnalyser
         mGroupBySequence = cmd.hasOption(GROUP_BY_SEQUENCE);
 
         mWriter = initialiseWriter();
+        mBlatWriter = cmd.hasOption(WRITE_BLAT_FILE) ? initialiseBlatWriter() : null;
     }
 
     public static void addCmdLineOptions(final Options options)
@@ -86,6 +89,7 @@ public class UmrCohortAnalyser
         options.addOption(GENE_EXPRESSION_FILE, true, "Gene expression file for cohort");
         options.addOption(COMBINE_FREQUENCIES, false, "Determine cohort frequencies for slice candidates");
         options.addOption(GROUP_BY_SEQUENCE, false, "Form consensus soft-clip sequences");
+        options.addOption(WRITE_BLAT_FILE, false, "Write fasta file for BLAT consensue sequence search");
         options.addOption(LINX_DIR, true, "Linx data directory");
         options.addOption(SV_VCF_FILE, true, "Structural variant VCF");
     }
@@ -141,6 +145,7 @@ public class UmrCohortAnalyser
             writeUnmappedReads();
 
         closeBufferedWriter(mWriter);
+        closeBufferedWriter(mBlatWriter);
     }
 
     private void loadFile(final String sampleId, final Path filename)
@@ -230,7 +235,7 @@ public class UmrCohortAnalyser
 
     private BufferedWriter initialiseWriter()
     {
-        final String outputFile = mConfig.formCohortFilename("combined_unmapped_reads.csv");
+        final String outputFile = mConfig.formCohortFilename("unmapped_reads.csv");
 
         try
         {
@@ -255,6 +260,21 @@ public class UmrCohortAnalyser
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to initialise cohort unmapped reads file({}): {}", outputFile, e.toString());
+            return null;
+        }
+    }
+
+    private BufferedWriter initialiseBlatWriter()
+    {
+        final String outputFile = mConfig.formCohortFilename("blat_sequences.fa");
+
+        try
+        {
+            return createBufferedWriter(outputFile, false);
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to initialise BLAT seqeuence file({}): {}", outputFile, e.toString());
             return null;
         }
     }
@@ -352,6 +372,8 @@ public class UmrCohortAnalyser
         }
     }
 
+    private static final int MIN_BLAT_SEQEUNCE_LENGTH = 20;
+
     private void writeLocationSequences(final String sampleId, final List<UnmappedRead> umReads)
     {
         try
@@ -412,9 +434,11 @@ public class UmrCohortAnalyser
                         sampleId, fragmentCount, unpairedCount, chromosome, genesStr.toString(), firstRead.TransName,
                         firstRead.ExonRank, firstRead.SpliceType));
 
+                String consensusString = sequence.getSequenceString();
+
                 mWriter.write(String.format(",%d,%d,%s,%.1f,%s,%4.3e,%s",
                         firstRead.ExonBoundary, firstRead.ExonDistance, startEndStr(firstRead.ScSide),
-                        avgBaseQual, sequence.getSequenceString(), geneTpm, hasSuppMatch));
+                        avgBaseQual, consensusString, geneTpm, hasSuppMatch));
 
                 if(mLineElementMatcher != null)
                 {
@@ -425,8 +449,15 @@ public class UmrCohortAnalyser
                         sequence.exactMatchReads().size(), sequence.assignedReadTotal(), sequence.calcHighQualPercent()));
 
                 mWriter.newLine();
-            }
 
+                if(mBlatWriter != null && consensusString.length() >= MIN_BLAT_SEQEUNCE_LENGTH)
+                {
+                    mBlatWriter.write(String.format(">%s_%s_%d", sampleId, genesStr.toString(), firstRead.ExonBoundary));
+                    mBlatWriter.newLine();
+                    mBlatWriter.write(consensusString);
+                    mBlatWriter.newLine();
+                }
+            }
         }
         catch(IOException e)
         {
