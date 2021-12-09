@@ -49,8 +49,13 @@ public class LoadPurpleSomaticVariants
             BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(tumorSample);
 
             LOGGER.info("Streaming data from {} to db", somaticVcf);
-            new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, true, somaticWriter);
+            SomaticVariantFactory somaticVariantFactory = new SomaticVariantFactory();
+
+            somaticVariantFactory.fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf, true, somaticWriter);
             somaticWriter.close();
+
+            LOGGER.info("Loaded {} variants, filtered {} variants",
+                    somaticVariantFactory.getCreatedCount(), somaticVariantFactory.getFilteredCount());
         }
         catch(IOException e)
         {

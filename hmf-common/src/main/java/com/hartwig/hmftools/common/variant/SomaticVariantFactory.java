@@ -49,6 +49,8 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     @NotNull
     private final CompoundFilter mFilter;
+    private int mCreatedCount;
+    private int mFilteredCount;
 
     public SomaticVariantFactory(@NotNull final VariantContextFilter... filters)
     {
@@ -56,7 +58,12 @@ public class SomaticVariantFactory implements VariantContextFilter
         mFilter.addAll(Arrays.asList(filters));
         mFilter.add(new HumanChromosomeFilter());
         mFilter.add(new NTFilter());
+        mCreatedCount = 0;
+        mFilteredCount = 0;
     }
+
+    public int getCreatedCount() { return mCreatedCount; }
+    public int getFilteredCount() { return mFilteredCount; }
 
     @NotNull
     public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException
@@ -123,7 +130,21 @@ public class SomaticVariantFactory implements VariantContextFilter
             {
                 if(mFilter.test(variant))
                 {
-                    createVariant(tumor, reference, rna, variant).ifPresent(consumer);
+                    Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
+
+                    if(varOptional.isPresent())
+                    {
+                        varOptional.ifPresent(consumer);
+                        ++mCreatedCount;
+                    }
+                    else
+                    {
+                        ++mFilteredCount;
+                    }
+                }
+                else
+                {
+                    ++mFilteredCount;
                 }
             }
         }
