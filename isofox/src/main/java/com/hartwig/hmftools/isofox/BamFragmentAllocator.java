@@ -373,11 +373,7 @@ public class BamFragmentAllocator
 
         final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
-        if(isDuplicate)
-        {
-            mCurrentGenes.addCount(DUPLICATE, 1);
-        }
-        else
+        if(!isDuplicate)
         {
             mBaseDepth.processRead(commonMappings);
         }
@@ -387,7 +383,7 @@ public class BamFragmentAllocator
         if(isChimeric)
         {
             if(!isMultiMapped)
-                processChimericReadPair(read1, read2);
+                processChimericReadPair(read1, read2, isDuplicate);
 
             mUmrFinder.processReads(read1, read2, true);
             return;
@@ -414,6 +410,10 @@ public class BamFragmentAllocator
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
         final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax, true);
+
+        if(isDuplicate)
+            mCurrentGenes.addCount(DUPLICATE, 1);
+
         mCurrentGenes.addCount(TOTAL, 1);
 
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
@@ -827,7 +827,7 @@ public class BamFragmentAllocator
         mRetainedIntronFinder.setPositionDepth(mBaseDepth);
     }
 
-    private void processChimericReadPair(final ReadRecord read1, final ReadRecord read2)
+    private void processChimericReadPair(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate)
     {
         if(mChimericReads.enabled())
         {
@@ -838,6 +838,9 @@ public class BamFragmentAllocator
             // avoid double-counting fragment reads
             mCurrentGenes.addCount(TOTAL, 1);
             mCurrentGenes.addCount(CHIMERIC, 1);
+
+            if(isDuplicate)
+                mCurrentGenes.addCount(DUPLICATE, 1);
         }
     }
 
