@@ -85,7 +85,7 @@ The effects and codingEffects supported by PAVE are the following:
 
 Effect|Coding effect
 ---|---
-• upstream_gene_variant (<1kb)
+<p>• upstream_gene_variant (<1kb)</p>
 • intron_variant
 • 5_prime_UTR_variant
 • 3_prime_UTR_variant
