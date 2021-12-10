@@ -60,7 +60,7 @@ public class ActinExtractor {
             String gene = EXTRACTOR.extractGene(trials);
             String event = EXTRACTOR.extractEvent(trials);
 
-           EventType eventType = CLASSIFIER.determineType(gene, event);
+            EventType eventType = CLASSIFIER.determineType(gene, event);
 
             eventExtractions.add(eventExtractor.extract(gene, null, eventType, event));
 
