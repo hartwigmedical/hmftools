@@ -121,7 +121,26 @@ Nucleotide numbering conventions:
 
 Examples:
 
-
+Type | Location | Examples | Notes
+---|---|---|---
+Substitutions (SNV)  | Coding | c.76A>C  | Includes start and stop codons
+ | 5’UTR | c.-14G>C
+ | Upstream | c.-146C>T | (eg, TERT hotspot)
+ | Intronic (post) | c.88+1G>T
+ | Intronic (pre) | c.89-2A>C
+ | 3’UTR | c.*46T>A
+Deletions | Coding | c.76_78delACT
+ | Intronic (pre) | c.726-5537_726-5536delTT
+ | 5’UTR Intronic | c.-147-1093delA
+Duplication | Coding | c.128dupA | Use duplications in case of INS with full homology match.
+ | Intronic (post) | c.830+11459_830+11461dupGGA
+ | Start codon overlap | c.-1_1delAA
+ | Insertion | Coding | c.1033_1034insA
+ | Intronic (post) | c.15+1619_15+1620insTTTGTT
+ | Intronic (5’UTR) | c.-23-304_-23-303insA
+Substitution (MNV) | Coding | c.1390_1391delCGinsTT
+ | Intronic | c.853-2260_853-2258delCACinsTAT
+Complex Indel | Coding | c.112_117delinsTG
 
 ### HGVS Protein Impact
 
