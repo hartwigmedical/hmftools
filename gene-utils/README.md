@@ -66,13 +66,13 @@ java -cp gene-utils.jar com.hartwig.hmftools.geneutils.mapping.EnsemblGeneMapper
 ### Global Gene Panel
 * HMF’s gene model is keyed on HGNC symbol (referred to as “gene” in our data model)
 * HMF’s universe of genes consists of all HGNC symbols (http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt) that are matched to an ensembl gene id  that also exists in the latest ensembl version, or failing that gene with matching HGNC symbol in Ensembl.  Notes:
-* If the Ensembl gene name and HGNC gene symbol disagree we use HGNC Symbol as gene name.
+  + If the Ensembl gene name and HGNC gene symbol disagree we use HGNC Symbol as gene name
   + RP11-356O9.1 (hg37)  (annotated as ‘novel transcript in HG38, also known as AL121790.1) is a highly recurrent 5’ fusion partner in Prostate cancer, but is not present in the HGNC so is added to the HGNC symbols and mapped to ENSG00000258414
   + HIST1H3B (hg37) has a different HGNC symbol and ensembl gene id in HG38 and is enforced to match H3C2
   + If multiple ensembl genes match the same HGNC symbol, then always choose one only: the matching ensembl gene id first or if none match then the longest transcript.
 * HMF’s universe of transcripts consists of all ensembl transcripts belonging to a gene with a matching HGNC symbol
-* HMF uses the ensembl canonical transcript as its canonical transcript,.   Functional annotations of point mutations are made relative to this transcript, drivers are called on this transcript, and the transcript is favored in fusion prioritisation.  Specific additional transcripts of clinical interest (eg. CDKN2Ap14ARF) may be configured for specific genes in the driver gene panel and will be also used to call drivers in this gene.
-  + Note that the ensembl method for choosing canonical transcripts has changed significantly for hg38 since Apr 2021, but is frozen for hg37 so the canonical transcripts may differ between versions.
+* HMF uses the ensembl canonical transcript as its canonical transcript,.   Functional annotations of point mutations are made relative to this transcript, drivers are called on this transcript, and the transcript is favored in fusion prioritisation.  Specific additional transcripts of clinical interest (eg. CDKN2Ap14ARF) may be configured for specific genes in the driver gene panel and will be also used to call drivers in this gene.   Notes:
+  + The ensembl method for choosing canonical transcripts has changed significantly for hg38 since Apr 2021, but is frozen for hg37 so the canonical transcripts may differ between versions.
   + If a variant overlaps multiple genes, any driver panel gene is prioritised first, then the gene with the longest canonical transcript (coding bases).
 
 ### Curated gene configuration in Hartwig Pipeline
