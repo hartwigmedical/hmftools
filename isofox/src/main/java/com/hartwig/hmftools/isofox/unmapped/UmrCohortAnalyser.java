@@ -36,6 +36,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -514,7 +515,7 @@ public class UmrCohortAnalyser
                 mWriter.write(String.format("%s,", string));
             }
 
-            mWriter.write(",ExonicBases," + BlatResult.csvHeader());
+            mWriter.write("ExonicBases," + BlatResult.csvHeader());
             mWriter.newLine();
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
@@ -569,7 +570,7 @@ public class UmrCohortAnalyser
                 String exonicBases = getExonicBases(
                         values[chrIndex], Integer.parseInt(values[exonBoundaryIndex]), values[scSideIndex]);
 
-                mWriter.write(String.format(",%s,%s", exonicBases, blatResult.toCsv()));
+                mWriter.write(String.format("%s,%s", exonicBases, blatResult.toCsv()));
                 mWriter.newLine();
             }
 
@@ -586,10 +587,13 @@ public class UmrCohortAnalyser
         if(mConfig.RefGenome == null)
             return "";
 
-        int posStart = scSide.equals(START_STR) ? exonBoundary : exonBoundary - REF_EXONIC_BASE_LENGTH + 1;
-        int posEnd = scSide.equals(START_STR) ? exonBoundary + REF_EXONIC_BASE_LENGTH + 1 : exonBoundary;
+        boolean isStart = scSide.equals(START_STR);
 
-        return mConfig.RefGenome.getBaseString(chromosome, posStart, posEnd);
+        int posStart = isStart ? exonBoundary : exonBoundary - REF_EXONIC_BASE_LENGTH + 1;
+        int posEnd = isStart ? exonBoundary + REF_EXONIC_BASE_LENGTH + 1 : exonBoundary;
+        String refBases = mConfig.RefGenome.getBaseString(chromosome, posStart, posEnd);
+
+        return isStart ? Nucleotides.reverseStrandBases(refBases) : refBases;
     }
 
 }
