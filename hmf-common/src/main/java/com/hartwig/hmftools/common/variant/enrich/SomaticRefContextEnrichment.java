@@ -113,7 +113,6 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
         final int refLength = variant.getReference().getBaseString().length();
         final SAMSequenceRecord samSequenceRecord = reference.getSequenceDictionary().getSequence(variant.getContig());
         if (samSequenceRecord == null) {
-            LOGGER.warn("Unable to locate contig {} in ref genome", variant.getContig());
             return new Pair<>(-1, Strings.EMPTY);
         }
 
