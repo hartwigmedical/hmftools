@@ -86,27 +86,10 @@ The effects and codingEffects supported by PAVE are the following:
 Effect|Coding effect
 ---|---
 • upstream_gene_variant (<1kb)<br />• intron_variant<br />• 5_prime_UTR_variant<br />• 3_prime_UTR_variant<br />• non_coding_transcript_exon_variant | NONE
-
-
-• synonymous_variant
-SYNONYMOUS
-• missense_variant
-• inframe_insertion3
-• inframe_deletion3
-• phased_inframe_insertion4
-• phased_inframe_deletion4
-MISSENSE
-• stop_gained
-• frameshift
-• start_lost5
-• stop_lost5
-NONSENSE_OR_FRAMESHIFT
-• splice_donor_variant (D-1,D+1,D+2,D+5)
-• splice_acceptor_variant (A+1;A+2; A+3 if ALT=G only)
-SPLICE6,7
-
-
-
+• synonymous_variant | SYNONYMOUS
+• missense_variant<br />• inframe_insertion<br />• inframe_deletion<br />• phased_inframe_insertion<br />• phased_inframe_deletion | MISSENSE
+• stop_gained<br />• frameshift<br />• start_lost<br />• stop_lost | NONSENSE_OR_FRAMESHIFT
+• splice_donor_variant (D-1,D+1,D+2,D+5)<br />• splice_acceptor_variant (A+1;A+2; A+3 if ALT=G only) | SPLICE
 
 ### HGVS Coding Impact
 
