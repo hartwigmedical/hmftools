@@ -20,6 +20,7 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
 import com.hartwig.hmftools.serve.sources.actin.ActinExtractor;
 import com.hartwig.hmftools.serve.sources.actin.ActinExtractorFactory;
+import com.hartwig.hmftools.serve.sources.actin.ActinReader;
 import com.hartwig.hmftools.serve.sources.actin.ActinTrial;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinTrialFile;
@@ -76,7 +77,7 @@ public class ServeAlgo {
         }
 
         if (config.useActin()) {
-            //extractions.add();
+            extractions.add(extractActinKnowledge(config.actinTrailTsv()));
         }
 
         if (config.useDocm()) {
@@ -147,7 +148,7 @@ public class ServeAlgo {
     @NotNull
     private ExtractionResult extractActinKnowledge(@NotNull String actinTrialTsv)
             throws IOException {
-        List<ActinTrial> actinEntries = ActinTrialFile.read(actinTrialTsv);
+        List<ActinTrial> actinEntries = ActinReader.read(actinTrialTsv);
 
         EventClassifierConfig config = ActinClassificationConfig.build();
         ActinExtractor extractor =
