@@ -67,3 +67,80 @@ java -jar pave.jar
   -output_dir /path_to_write_data_files/ 
 ```
 
+## Overview and algorithm
+
+PAVE predicts the coding impact,protein impact and coding effect of each variant on every overlapping transcript including for up to 1kb upstream.  The following annotations are added for each affected transcript:
+
+* Gene
+* TranscriptId
+* HGVSCodingImpact
+* HGVSProteinImpact
+* Effect
+* CodingEffect
+* SpliceRegion (T/F - any variant that overlaps within 3 exonic or 8 intronic bases of a splice site)
+* Population Frequency (gnomAD)
+
+### Effect and Coding Effect
+The effects and codingEffects supported by PAVE are the following:
+
+Effect|Coding effect
+---|---
+• upstream_gene_variant (<1kb)
+• intron_variant
+• 5_prime_UTR_variant
+• 3_prime_UTR_variant
+• non_coding_transcript_exon_variant | NONE
+
+
+• synonymous_variant
+SYNONYMOUS
+• missense_variant
+• inframe_insertion3
+• inframe_deletion3
+• phased_inframe_insertion4
+• phased_inframe_deletion4
+MISSENSE
+• stop_gained
+• frameshift
+• start_lost5
+• stop_lost5
+NONSENSE_OR_FRAMESHIFT
+• splice_donor_variant (D-1,D+1,D+2,D+5)
+• splice_acceptor_variant (A+1;A+2; A+3 if ALT=G only)
+SPLICE6,7
+
+
+
+
+### HGVS Coding Impact
+
+For coding transcripts use c. and for non coding transcripts use n.
+
+Nucleotide numbering conventions:
+* No nucleotide 0.  
+* Nucleotide 1 is the A of the ATG-translation initiation codon (For non coding 1 is the 1st base of the transcript)
+* Nucleotide -1 is the 1st base prior to the ATG-translation initiation codon
+* Nucleotide *1 is the 1st base 3’ of the translation stop codon
+* Use most 3’ position in case of homology for duplications and deletions (with an exception for homology at splice boundary.  See https://www.hgvs.org/mutnomen/recs-DNA.html#except)
+
+Examples:
+
+
+
+### HGVS Protein Impact
+
+Phased inframe variants should get the combined impact of both variants
+
+Amino acid numbering conventions
+* AA 1 = Translation initiator Methionine
+* AA *110+1 = 1st AA after the stop codon at AA position 110
+* Use most 3’ residue in case of AA homology
+
+Examples:
+
+
+
+### Population Frequency
+
+We annotate the population frequency using Gnomad (v3.1.2 for hg38, v2.1.1 for GRCH37).  We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. 
+
