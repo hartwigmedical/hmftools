@@ -124,11 +124,11 @@ Examples:
 Type | Location | Examples | Notes
 ---|---|---|---
 Substitutions (SNV)  | Coding | c.76A>C  | Includes start and stop codons
- | 5’UTR | c.-14G>C
- | Upstream | c.-146C>T | (eg, TERT hotspot)
- | Intronic (post) | c.88+1G>T
- | Intronic (pre) | c.89-2A>C
- | 3’UTR | c.*46T>A
+' | 5’UTR | c.-14G>C
+' | Upstream | c.-146C>T | (eg, TERT hotspot)
+' | Intronic (post) | c.88+1G>T
+' | Intronic (pre) | c.89-2A>C
+' | 3’UTR | c.*46T>A
 Deletions | Coding | c.76_78delACT
  | Intronic (pre) | c.726-5537_726-5536delTT
  | 5’UTR Intronic | c.-147-1093delA
