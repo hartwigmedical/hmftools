@@ -114,9 +114,6 @@ public class GenerateDriverGeneFiles
 
         Collections.sort(driverGenes);
 
-        // This will throw an exception if there is a problem with the driver genes for this ref genome version.
-        // DriverGenePanelFactory.create(refGenomeVersion, driverGenes);
-
         // Write out driver gene panel
         DriverGeneFile.write(driverGeneFile, driverGenes);
 
