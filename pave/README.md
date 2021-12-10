@@ -132,15 +132,15 @@ _ | 3’UTR | c.*46T>A
 Deletions | Coding | c.76_78delACT
 _ | Intronic (pre) | c.726-5537_726-5536delTT
 _ | 5’UTR Intronic | c.-147-1093delA
-Duplication | Coding | c.128dupA | Use duplications in case of INS with full homology match.
+Duplications | Coding | c.128dupA | Use duplications in case of INS with full homology match.
 _ | Intronic (post) | c.830+11459_830+11461dupGGA
 _ | Start codon overlap | c.-1_1delAA
 _ | Insertion | Coding | c.1033_1034insA
 _ | Intronic (post) | c.15+1619_15+1620insTTTGTT
 _ | Intronic (5’UTR) | c.-23-304_-23-303insA
-Substitution (MNV) | Coding | c.1390_1391delCGinsTT
+Substitutions (MNV) | Coding | c.1390_1391delCGinsTT
 _ | Intronic | c.853-2260_853-2258delCACinsTAT
-Complex Indel | Coding | c.112_117delinsTG
+Complex Indels | Coding | c.112_117delinsTG
 
 ### HGVS Protein Impact
 
@@ -153,7 +153,30 @@ Amino acid numbering conventions
 
 Examples:
 
-
+Type | Context | Examples | Notes
+---|---|---|---
+SYNONYMOUS | Synonymous | p.Leu54= | Snpeff uses p.Leu54Leu but the recommendation has changed (https://www.hgvs.org/mutnomen/disc.html#silent)
+_ | Synonymous (MNV multiple codon) | p.Leu54_Arg55=
+_ | Synonymous( Stop retained) | p.Ter26= | Not supported
+MISSENSE | Missense | p.Trp26Cys
+_ | Missense (MNV multiple codon) | p.Ala100_Val101delinsArgTrp  | SnpEff uses format: p.AlaVal100ArgTrp
+NONSENSE OR FRAMESHIFT  | Stop Gained | p.Trp26*
+_ | Stop Gained (MNV multiple codon - 2nd codon stop)  | p.Cys495_Val496delinsArg*
+_ | Stop Gained(MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
+_ | Frameshift | p.Arg97fs | Always use simply fs even if also stop gained
+_ | Stop Lost | p.Ter407Trpext*? | Ie. a STOP at AA407 changes to a W and extends the protein
+_ | Start Lost | p.Met1? | Any variant that disrupts initiator codon
+INFRAME | Deletion (single AA) | p.Lys2del
+_ | Deletion (range) | p.Gly4_Gln6del 
+_ | Deletion (non conservative) | p.Cys28_Lys29delinsTrp
+_ | Duplication (single AA) | p.Gln8dup
+_ | Duplication (range) | p.Gly4_Gln6dup
+_ | Insertion | p.Lys2_Leu3insGlnSer
+_ | Insertion (conservative stop) | p.Ser81_Val82ins* | Ie. a STOP codon is inserted between AA81 and AA82
+_ | Insertion (non conservative) | p.Cys28delinsTrpVal 
+MIXED | Inframe Deletion with stop lost (single AA) | p.104Terdelext*?
+_ | Inframe Deletion with stop lost (multiple AA non conservative) | p.Val98_Ter104delinsArgext*?
+_ Inframe insertion + stop gained | p.Leu339delinsHisPhe* | Ignore any AA inserted AFTER the stop codon
 
 ### Population Frequency
 
