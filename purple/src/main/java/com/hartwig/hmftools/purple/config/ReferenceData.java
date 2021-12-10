@@ -26,20 +26,14 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
-import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.purple.drivers.GermlineDeletionFrequency;
@@ -48,7 +42,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -215,77 +208,31 @@ public class ReferenceData
 
     private void loadGeneTransCache(final CommandLine cmd)
     {
-        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        // load transcripts with any alts from the driver gene panel in mind
+        for(DriverGene driverGene : DriverGenes.driverGenes())
         {
-            // load transcripts with any alts from the driver gene panel in mind
-            for(DriverGene driverGene : DriverGenes.driverGenes())
+            if(!driverGene.additionalReportedTranscripts().isEmpty())
             {
-                if(!driverGene.additionalReportedTranscripts().isEmpty())
-                {
-                    OtherReportableTranscripts.put(driverGene.gene(), driverGene.additionalReportedTranscripts());
-                }
+                OtherReportableTranscripts.put(driverGene.gene(), driverGene.additionalReportedTranscripts());
             }
+        }
 
-            if(!OtherReportableTranscripts.isEmpty())
-            {
-                List<String> additionalTransNames = Lists.newArrayList();
-                OtherReportableTranscripts.values().forEach(x -> additionalTransNames.addAll(x));
+        if(!OtherReportableTranscripts.isEmpty())
+        {
+            List<String> additionalTransNames = Lists.newArrayList();
+            OtherReportableTranscripts.values().forEach(x -> additionalTransNames.addAll(x));
 
-                PPL_LOGGER.info("loaded {} alternative transcripts from {} genes",
-                        additionalTransNames.size(), OtherReportableTranscripts.size());
+            PPL_LOGGER.info("loaded {} alternative transcripts from {} genes",
+                    additionalTransNames.size(), OtherReportableTranscripts.size());
 
-                GeneTransCache.setRequiredData(true, false, false, true);
-                GeneTransCache.load(true);
-                GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
-            }
-            else
-            {
-                GeneTransCache.setRequiredData(true, false, false, true);
-                GeneTransCache.load(false);
-            }
+            GeneTransCache.setRequiredData(true, false, false, true);
+            GeneTransCache.load(true);
+            GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
         }
         else
         {
-            // build from the all-genes TSV file for now but the information will be incomplete for some operations
-            List<HmfTranscriptRegion> canonicalTranscripts = RefGenVersion.is37() ?
-                    HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
-
-            GeneNameMapping geneNameMapping = GeneTransCache.getGeneMappings();
-
-            int transId = 0;
-
-            for(HmfTranscriptRegion transcriptRegion : canonicalTranscripts)
-            {
-                String geneNameNew = geneNameMapping.getNewName(transcriptRegion.geneName());
-
-                GeneData geneData = HmfTranscriptRegionUtils.createGeneData(transcriptRegion, geneNameNew);
-
-                List<GeneData> geneDataList = GeneTransCache.getChrGeneDataMap().get(geneData.Chromosome);
-
-                if(geneDataList == null)
-                {
-                    geneDataList = Lists.newArrayList(geneData);
-                    GeneTransCache.getChrGeneDataMap().put(geneData.Chromosome, geneDataList);
-                }
-                else
-                {
-                    geneDataList.add(geneData);
-                }
-
-                TranscriptData transData = HmfTranscriptRegionUtils.createTranscriptData(transcriptRegion, transId++);
-
-                List<TranscriptData> transDataList = GeneTransCache.getTranscripts(geneData.GeneId);
-
-                if(transDataList == null)
-                {
-                    transDataList = Lists.newArrayList(transData);
-                    GeneTransCache.getTranscriptDataMap().put(geneData.GeneId, transDataList);
-                }
-                else
-                {
-                    transDataList.add(transData);
-                }
-            }
+            GeneTransCache.setRequiredData(true, false, false, true);
+            GeneTransCache.load(false);
         }
     }
 
@@ -316,19 +263,16 @@ public class ReferenceData
             {
                 result.put(chromosome, GenomePositions.create(contig, longs.get(chromosome)));
             }
-
         }
 
         return result;
     }
 
-    @NotNull
-    static Map<Chromosome, GenomePosition> fromLengths(@NotNull final Collection<ChromosomeLength> lengths)
+    private static Map<Chromosome, GenomePosition> fromLengths(final Collection<ChromosomeLength> lengths)
     {
         return lengths.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
                 .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()),
                         item -> GenomePositions.create(item.chromosome(), item.length())));
     }
-
 }

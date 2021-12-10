@@ -124,15 +124,26 @@ public class PurpleApplication
 
         mDbAccess = hasDatabaseConfig(mCmdLineArgs) ? createDatabaseAccess(mCmdLineArgs) : null;
 
-        final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
-
-        mExecutorService = Executors.newFixedThreadPool(threads);
-
         // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
 
+        if(!mConfig.isValid())
+        {
+            PPL_LOGGER.error("initialisation error, exiting");
+            System.exit(1);
+        }
+
         // and common reference data
         mReferenceData = new ReferenceData(mCmdLineArgs, mConfig);
+
+        if(!mReferenceData.isValid())
+        {
+            PPL_LOGGER.error("initialisation error, exiting");
+            System.exit(1);
+        }
+
+        final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
+        mExecutorService = Executors.newFixedThreadPool(threads);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
 
@@ -146,13 +157,6 @@ public class PurpleApplication
             mSegmentation = null;
             mCharts = null;
         }
-
-        if(!mConfig.isValid() || !mReferenceData.isValid())
-        {
-            PPL_LOGGER.error("initialisation error, exiting");
-            mExecutorService.shutdown();
-            System.exit(1);
-        }
     }
 
     public void run()
@@ -160,7 +164,6 @@ public class PurpleApplication
         try
         {
             processSample(mConfig.ReferenceId, mConfig.TumorId);
-
         }
         finally
         {

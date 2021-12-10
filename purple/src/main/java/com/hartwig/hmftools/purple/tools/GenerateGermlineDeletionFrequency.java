@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.tools.CohortGermlineDeletions.COHORT_DEL_FILE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,8 +36,10 @@ public class GenerateGermlineDeletionFrequency
     private Map<String,List<DeletionRegionFrequency>> mChrRegionMap;
 
     public static final String COHORT_DEL_FREQ_FILE = "germline_del_freq_file";
-    public static final String MIN_FREQUENCY = "min_frequency";
-    public static final String SAMPLE_ID_FILE = "sample_ids_file";
+
+    private static final String MIN_FREQUENCY = "min_frequency";
+    private static final String SAMPLE_ID_FILE = "sample_ids_file";
+    private static final String COHORT_DEL_FILE = "cohort_germline_del_file";
 
     public GenerateGermlineDeletionFrequency(final CommandLine cmd)
     {

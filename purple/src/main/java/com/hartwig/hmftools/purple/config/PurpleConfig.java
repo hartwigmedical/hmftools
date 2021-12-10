@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
@@ -91,6 +92,8 @@ public class PurpleConfig
             OutputDir = checkAddDirSeparator(parameter(cmd, OUTPUT_DIRECTORY, missingJoiner));
         }
 
+        parameter(cmd, ENSEMBL_DATA_DIR, missingJoiner);
+
         final String missing = missingJoiner.toString();
 
         if(!missing.isEmpty())
@@ -160,8 +163,7 @@ public class PurpleConfig
         SampleDataFiles.addOptions(options);
     }
 
-    @NotNull
-    static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
+    private static String parameter(final CommandLine cmd, final String parameter, final StringJoiner missing)
     {
         final String value = cmd.getOptionValue(parameter);
         if(value == null)
