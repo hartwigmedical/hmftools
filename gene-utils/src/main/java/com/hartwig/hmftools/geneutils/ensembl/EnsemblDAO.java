@@ -250,7 +250,11 @@ public class EnsemblDAO
                     if(mRefGenomeVersion == V38)
                     {
                         String hgncId = (String)record.get("HgncId");
-                        hgncGene = mHgncGenes.getByHgncId((String)hgncId);
+
+                        if(hgncId.isEmpty())
+                            continue;
+
+                        hgncGene = mHgncGenes.getByHgncId(hgncId);
 
                         if(hgncGene == null)
                             continue;
