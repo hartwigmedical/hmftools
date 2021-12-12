@@ -98,7 +98,7 @@
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
         <apache.commons.dbcp2.version>2.1.1</apache.commons.dbcp2.version>
-        <apache.log4j.version>2.8.1</apache.log4j.version>
+        <apache.log4j.version>2.15.0</apache.log4j.version>
         <apache.log4j.slf4j.version>2.8.1</apache.log4j.slf4j.version>
         <apache.lucene.version>7.1.0</apache.lucene.version>
         <jooq.version>3.9.5</jooq.version>
