@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,41 +17,45 @@ public final class DsbLinkFinder
     private static final int MAX_DSB_SEEK_DISTANCE = 1000;
     private static final int MAX_DSB_DISTANCE = 30;
 
+    // a breakend can only be in one DSB - the first & closest found
+
     public static LinkStore findBreaks(final SvDataCache dataCache, final LinkStore assemblyLinks, final Set<Breakend> duplicateBreakends)
     {
         LinkStore dsbLinks = new LinkStore();
         int linkId = 1;
 
-        Set<Breakend> linkedBreakends = Sets.newHashSet();
-
         for(SvData sv : dataCache.getSvList())
         {
             for(Breakend breakend : sv.breakends())
             {
-                if(breakend == null || linkedBreakends.contains(breakend))
+                if(breakend == null || dsbLinks.getBreakendLinks(breakend) != null)
                     continue;
 
-                List<Link> links = findLinks(linkId++, breakend, dataCache, assemblyLinks, duplicateBreakends);
-
-                if(links == null)
+                // ignore duplicate breakends
+                if(duplicateBreakends.contains(breakend))
                     continue;
 
-                dsbLinks.addLink(links.get(0).breakendStart(), links.get(0));
-                dsbLinks.addLink(links.get(1).breakendStart(), links.get(1));
-                linkedBreakends.add(links.get(1).breakendStart()); // to prevent evaluating the other breakend again
+                Link[] links = findLinks(linkId++, breakend, dataCache, assemblyLinks, dsbLinks, duplicateBreakends);
+
+                if(links == null || links.length != 2)
+                    continue;
+
+                dsbLinks.addLink(links[0].breakendStart(), links[0]);
+                dsbLinks.addLink(links[1].breakendStart(), links[1]);
             }
         }
 
         return dsbLinks;
     }
 
-    private static List<Link> findLinks(
-            int linkId, final Breakend breakend, final SvDataCache dataCache, final LinkStore assemblyLinks,
+    private static Link[] findLinks(
+            int linkId, final Breakend breakend, final SvDataCache dataCache, final LinkStore assemblyLinks, final LinkStore dsbLinks,
             final Set<Breakend> duplicateBreakends)
     {
         List<Breakend> nearbyBreakends = dataCache.selectOthersNearby(breakend, MAX_DSB_DISTANCE, MAX_DSB_SEEK_DISTANCE).stream()
                 .filter(x -> x.Orientation != breakend.Orientation)
                 .filter(x -> !duplicateBreakends.contains(x))
+                .filter(x -> dsbLinks.getBreakendLinks(x) == null)
                 .collect(Collectors.toList());
 
         if(nearbyBreakends.size() != 1)
@@ -63,20 +69,19 @@ public final class DsbLinkFinder
                 .filter(x -> !duplicateBreakends.contains(x))
                 .collect(Collectors.toList());
 
-        if(otherNearbyBreakends.size() != 1)
+        if(otherNearbyBreakends.size() != 1 || otherNearbyBreakends.get(0) != breakend)
             return null;
 
-        List<Link> existingLinks = assemblyLinks.getBreakendLinks(breakend);
+        List<Link> existingAssemblyLinks = assemblyLinks.getBreakendLinks(breakend);
 
         // ignore if already linked
-        if(existingLinks != null && existingLinks.stream().anyMatch(x -> x.otherBreakend(breakend) == otherBreakend))
+        if(existingAssemblyLinks != null && existingAssemblyLinks.stream().anyMatch(x -> x.otherBreakend(breakend) == otherBreakend))
             return null;
 
-        List<Link> links = Lists.newArrayList();
+        Link[] links = new Link[2];
         String linkStr = String.format("dsb%d", linkId);
-        links.add(Link.from(linkStr, breakend, otherBreakend));
-        links.add(Link.from(linkStr, otherBreakend, breakend));
-
+        links[0] = Link.from(linkStr, breakend, otherBreakend);
+        links[1] = Link.from(linkStr, otherBreakend, breakend);
         return links;
     }
 }

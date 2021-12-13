@@ -112,14 +112,14 @@ public class DuplicateFinder
             // if none of them require keeping the single, then mark it as a duplicate
             boolean keepSingle = true;
 
-            for(Breakend otherBreakend : nearbyBreakends)
+            for(Breakend nearBreakend : nearbyBreakends)
             {
-                if(!isDuplicateCandidate(breakend, otherBreakend))
+                if(!isDuplicateCandidate(breakend, nearBreakend))
                     continue;
 
-                if(!keepSingle(isPass, breakend, otherBreakend, linkStore))
+                if(!keepSingle(isPass, breakend, nearBreakend, linkStore))
                 {
-                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", breakend, otherBreakend);
+                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", breakend, nearBreakend);
                     keepSingle = false;
                     break;
                 }
@@ -131,16 +131,16 @@ public class DuplicateFinder
             }
             else
             {
-                for(Breakend otherBreakend : nearbyBreakends)
+                for(Breakend nearBreakend : nearbyBreakends)
                 {
-                    if(!isDuplicateCandidate(breakend, otherBreakend))
+                    if(!isDuplicateCandidate(breakend, nearBreakend))
                         continue;
 
-                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", otherBreakend, breakend);
-                    mSingleDuplicates.add(otherBreakend);
+                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", nearBreakend, breakend);
+                    mSingleDuplicates.add(nearBreakend);
 
-                    if(!otherBreakend.isSgl())
-                        mSingleDuplicates.add(otherBreakend.otherBreakend());
+                    if(!nearBreakend.isSgl())
+                        mSingleDuplicates.add(nearBreakend.otherBreakend());
                 }
             }
         }

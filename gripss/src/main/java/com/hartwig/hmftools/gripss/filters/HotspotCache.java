@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.gripss.common.SvData;
+import com.hartwig.hmftools.gripss.links.LinkRescue;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -61,7 +62,7 @@ public class HotspotCache
         if(sv.isSgl())
             return false;
 
-        if(hasLength(sv.type()) && sv.length() < FilterConstants.SHORT_RESCUE_LENGTH)
+        if(LinkRescue.tooShortToRescue(sv.type(), sv.length()))
             return false;
 
         if(isPolyATSequence(sv.contextStart()) || (sv.contextEnd() != null && isPolyATSequence(sv.contextEnd())))
@@ -76,7 +77,7 @@ public class HotspotCache
         if(sv.type() == SGL)
             return false;
 
-        if(hasLength(sv.type()) && SvData.length(sv) < FilterConstants.SHORT_RESCUE_LENGTH)
+        if(LinkRescue.tooShortToRescue(sv.type(), SvData.length(sv)))
             return false;
 
         else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))

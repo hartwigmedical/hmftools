@@ -42,18 +42,32 @@ public class SvData
     {
         mId = sv.startContext().getAttributeAsString(VT_EVENT, sv.id());
 
-        mType = sv.type();
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
-        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && (sv.end().position() - sv.start().position()) < SHORT_CALLING_SIZE;
+        mIsShortLocal = (sv.type() == DEL || sv.type() == DUP || sv.type() == INS)
+                && (sv.end().position() - sv.start().position()) < SHORT_CALLING_SIZE;
 
-        Breakend breakendStart = Breakend.from(
-                this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+        // special handling of DUPs at the same base - need to switch their breakends
+        if(sv.type() == INS && sv.position(true).equals(sv.position(false)))
+        {
+            mType = sv.type();
 
-        Breakend breakendEnd = sv.end() != null ?
-                Breakend.from(this, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+            mBreakends = new Breakend[] {
+                    Breakend.from(this, true, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal),
+                    Breakend.from(this, false, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) };
+        }
+        else
+        {
+            mType = sv.type();
 
-        mBreakends = new Breakend[] { breakendStart, breakendEnd };
+            Breakend breakendStart = Breakend.from(
+                    this, true, sv.start(), sv.startContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
+
+            Breakend breakendEnd = sv.end() != null ?
+                    Breakend.from(this, false, sv.end(), sv.endContext(), genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal) : null;
+
+            mBreakends = new Breakend[] { breakendStart, breakendEnd };
+        }
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
