@@ -14,6 +14,8 @@ public class TransitiveLinkFinder
     private final SvDataCache mSvDataCache;
     private final LinkStore mAssemblyLinkStore;
 
+    private int mRecursiveInterations = 0;
+
     // TODO: make public and move to Constants
     public static final int MAX_ASSEMBLY_JUMPS = 5;
     public static final int MAX_TRANSITIVE_JUMPS = 2;
@@ -30,6 +32,7 @@ public class TransitiveLinkFinder
     {
         mSvDataCache = svDataCache;
         mAssemblyLinkStore = assemblyLinkStore;
+        mRecursiveInterations = 0;
     }
 
     public List<Link> findTransitiveLinks(final Breakend breakend)
@@ -68,6 +71,7 @@ public class TransitiveLinkFinder
             assemblyTransLinks.add(transLink);
         }
 
+        mRecursiveInterations = 0;
         List<Link> assemblyLinks = findLinks(target, assemblyTransLinks, transLinks, matchedTransLinks);
 
         if(!assemblyLinks.isEmpty())
@@ -76,16 +80,25 @@ public class TransitiveLinkFinder
         return links;
     }
 
+    private static final int MAX_ITERATIONS = 50; // logically not required but in as a safety measure
+
     private List<Link> findLinks(
             final Breakend target, final ArrayDeque assemblyTransLinks, final ArrayDeque transLinks, final ArrayDeque matchedTransLinks)
     {
+        ++mRecursiveInterations;
+
+        if(mRecursiveInterations >= MAX_ITERATIONS)
+        {
+            return Lists.newArrayList();
+        }
+
         if(transLinks.size() > 1)
         {
             // no result if we there is more than one transitive path (and no assembly path)
             return Lists.newArrayList();
         }
 
-        if (assemblyTransLinks.isEmpty() && transLinks.isEmpty())
+        if(assemblyTransLinks.isEmpty() && transLinks.isEmpty())
         {
             if (matchedTransLinks.size() == 1)
             {
