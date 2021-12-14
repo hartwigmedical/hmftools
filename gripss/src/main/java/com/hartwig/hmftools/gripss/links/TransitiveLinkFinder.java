@@ -287,6 +287,9 @@ public class TransitiveLinkFinder
             if(!areCandidateLink(transBreakend, otherBreakend))
                 continue;
 
+            if(mAssemblyLinkStore.getBreakendLinksMap().containsKey(otherBreakend))
+                continue;
+
             Breakend pairedOtherBreakend = otherBreakend.otherBreakend();
 
             List<Link> newLinks = Lists.newArrayList(transLink.links());
@@ -320,38 +323,4 @@ public class TransitiveLinkFinder
             return second.minPosition() >= first.maxPosition() + MIN_TRANSITIVE_DISTANCE;
         }
     }
-
-            /*
-        private fun VariantStore.selectTransitive(variant: StructuralVariantContext): Collection<StructuralVariantContext> {
-            val leftFilter: SvFilter = { other -> other.maxStart <= variant.minStart - MIN_TRANSITIVE_DISTANCE }
-            val rightFilter: SvFilter = { other -> other.minStart >= variant.maxStart + MIN_TRANSITIVE_DISTANCE }
-            val directionFilter: SvFilter = if (variant.orientation == 1.toByte()) leftFilter else rightFilter
-            val transitiveFilter: SvFilter = { other -> other.orientation != variant.orientation && !other.imprecise && !other.isSingle }
-
-            return selectOthersNearby(variant, MAX_TRANSITIVE_ADDITIONAL_DISTANCE, MAX_TRANSITIVE_SEEK_DISTANCE) { x -> directionFilter(x) && transitiveFilter(x) }.sortByQualDesc()
-        }
-         */
-
-        /*
-        if (assemblyLinkStore.linkedVariants(end.vcfId).isNotEmpty()) {
-            // Cannot have transitive links if there are assembly links
-            return Collections.emptyList()
-        }
-
-        val result = mutableListOf<Node>()
-
-        // unfilteredAssemblyLinks.isEmpty() &&
-        if (remainingTransitiveJumps > 0) {
-            val unlinkedFilter: SvFilter = { assemblyLinkStore.linkedVariants(it.vcfId).isEmpty() }
-            val transitiveLinkedVariants = variantStore.selectTransitive(end).filter { x -> unlinkedFilter(x) }
-            for (linkedVariant in transitiveLinkedVariants) {
-                val linkedVariantMate = variantStore.select(linkedVariant.mateId!!)
-                val link = Link("$transLinkPrefix${maxTransitiveJumps - remainingTransitiveJumps}", Pair(end, linkedVariant))
-                result.add(Node(transLinkPrefix, maxTransitiveJumps, remainingAssemblyJumps, remainingTransitiveJumps - 1, linkedVariant, linkedVariantMate, links + link + Link(linkedVariant)))
-            }
-        }
-
-        return result
-            */
-
 }

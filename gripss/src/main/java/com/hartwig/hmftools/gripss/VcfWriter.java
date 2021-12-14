@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RESCUE_INFO;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_TAF;
 import static com.hartwig.hmftools.gripss.filters.FilterType.HARD_FILTERED;
 import static com.hartwig.hmftools.gripss.filters.FilterType.PON;
@@ -17,12 +18,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
+import com.hartwig.hmftools.gripss.links.LinkRescue;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
 import htsjdk.samtools.SAMSequenceRecord;
@@ -107,11 +108,14 @@ public class VcfWriter
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_HOTSPOT, 1, VCFHeaderLineType.Flag, "Variant is a hotspot"));
 
-        // writer.writeHeader(VCFHeader(metaData, samples))
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
+                VT_RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend rescue"));
+
         writer.writeHeader(newHeader);
     }
 
-    public void write(final LinkStore combinedLinks, final Map<Breakend,String> idPathMap, final VCFHeader vcfHeader)
+    public void write(
+            final LinkStore combinedLinks, final Map<Breakend,String> idPathMap, final VCFHeader vcfHeader, final LinkRescue linkRescue)
     {
         final Map<SvData,List<FilterType>> svFiltersMap = Maps.newHashMap(); // to avoid collating SV filters twice
 
@@ -140,15 +144,16 @@ public class VcfWriter
                 }
 
                 String altPathStr = idPathMap.get(breakend);
+                String rescueInfo = linkRescue.getRescueInfo().get(breakend);
 
-                writeBreakend(breakend, svFiltersMap, localLinks, remoteLinks, altPathStr);
+                writeBreakend(breakend, svFiltersMap, localLinks, remoteLinks, altPathStr, rescueInfo);
             }
         }
     }
 
     private void writeBreakend(
             final Breakend breakend, final Map<SvData,List<FilterType>> svFiltersMap,
-            final String localLinks, final String remoteLinks, final String altPathStr)
+            final String localLinks, final String remoteLinks, final String altPathStr, String rescueInfo)
     {
         List<Genotype> genotypes = Lists.newArrayList(breakend.Context.getGenotype(mGenotypeIds.TumorOrdinal));
 
@@ -174,6 +179,9 @@ public class VcfWriter
 
         if(altPathStr != null && !altPathStr.isEmpty())
             builder.attribute(VT_ALT_PATH, altPathStr);
+
+        if(rescueInfo != null)
+            builder.attribute(VT_RESCUE_INFO, rescueInfo);
 
         final SvData sv = breakend.sv();
 

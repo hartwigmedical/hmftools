@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.links.LinkRescue.findRescuedDsbLineInsertions;
 
 import java.io.IOException;
 import java.util.List;
@@ -231,10 +230,12 @@ public class GripssApplication
 
         GR_LOGGER.info("rescuing linked variants");
 
-        Set<Breakend> rescuedBreakends = LinkRescue.findRescuedBreakends(dsbLinkStore, mFilterCache, false);
-        rescuedBreakends.addAll(findRescuedDsbLineInsertions(dsbLinkStore, mFilterCache, mFilterConstants.MinQualRescueLine));
-        rescuedBreakends.addAll(LinkRescue.findRescuedBreakends(assemblyLinkStore, mFilterCache, true));
-        rescuedBreakends.addAll(LinkRescue.findRescuedBreakends(transitiveLinkStore, mFilterCache, true));
+        LinkRescue linkRescue = new LinkRescue();
+        linkRescue.findRescuedBreakends(dsbLinkStore, mFilterCache, false);
+        linkRescue.findRescuedDsbLineInsertions(dsbLinkStore, mFilterCache, mFilterConstants.MinQualRescueLine);
+        linkRescue.findRescuedBreakends(assemblyLinkStore, mFilterCache, true);
+        linkRescue.findRescuedBreakends(transitiveLinkStore, mFilterCache, true);
+        Set<Breakend> rescuedBreakends = linkRescue.getRescueInfo().keySet();
 
         GR_LOGGER.debug("rescued {} linked variants", rescuedBreakends.size());
 
@@ -250,7 +251,7 @@ public class GripssApplication
 
         Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
 
-        writer.write(combinedLinks, idPathMap, vcfHeader);
+        writer.write(combinedLinks, idPathMap, vcfHeader, linkRescue);
         writer.close();
 
         // summary logging

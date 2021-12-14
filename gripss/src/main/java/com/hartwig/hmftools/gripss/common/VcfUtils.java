@@ -79,6 +79,7 @@ public class VcfUtils
     public static final String VT_TAF = "TAF";
     public static final String VT_ALT_PATH = "ALT_PATH";
     public static final String VT_HOTSPOT = "HOTSPOT";
+    public static final String VT_RESCUE_INFO = "RESCUED";
     public static final String VT_REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)

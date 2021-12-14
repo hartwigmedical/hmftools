@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
-import static com.hartwig.hmftools.gripss.links.LinkRescue.findRescuedDsbLineInsertions;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -26,13 +25,29 @@ import org.junit.Test;
 public class RescueTest
 {
     private final GripssTestApp mGripss;
+    private final LinkRescue mLinkRescue;
 
     public RescueTest()
     {
         mGripss = new GripssTestApp();
+        mLinkRescue = new LinkRescue();
     }
 
     private void setFiltered(final Breakend breakend) { mGripss.FilterCache.addBreakendFilter(breakend, MIN_TUMOR_AF); }
+
+    private Set<Breakend> findRescuedBreakends(final LinkStore linkStore, final FilterCache filterCache, boolean rescueShortSVs)
+    {
+        mLinkRescue.getRescueInfo().clear();
+        mLinkRescue.findRescuedBreakends(linkStore, filterCache, rescueShortSVs);
+        return mLinkRescue.getRescueInfo().keySet();
+    }
+
+    private Set<Breakend> findRescuedDsbLineInsertions(final LinkStore linkStore, final FilterCache filterCache, double minQual)
+    {
+        mLinkRescue.getRescueInfo().clear();
+        mLinkRescue.findRescuedDsbLineInsertions(linkStore, filterCache, minQual);
+        return mLinkRescue.getRescueInfo().keySet();
+    }
 
     @Test
     public void testVariantRescue()
@@ -55,9 +70,9 @@ public class RescueTest
         linkStore.addLinks("2", var2.breakendEnd(), var3.breakendEnd());
         linkStore.addLinks("3", var3.breakendStart(), var4.breakendStart());
 
-        assertTrue(LinkRescue.findRescuedBreakends(linkStore, mGripss.FilterCache, false).isEmpty());
+        assertTrue(findRescuedBreakends(linkStore, mGripss.FilterCache, false).isEmpty());
 
-        Set<Breakend> rescues = LinkRescue.findRescuedBreakends(linkStore, mGripss.FilterCache, true);
+        Set<Breakend> rescues = findRescuedBreakends(linkStore, mGripss.FilterCache, true);
         assertTrue(rescues.contains(var1.breakendStart()));
         assertTrue(rescues.contains(var1.breakendEnd()));
         assertTrue(rescues.contains(var2.breakendStart()));
@@ -72,7 +87,7 @@ public class RescueTest
         linkStore.addLinks("3", var3.breakendEnd(), var4.breakendStart());
         linkStore.addLinks("4", var4.breakendEnd(), var1.breakendStart());
 
-        rescues = LinkRescue.findRescuedBreakends(linkStore, mGripss.FilterCache, true);
+        rescues = findRescuedBreakends(linkStore, mGripss.FilterCache, true);
         assertTrue(rescues.contains(var1.breakendStart()));
         assertTrue(rescues.contains(var1.breakendEnd()));
         assertTrue(rescues.contains(var2.breakendStart()));

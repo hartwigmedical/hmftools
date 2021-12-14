@@ -20,12 +20,10 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 import org.apache.commons.cli.CommandLine;
@@ -51,7 +49,6 @@ public class GripssCompareVcfs
     private final VariantBuilder mVariantBuilder;
 
     private final Map<String,SvData> mOriginalSvData;
-    private final Map<String,SvData> mNewSvData;
 
     private final BufferedWriter mWriter;
 
@@ -66,8 +63,7 @@ public class GripssCompareVcfs
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        mOriginalSvData = Maps.newLinkedHashMap();
-        mNewSvData = Maps.newHashMap();
+        mOriginalSvData = Maps.newHashMap();
 
         mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd));
 
@@ -83,18 +79,15 @@ public class GripssCompareVcfs
         }
 
         GR_LOGGER.info("loading original VCF({})", mOriginalVcf);
-        loadVariants(mOriginalVcf, mOriginalSvData);
+        loadOriginalVariants(mOriginalVcf);
 
-        GR_LOGGER.info("loading new VCF({})", mNewVcf);
-        loadVariants(mNewVcf, mNewSvData);
+        GR_LOGGER.info("loaded {} original SVs", mOriginalSvData.size());
 
-        GR_LOGGER.info("loaded SVs: original({}) new({})", mOriginalSvData.size(), mNewSvData.size());
-
-        compareVariants();;
+        compareVariants(mNewVcf);
         closeBufferedWriter(mWriter);
     }
 
-    private void loadVariants(final String vcfFile, final Map<String,SvData> svDataMap)
+    private void loadOriginalVariants(final String vcfFile)
     {
         mVariantBuilder.clearState();
 
@@ -112,7 +105,7 @@ public class GripssCompareVcfs
                 if(svData == null)
                     continue;
 
-                svDataMap.put(svData.id(), svData);
+                mOriginalSvData.put(svData.id(), svData);
             }
         }
         catch(IOException e)
@@ -121,77 +114,92 @@ public class GripssCompareVcfs
         }
     }
 
-    private void compareVariants()
+    private void compareVariants(final String newVcfFile)
     {
-        Set<SvData> matchedSvs = Sets.newHashSet();
+        mVariantBuilder.clearState();
 
-        int compareCount = 0;
+        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
+                newVcfFile, new VCFCodec(), false);
+
+        GenotypeIds genotypeIds = new GenotypeIds(0, 1, mSampleId, mSampleId);
+
         int diffCount = 0;
+
+        try
+        {
+            int newSvCount = 0;
+
+            for(VariantContext variantContext : reader.iterator())
+            {
+                SvData newSv = mVariantBuilder.checkCreateVariant(variantContext, genotypeIds);
+
+                if(newSv == null)
+                    continue;
+
+                ++newSvCount;
+
+                if((newSvCount % 10000 == 0))
+                {
+                    GR_LOGGER.debug("processed {} variants", newSvCount);
+                }
+
+                SvData origSv = mOriginalSvData.get(newSv.id());
+
+                if(origSv == null)
+                {
+                    writeDiffs(origSv, null, "NO_NEW", "", "");
+                    ++diffCount;
+                    continue;
+                }
+
+                mOriginalSvData.remove(origSv.id());
+
+                boolean hasDiff = false;
+
+                if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
+                || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
+                {
+                    hasDiff = true;
+                    writeDiffs(origSv, newSv, "COORDS", makeSvCoords(origSv), makeSvCoords(newSv));
+                }
+
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    if(origSv.isSgl() && se == SE_END)
+                        continue;
+
+                    Breakend origStart = origSv.breakends()[se];
+                    Breakend newStart = newSv.breakends()[se];
+
+                    if(se == SE_START)
+                    {
+                        Set<String> origFilters = origStart.Context.getFilters();
+                        Set<String> newFilters = newStart.Context.getFilters();
+
+                        Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
+                        Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
+
+                        if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
+                        {
+                            writeDiffs(origSv, newSv, "FILTERS", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
+                            hasDiff = true;
+                        }
+                    }
+                }
+
+                if(hasDiff)
+                    ++diffCount;
+            }
+        }
+        catch(IOException e)
+        {
+            GR_LOGGER.error("error reading vcf({}): {}", newVcfFile, e.toString());
+        }
 
         for(SvData origSv : mOriginalSvData.values())
         {
-            ++compareCount;
-
-            if(compareCount > 0 && (compareCount % 10000 == 0))
-            {
-                GR_LOGGER.debug("processed {} variants", compareCount);
-            }
-
-            SvData newSv = mNewSvData.get(origSv.id());
-
-            if(newSv == null)
-            {
-                writeDiffs(origSv, null, "NO_NEW", "", "");
-                ++diffCount;
-                continue;
-            }
-
-            matchedSvs.add(newSv);
-
-            boolean hasDiff = false;
-
-            if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
-            || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
-            {
-                hasDiff = true;
-                writeDiffs(origSv, newSv, "COORDS", makeSvCoords(origSv), makeSvCoords(newSv));
-            }
-
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                if(origSv.isSgl() && se == SE_END)
-                    continue;
-
-                Breakend origStart = origSv.breakends()[se];
-                Breakend newStart = newSv.breakends()[se];
-
-                if(se == SE_START)
-                {
-                    Set<String> origFilters = origStart.Context.getFilters();
-                    Set<String> newFilters = newStart.Context.getFilters();
-
-                    Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
-                    Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
-
-                    if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
-                    {
-                        writeDiffs(origSv, newSv, "FILTERS", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
-                        hasDiff = true;
-                    }
-                }
-            }
-
-            if(hasDiff)
-                ++diffCount;
-        }
-
-        for(SvData newSv : mNewSvData.values())
-        {
-            if(matchedSvs.contains(newSv))
-                continue;
-
             ++diffCount;
-            writeDiffs(null, newSv, "NO_ORIG", "", "");
+            writeDiffs(origSv, null, "NO_NEW", "", "");
         }
 
         GR_LOGGER.info("diffTotal({})", diffCount);
