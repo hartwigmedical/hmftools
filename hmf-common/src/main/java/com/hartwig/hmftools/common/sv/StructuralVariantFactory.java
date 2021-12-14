@@ -44,13 +44,18 @@ public class StructuralVariantFactory
     public static final String MATE_ID = "MATEID";
     public static final String PAR_ID = "PARID";
 
+    // set by Gripss
+    public static final String TAF = "TAF";
+    public static final String HOTSPOT = "HOTSPOT";
+    public static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
+    public static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
+    public static final String LINKED_BY_DELIM = ",";
+
     private static final String INS_SEQ = "SVINSSEQ";
     private static final String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
     private static final String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
     private static final String HOM_SEQ = "HOMSEQ";
     private static final String BPI_AF = "BPI_AF";
-    private static final String TAF = "TAF";
-    private static final String HOTSPOT = "HOTSPOT";
     private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private static final String IHOMPOS = "IHOMPOS";
     private static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
@@ -58,8 +63,6 @@ public class StructuralVariantFactory
     private static final String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
     private static final String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
     private static final String EVENT = "EVENT";
-    private static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-    private static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
     private static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
     private static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
     private static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";

@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LINKED_BY_DELIM;
+
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.gripss.common.Breakend;
 
 public class LinkStore
@@ -81,7 +84,7 @@ public class LinkStore
         if(links == null || links.isEmpty())
             return "";
 
-        StringJoiner sj = new StringJoiner(",");
+        StringJoiner sj = new StringJoiner(LINKED_BY_DELIM);
         links.forEach(x -> sj.add(x.Id));
         return sj.toString();
     }

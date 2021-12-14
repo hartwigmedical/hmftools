@@ -5,14 +5,23 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_2;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.buildLinkAttributes;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEID;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEIDL;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.links.AssemblyLinks;
+import com.hartwig.hmftools.gripss.links.Link;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 
 import org.junit.Test;
@@ -76,5 +85,35 @@ public class AssemblyLinksTest
 
         assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2));
         assertTrue(assemblyLinks.getBreakendLinksMap().isEmpty());
+
+        // a breakend cannot assembly to the same other breakend, but can to another breakend
+        SvData var3 = mGripss.createInv(
+                CHR_2, 1000, 2000, NEG_ORIENT, null,
+                buildLinkAttributes("asm12_01,asm12_02,asm13-01,asm13-02", "1,2,3,4"));
+
+        SvData var4 = mGripss.createInv(
+                CHR_2, 2100, 4200, POS_ORIENT,
+                buildLinkAttributes("asm12_01,asm12_02", "1,2"),
+                buildLinkAttributes("asm23-01,asm23-02,asm23-03", "5,6,7"));
+
+        SvData var5 = mGripss.createDel(
+                CHR_2, 2200, 4100,
+                buildLinkAttributes("asm13-01,asm13-02", "3,4"),
+                buildLinkAttributes("asm23-01,asm23-02,asm23-03", "5,6,7"));
+
+        assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var3, var4, var5));
+
+        List<Link> links = assemblyLinks.getBreakendLinks(var3.breakendEnd());
+        assertEquals(2, links.size());
+        assertTrue(links.stream().anyMatch(x -> x.breakendEnd() == var4.breakendStart()));
+        assertTrue(links.stream().anyMatch(x -> x.breakendEnd() == var5.breakendStart()));
+
+        links = assemblyLinks.getBreakendLinks(var4.breakendEnd());
+        assertEquals(1, links.size());
+        assertTrue(links.stream().anyMatch(x -> x.breakendEnd() == var5.breakendEnd()));
+
+        links = assemblyLinks.getBreakendLinks(var5.breakendEnd());
+        assertEquals(1, links.size());
+        assertTrue(links.stream().anyMatch(x -> x.breakendEnd() == var4.breakendEnd()));
     }
 }

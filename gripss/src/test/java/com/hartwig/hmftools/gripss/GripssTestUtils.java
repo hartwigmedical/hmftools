@@ -377,8 +377,11 @@ public class GripssTestUtils
     {
         Map<String,Object> attributes = Maps.newHashMap();
         attributes.put(VT_AS, 2); // set automatically from assembly strings
-        attributes.put(VT_BEID, beid);
-        attributes.put(VT_BEIDL, beidl);
+
+        String[] beids = beid.split(",");
+        String[] beidls = beidl.split(",");
+        attributes.put(VT_BEID, beids);
+        attributes.put(VT_BEIDL, beidls);
         return attributes;
     }
 

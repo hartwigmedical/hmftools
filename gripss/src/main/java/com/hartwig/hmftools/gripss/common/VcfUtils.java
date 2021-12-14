@@ -3,9 +3,13 @@ package com.hartwig.hmftools.gripss.common;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.MATE_ID;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.LINE_POLY_AT_REQ;
@@ -73,14 +77,14 @@ public class VcfUtils
     public static final String VT_CIRPOS = "CIRPOS";
     public static final String VT_IMPRECISE = IMPRECISE;
 
+    public static final String VT_LOCAL_LINKED_BY = LOCAL_LINKED_BY;
+    public static final String VT_REMOTE_LINKED_BY = REMOTE_LINKED_BY;
+    public static final String VT_TAF = TAF;
+    public static final String VT_HOTSPOT = HOTSPOT;
     public static final String VT_REALIGN = "REALIGN";
-    public static final String VT_LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
     public static final String VT_EVENT_TYPE = "EVENTTYPE";
-    public static final String VT_TAF = "TAF";
     public static final String VT_ALT_PATH = "ALT_PATH";
-    public static final String VT_HOTSPOT = "HOTSPOT";
     public static final String VT_RESCUE_INFO = "RESCUED";
-    public static final String VT_REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
 
     public static GenotypeIds parseVcfSampleIds(final VCFHeader header, final String referenceId, final String tumorId)
     {

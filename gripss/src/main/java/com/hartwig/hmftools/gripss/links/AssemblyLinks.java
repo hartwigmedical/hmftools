@@ -96,6 +96,7 @@ public class AssemblyLinks
 
                     String linkId = String.format("%s-%d", assembly, linkCounter++);
 
+                    // a breakend can assemble to more than 1 other breakend, but not to the same breakend twice
                     assemblyLinkStore.addLinks(linkId, breakend1, breakend2, false);
                 }
             }
