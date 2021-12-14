@@ -3,8 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.HLATYPE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.HLATYPEDETAILS;
 
-import java.sql.Timestamp;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.hartwig.hmftools.common.hla.HlaType;
@@ -26,7 +25,7 @@ class HlaTypeDAO {
     void writeType(@NotNull final String sample, @NotNull HlaType type) {
         context.delete(HLATYPE).where(HLATYPE.SAMPLEID.eq(sample)).execute();
 
-        Timestamp timestamp = new Timestamp(new Date().getTime());
+        LocalDateTime timestamp = LocalDateTime.now();
         context.insertInto(HLATYPE,
                 HLATYPE.MODIFIED,
                 HLATYPE.SAMPLEID,
@@ -53,7 +52,7 @@ class HlaTypeDAO {
 
     void writeTypeDetails(@NotNull final String sample, @NotNull List<HlaTypeDetails> typeDetails) {
         context.delete(HLATYPEDETAILS).where(HLATYPEDETAILS.SAMPLEID.eq(sample)).execute();
-        Timestamp timestamp = new Timestamp(new Date().getTime());
+        LocalDateTime timestamp = LocalDateTime.now();
 
         InsertValuesStep15 inserter = context.insertInto(HLATYPEDETAILS,
                 HLATYPEDETAILS.MODIFIED,

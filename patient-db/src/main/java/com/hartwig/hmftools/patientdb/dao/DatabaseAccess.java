@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
@@ -59,6 +57,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.CloseableDSLContext;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.conf.MappedSchema;
@@ -82,7 +81,7 @@ public class DatabaseAccess implements AutoCloseable {
     public static final String DB_DEFAULT_ARGS = "?serverTimezone=UTC&useSSL=false";
 
     @NotNull
-    private final DSLContext context;
+    private final CloseableDSLContext context;
     @NotNull
     private final EcrfDAO ecrfDAO;
     @NotNull
@@ -139,10 +138,8 @@ public class DatabaseAccess implements AutoCloseable {
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        Connection conn = DriverManager.getConnection(url, userName, password);
-        String catalog = conn.getCatalog();
-        LOGGER.debug("Connecting to database {}", catalog);
-        this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
+        LOGGER.debug("Connecting to database {} @ {}", userName, url);
+        this.context = DSL.using(url, userName, password);
 
         this.ecrfDAO = new EcrfDAO(context);
         this.clinicalDAO = new ClinicalDAO(context);
