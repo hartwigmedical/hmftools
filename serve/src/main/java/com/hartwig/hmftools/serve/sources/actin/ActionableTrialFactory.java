@@ -19,7 +19,7 @@ public class ActionableTrialFactory {
         com.hartwig.hmftools.serve.sources.actin.ImmutableActionableTrial.Builder actionableBuilder =
                 com.hartwig.hmftools.serve.sources.actin.ImmutableActionableTrial.builder()
                         .source(Knowledgebase.ACTIN)
-                        .treatment("")
+                        .treatment(actionTrial.trialId() + "(" + actionTrial.cohortId() + ")")
                         .level(EvidenceLevel.B)
                         .direction(EvidenceDirection.RESPONSIVE)
                         .urls(Sets.newHashSet(""));

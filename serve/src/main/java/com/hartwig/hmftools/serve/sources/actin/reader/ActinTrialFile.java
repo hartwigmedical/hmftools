@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.sources.actin.ActinTrial;
+import com.hartwig.hmftools.serve.sources.actin.EligibilityRule;
 import com.hartwig.hmftools.serve.sources.actin.ImmutableActinTrial;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +44,7 @@ public class ActinTrialFile {
         return ImmutableActinTrial.builder()
                 .trialId(values[0])
                 .cohortId(values[1])
-                .rule(values[2])
+                .rule(EligibilityRule.valueOf(values[2]))
                 .parameters(values[3])
                 .build();
     }

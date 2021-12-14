@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.serve.sources.actin.classification;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.serve.sources.actin.ActinTrial;
 
@@ -22,12 +20,48 @@ public class ActinEventTypeExtractor {
     }
 
     @NotNull
-    public String extractGene(@NotNull List<ActinTrial> trials) {
+    public String extractGene(@NotNull ActinTrial trial) {
         return Strings.EMPTY;
     }
 
     @NotNull
-    public String extractEvent(@NotNull List<ActinTrial> trials) {
-        return Strings.EMPTY;
+    public String extractEvent(@NotNull ActinTrial trial) {
+        switch (trial.rule()) {
+            case ACTIVATION_OF_GENE_X:
+                return Strings.EMPTY;
+            case INACTIVATION_OF_GENE_X:
+                return Strings.EMPTY;
+            case ACTIVATING_MUTATION_IN_GENE_X:
+                return Strings.EMPTY;
+            case MUTATION_IN_GENE_X_OF_TYPE_Y:
+                return Strings.EMPTY;
+            case INACTIVATING_MUTATION_IN_GENE_X:
+                return Strings.EMPTY;
+            case AMPLIFICATION_OF_GENE_X:
+                return Strings.EMPTY;
+            case DELETION_OF_GENE_X:
+                return Strings.EMPTY;
+            case ACTIVATING_FUSION_IN_GENE_X:
+                return Strings.EMPTY;
+            case SPECIFIC_FUSION_X:
+                return Strings.EMPTY;
+            case OVEREXPRESSION_OF_GENE_X:
+                return Strings.EMPTY;
+            case WILDTYPE_OF_GENE_X:
+                return Strings.EMPTY;
+            case MSI_SIGNATURE:
+                return Strings.EMPTY;
+            case HRD_SIGNATURE:
+                return Strings.EMPTY;
+            case TMB_OF_AT_LEAST_X:
+                return Strings.EMPTY;
+            case TML_OF_AT_LEAST_X:
+                return Strings.EMPTY;
+            case TML_OF_AT_MOST_X:
+                return Strings.EMPTY;
+            default: {
+                throw new IllegalStateException("Unrecognized event: " + trial.rule());
+            }
+        }
     }
 }

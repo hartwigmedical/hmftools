@@ -57,8 +57,8 @@ public class ActinExtractor {
 
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
 
-            String gene = EXTRACTOR.extractGene(trials);
-            String event = EXTRACTOR.extractEvent(trials);
+            String gene = EXTRACTOR.extractGene(trial);
+            String event = EXTRACTOR.extractEvent(trial);
 
             EventType eventType = CLASSIFIER.determineType(gene, event);
 

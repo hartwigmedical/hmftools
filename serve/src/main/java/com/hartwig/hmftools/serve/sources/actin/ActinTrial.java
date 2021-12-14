@@ -16,7 +16,7 @@ public abstract class ActinTrial {
     public abstract String cohortId();
 
     @NotNull
-    public abstract String rule();
+    public abstract EligibilityRule rule();
 
     @NotNull
     public abstract String parameters();
