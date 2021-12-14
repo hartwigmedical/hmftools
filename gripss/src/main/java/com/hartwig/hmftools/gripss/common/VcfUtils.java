@@ -62,7 +62,6 @@ public class VcfUtils
     public static final String VT_HOMSEQ = "HOMSEQ";
     public static final String VT_IHOMPOS = "IHOMPOS";
 
-    public static final String VT_MATE_ID = MATE_ID;
     public static final String VT_PAR_ID = PAR_ID;
 
     public static final String VT_AS = "AS";

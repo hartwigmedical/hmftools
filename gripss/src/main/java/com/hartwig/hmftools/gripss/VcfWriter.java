@@ -177,12 +177,6 @@ public class VcfWriter
         else
             builder.attribute(VT_REMOTE_LINKED_BY, "");
 
-        if(altPathStr != null && !altPathStr.isEmpty())
-            builder.attribute(VT_ALT_PATH, altPathStr);
-
-        if(rescueInfo != null)
-            builder.attribute(VT_RESCUE_INFO, rescueInfo);
-
         final SvData sv = breakend.sv();
 
         List<FilterType> svFilters;
@@ -210,12 +204,21 @@ public class VcfWriter
             svFilters.forEach(x -> builder.filter(FilterType.vcfName(x)));
         }
 
-        VariantContext variantContext = builder.make();
-
-        mUnfilteredWriter.add(variantContext);
+        VariantContext variantContext = builder.make(true);
 
         if(svFilters == null || (svFilters.size() == 1 && svFilters.get(0) == PON))
+        {
             mFilteredWriter.add(variantContext);
+        }
+
+        // write additional status and working data to unfiltered VCF
+        if(altPathStr != null && !altPathStr.isEmpty())
+            builder.attribute(VT_ALT_PATH, altPathStr);
+
+        if(rescueInfo != null)
+            builder.attribute(VT_RESCUE_INFO, rescueInfo);
+
+        mUnfilteredWriter.add(variantContext);
     }
 
     public void close()

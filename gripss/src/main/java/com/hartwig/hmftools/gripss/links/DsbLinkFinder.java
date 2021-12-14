@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.gripss.links;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.gripss.SvDataCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;

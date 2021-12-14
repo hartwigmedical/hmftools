@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -52,8 +56,11 @@ public class GripssCompareVcfs
 
     private final BufferedWriter mWriter;
 
+    private final boolean mIgnorePonDiff;
+
     private static final String ORIGINAL_VCF = "original_vcf";
     private static final String NEW_VCF = "new_vcf";
+    private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
 
     public GripssCompareVcfs(final CommandLine cmd)
     {
@@ -66,6 +73,8 @@ public class GripssCompareVcfs
         mOriginalSvData = Maps.newHashMap();
 
         mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd));
+
+        mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
 
         mWriter = initialiseWriter();
     }
@@ -147,48 +156,73 @@ public class GripssCompareVcfs
 
                 if(origSv == null)
                 {
-                    writeDiffs(origSv, null, "NO_NEW", "", "");
+                    writeDiffs(null, newSv, "NO_ORIG", "", "");
                     ++diffCount;
                     continue;
                 }
 
                 mOriginalSvData.remove(origSv.id());
 
-                boolean hasDiff = false;
+                // types of diffs:
+                // filters - where both have filters but different ones
+                // filtered vs PASS - likely due to rescue
+                // LINKED_BY local and remote -
 
                 if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
                 || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
                 {
-                    hasDiff = true;
-                    writeDiffs(origSv, newSv, "COORDS", makeSvCoords(origSv), makeSvCoords(newSv));
-                }
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    if(origSv.isSgl() && se == SE_END)
-                        continue;
-
-                    Breakend origStart = origSv.breakends()[se];
-                    Breakend newStart = newSv.breakends()[se];
-
-                    if(se == SE_START)
-                    {
-                        Set<String> origFilters = origStart.Context.getFilters();
-                        Set<String> newFilters = newStart.Context.getFilters();
-
-                        Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
-                        Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
-
-                        if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
-                        {
-                            writeDiffs(origSv, newSv, "FILTERS", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
-                            hasDiff = true;
-                        }
-                    }
-                }
-
-                if(hasDiff)
                     ++diffCount;
+                    writeDiffs(origSv, newSv, "COORDS", makeSvCoords(origSv), makeSvCoords(newSv));
+                    continue;
+                }
+
+                Breakend origStart = origSv.breakends()[SE_START];
+                Breakend newStart = newSv.breakends()[SE_START];
+
+                Set<String> origFilters = origStart.Context.getFilters();
+                Set<String> newFilters = newStart.Context.getFilters();
+
+                // first check for a difference in PASS vs not
+                Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
+                Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
+
+                boolean ignorePonDiff = mIgnorePonDiff
+                        && ((origFilterDiffs.isEmpty() && newFilterDiffs.size() == 1 && newFilterDiffs.contains(PON_FILTER_PON))
+                        || (newFilterDiffs.isEmpty() && origFilterDiffs.size() == 1 && origFilterDiffs.contains(PON_FILTER_PON)));
+
+                if(!ignorePonDiff && (!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty()))
+                {
+                    boolean origIsPass = origStart.Context.isNotFiltered() || (origFilters.size() == 1 && origFilters.contains(PASS));
+                    boolean newIsPass = newStart.Context.isNotFiltered() || (newFilters.size() == 1 && newFilters.contains(PASS));
+
+                    if(origIsPass != newIsPass)
+                    {
+                        writeDiffs(origSv, newSv, "FILTER_PASS", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
+                    }
+                    else
+                    {
+                        writeDiffs(origSv, newSv, "FILTER_DIFF", filtersStr(origFilterDiffs), filtersStr(newFilterDiffs));
+                    }
+
+                    ++diffCount;
+                    continue;
+                }
+
+                // check local and remote linked by for assembled links
+                boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
+                boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
+                boolean origHasEndAssembled = !origSv.isSgl() && origStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
+                boolean newHasEndAssembled = !origSv.isSgl() && newStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
+
+                if(origHasStartAssembled != newHasStartAssembled || origHasEndAssembled != newHasEndAssembled)
+                {
+                    writeDiffs(
+                            origSv, newSv, "ASSEMBLY",
+                            String.format("%s_%s", origHasStartAssembled, origHasEndAssembled),
+                            String.format("%s_%s", newHasStartAssembled, newHasEndAssembled));
+                    ++diffCount;
+                    continue;
+                }
             }
         }
         catch(IOException e)
@@ -270,46 +304,13 @@ public class GripssCompareVcfs
         }
     }
 
-    private boolean findDiffs(final SvData origSv, final SvData newSv, final StringJoiner diffTypes, final StringJoiner diffDetails)
-    {
-        if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
-                || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
-        {
-            diffTypes.add("COORDS");
-            diffDetails.add(String.format("new=%s)", makeSvCoords(newSv)));
-        }
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(origSv.isSgl() && se == SE_END)
-                continue;
-
-            Breakend origStart = origSv.breakends()[se];
-            Breakend newStart = newSv.breakends()[se];
-
-            if(se == SE_START)
-            {
-                Set<String> origFilters = origStart.Context.getFilters();
-                Set<String> newFilters = newStart.Context.getFilters();
-
-                if((!origFilters.isEmpty() || !newFilters.isEmpty())
-                        && origFilters.size() != newFilters.size() || origFilters.stream().anyMatch(x -> !newFilters.contains(x)))
-                {
-                    diffTypes.add("FILTERS");
-                    diffDetails.add(String.format("orig=%s new=%s", filtersStr(origFilters), filtersStr(newFilters)));
-                }
-            }
-        }
-
-        return diffTypes.length() > 0;
-    }
-
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(ORIGINAL_VCF, true, "Optional, name of the reference sample");
         options.addOption(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
+        options.addOption(IGNORE_PON_DIFF, false, "Ignore diffs if just PON filter");
 
         addOutputOptions(options);
         addLoggingOptions(options);

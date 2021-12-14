@@ -77,7 +77,7 @@ public class LinkRescue
         Breakend otherBreakend = breakend.otherBreakend();
 
         if(otherBreakend != null)
-            mRescueInfo.put(breakend, rescueInfo);
+            mRescueInfo.put(otherBreakend, rescueInfo);
     }
 
     private static boolean isRescueCandidate(final Breakend breakend, final FilterCache filterCache, boolean rescueShortSVs)
