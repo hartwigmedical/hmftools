@@ -53,9 +53,11 @@ public class VariantBuilder
         // each SV breakend can be a) not hard-filtered, b) hard-filtered but a hotspot candidate or c) neither
         // and if it's not a single then these 3 scenarios need to be considered together for the pair of breakends
         // if either are hard-filtered and not hotspot candidates, then drop them both
-        boolean hardFiltered = mHardFilters != null ? mHardFilters.isFiltered(variant, genotypeIds) : false;
+        boolean isSgl = StructuralVariantFactory.isSingleBreakend(variant);
 
-        if(StructuralVariantFactory.isSingleBreakend(variant))
+        boolean hardFiltered = mHardFilters != null ? mHardFilters.isFiltered(variant, genotypeIds, isSgl) : false;
+
+        if(isSgl)
         {
             if(hardFiltered)
             {
@@ -81,7 +83,9 @@ public class VariantBuilder
         }
 
         boolean mateHotspotCandidate = mHotspotCandidateVcfIds.contains(mateId);
-        boolean hotspotCandidate = hardFiltered && mHotspotCache.matchesHotspotBreakend(variant.getContig(), variant.getStart());
+
+        boolean hotspotCandidate = hardFiltered && !mHardFilters.belowMinQual(variant, genotypeIds, isSgl)
+                && mHotspotCache.matchesHotspotBreakend(variant.getContig(), variant.getStart());
 
         if(hardFiltered && !hotspotCandidate)
         {

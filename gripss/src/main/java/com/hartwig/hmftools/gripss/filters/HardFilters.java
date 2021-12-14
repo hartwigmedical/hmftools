@@ -27,13 +27,11 @@ public class HardFilters
         mFilterConstants = filterConstants;
     }
 
-    public boolean isFiltered(final VariantContext variant, final GenotypeIds genotypeIds)
+    public boolean isFiltered(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
         // the following hard filters are applied:
         // - below min tumor qual
         // - excessive normal support
-        boolean isSgl = StructuralVariantFactory.isSingleBreakend(variant);
-
         if(belowMinQual(variant, genotypeIds, isSgl))
             return true;
 
@@ -43,7 +41,7 @@ public class HardFilters
         return false;
     }
 
-    private boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
+    public boolean belowMinQual(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
         Genotype tumorGenotype = variant.getGenotype(genotypeIds.TumorOrdinal);
         double qual;

@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.createSvBreakends;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -224,9 +225,9 @@ public class VariantBuilderTest
         SvData sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
         sv = mBuilder.checkCreateVariant(contexts[SE_END], mGenotypeIds);
-        assertNotNull(sv);
+        assertNull(sv);
 
-        assertEquals(0, mBuilder.hardFilteredCount());
+        assertEquals(1, mBuilder.hardFilteredCount());
         assertEquals(0, mBuilder.incompleteSVs());
 
         mBuilder.clearState();
@@ -253,6 +254,38 @@ public class VariantBuilderTest
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
         contexts[SE_END].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
+
+        sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
+        assertNull(sv);
+        sv = mBuilder.checkCreateVariant(contexts[SE_END], mGenotypeIds);
+        assertNull(sv);
+
+        assertEquals(1, mBuilder.hardFilteredCount());
+        assertEquals(0, mBuilder.incompleteSVs());
+
+        mBuilder.clearState();
+
+        // excessive ref support is rescued by being a hotspot
+        contexts = createSvBreakends(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
+
+        contexts[SE_END].getGenotype(0).getExtendedAttributes().put(VT_VF, 10);
+        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(VT_VF, 1);
+
+        sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
+        assertNull(sv);
+        sv = mBuilder.checkCreateVariant(contexts[SE_END], mGenotypeIds);
+        assertNotNull(sv);
+
+        assertEquals(0, mBuilder.hardFilteredCount());
+        assertEquals(0, mBuilder.incompleteSVs());
+
+        // legs in reverse order
+        contexts = createSvBreakends(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
+
+        contexts[SE_START].getGenotype(0).getExtendedAttributes().put(VT_VF, 10);
+        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_VF, 1);
 
         sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);

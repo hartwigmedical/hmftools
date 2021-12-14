@@ -125,11 +125,18 @@ public class GripssCompareVcfs
     {
         Set<SvData> matchedSvs = Sets.newHashSet();
 
+        int compareCount = 0;
         int diffCount = 0;
-
 
         for(SvData origSv : mOriginalSvData.values())
         {
+            ++compareCount;
+
+            if(compareCount > 0 && (compareCount % 10000 == 0))
+            {
+                GR_LOGGER.debug("processed {} variants", compareCount);
+            }
+
             SvData newSv = mNewSvData.get(origSv.id());
 
             if(newSv == null)
