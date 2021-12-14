@@ -25,16 +25,13 @@ public class LinxSvData implements ComparableItem
     public final StructuralVariantData SvData;
     public final LinxSvAnnotation Annotation;
     public final LinxCluster Cluster;
-    public final LinxViralInsertion ViralInsertion;
 
     public LinxSvData(
-            final StructuralVariantData svData, final LinxSvAnnotation annotation,
-            final LinxCluster cluster, final LinxViralInsertion viralInsertion)
+            final StructuralVariantData svData, final LinxSvAnnotation annotation, final LinxCluster cluster)
     {
         SvData = svData;
         Cluster = cluster;
         Annotation = annotation;
-        ViralInsertion = viralInsertion;
     }
 
     public Category category() { return LINX_DATA; }
@@ -85,13 +82,6 @@ public class LinxSvData implements ComparableItem
         }
 
         checkDiff(diffs, "foldback", Annotation.isFoldback(), otherSv.Annotation.isFoldback());
-
-        if((ViralInsertion == null) != (otherSv.ViralInsertion == null))
-        {
-            diffs.add(String.format("viralInsert(%s/%s)",
-                    ViralInsertion != null ? ViralInsertion.VirusName : "NONE",
-                    otherSv.ViralInsertion != null ? otherSv.ViralInsertion.VirusName : "NONE"));
-        }
 
         return diffs;
     }
