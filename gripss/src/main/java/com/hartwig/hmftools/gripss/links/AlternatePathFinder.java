@@ -21,7 +21,6 @@ public class AlternatePathFinder
 {
     public static List<AlternatePath> findPaths(final SvDataCache svDataCache, final LinkStore assemblyLinkStore)
     {
-        Set<String> failed = Sets.newHashSet();
         Map<String,AlternatePath> alternatePaths = Maps.newHashMap();
 
         TransitiveLinkFinder transitiveLinkFinder = new TransitiveLinkFinder(svDataCache, assemblyLinkStore);
@@ -31,31 +30,21 @@ public class AlternatePathFinder
             if(sv.isSgl())
                 continue;
 
-            for(int se = SE_START; se <= SE_END; ++se)
+            Breakend breakend = sv.breakendStart();
+            Breakend otherBreakend = sv.breakendEnd();
+
+            List<Link> transLinks = transitiveLinkFinder.findTransitiveLinks(breakend);
+
+            if(!transLinks.isEmpty())
             {
-                Breakend breakend = sv.breakends()[se];
-                Breakend otherBreakend = sv.breakends()[switchIndex(se)];
+                AlternatePath altPath = new AlternatePath(breakend, otherBreakend, transLinks);
 
-                if(alternatePaths.containsKey(otherBreakend.VcfId) && failed.contains(otherBreakend.VcfId))
-                    continue;
+                List<Link> reversedLinks = Lists.newArrayList();
+                transLinks.forEach(x -> reversedLinks.add(0, x.reverse()));
+                AlternatePath reverseAltPath = new AlternatePath(otherBreakend, breakend, reversedLinks);
 
-                List<Link> transLinks = transitiveLinkFinder.findTransitiveLinks(breakend);
-
-                if(!transLinks.isEmpty())
-                {
-                    AlternatePath altPath = new AlternatePath(breakend, otherBreakend, transLinks);
-
-                    List<Link> reversedLinks = Lists.newArrayList();
-                    transLinks.forEach(x -> reversedLinks.add(0, x.reverse()));
-                    AlternatePath reverseAltPath = new AlternatePath(otherBreakend, breakend, reversedLinks);
-
-                    alternatePaths.put(breakend.VcfId, altPath);
-                    alternatePaths.put(otherBreakend.VcfId, reverseAltPath);
-                }
-                else
-                {
-                    failed.add(breakend.VcfId);
-                }
+                alternatePaths.put(breakend.VcfId, altPath);
+                alternatePaths.put(otherBreakend.VcfId, reverseAltPath);
             }
         }
 

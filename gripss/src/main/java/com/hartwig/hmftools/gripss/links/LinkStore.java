@@ -45,6 +45,19 @@ public class LinkStore
 
     public void addLinks(final String linkId, final Breakend breakend1, final Breakend breakend2)
     {
+        addLinks(linkId, breakend1, breakend2, true);
+    }
+
+    public void addLinks(final String linkId, final Breakend breakend1, final Breakend breakend2, boolean allowDuplicates)
+    {
+        if(!allowDuplicates)
+        {
+            List<Link> existingLinks = getBreakendLinks(breakend1);
+
+            if(existingLinks != null && existingLinks.stream().anyMatch(x -> x.otherBreakend(breakend1) == breakend2))
+                return;
+        }
+
         addLink(breakend1, Link.from(linkId, breakend1, breakend2));
         addLink(breakend2, Link.from(linkId, breakend2, breakend1));
     }

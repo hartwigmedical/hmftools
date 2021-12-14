@@ -10,23 +10,24 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.gripss.SvDataCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 
 public class AssemblyLinks
 {
-    public static LinkStore buildAssembledLinks(final List<SvData> svList)
+    public static LinkStore buildAssembledLinks(final Map<String,List<Breakend>> chrBreakendMap)
     {
-        Map<String,List<Breakend>> assemblyBreakendMap = Maps.newHashMap();
+        LinkStore assemblyLinkStore = new LinkStore();
 
-        for(SvData sv : svList)
+        for(List<Breakend> breakendLists : chrBreakendMap.values())
         {
-            if(sv.isSgl())
-                continue;
+            Map<String,List<Breakend>> assemblyBreakendMap = Maps.newHashMap();
 
-            for(int se = SE_START; se <= SE_END; ++se)
+            for(Breakend breakend : breakendLists)
             {
-                Breakend breakend = sv.breakends()[se];
+                if(breakend.isSgl())
+                    continue;
 
                 for(String assembly : breakend.getAssemblies())
                 {
@@ -41,10 +42,25 @@ public class AssemblyLinks
                     breakends.add(breakend);
                 }
             }
+
+            addAssemblyLinks(assemblyLinkStore, assemblyBreakendMap);
         }
 
-        LinkStore assemblyLinkStore = new LinkStore();
+        return assemblyLinkStore;
+    }
 
+    public static LinkStore buildAssembledLinks(final List<SvData> svList)
+    {
+        // only used for testing
+        SvDataCache svDataCache = new SvDataCache();
+        svList.forEach(x -> svDataCache.addSvData(x));
+        svDataCache.buildBreakendMap();
+
+        return buildAssembledLinks(svDataCache.getBreakendMap());
+    }
+
+    private static void addAssemblyLinks(final LinkStore assemblyLinkStore, final Map<String,List<Breakend>> assemblyBreakendMap)
+    {
         for(Map.Entry<String,List<Breakend>> entry : assemblyBreakendMap.entrySet())
         {
             String assembly = entry.getKey();
@@ -80,11 +96,9 @@ public class AssemblyLinks
 
                     String linkId = String.format("%s-%d", assembly, linkCounter++);
 
-                    assemblyLinkStore.addLinks(linkId, breakend1, breakend2);
+                    assemblyLinkStore.addLinks(linkId, breakend1, breakend2, false);
                 }
             }
         }
-
-        return assemblyLinkStore;
     }
 }

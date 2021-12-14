@@ -197,7 +197,7 @@ public class GripssApplication
         GR_LOGGER.debug("pon filtered count({})", mFilterCache.ponFilteredCount());
 
         GR_LOGGER.info("finding assembly links");
-        LinkStore assemblyLinkStore = AssemblyLinks.buildAssembledLinks(mSvDataCache.getSvList());
+        LinkStore assemblyLinkStore = AssemblyLinks.buildAssembledLinks(mSvDataCache.getBreakendMap());
         GR_LOGGER.debug("found {} assembly links", assemblyLinkStore.getBreakendLinksMap().size());
 
         GR_LOGGER.info("finding alternative paths and transitive links");

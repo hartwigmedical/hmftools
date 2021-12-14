@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.links.TransitiveLink.TRANS_LINK_PREFIX;
 
 import java.util.ArrayDeque;
@@ -80,15 +81,16 @@ public class TransitiveLinkFinder
         return links;
     }
 
-    private static final int MAX_ITERATIONS = 50; // logically not required but in as a safety measure
+    private static final int MAX_ITERATIONS = 500   ; // logically not required but in as a safety measure
 
     private List<Link> findLinks(
             final Breakend target, final ArrayDeque assemblyTransLinks, final ArrayDeque transLinks, final ArrayDeque matchedTransLinks)
     {
         ++mRecursiveInterations;
 
-        if(mRecursiveInterations >= MAX_ITERATIONS)
+        if(mRecursiveInterations == MAX_ITERATIONS)
         {
+            GR_LOGGER.warn("breakend({}) reached max({}) iterations finding transitive links", target, mRecursiveInterations);
             return Lists.newArrayList();
         }
 
