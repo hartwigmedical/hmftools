@@ -26,6 +26,11 @@ public class Link
         return new Link(LINK_TYPE_PAIR, sv.breakendStart(), sv.breakendEnd());
     }
 
+    public static Link from(final Breakend firstBreakend)
+    {
+        return new Link(LINK_TYPE_PAIR, firstBreakend, firstBreakend.otherBreakend());
+    }
+
     public static Link from(final String linkId, final Breakend first, final Breakend second)
     {
         return new Link(linkId, first, second);

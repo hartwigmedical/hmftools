@@ -53,8 +53,6 @@ public class TransitiveLinkFinder
         if(alternatives.isEmpty() || alternatives.size() > MAX_ALTERNATIVES)
             return links;
 
-        // logger.debug("Examining ${alternativeStarts.size} alternative(s) to variant $target")
-
         String tranksLinkPrefix = String.format("%s_%s_",TRANS_LINK_PREFIX, breakend.VcfId);
 
         ArrayDeque assemblyTransLinks = new ArrayDeque<TransitiveLink>();
@@ -65,7 +63,7 @@ public class TransitiveLinkFinder
         {
             Breakend alternativeOtherBreakend = alternative.otherBreakend();
 
-            Link altLink = Link.from(alternative.sv());
+            Link altLink = Link.from(alternative);
 
             TransitiveLink transLink = new TransitiveLink(tranksLinkPrefix, alternative, alternativeOtherBreakend, Lists.newArrayList(altLink));
 
@@ -227,32 +225,12 @@ public class TransitiveLinkFinder
 
             List<Link> newLinks = Lists.newArrayList(transLink.links());
             newLinks.add(assemblyLink);
-            newLinks.add(Link.from(pairedBreakend.sv()));
+            newLinks.add(Link.from(pairedBreakend));
 
             transitiveLinks.add(new TransitiveLink(
                     transLink.prefix(), pairedBreakend, pairedOtherBreakend,
                     transLink.remainingAssemblyJumps() - 1, transLink.remainingTransitiveJumps(), newLinks));
         }
-
-        /*
-        val unfilteredAssemblyLinks = assemblyLinkStore.linkedVariants(end.vcfId)
-        if (remainingAssemblyJumps > 0) {
-            val assemblyLinkedVariants = unfilteredAssemblyLinks
-                    .filter { x -> !links.contains(x) }
-                    .map { x -> Pair(x, variantStore.select(x.otherVcfId)) }
-                    .sortedByDescending { x -> x.second.tumorQual }
-
-            for (linkPair in assemblyLinkedVariants) {
-                val link = linkPair.first
-                val linkedVariant = linkPair.second
-                if (!linkedVariant.isSingle && !linkedVariant.imprecise) {
-                    val linkedVariantMate = variantStore.select(linkedVariant.mateId!!)
-                    result.add(Node(transLinkPrefix, maxTransitiveJumps, remainingAssemblyJumps - 1, remainingTransitiveJumps,
-                    linkedVariant, linkedVariantMate, links + link + Link(linkedVariant)))
-                }
-            }
-        }
-        */
 
         return transitiveLinks;
     }
@@ -296,7 +274,7 @@ public class TransitiveLinkFinder
             String linkPrefix = String.format("%s{%d-%d}", transLink.prefix(), MAX_TRANSITIVE_JUMPS, transLink.remainingTransitiveJumps());
             Link transitiveLink = Link.from(linkPrefix, transBreakend, otherBreakend);
             newLinks.add(transitiveLink);
-            newLinks.add(Link.from(otherBreakend.sv()));
+            newLinks.add(Link.from(otherBreakend));
 
             transLinks.add(new TransitiveLink(
                     transLink.prefix(), otherBreakend, pairedOtherBreakend,
