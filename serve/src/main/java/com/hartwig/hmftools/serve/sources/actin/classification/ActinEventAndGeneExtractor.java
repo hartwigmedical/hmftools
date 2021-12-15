@@ -12,32 +12,34 @@ public final class ActinEventAndGeneExtractor {
 
     @NotNull
     public static String extractGene(@NotNull ActinEntry entry) {
-        // TODO
-        return Strings.EMPTY;
+        return entry.parameters().get(0);
     }
 
     @NotNull
     public static String extractEvent(@NotNull ActinEntry entry) {
-        // TODO
         switch (entry.rule()) {
             case ACTIVATION_OF_GENE_X:
-                return Strings.EMPTY;
+                return "activation";
             case INACTIVATION_OF_GENE_X:
-                return Strings.EMPTY;
+                return "inactivation";
             case ACTIVATING_MUTATION_IN_GENE_X:
-                return Strings.EMPTY;
+                return "activation";
             case MUTATION_IN_GENE_X_OF_TYPE_Y:
-                return Strings.EMPTY;
+                if (entry.parameters().size() == 2) {
+                    return entry.parameters().get(1);
+                } else {
+                    return Strings.EMPTY;
+                }
             case INACTIVATING_MUTATION_IN_GENE_X:
-                return Strings.EMPTY;
+                return "inactivation";
             case AMPLIFICATION_OF_GENE_X:
-                return Strings.EMPTY;
+                return "amplification";
             case DELETION_OF_GENE_X:
-                return Strings.EMPTY;
+                return "deletion";
             case ACTIVATING_FUSION_IN_GENE_X:
-                return Strings.EMPTY;
+                return "fusion";
             case SPECIFIC_FUSION_X:
-                return Strings.EMPTY;
+                return entry.parameters().get(0);
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());
             }
