@@ -19,6 +19,6 @@ public class ActinExtractorFactory {
     public static ActinExtractor buildActinExtractor(@NotNull EventClassifierConfig config,
             @NotNull RefGenomeResource refGenomeResource) {
         return new ActinExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES),
-                new ActionableTrialFactory());
+                new ActinTrialFactory());
     }
 }

@@ -22,38 +22,36 @@ import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
+import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(ActinExtractor.class);
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ActinClassificationConfig.build());
     private static final ActinEventTypeExtractor EXTRACTOR = new ActinEventTypeExtractor();
 
     @NotNull
     private final EventExtractor eventExtractor;
     @NotNull
-    private final com.hartwig.hmftools.serve.sources.actin.ActionableTrialFactory actionableTrialFactory;
+    private final ActinTrialFactory actinTrialFactory;
 
     ActinExtractor(@NotNull final EventExtractor eventExtractor,
-            @NotNull final com.hartwig.hmftools.serve.sources.actin.ActionableTrialFactory actionableTrialFactory) {
+            @NotNull final ActinTrialFactory actinTrialFactory) {
         this.eventExtractor = eventExtractor;
-        this.actionableTrialFactory = actionableTrialFactory;
+        this.actinTrialFactory = actinTrialFactory;
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<ActinTrial> trials) {
+    public ExtractionResult extract(@NotNull List<ActinEntry> trials) {
         // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
 
         ProgressTracker tracker = new ProgressTracker("ACTIN", trials.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
-        for (ActinTrial trial : trials) {
-            List<com.hartwig.hmftools.serve.sources.actin.ActionableTrial> actionableTrials =
-                    actionableTrialFactory.toActionableEntries(trial);
+        for (ActinEntry trial : trials) {
+            List<ActinTrial> actinTrials =
+                    actinTrialFactory.toActionableEntries(trial);
 
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
 
@@ -64,7 +62,7 @@ public class ActinExtractor {
 
             eventExtractions.add(eventExtractor.extract(gene, null, eventType, event));
 
-            extractions.add(toExtractionResult(actionableTrials, eventExtractions));
+            extractions.add(toExtractionResult(actinTrials, eventExtractions));
 
             tracker.update();
         }
@@ -74,7 +72,7 @@ public class ActinExtractor {
 
     @NotNull
     private static ExtractionResult toExtractionResult(
-            @NotNull List<com.hartwig.hmftools.serve.sources.actin.ActionableTrial> actionableTrials,
+            @NotNull List<ActinTrial> actinTrials,
             @NotNull List<EventExtractorOutput> eventExtractions) {
         Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
@@ -82,7 +80,7 @@ public class ActinExtractor {
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
 
-        for (ActionableTrial trial : actionableTrials) {
+        for (ActinTrial trial : actinTrials) {
             for (EventExtractorOutput extraction : eventExtractions) {
                 actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots()));
                 actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
