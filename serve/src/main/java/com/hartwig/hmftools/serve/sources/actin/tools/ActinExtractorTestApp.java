@@ -80,6 +80,4 @@ public class ActinExtractorTestApp {
                 .proteinResolver(ProteinResolverFactory.dummy())
                 .build();
     }
-
-
 }
