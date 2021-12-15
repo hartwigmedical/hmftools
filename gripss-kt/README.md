@@ -4,7 +4,7 @@ This version has been superceded by:
 https://github.com/hartwigmedical/hmftools/blob/master/gripss/README.md
 
 
-# Usage for version 1.12 and earlier
+## Usage for version 1.12 and earlier
 
 ```
 java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripsskt.GripssApplicationKt \
