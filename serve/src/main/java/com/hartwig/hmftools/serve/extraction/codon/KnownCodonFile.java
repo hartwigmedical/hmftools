@@ -58,7 +58,7 @@ public final class KnownCodonFile {
                         .start(Long.parseLong(values[3]))
                         .end(Long.parseLong(values[4]))
                         .mutationType(MutationTypeFilter.valueOf(values[5]))
-                        .codonIndex(Integer.parseInt(values[6]))
+                        .rank(Integer.parseInt(values[6]))
                         .build())
                 .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[7]))
                 .build();
@@ -79,7 +79,7 @@ public final class KnownCodonFile {
                 .add("start")
                 .add("end")
                 .add("mutationType")
-                .add("codonIndex")
+                .add("codonRank")
                 .add("sources")
                 .toString();
     }
@@ -111,7 +111,7 @@ public final class KnownCodonFile {
                 .add(String.valueOf(codon.annotation().start()))
                 .add(String.valueOf(codon.annotation().end()))
                 .add(codon.annotation().mutationType().toString())
-                .add(String.valueOf(codon.annotation().codonIndex()))
+                .add(String.valueOf(codon.annotation().rank()))
                 .add(Knowledgebase.toCommaSeparatedSourceString(codon.sources()))
                 .toString();
     }

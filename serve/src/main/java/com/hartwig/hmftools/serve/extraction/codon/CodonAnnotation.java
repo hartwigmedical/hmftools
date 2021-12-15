@@ -11,9 +11,4 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CodonAnnotation implements RangeAnnotation {
 
-    @NotNull
-    public abstract String transcript();
-
-    public abstract int codonIndex();
-
 }

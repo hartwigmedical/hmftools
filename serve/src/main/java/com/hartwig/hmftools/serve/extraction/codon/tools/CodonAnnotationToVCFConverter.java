@@ -75,7 +75,7 @@ public class CodonAnnotationToVCFConverter {
                         codon.sources(),
                         codon.annotation().gene(),
                         codon.annotation().transcript(),
-                        codon.annotation().codonIndex());
+                        codon.annotation().rank());
             }
         }
 
@@ -86,7 +86,7 @@ public class CodonAnnotationToVCFConverter {
 
     private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
             @NotNull String ref, @NotNull String alt, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene,
-            @NotNull String transcript, int codonIndex) {
+            @NotNull String transcript, int codonRank) {
         List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
         VariantContext variant = new VariantContextBuilder().noGenotypes()
@@ -95,7 +95,7 @@ public class CodonAnnotationToVCFConverter {
                 .start(position)
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, new Long(position).intValue())
-                .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toCodonKey(gene, transcript, codonIndex))
+                .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toCodonKey(gene, transcript, codonRank))
                 .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
                 .make();
 

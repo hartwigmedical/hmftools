@@ -16,6 +16,7 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
@@ -100,7 +101,7 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
-                .codonIndex(0)
+                .rank(0)
                 .build();
     }
 
@@ -123,7 +124,7 @@ public final class ServeTestFactory {
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
-                .exonIndex(0)
+                .rank(0)
                 .build();
     }
 
@@ -173,10 +174,13 @@ public final class ServeTestFactory {
         return ImmutableActionableRange.builder()
                 .from(createTestBaseEvent())
                 .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .start(0)
                 .end(0)
                 .mutationType(MutationTypeFilter.ANY)
+                .rangeType(RangeType.EXON)
+                .rank(0)
                 .build();
     }
 

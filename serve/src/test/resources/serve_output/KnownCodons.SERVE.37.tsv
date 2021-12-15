@@ -1,3 +1,3 @@
-gene	transcript	chromosome	start	end	mutationType	codonIndex	sources
+gene	transcript	chromosome	start	end	mutationType	codonRank	sources
 NRAS	ENST00000369535	1	115251189	115251191	MISSENSE	179	vicc_civic
 NRAS	ENST00000369535	1	115256528	115256530	MISSENSE	61	vicc_cgi,vicc_civic

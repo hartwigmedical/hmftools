@@ -16,8 +16,13 @@ import com.hartwig.hmftools.serve.actionability.hotspot.ActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.hotspot.ImmutableActionableHotspot;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
+import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
+import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.copynumber.KnownCopyNumber;
+import com.hartwig.hmftools.serve.extraction.exon.ExonAnnotation;
+import com.hartwig.hmftools.serve.extraction.exon.ImmutableExonAnnotation;
 import com.hartwig.hmftools.serve.extraction.fusion.KnownFusionPair;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
@@ -64,14 +69,28 @@ public final class ActionableEventFactory {
             actionableRanges.add(ImmutableActionableRange.builder()
                     .from(actionableEvent)
                     .chromosome(range.chromosome())
+                    .transcript(range.transcript())
                     .start(range.start())
                     .end(range.end())
                     .gene(range.gene())
                     .mutationType(range.mutationType())
+                    .rangeType(determineRangeType(range))
+                    .rank(range.rank())
                     .build());
         }
 
         return actionableRanges;
+    }
+
+    @NotNull
+    private static RangeType determineRangeType(@NotNull RangeAnnotation annotation) {
+        if (annotation instanceof CodonAnnotation || annotation instanceof ImmutableCodonAnnotation) {
+            return RangeType.CODON;
+        } else if (annotation instanceof ExonAnnotation || annotation instanceof ImmutableExonAnnotation) {
+            return RangeType.EXON;
+        }
+
+        throw new IllegalStateException("Could not determine range type for: " + annotation);
     }
 
     @NotNull

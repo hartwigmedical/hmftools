@@ -20,13 +20,13 @@ public class KnownExonComparatorTest {
                         .end(11)
                         .gene("gene x")
                         .mutationType(MutationTypeFilter.ANY)
-                        .exonIndex(1)
+                        .rank(1)
                         .transcript("transcript x")
                         .build())
                 .build();
 
         KnownExon exon2 = ImmutableKnownExon.builder()
-                .annotation(ImmutableExonAnnotation.builder().from(exon1.annotation()).exonIndex(2).build())
+                .annotation(ImmutableExonAnnotation.builder().from(exon1.annotation()).rank(2).build())
                 .build();
 
         Set<KnownExon> sortedExons = Sets.newTreeSet(new KnownExonComparator());
