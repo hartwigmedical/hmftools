@@ -62,7 +62,7 @@ public class BreakendRealigner
 
         String newAlt = formPairedAltString(
                 refAllele.getDisplayString(), breakend.InsertSequence,
-                breakend.OtherChromosome, realignedOther.Position, breakend.Orientation, realignedOther.Orientation);
+                realignedOther.Chromosome, realignedOther.Position, breakend.Orientation, realignedOther.Orientation);
 
         alleles.add(Allele.create(newAlt));
 
@@ -120,7 +120,7 @@ public class BreakendRealigner
         final Breakend otherBreakend = breakend.otherBreakend();
 
         String newAlt = formPairedAltString(
-                newRef, otherBreakend.InsertSequence, otherBreakend.OtherChromosome, otherBreakend.Position,
+                newRef, otherBreakend.InsertSequence, otherBreakend.Chromosome, otherBreakend.Position,
                 breakend.Orientation, otherBreakend.Orientation);
 
         List<Allele> alleles = Lists.newArrayList();
