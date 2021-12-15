@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,16 +45,14 @@ public class GripssConfig
     private static final String REFERENCE = "reference";
     private static final String VCF_FILE = "vcf";
 
-    private static final String SCOPE = "scope";
-
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
 
     public static final Logger GR_LOGGER = LogManager.getLogger(GripssApplication.class);
 
     public GripssConfig(final CommandLine cmd)
     {
-        SampleId = cmd.getOptionValue(SAMPLE);
-        ReferenceId = cmd.getOptionValue(REFERENCE);
+        SampleId = cmd.getOptionValue(SAMPLE, "");
+        ReferenceId = cmd.getOptionValue(REFERENCE, "");
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
@@ -62,8 +62,6 @@ public class GripssConfig
         RestrictedChromosomes = cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES, "")
                 .split(";")).collect(Collectors.toList()) : Lists.newArrayList();
-
-        // Scope = cmd.getOptionValue(SCOPE);
     }
 
     public GripssConfig(
@@ -79,6 +77,23 @@ public class GripssConfig
     }
 
     public boolean tumorOnly() { return ReferenceId.isEmpty(); }
+
+    public boolean isValid()
+    {
+        if(SampleId.isEmpty())
+        {
+            GR_LOGGER.error("missing sample config");
+            return false;
+        }
+
+        if(VcfFile.isEmpty() || !Files.exists(Paths.get(VcfFile)))
+        {
+            GR_LOGGER.error("missing or invalid VCF file");
+            return false;
+        }
+
+        return true;
+    }
 
     public boolean excludeVariant(final SvData sv)
     {
@@ -99,7 +114,6 @@ public class GripssConfig
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(SCOPE, true, "Scope: germline or somatic");
 
         addOutputOptions(options);
         addLoggingOptions(options);

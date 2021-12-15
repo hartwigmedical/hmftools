@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_DSB_DISTANCE;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_DSB_SEEK_DISTANCE;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,9 +13,6 @@ import com.hartwig.hmftools.gripss.common.SvData;
 
 public final class DsbLinkFinder
 {
-    private static final int MAX_DSB_SEEK_DISTANCE = 1000;
-    private static final int MAX_DSB_DISTANCE = 30;
-
     // a breakend can only be in one DSB - the first & closest found
 
     public static LinkStore findBreaks(final SvDataCache dataCache, final LinkStore assemblyLinks, final Set<Breakend> duplicateBreakends)

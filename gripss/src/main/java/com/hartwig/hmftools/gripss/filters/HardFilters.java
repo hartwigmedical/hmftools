@@ -48,7 +48,6 @@ public class HardFilters
 
         if(isSgl)
         {
-            // FIXME: won't work for tumor-only passing in ref
             String ref = variant.getAlleles().get(0).getDisplayString();
             final VariantAltInsertCoords altInsertCoords = parseRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
 

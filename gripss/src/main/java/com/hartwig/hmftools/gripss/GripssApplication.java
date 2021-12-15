@@ -93,6 +93,12 @@ public class GripssApplication
 
     public void run()
     {
+        if(!mConfig.isValid())
+        {
+            GR_LOGGER.error("invalid config, exiting");
+            System.exit(1);
+        }
+
         processVcf(mConfig.VcfFile);
     }
 

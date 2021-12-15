@@ -2,8 +2,8 @@ package com.hartwig.hmftools.gripss.links;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.gripss.links.TransitiveLinkFinder.MAX_ASSEMBLY_JUMPS;
-import static com.hartwig.hmftools.gripss.links.TransitiveLinkFinder.MAX_TRANSITIVE_JUMPS;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_ASSEMBLY_JUMPS;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_TRANSITIVE_JUMPS;
 
 import java.util.List;
 

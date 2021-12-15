@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.gripss.links;
 
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_ALTERNATIVES;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_ALTERNATIVES_ADDITIONAL_DISTANCE;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_ALTERNATIVES_SEEK_DISTANCE;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_TRANSITIVE_ADDITIONAL_DISTANCE;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_TRANSITIVE_JUMPS;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_TRANSITIVE_SEEK_DISTANCE;
+import static com.hartwig.hmftools.gripss.GripssConstants.MAX_VARIANTS;
+import static com.hartwig.hmftools.gripss.GripssConstants.MIN_TRANSITIVE_DISTANCE;
 import static com.hartwig.hmftools.gripss.links.TransitiveLink.TRANS_LINK_PREFIX;
 
 import java.util.ArrayDeque;
@@ -16,18 +24,6 @@ public class TransitiveLinkFinder
     private final LinkStore mAssemblyLinkStore;
 
     private int mRecursiveInterations = 0;
-
-    // TODO: make public and move to Constants
-    public static final int MAX_ASSEMBLY_JUMPS = 5;
-    public static final int MAX_TRANSITIVE_JUMPS = 2;
-    private static final int MAX_VARIANTS = 500000;
-    private static final int MAX_ALTERNATIVES = 25;
-    private static final int MAX_ALTERNATIVES_SEEK_DISTANCE = 1000;
-    private static final int MAX_ALTERNATIVES_ADDITIONAL_DISTANCE = MAX_ALTERNATIVES_SEEK_DISTANCE;
-
-    private static final int MIN_TRANSITIVE_DISTANCE = 30;
-    private static final int MAX_TRANSITIVE_SEEK_DISTANCE = 2000;
-    private static final int MAX_TRANSITIVE_ADDITIONAL_DISTANCE = 1000;
 
     public TransitiveLinkFinder(final SvDataCache svDataCache, final LinkStore assemblyLinkStore)
     {
