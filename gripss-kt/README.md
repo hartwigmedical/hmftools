@@ -11,7 +11,7 @@ Repeat masker annotations must be included in the GRIDSS output before running G
 # Usage
 
 ```
-java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssApplicationKt \
+java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripsskt.GripssApplicationKt \
    -tumor SAMPLE_T \
    -reference SAMPLE_N \
    -ref_genome /path/to/Homo_sapiens_assembly.fasta \
@@ -24,7 +24,7 @@ java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssApplication
 
 We typically then hard-filter all but PON filtered from the somatic file with the following command:
 ```
-java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripss.GripssHardFilterApplicationKt \
+java -Xms4G -Xmx16G -cp gripss.jar com.hartwig.hmftools.gripsskt.GripssHardFilterApplicationKt \
    -input_vcf /path/to/SAMPLE_T.gripss.vcf.gz \
    -output_vcf /path/to/SAMPLE_T.gripss.filtered.vcf.gz 
 ```
