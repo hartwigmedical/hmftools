@@ -232,7 +232,6 @@ public class SomaticVariantDAO
                 .qual(record.get(SOMATICVARIANT.QUAL))
                 .localPhaseSet(record.get(SOMATICVARIANT.LOCALPHASESET))
                 .localRealignmentSet(record.get(SOMATICVARIANT.LOCALREALIGNMENTSET))
-                .phasedInframeIndelIdentifier(record.get(SOMATICVARIANT.PHASEDINFRAMEINDEL))
                 .genotypeStatus(UNKNOWN)
                 .build();
     }
@@ -291,7 +290,6 @@ public class SomaticVariantDAO
                 SOMATICVARIANT.QUAL,
                 SOMATICVARIANT.LOCALPHASESET,
                 SOMATICVARIANT.LOCALREALIGNMENTSET,
-                SOMATICVARIANT.PHASEDINFRAMEINDEL,
                 SOMATICVARIANT.MODIFIED);
         variants.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
         inserter.execute();
@@ -342,7 +340,6 @@ public class SomaticVariantDAO
                 variant.qual(),
                 variant.localPhaseSet(),
                 variant.localRealignmentSet(),
-                variant.phasedInframeIndelIdentifier(),
                 timestamp);
     }
 

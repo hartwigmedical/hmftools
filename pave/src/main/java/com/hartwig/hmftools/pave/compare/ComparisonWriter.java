@@ -127,7 +127,7 @@ public class ComparisonWriter
                     VariantData.csvHeader(), VariantTransImpact.csvHeader(), CodingContext.csvHeader(), ProteinContext.csvHeader()));
 
             writer.write(",RealignHgvsCoding,RealignHgvsProtein");
-            writer.write(",SnpEffCanonEffects,SnpEffHgvsCoding,SnpEffHgvsProtein,SagePhasedInframeIndel");
+            writer.write(",SnpEffCanonEffects,SnpEffHgvsCoding,SnpEffHgvsProtein");
 
             writer.newLine();
 
@@ -182,8 +182,8 @@ public class ComparisonWriter
                 mTransImpactWriter.write(",N/A,N/A");
             }
 
-            mTransImpactWriter.write(String.format(",%s,%s,%s,%s",
-                    refVariant.CanonicalEffect, refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.PhasedInframeIndel));
+            mTransImpactWriter.write(String.format(",%s,%s,%s",
+                    refVariant.CanonicalEffect, refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact));
 
             mTransImpactWriter.newLine();
         }

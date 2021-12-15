@@ -22,6 +22,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.pave.GeneDataCache;
 
 import org.jooq.Record;
+import org.jooq.Record18;
 import org.jooq.Record19;
 import org.jooq.Record20;
 import org.jooq.Result;
@@ -33,15 +34,15 @@ public final class DataLoader
     {
         List<RefVariantData> variants = Lists.newArrayList();
 
-        Result<Record19<String, String, Integer, String, String, String, String, String, String, String, String, String, String,
-                        String, Integer, Integer, Integer, Byte, String>>
+        Result<Record18<String, String, Integer, String, String, String, String, String, String, String, String, String, String,
+                                String, Integer, Integer, Byte, String>>
                 result = dbAccess.context()
                 .select(SOMATICVARIANT.GENE, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
                         SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.TYPE, SOMATICVARIANT.GENE,
                         SOMATICVARIANT.CANONICALEFFECT, SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.WORSTCODINGEFFECT,
                         SOMATICVARIANT.CANONICALHGVSCODINGIMPACT, SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
                         SOMATICVARIANT.MICROHOMOLOGY, SOMATICVARIANT.REPEATSEQUENCE, SOMATICVARIANT.REPEATCOUNT,
-                        SOMATICVARIANT.PHASEDINFRAMEINDEL, SOMATICVARIANT.LOCALPHASESET, SOMATICVARIANT.REPORTED, SOMATICVARIANT.HOTSPOT)
+                        SOMATICVARIANT.LOCALPHASESET, SOMATICVARIANT.REPORTED, SOMATICVARIANT.HOTSPOT)
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
@@ -98,7 +99,6 @@ public final class DataLoader
             int microhomologyIndex = fieldsIndexMap.get("microhomology");
             int repeatSequenceIndex = fieldsIndexMap.get("repeatSequence");
             int repeatCountIndex = fieldsIndexMap.get("repeatCount");
-            int phasedInframeIndelIndex = fieldsIndexMap.get("phasedInframeIndel");
             int localPhaseSetIndex = fieldsIndexMap.get("localPhaseSet");
             int reportedIndex = fieldsIndexMap.get("reported");
             Integer hotspotIndex = fieldsIndexMap.get("hotspot");
@@ -130,8 +130,7 @@ public final class DataLoader
                             items[canonicalCodingEffectIndex].isEmpty() ? NONE : CodingEffect.valueOf(items[canonicalCodingEffectIndex]),
                             CodingEffect.valueOf(items[worstCodingEffectIndex]), items[canonicalHgvsCodingImpactIndex],
                             items[canonicalHgvsProteinImpactIndex], items[microhomologyIndex], items[repeatSequenceIndex],
-                            Integer.parseInt(items[repeatCountIndex]), Boolean.parseBoolean(items[phasedInframeIndelIndex]),
-                            localPhaseSet, items[reportedIndex].equals("1"),
+                            Integer.parseInt(items[repeatCountIndex]), localPhaseSet, items[reportedIndex].equals("1"),
                             hotspotIndex != null ? items[hotspotIndex].equals(Hotspot.HOTSPOT.toString()) : false);
 
                     variants.add(variant);

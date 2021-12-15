@@ -238,11 +238,6 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false));
 
-        if(context.hasAttribute(SageMetaData.PHASED_INFRAME_INDEL))
-        {
-            builder.phasedInframeIndelIdentifier(context.getAttributeAsInt(SageMetaData.PHASED_INFRAME_INDEL, 0));
-        }
-
         if(context.hasAttribute(SageMetaData.LOCAL_PHASE_SET))
         {
             builder.localPhaseSet(context.getAttributeAsInt(SageMetaData.LOCAL_PHASE_SET, 0));

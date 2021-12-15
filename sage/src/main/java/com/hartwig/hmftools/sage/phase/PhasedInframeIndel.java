@@ -61,6 +61,7 @@ public class PhasedInframeIndel extends BufferedPostProcessor
 
                 if(isCodonMultiple(combinedLength))
                 {
+                    /*
                     if(other.phasedInframeIndel() != 0)
                     {
                         newVariant.phasedInframeIndel(other.phasedInframeIndel());
@@ -71,6 +72,7 @@ public class PhasedInframeIndel extends BufferedPostProcessor
                         newVariant.phasedInframeIndel(mPhase);
                         other.phasedInframeIndel(mPhase);
                     }
+                    */
                 }
             }
         }

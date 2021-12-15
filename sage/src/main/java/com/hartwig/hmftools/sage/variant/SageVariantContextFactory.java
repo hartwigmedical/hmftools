@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.variant;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_REALIGN_SET;
-import static com.hartwig.hmftools.common.sage.SageMetaData.PHASED_INFRAME_INDEL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.PASS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
@@ -82,11 +81,6 @@ public final class SageVariantContextFactory
         if(variant.mixedGermlineImpact() > 0)
         {
             builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
-        }
-
-        if(variant.phasedInframeIndel() > 0)
-        {
-            builder.attribute(PHASED_INFRAME_INDEL, variant.phasedInframeIndel());
         }
 
         if(variant.isRealigned())

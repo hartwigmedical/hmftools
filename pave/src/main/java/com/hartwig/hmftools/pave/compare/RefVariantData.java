@@ -36,17 +36,16 @@ public class RefVariantData
     public final String Microhomology;
     public final String RepeatSequence;
     public final int RepeatCount;
-    public final boolean PhasedInframeIndel;
     public final boolean Reported;
     public final boolean IsHotspot;
 
-    // repeatCount, localPhaseSet, localRealignmentSet, phasedInframeIndel, reported
+    // repeatCount, localPhaseSet, localRealignmentSet, reported
 
     public RefVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final String canonicalEffect, final CodingEffect canonicalCodingEffect,
             final CodingEffect worstCodingEffect, final String hgvsCodingImpact, final String hgvsProteinImpact,
-            final String microhomology, final String repeatSequence, int repeatCount, boolean phasedInframeIndel, int localPhaseSet,
+            final String microhomology, final String repeatSequence, int repeatCount, int localPhaseSet,
             boolean reported, boolean isHotspot)
     {
         Chromosome = chromosome;
@@ -66,14 +65,12 @@ public class RefVariantData
         Microhomology = microhomology;
         RepeatSequence = repeatSequence;
         RepeatCount = repeatCount;
-        PhasedInframeIndel = phasedInframeIndel;
         Reported = reported;
         IsHotspot = isHotspot;
     }
 
     public static RefVariantData fromSomatic(final SomaticVariant variant)
     {
-        boolean phasedInframe = variant.phasedInframeIndelIdentifier() != null && variant.phasedInframeIndelIdentifier() > 0;
         int localPhaseSet = variant.localPhaseSet() != null ? variant.localPhaseSet() : NO_LOCAL_PHASE_SET;
 
         return new RefVariantData(
@@ -81,7 +78,7 @@ public class RefVariantData
                 variant.canonicalEffect(), variant.canonicalCodingEffect(), variant.worstCodingEffect(),
                 variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
-                phasedInframe, localPhaseSet, variant.reported(), variant.isHotspot());
+                localPhaseSet, variant.reported(), variant.isHotspot());
     }
 
     public static RefVariantData fromRecord(final Record record)
@@ -96,9 +93,6 @@ public class RefVariantData
 
         Integer localPhaseSetDb = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
         int localPhaseSet = localPhaseSetDb != null ? localPhaseSetDb : NO_LOCAL_PHASE_SET;
-
-        Integer phasedInframeCount = record.getValue(SOMATICVARIANT.PHASEDINFRAMEINDEL);
-        boolean phasedInframe = phasedInframeCount != null ? phasedInframeCount > 0 : false;
 
         boolean isHotspot = Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)) == Hotspot.HOTSPOT;
 
@@ -117,7 +111,6 @@ public class RefVariantData
                 record.getValue(SOMATICVARIANT.MICROHOMOLOGY),
                 record.getValue(SOMATICVARIANT.REPEATSEQUENCE),
                 record.getValue(SOMATICVARIANT.REPEATCOUNT),
-                phasedInframe,
                 localPhaseSet,
                 record.getValue(SOMATICVARIANT.REPORTED) == 1,
                 isHotspot);
@@ -149,7 +142,6 @@ public class RefVariantData
         sj.add("repeatSequence");
         sj.add("repeatCount");
         sj.add("localPhaseSet");
-        sj.add("phasedInframeIndel");
         sj.add("reported");
         sj.add("hotspot");
         return sj.toString();
@@ -174,7 +166,6 @@ public class RefVariantData
         sj.add(RepeatSequence);
         sj.add(String.valueOf(RepeatCount));
         sj.add(LocalPhaseSet == NO_LOCAL_PHASE_SET ? "NULL" : String.valueOf(LocalPhaseSet));
-        sj.add(String.valueOf(PhasedInframeIndel));
         sj.add(Reported ? "1" : "0");
         sj.add(IsHotspot ? Hotspot.HOTSPOT.toString() : "NONE");
         return sj.toString();

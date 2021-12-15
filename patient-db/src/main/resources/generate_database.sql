@@ -526,7 +526,7 @@ DROP TABLE IF EXISTS somaticVariant;
 CREATE TABLE somaticVariant
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(31) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     chromosome varchar(31) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
@@ -566,7 +566,6 @@ CREATE TABLE somaticVariant
     rnaTotalReadCount int,
     localPhaseSet int,
     localRealignmentSet int,
-    phasedInframeIndel int,
     qual double precision not null,
     reported BOOLEAN NOT NULL,
     PRIMARY KEY (id),
@@ -581,7 +580,7 @@ DROP TABLE IF EXISTS germlineVariant;
 CREATE TABLE germlineVariant
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     chromosome varchar(255) NOT NULL,
     position int not null,
     filter varchar(255) NOT NULL,
@@ -635,14 +634,6 @@ CREATE TABLE germlineVariant
     mappability DOUBLE PRECISION NOT NULL,
     reported BOOLEAN NOT NULL,
 
-    ### NOT USED
-    #recovered BOOLEAN NOT NULL,
-    #germlineStatus varchar(255) NOT NULL,
-    #kataegis varchar(20) NOT NULL,
-    #localRealignmentSet int,
-    #phasedInframeIndel int,
-    #subclonalLikelihood DOUBLE PRECISION NOT NULL,
-
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),
@@ -655,7 +646,7 @@ CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     version VARCHAR(255) NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     gender varchar(255) NOT NULL,
     fitMethod varchar(255) NOT NULL,
     qcStatus varchar(255) NOT NULL,
@@ -694,7 +685,7 @@ DROP TABLE IF EXISTS purityRange;
 CREATE TABLE purityRange
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     purity DOUBLE PRECISION not null,
     normFactor DOUBLE PRECISION not null,
     score DOUBLE PRECISION not null,
@@ -709,7 +700,7 @@ DROP TABLE IF EXISTS copyNumber;
 CREATE TABLE copyNumber
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     chromosome varchar(255) NOT NULL,
     start int not null,
     end int not null,
@@ -735,7 +726,7 @@ DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(31) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     chromosome varchar(31) NOT NULL,
     start int not null,
     end int not null,
@@ -763,7 +754,7 @@ DROP TABLE IF EXISTS driverCatalog;
 CREATE TABLE driverCatalog
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     chromosome varchar(10) NOT NULL,
     chromosomeBand varchar(50) NOT NULL,
     gene varchar(50) NOT NULL,
@@ -791,7 +782,7 @@ DROP TABLE IF EXISTS germlineDeletion;
 CREATE TABLE germlineDeletion
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     gene varchar(50) NOT NULL,
     chromosome varchar(10) NOT NULL,
     regionStart int not null,
@@ -817,7 +808,7 @@ CREATE TABLE structuralVariant
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     svId INT NOT NULL,
-    sampleId varchar(31) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     startChromosome varchar(31) NOT NULL,
     endChromosome varchar(31),
     startPosition int not null,
@@ -878,7 +869,7 @@ DROP TABLE IF EXISTS svAnnotation;
 CREATE TABLE svAnnotation
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     svId INT NOT NULL,
     clusterId INT NOT NULL,
     clusterReason VARCHAR(255) NULL,
@@ -907,7 +898,7 @@ DROP TABLE IF EXISTS svCluster;
 CREATE TABLE svCluster
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     clusterId INT NOT NULL,
     category VARCHAR(20),
     synthetic BOOLEAN NOT NULL,
@@ -923,7 +914,7 @@ DROP TABLE IF EXISTS svLink;
 CREATE TABLE svLink
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     clusterId INT NOT NULL,
     chainId INT NOT NULL,
     chainIndex VARCHAR(50) NOT NULL,
@@ -950,7 +941,7 @@ DROP TABLE IF EXISTS svDriver;
 CREATE TABLE svDriver
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     clusterId INT NULL,
     gene VARCHAR(50) NOT NULL,
     eventType VARCHAR(50),
@@ -963,7 +954,7 @@ DROP TABLE IF EXISTS svBreakend;
 CREATE TABLE svBreakend
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     svId INT NOT NULL,
     startBreakend BOOLEAN NOT NULL,
     gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
@@ -991,7 +982,7 @@ DROP TABLE IF EXISTS svFusion;
 CREATE TABLE svFusion
 (   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     fivePrimeBreakendId INT UNSIGNED NOT NULL,
     threePrimeBreakendId INT UNSIGNED NOT NULL,
     name VARCHAR(50) NOT NULL,
@@ -1019,7 +1010,7 @@ DROP TABLE IF EXISTS structuralVariantGermline;
 CREATE TABLE structuralVariantGermline
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     chromosomeStart varchar(10) NOT NULL,
     chromosomeEnd varchar(10),
     positionStart int not null,
@@ -1057,7 +1048,7 @@ DROP TABLE IF EXISTS signature;
 CREATE TABLE signature
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     signature VARCHAR(50) NOT NULL,
     allocation DOUBLE PRECISION,
     percent DOUBLE PRECISION,
@@ -1238,7 +1229,7 @@ DROP TABLE IF EXISTS rnaStatistics;
 CREATE TABLE rnaStatistics
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     qcStatus varchar(50) NOT NULL,
     readLength int NOT NULL,
     totalFragments int NOT NULL,
@@ -1260,7 +1251,7 @@ DROP TABLE IF EXISTS geneExpression;
 CREATE TABLE geneExpression
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     gene VARCHAR(30) NOT NULL,
     tpm DOUBLE PRECISION NOT NULL,
     splicedFragments int NOT NULL,
@@ -1278,7 +1269,7 @@ DROP TABLE IF EXISTS novelSpliceJunction;
 CREATE TABLE novelSpliceJunction
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     gene VARCHAR(20) NOT NULL,
     chromosome VARCHAR(10) NOT NULL,
     junctionStart int NOT NULL,
@@ -1301,7 +1292,7 @@ DROP TABLE IF EXISTS rnaFusion;
 CREATE TABLE rnaFusion
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    sampleId varchar(255) NOT NULL,
+    sampleId varchar(50) NOT NULL,
     name VARCHAR(50) NOT NULL,
     chromosomeUp VARCHAR(10) NOT NULL,
     chromosomeDown VARCHAR(10) NOT NULL,

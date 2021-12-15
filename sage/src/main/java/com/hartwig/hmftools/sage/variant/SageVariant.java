@@ -20,7 +20,6 @@ public class SageVariant
     private int mLocalPhaseSet;
     private int mLocalRealignSet;
     private int mMixedImpact;
-    private int mPhasedInframeIndel;
     private boolean mRealigned;
 
     public SageVariant(
@@ -66,16 +65,6 @@ public class SageVariant
     public boolean isIndel()
     {
         return variant().ref().length() != variant().alt().length();
-    }
-
-    public int phasedInframeIndel()
-    {
-        return mPhasedInframeIndel;
-    }
-
-    public void phasedInframeIndel(final int phasedInframeIndel)
-    {
-        mPhasedInframeIndel = phasedInframeIndel;
     }
 
     public boolean isMnv()
@@ -200,10 +189,4 @@ public class SageVariant
     {
         return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
-
-    public int maxQuality()
-    {
-        return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).max().orElse(0);
-    }
-
 }
