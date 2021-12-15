@@ -8,8 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractorFactory {
 
-    // For iClusion we want to deal with any driver inconsistency!
-    // For CKB we want to ignore driver inconsistencies for now (their gene panel is larger than hmf driver panel to start with)
+    // For ACTIN we don't care about driver inconsistencies
     private static final boolean REPORT_DRIVER_INCONSISTENCIES = false;
 
     private ActinExtractorFactory() {
@@ -18,7 +17,6 @@ public class ActinExtractorFactory {
     @NotNull
     public static ActinExtractor buildActinExtractor(@NotNull EventClassifierConfig config,
             @NotNull RefGenomeResource refGenomeResource) {
-        return new ActinExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES),
-                new ActinTrialFactory());
+        return new ActinExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES));
     }
 }

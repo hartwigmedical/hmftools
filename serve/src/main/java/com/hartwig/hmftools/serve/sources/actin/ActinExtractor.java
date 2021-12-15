@@ -34,35 +34,25 @@ public class ActinExtractor {
 
     @NotNull
     private final EventExtractor eventExtractor;
-    @NotNull
-    private final ActinTrialFactory actinTrialFactory;
 
-    ActinExtractor(@NotNull final EventExtractor eventExtractor,
-            @NotNull final ActinTrialFactory actinTrialFactory) {
+    ActinExtractor(@NotNull final EventExtractor eventExtractor) {
         this.eventExtractor = eventExtractor;
-        this.actinTrialFactory = actinTrialFactory;
     }
 
     @NotNull
-    public ExtractionResult extract(@NotNull List<ActinEntry> trials) {
-        // We assume filtered trials (no empty acronyms, only OR mutations, and no negated mutations
-
-        ProgressTracker tracker = new ProgressTracker("ACTIN", trials.size());
+    public ExtractionResult extract(@NotNull List<ActinEntry> entries) {
+        ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
-        for (ActinEntry trial : trials) {
-            List<ActinTrial> actinTrials =
-                    actinTrialFactory.toActionableEntries(trial);
-
-            List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
-
-            String gene = EXTRACTOR.extractGene(trial);
-            String event = EXTRACTOR.extractEvent(trial);
+        for (ActinEntry entry : entries) {
+            String gene = EXTRACTOR.extractGene(entry);
+            String event = EXTRACTOR.extractEvent(entry);
 
             EventType eventType = CLASSIFIER.determineType(gene, event);
 
-            eventExtractions.add(eventExtractor.extract(gene, null, eventType, event));
+            EventExtractorOutput extraction = eventExtractor.extract(gene, null, eventType, event);
+            ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
 
-            extractions.add(toExtractionResult(actinTrials, eventExtractions));
+            extractions.add(toExtractionResult(trial, extraction));
 
             tracker.update();
         }
@@ -71,37 +61,30 @@ public class ActinExtractor {
     }
 
     @NotNull
-    private static ExtractionResult toExtractionResult(
-            @NotNull List<ActinTrial> actinTrials,
-            @NotNull List<EventExtractorOutput> eventExtractions) {
-        Set<ActionableHotspot> actionableHotspots = Sets.newHashSet();
+    private static ExtractionResult toExtractionResult(@NotNull ActinTrial trial, @NotNull EventExtractorOutput extraction) {
+        Set<ActionableHotspot> actionableHotspots = ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots());
+
         Set<ActionableRange> actionableRanges = Sets.newHashSet();
+        actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
+        actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.exons()));
+
         Set<ActionableGene> actionableGenes = Sets.newHashSet();
+        if (extraction.geneLevelEvent() != null) {
+            actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, extraction.geneLevelEvent()));
+        }
+
+        if (extraction.knownCopyNumber() != null) {
+            actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, extraction.knownCopyNumber()));
+        }
+
         Set<ActionableFusion> actionableFusions = Sets.newHashSet();
+        if (extraction.knownFusionPair() != null) {
+            actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, extraction.knownFusionPair()));
+        }
+
         Set<ActionableCharacteristic> actionableCharacteristics = Sets.newHashSet();
-
-        for (ActinTrial trial : actinTrials) {
-            for (EventExtractorOutput extraction : eventExtractions) {
-                actionableHotspots.addAll(ActionableEventFactory.toActionableHotspots(trial, extraction.hotspots()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.codons()));
-                actionableRanges.addAll(ActionableEventFactory.toActionableRanges(trial, extraction.exons()));
-
-                if (extraction.geneLevelEvent() != null) {
-                    actionableGenes.add(ActionableEventFactory.geneLevelEventToActionableGene(trial, extraction.geneLevelEvent()));
-                }
-
-                if (extraction.knownCopyNumber() != null) {
-                    actionableGenes.add(ActionableEventFactory.copyNumberToActionableGene(trial, extraction.knownCopyNumber()));
-                }
-
-                if (extraction.knownFusionPair() != null) {
-                    actionableFusions.add(ActionableEventFactory.toActionableFusion(trial, extraction.knownFusionPair()));
-                }
-
-                if (extraction.characteristic() != null) {
-                    actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
-                }
-            }
+        if (extraction.characteristic() != null) {
+            actionableCharacteristics.add(ActionableEventFactory.toActionableCharacteristic(trial, extraction.characteristic()));
         }
 
         return ImmutableExtractionResult.builder()
