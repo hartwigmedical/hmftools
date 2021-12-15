@@ -33,11 +33,11 @@
         <module>telo</module>
         <module>cuppa</module>
         <module>isofox</module>
+        <module>pave</module>
         <module>ckb-importer</module>
         <module>iclusion-importer</module>
         <module>vicc-importer</module>
         <module>serve</module>
-        <module>pave</module>
         <module>protect</module>
         <module>orange</module>
         <module>patient-reporter</module>
