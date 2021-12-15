@@ -23,13 +23,16 @@ import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventAndGeneExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
+import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractor {
 
-    private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ActinClassificationConfig.build());
+    private static final Logger LOGGER = LogManager.getLogger(CkbExtractor.class);
 
     @NotNull
     private final EventExtractor eventExtractor;
@@ -46,9 +49,11 @@ public class ActinExtractor {
             String gene = ActinEventAndGeneExtractor.extractGene(entry);
             String event = ActinEventAndGeneExtractor.extractEvent(entry);
 
-            EventType eventType = CLASSIFIER.determineType(gene, event);
+            if (entry.type() == EventType.UNKNOWN) {
+                LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
+            }
 
-            EventExtractorOutput extraction = eventExtractor.extract(gene, null, eventType, event);
+            EventExtractorOutput extraction = eventExtractor.extract(gene, null, entry.type(), event);
             ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
 
             extractions.add(toExtractionResult(trial, extraction));
