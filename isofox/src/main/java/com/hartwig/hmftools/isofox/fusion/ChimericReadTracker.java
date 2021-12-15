@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.addChimericReads;
@@ -233,6 +234,9 @@ public class ChimericReadTracker
                     mDuplicateReadIds.remove(readId); // not expected to be seen again since occurs across consecutive gene collections
                 else
                     mDuplicateReadIds.add(readId);
+
+                if(reads.size() >= 2)
+                    mGeneCollection.addCount(DUPLICATE, 1);
 
                 fragsToRemove.add(readId);
                 continue;

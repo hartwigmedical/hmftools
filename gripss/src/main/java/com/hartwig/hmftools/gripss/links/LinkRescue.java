@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.gripss.common.SvData.hasLength;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_RESCUE_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DEDUP;
@@ -7,9 +10,9 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.PON;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.FilterCache;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
@@ -38,14 +41,16 @@ public final class LinkRescue
             if(linkedBreakends.isEmpty())
                 continue;
 
-            List<Breakend> linkedRescueCandidates = linkedBreakends.stream()
-                    .filter(x -> isRescueCandidate(x, filterCache, rescueShortSVs))
-                    .collect(Collectors.toList());
+            boolean hasValidPassing = linkedBreakends.stream()
+                    .anyMatch(x -> !filterCache.hasFilters(x) && isRescueCandidate(x, filterCache, rescueShortSVs));
 
-            if(linkedRescueCandidates.stream().anyMatch(x -> !filterCache.hasFilters(x)))
+            if(hasValidPassing)
             {
-                for(Breakend linkedBreakend : linkedRescueCandidates)
+                for(Breakend linkedBreakend : linkedBreakends)
                 {
+                    if(!isRescueCandidate(linkedBreakend, filterCache, rescueShortSVs))
+                        continue;
+
                     rescuedBreakends.add(linkedBreakend);
 
                     Breakend otherLinkedBreakend = linkedBreakend.otherBreakend();
@@ -64,7 +69,7 @@ public final class LinkRescue
         if(filterCache.hasFilter(breakend.sv(), DEDUP))
             return false;
 
-        if(!rescueShortSVs && hasLength(breakend.type()) && breakend.sv().length() < SHORT_RESCUE_LENGTH)
+        if(!rescueShortSVs && tooShortToRescue(breakend.type(), breakend.sv().length()))
             return false;
 
         return true;
@@ -147,6 +152,11 @@ public final class LinkRescue
         return rescuedBreakends;
     }
 
+    public static boolean tooShortToRescue(final StructuralVariantType type, int svLength)
+    {
+        return (type == DEL || type == DUP || type == INS) && svLength < FilterConstants.SHORT_RESCUE_LENGTH;
+    }
+
     private static boolean isLineRescueCandidate(final Breakend breakend, final FilterCache filterCache)
     {
         if(filterCache.hasFilter(breakend.sv(), PON))
@@ -155,7 +165,7 @@ public final class LinkRescue
         if(filterCache.hasFilter(breakend.sv(), DEDUP))
             return false;
 
-        if(hasLength(breakend.type()) && breakend.sv().length() < FilterConstants.SHORT_RESCUE_LENGTH)
+        if(tooShortToRescue(breakend.type(), breakend.sv().length()))
             return false;
 
         return true;

@@ -49,7 +49,7 @@ public final class PatientReporterTestFactory {
     private static final String SAMPLE_SUMMARY_TSV = Resources.getResource("sample_summary/sample_summary.tsv").getPath();
     private static final String GERMLINE_REPORTING_TSV = Resources.getResource("germline_reporting/germline_reporting.tsv").getPath();
 
-    private static final String UDI_DI = "5.22";
+    private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
 
     private PatientReporterTestFactory() {
     }

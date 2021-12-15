@@ -69,6 +69,7 @@ import com.hartwig.hmftools.purple.drivers.GermlineDeletionDrivers;
 import com.hartwig.hmftools.purple.drivers.GermlineDrivers;
 import com.hartwig.hmftools.purple.fitting.BestFitFactory;
 import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.purple.fitting.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberFactory;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
@@ -123,15 +124,26 @@ public class PurpleApplication
 
         mDbAccess = hasDatabaseConfig(mCmdLineArgs) ? createDatabaseAccess(mCmdLineArgs) : null;
 
-        final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
-
-        mExecutorService = Executors.newFixedThreadPool(threads);
-
         // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
 
+        if(!mConfig.isValid())
+        {
+            PPL_LOGGER.error("initialisation error, exiting");
+            System.exit(1);
+        }
+
         // and common reference data
         mReferenceData = new ReferenceData(mCmdLineArgs, mConfig);
+
+        if(!mReferenceData.isValid())
+        {
+            PPL_LOGGER.error("initialisation error, exiting");
+            System.exit(1);
+        }
+
+        final int threads = mCmdLineArgs.hasOption(THREADS) ? Integer.parseInt(mCmdLineArgs.getOptionValue(THREADS)) : THREADS_DEFAULT;
+        mExecutorService = Executors.newFixedThreadPool(threads);
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
 
@@ -145,13 +157,6 @@ public class PurpleApplication
             mSegmentation = null;
             mCharts = null;
         }
-
-        if(!mConfig.isValid() || !mReferenceData.isValid())
-        {
-            PPL_LOGGER.error("initialisation error, exiting");
-            mExecutorService.shutdown();
-            System.exit(1);
-        }
     }
 
     public void run()
@@ -159,7 +164,6 @@ public class PurpleApplication
         try
         {
             processSample(mConfig.ReferenceId, mConfig.TumorId);
-
         }
         finally
         {
@@ -372,6 +376,7 @@ public class PurpleApplication
         PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), copyNumbers);
         GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample), geneCopyNumbers);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorSample), fittedRegions);
+        PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorSample), somaticPeaks);
         GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorSample), germlineDeletions);
 
         if(mDbAccess != null)

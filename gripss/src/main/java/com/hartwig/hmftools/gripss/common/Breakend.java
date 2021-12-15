@@ -79,7 +79,7 @@ public class Breakend
         RefGenotype = refGenotype;
         TumorGenotype = tumorGenotype;
 
-        // NOTE: SvData is only partially constructed so becareful which fields are used
+        // NOTE: SvData is only partially constructed so be careful which fields are used
         boolean isSgl = mSvData.type() == SGL;
 
         if(refGenotype != null)

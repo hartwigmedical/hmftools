@@ -48,14 +48,15 @@ public class CFReportWriterTest {
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
-    private static final String COLO_COMMENT_STRING = "This is a test report and is based on COLO829";
+    private static final String COLO_COMMENT_STRING = "This is a test report and is based on COLO829. Where is referred to CKB, "
+            + "VICC evidence is listed due to licensing restrictions.";
     private static final String COLO_COMMENT_STRING_CORRECTED = "This is a corrected test report and is based on COLO829";
     private static final String FULL_TABLES_COMMENT_STRING = "This is a test report with all tables filled in";
 
     private static final String COMMENT_STRING_QC_FAIL = "This is a test QC fail report";
     private static final String COMMENT_STRING_QC_FAIL_CORRECTED = "This is a corrected test QC fail report";
 
-    private static final String UDI_DI = "5.22";
+    private static final String UDI_DI = "(01) 8720299486010(8012)v5.25";
 
     @Test
     public void canGeneratePatientReportForCOLO829() throws IOException {
@@ -290,6 +291,17 @@ public class CFReportWriterTest {
                 false,
                 COMMENT_STRING_QC_FAIL,
                 LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.FAIL_CONTAMINATION);
+    }
+
+    @Test
+    public void canGenerateSufficientTCPQCFailReportPASS() throws IOException {
+        generateQCFailReport("CPCT03-sufficient_tcp_qc_failure-FOR-083",
+                "60%",
+                "70%",
+                QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
+                false,
+                COMMENT_STRING_QC_FAIL,
+                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
     }
 
     @Test

@@ -131,17 +131,17 @@ java -jar isofox.jar
     -sample SAMPLE_ID 
     -functions "TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS"
     -bam_file /path_to_bam/sample.bam 
-    -ref_genome /path_to_ref_files/ef-genome.fasta 
+    -ref_genome /path_to_ref_files/ref-genome.fasta 
     -ensembl_data_dir /path_ensembl_data_cache_files/ 
-    -output_dir /path_to_output_data/ 
     -apply_calc_frag_lengths 
     -apply_exp_rates 
     -read_length 151
-    -exp_counts_file /path_to_ref_files/read_76_exp_counts.csv 
+    -exp_counts_file /path_to_ref_files/read_151_exp_counts.csv 
     -apply_gc_bias_adjust 
     -exp_gc_ratios_file /path_to_ref_files/read_100_exp_gc_ratios.csv 
     -long_frag_limit 550 
     -apply_map_qual_adjust 
+    -output_dir /path_to_output_data/ 
     -threads 10 
 ```
 
@@ -152,7 +152,7 @@ java -jar isofox.jar
     -sample SAMPLE_ID 
     -functions FUSIONS
     -bam_file /path_to_bam/sample.bam 
-    -ref_genome /path_to_ref_files/ef-genome.fasta 
+    -ref_genome /path_to_ref_files/ref-genome.fasta 
     -ensembl_data_dir /path_ensembl_data_cache_files/ 
     -output_dir /path_to_output_data/ 
     -read_length 151 
@@ -326,7 +326,7 @@ If either end of the chimeric junction overlaps more than 1 gene, then select on
 
 Isofox counts 3 categories all fragments supporting the break junction broken into 3 categories:
 * Split - any fragment with a supplementary alignment or splice juction at the exact break junction
-* Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
+* Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases but not more than 10 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
 * Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript. If the discordant pairs are consistent with multiple junctions they may be double counted	
 
 Isofox also determines the coverage at both breakends and the max anchor length on either side of the break junction (ie. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakend is calculated as (split + realigned) / coverage.

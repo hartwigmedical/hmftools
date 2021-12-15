@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.HOM_INV_LENGTH;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_C_INSERT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_G_INSERT;
@@ -24,7 +22,6 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_HOM_LENGTH_SHORT_INV;
-import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_INEXACT_HOM_LENGTH_SHORT_DEL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_POLY_A_HOM_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_POLY_G_LENGTH;
@@ -113,9 +110,6 @@ public class SoftFilters
 
             if(shortDelInsertArtifact(sv, breakend))
                 filters.add(SHORT_DEL_INS_ARTIFACT);
-
-            if(inexactHomologyLengthShortDel(sv, breakend))
-                filters.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL);
 
             if(strandBias(sv, breakend))
                 filters.add(SHORT_STRAND_BIAS);
@@ -210,17 +204,6 @@ public class SoftFilters
     {
         String homologySequence = sv.contextStart().getAttributeAsString(VT_HOMSEQ, "");
         return homologySequence.contains(POLY_A_HOMOLOGY) || homologySequence.contains(POLY_T_HOMOLOGY);
-    }
-
-    private boolean inexactHomologyLengthShortDel(final SvData sv, final Breakend breakend)
-    {
-        if(sv.type() != DEL)
-            return false;
-
-        if(sv.length() < INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH || sv.length() > INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH)
-            return false;
-
-        return breakend.inexactHomologyLength() > mFilterConstants.MaxInexactHomLengthShortDel;
     }
 
     private static double calcStrandBias(final VariantContext variantContext)

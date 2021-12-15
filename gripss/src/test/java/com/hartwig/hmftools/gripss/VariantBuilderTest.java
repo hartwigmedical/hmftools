@@ -213,11 +213,11 @@ public class VariantBuilderTest
     {
         mHotspotCache.addHotspot(new KnownHotspot(
                 new ChrBaseRegion(CHR_1, 100, 200), POS_ORIENT,
-                new ChrBaseRegion(CHR_1, 1999, 2000), NEG_ORIENT, "geneInfo"));
+                new ChrBaseRegion(CHR_1, 1999, 20000), NEG_ORIENT, "geneInfo"));
 
         // first a low-qual pair but matching the hotspot
         VariantContext[] contexts = createSvBreakends(
-                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 2000, POS_ORIENT, NEG_ORIENT, "A", "");
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
         contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
 
@@ -250,7 +250,7 @@ public class VariantBuilderTest
         // second leg hard-filtered but matching a hotspot
         // now with only the first leg matching the hotspot
         contexts = createSvBreakends(
-                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 2000, POS_ORIENT, NEG_ORIENT, "A", "");
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
         contexts[SE_END].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
 

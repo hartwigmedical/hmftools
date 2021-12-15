@@ -159,7 +159,7 @@ public class FilterCache
             StringJoiner sj = new StringJoiner(";");
             filters.forEach(x -> sj.add(FilterType.vcfName(x)));
 
-            GR_LOGGER.debug("breakend({}) rescued from filters({})", breakend, sj.toString());
+            GR_LOGGER.trace("breakend({}) rescued from filters({})", breakend, sj.toString());
         }
     }
 

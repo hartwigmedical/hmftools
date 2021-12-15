@@ -40,7 +40,6 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_M
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MAX_HOM_LENGTH_SHORT_INV;
-import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MAX_SHORT_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_MIN_NORMAL_COVERAGE;
@@ -368,7 +367,6 @@ public class GripssTestUtils
                 DEFAULT_MIN_QUAL_BREAK_POINT,
                 DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION,
                 DEFAULT_MAX_HOM_LENGTH_SHORT_INV,
-                DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL,
                 DEFAULT_MIN_LENGTH,
                 DEFAULT_PON_DISTANCE,
                 LINC_00486_V37,

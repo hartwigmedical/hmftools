@@ -13,11 +13,9 @@ import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
@@ -27,7 +25,6 @@ import static com.hartwig.hmftools.gripss.filters.FilterConstants.POLY_A_HOMOLOG
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_HOM_LENGTH_SHORT_INV;
-import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_INEXACT_HOM_LENGTH_SHORT_DEL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_NORMAL_RELATIVE_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_POLY_A_HOM_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_POLY_G_LENGTH;
@@ -281,15 +278,6 @@ public class SoftFiltersTest
 
         applyFilters(sv);
         assertTrue(hasFilter(sv.breakendStart(), MAX_HOM_LENGTH_SHORT_INV));
-
-        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
-
-        // inexactHomologyLengthShortDel
-        commonOverrides.put(VT_IHOMPOS, Lists.newArrayList(-5, 8));
-
-        sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
-        applyFilters(sv);
-        assertTrue(hasFilter(sv.breakendStart(), MAX_INEXACT_HOM_LENGTH_SHORT_DEL));
 
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 

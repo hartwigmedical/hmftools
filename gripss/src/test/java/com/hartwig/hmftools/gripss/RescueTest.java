@@ -89,11 +89,11 @@ public class RescueTest
         tumorAttributes.put(VT_QUAL, 200);
 
         SvData var1 = createSv(
-                mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 2000, POS_ORIENT, NEG_ORIENT, LINE_INSERT_SEQ_A,
+                mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, LINE_INSERT_SEQ_A,
                 mGripss.GenotypeIds, null, null, tumorAttributes);
 
         SvData var2 = createSv(
-                mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 2010, 5000, POS_ORIENT, NEG_ORIENT, LINE_INSERT_SEQ_T,
+                mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 2010, 50000, POS_ORIENT, NEG_ORIENT, LINE_INSERT_SEQ_T,
                 mGripss.GenotypeIds, null, null, tumorAttributes);
 
         assertTrue(var1.breakendEnd().IsLineInsertion);

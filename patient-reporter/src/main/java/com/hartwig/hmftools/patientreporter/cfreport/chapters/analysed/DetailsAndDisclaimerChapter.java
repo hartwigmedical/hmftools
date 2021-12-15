@@ -126,7 +126,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
                 ReportResources.VERSION_REPORT,
                 " based on ",
                 patientReport.qsFormNumber() + "."));
-        div.add(createContentParagraph("UDI-DI: ", patientReport.udiDi() + "."));
+        div.add(createContentParagraph("(basic) UDI-DI: ", patientReport.udiDi() + "."));
         div.add(createContentDivWithLink("The OncoAct user manual can be found at ", ReportResources.MANUAL + ".", ReportResources.MANUAL + "."));
         div.add(createContentParagraph("This report is based on pipeline version ", pipelineVersion + "."));
         div.add(createContentParagraph("The ‘primary tumor location’ and ‘primary tumor type’ have influence on the "

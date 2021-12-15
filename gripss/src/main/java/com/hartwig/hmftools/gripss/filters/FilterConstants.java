@@ -23,7 +23,6 @@ public class FilterConstants
     public final int MinQualBreakpoint;
     public final int MinQualRescueLine;
     public final int MaxHomLengthShortInv;
-    public final int MaxInexactHomLengthShortDel;
     public final int MinLength;
     public final int PonDistance;
     public final ChrBaseRegion PolyGcRegion;
@@ -33,7 +32,7 @@ public class FilterConstants
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
 
     // default filter values
-    public static final int SHORT_RESCUE_LENGTH = 1000;
+    public static final int SHORT_RESCUE_LENGTH = 10000;
     public static final int SHORT_CALLING_SIZE = 1000;
     public static final int HOM_INV_LENGTH = 40;
 
@@ -60,9 +59,6 @@ public class FilterConstants
     public static final int DEFAULT_MIN_QUAL_BREAK_POINT = 400;
     public static final int DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = 500;
     public static final int DEFAULT_MAX_HOM_LENGTH_SHORT_INV = 6;
-    public static final int DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL = 5;
-    public static final int INEXACT_HOM_LENGTH_SHORT_DEL_MIN_LENGTH = 100;
-    public static final int INEXACT_HOM_LENGTH_SHORT_DEL_MAX_LENGTH = 800;
     public static final int DEFAULT_MIN_LENGTH = 32;
     public static final int DEFAULT_PON_DISTANCE = 3;
 
@@ -87,7 +83,6 @@ public class FilterConstants
     public static final String MIN_QUAL_BREAK_POINT_CFG = "min_qual_break_point";
     public static final String MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = "min_qual_rescue_mobile_element_insertion";
     public static final String MAX_HOM_LENGTH_SHORT_INV_CFG = "max_hom_length_short_inv";
-    public static final String MAX_INEXACT_HOM_LENGTH_SHORT_DEL_CFG = "max_inexact_hom_length_short_del";
     public static final String MIN_LENGTH_CFG = "min_length";
     public static final String PON_DISTANCE = "pon_distance";
 
@@ -111,8 +106,6 @@ public class FilterConstants
                 Integer.parseInt(cmd.getOptionValue(
                         MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, String.valueOf(DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION))),
                 Integer.parseInt(cmd.getOptionValue(MAX_HOM_LENGTH_SHORT_INV_CFG, String.valueOf(DEFAULT_MAX_HOM_LENGTH_SHORT_INV))),
-                Integer.parseInt(cmd.getOptionValue(
-                        MAX_INEXACT_HOM_LENGTH_SHORT_DEL_CFG, String.valueOf(DEFAULT_MAX_INEXACT_HOM_LENGTH_SHORT_DEL))),
                 Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
                 Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
                 refGenVersion == V37 ? LINC_00486_V37 : LINC_00486_V38, refGenVersion == V37 ? PMS2_V37 : PMS2_V38);
@@ -121,7 +114,7 @@ public class FilterConstants
     public FilterConstants(
             int minTumorQual, int hardMaxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMaxNormalRelativeSupport,
             double minNormalCoverage, double minTumorAfBreakend, double minTumorAfBreakpoint, double maxShortStrandBias,
-            int minQualBreakend, int minQualBreakpoint, int minQualRescueLine, int maxHomLengthShortInv, int maxInexactHomLengthShortDel,
+            int minQualBreakend, int minQualBreakpoint, int minQualRescueLine, int maxHomLengthShortInv,
             int minLength, int ponDistance, final ChrBaseRegion polyGcRegion, final ChrBaseRegion lowQualRegion)
     {
         MinTumorQual = minTumorQual;
@@ -136,7 +129,6 @@ public class FilterConstants
         MinQualBreakpoint = minQualBreakpoint;
         MinQualRescueLine = minQualRescueLine;
         MaxHomLengthShortInv = maxHomLengthShortInv;
-        MaxInexactHomLengthShortDel = maxInexactHomLengthShortDel;
         MinLength = minLength;
         PonDistance = ponDistance;
         PolyGcRegion = polyGcRegion;
@@ -156,7 +148,6 @@ public class FilterConstants
         options.addOption(MIN_QUAL_BREAK_POINT_CFG, true, "Min qual break point");
         options.addOption(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, true, "Min qual rescue mobile element insertions");
         options.addOption(MAX_HOM_LENGTH_SHORT_INV_CFG, true, "Max homology length short inversion");
-        options.addOption(MAX_INEXACT_HOM_LENGTH_SHORT_DEL_CFG, true, "Max inexact homology length short del");
         options.addOption(MIN_LENGTH_CFG, true, "Min length");
         options.addOption(PON_DISTANCE, true, "PON permitted margin");
     }

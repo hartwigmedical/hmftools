@@ -34,6 +34,8 @@ public interface ServeConfig {
     String USE_CKB = "use_ckb";
     String CKB_DIR = "ckb_dir";
     String CKB_FILTER_TSV = "ckb_filter_tsv";
+    String USE_ACTIN = "use_actin";
+    String ACTIN_TRIAL_TSV = "actin_trial_tsv";
     String USE_DOCM = "use_docm";
     String DOCM_TSV = "docm_tsv";
     String USE_HARTWIG_COHORT = "use_hartwig_cohort";
@@ -73,6 +75,8 @@ public interface ServeConfig {
         options.addOption(USE_CKB, false, "If provided, CKB FLEX will be used as a source in SERVE");
         options.addOption(CKB_DIR, true, "Path to the CKB FLEX json input dir");
         options.addOption(CKB_FILTER_TSV, true, "Path to the CKB filter tsv");
+        options.addOption(USE_ACTIN, false, "If provided, ACTIN will be used as a source in SERVE");
+        options.addOption(ACTIN_TRIAL_TSV, true, "Path to the ACTIN input trial tsv");
         options.addOption(USE_DOCM, false, "If provided, DoCM will be used as a source in SERVE");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(USE_HARTWIG_COHORT, false, "If provided, Hartwig Cohort will be used as a source in SERVE");
@@ -119,6 +123,11 @@ public interface ServeConfig {
 
     @NotNull
     String ckbFilterTsv();
+
+    boolean useActin();
+
+    @NotNull
+    String actinTrailTsv();
 
     boolean useDocm();
 
@@ -177,6 +186,7 @@ public interface ServeConfig {
         boolean useVicc = cmd.hasOption(USE_VICC);
         boolean useIclusion = cmd.hasOption(USE_ICLUSION);
         boolean useCkb = cmd.hasOption(USE_CKB);
+        boolean useActin = cmd.hasOption(USE_ACTIN);
         boolean useDocm = cmd.hasOption(USE_DOCM);
         boolean useHartwigCohort = cmd.hasOption(USE_HARTWIG_COHORT);
         boolean useHartwigCurated = cmd.hasOption(USE_HARTWIG_CURATED);
@@ -190,6 +200,8 @@ public interface ServeConfig {
                 .useCkb(useCkb)
                 .ckbDir(useCkb ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .ckbFilterTsv(useCkb ? nonOptionalFile(cmd, CKB_FILTER_TSV) : NOT_APPLICABLE)
+                .useActin(useActin)
+                .actinTrailTsv(useActin ? nonOptionalFile(cmd, ACTIN_TRIAL_TSV) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)

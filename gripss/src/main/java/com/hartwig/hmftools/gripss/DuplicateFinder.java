@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+
 import java.util.List;
 import java.util.Set;
 
@@ -50,9 +52,9 @@ public class DuplicateFinder
                 Breakend first = altPath.First;
                 Breakend second = altPath.Links.get(0).breakendEnd();
 
-                // Favour PRECISE, PASSING, then QUAL
                 if(!keepOriginal(first, second, firstIsPass, anyInAltPathPasses))
                 {
+                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", first, second);
                     mDuplicateBreakends.add(first);
                 }
 
@@ -60,6 +62,8 @@ public class DuplicateFinder
             }
             else
             {
+                GR_LOGGER.trace("SV({}) duplicate vs alt-path links({})", altPath.First.sv(), altPath.pathString());
+
                 mDuplicateBreakends.add(altPath.First);
                 mDuplicateBreakends.add(altPath.Second);
 
@@ -80,6 +84,7 @@ public class DuplicateFinder
 
     private static boolean keepOriginal(final Breakend original, final Breakend other, boolean originalIsPass, boolean otherIsPass)
     {
+        // Favour PRECISE, PASSING, then QUAL
         if(original.imprecise() != other.imprecise())
             return !original.imprecise();
 
@@ -107,13 +112,14 @@ public class DuplicateFinder
             // if none of them require keeping the single, then mark it as a duplicate
             boolean keepSingle = true;
 
-            for(Breakend otherBreakend : nearbyBreakends)
+            for(Breakend nearBreakend : nearbyBreakends)
             {
-                if(!isDuplicateCandidate(breakend, otherBreakend))
+                if(!isDuplicateCandidate(breakend, nearBreakend))
                     continue;
 
-                if(!keepSingle(isPass, breakend, otherBreakend, linkStore))
+                if(!keepSingle(isPass, breakend, nearBreakend, linkStore))
                 {
+                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", breakend, nearBreakend);
                     keepSingle = false;
                     break;
                 }
@@ -125,15 +131,16 @@ public class DuplicateFinder
             }
             else
             {
-                for(Breakend otherBreakend : nearbyBreakends)
+                for(Breakend nearBreakend : nearbyBreakends)
                 {
-                    if(!isDuplicateCandidate(breakend, otherBreakend))
+                    if(!isDuplicateCandidate(breakend, nearBreakend))
                         continue;
 
-                    mSingleDuplicates.add(otherBreakend);
+                    GR_LOGGER.trace("breakend({}) duplicate vs other({})", nearBreakend, breakend);
+                    mSingleDuplicates.add(nearBreakend);
 
-                    if(!otherBreakend.isSgl())
-                        mSingleDuplicates.add(otherBreakend.otherBreakend());
+                    if(!nearBreakend.isSgl())
+                        mSingleDuplicates.add(nearBreakend.otherBreakend());
                 }
             }
         }

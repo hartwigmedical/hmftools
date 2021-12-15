@@ -332,11 +332,6 @@ public class DatabaseAccess implements AutoCloseable {
         return structuralVariantFusionDAO.readBreakends(sample);
     }
 
-    @NotNull
-    public List<LinxViralInsertion> readViralInsertions(@NotNull String sample) {
-        return structuralVariantFusionDAO.readViralInsertions(sample);
-    }
-
     public void writeCanonicalTranscripts(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
         canonicalTranscriptDAO.write(assembly, transcripts);
     }

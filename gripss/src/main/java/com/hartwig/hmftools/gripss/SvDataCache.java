@@ -16,7 +16,6 @@ public class SvDataCache
     private final List<SvData> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
 
-
     public SvDataCache()
     {
         mSvData = Lists.newArrayList();

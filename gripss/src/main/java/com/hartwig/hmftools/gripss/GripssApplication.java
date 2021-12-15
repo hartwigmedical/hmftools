@@ -197,7 +197,7 @@ public class GripssApplication
         GR_LOGGER.debug("pon filtered count({})", mFilterCache.ponFilteredCount());
 
         GR_LOGGER.info("finding assembly links");
-        LinkStore assemblyLinkStore = AssemblyLinks.buildAssembledLinks(mSvDataCache.getSvList());
+        LinkStore assemblyLinkStore = AssemblyLinks.buildAssembledLinks(mSvDataCache.getBreakendMap());
         GR_LOGGER.debug("found {} assembly links", assemblyLinkStore.getBreakendLinksMap().size());
 
         GR_LOGGER.info("finding alternative paths and transitive links");
@@ -250,7 +250,7 @@ public class GripssApplication
 
         Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
 
-        writer.write(combinedLinks, idPathMap);
+        writer.write(combinedLinks, idPathMap, vcfHeader);
         writer.close();
 
         // summary logging
@@ -278,7 +278,7 @@ public class GripssApplication
 
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
-        GR_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
+        // GR_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
 
         ++mProcessedVariants;
 

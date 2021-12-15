@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss.links;
 
+import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.links.TransitiveLink.TRANS_LINK_PREFIX;
 
 import java.util.ArrayDeque;
@@ -13,6 +14,8 @@ public class TransitiveLinkFinder
 {
     private final SvDataCache mSvDataCache;
     private final LinkStore mAssemblyLinkStore;
+
+    private int mRecursiveInterations = 0;
 
     // TODO: make public and move to Constants
     public static final int MAX_ASSEMBLY_JUMPS = 5;
@@ -30,6 +33,7 @@ public class TransitiveLinkFinder
     {
         mSvDataCache = svDataCache;
         mAssemblyLinkStore = assemblyLinkStore;
+        mRecursiveInterations = 0;
     }
 
     public List<Link> findTransitiveLinks(final Breakend breakend)
@@ -68,6 +72,7 @@ public class TransitiveLinkFinder
             assemblyTransLinks.add(transLink);
         }
 
+        mRecursiveInterations = 0;
         List<Link> assemblyLinks = findLinks(target, assemblyTransLinks, transLinks, matchedTransLinks);
 
         if(!assemblyLinks.isEmpty())
@@ -76,16 +81,26 @@ public class TransitiveLinkFinder
         return links;
     }
 
+    private static final int MAX_ITERATIONS = 500   ; // logically not required but in as a safety measure
+
     private List<Link> findLinks(
             final Breakend target, final ArrayDeque assemblyTransLinks, final ArrayDeque transLinks, final ArrayDeque matchedTransLinks)
     {
+        ++mRecursiveInterations;
+
+        if(mRecursiveInterations == MAX_ITERATIONS)
+        {
+            GR_LOGGER.warn("breakend({}) reached max({}) iterations finding transitive links", target, mRecursiveInterations);
+            return Lists.newArrayList();
+        }
+
         if(transLinks.size() > 1)
         {
             // no result if we there is more than one transitive path (and no assembly path)
             return Lists.newArrayList();
         }
 
-        if (assemblyTransLinks.isEmpty() && transLinks.isEmpty())
+        if(assemblyTransLinks.isEmpty() && transLinks.isEmpty())
         {
             if (matchedTransLinks.size() == 1)
             {
@@ -180,7 +195,7 @@ public class TransitiveLinkFinder
         {
             for(Link assemblyLink : unfilteredAssemblyLinks)
             {
-                if(!transLink.links().contains(assemblyLink))
+                if(transLink.links().contains(assemblyLink))
                     continue;
 
                 Breakend otherBreakend = assemblyLink.otherBreakend(transBreakend);
@@ -275,7 +290,7 @@ public class TransitiveLinkFinder
             Breakend pairedOtherBreakend = otherBreakend.otherBreakend();
 
             List<Link> newLinks = Lists.newArrayList(transLink.links());
-            String linkPrefix = String.format("%s{%d - %d}", transLink.prefix(), MAX_TRANSITIVE_JUMPS, transLink.remainingTransitiveJumps());
+            String linkPrefix = String.format("%s{%d-%d}", transLink.prefix(), MAX_TRANSITIVE_JUMPS, transLink.remainingTransitiveJumps());
             Link transitiveLink = Link.from(linkPrefix, transBreakend, otherBreakend);
             newLinks.add(transitiveLink);
             newLinks.add(Link.from(otherBreakend.sv()));

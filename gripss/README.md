@@ -61,7 +61,7 @@ The following filters are applied to all variants
 
 Filter | Default | Description / purpose
 ---|---|---
-minQual | 400 (single breakend:1000) | Minimum absolute tumor support for variant
+minQual | 400 (single breakend:500) | Minimum absolute tumor support for variant
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
 minTumorAF | 0.005 | Low AF variants in high depth regions may be artefacts
@@ -71,13 +71,12 @@ PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
 
-We also have 7 special filters applying to specific short variant categories:
+We also have 6 special filters applying to specific short variant categories:
 
 Filter | Default | Scope | Description 
 ---|---|---|---
 minLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
 maxHomLengthShortInv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
-maxInexactHomLengthShortDel | 6 | DEL(<1kb) | Short DEL with high homology are a common mapping artefact
 shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
 shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read or in the case of very short DEL and INS at least 1 supporting indel containing read.
 shortSRNormalSupport | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 

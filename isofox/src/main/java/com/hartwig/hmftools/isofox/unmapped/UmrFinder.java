@@ -38,7 +38,6 @@ public class UmrFinder
 {
     private final IsofoxConfig mConfig;
     private final boolean mEnabled;
-    private final UmrCohortFrequency mCohortFrequency;
     private GeneCollection mGenes;
 
     private final Set<String> mChimericReadKeys;
@@ -48,14 +47,13 @@ public class UmrFinder
 
     public static final String UNMAPPED_READS_FILE_ID = "unmapped_reads.csv";
 
-    private static final int MIN_SOFT_CLIP_LENGTH = 20;
+    private static final int MIN_SOFT_CLIP_LENGTH = 11;
     private static final int MAX_INTRON_DISTANCE = 5;
 
     public UmrFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
         mEnabled = config.runFunction(UNMAPPED_READS);
         mConfig = config;
-        mCohortFrequency = new UmrCohortFrequency(config.UnmappedCohortFreqFile);
 
         // mCandidateReads = Lists.newArrayList();
         mChimericReadKeys = Sets.newHashSet();
@@ -135,8 +133,17 @@ public class UmrFinder
         if(umRead.ScSide == SE_END && otherScSidePosition > umRead.ReadRegion.end())
             return false;
 
-        if(otherRead.isSoftClipped(switchIndex(umRead.ScSide)))
+        // ignore reads where they overlap and their fragment size is less than the read length
+        if(otherRead.likelyAdaperSoftClipping())
             return false;
+
+        if(otherRead.isSoftClipped(switchIndex(umRead.ScSide)))
+        {
+            int scLength = umRead.ScSide == SE_START ?
+                    otherRead.Cigar.getLastCigarElement().getLength() : otherRead.Cigar.getFirstCigarElement().getLength();
+
+            return scLength <= 5; // all small SCs only
+        }
 
         return true;
     }
@@ -265,8 +272,35 @@ public class UmrFinder
             avgBaseQual = totalBaseQual / scLength;
         }
 
+        // take all SC bases but also any from the exon junction
+        int scBaseLength = scLength + exonBoundaryDistance;
+
         String scBases = scSide == SE_START ?
-                Nucleotides.reverseStrandBases(read.ReadBases.substring(0, scLength)) : read.ReadBases.substring(read.ReadBases.length() - scLength);
+                Nucleotides.reverseStrandBases(read.ReadBases.substring(0, scBaseLength)) : read.ReadBases.substring(read.ReadBases.length() - scBaseLength);
+
+        byte[] scBaseQuals = new byte[scBaseLength];
+
+        if(read.baseQualities() != null)
+        {
+            if(scSide == SE_START)
+            {
+                for(int i = 0; i < scBaseLength; ++i)
+                {
+                    int index = scBaseLength - i - 1;
+                    scBaseQuals[i] = read.baseQualities()[index];
+                }
+            }
+            else
+            {
+                int bqLength = read.baseQualities().length;
+                int offset = bqLength - scBaseLength;
+                for(int i = 0; i < scBaseLength; ++i)
+                {
+                    int index = i + offset;
+                    scBaseQuals[i] = read.baseQualities()[index];
+                }
+            }
+        }
 
         if(scBases.contains("N"))
             return null;
@@ -277,7 +311,7 @@ public class UmrFinder
         UnmappedRead umRead = new UnmappedRead(
                 read.Id, new ChrBaseRegion(read.Chromosome, read.PosStart, read.PosEnd), scLength,
                 scSide, avgBaseQual, geneData.GeneId, geneData.GeneName, selectedTransData.TransName, exonRank, exonBoundary,
-                exonBoundaryDistance, spliceType, scBases, mateCoords, 0, false);
+                exonBoundaryDistance, spliceType, scBases, scBaseQuals, mateCoords, false);
 
         return umRead;
     }
@@ -290,14 +324,6 @@ public class UmrFinder
     public void writeUnmappedReads()
     {
         markChimericMatches();
-
-        /*
-        int cohortFrequency = mCohortFrequency.getCohortFrequency(read.Chromosome, umRead.positionKey());
-
-        // for now, filter these
-        //if(cohortFrequency > 0)
-        //    return;
-        */
 
         writeReadData(mWriter, mCandidateReads);
     }

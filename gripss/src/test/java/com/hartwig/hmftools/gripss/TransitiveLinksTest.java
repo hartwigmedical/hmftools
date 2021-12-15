@@ -128,7 +128,9 @@ public class TransitiveLinksTest
         LinkStore assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2, var3, var4));
 
         transLinkFinder = new TransitiveLinkFinder(mGripss.DataCache, assemblyLinks);
-        assertTrue(transLinkFinder.findTransitiveLinks(var1.breakendStart()).isEmpty());
+        links = transLinkFinder.findTransitiveLinks(var1.breakendStart());
+        assertEquals(3, links.size());
+        assertTrue(links.stream().anyMatch(x -> assemblyLinks.getBreakendLinks(var2.breakendEnd()).contains(x)));
     }
 
     @Test
