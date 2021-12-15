@@ -1,5 +1,8 @@
 # GRIDSS Post Somatic Software (GRIPSS)
 
+This version has been superceded by:
+https://github.com/hartwigmedical/hmftools/blob/master/gripss/README.md
+
 GRIPSS applies a set of filtering and post processing steps on GRIDSS paired tumor-normal output to produce a high confidence set of somatic SV for a tumor sample.
 GRIPSS processes the GRIDSS output and produces a somatic vcf.
 
