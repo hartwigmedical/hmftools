@@ -14,7 +14,9 @@ data class DedupPair(val duplicates: Set<String>, val rescue: Set<String>) {
 
             for (alt in alternatePaths) {
                 val originalPasses = filterStore[alt.vcfId].isEmpty()
-                val anyInAltPathPasses = alt.pathVcfIds().map { x -> filterStore[x] }.any { x -> x.isEmpty() }
+
+                val pathVcfIds = alt.pathVcfIds()
+                val anyInAltPathPasses = pathVcfIds.map { x -> filterStore[x] }.any { x -> x.isEmpty() }
 
                 if (alt.size() == 1) {
                     val variant = variantStore.select(alt.vcfId)

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripsskt
 
+import com.google.common.collect.Sets
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import com.hartwig.hmftools.gripsskt.GripssApplication.Companion.logger
 import com.hartwig.hmftools.gripsskt.dedup.DedupPair
@@ -89,7 +90,7 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         val hotspots = variantStore.selectAll().filter(hotspotRescue).map { x -> x.vcfId }.toSet()
 
         logger.info("Reading PON files: ${config.singlePonFile} ${config.pairedPonFile}")
-        val ponFiltered = ponFiltered(contigComparator, variantStore.selectAll())
+        val ponFiltered = ponFiltered(contigComparator, variantStore)
 
         logger.info("Applying initial soft filters")
         val initialFilters = SoftFilterStore(config.filterConfig, variantStore.selectAll(), ponFiltered, hotspots)
@@ -143,13 +144,38 @@ class GripssApplication(private val config: GripssConfig) : AutoCloseable, Runna
         return { variant -> minDistanceFilter(variant) && appropriateSoftFilters(variant) && hotspotStore.contains(variant) }
     }
 
-    private fun ponFiltered(contigComparator: ContigComparator, variants: List<StructuralVariantContext>): Set<String> {
+    private fun ponFiltered(contigComparator: ContigComparator, variantStore: VariantStore): Set<String> {
         val breakends = Breakend.fromBedFile(config.singlePonFile)
         val breakpoints = Breakpoint.fromBedpeFile(config.pairedPonFile, contigComparator)
         val ponStore = LocationStore(contigComparator, breakends, breakpoints, config.filterConfig.ponDistance)
 
         logger.info("Applying PON file")
-        return variants.filter { ponStore.contains(it) }.map { it.vcfId }.toSet()
+        val ponFilteredBreakends = Sets.newHashSet<String>()
+
+        for(breakend in variantStore.selectAll())
+        {
+            if(breakend.isSingle)
+            {
+                if(ponStore.contains(breakend))
+                    ponFilteredBreakends.add(breakend.vcfId)
+            }
+            else
+            {
+                // only test the PON once per SV, on the start breakend
+                val mate = variantStore.select(breakend.mateId!!)
+
+                if(contigComparator.compare(breakend, mate) <= 0)
+                {
+                    if(ponStore.contains(breakend))
+                    {
+                        ponFilteredBreakends.add(breakend.vcfId)
+                        ponFilteredBreakends.add(breakend.mateId)
+                    }
+                }
+            }
+        }
+
+        return ponFilteredBreakends
     }
 
     private fun hardFilterAndRealign(fileReader: VCFFileReader, ordinals: Pair<Int, Int>, hotspotFilter: (StructuralVariantContext) -> Boolean, contigComparator: ContigComparator): List<StructuralVariantContext> {

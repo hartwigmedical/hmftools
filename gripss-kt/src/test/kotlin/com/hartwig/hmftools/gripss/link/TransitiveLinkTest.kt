@@ -69,7 +69,8 @@ class TransitiveLinkTest {
         val vSgl = createVariant("1", 1500, "idSgl", "A", "A.", 1000, listOf("PASS")).toSv()
         val variantStore = VariantStore(listOf(v1start, v1end, v2start, v2end, vSgl, v3start, v3end))
 
-        assertTrue(TransitiveLink(LinkStore(listOf()), variantStore).transitiveLink(v1start).isNotEmpty())
+        var links = TransitiveLink(LinkStore(listOf()), variantStore).transitiveLink(v1start);
+        assertEquals(3, links.size)
 
         val v3link = Link("assemblyLink", "id3s", "idSgl", 0, 0)
         assertTrue(TransitiveLink(LinkStore(listOf(v3link)), variantStore).transitiveLink(v1start).isEmpty())

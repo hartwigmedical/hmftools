@@ -141,7 +141,9 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
         val newRef = refGenome.getSubsequenceAt(contig, newStart.toLong(), newStart.toLong()).unambiguousNucleotides
 
         val mate = variantType as Paired
-        val alleles = listOf(Allele.create(newRef, true), Allele.create(mate.altString(mate.otherPosition, newRef)))
+        val refAllele = Allele.create(newRef, true)
+        val altAllele = Allele.create(mate.altString(mate.otherPosition, newRef))
+        val alleles = listOf(refAllele, altAllele)
 
         val variantContextBuilder = VariantContextBuilder(context)
                 .start(newStart.toLong())
@@ -275,9 +277,11 @@ class StructuralVariantContext(val context: VariantContext, private val normalOr
             result.add(MAX_HOM_LENGTH_SHORT_INV)
         }
 
+        /* decommissioned in v1.12
         if (inexactHomologyLengthShortDelFilter(config.maxInexactHomLengthShortDel)) {
             result.add(MAX_INEXACT_HOM_LENGTH_SHORT_DEL)
         }
+         */
 
         if (shortSplitReadTumorFilter()) {
             result.add(SHORT_SR_SUPPORT)

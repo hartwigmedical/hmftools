@@ -18,7 +18,7 @@ fun Genotype.allelicFrequency(isSingleBreakEnd: Boolean, isShort: Boolean): Doub
     val readPairSupport = if (isSingleBreakEnd || !isShort) this.refSupportReadPair() else 0
     val totalSupport = fragmentSupport + this.refSupportRead() + readPairSupport
 
-    return fragmentSupport.toDouble() / totalSupport.toDouble()
+    return if (totalSupport == 0) 0.0 else fragmentSupport.toDouble() / totalSupport.toDouble()
 }
 
 fun Genotype.assemblyReadPairs(): Int = attributeAsInt("ASRP", 0)
