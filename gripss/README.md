@@ -25,7 +25,7 @@ This will write 2 files:
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The bed and bedpe files are available to download from [HMFTools-Resources > GRIDSS](https://resources.hartwigmedicalfoundation.nl/) for both GRCH 37 and 38.
+The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/) for both GRCh 37. Files for GRCh38 will be available early next year. Both files need to be sorted by chromsome and start breakend start position.
 
 ## Tumor-only mode
 The `reference` argument is optional and if not supplied, GRIPSS will run in tumor-only mode in which case  all filters that require the normal sample are de-activated. This includes
@@ -125,47 +125,17 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Version History and Download Links
+- [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.0_beta)
+- [1.12](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.12)
 - [1.11](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.11)
-  - Fix hotspot matching
-  - Replace other ambiguous bases in bam with N
-  - Fixed description of TAF: Tumor allelic frequency (fragment support / total support)
-  - Do not attempt transitive linking if there is 500,000+ variants
-  - Changed default value of hardMaxNormalRelativeSupport from 0.06 to 0.08 
 - [1.10](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.10)
-  - Removed viral insertion exception from normal relative support filter
-  - Add EventType flag [DEL, INS, DUP, INV, SGL, BND]
-  - Check IC flag whenever we check SR 
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.9)
-  - Warn if malformed BEALN field in input
-  - Only include specified samples in VCF output
-  - `tumor` argument is now mandatory
-  - `reference` argument is still optional but excluding it will run in [tumor-only mode](#tumor-only-mode)
-  - HardMaxNormalAbsoluteSupport does not trigger unless SoftMaxNormalRelativeSupport does also
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.8)
-  - Legs of variant always have same filters
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.7)
-  - Fix bug in BEALN interpretation
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.6)
-  - Fix bug where alt does not always realign
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.5)
-  - Tumor only support
-  - Added GripssHardFilterApplicationKt application
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.4)
-  - Fix bug when trying to use non-default parameter values
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.3)
-  - Fixed bug to allow output VCF name to be relative path
-  - Fixed bug handling contigs with colons eg HLA-A*23:01:01
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.2)
-  - Hotspots cannot recover HardMinQualFiltered variants
-  - Ignore maxNormalRelativeSupport filter for single breakends with viral sequence alignments
-  - BEALN, INSRMRC and INSRMRT are now mandatory requirements
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.1)
-  - Added HardMinTumorQual [100] filter
-  - Added HardMaxNormalAbsoluteSupport [3] filter 
-  - Added HardMaxNormalRelativeSupport [0.06] filter to replace MaxNormalRelativeSupport [0.03]
-  - Added SoftMaxNormalRelativeSupport [0.03] filter
-  - Qual filters and QUAL field in output VCF now refer to tumor qual only
-  - Added optional `reference` and `tumor` parameters
-  - Rescue DSB linked mobile element insertions
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v1.0)
-  - Initial Release 
