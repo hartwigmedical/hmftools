@@ -86,8 +86,8 @@ public final class CkbDAO {
     public void write(@NotNull CkbEntry ckbEntry) {
         int id = context.insertInto(CKBENTRY, CKBENTRY.CKBPROFILEID, CKBENTRY.CREATEDATE, CKBENTRY.UPDATEDATE, CKBENTRY.PROFILENAME)
                 .values(ckbEntry.profileId(),
-                        Util.sqlDate(ckbEntry.createDate()),
-                        Util.sqlDate(ckbEntry.updateDate()),
+                        ckbEntry.createDate(),
+                        ckbEntry.updateDate(),
                         ckbEntry.profileName())
                 .returning(CKBENTRY.ID)
                 .fetchOne()

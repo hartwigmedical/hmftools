@@ -37,7 +37,7 @@ class IndicationDAO {
                         indication.source(),
                         indication.definition(),
                         indication.currentPreferredTerm(),
-                        Util.sqlDate(indication.lastUpdateDateFromDO()),
+                        indication.lastUpdateDateFromDO(),
                         indication.termId())
                 .returning(INDICATION.ID)
                 .fetchOne()
