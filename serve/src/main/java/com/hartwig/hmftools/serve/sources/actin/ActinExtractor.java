@@ -21,7 +21,7 @@ import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
-import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
+import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventAndGeneExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
 
@@ -30,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 public class ActinExtractor {
 
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ActinClassificationConfig.build());
-    private static final ActinEventTypeExtractor EXTRACTOR = new ActinEventTypeExtractor();
 
     @NotNull
     private final EventExtractor eventExtractor;
@@ -44,8 +43,8 @@ public class ActinExtractor {
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
-            String gene = EXTRACTOR.extractGene(entry);
-            String event = EXTRACTOR.extractEvent(entry);
+            String gene = ActinEventAndGeneExtractor.extractGene(entry);
+            String event = ActinEventAndGeneExtractor.extractEvent(entry);
 
             EventType eventType = CLASSIFIER.determineType(gene, event);
 
