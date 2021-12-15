@@ -33,45 +33,45 @@ public final class ServeLocalConfigProvider {
                 .hartwigCohortTsv(Strings.EMPTY)
                 .skipHotspotResolving(true);
 
-        // Datastore is a shared vm with fixed paths.
+        // SERVE-VM is a shared vm tailored for running SERVE on GCP.
         if (hostname.toLowerCase().equals("serve-vm")) {
-            builder.viccJson("/data/common/dbs/serve/static_sources/vicc/all.json");
-            builder.ckbDir("/data/common/dbs/ckb/210514_flex_dump");
-            builder.ckbFilterTsv("/data/common/dbs/serve/curation/ckb_filters.tsv");
-            builder.iClusionTrialTsv("/data/common/dbs/iclusion/iclusion_trials_prod.tsv");
-            builder.actinTrailTsv("");
+            builder.viccJson("/data/resources/custom/vicc/all.json");
+            builder.ckbDir("/data/resources/custom/ckb/latest");
+            builder.ckbFilterTsv("/data/resources/custom/serve/ckb_filters.tsv");
+            builder.iClusionTrialTsv("/data/resources/custom/iclusion/iclusion_trials_prod.tsv");
+            builder.actinTrialTsv("/data/resources/custom/actin/actin_knowledgebase.tsv");
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
-            builder.missingDoidsMappingTsv("/data/common/dbs/serve/curation/missing_doids_mapping.tsv");
-            builder.driverGene37Tsv("/data/common/dbs/driver_gene_panel/DriverGenePanel.37.tsv");
-            builder.driverGene38Tsv("/data/common/dbs/driver_gene_panel/DriverGenePanel.38.tsv");
-            builder.knownFusion37File("/data/common/dbs/fusions/known_fusion_data.37_v3.csv");
-            builder.knownFusion38File("/data/common/dbs/fusions/known_fusion_data.38_v3.csv");
-            builder.refGenome37FastaFile("/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+            builder.missingDoidsMappingTsv("/data/resources/custom/serve/public_missing_doids_mapping.tsv");
+            builder.driverGene37Tsv("/data/resources/public/gene_panel/37/DriverGenePanel.37.tsv");
+            builder.driverGene38Tsv("/data/resources/public/gene_panel/38/DriverGenePanel.38.tsv");
+            builder.knownFusion37File("/data/resources/public/fusions/37/known_fusion_data.37.csv");
+            builder.knownFusion38File("/data/resources/public/fusions/38/known_fusion_data.38.csv");
+            builder.refGenome37FastaFile(
+                    "/data/resources/bucket/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(
-                    "/data/common/refgenomes/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
-            builder.refGenome37To38Chain("/data/common/refgenomes/liftover/hg19ToHg38.over.chain");
-            builder.refGenome38To37Chain("/data/common/refgenomes/liftover/hg38ToHg19.over.chain");
+                    "/data/resources/bucket/reference_genome/38/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
+            builder.refGenome37To38Chain("/data/resources/custom/reference_genome_liftover/hg19ToHg38.over.chain");
+            builder.refGenome38To37Chain("/data/resources/custom/reference_genome_liftover/hg38ToHg19.over.chain");
         } else {
             // Assume we run on local machine with fixed paths
-            builder.viccJson(System.getProperty("user.home") + "/hmf/serve/static_sources/vicc/all.json");
-            builder.ckbDir(System.getProperty("user.home") + "/hmf/serve/ckb");
-            builder.ckbFilterTsv(System.getProperty("user.home") + "/hmf/serve/curation/ckb_filters.tsv");
-            builder.iClusionTrialTsv(System.getProperty("user.home") + "/hmf/serve/iclusion/iclusion_trials_prod.tsv");
-            builder.actinTrailTsv("");
+            String baseDir = System.getProperty("user.home") + "/hmf/";
+            builder.viccJson(baseDir + "serve/static_sources/vicc/all.json");
+            builder.ckbDir(baseDir + "serve/ckb");
+            builder.ckbFilterTsv(baseDir + "serve/curation/ckb_filters.tsv");
+            builder.iClusionTrialTsv(baseDir + "serve/iclusion/iclusion_trials_prod.tsv");
+            builder.actinTrialTsv(baseDir + "serve/actin/actin_knowledgebase.tsv");
 
-            builder.outputDir(System.getProperty("user.home") + "/hmf/tmp/serve");
-            builder.missingDoidsMappingTsv(System.getProperty("user.home") + "/hmf/serve/curation/missing_doids_mapping.tsv");
-            builder.driverGene37Tsv(System.getProperty("user.home") + "/hmf/driver_gene_panel/DriverGenePanel.37.tsv");
-            builder.driverGene38Tsv(System.getProperty("user.home") + "/hmf/driver_gene_panel/DriverGenePanel.38.tsv");
-            builder.knownFusion37File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.37.csv");
-            builder.knownFusion38File(System.getProperty("user.home") + "/hmf/fusions/known_fusion_data.38.csv");
-            builder.refGenome37FastaFile(
-                    System.getProperty("user.home") + "/hmf/refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
-            builder.refGenome38FastaFile(
-                    System.getProperty("user.home") + "/hmf/refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
-            builder.refGenome37To38Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg19ToHg38.over.chain");
-            builder.refGenome38To37Chain(System.getProperty("user.home") + "/hmf/refgenomes/liftover/hg38ToHg19.over.chain");
+            builder.outputDir(baseDir + "tmp/serve");
+            builder.missingDoidsMappingTsv(baseDir + "serve/curation/missing_doids_mapping.tsv");
+            builder.driverGene37Tsv(baseDir + "driver_gene_panel/DriverGenePanel.37.tsv");
+            builder.driverGene38Tsv(baseDir + "driver_gene_panel/DriverGenePanel.38.tsv");
+            builder.knownFusion37File(baseDir + "fusions/known_fusion_data.37.csv");
+            builder.knownFusion38File(baseDir + "fusions/known_fusion_data.38.csv");
+            builder.refGenome37FastaFile(baseDir + "refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
+            builder.refGenome38FastaFile(baseDir + "refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
+            builder.refGenome37To38Chain(baseDir + "refgenomes/liftover/hg19ToHg38.over.chain");
+            builder.refGenome38To37Chain(baseDir + "refgenomes/liftover/hg38ToHg19.over.chain");
         }
 
         return builder.build();

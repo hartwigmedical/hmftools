@@ -41,8 +41,8 @@ public final class ActinFileReader {
 
         return ImmutableActinEntry.builder()
                 .trial(values[0])
-                .rule(ActinRule.valueOf(values[2]))
-                .parameters(toParameters(values[3]))
+                .rule(ActinRule.valueOf(values[1]))
+                .parameters(toParameters(values[2]))
                 .build();
     }
 

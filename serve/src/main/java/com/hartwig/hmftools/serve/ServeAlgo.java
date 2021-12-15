@@ -76,7 +76,7 @@ public class ServeAlgo {
         }
 
         if (config.useActin()) {
-            extractions.add(extractActinKnowledge(config.actinTrailTsv()));
+            extractions.add(extractActinKnowledge(config.actinTrialTsv()));
         }
 
         if (config.useDocm()) {
