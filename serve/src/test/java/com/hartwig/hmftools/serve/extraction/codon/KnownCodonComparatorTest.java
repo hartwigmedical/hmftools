@@ -20,13 +20,13 @@ public class KnownCodonComparatorTest {
                         .end(11)
                         .gene("gene x")
                         .mutationType(MutationTypeFilter.ANY)
-                        .codonIndex(1)
+                        .rank(1)
                         .transcript("transcript x")
                         .build())
                 .build();
 
         KnownCodon codon2 = ImmutableKnownCodon.builder()
-                .annotation(ImmutableCodonAnnotation.builder().from(codon1.annotation()).codonIndex(2).build())
+                .annotation(ImmutableCodonAnnotation.builder().from(codon1.annotation()).rank(2).build())
                 .build();
 
         Set<KnownCodon> sortedExons = Sets.newTreeSet(new KnownCodonComparator());
@@ -35,5 +35,4 @@ public class KnownCodonComparatorTest {
 
         assertEquals(codon1, sortedExons.iterator().next());
     }
-
 }

@@ -127,7 +127,7 @@ public interface ServeConfig {
     boolean useActin();
 
     @NotNull
-    String actinTrailTsv();
+    String actinTrialTsv();
 
     boolean useDocm();
 
@@ -201,7 +201,7 @@ public interface ServeConfig {
                 .ckbDir(useCkb ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .ckbFilterTsv(useCkb ? nonOptionalFile(cmd, CKB_FILTER_TSV) : NOT_APPLICABLE)
                 .useActin(useActin)
-                .actinTrailTsv(useActin ? nonOptionalFile(cmd, ACTIN_TRIAL_TSV) : NOT_APPLICABLE)
+                .actinTrialTsv(useActin ? nonOptionalFile(cmd, ACTIN_TRIAL_TSV) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)

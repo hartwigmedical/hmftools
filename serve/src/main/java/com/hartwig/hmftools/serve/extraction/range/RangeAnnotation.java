@@ -11,5 +11,11 @@ public interface RangeAnnotation extends GenomeRegion {
     String gene();
 
     @NotNull
+    String transcript();
+
+    int rank();
+
+    @NotNull
     MutationTypeFilter mutationType();
+
 }

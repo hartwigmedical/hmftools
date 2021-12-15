@@ -60,9 +60,8 @@ public class ExonAnnotationToVCFConverter {
             long start = exon.annotation().start() + 10; // remove the first 10 non-coding positions before exon
             long end = exon.annotation().end() - 10; // remove the last 10 non-coding positions after exon
             long middle = start + Math.round((end - start) / 2D); // take middle position of exon
-            List<Long> positions = Lists.newArrayList(start, middle, end);
 
-            String gene = exon.annotation().gene();
+            List<Long> positions = Lists.newArrayList(start, middle, end);
             for (long position : positions) {
                 String refBaseOfPosition = altBaseGenerator.extractRefBaseAtGenomicPosition(chromosome, position);
                 String randomAltBase = altBaseGenerator.createAltForRefBase(chromosome, position);
@@ -73,9 +72,9 @@ public class ExonAnnotationToVCFConverter {
                         refBaseOfPosition,
                         randomAltBase,
                         exon.sources(),
-                        gene,
-                        exon.annotation().exonIndex(),
-                        exon.annotation().transcript());
+                        exon.annotation().gene(),
+                        exon.annotation().transcript(),
+                        exon.annotation().rank());
             }
         }
 
@@ -85,8 +84,8 @@ public class ExonAnnotationToVCFConverter {
     }
 
     private static void writeVariantToVCF(@NotNull VariantContextWriter writer, @NotNull String chromosome, long position,
-            @NotNull String ref, @NotNull String alt, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, int exonIndex,
-            @NotNull String transcript) {
+            @NotNull String ref, @NotNull String alt, @NotNull Set<Knowledgebase> knowledgebases, @NotNull String gene, @NotNull String transcript,
+            int exonRank) {
         List<Allele> alleles = Lists.newArrayList(Allele.create(ref, true), Allele.create(alt, false));
 
         VariantContext variant = new VariantContextBuilder().noGenotypes()
@@ -95,7 +94,7 @@ public class ExonAnnotationToVCFConverter {
                 .start(position)
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, new Long(position).intValue())
-                .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toExonKey(gene, transcript, exonIndex))
+                .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toExonKey(gene, transcript, exonRank))
                 .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
                 .make();
 

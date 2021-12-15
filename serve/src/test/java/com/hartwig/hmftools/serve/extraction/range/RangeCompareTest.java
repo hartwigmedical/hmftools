@@ -18,7 +18,7 @@ public class RangeCompareTest {
                 .end(10)
                 .gene("gene")
                 .transcript("transcript")
-                .exonIndex(1)
+                .rank(1)
                 .mutationType(MutationTypeFilter.INFRAME_DELETION)
                 .build();
 

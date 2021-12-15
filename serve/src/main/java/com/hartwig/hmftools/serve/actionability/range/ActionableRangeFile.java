@@ -45,10 +45,13 @@ public final class ActionableRangeFile {
     @NotNull
     private static String header() {
         return new StringJoiner(FIELD_DELIMITER).add("gene")
+                .add("transcript")
                 .add("chromosome")
                 .add("start")
                 .add("end")
                 .add("mutationType")
+                .add("rangeType")
+                .add("rank")
                 .add(ActionableFileFunctions.header())
                 .toString();
     }
@@ -68,12 +71,15 @@ public final class ActionableRangeFile {
         String[] values = line.split(FIELD_DELIMITER);
 
         return ImmutableActionableRange.builder()
-                .from(ActionableFileFunctions.fromLine(values, 5))
+                .from(ActionableFileFunctions.fromLine(values, 8))
                 .gene(values[0])
-                .chromosome(values[1])
-                .start(Long.parseLong(values[2]))
-                .end(Long.parseLong(values[3]))
-                .mutationType(MutationTypeFilter.valueOf(values[4]))
+                .transcript(values[1])
+                .chromosome(values[2])
+                .start(Long.parseLong(values[3]))
+                .end(Long.parseLong(values[4]))
+                .mutationType(MutationTypeFilter.valueOf(values[5]))
+                .rangeType(RangeType.valueOf(values[6]))
+                .rank(Integer.parseInt(values[7]))
                 .build();
     }
 
@@ -99,10 +105,13 @@ public final class ActionableRangeFile {
     @NotNull
     private static String toLine(@NotNull ActionableRange range) {
         return new StringJoiner(FIELD_DELIMITER).add(range.gene())
+                .add(range.transcript())
                 .add(range.chromosome())
                 .add(Long.toString(range.start()))
                 .add(Long.toString(range.end()))
                 .add(range.mutationType().toString())
+                .add(range.rangeType().toString())
+                .add(String.valueOf(range.rank()))
                 .add(ActionableFileFunctions.toLine(range))
                 .toString();
     }

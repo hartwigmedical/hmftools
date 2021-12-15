@@ -19,7 +19,7 @@ public enum Knowledgebase {
     HARTWIG_COHORT(RefGenomeVersion.V37, "hartwig_cohort", "HMF Cohort", EvidenceLevel.A, EvidenceLevel.A),
     HARTWIG_CURATED(RefGenomeVersion.V37, "hartwig_curated", "HMF Curated", EvidenceLevel.A, EvidenceLevel.A),
     ICLUSION(RefGenomeVersion.V37, "iclusion", "iClusion", EvidenceLevel.B, EvidenceLevel.B),
-    ACTIN(RefGenomeVersion.V37, "actin", "ACTIN", EvidenceLevel.B, EvidenceLevel.B),
+    ACTIN(RefGenomeVersion.V37, "actin", "ACTIN", EvidenceLevel.A, EvidenceLevel.A),
     VICC_CGI(RefGenomeVersion.V37, "vicc_cgi", "CGI", EvidenceLevel.B, EvidenceLevel.B),
     VICC_CIVIC(RefGenomeVersion.V37, "vicc_civic", "CIViC", EvidenceLevel.B, EvidenceLevel.B),
     VICC_JAX(RefGenomeVersion.V37, "vicc_jax", "CKB Core", EvidenceLevel.B, EvidenceLevel.B),

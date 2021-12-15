@@ -12,7 +12,7 @@ import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 
 import org.junit.Test;
 
-public class ActionableTrialFactoryTest {
+public class ActinTrialFactoryTest {
 
     @Test
     public void canCreateActionableTrials() {

@@ -77,12 +77,12 @@ public class CodonExtractorTest {
 
     @Test
     public void canExtractCodonIndices() {
-        assertEquals(600, (int) CodonExtractor.extractCodonIndex("BRAF (V600)"));
-        assertEquals(742, (int) CodonExtractor.extractCodonIndex("W742"));
-        assertEquals(179, (int) CodonExtractor.extractCodonIndex("Q179X"));
-        assertEquals(61, (int) CodonExtractor.extractCodonIndex("KRAS Q61X"));
+        assertEquals(600, (int) CodonExtractor.extractCodonRank("BRAF (V600)"));
+        assertEquals(742, (int) CodonExtractor.extractCodonRank("W742"));
+        assertEquals(179, (int) CodonExtractor.extractCodonRank("Q179X"));
+        assertEquals(61, (int) CodonExtractor.extractCodonRank("KRAS Q61X"));
 
-        assertNull(CodonExtractor.extractCodonIndex("Not a codon number"));
+        assertNull(CodonExtractor.extractCodonRank("Not a codon number"));
     }
 
     @NotNull

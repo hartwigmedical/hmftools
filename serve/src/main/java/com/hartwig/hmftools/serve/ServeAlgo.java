@@ -18,12 +18,12 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeManager;
+import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.actin.ActinExtractor;
 import com.hartwig.hmftools.serve.sources.actin.ActinExtractorFactory;
 import com.hartwig.hmftools.serve.sources.actin.ActinReader;
-import com.hartwig.hmftools.serve.sources.actin.ActinTrial;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
-import com.hartwig.hmftools.serve.sources.actin.reader.ActinTrialFile;
+import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractorFactory;
 import com.hartwig.hmftools.serve.sources.ckb.CkbReader;
@@ -69,15 +69,15 @@ public class ServeAlgo {
         }
 
         if (config.useIclusion()) {
-            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv(), config.outputDir()));
+            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
         }
 
         if (config.useCkb()) {
-            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv(), config.outputDir()));
+            extractions.add(extractCkbKnowledge(config.ckbDir(), config.ckbFilterTsv()));
         }
 
         if (config.useActin()) {
-            extractions.add(extractActinKnowledge(config.actinTrailTsv()));
+            extractions.add(extractActinKnowledge(config.actinTrialTsv()));
         }
 
         if (config.useDocm()) {
@@ -111,48 +111,45 @@ public class ServeAlgo {
 
         EventClassifierConfig config = ViccClassificationConfig.build();
         // Assume all VICC sources share the same ref genome version
-        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.VICC_CIVIC),
-                missingDoidLookup);
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.VICC_CIVIC);
+        ViccExtractor extractor = ViccExtractorFactory.buildViccExtractor(config, refGenomeResource, missingDoidLookup);
 
         LOGGER.info("Running VICC knowledge extraction");
         return extractor.extract(entries);
     }
 
     @NotNull
-    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull String outputDir) throws IOException {
+    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
         List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
-        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ICLUSION),
-                missingDoidLookup);
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ICLUSION);
+        IclusionExtractor extractor = IclusionExtractorFactory.buildIclusionExtractor(config, refGenomeResource, missingDoidLookup);
 
         LOGGER.info("Running iClusion knowledge extraction");
         return extractor.extract(trials);
     }
 
     @NotNull
-    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv, @NotNull String outputDir)
+    private ExtractionResult extractCkbKnowledge(@NotNull String ckbDir, @NotNull String ckbFilterTsv)
             throws IOException {
         List<CkbEntry> ckbEntries = CkbReader.readAndCurate(ckbDir, ckbFilterTsv);
 
         EventClassifierConfig config = CkbClassificationConfig.build();
-        CkbExtractor extractor =
-                CkbExtractorFactory.buildCkbExtractor(config, refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB));
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.CKB);
+        CkbExtractor extractor = CkbExtractorFactory.buildCkbExtractor(config, refGenomeResource);
 
         LOGGER.info("Running CKB knowledge extraction");
         return extractor.extract(ckbEntries);
     }
 
     @NotNull
-    private ExtractionResult extractActinKnowledge(@NotNull String actinTrialTsv)
-            throws IOException {
-        List<ActinTrial> actinEntries = ActinReader.read(actinTrialTsv);
+    private ExtractionResult extractActinKnowledge(@NotNull String actinTrialTsv) throws IOException {
+        List<ActinEntry> actinEntries = ActinReader.read(actinTrialTsv);
 
         EventClassifierConfig config = ActinClassificationConfig.build();
-        ActinExtractor extractor =
-                ActinExtractorFactory.buildActinExtractor(config, refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ACTIN));
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ACTIN);
+        ActinExtractor extractor = ActinExtractorFactory.buildActinExtractor(config, refGenomeResource);
 
         LOGGER.info("Running ACTIN knowledge extraction");
         return extractor.extract(actinEntries);
@@ -162,7 +159,8 @@ public class ServeAlgo {
     private ExtractionResult extractDocmKnowledge(@NotNull String docmTsv) throws IOException {
         List<DocmEntry> entries = DocmReader.readAndCurate(docmTsv);
 
-        DocmExtractor extractor = new DocmExtractor(refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.DOCM).proteinResolver());
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.DOCM);
+        DocmExtractor extractor = new DocmExtractor(refGenomeResource.proteinResolver());
         LOGGER.info("Running DoCM knowledge extraction");
         return extractor.extract(entries);
     }
@@ -174,9 +172,9 @@ public class ServeAlgo {
         List<HartwigEntry> entries = HartwigFileReader.read(hartwigCohortTsv);
         LOGGER.info(" Read {} entries", entries.size());
 
-        HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_COHORT,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.HARTWIG_COHORT).proteinResolver(),
-                addExplicitHotspots);
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.HARTWIG_COHORT);
+        HartwigExtractor extractor =
+                new HartwigExtractor(Knowledgebase.HARTWIG_COHORT, refGenomeResource.proteinResolver(), addExplicitHotspots);
         LOGGER.info("Running Hartwig Cohort knowledge extraction");
         return extractor.extract(entries);
     }
@@ -188,9 +186,9 @@ public class ServeAlgo {
         List<HartwigEntry> entries = HartwigFileReader.read(hartwigCuratedTsv);
         LOGGER.info(" Read {} entries", entries.size());
 
-        HartwigExtractor extractor = new HartwigExtractor(Knowledgebase.HARTWIG_CURATED,
-                refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.HARTWIG_CURATED).proteinResolver(),
-                addExplicitHotspots);
+        RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.HARTWIG_CURATED);
+        HartwigExtractor extractor =
+                new HartwigExtractor(Knowledgebase.HARTWIG_CURATED, refGenomeResource.proteinResolver(), addExplicitHotspots);
         LOGGER.info("Running Hartwig Curated knowledge extraction");
         return extractor.extract(entries);
     }

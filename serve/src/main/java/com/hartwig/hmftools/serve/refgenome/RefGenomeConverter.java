@@ -99,15 +99,11 @@ class RefGenomeConverter {
                             originalAnnotation,
                             liftedAnnotation);
                 } else {
-                    // We blank out the transcript and codon index since we are unsure to what extend
+                    // We blank out the transcript and codon rank since we are unsure to what extend
                     // the transcript maps to the new ref genome.
                     convertedCodons.add(ImmutableKnownCodon.builder()
                             .from(codon)
-                            .annotation(ImmutableCodonAnnotation.builder()
-                                    .from(liftedAnnotation)
-                                    .transcript(Strings.EMPTY)
-                                    .codonIndex(0)
-                                    .build())
+                            .annotation(ImmutableCodonAnnotation.builder().from(liftedAnnotation).build())
                             .build());
                 }
             }
@@ -122,10 +118,10 @@ class RefGenomeConverter {
         for (KnownExon exon : exons) {
             RangeAnnotation liftedAnnotation = liftOverRange(exon.annotation());
             if (liftedAnnotation != null) {
-                // We blank out the transcript and exon index since we are unsure to what extend the transcript maps to the new ref genome.
+                // We blank out the transcript and exon rank since we are unsure to what extend the transcript maps to the new ref genome.
                 convertedExons.add(ImmutableKnownExon.builder()
                         .from(exon)
-                        .annotation(ImmutableExonAnnotation.builder().from(liftedAnnotation).transcript(Strings.EMPTY).exonIndex(0).build())
+                        .annotation(ImmutableExonAnnotation.builder().from(liftedAnnotation).build())
                         .build());
             }
         }
@@ -253,12 +249,23 @@ class RefGenomeConverter {
         verifyNoChromosomeChange(annotation.chromosome(), liftedStart, annotation);
         verifyNoChromosomeChange(annotation.chromosome(), liftedEnd, annotation);
 
-        // We blank out the transcript since we are unsure to what extend the transcript maps to the new ref genome.
+        // We blank out the transcript and rank since we are unsure to what extend the transcript maps to the new ref genome.
         return new RangeAnnotation() {
             @NotNull
             @Override
             public String gene() {
                 return mapGene(annotation.gene());
+            }
+
+            @NotNull
+            @Override
+            public String transcript() {
+                return Strings.EMPTY;
+            }
+
+            @Override
+            public int rank() {
+                return 0;
             }
 
             @NotNull

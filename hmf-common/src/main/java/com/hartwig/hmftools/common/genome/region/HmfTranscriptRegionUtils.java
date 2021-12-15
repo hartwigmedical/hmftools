@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,11 +78,11 @@ public class HmfTranscriptRegionUtils
     @Nullable
     public static List<GenomeRegion> codonByIndex(final HmfTranscriptRegion transcript, int index)
     {
-        return codonRangeByIndex(transcript, index, index);
+        return codonRangeByRank(transcript, index, index);
     }
 
     @Nullable
-    public static List<GenomeRegion> codonRangeByIndex(final HmfTranscriptRegion transcript, int startCodon, int endCodon)
+    public static List<GenomeRegion> codonRangeByRank(final HmfTranscriptRegion transcript, int startCodon, int endCodon)
     {
         if(startCodon < 1 || endCodon < 1)
         {

@@ -26,7 +26,7 @@ ALTER TABLE copyNumber
 ALTER TABLE geneCopyNumber
 	MODIFY COLUMN sampleId VARCHAR(31);
 ALTER TABLE geneCopyNumber
-	MODIFY COLUMN geneCopyNumber VARCHAR(31);
+	MODIFY COLUMN chromosome VARCHAR(31);
 ALTER TABLE geneCopyNumber
 	ADD UNIQUE KEY (sampleId, chromosome, gene, transcriptId);
 

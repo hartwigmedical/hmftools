@@ -15,12 +15,12 @@ public final class KeyFormatter {
     }
 
     @NotNull
-    public static String toExonKey(@NotNull String gene, @Nullable String transcript, int exonIndex) {
-        return gene + "|" + transcript + "|" + exonIndex;
+    public static String toExonKey(@NotNull String gene, @Nullable String transcript, int exonRank) {
+        return gene + "|" + transcript + "|" + exonRank;
     }
 
     @NotNull
-    public static String toCodonKey(@NotNull String gene, @Nullable String transcript, int codonIndex) {
-        return gene + "|" + transcript + "|" + codonIndex;
+    public static String toCodonKey(@NotNull String gene, @Nullable String transcript, int codonRank) {
+        return gene + "|" + transcript + "|" + codonRank;
     }
 }

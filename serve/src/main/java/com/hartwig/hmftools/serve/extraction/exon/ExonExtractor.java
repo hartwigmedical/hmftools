@@ -49,8 +49,8 @@ public class ExonExtractor {
             assert canonicalTranscript != null;
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transName())) {
-                List<Integer> exonIndices = extractExonIndices(event);
-                if (exonIndices == null) {
+                List<Integer> exonRanks = extractExonIndices(event);
+                if (exonRanks == null) {
                     LOGGER.warn("Could not extract exon indices from '{}'", event);
                     return null;
                 }
@@ -58,17 +58,17 @@ public class ExonExtractor {
                 MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
 
                 List<ExonAnnotation> annotations = Lists.newArrayList();
-                for (int exonIndex : exonIndices) {
+                for (int exonRank : exonRanks) {
                     ExonAnnotation annotation = determineExonAnnotation(gene,
                             canonicalTranscript,
-                            exonIndex,
+                            exonRank,
                             mutationTypeFilter,
                             canonicalTranscript.transName());
                     if (annotation != null) {
                         annotations.add(annotation);
                     } else {
-                        LOGGER.warn("Could not determine exon annotation for exon index {} on transcript '{}' on '{}'",
-                                exonIndex,
+                        LOGGER.warn("Could not determine exon annotation for exon rank {} on transcript '{}' on '{}'",
+                                exonRank,
                                 canonicalTranscript.transName(),
                                 gene);
                     }
@@ -139,9 +139,9 @@ public class ExonExtractor {
     }
 
     @Nullable
-    private static ExonAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript, int exonIndex,
+    private static ExonAnnotation determineExonAnnotation(@NotNull String gene, @NotNull HmfTranscriptRegion transcript, int exonRank,
             @NotNull MutationTypeFilter mutationTypeFilter, @NotNull String canonicalTranscriptID) {
-        HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonIndex);
+        HmfExonRegion hmfExonRegion = transcript.exonByIndex(exonRank);
 
         if (hmfExonRegion == null) {
             return null;
@@ -159,7 +159,7 @@ public class ExonExtractor {
                 .start(start)
                 .end(end)
                 .mutationType(mutationTypeFilter)
-                .exonIndex(exonIndex)
+                .rank(exonRank)
                 .build();
     }
 

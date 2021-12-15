@@ -71,8 +71,8 @@ public class FusionExtractor {
             return null;
         }
 
-        Integer exonIndex = extractExonIndex(event);
-        if (exonIndex == null) {
+        Integer exonRank = extractExonRank(event);
+        if (exonRank == null) {
             return null;
         }
 
@@ -80,13 +80,13 @@ public class FusionExtractor {
         int exonDown;
         switch (exonicDelDupType) {
             case FULL_EXONIC_DELETION: {
-                exonUp = exonIndex - 1;
-                exonDown = exonIndex + 1;
+                exonUp = exonRank - 1;
+                exonDown = exonRank + 1;
                 break;
             }
             case PARTIAL_EXONIC_DELETION: {
-                exonUp = exonIndex;
-                exonDown = exonIndex;
+                exonUp = exonRank;
+                exonDown = exonRank;
                 break;
             }
             default: {
@@ -105,7 +105,7 @@ public class FusionExtractor {
     }
 
     @Nullable
-    private static Integer extractExonIndex(@NotNull String event) {
+    private static Integer extractExonRank(@NotNull String event) {
         List<Integer> exons = Lists.newArrayList();
         String[] words = event.split(" ");
         for (String word : words) {
@@ -114,10 +114,10 @@ public class FusionExtractor {
             }
         }
         if (exons.size() > 1) {
-            LOGGER.warn("Multiple exon indices extracted from '{}' while expecting 1", event);
+            LOGGER.warn("Multiple exon ranks extracted from '{}' while expecting 1", event);
             return null;
         } else if (exons.isEmpty()) {
-            LOGGER.warn("No exon index could be resolved from '{}'", event);
+            LOGGER.warn("No exon rank could be resolved from '{}'", event);
             return null;
         }
 

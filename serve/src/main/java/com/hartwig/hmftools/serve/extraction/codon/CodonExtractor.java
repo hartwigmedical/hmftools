@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.serve.extraction.codon;
 
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeByIndex;
+import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeByRank;
 
 import java.util.List;
 import java.util.Map;
@@ -45,21 +45,21 @@ public class CodonExtractor {
             assert canonicalTranscript != null;
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transName())) {
-                Integer codonIndex = extractCodonIndex(event);
-                if (codonIndex == null) {
-                    LOGGER.warn("Could not extract codon index from '{}'", event);
+                Integer codonRank = extractCodonRank(event);
+                if (codonRank == null) {
+                    LOGGER.warn("Could not extract codon rank from '{}'", event);
                     return null;
                 }
 
                 MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
                 List<CodonAnnotation> codonAnnotations = determineCodonAnnotations(gene,
                         canonicalTranscript,
-                        codonIndex,
+                        codonRank,
                         mutationTypeFilter);
 
                 if (codonAnnotations == null) {
-                    LOGGER.warn("Could not resolve codon index {} on transcript '{}' for gene '{}'",
-                            codonIndex,
+                    LOGGER.warn("Could not resolve codon rank {} on transcript '{}' for gene '{}'",
+                            codonRank,
                             canonicalTranscript.transName(),
                             gene);
                 }
@@ -78,7 +78,7 @@ public class CodonExtractor {
 
     @Nullable
     @VisibleForTesting
-    static Integer extractCodonIndex(@NotNull String event) {
+    static Integer extractCodonRank(@NotNull String event) {
         String codonPart;
         if (event.contains(" ")) {
             codonPart = event.split(" ")[1];
@@ -95,8 +95,8 @@ public class CodonExtractor {
 
     @Nullable
     private static List<CodonAnnotation> determineCodonAnnotations(@NotNull String gene, @NotNull HmfTranscriptRegion canonicalTranscript,
-            int codonIndex, @NotNull MutationTypeFilter mutationTypeFilter) {
-        List<GenomeRegion> regions = codonRangeByIndex(canonicalTranscript, codonIndex, codonIndex);
+            int codonRank, @NotNull MutationTypeFilter mutationTypeFilter) {
+        List<GenomeRegion> regions = codonRangeByRank(canonicalTranscript, codonRank, codonRank);
 
         if (regions != null) {
             List<CodonAnnotation> codonAnnotations = Lists.newArrayList();
@@ -108,7 +108,7 @@ public class CodonExtractor {
                         .start(region.start())
                         .end(region.end())
                         .mutationType(mutationTypeFilter)
-                        .codonIndex(codonIndex)
+                        .rank(codonRank)
                         .build());
             }
             return codonAnnotations;

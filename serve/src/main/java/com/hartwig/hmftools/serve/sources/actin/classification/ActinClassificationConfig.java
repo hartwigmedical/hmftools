@@ -82,12 +82,18 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> exonIdentifiers() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("exon");
+        set.add("EXON");
+        return set;
     }
 
     @NotNull
     private static Set<String> exonKeywords() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("exon");
+        set.add("EXON");
+        return set;
     }
 
     @NotNull
@@ -117,17 +123,23 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> activatingGeneLevelKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("activation");
+        return set;
     }
 
     @NotNull
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("inactivation");
+        return set;
     }
 
     @NotNull
     private static Set<String> amplificationKeywords() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("amplification");
+        return set;
     }
 
     @NotNull
@@ -142,7 +154,9 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> deletionKeywords() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("deletion");
+        return set;
     }
 
     @NotNull
@@ -167,7 +181,9 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> promiscuousFusionKeyPhrases() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add("fusion");
+        return set;
     }
 
     @NotNull
