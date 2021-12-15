@@ -2,9 +2,9 @@ package com.hartwig.hmftools.extensions.cli.options.commands
 
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
-import io.kotlintest.matchers.shouldBe
-import io.kotlintest.matchers.shouldThrow
-import io.kotlintest.specs.StringSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.StringSpec
 import java.io.IOException
 
 class CommandOptionTest : StringSpec() {

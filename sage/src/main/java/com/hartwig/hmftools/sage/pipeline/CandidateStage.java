@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.ref.RefSequence;
@@ -62,7 +63,7 @@ public class CandidateStage
                 final String sample = mConfig.TumorIds.get(i);
                 final String sampleBam = mConfig.TumorBams.get(i);
 
-                done = done.thenApply(aVoid -> mCandidateEvidence.readBam(sample, sampleBam, refSequence, region))
+                done = done.<List<AltContext>>thenApply(aVoid -> mCandidateEvidence.readBam(sample, sampleBam, refSequence, region))
                         .thenAccept(initialCandidates::add);
             }
             return done.thenApply(y -> initialCandidates.candidates());

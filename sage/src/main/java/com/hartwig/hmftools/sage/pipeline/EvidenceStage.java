@@ -8,6 +8,7 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounters;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ public class EvidenceStage
                 final String sample = samples.get(i);
                 final String sampleBam = sampleBams.get(i);
 
-                done = done.thenApply(x -> mReadContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
+                done = done.<List<ReadContextCounter>>thenApply(x -> mReadContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
             }
 
             return done.thenApply(x -> result);

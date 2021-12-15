@@ -6,15 +6,15 @@ class PatientAnonymizer {
 
     fun anonymize(amberPatients: List<AmberPatient>, existingSamples: List<HmfSample>): List<HmfSample> {
         val newSamples = mutableListOf<HmfSample>()
-        var maxPatientId = existingSamples.map { x -> x.patientId }.max() ?: 0
+        var maxPatientId = existingSamples.map { x -> x.patientId }.maxOrNull() ?: 0
 
         val amberPatientIds = amberPatients.map { x -> x.patientId() }.toSet()
         for (amberPatientId in amberPatientIds) {
             val allPatientSamples = amberPatients.filter { it.patientId() == amberPatientId }.map { it.sample() }
             val existingPatientSamples = existingSamples.filter { x -> allPatientSamples.contains(x.sample) }
 
-            val hmfPatientId = (existingPatientSamples.map { x -> x.patientId }.max() ?: ++maxPatientId)
-            var maxSampleIdForPatient = existingPatientSamples.map { x -> x.sampleId }.max() ?: 0
+            val hmfPatientId = (existingPatientSamples.map { x -> x.patientId }.maxOrNull() ?: ++maxPatientId)
+            var maxSampleIdForPatient = existingPatientSamples.map { x -> x.sampleId }.maxOrNull() ?: 0
 
             for (sample in allPatientSamples) {
                 if (existingPatientSamples.none { x -> x.sample == sample }) {
