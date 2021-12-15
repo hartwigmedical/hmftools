@@ -29,7 +29,7 @@ OtherReportableEffects |Transcript, HGVS Coding, HGVS Protein, Effects, CodingEf
 WorstCodingEffect | From all transcripts
 GenesAffected | Count of genes which the variant overlaps
 
-* if additional reportabled transcripts are configured in drive panel
+* if additional reportable transcripts are configured in drive panel
 
 ## Running Pave
 
@@ -43,24 +43,19 @@ ref_genome | Reference genome fasta file
 ensembl_data_dir | Path to Ensembl data cache directory
 output_dir | Output directory for VCF and transcript CSV
 
-NOTE: Lilac handles BAMs which have been sliced for the HLA gene regions.
-
-If a sample's tumor BAM is provided in place of the reference BAM, then Lilac will determine the allele solution from it instead.
-
 ### Optional Arguments
 
 Argument | Description 
 ---|---
-ref_genome_version | V37 (default) or V38
+ref_genome_version | 37 (default) or 38
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 write_transcript_csv | Write a detailed CSV file for each impacted transcript
 
-
 ```
 java -jar pave.jar 
   -sample SAMPLE_ID
-  vcf_file /path_to_somatic_vcf_file/
+  -vcf_file /path_to_somatic_vcf_file/
   -ensembl_data_dir /path_to_ensembl_files/
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version [37 or 38] 
@@ -69,7 +64,7 @@ java -jar pave.jar
 
 ## Overview and algorithm
 
-PAVE predicts the coding impact,protein impact and coding effect of each variant on every overlapping transcript including for up to 1kb upstream.  The following annotations are added for each affected transcript:
+PAVE predicts the coding impact, protein impact and coding effect of each variant on every overlapping transcript including for up to 1kb upstream.  The following annotations are added for each affected transcript:
 
 * Gene
 * TranscriptId
@@ -101,11 +96,11 @@ Notes:
    - MISSENSE
    - SYNONYMOUS
    - NONE
-3. Inframe INDELs may occasionally be annotated as notionally partially or completely outside the coding region due to left alignment and microhomology. Any INDEL with a length that is a multiplier of 3, that can be right aligned to be fully inside the coding regions should be marked as effect=inframe_insertion/inframe_deleton (notable examples include known pathogenic variants in KIT (4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C) and EGFR (7:55248980 C > CTCCAGGAAGCCT)). 
+3. Inframe INDELs may occasionally be annotated as notionally partially or completely outside the coding region due to left alignment and microhomology. Any INDEL with a length that is a multiplier of 3, that can be right aligned to be fully inside the coding regions should be marked as effect=inframe_insertion/inframe_deletion (notable examples include known pathogenic variants in KIT (4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C) and EGFR (7:55248980 C > CTCCAGGAAGCCT)). 
 4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal).   
 5. Where an INDEL also leads to a stop_lost or start_lost, the lost effects are prioritised
 6. A SPLICE MNV needs to be marked as splice if any base overlaps a splice site.
-7. Any INDEL which overlaps a canonical splice region (ie.[D-1:D+5] OR [A+3:A+1]) should be marked as splice_donor/splice_acceptor if and only if the canonical sites are changed according to the SPLICE rules listed above. Where an INDEL has microhomology extends over a splice donor or splice acceptor region, the variant is tested at both the leftmost and rightmost alignment, with intronic only effects prioritised highest, then exonic effects and finally splice effects.   A notable recurrent example where D+5 is not affected by an indel with microhomology in GRCH37 are indels at the homopoloymer at MSH2 2:47641559.  Both splice and frameshift/inframe effects may be reported together if a deletion unambiguously both overlaps coding bases and changes canonical splice sites.
+7. Any INDEL which overlaps a canonical splice region (ie.[D-1:D+5] OR [A+3:A+1]) should be marked as splice_donor/splice_acceptor if and only if the canonical sites are changed according to the SPLICE rules listed above. Where an INDEL has microhomology extends over a splice donor or splice acceptor region, the variant is tested at both the leftmost and rightmost alignment, with intronic only effects prioritised highest, then exonic effects and finally splice effects.   A notable recurrent example where D+5 is not affected by an indel with microhomology in GRCH37 are indels at the homopolymer at MSH2 2:47641559.  Both splice and frameshift/inframe effects may be reported together if a deletion unambiguously both overlaps coding bases and changes canonical splice sites.
 
 
 ### HGVS Coding Impact
@@ -180,5 +175,5 @@ _ Inframe insertion + stop gained | p.Leu339delinsHisPhe* | Ignore any AA insert
 
 ### Population Frequency
 
-We annotate the population frequency using Gnomad (v3.1.2 for hg38, v2.1.1 for GRCH37).  We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. 
+We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for GRCH37).  We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. 
 
