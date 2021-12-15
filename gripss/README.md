@@ -20,8 +20,8 @@ java -jar gripss.jar \
 ```
 
 This will write 2 files:
-- SAMPLE_T.gridss.somatic.vcf.gz - all non-hard-filtered SVs
-- SAMPLE_T.gridss.somatic.filtered.vcf.gz - filtered for PASS and PON only
+- SAMPLE_T.gridss.vcf.gz - all non-hard-filtered SVs
+- SAMPLE_T.gridss.filtered.vcf.gz - filtered for PASS and PON only
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
