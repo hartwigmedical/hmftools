@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.neo.bind.BindConstants;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
 

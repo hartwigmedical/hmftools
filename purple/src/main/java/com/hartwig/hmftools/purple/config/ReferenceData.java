@@ -122,8 +122,8 @@ public class ReferenceData
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
 
-        ChromosomeLengths = toPosition(RefGeCoordinates.lengths(), chromosomeNames);
-        Centromeres = toPosition(RefGeCoordinates.centromeres(), chromosomeNames);
+        ChromosomeLengths = toPosition(RefGeCoordinates.Lengths, chromosomeNames);
+        Centromeres = toPosition(RefGeCoordinates.Centromeres, chromosomeNames);
 
         String somaticHotspotVcf = cmd.getOptionValue(SOMATIC_HOTSPOT, Strings.EMPTY);
         String germlineHotspotVcf = cmd.getOptionValue(GERMLINE_HOTSPOT, Strings.EMPTY);
@@ -251,7 +251,7 @@ public class ReferenceData
         DriverGenePanelConfig.addGenePanelOption(false, options);
     }
 
-    private static Map<Chromosome, GenomePosition> toPosition(final Map<Chromosome,Long> longs, final Map<Chromosome, String> contigMap)
+    private static Map<Chromosome, GenomePosition> toPosition(final Map<Chromosome,Integer> longs, final Map<Chromosome, String> contigMap)
     {
         final Map<Chromosome, GenomePosition> result = Maps.newHashMap();
 

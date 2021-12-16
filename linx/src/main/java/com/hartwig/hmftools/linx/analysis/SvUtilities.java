@@ -39,13 +39,13 @@ public class SvUtilities {
 
     public static int getChromosomeLength(final String chromosome)
     {
-        Long chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
+        Integer chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
         return chrLength != null ? chrLength.intValue() : 0;
     }
 
     public static ChromosomeArm getChromosomalArm(final String chromosome, final int position)
     {
-        final Long centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
+        final Integer centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
 
         if(centromerePos == null)
             return UNKNOWN;
@@ -58,7 +58,7 @@ public class SvUtilities {
         final RefGenomeCoordinates refGenome = refGenomeLengths();
         final HumanChromosome chr = HumanChromosome.fromString(chromosome);
 
-        final Long centromerePos = refGenome.centromeres().get(chr);
+        final Integer centromerePos = refGenome.centromeres().get(chr);
 
         if(centromerePos == null)
             return 0;

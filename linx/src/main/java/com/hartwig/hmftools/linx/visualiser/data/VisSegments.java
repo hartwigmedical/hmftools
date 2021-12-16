@@ -88,8 +88,8 @@ public class VisSegments
     public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
             @NotNull final List<VisSvData> links, @NotNull final List<GenomePosition> allPositions, boolean showSimpleSvSegments)
     {
-        final Map<Chromosome, Long> lengths = REF_GENOME.lengths();
-        final Map<Chromosome, Long> centromeres = REF_GENOME.centromeres();
+        final Map<Chromosome,Integer> lengths = REF_GENOME.Lengths;
+        final Map<Chromosome,Integer> centromeres = REF_GENOME.Centromeres;
 
         final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
         final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);

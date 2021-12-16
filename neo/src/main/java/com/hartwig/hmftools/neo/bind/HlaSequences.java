@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 
 public class HlaSequences
 {

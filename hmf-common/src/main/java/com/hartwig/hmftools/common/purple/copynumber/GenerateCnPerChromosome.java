@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
-import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.ChromosomeArm;
 
 import org.jetbrains.annotations.NotNull;

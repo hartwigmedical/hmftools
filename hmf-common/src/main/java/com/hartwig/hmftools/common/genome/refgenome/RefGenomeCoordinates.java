@@ -18,44 +18,40 @@ public enum RefGenomeCoordinates
     COORDS_37(fromResource("lengths.37.tsv"), fromResource("centromeres.37.tsv")),
     COORDS_38(fromResource("lengths.38.tsv"), fromResource("centromeres.38.tsv"));
 
-    @NotNull
-    private final Map<Chromosome, Long> lengths;
-    @NotNull
-    private final Map<Chromosome, Long> centromeres;
+    public final Map<Chromosome,Integer> Lengths;
+    public final Map<Chromosome,Integer> Centromeres;
 
     private static final String FIELD_SEPARATOR = "\t";
 
-    RefGenomeCoordinates(@NotNull final Map<Chromosome, Long> lengths, @NotNull final Map<Chromosome, Long> centromeres)
+    RefGenomeCoordinates(@NotNull final Map<Chromosome,Integer> lengths, @NotNull final Map<Chromosome,Integer> centromeres)
     {
-        this.lengths = lengths;
-        this.centromeres = centromeres;
+        Lengths = lengths;
+        Centromeres = centromeres;
     }
 
     @NotNull
-    public Map<Chromosome, Long> lengths() {
-        return lengths;
+    public Map<Chromosome,Integer> lengths() {
+        return Lengths;
     }
 
     @NotNull
-    public Map<Chromosome, Long> centromeres() {
-        return centromeres;
+    public Map<Chromosome,Integer> centromeres() {
+        return Centromeres;
     }
 
-    @NotNull
-    private static Map<Chromosome, Long> fromResource(@NotNull final String resource)
+    private static Map<Chromosome,Integer> fromResource(final String resource)
     {
         final InputStream inputStream = RefGenomeCoordinates.class.getResourceAsStream("/refgenome/" + resource);
         return fromLines(new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList()));
     }
 
-    @NotNull
-    private static Map<Chromosome, Long> fromLines(@NotNull final List<String> lines)
+    private static Map<Chromosome,Integer> fromLines(final List<String> lines)
     {
-        final Map<Chromosome, Long> result = Maps.newHashMap();
+        final Map<Chromosome,Integer> result = Maps.newHashMap();
         for (final String line : lines)
         {
             final String[] values = line.split(FIELD_SEPARATOR);
-            result.put(HumanChromosome.fromString(values[0]), Long.valueOf(values[1]));
+            result.put(HumanChromosome.fromString(values[0]), Integer.valueOf(values[1]));
         }
 
         return result;

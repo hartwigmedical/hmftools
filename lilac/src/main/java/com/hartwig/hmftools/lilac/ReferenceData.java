@@ -28,7 +28,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.cohort.CohortFrequency;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -113,7 +112,7 @@ public class ReferenceData
         String refFile = version.is37() ? "/pon/indels_v37.csv" : "/pon/indels_v38.csv";
 
         final List<String> ponLines = new BufferedReader(new InputStreamReader(
-                RefGenomeCoordinates.class.getResourceAsStream(refFile)))
+                ReferenceData.class.getResourceAsStream(refFile)))
                 .lines().collect(Collectors.toList());
 
         ponLines.stream().map(x -> Indel.fromString(x)).forEach(x -> INDEL_PON.add(x));

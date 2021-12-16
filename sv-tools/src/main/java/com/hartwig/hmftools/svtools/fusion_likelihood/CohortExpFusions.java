@@ -107,7 +107,7 @@ public class CohortExpFusions
         // sum up all arm lengths to adjust same-arm fusion rates
         int maxBucketLength = max(getMaxBucketLength(), 4000000);
 
-        for(Map.Entry<Chromosome,Long> entry : RefGenomeCoordinates.COORDS_37.lengths().entrySet())
+        for(Map.Entry<Chromosome,Integer> entry : RefGenomeCoordinates.COORDS_37.lengths().entrySet())
         {
             final String chromosome = entry.getKey().toString();
 
@@ -144,7 +144,7 @@ public class CohortExpFusions
         final RefGenomeCoordinates refGenome = RefGenomeCoordinates.COORDS_37;
         final HumanChromosome chr = HumanChromosome.fromString(chromosome);
 
-        final Long centromerePos = refGenome.centromeres().get(chr);
+        final Integer centromerePos = refGenome.Centromeres.get(chr);
 
         if(centromerePos == null)
             return 0;

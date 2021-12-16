@@ -61,7 +61,7 @@ public class GeneRangeData
 
     private static ChromosomeArm getChromosomalArm(final String chromosome, final int position)
     {
-        final Long centromerePos = RefGenomeCoordinates.COORDS_37.centromeres().get(HumanChromosome.fromString(chromosome));
+        final Integer centromerePos = RefGenomeCoordinates.COORDS_37.Centromeres.get(HumanChromosome.fromString(chromosome));
 
         if(centromerePos == null)
             return UNKNOWN;
