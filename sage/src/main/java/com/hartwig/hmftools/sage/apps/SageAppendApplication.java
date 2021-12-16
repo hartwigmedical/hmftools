@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -85,7 +86,8 @@ public class SageAppendApplication implements AutoCloseable
 
     public void run() throws IOException, ExecutionException, InterruptedException
     {
-        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
+        final RefGenomeCoordinates refCoords = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome, refCoords);
         final List<VariantContext> existing = verifyAndReadExisting();
 
         final SAMSequenceDictionary dictionary = dictionary();

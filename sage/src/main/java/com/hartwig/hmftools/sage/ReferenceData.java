@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -38,6 +39,7 @@ public class ReferenceData
     public final List<HmfTranscriptRegion> TranscriptRegions;
 
     public final IndexedFastaSequenceFile RefGenome;
+    public final RefGenomeCoordinates RefGenomeCoords;
 
     private final SageConfig mConfig;
 
@@ -70,6 +72,8 @@ public class ReferenceData
         }
 
         RefGenome = indexFasta;
+
+        RefGenomeCoords = config.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
     }
 
     public boolean load()

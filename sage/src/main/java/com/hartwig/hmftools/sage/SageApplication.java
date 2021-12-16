@@ -108,14 +108,14 @@ public class SageApplication implements AutoCloseable
             final String contig = samSequenceRecord.getSequenceName();
             if(mConfig.Chromosomes.isEmpty() || mConfig.Chromosomes.contains(contig))
             {
-                if(HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig))
+                if(!HumanChromosome.contains(contig) && !MitochondrialChromosome.contains(contig))
+                continue;
+
+                try(final ChromosomePipeline pipeline = createChromosomePipeline(contig, coverage, recalibrationMap))
                 {
-                    try(final ChromosomePipeline pipeline = createChromosomePipeline(contig, coverage, recalibrationMap))
-                    {
-                        pipeline.process();
-                    }
-                    System.gc();
+                    pipeline.process();
                 }
+                System.gc();
             }
         }
 

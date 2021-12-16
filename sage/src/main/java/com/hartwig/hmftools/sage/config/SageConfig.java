@@ -121,7 +121,7 @@ public class SageConfig
         
         AppendMode = appendMode;
 
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         ReferenceIds = Lists.newArrayList();
         if(cmd.hasOption(REFERENCE))

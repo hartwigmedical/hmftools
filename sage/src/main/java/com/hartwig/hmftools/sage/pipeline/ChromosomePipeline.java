@@ -63,7 +63,7 @@ public class ChromosomePipeline implements AutoCloseable
                 refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr),
                 refData.HighConfidence.get(chr), qualityRecalibrationMap, coverage);
 
-        mPartition = new ChromosomePartition(config, mRefGenome);
+        mPartition = new ChromosomePartition(config, mRefGenome, refData.RefGenomeCoords);
 
         final List<HmfTranscriptRegion> transcripts =
                 refData.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());

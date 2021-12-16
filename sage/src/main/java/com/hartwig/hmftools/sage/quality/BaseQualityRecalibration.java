@@ -61,14 +61,16 @@ public class BaseQualityRecalibration
             processSample(mConfig.ReferenceIds.get(i), mConfig.ReferenceBams.get(i), regions);
         }
 
-        mPerfCounter.logStats();
+        if(SG_LOGGER.isDebugEnabled())
+            mPerfCounter.logStats();
 
         for(int i = 0; i < mConfig.TumorIds.size(); i++)
         {
             processSample(mConfig.TumorIds.get(i), mConfig.TumorBams.get(i), regions);
         }
 
-        mPerfCounter.logStats();
+        if(SG_LOGGER.isDebugEnabled())
+            mPerfCounter.logStats();
     }
 
     private void processSample(final String sampleId, final String bamFile, final List<ChrBaseRegion> regions)
