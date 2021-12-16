@@ -36,6 +36,7 @@ public interface ServeConfig {
     String CKB_FILTER_TSV = "ckb_filter_tsv";
     String USE_ACTIN = "use_actin";
     String ACTIN_TRIAL_TSV = "actin_trial_tsv";
+    String ACTIN_FILTER_TSV = "actin_filter_tsv";
     String USE_DOCM = "use_docm";
     String DOCM_TSV = "docm_tsv";
     String USE_HARTWIG_COHORT = "use_hartwig_cohort";
@@ -77,6 +78,7 @@ public interface ServeConfig {
         options.addOption(CKB_FILTER_TSV, true, "Path to the CKB filter tsv");
         options.addOption(USE_ACTIN, false, "If provided, ACTIN will be used as a source in SERVE");
         options.addOption(ACTIN_TRIAL_TSV, true, "Path to the ACTIN input trial tsv");
+        options.addOption(ACTIN_FILTER_TSV, true, "Path to the ACTIN filter tsv");
         options.addOption(USE_DOCM, false, "If provided, DoCM will be used as a source in SERVE");
         options.addOption(DOCM_TSV, true, "Path to the DoCM knowledgebase input TSV");
         options.addOption(USE_HARTWIG_COHORT, false, "If provided, Hartwig Cohort will be used as a source in SERVE");
@@ -128,6 +130,9 @@ public interface ServeConfig {
 
     @NotNull
     String actinTrialTsv();
+
+    @NotNull
+    String actinFilterTsv();
 
     boolean useDocm();
 

@@ -77,7 +77,7 @@ public class ServeAlgo {
         }
 
         if (config.useActin()) {
-            extractions.add(extractActinKnowledge(config.actinTrialTsv()));
+            extractions.add(extractActinKnowledge(config.actinTrialTsv(), config.actinFilterTsv()));
         }
 
         if (config.useDocm()) {
@@ -144,8 +144,8 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractActinKnowledge(@NotNull String actinTrialTsv) throws IOException {
-        List<ActinEntry> actinEntries = ActinReader.read(actinTrialTsv);
+    private ExtractionResult extractActinKnowledge(@NotNull String actinTrialTsv, @NotNull String actinFilterTsv) throws IOException {
+        List<ActinEntry> actinEntries = ActinReader.read(actinTrialTsv, actinFilterTsv);
 
         EventClassifierConfig config = ActinClassificationConfig.build();
         RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ACTIN);
