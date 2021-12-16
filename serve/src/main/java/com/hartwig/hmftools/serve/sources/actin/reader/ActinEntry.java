@@ -20,7 +20,7 @@ public abstract class ActinEntry {
 
     @NotNull
     @Value.Derived
-    public EventType type() {
+    public List<EventType> type() {
         return ActinEventTypeExtractor.classify(this);
     }
 

@@ -43,15 +43,18 @@ public class ActinFilter {
                 gene = entry.parameters().get(0);
             }
 
-            if (include(entry.type(), entry)) {
-                filteredVariants.add(variant);
-            } else {
-                LOGGER.debug("Filtering variant '{}' on '{}'", variant, gene);
+            for (EventType eventType : entry.type()) {
+                if (include(eventType, entry)) {
+                    filteredVariants.add(variant);
+                } else {
+                    LOGGER.debug("Filtering variant '{}' on '{}'", variant, gene);
+                }
+
+                if (!filteredVariants.isEmpty()) {
+                    filteredActinEntries.add(ImmutableActinEntry.builder().from(entry).parameters(entry.parameters()).build());
+                }
             }
 
-            if (!filteredVariants.isEmpty()) {
-                filteredActinEntries.add(ImmutableActinEntry.builder().from(entry).parameters(entry.parameters()).build());
-            }
         }
 
         return filteredActinEntries;

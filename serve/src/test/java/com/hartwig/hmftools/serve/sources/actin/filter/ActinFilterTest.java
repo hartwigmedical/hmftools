@@ -9,10 +9,12 @@ import com.hartwig.hmftools.serve.sources.actin.ActinTestFactory;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActinFilterTest {
 
+    @Ignore
     @Test
     public void canFilterOnFullNames() {
         ActinFilter filter = new ActinFilter(createFilterEntryList(ActinFilterType.FILTER_EXACT_VARIANT_FULLNAME, "BRAF V600E"));
