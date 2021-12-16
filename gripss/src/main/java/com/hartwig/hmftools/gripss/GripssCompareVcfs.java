@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
+import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 import org.apache.commons.cli.CommandLine;
@@ -41,6 +42,7 @@ import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class GripssCompareVcfs
 {
@@ -103,7 +105,13 @@ public class GripssCompareVcfs
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 vcfFile, new VCFCodec(), false);
 
-        GenotypeIds genotypeIds = new GenotypeIds(0, 1, mSampleId, mSampleId);
+        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId);
+
+        if(genotypeIds == null)
+        {
+            System.exit(1);
+        }
 
         try
         {
@@ -130,7 +138,11 @@ public class GripssCompareVcfs
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 newVcfFile, new VCFCodec(), false);
 
-        GenotypeIds genotypeIds = new GenotypeIds(0, 1, mSampleId, mSampleId);
+        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId);
+
+        if(genotypeIds == null)
+            System.exit(1);
 
         int diffCount = 0;
 
