@@ -9,12 +9,16 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_LOST;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
+import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HotspotMatcher implements EventMatcher {
+    private static final Logger LOGGER = LogManager.getLogger(HotspotMatcher.class);
 
     private static final int MAX_INFRAME_BASE_LENGTH = 50;
 
@@ -55,7 +59,11 @@ public class HotspotMatcher implements EventMatcher {
         } else if (event.contains(HGVS_DELETION + HGVS_INSERTION)) {
             int mutationLength = extractComplexDeletionInsertionLength(event);
             return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
-        } else if (event.startsWith(HGVS_START_LOST)) {
+        } else if (event.endsWith(HGVS_INSERTION)) {
+            int mutationLength = extractComplexInsertionLength(event);
+            return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
+        }
+        else if (event.startsWith(HGVS_START_LOST)) {
             return true;
         } else {
             return isValidSingleCodonMutation(event);
@@ -104,6 +112,13 @@ public class HotspotMatcher implements EventMatcher {
         }
     }
 
+    private static int extractComplexInsertionLength(@NotNull String event) {
+        assert event.endsWith(HGVS_INSERTION);
+        // Format is expected to be something like D770ins
+        String[] parts = event.split(HGVS_DELETION + HGVS_INSERTION);
+        return 1;
+    }
+
     private static int extractComplexDeletionInsertionLength(@NotNull String event) {
         assert event.contains(HGVS_DELETION + HGVS_INSERTION);
 
@@ -111,6 +126,7 @@ public class HotspotMatcher implements EventMatcher {
 
         // Format is expected to be something like D770delinsGY
         if (Character.isDigit(parts[0].charAt(1))) {
+            LOGGER.info(parts[0]);
             return 3 * parts[1].length();
         } else {
             return -1;
