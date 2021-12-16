@@ -19,8 +19,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
@@ -32,8 +30,7 @@ public final class SageVariantContextFactory
 {
     private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
-    @NotNull
-    public static VariantContext addGenotype(@NotNull final VariantContext parent, @NotNull final List<ReadContextCounter> counters)
+    public static VariantContext addGenotype(final VariantContext parent, final List<ReadContextCounter> counters)
     {
         final VariantContextBuilder builder = new VariantContextBuilder(parent);
         final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
@@ -46,8 +43,7 @@ public final class SageVariantContextFactory
         return builder.genotypes(genotypes).make();
     }
 
-    @NotNull
-    public static VariantContext create(@NotNull final SageVariant entry)
+    public static VariantContext create(final SageVariant entry)
     {
         final List<Genotype> genotypes = Lists.newArrayList();
         for(int i = 0; i < entry.normalAltContexts().size(); i++)
@@ -60,8 +56,7 @@ public final class SageVariantContextFactory
         return createContext(entry, genotypes);
     }
 
-    @NotNull
-    private static VariantContext createContext(@NotNull final SageVariant variant, @NotNull final List<Genotype> genotypes)
+    private static VariantContext createContext(final SageVariant variant, final List<Genotype> genotypes)
     {
         final VariantContextBuilder builder = CandidateSerialization.toContext(variant.candidate())
                 .log10PError(variant.totalQuality() / -10d)
@@ -97,8 +92,7 @@ public final class SageVariantContextFactory
         return context;
     }
 
-    @NotNull
-    private static Genotype createGenotype(@NotNull final ReadContextCounter counter)
+    private static Genotype createGenotype(final ReadContextCounter counter)
     {
         return new GenotypeBuilder(counter.Sample).DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })

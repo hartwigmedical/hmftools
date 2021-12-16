@@ -10,8 +10,6 @@ import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.read.ReadContext;
 
-import org.jetbrains.annotations.NotNull;
-
 public class RefContext implements GenomePosition
 {
     public final String Sample;
@@ -19,9 +17,9 @@ public class RefContext implements GenomePosition
     public final int MaxDepth;
     public final long Position;
     
-    private final Map<String, AltContext> mAlts;
+    private final Map<String,AltContext> mAlts;
 
-    private int rawDepth;
+    private int mRawDepth;
 
     public RefContext(final String sample, final String chromosome, final long position, final int maxDepth)
     {
@@ -39,13 +37,13 @@ public class RefContext implements GenomePosition
 
     public boolean reachedLimit()
     {
-        return rawDepth >= MaxDepth;
+        return mRawDepth >= MaxDepth;
     }
 
     public void refRead(boolean sufficientMapQuality)
     {
         if(sufficientMapQuality)
-            rawDepth++;
+            mRawDepth++;
     }
 
     public void altRead(
@@ -56,7 +54,7 @@ public class RefContext implements GenomePosition
         altContext.incrementAltRead(baseQuality);
         if(sufficientMapQuality)
         {
-            rawDepth++;
+            mRawDepth++;
         }
 
         if(readContext != null && !readContext.incompleteCore())
@@ -79,7 +77,7 @@ public class RefContext implements GenomePosition
 
     public int rawDepth()
     {
-        return rawDepth;
+        return mRawDepth;
     }
 
     public String sample()

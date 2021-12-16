@@ -60,7 +60,7 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawAltBaseQuality;
     private int mRawRefBaseQuality;
 
-    public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
+    public ReadContextCounter(final String sample, final VariantHotspot variant, final ReadContext readContext,
             final QualityRecalibrationMap recalibrationMap, final VariantTier tier, final int maxCoverage, final int minNumberOfEvents,
             final int maxSkippedReferenceRegions, boolean realign)
     {
@@ -363,7 +363,7 @@ public class ReadContextCounter implements VariantHotspot
                 : ReadContext.avgCentreQuality(readBaseIndex, record);
     }
 
-    private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length)
+    private double baseQuality(int startReadIndex, final SAMRecord record, int length)
     {
         int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
@@ -388,7 +388,7 @@ public class ReadContextCounter implements VariantHotspot
         return (int) mJitterPenalty;
     }
 
-    private void incrementQualityFlags(@NotNull final SAMRecord record)
+    private void incrementQualityFlags(final SAMRecord record)
     {
         if(!record.getReadPairedFlag() || !record.getProperPairFlag())
         {
@@ -396,7 +396,7 @@ public class ReadContextCounter implements VariantHotspot
         }
     }
 
-    private int indelLength(@NotNull final SAMRecord record)
+    private int indelLength(final SAMRecord record)
     {
         int result = 0;
         for(CigarElement cigarElement : record.getCigar())
@@ -413,7 +413,7 @@ public class ReadContextCounter implements VariantHotspot
         return result;
     }
 
-    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record)
+    private int readDistanceFromEdge(int readIndex, final SAMRecord record)
     {
         int index = ReadContext.readBasesPositionIndex();
         int leftIndex = ReadContext.readBasesLeftCentreIndex();

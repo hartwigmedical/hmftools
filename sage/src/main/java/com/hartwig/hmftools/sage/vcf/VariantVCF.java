@@ -104,10 +104,8 @@ public class VariantVCF implements AutoCloseable
         mWriter.writeHeader(header);
     }
 
-    public VariantVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config,
-            @NotNull final VCFHeader existingHeader)
+    public VariantVCF(final IndexedFastaSequenceFile reference, final SageConfig config, final VCFHeader existingHeader)
     {
-
         Set<VCFHeaderLine> headerLines = existingHeader.getMetaDataInInputOrder();
         List<String> samples = Lists.newArrayList(existingHeader.getGenotypeSamples());
         samples.addAll(config.ReferenceIds);
@@ -123,13 +121,12 @@ public class VariantVCF implements AutoCloseable
         mWriter.writeHeader(newHeader);
     }
 
-    public void write(@NotNull final VariantContext context)
+    public void write(final VariantContext context)
     {
         mConsumer.accept(context);
     }
 
-    @NotNull
-    static VCFHeader header(@NotNull final SageConfig config)
+    private static VCFHeader header(final SageConfig config)
     {
         final List<String> samples = Lists.newArrayList();
         samples.addAll(config.ReferenceIds);

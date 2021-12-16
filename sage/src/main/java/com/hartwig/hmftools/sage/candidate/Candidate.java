@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 
-import org.jetbrains.annotations.NotNull;
-
-public class Candidate implements GenomePosition
+public class Candidate
 {
     private final VariantTier mTier;
     private final VariantHotspot mVariant;
@@ -73,13 +70,11 @@ public class Candidate implements GenomePosition
         return mMinNumberOfEvents;
     }
 
-    @Override
     public String chromosome()
     {
         return mVariant.chromosome();
     }
 
-    @Override
     public long position()
     {
         return mVariant.position();
