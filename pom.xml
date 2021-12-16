@@ -50,7 +50,6 @@
 
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
-        <maven.jaxb2.plugin.version>0.14.0</maven.jaxb2.plugin.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
@@ -104,7 +103,6 @@
         <rxjava2.version>2.1.2</rxjava2.version>
         <retrofit.version>2.4.0</retrofit.version>
         <moshi.version>1.6.0</moshi.version>
-        <aws.sdk.version>1.11.213</aws.sdk.version>
         <okhttp.version>3.9.0</okhttp.version>
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
         <kotlin.version>1.5.32</kotlin.version>
@@ -144,11 +142,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven.jar.plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.jvnet.jaxb2.maven2</groupId>
-                    <artifactId>maven-jaxb2-plugin</artifactId>
-                    <version>${maven.jaxb2.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -337,11 +330,6 @@
                 <groupId>com.squareup.moshi</groupId>
                 <artifactId>moshi-kotlin</artifactId>
                 <version>${moshi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-s3</artifactId>
-                <version>${aws.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
