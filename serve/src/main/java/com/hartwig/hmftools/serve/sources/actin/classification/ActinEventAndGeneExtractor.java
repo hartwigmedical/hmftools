@@ -39,7 +39,7 @@ public final class ActinEventAndGeneExtractor {
             case ACTIVATING_FUSION_IN_GENE_X:
                 return "fusion";
             case SPECIFIC_FUSION_X:
-                return entry.parameters().get(0);
+                return entry.parameters().get(0).replace("_", "-");
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());
             }
