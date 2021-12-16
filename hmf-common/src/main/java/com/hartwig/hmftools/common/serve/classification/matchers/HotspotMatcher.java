@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_INSERT
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_INDICATOR;
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_LOST;
 
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.jetbrains.annotations.NotNull;
@@ -118,6 +119,10 @@ public class HotspotMatcher implements EventMatcher {
 
     private static boolean isValidSingleCodonMutation(@NotNull String event) {
         // Single codon mutations are expected to look something like V600E (1 char - N digits - M chars (1 char, or "del" or "dup"))
+
+        //Make all codongs a single letter codon
+        event = AminoAcids.forceSingleLetterProteinAnnotation(event);
+
         if (event.length() < 3) {
             return false;
         }
