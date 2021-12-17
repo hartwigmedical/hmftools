@@ -1,29 +1,32 @@
 package com.hartwig.hmftools.sage.count;
 
+import static com.google.common.math.IntMath.ceilingPowerOfTwo;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.hartwig.hmftools.sage.context.RefContext;
+
 import org.jetbrains.annotations.NotNull;
 
-public class EvictingArray<T>
+public class EvictingArray
 {
-    private final Object[] mElements;
-    private final Consumer<T> mEvictionHandler;
+    private final RefContext[] mElements;
+    private final Consumer<RefContext> mEvictionHandler;
     private int mMinPosition = 0;
     private int mMinPositionIndex = 0;
 
     private final int mCapacity;
 
-    public EvictingArray(int minCapacity, Consumer<T> evictionHandler)
+    public EvictingArray(int minCapacity, Consumer<RefContext> evictionHandler)
     {
         mEvictionHandler = evictionHandler;
         mCapacity = calculateSize(minCapacity);
-        mElements = new Object[mCapacity];
+        mElements = new RefContext[mCapacity];
     }
 
-    public T computeIfAbsent(long position, @NotNull final Function<Long, T> supplier)
+    public RefContext computeIfAbsent(long position, @NotNull final Function<Long,RefContext> supplier)
     {
         if(mMinPosition == 0)
         {
@@ -45,7 +48,7 @@ public class EvictingArray<T>
 
         distanceFromMinPosition = (int) position - mMinPosition;
         int index = (mMinPositionIndex + distanceFromMinPosition) & (mElements.length - 1);
-        T element = (T) mElements[index];
+        RefContext element = mElements[index];
         if(element == null)
         {
             element = supplier.apply(position);
@@ -74,7 +77,7 @@ public class EvictingArray<T>
     {
         for(int i = 0; i < count; i++)
         {
-            T element = (T) mElements[mMinPositionIndex];
+            RefContext element = mElements[mMinPositionIndex];
             if(element != null)
             {
                 mEvictionHandler.accept(element);
@@ -85,9 +88,15 @@ public class EvictingArray<T>
         }
     }
 
-    private static final int MIN_INITIAL_CAPACITY = 8;
+    public static final int MIN_INITIAL_CAPACITY = 8;
 
-    private static int calculateSize(int numElements)
+    public static int calculateSize(int numElements)
+    {
+        return ceilingPowerOfTwo(numElements);
+    }
+
+    @Deprecated
+    public static int calculateSizeOld(int numElements)
     {
         int initialCapacity = MIN_INITIAL_CAPACITY;
         // Find the best power of two to hold elements.

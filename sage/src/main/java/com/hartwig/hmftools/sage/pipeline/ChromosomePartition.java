@@ -14,13 +14,11 @@ public class ChromosomePartition
 {
     private final SageConfig mConfig;
     private final ReferenceSequenceFile mRefGenome;
-    private final RefGenomeCoordinates mRefCoords;
 
-    public ChromosomePartition(final SageConfig config, final ReferenceSequenceFile refGenome, final RefGenomeCoordinates refCoords)
+    public ChromosomePartition(final SageConfig config, final ReferenceSequenceFile refGenome)
     {
         mConfig = config;
         mRefGenome = refGenome;
-        mRefCoords = refCoords;
     }
 
     public List<ChrBaseRegion> partition(final String chromosome)
@@ -31,7 +29,7 @@ public class ChromosomePartition
             return partitionRegions(chrRegions);
         }
 
-        int chromosomeLength = mRefCoords.lengths().get(chromosome).intValue();
+        int chromosomeLength = mRefGenome.getSequenceDictionary().getSequence(chromosome).getSequenceLength();
         return partition(chromosome, 1, chromosomeLength);
     }
 

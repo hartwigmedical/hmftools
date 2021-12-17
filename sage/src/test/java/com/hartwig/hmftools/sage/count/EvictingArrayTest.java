@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage.count;
 
+import static com.hartwig.hmftools.sage.count.EvictingArray.calculateSize;
+import static com.hartwig.hmftools.sage.count.EvictingArray.calculateSizeOld;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -8,6 +11,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.sage.context.RefContext;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,34 +20,40 @@ public class EvictingArrayTest
 {
     private static final int CAPACITY = 256;
 
-    private EvictingArray<GenomePosition> victim;
-    private EvictionHandler handler;
+    private EvictingArray mArray;
+    private EvictionHandler mHandler;
 
     @Before
     public void setup()
     {
-        handler = new EvictionHandler();
-        victim = new EvictingArray<>(CAPACITY, handler);
+        mHandler = new EvictionHandler();
+        mArray = new EvictingArray(CAPACITY, mHandler);
     }
 
     @Test
-    public void testCapacity()
+    public void testCapacityCalc()
     {
-        victim = new EvictingArray<>(151, handler);
-        assertEquals(256, victim.capacity());
+        assertEquals(8, calculateSizeOld(8));
+        assertEquals(8, calculateSize(8));
 
-        victim = new EvictingArray<>(CAPACITY, handler);
-        assertEquals(CAPACITY, victim.capacity());
+        assertEquals(32, calculateSizeOld(17));
+        assertEquals(32, calculateSize(32));
 
-        victim = new EvictingArray<>(300, handler);
-        assertEquals(512, victim.capacity());
+        assertEquals(256, calculateSizeOld(129));
+        assertEquals(256, calculateSize(256));
+
+        assertEquals(1024, calculateSizeOld(513));
+        assertEquals(1024, calculateSize(1024));
+
+        assertEquals(8192, calculateSizeOld(4097));
+        assertEquals(8192, calculateSize(8192));
     }
 
     @Test
     public void testInitialPosition()
     {
-        victim.computeIfAbsent(512, EvictingArrayTest::create);
-        assertEquals(257, victim.minPosition());
+        mArray.computeIfAbsent(512, EvictingArrayTest::create);
+        assertEquals(257, mArray.minPosition());
     }
 
     @Test
@@ -51,11 +61,11 @@ public class EvictingArrayTest
     {
         for(int i = 0; i < CAPACITY; i++)
         {
-            victim.computeIfAbsent(1000 + i, EvictingArrayTest::create);
+            mArray.computeIfAbsent(1000 + i, EvictingArrayTest::create);
         }
 
-        assertEquals(1000, victim.minPosition());
-        assertEquals(0, handler.list.size());
+        assertEquals(1000, mArray.minPosition());
+        assertEquals(0, mHandler.list.size());
     }
 
     @Test
@@ -70,28 +80,31 @@ public class EvictingArrayTest
     {
         for(int i = 0; i < CAPACITY + 100; i++)
         {
-            victim.computeIfAbsent(1000 + i, EvictingArrayTest::create);
+            mArray.computeIfAbsent(1000 + i, EvictingArrayTest::create);
         }
 
-        assertEquals(1100, victim.minPosition());
-        assertEquals(100, handler.list.size());
-        assertEquals(handler.list.get(0).position(), 1000);
-        assertEquals(handler.list.get(99).position(), 1099);
+        assertEquals(1100, mArray.minPosition());
+        assertEquals(100, mHandler.list.size());
+        assertEquals(mHandler.list.get(0).position(), 1000);
+        assertEquals(mHandler.list.get(99).position(), 1099);
     }
 
-    static class EvictionHandler implements Consumer<GenomePosition>
+    static class EvictionHandler implements Consumer<RefContext>
     {
         private final List<GenomePosition> list = Lists.newArrayList();
 
         @Override
-        public void accept(final GenomePosition position)
+        public void accept(final RefContext position)
         {
             list.add(position);
         }
     }
 
-    private static GenomePosition create(long pos)
+    private static final String TEST_SAMPLE_ID = "SAMPLE";
+
+    private static RefContext create(long pos)
     {
-        return GenomePositions.create("CHROM", pos);
+        return new RefContext(TEST_SAMPLE_ID, "1", pos, 100);
+        // return GenomePositions.create("CHROM", pos);
     }
 }

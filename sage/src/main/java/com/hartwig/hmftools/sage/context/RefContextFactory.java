@@ -18,9 +18,11 @@ public class RefContextFactory
 {
     private final SageConfig mConfig;
     private final String mSample;
-    private final EvictingArray<RefContext> mRollingCandidates;
+    private final EvictingArray mRollingCandidates;
     private final PanelSelector mPanelSelector;
     private final List<AltContext> mSavedCandidates = Lists.newArrayList();
+
+    private static final int MIN_ARRAY_CAPACITY = 256;
 
     public RefContextFactory(
             final SageConfig config, final String sample, final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel)
@@ -38,7 +40,7 @@ public class RefContextFactory
                 .filter(altContextPredicate)
                 .forEach(mSavedCandidates::add);
 
-        mRollingCandidates = new EvictingArray<>(256, evictionHandler);
+        mRollingCandidates = new EvictingArray(MIN_ARRAY_CAPACITY, evictionHandler);
     }
 
     public RefContext refContext(final String chromosome, final long position)

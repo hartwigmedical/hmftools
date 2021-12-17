@@ -23,7 +23,6 @@ import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public class CandidateSerializationTest
 {
-
     private static final VCFCodec CODEC = createTestCodec();
 
     @NotNull

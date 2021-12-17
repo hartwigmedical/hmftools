@@ -39,7 +39,6 @@ public class ReferenceData
     public final List<HmfTranscriptRegion> TranscriptRegions;
 
     public final IndexedFastaSequenceFile RefGenome;
-    public final RefGenomeCoordinates RefGenomeCoords;
 
     private final SageConfig mConfig;
 
@@ -60,20 +59,20 @@ public class ReferenceData
             config.Quality.populateGeneData(TranscriptRegions);
         }
 
-        IndexedFastaSequenceFile indexFasta = null;
+        RefGenome = loadRefGenome(config.RefGenomeFile);
+    }
 
+    public static IndexedFastaSequenceFile loadRefGenome(final String refGenomeFile)
+    {
         try
         {
-            indexFasta = new IndexedFastaSequenceFile(new File(config.RefGenomeFile));
+            return new IndexedFastaSequenceFile(new File(refGenomeFile));
         }
         catch(IOException e)
         {
             SG_LOGGER.error("failed to load ref genome: {}", e.toString());
+            return null;
         }
-
-        RefGenome = indexFasta;
-
-        RefGenomeCoords = config.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
     }
 
     public boolean load()

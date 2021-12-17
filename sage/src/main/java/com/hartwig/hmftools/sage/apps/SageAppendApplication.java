@@ -86,8 +86,7 @@ public class SageAppendApplication implements AutoCloseable
 
     public void run() throws IOException, ExecutionException, InterruptedException
     {
-        final RefGenomeCoordinates refCoords = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome, refCoords);
+        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
         final List<VariantContext> existing = verifyAndReadExisting();
 
         final SAMSequenceDictionary dictionary = dictionary();

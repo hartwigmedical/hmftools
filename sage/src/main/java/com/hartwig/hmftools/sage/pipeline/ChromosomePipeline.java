@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         mChromosome = chromosome;
         mConfig = config;
-        mRefGenome = refData.RefGenome;
+        mRefGenome = loadRefGenome(config.RefGenomeFile);
         mConsumer = consumer;
 
         final Chromosome chr = HumanChromosome.contains(chromosome)
@@ -63,7 +64,7 @@ public class ChromosomePipeline implements AutoCloseable
                 refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr),
                 refData.HighConfidence.get(chr), qualityRecalibrationMap, coverage);
 
-        mPartition = new ChromosomePartition(config, mRefGenome, refData.RefGenomeCoords);
+        mPartition = new ChromosomePartition(config, mRefGenome);
 
         final List<HmfTranscriptRegion> transcripts =
                 refData.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
