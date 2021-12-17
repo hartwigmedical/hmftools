@@ -80,9 +80,9 @@ final class VariantUtil {
         } else if (!variant.canonicalHgvsCodingImpact().isEmpty()) {
             consequence = variant.canonicalHgvsCodingImpact();
         } else if (variant.canonicalEffect().equals(UPSTREAM_GENE_VARIANT)) {
-            return "upstream";
+            consequence = "upstream";
         } else {
-            return variant.canonicalEffect();
+            consequence = variant.canonicalEffect();
         }
 
         return variant.gene() + " " + consequence;
