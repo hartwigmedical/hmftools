@@ -1019,7 +1019,9 @@ public class FusionDisruptionAnalyser
                 {
                     for(BreakendTransData transcript : geneAnnotation.transcripts())
                     {
-                        if(mDisruptionFinder.matchesDisruptionTranscript(geneAnnotation.geneId(), transcript.TransData))
+                        if(transcript.isCanonical())
+                            transcripts.add(transcript);
+                        else if(mDisruptionFinder.matchesDisruptionTranscript(geneAnnotation.geneId(), transcript.TransData))
                             transcripts.add(transcript);
                     }
                 }
