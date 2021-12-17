@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_RANGE_
 import static com.hartwig.hmftools.common.variant.hgvs.HgvsConstants.HGVS_START_LOST;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.serve.classification.EventClassifier;
 import com.hartwig.hmftools.common.serve.classification.EventPreprocessor;
 
 import org.apache.logging.log4j.LogManager;
@@ -126,7 +125,7 @@ public class HotspotMatcher implements EventMatcher {
 
         // Format is expected to be something like D770delinsGY
         if (Character.isDigit(parts[0].charAt(1))) {
-            LOGGER.info(parts[0]);
+            LOGGER.debug(parts[0]);
             return 3 * parts[1].length();
         } else {
             return -1;
