@@ -15,10 +15,6 @@ public interface SomaticVariant extends Variant {
 
     int genesAffected();
 
-    @NotNull
-    String canonicalEffect();
-
-    @NotNull
     boolean spliceRegion();
 
     @NotNull

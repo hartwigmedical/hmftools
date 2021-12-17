@@ -8,21 +8,17 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantSource;
-import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VariantTestFactory;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -91,26 +87,6 @@ public class ConsentFilterFunctionsTest {
 
     @NotNull
     private static ImmutableReportableVariant.Builder createTestReportableVariantBuilder() {
-        return ImmutableReportableVariant.builder()
-                .type(VariantType.SNP)
-                .gene(Strings.EMPTY)
-                .genotypeStatus(GenotypeStatus.UNKNOWN)
-                .chromosome(Strings.EMPTY)
-                .position(0)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
-                .canonicalTranscript(Strings.EMPTY)
-                .canonicalCodingEffect(CodingEffect.UNDEFINED)
-                .canonicalHgvsCodingImpact(Strings.EMPTY)
-                .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .totalReadCount(0)
-                .alleleReadCount(0)
-                .totalCopyNumber(0)
-                .alleleCopyNumber(0D)
-                .minorAlleleCopyNumber(Double.NaN)
-                .hotspot(Hotspot.HOTSPOT)
-                .clonalLikelihood(1D)
-                .driverLikelihood(0D)
-                .biallelic(false);
+        return ImmutableReportableVariant.builder().from(VariantTestFactory.createTestReportableVariant());
     }
 }

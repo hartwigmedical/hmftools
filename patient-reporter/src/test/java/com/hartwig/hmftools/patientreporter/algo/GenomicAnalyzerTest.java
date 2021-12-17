@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -65,6 +64,7 @@ public class GenomicAnalyzerTest {
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .canonicalTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
@@ -90,6 +90,7 @@ public class GenomicAnalyzerTest {
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .canonicalTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
@@ -121,6 +122,7 @@ public class GenomicAnalyzerTest {
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .canonicalTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)

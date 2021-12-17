@@ -22,6 +22,7 @@ public final class VariantTestFactory {
                 .alt(Strings.EMPTY)
                 .type(VariantType.SNP)
                 .canonicalTranscript("123")
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)

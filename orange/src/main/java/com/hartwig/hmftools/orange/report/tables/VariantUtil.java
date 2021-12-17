@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 final class VariantUtil {
 
+    private static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
+
     private static final Logger LOGGER = LogManager.getLogger(VariantUtil.class);
 
     private VariantUtil() {
@@ -25,9 +27,15 @@ final class VariantUtil {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
-                    int codonVariant1 = extractCodonField(variant1.canonicalHgvsCodingImpact());
-                    int codonVariant2 = extractCodonField(variant2.canonicalHgvsCodingImpact());
-                    return codonVariant1 - codonVariant2 < 0 ? -1 : 1;
+                    if (variant1.canonicalHgvsCodingImpact().isEmpty()) {
+                        return 1;
+                    } else if (variant2.canonicalHgvsCodingImpact().isEmpty()) {
+                        return -1;
+                    } else {
+                        int codonVariant1 = extractCodonField(variant1.canonicalHgvsCodingImpact());
+                        int codonVariant2 = extractCodonField(variant2.canonicalHgvsCodingImpact());
+                        return Integer.compare(codonVariant1, codonVariant2);
+                    }
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
@@ -66,9 +74,17 @@ final class VariantUtil {
 
     @NotNull
     public static String variantField(@NotNull ReportableVariant variant) {
-        String consequence = !variant.canonicalHgvsProteinImpact().isEmpty()
-                ? AminoAcids.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact())
-                : variant.canonicalHgvsCodingImpact();
+        String consequence;
+        if (!variant.canonicalHgvsProteinImpact().isEmpty()) {
+            consequence = AminoAcids.forceSingleLetterProteinAnnotation(variant.canonicalHgvsProteinImpact());
+        } else if (!variant.canonicalHgvsCodingImpact().isEmpty()) {
+            consequence = variant.canonicalHgvsCodingImpact();
+        } else if (variant.canonicalEffect().equals(UPSTREAM_GENE_VARIANT)) {
+            return "upstream";
+        } else {
+            return variant.canonicalEffect();
+        }
+
         return variant.gene() + " " + consequence;
     }
 

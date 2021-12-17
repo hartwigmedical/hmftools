@@ -58,9 +58,6 @@ import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableAnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.ImmutableGenomicAnalysis;
-import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -720,6 +717,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     private static List<ReportableVariant> createCOLO829SomaticVariants(boolean forceCDKN2AVariantToBeGermline) {
+        // TODO Fill in canonicalEffect
         ReportableVariant variant1 = ImmutableReportableVariant.builder()
                 .source(ReportableVariantSource.SOMATIC)
                 .gene("BRAF")
@@ -730,6 +728,7 @@ public final class ExampleAnalysisTestFactory {
                 .alt("A")
                 .type(VariantType.SNP)
                 .canonicalTranscript("ENST00000288602")
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1799T>A")
                 .canonicalHgvsProteinImpact("p.Val600Glu")
@@ -754,6 +753,7 @@ public final class ExampleAnalysisTestFactory {
                 .alt("C")
                 .type(VariantType.INDEL)
                 .canonicalTranscript("ENST00000498124")
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .canonicalHgvsCodingImpact("c.203_204delCG")
                 .canonicalHgvsProteinImpact("p.Ala68fs")
@@ -778,6 +778,7 @@ public final class ExampleAnalysisTestFactory {
                 .alt("AA")
                 .type(VariantType.MNP)
                 .canonicalTranscript("ENST00000310581")
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.NONE)
                 .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
@@ -801,8 +802,9 @@ public final class ExampleAnalysisTestFactory {
                 .ref("G")
                 .alt("A")
                 .type(VariantType.SNP)
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalTranscript("ENST00000335508")
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.2153C>T")
                 .canonicalHgvsProteinImpact("p.Pro718Leu")
                 .alleleReadCount(74)
@@ -826,6 +828,7 @@ public final class ExampleAnalysisTestFactory {
                 .alt("T")
                 .type(VariantType.SNP)
                 .canonicalTranscript("ENST00000264731")
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact("c.1497G>T")
                 .canonicalHgvsProteinImpact("p.Met499Ile")
