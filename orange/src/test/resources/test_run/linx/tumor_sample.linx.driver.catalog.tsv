@@ -1,7 +1,7 @@
-chromosome	chromosomeBand	gene	driver	category	likelihoodMethod	driverLikelihood	NA	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
-5	p15.33	TERT	MUTATION	ONCO	HOTSPOT	1.0000	0	0	0	0	0	0	true	2.0029	2.0029
-7	q34	BRAF	MUTATION	ONCO	HOTSPOT	1.0000	0	1	0	0	0	0	false	6.0129	6.0129
-2	q33.1	SF3B1	MUTATION	ONCO	DNDS	0.1459	0	1	0	0	0	0	false	3.0219	3.0219
-9	p21.3	CDKN2A	MUTATION	TSG	BIALLELIC	1.0000	0	0	0	0	0	1	true	1.9972	1.9972
-3	q28	TP63	MUTATION	TSG	DNDS	0.0000	0	1	0	0	0	0	false	3.9819	3.9819
-10	q23.31	PTEN	DEL	TSG	DEL	1.0000	0	0	0	0	0	0	true	-0.0194	2.0201
+chromosome	chromosomeBand	gene	transcript	isCanonical	driver	category	likelihoodMethod	driverLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
+5	p15.33	TERT	ENST00000310581	true	MUTATION	ONCO	HOTSPOT	1.0000	0	0	0	0	0	true	2.0029	2.0029
+7	q34	BRAF	ENST00000288602	true	MUTATION	ONCO	HOTSPOT	1.0000	1	0	0	0	0	false	6.0129	6.0129
+2	q33.1	SF3B1	ENST00000335508	true	MUTATION	ONCO	DNDS	0.1459	1	0	0	0	0	false	3.0219	3.0219
+9	p21.3	CDKN2A	ENST00000498124	true	MUTATION	TSG	BIALLELIC	1.0000	0	0	0	0	1	true	1.9972	1.9972
+3	q28	TP63	ENST00000264731	true	MUTATION	TSG	DNDS	0.0000	1	0	0	0	0	false	3.9819	3.9819
+10	q23.31	PTEN	ENST00000371953	true	DEL	TSG	DEL	1.0000	0	0	0	0	0	true	-0.0194	2.0148
