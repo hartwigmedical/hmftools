@@ -36,20 +36,14 @@ public class SvUtilities {
         return RG_VERSION == RefGenomeVersion.V38 ? RefGenomeCoordinates.COORDS_38 : RefGenomeCoordinates.COORDS_37;
     }
 
-
     public static int getChromosomeLength(final String chromosome)
     {
-        Integer chrLength = refGenomeLengths().lengths().get(HumanChromosome.fromString(chromosome));
-        return chrLength != null ? chrLength.intValue() : 0;
+        return refGenomeLengths().length(chromosome);
     }
 
     public static ChromosomeArm getChromosomalArm(final String chromosome, final int position)
     {
-        final Integer centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
-
-        if(centromerePos == null)
-            return UNKNOWN;
-
+        int centromerePos = refGenomeLengths().centromere(chromosome);
         return position < centromerePos ? P_ARM : Q_ARM;
     }
 

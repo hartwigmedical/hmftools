@@ -39,6 +39,22 @@ public enum RefGenomeCoordinates
         return Centromeres;
     }
 
+    public int length(final String chromosome)
+    {
+        if(!HumanChromosome.contains(chromosome))
+            return 0;
+
+        return Lengths.get(HumanChromosome.fromString(chromosome)).intValue();
+    }
+
+    public int centromere(final String chromosome)
+    {
+        if(!HumanChromosome.contains(chromosome))
+            return 0;
+
+        return Centromeres.get(HumanChromosome.fromString(chromosome)).intValue();
+    }
+
     private static Map<Chromosome,Integer> fromResource(final String resource)
     {
         final InputStream inputStream = RefGenomeCoordinates.class.getResourceAsStream("/refgenome/" + resource);

@@ -243,8 +243,7 @@ public class RnaUtils
     public static long getChromosomeLength(final String chromosome, final RefGenomeVersion version)
     {
         final RefGenomeCoordinates coords = version == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-        Integer chrLength = coords.Lengths.get(HumanChromosome.fromString(chromosome));
-        return chrLength != null ? chrLength : 0;
+        return coords.length(chromosome);
     }
 
     public static Cigar cigarFromStr(final String cigarStr)
