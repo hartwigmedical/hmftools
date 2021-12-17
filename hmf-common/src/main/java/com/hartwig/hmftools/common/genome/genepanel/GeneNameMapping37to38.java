@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-// a resource to map gene names between v37 and v38 - will be deprecated. Use Ensembl GenenNameMapping instead
+// a resource to map gene names between v37 and v38 - will be deprecated. Use Ensembl GeneNameMapping instead
 // if a gene is not present, then it's name has not changed
 public class GeneNameMapping37to38
 {
