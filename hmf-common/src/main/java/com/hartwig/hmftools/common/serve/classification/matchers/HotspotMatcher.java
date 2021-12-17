@@ -58,9 +58,6 @@ public class HotspotMatcher implements EventMatcher {
         } else if (event.contains(HGVS_DELETION + HGVS_INSERTION)) {
             int mutationLength = extractComplexDeletionInsertionLength(event);
             return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
-        } else if (event.endsWith(HGVS_INSERTION)) {
-            int mutationLength = extractComplexInsertionLength(event);
-            return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
         } else if (event.startsWith(HGVS_START_LOST)) {
             return true;
         } else {
@@ -108,13 +105,6 @@ public class HotspotMatcher implements EventMatcher {
         } else {
             return -1;
         }
-    }
-
-    private static int extractComplexInsertionLength(@NotNull String event) {
-        assert event.endsWith(HGVS_INSERTION);
-        // Format is expected to be something like D770ins
-        String[] parts = event.split(HGVS_DELETION + HGVS_INSERTION);
-        return 1;
     }
 
     private static int extractComplexDeletionInsertionLength(@NotNull String event) {
