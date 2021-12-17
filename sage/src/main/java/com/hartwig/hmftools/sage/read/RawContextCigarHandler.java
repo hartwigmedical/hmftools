@@ -44,15 +44,14 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleRightSoftClip(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-            final int refPosition)
+    public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
     {
         if(mResult != null)
         {
             return;
         }
 
-        long refPositionEnd = refPosition + element.getLength() - 1;
+        int refPositionEnd = refPosition + element.getLength() - 1;
         if(refPositionEnd < mVariant.position())
         {
             throw new IllegalStateException("Variant is after record");
@@ -67,14 +66,13 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPosition)
+    public void handleAlignment(final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
     {
         if(mResult != null)
-        {
             return;
-        }
 
-        long refPositionEnd = refPosition + e.getLength() - 1;
+        int refPositionEnd = refPosition + e.getLength() - 1;
+
         if(refPosition <= mVariant.position() && mVariant.position() <= refPositionEnd)
         {
             int readIndexOffset = (int) (mVariant.position() - refPosition);
@@ -88,12 +86,10 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPosition)
+    public void handleInsert(final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
     {
         if(mResult != null)
-        {
             return;
-        }
 
         if(refPosition == mVariant.position())
         {
@@ -105,12 +101,10 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPosition)
+    public void handleDelete(@NotNull final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
     {
         if(mResult != null)
-        {
             return;
-        }
 
         int refPositionEnd = refPosition + e.getLength();
         if(refPosition == mVariant.position())
@@ -128,13 +122,10 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleSkippedReference(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex,
-            final int refPosition)
+    public void handleSkippedReference(final SAMRecord record, final CigarElement e, int readIndex, int refPosition)
     {
         if(mResult != null)
-        {
             return;
-        }
 
         if(e.getLength() > mMaxSkippedReferenceRegions)
         {

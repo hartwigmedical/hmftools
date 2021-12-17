@@ -17,8 +17,8 @@ public class GeneCoverage implements Consumer<ChrBaseRegion>
     private final String mChromosome;
     private final String mGene;
     private final List<ExonCoverage> mExonCoverage;
-    private final long mMinPosition;
-    private final long mMaxPosition;
+    private final int mMinPosition;
+    private final int mMaxPosition;
 
     public static final List<Integer> DEPTH_BUCKETS = Lists.newArrayList();
     public static final int MAX_DEPTH_BUCKET = 10000;
@@ -75,13 +75,13 @@ public class GeneCoverage implements Consumer<ChrBaseRegion>
         mGene = exons.get(0).name();
         mExonCoverage = exons.stream().map(ExonCoverage::new).collect(Collectors.toList());
 
-        long tmpMin = exons.get(0).start();
-        long tmpMax = exons.get(0).end();
+        int tmpMin = (int)exons.get(0).start();
+        int tmpMax = (int)exons.get(0).end();
 
         for(NamedBed exon : exons)
         {
-            tmpMin = Math.min(tmpMin, exon.start());
-            tmpMax = Math.max(tmpMax, exon.end());
+            tmpMin = Math.min(tmpMin, (int)exon.start());
+            tmpMax = Math.max(tmpMax, (int)exon.end());
         }
 
         mMinPosition = tmpMin;

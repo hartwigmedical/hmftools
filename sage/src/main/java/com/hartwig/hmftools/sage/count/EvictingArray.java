@@ -26,7 +26,7 @@ public class EvictingArray
         mElements = new RefContext[mCapacity];
     }
 
-    public RefContext computeIfAbsent(long position, @NotNull final Function<Long,RefContext> supplier)
+    public RefContext computeIfAbsent(int position, @NotNull final Function<Integer,RefContext> supplier)
     {
         if(mMinPosition == 0)
         {
@@ -44,9 +44,9 @@ public class EvictingArray
         if(distanceFromMinPosition >= mCapacity)
         {
             flush((int) position - mMinPosition - mCapacity + 1);
+            distanceFromMinPosition = (int) position - mMinPosition;
         }
 
-        distanceFromMinPosition = (int) position - mMinPosition;
         int index = (mMinPositionIndex + distanceFromMinPosition) & (mElements.length - 1);
         RefContext element = mElements[index];
         if(element == null)

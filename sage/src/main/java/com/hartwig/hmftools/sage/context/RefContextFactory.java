@@ -43,7 +43,7 @@ public class RefContextFactory
         mRollingCandidates = new EvictingArray(MIN_ARRAY_CAPACITY, evictionHandler);
     }
 
-    public RefContext refContext(final String chromosome, final long position)
+    public RefContext refContext(final String chromosome, int position)
     {
         int maxDepth = maxReadDepth(chromosome, position);
         return mRollingCandidates.computeIfAbsent(position, aLong -> new RefContext(mSample, chromosome, position, maxDepth));
@@ -56,7 +56,7 @@ public class RefContextFactory
         return mSavedCandidates;
     }
 
-    private int maxReadDepth(final String chromosome, final long position)
+    private int maxReadDepth(final String chromosome, int position)
     {
         return MitochondrialChromosome.contains(chromosome) || mPanelSelector.inPanel(position, position)
                 ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;

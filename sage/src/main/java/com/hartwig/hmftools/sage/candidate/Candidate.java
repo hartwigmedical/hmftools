@@ -75,8 +75,6 @@ public class Candidate
         return mVariant.chromosome();
     }
 
-    public long position()
-    {
-        return mVariant.position();
-    }
+    public int position() { return (int)mVariant.position(); }
+
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.read.ReadContext;
@@ -15,19 +16,19 @@ public class RefContext implements GenomePosition
     public final String Sample;
     public final String Chromosome;
     public final int MaxDepth;
-    public final long Position;
+    public final int Position;
     
     private final Map<String,AltContext> mAlts;
 
     private int mRawDepth;
 
-    public RefContext(final String sample, final String chromosome, final long position, final int maxDepth)
+    public RefContext(final String sample, final String chromosome, int position, int maxDepth)
     {
         Sample = sample;
         Chromosome = chromosome;
         Position = position;
         MaxDepth = maxDepth;
-        mAlts = new HashMap<>();
+        mAlts = Maps.newHashMap();
     }
 
     public Collection<AltContext> alts()
@@ -80,11 +81,6 @@ public class RefContext implements GenomePosition
         return mRawDepth;
     }
 
-    public String sample()
-    {
-        return Sample;
-    }
-
     @Override
     public boolean equals(@Nullable Object another)
     {
@@ -97,7 +93,7 @@ public class RefContext implements GenomePosition
 
     private boolean equalTo(RefContext another)
     {
-        return chromosome().equals(another.chromosome()) && position() == another.position();
+        return Chromosome.equals(another.Chromosome) && Position == another.Position;
     }
 
     @Override

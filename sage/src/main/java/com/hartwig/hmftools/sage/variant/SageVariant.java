@@ -57,7 +57,7 @@ public class SageVariant
         mRealigned = realigned;
     }
 
-    public long end()
+    public int end()
     {
         return position() + ref().length() - 1;
     }
@@ -180,10 +180,7 @@ public class SageVariant
         return variant().chromosome();
     }
 
-    public long position()
-    {
-        return variant().position();
-    }
+    public int position() { return (int)variant().position(); }
 
     public int totalQuality()
     {

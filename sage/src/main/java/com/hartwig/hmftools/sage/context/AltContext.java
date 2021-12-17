@@ -165,10 +165,7 @@ public class AltContext implements VariantHotspot
     }
 
     @NotNull
-    public String sample()
-    {
-        return RefContext.sample();
-    }
+    public String sample() { return RefContext.Sample; }
 
     @Override
     public boolean equals(@Nullable Object another)

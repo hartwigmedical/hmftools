@@ -102,9 +102,8 @@ public class EvictingArrayTest
 
     private static final String TEST_SAMPLE_ID = "SAMPLE";
 
-    private static RefContext create(long pos)
+    private static RefContext create(int pos)
     {
         return new RefContext(TEST_SAMPLE_ID, "1", pos, 100);
-        // return GenomePositions.create("CHROM", pos);
     }
 }

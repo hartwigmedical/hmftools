@@ -30,15 +30,9 @@ public class ExonCoverage implements Consumer<ChrBaseRegion>
         return mExon.chromosome();
     }
 
-    public long start()
-    {
-        return mExon.start();
-    }
+    public int start() { return (int)mExon.start(); }
 
-    public long end()
-    {
-        return mExon.end();
-    }
+    public int end() { return (int)mExon.end(); }
 
     @Override
     public void accept(final ChrBaseRegion alignment)
