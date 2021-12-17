@@ -70,12 +70,11 @@ public final class EvidenceSelector {
     }
 
     @NotNull
-    public static Map<String, List<ProtectEvidence>> buildTreatmentMap(@NotNull List<ProtectEvidence> evidences, boolean reportGermline,
-            boolean requireOnLabel) {
+    public static Map<String, List<ProtectEvidence>> buildTreatmentMap(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel) {
         Map<String, List<ProtectEvidence>> evidencePerTreatmentMap = Maps.newHashMap();
 
         for (ProtectEvidence evidence : evidences) {
-            if ((reportGermline || !evidence.germline()) && evidence.onLabel() == requireOnLabel) {
+            if (evidence.onLabel() == requireOnLabel) {
                 List<ProtectEvidence> treatmentEvidences = evidencePerTreatmentMap.get(evidence.treatment());
                 if (treatmentEvidences == null) {
                     treatmentEvidences = Lists.newArrayList();

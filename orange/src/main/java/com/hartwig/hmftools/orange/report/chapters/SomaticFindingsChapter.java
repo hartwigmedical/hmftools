@@ -5,10 +5,12 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.algo.selection.CopyNumberSelector;
 import com.hartwig.hmftools.orange.algo.selection.FusionSelector;
 import com.hartwig.hmftools.orange.algo.selection.SomaticVariantSelector;
+import com.hartwig.hmftools.orange.report.ReportConfig;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.tables.FusionTable;
 import com.hartwig.hmftools.orange.report.tables.GeneCopyNumberTable;
@@ -33,9 +35,12 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     @NotNull
     private final OrangeReport report;
+    @NotNull
+    private final ReportConfig reportConfig;
 
-    public SomaticFindingsChapter(@NotNull final OrangeReport report) {
+    public SomaticFindingsChapter(@NotNull final OrangeReport report, @NotNull final ReportConfig reportConfig) {
         this.report = report;
+        this.reportConfig = reportConfig;
     }
 
     @NotNull
@@ -66,8 +71,15 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     private void addSomaticVariants(@NotNull Document document) {
-        String titleDrivers = "Driver variants (" + report.purple().reportableSomaticVariants().size() + ")";
-        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), report.purple().reportableSomaticVariants()));
+        List<ReportableVariant> reportableVariants;
+        if (reportConfig.reportGermline()) {
+            reportableVariants = report.purple().reportableSomaticVariants();
+        } else {
+            reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),
+                    report.purple().reportableGermlineVariants());
+        }
+        String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
+        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants));
 
         List<ReportableVariant> nonDriverVariants = SomaticVariantSelector.selectNonDrivers(report.purple().unreportedSomaticVariants(),
                 report.purple().reportableSomaticVariants(),

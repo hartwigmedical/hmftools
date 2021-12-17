@@ -60,10 +60,6 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     public void render(@NotNull final Document document) {
         document.add(new Paragraph(name()).addStyle(ReportResources.chapterTitleStyle()));
 
-        if (!reportConfig.reportGermline()) {
-            document.add(note(" * Evidence from germline events is filtered"));
-        }
-
         if (reportConfig.maxEvidenceLevel() != null) {
             String maxEvidenceLevelString = reportConfig.maxEvidenceLevel().toString();
             document.add(note(" * Treatments are reported up to a maximum evidence level of " + maxEvidenceLevelString + "."));
@@ -83,15 +79,13 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> noIclusion = EvidenceSelector.noIclusion(evidences);
-        Map<String, List<ProtectEvidence>> onLabelTreatments =
-                EvidenceSelector.buildTreatmentMap(noIclusion, reportConfig.reportGermline(), true);
-        Map<String, List<ProtectEvidence>> offLabelTreatments =
-                EvidenceSelector.buildTreatmentMap(noIclusion, reportConfig.reportGermline(), false);
+        Map<String, List<ProtectEvidence>> onLabelTreatments = EvidenceSelector.buildTreatmentMap(noIclusion, true);
+        Map<String, List<ProtectEvidence>> offLabelTreatments = EvidenceSelector.buildTreatmentMap(noIclusion, false);
         document.add(createTreatmentTable(header + " on-label evidence", onLabelTreatments));
         document.add(createTreatmentTable(header + " off-label evidence", offLabelTreatments));
 
         List<ProtectEvidence> iclusion = EvidenceSelector.iclusionOnly(evidences);
-        Map<String, List<ProtectEvidence>> trials = EvidenceSelector.buildTreatmentMap(iclusion, reportConfig.reportGermline(), true);
+        Map<String, List<ProtectEvidence>> trials = EvidenceSelector.buildTreatmentMap(iclusion, true);
         document.add(createTreatmentTable(header + " trials", trials));
     }
 
