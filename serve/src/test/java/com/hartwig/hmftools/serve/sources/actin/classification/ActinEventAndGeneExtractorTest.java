@@ -26,6 +26,6 @@ public class ActinEventAndGeneExtractorTest {
                 .trial("trial1")
                 .rule(ActinRule.MUTATION_IN_GENE_X_OF_TYPE_Y)
                 .parameters(Lists.newArrayList("A", "mut")).build();
-        assertEquals("mut", ActinEventAndGeneExtractor.extractEvent(trial1));
+        assertEquals(Lists.newArrayList("mut"), ActinEventAndGeneExtractor.extractEvent(trial1));
     }
 }

@@ -47,17 +47,20 @@ public class ActinExtractor {
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
             String gene = ActinEventAndGeneExtractor.extractGene(entry);
-            String event = ActinEventAndGeneExtractor.extractEvent(entry);
+            List<String> events = ActinEventAndGeneExtractor.extractEvent(entry);
 
-            if (entry.type() == EventType.UNKNOWN) {
-                LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
+            for (String event : events) {
+                for (EventType type : entry.type()) {
+                    if (type == EventType.UNKNOWN) {
+                        LOGGER.warn("No event type known for '{}' on '{}'", event, gene);
+                    }
+
+                    EventExtractorOutput extraction = eventExtractor.extract(gene, null, type, event);
+                    ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
+
+                    extractions.add(toExtractionResult(trial, extraction));
+                }
             }
-
-            EventExtractorOutput extraction = eventExtractor.extract(gene, null, entry.type(), event);
-            ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
-
-            extractions.add(toExtractionResult(trial, extraction));
-
             tracker.update();
         }
 

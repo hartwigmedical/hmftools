@@ -50,7 +50,7 @@ public class ActinExtractorTestApp {
         RefGenomeResource refGenomeResource = buildRefGenomeResource(config);
         ActinExtractor extractor = ActinExtractorFactory.buildActinExtractor(ActinClassificationConfig.build(), refGenomeResource);
 
-        List<ActinEntry> actinEntries = ActinReader.read(config.actinTrialTsv());
+        List<ActinEntry> actinEntries = ActinReader.read(config.actinTrialTsv(), config.actinFilterTsv());
         ExtractionResult result = extractor.extract(actinEntries);
 
         String eventsTsv = config.outputDir() + File.separator + "ActinEventClassification.tsv";

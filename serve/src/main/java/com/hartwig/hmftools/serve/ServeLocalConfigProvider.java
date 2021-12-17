@@ -40,6 +40,7 @@ public final class ServeLocalConfigProvider {
             builder.ckbFilterTsv("/data/resources/custom/serve/ckb_filters.tsv");
             builder.iClusionTrialTsv("/data/resources/custom/iclusion/iclusion_trials_prod.tsv");
             builder.actinTrialTsv("/data/resources/custom/actin/actin_knowledgebase.tsv");
+            builder.actinTrialTsv("/data/resources/custom/actin/actin_filter.tsv");
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
             builder.missingDoidsMappingTsv("/data/resources/custom/serve/public_missing_doids_mapping.tsv");
@@ -61,7 +62,7 @@ public final class ServeLocalConfigProvider {
             builder.ckbFilterTsv(baseDir + "serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv(baseDir + "serve/iclusion/iclusion_trials_prod.tsv");
             builder.actinTrialTsv(baseDir + "serve/actin/actin_knowledgebase.tsv");
-
+            builder.actinFilterTsv(baseDir + "serve/actin/actin_filter.tsv");
             builder.outputDir(baseDir + "tmp/serve");
             builder.missingDoidsMappingTsv(baseDir + "serve/curation/missing_doids_mapping.tsv");
             builder.driverGene37Tsv(baseDir + "driver_gene_panel/DriverGenePanel.37.tsv");
