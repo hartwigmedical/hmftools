@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -57,7 +55,7 @@ public class LoadLinxData {
         String sampleId = cmd.getOptionValue(SAMPLE);
         String linxDir = cmd.getOptionValue(LINX_DIR);
 
-        String dataType = cmd.getOptionValue(DATA_TYPE, "Both");
+        String dataType = cmd.getOptionValue(DATA_TYPE, DATA_TYPE_BOTH);
 
         loadLinxData(dbAccess, sampleId, linxDir, dataType);
 
@@ -69,6 +67,9 @@ public class LoadLinxData {
     {
         boolean loadSomaticData = dataTypes.equals(DATA_TYPE_BOTH) || dataTypes.equals(DATA_TYPE_SOMATIC);
         boolean loadGermlineData = dataTypes.equals(DATA_TYPE_BOTH) || dataTypes.equals(DATA_TYPE_GERMLINE);
+
+        if (!(loadSomaticData || loadGermlineData))
+            LOGGER.warn("No data will be loaded based on selected datatype '{}'", dataTypes);
 
         if(loadSomaticData)
         {
