@@ -211,9 +211,11 @@ public class EnsemblDataCache
         }
     }
 
+    public final TranscriptData getCanonicalTranscriptData(final String geneId) { return getTranscriptData(geneId, ""); }
 
     public final TranscriptData getTranscriptData(final String geneId, final String transcriptId)
     {
+        // leave transcriptId empty to retrieve the canonical transcript
         final List<TranscriptData> transDataList = mTranscriptDataMap.get(geneId);
 
         if(transDataList == null || transDataList.isEmpty())
