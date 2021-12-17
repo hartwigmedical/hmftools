@@ -91,7 +91,7 @@ public class ExonCoverageTest
     }
 
     @NotNull
-    private ExonCoverage exon(String gene, long start, long end)
+    private ExonCoverage exon(String gene, int start, int end)
     {
         NamedBed bed = ImmutableNamedBed.builder().chromosome("1").name(gene).start(start).end(end).build();
         return new ExonCoverage(bed);

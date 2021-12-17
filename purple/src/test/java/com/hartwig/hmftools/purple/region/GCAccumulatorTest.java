@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class GCAccumulatorTest
 {
-
     private static final int WINDOW_SIZE = 1000;
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1e-10;
@@ -80,19 +79,19 @@ public class GCAccumulatorTest
     }
 
     @NotNull
-    private static GCProfile unmappableProfile(long start, double gcContent)
+    private static GCProfile unmappableProfile(int start, double gcContent)
     {
         return create(start, GCProfile.MIN_MAPPABLE_PERCENTAGE - 0.1, gcContent);
     }
 
     @NotNull
-    private static GCProfile profile(long start, double gcContent)
+    private static GCProfile profile(int start, double gcContent)
     {
         return create(start, GCProfile.MIN_MAPPABLE_PERCENTAGE, gcContent);
     }
 
     @NotNull
-    private static GCProfile create(long start, double mappability, double gcContent)
+    private static GCProfile create(int start, double mappability, double gcContent)
     {
         return ImmutableGCProfile.builder()
                 .chromosome(CHROMOSOME)

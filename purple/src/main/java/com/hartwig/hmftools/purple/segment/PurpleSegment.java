@@ -18,10 +18,10 @@ public abstract class PurpleSegment implements GenomeRegion {
     public abstract String chromosome();
 
     @Override
-    public abstract long start();
+    public abstract int start();
 
     @Override
-    public abstract long end();
+    public abstract int end();
 
     public abstract boolean ratioSupport();
 
@@ -29,7 +29,7 @@ public abstract class PurpleSegment implements GenomeRegion {
 
     public abstract boolean svCluster();
 
-    public abstract long minStart();
+    public abstract int minStart();
 
-    public abstract long maxStart();
+    public abstract int maxStart();
 }

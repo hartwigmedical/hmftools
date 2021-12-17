@@ -68,13 +68,13 @@ public class DiploidRatioNormalizationTest
     }
 
     @NotNull
-    private static ReadRatio create(long position, double ratio)
+    private static ReadRatio create(int position, double ratio)
     {
         return createReadRatio(CHROMOSOME, position, ratio).build();
     }
 
     @NotNull
-    private static ImmutableReadRatio.Builder createReadRatio(@NotNull final String chromosome, final long position, final double ratio)
+    private static ImmutableReadRatio.Builder createReadRatio(@NotNull final String chromosome, final int position, final double ratio)
     {
         return ImmutableReadRatio.builder().chromosome(chromosome).position(position).ratio(ratio);
     }

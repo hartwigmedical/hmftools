@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class AdjustedPosition implements GenomePosition
 {
-    public abstract long unadjustedPosition();
+    public abstract int unadjustedPosition();
 
     public abstract int svId();
 }

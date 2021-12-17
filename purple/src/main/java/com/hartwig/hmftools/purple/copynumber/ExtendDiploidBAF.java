@@ -21,16 +21,16 @@ class ExtendDiploidBAF
 {
     // LOH Parameters
     private static final double LOH_COPY_NUMBER = 0.5;
-    private static final long LOH_SMALL_REGION_SIZE = 1000;
-    private static final long LOH_MAX_NEAREST_DISTANCE = 1_000_000;
+    private static final int LOH_SMALL_REGION_SIZE = 1000;
+    private static final int LOH_MAX_NEAREST_DISTANCE = 1000000;
 
-    private static final long TINY_REGION_SIZE = 30;
+    private static final int TINY_REGION_SIZE = 30;
     private static final double MIN_COPY_NUMBER_CHANGE = 0.5;
     private static final InferRegion INVALID_PAIR = new InferRegion(-1, -1, -1, -1);
     private static final Set<SegmentSupport> IGNORE_SUPPORT =
             EnumSet.of(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE, SegmentSupport.UNKNOWN);
 
-    private final Map<Long, Long> mSimpleDupMap = Maps.newHashMap();
+    private final Map<Integer,Integer> mSimpleDupMap = Maps.newHashMap();
 
     ExtendDiploidBAF(@NotNull final List<StructuralVariant> simpleVariants)
     {
@@ -45,7 +45,7 @@ class ExtendDiploidBAF
     }
 
     @VisibleForTesting
-    ExtendDiploidBAF(@NotNull final Map<Long, Long> simpleDupMap)
+    ExtendDiploidBAF(@NotNull final Map<Integer,Integer> simpleDupMap)
     {
         this.mSimpleDupMap.putAll(simpleDupMap);
     }
@@ -294,8 +294,8 @@ class ExtendDiploidBAF
             return optionalRight;
         }
 
-        long leftDistance = leftSource.end() - optionalLeft.get().start();
-        long rightDistance = optionalRight.get().start() - rightSource.start();
+        int leftDistance = leftSource.end() - optionalLeft.get().start();
+        int rightDistance = optionalRight.get().start() - rightSource.start();
 
         return leftDistance < rightDistance ? optionalLeft : optionalRight;
 
@@ -380,7 +380,7 @@ class ExtendDiploidBAF
     private static boolean isSingleSmallRegionFlankedByLargeLOH(@NotNull final FittedRegion nearestSource,
             @NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions)
     {
-        long distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end() ? nearestSource.start() - regions.get(
+        int distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end() ? nearestSource.start() - regions.get(
                 inferRegion.leftTargetIndex).end() : regions.get(inferRegion.leftTargetIndex).start() - nearestSource.end();
 
         return isSmallRegionFlankedByLOH(inferRegion, regions) && distance > LOH_MAX_NEAREST_DISTANCE;
@@ -401,7 +401,7 @@ class ExtendDiploidBAF
         return Doubles.lessOrEqual(region.region().minorAlleleCopyNumber(), LOH_COPY_NUMBER);
     }
 
-    private static boolean isSmallRegion(long maxSize, @NotNull final InferRegion inferRegion,
+    private static boolean isSmallRegion(int maxSize, @NotNull final InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions)
     {
         return regions.get(inferRegion.rightTargetIndex).end() - regions.get(inferRegion.leftTargetIndex).start() + 1 <= maxSize;

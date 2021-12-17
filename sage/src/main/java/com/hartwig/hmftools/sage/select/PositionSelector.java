@@ -46,7 +46,7 @@ public class PositionSelector<P extends GenomePosition>
         return currentCompare == 0 ? Optional.of(current()) : Optional.empty();
     }
 
-    public void select(final long start, final long end, final Consumer<P> handler)
+    public void select(final int start, final int end, final Consumer<P> handler)
     {
         if(mPositions.isEmpty())
         {
@@ -65,7 +65,7 @@ public class PositionSelector<P extends GenomePosition>
         mIndex = Math.min(mIndex, mPositions.size() - 1);
     }
 
-    private boolean inRegion(P current, long start, long end)
+    private boolean inRegion(P current, int start, int end)
     {
         return current.position() >= start && current.position() <= end;
     }

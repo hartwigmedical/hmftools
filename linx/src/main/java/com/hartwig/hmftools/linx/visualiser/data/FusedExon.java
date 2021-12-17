@@ -29,11 +29,11 @@ public abstract class FusedExon implements GenomeRegion
     @NotNull
     public abstract String transcript();
 
-    public abstract long unadjustedGeneStart();
+    public abstract int unadjustedGeneStart();
 
-    public abstract long geneStart();
+    public abstract int geneStart();
 
-    public abstract long geneEnd();
+    public abstract int geneEnd();
 
     public abstract int rank();
 

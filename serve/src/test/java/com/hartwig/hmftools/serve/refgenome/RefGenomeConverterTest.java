@@ -248,7 +248,7 @@ public class RefGenomeConverterTest {
 
         @Nullable
         @Override
-        public LiftOverResult liftOver(@NotNull final String chromosome, final long position) {
+        public LiftOverResult liftOver(@NotNull final String chromosome, final int position) {
             return ImmutableLiftOverResult.builder().chromosome(chromosome).position(position).build();
         }
     }
@@ -257,7 +257,7 @@ public class RefGenomeConverterTest {
 
         @Nullable
         @Override
-        public LiftOverResult liftOver(@NotNull final String chromosome, final long position) {
+        public LiftOverResult liftOver(@NotNull final String chromosome, final int position) {
             return null;
         }
     }

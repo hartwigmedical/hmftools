@@ -78,7 +78,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
     }
 
     @NotNull
-    private Optional<GenomeRegion> codon(long position)
+    private Optional<GenomeRegion> codon(int position)
     {
         final Optional<HmfTranscriptRegion> maybeTranscript = mSelector.select(position);
         if(maybeTranscript.isPresent())

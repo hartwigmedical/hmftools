@@ -18,15 +18,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class Span
 {
-
     @NotNull
-    public static Map<String, Long> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks)
+    public static Map<String,Integer> maxPositionPerChromosome(@NotNull final List<GenomePosition> tracks)
     {
         return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::max));
     }
 
     @NotNull
-    public static Map<String, Long> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks)
+    public static Map<String,Integer> minPositionPerChromosome(@NotNull final List<GenomePosition> tracks)
     {
         return tracks.stream().collect(Collectors.toMap(GenomePosition::chromosome, GenomePosition::position, Math::min));
     }
@@ -39,8 +38,8 @@ public class Span
         final List<String> chromosomes = positions.stream().map(GenomePosition::chromosome).distinct().collect(Collectors.toList());
         for (final String contig : chromosomes)
         {
-            long min = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToLong(GenomePosition::position).min().orElse(0);
-            long max = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToLong(GenomePosition::position).max().orElse(0);
+            int min = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToInt(GenomePosition::position).min().orElse(0);
+            int max = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToInt(GenomePosition::position).max().orElse(0);
 
             result.add(GenomeRegions.create(contig, min, max));
         }
@@ -57,8 +56,8 @@ public class Span
         final Set<String> chromosomes = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
         for (final String chromosome : chromosomes)
         {
-            long min = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::start).min().orElse(0);
-            long max = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToLong(GenomeRegion::end).max().orElse(0);
+            int min = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToInt(GenomeRegion::start).min().orElse(0);
+            int max = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToInt(GenomeRegion::end).max().orElse(0);
 
             result.add(GenomeRegions.create(chromosome, min, max));
         }

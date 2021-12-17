@@ -39,9 +39,9 @@ public class LiftOverCheckerTest {
 
         @NotNull
         private final String chromosome;
-        private final long position;
+        private final int position;
 
-        public TestGenomePosition(@NotNull final String chromosome, final long position) {
+        public TestGenomePosition(@NotNull final String chromosome, final int position) {
             this.chromosome = chromosome;
             this.position = position;
         }
@@ -53,7 +53,7 @@ public class LiftOverCheckerTest {
         }
 
         @Override
-        public long position() {
+        public int position() {
             return position;
         }
 
@@ -67,10 +67,10 @@ public class LiftOverCheckerTest {
 
         @NotNull
         private final String chromosome;
-        private final long start;
-        private final long end;
+        private final int start;
+        private final int end;
 
-        public TestGenomeRegion(@NotNull final String chromosome, final long start, final long end) {
+        public TestGenomeRegion(@NotNull final String chromosome, final int start, final int end) {
             this.chromosome = chromosome;
             this.start = start;
             this.end = end;
@@ -83,12 +83,12 @@ public class LiftOverCheckerTest {
         }
 
         @Override
-        public long start() {
+        public int start() {
             return start;
         }
 
         @Override
-        public long end() {
+        public int end() {
             return end;
         }
     }

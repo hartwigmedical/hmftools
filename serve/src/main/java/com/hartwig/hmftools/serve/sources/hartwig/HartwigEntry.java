@@ -12,7 +12,7 @@ public abstract class HartwigEntry {
     @NotNull
     public abstract String chromosome();
 
-    public abstract long position();
+    public abstract int position();
 
     @NotNull
     public abstract String ref();

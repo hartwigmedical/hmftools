@@ -112,7 +112,7 @@ public final class DndsVariantFile
         return ImmutableDndsVariant.builder()
                 .sampleId(values[0])
                 .chromosome(values[1])
-                .position(Long.parseLong(values[2]))
+                .position(Integer.parseInt(values[2]))
                 .ref(values[3])
                 .alt(values[4])
                 .gene(values[5])

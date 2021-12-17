@@ -16,13 +16,13 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion
     @NotNull
     public abstract String geneId();
 
-    public abstract long geneStart();
+    public abstract int geneStart();
 
-    public abstract long geneEnd();
+    public abstract int geneEnd();
 
-    public abstract long codingStart();
+    public abstract int codingStart();
 
-    public abstract long codingEnd();
+    public abstract int codingEnd();
 
     @NotNull
     public abstract Strand strand();

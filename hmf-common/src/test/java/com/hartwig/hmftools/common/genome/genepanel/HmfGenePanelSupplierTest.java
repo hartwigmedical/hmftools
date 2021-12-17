@@ -19,7 +19,7 @@ public class HmfGenePanelSupplierTest {
     public void allRegionsAreSortedCorrectly() {
         final SortedSetMultimap<String, HmfTranscriptRegion> geneRegions = HmfGenePanelSupplier.allGenesPerChromosomeMap37();
         for (final String chromosome : geneRegions.keySet()) {
-            long start = 0;
+            int start = 0;
             for (final HmfTranscriptRegion hmfTranscriptRegion : geneRegions.get(chromosome)) {
                 assertTrue(hmfTranscriptRegion.start() >= start);
                 start = hmfTranscriptRegion.start();

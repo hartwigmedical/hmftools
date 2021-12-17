@@ -56,7 +56,7 @@ public class PurpleCopyNumberFileTest {
 
     @NotNull
     private static PurpleCopyNumber createRandom(@NotNull Random random) {
-        return createCopyNumber(random.nextInt(22) + "", random.nextLong(), random.nextLong(), nextDouble(random))
+        return createCopyNumber(random.nextInt(22) + "", random.nextInt(), random.nextInt(), nextDouble(random))
                 .bafCount(random.nextInt())
                 .averageObservedBAF(nextDouble(random))
                 .averageActualBAF(nextDouble(random))

@@ -25,7 +25,7 @@ public abstract class Fusion
     @NotNull
     public abstract String transcriptUp();
 
-    public abstract long positionUp();
+    public abstract int positionUp();
 
     @NotNull
     public abstract String regionTypeUp();
@@ -43,7 +43,7 @@ public abstract class Fusion
     @NotNull
     public abstract String transcriptDown();
 
-    public abstract long positionDown();
+    public abstract int positionDown();
 
     @NotNull
     public abstract String regionTypeDown();

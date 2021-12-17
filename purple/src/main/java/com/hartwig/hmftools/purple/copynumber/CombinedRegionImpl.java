@@ -48,13 +48,13 @@ class CombinedRegionImpl implements CombinedRegion
     }
 
     @Override
-    public long start()
+    public int start()
     {
         return mCombined.start();
     }
 
     @Override
-    public long end()
+    public int end()
     {
         return mCombined.end();
     }

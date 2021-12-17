@@ -16,7 +16,6 @@ import org.junit.Test;
 
 public class ExtendLongArmTest
 {
-
     private static final String CHROMOSOME = "13";
     private static final double EPSILON = 1e-10;
 
@@ -137,7 +136,7 @@ public class ExtendLongArmTest
         assertCombinedRegion(10001, 20000, 2, CopyNumberMethod.UNKNOWN, result.get(1));
     }
 
-    static void assertCombinedRegion(long start, long end, double expectedCopyNumber, CopyNumberMethod expectedMethod,
+    static void assertCombinedRegion(int start, int end, double expectedCopyNumber, CopyNumberMethod expectedMethod,
             CombinedRegion victim)
     {
         assertEquals(expectedCopyNumber, victim.tumorCopyNumber(), EPSILON);
@@ -147,7 +146,7 @@ public class ExtendLongArmTest
     }
 
     @NotNull
-    private static CombinedRegion createCombinedRegion(String chromosome, long start, long end, double copyNumber, double baf,
+    private static CombinedRegion createCombinedRegion(String chromosome, int start, int end, double copyNumber, double baf,
             SegmentSupport support)
     {
         final FittedRegion region = createDefaultFittedRegion(chromosome, start, end)
@@ -160,7 +159,7 @@ public class ExtendLongArmTest
     }
 
     @NotNull
-    static CombinedRegion createCombinedRegion(long start, long end, double copyNumber, double baf, SegmentSupport support)
+    static CombinedRegion createCombinedRegion(int start, int end, double copyNumber, double baf, SegmentSupport support)
     {
         return createCombinedRegion(CHROMOSOME, start, end, copyNumber, baf, support);
     }

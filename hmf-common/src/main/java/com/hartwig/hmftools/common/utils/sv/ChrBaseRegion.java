@@ -28,7 +28,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         Positions = new int[] { posStart, posEnd };
     }
 
-    public static ChrBaseRegion from(final GenomeRegion region) { return new ChrBaseRegion(region.chromosome(), (int)region.start(), (int)region.end()); }
+    public static ChrBaseRegion from(final GenomeRegion region) { return new ChrBaseRegion(region.chromosome(), region.start(), region.end()); }
 
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }

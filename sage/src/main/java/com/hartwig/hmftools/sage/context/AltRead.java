@@ -35,7 +35,7 @@ public class AltRead
         return mReadContext != null;
     }
 
-    public long position()
+    public int position()
     {
         return RefContext.position();
     }

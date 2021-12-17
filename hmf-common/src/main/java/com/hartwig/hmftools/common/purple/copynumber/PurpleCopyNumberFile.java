@@ -93,8 +93,8 @@ public final class PurpleCopyNumberFile
 
             final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                     .chromosome(values[chrIndex])
-                    .start(Long.parseLong(values[startIndex]))
-                    .end(Long.parseLong(values[endIndex]))
+                    .start(Integer.parseInt(values[startIndex]))
+                    .end(Integer.parseInt(values[endIndex]))
                     .bafCount(Integer.parseInt(values[bafCountIndex]))
                     .averageTumorCopyNumber(Double.parseDouble(values[cnIndex]))
                     .averageObservedBAF(Double.parseDouble(values[observedBAFIndex]))
@@ -161,8 +161,8 @@ public final class PurpleCopyNumberFile
         String[] values = copyNumber.split(DELIMITER);
         final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                 .chromosome(values[0])
-                .start(Long.parseLong(values[1]))
-                .end(Long.parseLong(values[2]))
+                .start(Integer.parseInt(values[1]))
+                .end(Integer.parseInt(values[2]))
                 .averageTumorCopyNumber(Double.parseDouble(values[3]))
                 .bafCount(Integer.parseInt(values[4]))
                 .averageObservedBAF(Double.parseDouble(values[5]))

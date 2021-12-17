@@ -92,7 +92,7 @@ public class ScaleIntronsTest
         assertEquals(create(scaled[2] - 3, scaled[3]  + 3), region);
     }
 
-    private static GenomeRegion create(long start, long end)
+    private static GenomeRegion create(int start, int end)
     {
         return GenomeRegions.create("1", start, end);
     }

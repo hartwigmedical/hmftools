@@ -14,7 +14,7 @@ public abstract class PCFPosition implements GenomePosition {
     @NotNull
     public abstract PCFSource source();
 
-    public abstract long minPosition();
+    public abstract int minPosition();
 
-    public abstract long maxPosition();
+    public abstract int maxPosition();
 }

@@ -27,7 +27,6 @@ import mockit.Injectable;
 
 public class RecoverStructuralVariantsTest
 {
-
     @Injectable
     private RecoveredVariantFactory recoveredVariantFactory;
     private final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 0.68);
@@ -119,7 +118,7 @@ public class RecoverStructuralVariantsTest
     @NotNull
     private List<VariantContext> singleTest(int depthWindowCount, double endCopyNumber) throws IOException
     {
-        long position = 10000;
+        int position = 10000;
 
         PurpleCopyNumber start = create(1, position, 3, depthWindowCount);
         PurpleCopyNumber end = create(position + 1, 2 * position, endCopyNumber, depthWindowCount);
@@ -136,7 +135,7 @@ public class RecoverStructuralVariantsTest
     @Test
     public void testPrioritiseNonSglVsASglTest() throws IOException
     {
-        long position = 10000;
+        int position = 10000;
 
         PurpleCopyNumber cn1 = create(1, position, 3);
         PurpleCopyNumber cn2 = create(position + 1, 2 * position, 1);
@@ -160,7 +159,7 @@ public class RecoverStructuralVariantsTest
     }
     */
 
-    private static StructuralVariant createSingle(final long startPosition)
+    private static StructuralVariant createSingle(final int startPosition)
     {
         return PurpleTestUtils.createStructuralVariantSingleBreakend("1", startPosition, 0.9).build();
     }
@@ -170,12 +169,12 @@ public class RecoverStructuralVariantsTest
         return PurpleTestUtils.createStructuralVariant("1", 10000, "1", 20000, StructuralVariantType.DEL, 0.9, 0.9).build();
     }
 
-    private static PurpleCopyNumber create(final long start, final long end, final double copyNumber)
+    private static PurpleCopyNumber create(final int start, final int end, final double copyNumber)
     {
         return create(start, end, copyNumber, RECOVERY_UNBALANCED_MIN_DEPTH_WINDOW_COUNT);
     }
 
-    private static PurpleCopyNumber create(final long start, final long end, final double copyNumber, int depthWindowCount)
+    private static PurpleCopyNumber create(final int start, final int end, final double copyNumber, int depthWindowCount)
     {
         return PurpleTestUtils.createCopyNumber("1", start, end, copyNumber).depthWindowCount(depthWindowCount).build();
     }

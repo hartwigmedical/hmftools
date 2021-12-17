@@ -20,7 +20,6 @@ import org.junit.Test;
 
 public class ClusterFactoryTest
 {
-
     private static final String CHROM = "1";
 
     private ClusterFactory victim;
@@ -43,8 +42,8 @@ public class ClusterFactoryTest
         assertEquals(4, clusters.size());
         assertRatioInCluster(clusters.get(0), 36964002, 36965001);
         assertRatioInCluster(clusters.get(1), 37380002, 37381001, 37382001);
-        assertCluster(clusters.get(2), 37382002L, 37383599L, 37383599L, 37384001L, 37384001L);
-        assertCluster(clusters.get(3), 37386002L, 37387153L, 37387153L, 37387001L, 37389001L);
+        assertCluster(clusters.get(2), 37382002, 37383599, 37383599, 37384001, 37384001);
+        assertCluster(clusters.get(3), 37386002, 37387153, 37387153, 37387001, 37389001);
     }
 
     @Test
@@ -137,28 +136,28 @@ public class ClusterFactoryTest
         assertVariantsInCluster(clusters.get(0), 12002, 15532, 18881);
     }
 
-    private static void assertRatioInCluster(final Cluster cluster, long start, long position)
+    private static void assertRatioInCluster(final Cluster cluster, int start, int position)
     {
         assertCluster(cluster, start, null, null, position, position);
     }
 
-    private static void assertRatioInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition)
+    private static void assertRatioInCluster(final Cluster cluster, int start, int firstPosition, int finalPosition)
     {
         assertCluster(cluster, start, null, null, firstPosition, finalPosition);
     }
 
-    private static void assertVariantInCluster(final Cluster cluster, long start, long position)
+    private static void assertVariantInCluster(final Cluster cluster, int start, int position)
     {
         assertCluster(cluster, start, position, position, null, null);
     }
 
-    private static void assertVariantsInCluster(final Cluster cluster, long start, long firstPosition, long finalPosition)
+    private static void assertVariantsInCluster(final Cluster cluster, int start, int firstPosition, int finalPosition)
     {
         assertCluster(cluster, start, firstPosition, finalPosition, null, null);
     }
 
-    private static void assertCluster(@NotNull final Cluster cluster, long start, @Nullable Long firstVariant, @Nullable Long finalVariant,
-            @Nullable Long firstRatio, @Nullable Long finalRatio)
+    private static void assertCluster(@NotNull final Cluster cluster, int start, @Nullable Integer firstVariant, @Nullable Integer finalVariant,
+            @Nullable Integer firstRatio, @Nullable Integer finalRatio)
     {
         assertEquals(start, cluster.start());
         assertEquals(Math.max(finalVariant == null ? 0 : finalVariant, finalRatio == null ? 0 : finalRatio), cluster.end());
@@ -175,25 +174,25 @@ public class ClusterFactoryTest
     }
 
     @NotNull
-    private static CobaltRatio cobalt(long position, boolean useable)
+    private static CobaltRatio cobalt(int position, boolean useable)
     {
         return ratio(position, useable ? 1 : -1);
     }
 
     @NotNull
-    private static CobaltRatio ratio(long position, double ratio)
+    private static CobaltRatio ratio(int position, double ratio)
     {
         return PurpleTestUtils.cobalt(CHROM, position, ratio).build();
     }
 
     @NotNull
-    private static SVSegment createSVPosition(long position)
+    private static SVSegment createSVPosition(int position)
     {
         return ImmutableSVSegment.builder().chromosome(CHROM).position(position).type(StructuralVariantType.BND).build();
     }
 
     @NotNull
-    private static List<CobaltRatio> cobalt(long startPosition, boolean... usable)
+    private static List<CobaltRatio> cobalt(int startPosition, boolean... usable)
     {
         final List<CobaltRatio> result = Lists.newArrayList();
         int offset = 0;
@@ -206,10 +205,10 @@ public class ClusterFactoryTest
     }
 
     @NotNull
-    private static List<SVSegment> variants(long... positions)
+    private static List<SVSegment> variants(int... positions)
     {
         final List<SVSegment> result = Lists.newArrayList();
-        for(long position : positions)
+        for(int position : positions)
         {
             result.add(createSVPosition(position));
         }
@@ -218,10 +217,10 @@ public class ClusterFactoryTest
     }
 
     @NotNull
-    private static List<PCFPosition> createRatioBreaks(long... positions)
+    private static List<PCFPosition> createRatioBreaks(int... positions)
     {
         final List<PCFPosition> result = Lists.newArrayList();
-        for(long position : positions)
+        for(int position : positions)
         {
             result.add(ratio(position));
         }
@@ -230,7 +229,7 @@ public class ClusterFactoryTest
     }
 
     @NotNull
-    private static PCFPosition ratio(long position)
+    private static PCFPosition ratio(int position)
     {
         return ImmutablePCFPosition.builder()
                 .chromosome(CHROM)
@@ -242,25 +241,25 @@ public class ClusterFactoryTest
     }
 
     @Nullable
-    private static Long firstVariant(@NotNull Cluster cluster)
+    private static Integer firstVariant(@NotNull Cluster cluster)
     {
         return cluster.variants().isEmpty() ? null : cluster.variants().get(0).position();
     }
 
     @Nullable
-    private static Long finalVariant(@NotNull Cluster cluster)
+    private static Integer finalVariant(@NotNull Cluster cluster)
     {
         return cluster.variants().isEmpty() ? null : cluster.variants().get(cluster.variants().size() - 1).position();
     }
 
     @Nullable
-    private static Long firstRatio(@NotNull Cluster cluster)
+    private static Integer firstRatio(@NotNull Cluster cluster)
     {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(0).position();
     }
 
     @Nullable
-    private static Long finalRatio(@NotNull Cluster cluster)
+    private static Integer finalRatio(@NotNull Cluster cluster)
     {
         return cluster.ratios().isEmpty() ? null : cluster.ratios().get(cluster.ratios().size() - 1).position();
     }

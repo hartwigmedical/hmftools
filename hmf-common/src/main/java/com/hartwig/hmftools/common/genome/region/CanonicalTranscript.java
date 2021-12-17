@@ -11,25 +11,25 @@ public interface CanonicalTranscript extends TranscriptRegion {
     @NotNull
     String geneId();
 
-    long geneStart();
+    int geneStart();
 
-    long geneEnd();
+    int geneEnd();
 
     int exonCount();
 
     int codingExons();
 
-    long exonStart();
+    int exonStart();
 
-    long exonEnd();
+    int exonEnd();
 
-    long exonBases();
+    int exonBases();
 
     Strand strand();
 
-    long codingStart();
+    int codingStart();
 
-    long codingEnd();
+    int codingEnd();
 
     int codingBases();
 }

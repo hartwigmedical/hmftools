@@ -27,7 +27,7 @@ public interface ObservedRegion extends GenomeRegion {
 
     double gcContent();
 
-    long minStart();
+    int minStart();
 
-    long maxStart();
+    int maxStart();
 }

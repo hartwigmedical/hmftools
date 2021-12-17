@@ -16,10 +16,10 @@ public class GenomeRegionsTest {
     @Test
     public void testAddPosition() {
         final GenomeRegions victim = new GenomeRegions(CHROM, 1);
-        final List<Long> positions = Lists.newArrayList(1L, 1L, 2L, 3L, 5L, 6L, 7L, 9L, 10L, 10L);
+        final List<Integer> positions = Lists.newArrayList(1, 1, 2, 3, 5, 6, 7, 9, 10, 10);
         Collections.shuffle(positions);
 
-        for (Long position : positions) {
+        for (Integer position : positions) {
             victim.addPosition(position);
         }
 
@@ -154,7 +154,7 @@ public class GenomeRegionsTest {
         assertRegion(victim.build().get(0), 5000, 6500);
     }
 
-    private void assertRegion(@NotNull final GenomeRegion region, long expectedStart, long expectedEnd) {
+    private void assertRegion(@NotNull final GenomeRegion region, int expectedStart, int expectedEnd) {
         Assert.assertEquals(expectedStart, region.start());
         Assert.assertEquals(expectedEnd, region.end());
     }

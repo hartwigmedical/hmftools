@@ -11,5 +11,5 @@ public abstract class TransvarDeletion implements TransvarAnnotation {
 
     public abstract int deletedBaseCount();
 
-    public abstract long leftAlignedGDNAPosition();
+    public abstract int leftAlignedGDNAPosition();
 }

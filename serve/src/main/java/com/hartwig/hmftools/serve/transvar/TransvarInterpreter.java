@@ -169,7 +169,7 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
             // Dups don't have ref and alt information so need to look it up in ref genome.
-            long position = record.gdnaPosition() - 1;
+            int position = record.gdnaPosition() - 1;
             String preMutatedSequence = refSequence(record.chromosome(), position, position);
             String dupBases = refSequence(record.chromosome(), position + 1, position + dup.duplicatedBaseCount());
 
@@ -189,7 +189,7 @@ class TransvarInterpreter {
             @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        long position = record.gdnaPosition();
+        int position = record.gdnaPosition();
         String preMutatedSequence = refSequence(record.chromosome(), position, position);
 
         ImmutableVariantHotspotImpl.Builder hotspotBuilder =
@@ -243,8 +243,8 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
             ImmutableVariantHotspotImpl.Builder hotspotBuilder = withRefBasedChromosome(record.chromosome());
-            for (long start = deletion.leftAlignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
-                long adjustedPosition = start - 1;
+            for (int start = deletion.leftAlignedGDNAPosition(); start <= record.gdnaPosition(); start++) {
+                int adjustedPosition = start - 1;
                 String preMutatedSequence = refSequence(record.chromosome(), adjustedPosition, adjustedPosition);
                 String deletedSequence =
                         refSequence(record.chromosome(), adjustedPosition + 1, adjustedPosition + deletion.deletedBaseCount());
@@ -266,7 +266,7 @@ class TransvarInterpreter {
             @NotNull TransvarComplexInsertDelete insDel, @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
-            long position = record.gdnaPosition();
+            int position = record.gdnaPosition();
             String deletedBases = refSequence(record.chromosome(), position, position + insDel.deletedBaseCount() - 1);
 
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
@@ -304,7 +304,7 @@ class TransvarInterpreter {
             simplifiedAlt = simplifiedAlt.substring(0, simplifiedAlt.length() - 1);
         }
 
-        long adjustedPos = complexInsDel.position();
+        int adjustedPos = complexInsDel.position();
         while (simplifiedRef.length() > 2 && simplifiedAlt.length() > 2 && simplifiedRef.subSequence(0, 1)
                 .equals(simplifiedAlt.substring(0, 1))) {
             adjustedPos++;
@@ -320,7 +320,7 @@ class TransvarInterpreter {
             @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (!record.variantSpanMultipleExons()) {
-            long posPriorToCodon = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
+            int posPriorToCodon = strand == Strand.FORWARD ? record.gdnaPosition() : record.gdnaPosition() - 3;
             // For frameshifts in start codons, transvar generates the start of the start codon rather than position prior.
             if (frameshift.isFrameshiftInsideStartCodon()) {
                 posPriorToCodon = strand == Strand.FORWARD ? posPriorToCodon - 1 : posPriorToCodon + 1;
@@ -347,7 +347,7 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private List<VariantHotspot> generateSingleBaseInserts(@NotNull TransvarRecord record, long posPriorToCodon, @NotNull Strand strand,
+    private List<VariantHotspot> generateSingleBaseInserts(@NotNull TransvarRecord record, int posPriorToCodon, @NotNull Strand strand,
             @NotNull String refAminoAcid) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         ImmutableVariantHotspotImpl.Builder builder = withRefBasedChromosome(record.chromosome());
@@ -356,7 +356,7 @@ class TransvarInterpreter {
         for (int i = 0; i < 3; i++) {
             // For reverse strand we need to move the position up by 1 for inserts
             int strandCorrection = strand == Strand.FORWARD ? 0 : 1;
-            long pos = posPriorToCodon + i + strandCorrection;
+            int pos = posPriorToCodon + i + strandCorrection;
             String ref = refSequence(record.chromosome(), pos, pos);
             builder.position(pos).ref(ref);
 
@@ -385,7 +385,7 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private List<VariantHotspot> generateSingleBaseDeletes(@NotNull TransvarRecord record, long posPriorToCodon, @NotNull Strand strand,
+    private List<VariantHotspot> generateSingleBaseDeletes(@NotNull TransvarRecord record, int posPriorToCodon, @NotNull Strand strand,
             @NotNull String refAminoAcid) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         ImmutableVariantHotspotImpl.Builder builder = withRefBasedChromosome(record.chromosome());
@@ -424,7 +424,7 @@ class TransvarInterpreter {
                     findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseStrandBases(newRefCodon));
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
-                long pos = posPriorToCodon + i;
+                int pos = posPriorToCodon + i;
                 String ref = refSequence(record.chromosome(), pos, pos + 1);
                 String alt = refSequence(record.chromosome(), pos, pos);
 
@@ -435,7 +435,7 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private List<VariantHotspot> generateDoubleBaseDeletes(@NotNull TransvarRecord record, long posPriorToCodon, @NotNull Strand strand,
+    private List<VariantHotspot> generateDoubleBaseDeletes(@NotNull TransvarRecord record, int posPriorToCodon, @NotNull Strand strand,
             @NotNull String refAminoAcid) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         ImmutableVariantHotspotImpl.Builder builder = withRefBasedChromosome(record.chromosome());
@@ -466,7 +466,7 @@ class TransvarInterpreter {
                     findAminoAcidForCodon(strand == Strand.FORWARD ? newRefCodon : reverseStrandBases(newRefCodon));
 
             if (newAminoAcid != null && !newAminoAcid.equals(refAminoAcid)) {
-                long pos = posPriorToCodon + i;
+                int pos = posPriorToCodon + i;
                 String ref = refSequence(record.chromosome(), pos, pos + 2);
                 String alt = refSequence(record.chromosome(), pos, pos);
 
@@ -477,7 +477,7 @@ class TransvarInterpreter {
     }
 
     @NotNull
-    private String refSequence(@NotNull String chromosome, long start, long end) {
+    private String refSequence(@NotNull String chromosome, int start, int end) {
         String versionedChromosome = refGenomeVersion.versionedChromosome(chromosome);
         return refGenomeFasta.getSubsequenceAt(versionedChromosome, start, end).getBaseString();
     }

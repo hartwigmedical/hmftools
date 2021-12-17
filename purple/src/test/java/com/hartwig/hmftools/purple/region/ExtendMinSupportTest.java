@@ -12,7 +12,6 @@ import org.junit.Test;
 
 public class ExtendMinSupportTest
 {
-
     @Test
     public void testDefault()
     {
@@ -71,7 +70,7 @@ public class ExtendMinSupportTest
     }
 
     @NotNull
-    private ModifiableEnrichedRegion create(long start, @NotNull final GermlineStatus status, @NotNull final SegmentSupport support)
+    private ModifiableEnrichedRegion create(int start, @NotNull final GermlineStatus status, @NotNull final SegmentSupport support)
     {
         return ModifiableEnrichedRegion.create().setStart(start).setMinStart(start).setGermlineStatus(status).setSupport(support);
     }

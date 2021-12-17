@@ -84,7 +84,7 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     @Override
-    public long position()
+    public int position()
     {
         return Variant.position();
     }

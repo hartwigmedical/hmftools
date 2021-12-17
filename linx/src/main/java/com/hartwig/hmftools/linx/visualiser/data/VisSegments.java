@@ -61,7 +61,7 @@ public class VisSegments
     @NotNull
     private static Segment centromere(@NotNull final String sampleId, @NotNull final String chromosome)
     {
-        long position = REF_GENOME.centromeres().get(HumanChromosome.fromString(chromosome));
+        int position = REF_GENOME.centromeres().get(HumanChromosome.fromString(chromosome));
         return ImmutableSegment.builder()
                 .sampleId(sampleId)
                 .clusterId(-1)
@@ -85,25 +85,25 @@ public class VisSegments
     }
 
     @NotNull
-    public static List<Segment> extendTerminals(long terminalDistance, @NotNull final List<Segment> segments,
+    public static List<Segment> extendTerminals(int terminalDistance, @NotNull final List<Segment> segments,
             @NotNull final List<VisSvData> links, @NotNull final List<GenomePosition> allPositions, boolean showSimpleSvSegments)
     {
         final Map<Chromosome,Integer> lengths = REF_GENOME.Lengths;
         final Map<Chromosome,Integer> centromeres = REF_GENOME.Centromeres;
 
-        final Map<String, Long> minPositionPerChromosome = minPositionPerChromosome(allPositions);
-        final Map<String, Long> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
+        final Map<String,Integer> minPositionPerChromosome = minPositionPerChromosome(allPositions);
+        final Map<String,Integer> maxPositionPerChromosome = maxPositionPerChromosome(allPositions);
 
         final List<Segment> result = Lists.newArrayList();
         for (Segment segment : segments)
         {
-            final long centromere = centromeres.get(HumanChromosome.fromString(segment.chromosome()));
-            final long length = lengths.get(HumanChromosome.fromString(segment.chromosome()));
+            final int centromere = centromeres.get(HumanChromosome.fromString(segment.chromosome()));
+            final int length = lengths.get(HumanChromosome.fromString(segment.chromosome()));
 
             if (segment.startTerminal() != SegmentTerminal.NONE)
             {
-                final long minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
-                final long startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
+                final int minPositionOnChromosome = minPositionPerChromosome.get(segment.chromosome());
+                final int startPosition = segment.startTerminal() == SegmentTerminal.CENTROMERE && minPositionOnChromosome < centromere
                         ? centromere
                         : Math.max(1, minPositionOnChromosome - terminalDistance);
 
@@ -112,8 +112,8 @@ public class VisSegments
 
             if (segment.endTerminal() != SegmentTerminal.NONE)
             {
-                final long maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
-                final long endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
+                final int maxPositionOnChromosome = maxPositionPerChromosome.get(segment.chromosome());
+                final int endPosition = segment.endTerminal() == SegmentTerminal.CENTROMERE && maxPositionOnChromosome > centromere
                         ? centromere
                         : Math.min(length, maxPositionOnChromosome + terminalDistance);
 
@@ -143,7 +143,7 @@ public class VisSegments
         final List<GenomeRegion> segmentSpan = Span.spanRegions(segments);
         for (final GenomeRegion genomeRegion : segmentSpan)
         {
-            long centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
+            int centromere = REF_GENOME.centromeres().get(HumanChromosome.fromString(genomeRegion.chromosome()));
             if (genomeRegion.start() < centromere && genomeRegion.end() > centromere)
             {
                 requiredCentromeres.add(genomeRegion.chromosome());
@@ -172,11 +172,11 @@ public class VisSegments
                 .chainId(file.ChainId)
                 .chromosome(file.Chromosome)
                 .start(SegmentTerminal.fromString(file.PosStart) == SegmentTerminal.NONE
-                        ? Long.valueOf(file.PosStart)
-                        : Long.valueOf(file.PosEnd))
+                        ? Integer.valueOf(file.PosStart)
+                        : Integer.valueOf(file.PosEnd))
                 .end(SegmentTerminal.fromString(file.PosEnd) == SegmentTerminal.NONE
-                        ? Long.valueOf(file.PosEnd)
-                        : Long.valueOf(file.PosStart))
+                        ? Integer.valueOf(file.PosEnd)
+                        : Integer.valueOf(file.PosStart))
                 .track(0)
                 .frame(0)
                 .startTerminal(SegmentTerminal.fromString(file.PosStart))

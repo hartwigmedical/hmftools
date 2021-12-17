@@ -11,5 +11,5 @@ public interface ChromosomeLength {
     @NotNull
     String chromosome();
 
-    long length();
+    int length();
 }

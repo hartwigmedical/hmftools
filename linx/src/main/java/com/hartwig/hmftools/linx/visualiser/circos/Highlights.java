@@ -30,8 +30,8 @@ public class Highlights
                     segments.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeSegments.isEmpty())
             {
-                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0);
-                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0);
+                int minTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::start).min().orElse(0);
+                int maxTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::end).max().orElse(0);
                 if (highlight.end() >= minTrackPosition && highlight.start() <= maxTrackPosition)
                 {
 
@@ -74,7 +74,7 @@ public class Highlights
             if (!line.startsWith(COMMENT) && !line.startsWith(HEADER))
             {
                 final String[] values = line.split(DELIMITER);
-                result.add(GenomeRegions.create(values[0], Long.parseLong(values[1]), Long.parseLong(values[2])));
+                result.add(GenomeRegions.create(values[0], Integer.parseInt(values[1]), Integer.parseInt(values[2])));
 
             }
         }

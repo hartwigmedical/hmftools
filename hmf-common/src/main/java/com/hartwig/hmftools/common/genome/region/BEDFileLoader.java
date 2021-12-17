@@ -32,8 +32,8 @@ public final class BEDFileLoader {
         try (final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false)) {
             for (final BEDFeature bedFeature : reader.iterator()) {
                 final String chromosome = bedFeature.getContig();
-                final long start = bedFeature.getStart();
-                final long end = bedFeature.getEnd();
+                final int start = bedFeature.getStart();
+                final int end = bedFeature.getEnd();
 
                 if (end < start) {
                     LOGGER.warn("Invalid genome region found in chromosome {}: start={}, end={}", chromosome, start, end);

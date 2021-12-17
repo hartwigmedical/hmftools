@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class ExtendDiploidTest
 {
-
     private static final int MIN_TUMOR_COUNT = 30;
     private static final int MIN_TUMOR_COUNT_AT_CENTROMERE = 50;
     private static final String CHROMOSOME = "1";
@@ -178,7 +177,7 @@ public class ExtendDiploidTest
         assertRegion(10001, 20000, 4, result.get(1));
     }
 
-    private static void assertRegion(long start, long end, double tumorCopyNumber, @NotNull final CombinedRegion victim)
+    private static void assertRegion(int start, int end, double tumorCopyNumber, @NotNull final CombinedRegion victim)
     {
         assertEquals(start, victim.start());
         assertEquals(end, victim.end());
@@ -186,14 +185,14 @@ public class ExtendDiploidTest
     }
 
     @NotNull
-    private static FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, GermlineStatus status,
+    private static FittedRegion createFittedRegion(int start, int end, double tumorCopyNumber, GermlineStatus status,
             SegmentSupport support)
     {
         return createFittedRegion(start, end, tumorCopyNumber, 1.1, status, support);
     }
 
     @NotNull
-    private static FittedRegion createValidSomatic(long start, long end, double copyNumber, int bafCount, SegmentSupport support)
+    private static FittedRegion createValidSomatic(int start, int end, double copyNumber, int bafCount, SegmentSupport support)
     {
         return createDefaultFittedRegion(CHROMOSOME, start, end)
                 .germlineStatus(GermlineStatus.DIPLOID)
@@ -207,19 +206,19 @@ public class ExtendDiploidTest
     }
 
     @NotNull
-    private static FittedRegion createDubiousRegion(long start, long end, double copyNumber, int ratioCount)
+    private static FittedRegion createDubiousRegion(int start, int end, double copyNumber, int ratioCount)
     {
         return createDubiousRegion(start, end, copyNumber, ratioCount, 1);
     }
 
     @NotNull
-    private static FittedRegion createDubiousRegion(long start, long end, double copyNumber, int ratioCount, int bafCount)
+    private static FittedRegion createDubiousRegion(int start, int end, double copyNumber, int ratioCount, int bafCount)
     {
         return createRegion(start, end, copyNumber, ratioCount, bafCount, SegmentSupport.NONE);
     }
 
     @NotNull
-    private static FittedRegion createRegion(long start, long end, double copyNumber, int ratioCount, int bafCount,
+    private static FittedRegion createRegion(int start, int end, double copyNumber, int ratioCount, int bafCount,
             SegmentSupport support)
     {
         return createDefaultFittedRegion(CHROMOSOME, start, end)
@@ -234,7 +233,7 @@ public class ExtendDiploidTest
     }
 
     @NotNull
-    private static FittedRegion createFittedRegion(long start, long end, double tumorCopyNumber, double observedNormalRatio,
+    private static FittedRegion createFittedRegion(int start, int end, double tumorCopyNumber, double observedNormalRatio,
             GermlineStatus status, SegmentSupport support)
     {
         return createDefaultFittedRegion(CHROMOSOME, start, end)

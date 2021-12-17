@@ -73,7 +73,7 @@ public class BamSlicer
 
     public List<SAMRecord> slice(@NotNull final SamReader samReader, final GenomePosition variantRegion)
     {
-        int position = (int)variantRegion.position();
+        int position = variantRegion.position();
 
         final QueryInterval[] queryIntervals = createIntervals(Lists.newArrayList(
                 new ChrBaseRegion(variantRegion.chromosome(), position, position)), samReader.getFileHeader());

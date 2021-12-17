@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class CobaltAccumulatorTest
 {
-
     private static final String CHROMOSOME = "1";
     private static final int WINDOW_SIZE = 1000;
 
@@ -39,7 +38,7 @@ public class CobaltAccumulatorTest
         assertTumorCount(1, 5001, 9999, 4001, 5001, 9001, 10001);
     }
 
-    private void assertTumorCount(int expectedCount, long regionStart, long regionEnd, long... ratios)
+    private void assertTumorCount(int expectedCount, int regionStart, int regionEnd, int... ratios)
     {
         final GenomeRegion region = GenomeRegions.create(CHROMOSOME, regionStart, regionEnd);
         final ObservedRegionFactory.CobaltAccumulator accumulator = new ObservedRegionFactory.CobaltAccumulator(WINDOW_SIZE, region);
@@ -49,10 +48,10 @@ public class CobaltAccumulatorTest
     }
 
     @NotNull
-    private static GenomePositionSelector<CobaltRatio> createSelector(long... ratioPositions)
+    private static GenomePositionSelector<CobaltRatio> createSelector(int... ratioPositions)
     {
         List<CobaltRatio> ratios = Lists.newArrayList();
-        for(long ratioPosition : ratioPositions)
+        for(int ratioPosition : ratioPositions)
         {
             ratios.add(ratio(ratioPosition));
         }
@@ -61,7 +60,7 @@ public class CobaltAccumulatorTest
     }
 
     @NotNull
-    private static CobaltRatio ratio(long position)
+    private static CobaltRatio ratio(int position)
     {
         return PurpleTestUtils.cobalt(CHROMOSOME, position, 1).build();
     }

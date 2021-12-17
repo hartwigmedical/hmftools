@@ -117,11 +117,11 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
         }
 
         final int chromosomeLength = samSequenceRecord.getSequenceLength();
-        long positionBeforeEvent = variant.getStart();
+        int positionBeforeEvent = variant.getStart();
 
-        long start = Math.max(positionBeforeEvent - 100, 1);
-        long end = Math.min(positionBeforeEvent + refLength + 100 - 1, chromosomeLength - 1);
-        int relativePosition = (int) (positionBeforeEvent - start);
+        int start = Math.max(positionBeforeEvent - 100, 1);
+        int end = Math.min(positionBeforeEvent + refLength + 100 - 1, chromosomeLength - 1);
+        int relativePosition = positionBeforeEvent - start;
         final String sequence;
         if (start < chromosomeLength && end < chromosomeLength) {
             sequence = reference.getSubsequenceAt(variant.getContig(), start, end).getBaseString();

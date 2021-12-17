@@ -260,7 +260,7 @@ public class VisDataWriter
                     final SvBreakend beEnd = pair.getBreakend(false);
 
                     segments.add(new VisSegmentFile(sampleData.sampleId(), cluster.id(), chain.id(), beStart.chromosome(),
-                            Long.toString(beStart.position()), Long.toString(beEnd.position()), linkPloidy, chain.isDoubleMinute()));
+                            String.valueOf(beStart.position()), String.valueOf(beEnd.position()), linkPloidy, chain.isDoubleMinute()));
                 }
 
                 if(!chain.isClosedLoop())

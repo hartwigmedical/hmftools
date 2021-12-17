@@ -10,11 +10,11 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
     @NotNull
     String chromosome();
 
-    long start();
+    int start();
 
-    long end();
+    int end();
 
-    default long bases() {
+    default int bases() {
         return 1 + end() - start();
     }
 
@@ -40,13 +40,13 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
         return other.chromosome().equals(chromosome()) && other.end() > start() && other.start() < end();
     }
 
-    default long overlappingBases(@NotNull final GenomeRegion other) {
+    default int overlappingBases(@NotNull final GenomeRegion other) {
         if (!chromosome().equals(other.chromosome())) {
             return 0;
         }
 
-        long minEnd = Math.min(end(), other.end());
-        long maxStart = Math.max(start(), other.start());
+        int minEnd = Math.min(end(), other.end());
+        int maxStart = Math.max(start(), other.start());
         return Math.max(0, 1 + minEnd - maxStart);
     }
 }

@@ -103,7 +103,7 @@ public class GenomeRegionSelectorTest {
         assertEquals(Optional.empty(), standardSelector.select(position));
     }
 
-    private static GenomePosition createPosition(final String chromosome, final long position) {
+    private static GenomePosition createPosition(final String chromosome, final int position) {
         return new GenomePosition() {
             @NotNull
             @Override
@@ -112,7 +112,7 @@ public class GenomeRegionSelectorTest {
             }
 
             @Override
-            public long position() {
+            public int position() {
                 return position;
             }
         };

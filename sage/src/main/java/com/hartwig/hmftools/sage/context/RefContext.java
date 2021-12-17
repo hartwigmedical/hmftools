@@ -71,7 +71,7 @@ public class RefContext implements GenomePosition
     }
 
     @Override
-    public long position()
+    public int position()
     {
         return Position;
     }

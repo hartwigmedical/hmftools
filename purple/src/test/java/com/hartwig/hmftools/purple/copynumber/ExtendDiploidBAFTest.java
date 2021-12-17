@@ -20,14 +20,13 @@ import org.junit.Test;
 
 public class ExtendDiploidBAFTest
 {
-
     private static final double EPSILON = 1e-10;
 
     @Test
     public void testDUPWithLOH()
     {
-        final Map<Long, Long> dupMap = Maps.newHashMap();
-        dupMap.put(1001L, 2001L);
+        final Map<Integer,Integer> dupMap = Maps.newHashMap();
+        dupMap.put(1001, 2001);
         final ExtendDiploidBAF victim = new ExtendDiploidBAF(dupMap);
 
         CombinedRegion leftWithLOH = create(1, 1000, SegmentSupport.TELOMERE, 10, 1, 2);
@@ -186,7 +185,7 @@ public class ExtendDiploidBAFTest
     }
 
     @NotNull
-    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount)
+    private static CombinedRegion create(int start, int end, SegmentSupport support, int bafCount)
     {
         return new CombinedRegionImpl(createDefaultFittedRegion("1", start, end)
                 .support(support)
@@ -195,7 +194,7 @@ public class ExtendDiploidBAFTest
     }
 
     @NotNull
-    private static CombinedRegion create(long start, long end, SegmentSupport support, int bafCount, double baf, double copyNumber)
+    private static CombinedRegion create(int start, int end, SegmentSupport support, int bafCount, double baf, double copyNumber)
     {
         return new CombinedRegionImpl(createDefaultFittedRegion("1", start, end)
                 .support(support)

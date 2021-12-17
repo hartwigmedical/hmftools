@@ -21,15 +21,15 @@ public class ScaleContigTest
     @Test
     public void testFirstPositionIsAtStart()
     {
-        ScaleContig victim = new ScaleContig("1", Lists.newArrayList(200L, 10L));
-        assertEquals(1, victim.scale(10L));
+        ScaleContig victim = new ScaleContig("1", Lists.newArrayList(200, 10));
+        assertEquals(1, victim.scale(10));
     }
 
 
     @Test
     public void testScalePosition()
     {
-        long firstPosition = new Random().nextInt(1000000) + 1;
+        int firstPosition = new Random().nextInt(1000000) + 1;
         ScaleContig victim =
                 new ScaleContig("1", Lists.newArrayList(firstPosition + 1001, firstPosition, firstPosition + 1, firstPosition));
 
@@ -50,27 +50,27 @@ public class ScaleContigTest
     @Test
     public void testInterpolate()
     {
-        final Map<Long, Integer> map = Maps.newHashMap();
-        map.put(1000L, 10);
+        final Map<Integer,Integer> map = Maps.newHashMap();
+        map.put(1000, 10);
         final ScaleContig victim = new ScaleContig("Dummy", map);
 
-        assertEquals(10, victim.interpolate(900L));
-        assertEquals(10, victim.interpolate(1000L));
-        assertEquals(10, victim.interpolate(1100L));
+        assertEquals(10, victim.interpolate(900));
+        assertEquals(10, victim.interpolate(1000));
+        assertEquals(10, victim.interpolate(1100));
 
-        map.put(2000L, 20);
-        assertEquals(10, victim.interpolate(900L));
-        assertEquals(10, victim.interpolate(1000L));
-        assertEquals(11, victim.interpolate(1100L));
-        assertEquals(15, victim.interpolate(1500L));
-        assertEquals(20, victim.interpolate(2000L));
-        assertEquals(20, victim.interpolate(2100L));
+        map.put(2000, 20);
+        assertEquals(10, victim.interpolate(900));
+        assertEquals(10, victim.interpolate(1000));
+        assertEquals(11, victim.interpolate(1100));
+        assertEquals(15, victim.interpolate(1500));
+        assertEquals(20, victim.interpolate(2000));
+        assertEquals(20, victim.interpolate(2100));
 
-        map.put(3000L, 40);
-        assertEquals(20, victim.interpolate(2000L));
-        assertEquals(22, victim.interpolate(2100L));
-        assertEquals(30, victim.interpolate(2500L));
-        assertEquals(40, victim.interpolate(3000L));
+        map.put(3000, 40);
+        assertEquals(20, victim.interpolate(2000));
+        assertEquals(22, victim.interpolate(2100));
+        assertEquals(30, victim.interpolate(2500));
+        assertEquals(40, victim.interpolate(3000));
     }
 
 }

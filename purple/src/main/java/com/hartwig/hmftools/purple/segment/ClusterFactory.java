@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 class ClusterFactory
 {
-    private final long mWindowSize;
+    private final int mWindowSize;
     private final Window mWindow;
 
     ClusterFactory(final int windowSize)
@@ -82,7 +82,7 @@ class ClusterFactory
                 cobaltIndex++;
             }
 
-            final long earliestDetectableCopyNumberChangePosition =
+            final int earliestDetectableCopyNumberChangePosition =
                     earliestDetectableCopyNumberChangePosition(position.position(), cobaltIndex, cobaltRatios);
             if(segment == null || earliestDetectableCopyNumberChangePosition > segment.end())
             {
@@ -115,10 +115,10 @@ class ClusterFactory
     }
 
     @VisibleForTesting
-    long earliestDetectableCopyNumberChangePosition(long position, int index, @NotNull final List<CobaltRatio> ratios)
+    int earliestDetectableCopyNumberChangePosition(int position, int index, @NotNull final List<CobaltRatio> ratios)
     {
         assert (index <= ratios.size());
-        final long min = mWindow.start(position) - mWindowSize + 1;
+        final int min = mWindow.start(position) - mWindowSize + 1;
         if(!ratios.isEmpty())
         {
             for(int i = index; i >= 0; i--)

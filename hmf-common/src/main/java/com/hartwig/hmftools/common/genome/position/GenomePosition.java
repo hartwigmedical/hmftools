@@ -9,7 +9,7 @@ public interface GenomePosition extends Comparable<GenomePosition> {
     @NotNull
     String chromosome();
 
-    long position();
+    int position();
 
     @Override
     default int compareTo(@NotNull GenomePosition other) {

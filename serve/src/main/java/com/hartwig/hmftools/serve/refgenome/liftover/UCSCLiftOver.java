@@ -30,7 +30,7 @@ public class UCSCLiftOver implements LiftOverAlgo {
 
     @Nullable
     @Override
-    public LiftOverResult liftOver(@NotNull final String chromosome, final long position) {
+    public LiftOverResult liftOver(@NotNull final String chromosome, final int position) {
         // UCSC expects hg19 format in case v37 is used.
         String ucscChromosome = RefGenomeFunctions.enforceChrPrefix(chromosome);
         Interval interval = new Interval(ucscChromosome, (int) position, (int) position);

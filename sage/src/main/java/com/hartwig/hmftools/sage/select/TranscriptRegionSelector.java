@@ -22,7 +22,7 @@ public class TranscriptRegionSelector
     }
 
     @NotNull
-    public Optional<HmfTranscriptRegion> select(long position)
+    public Optional<HmfTranscriptRegion> select(int position)
     {
         if(mRegions.isEmpty())
         {

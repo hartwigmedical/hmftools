@@ -18,12 +18,12 @@ public interface CombinedRegion extends GenomeRegion {
     }
 
     @Override
-    default long start() {
+    default int start() {
         return region().start();
     }
 
     @Override
-    default long end() {
+    default int end() {
         return region().end();
     }
 

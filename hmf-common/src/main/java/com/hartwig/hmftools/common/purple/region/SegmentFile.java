@@ -80,8 +80,8 @@ public final class SegmentFile
 
             final ImmutableFittedRegion.Builder builder = ImmutableFittedRegion.builder()
                     .chromosome(values[chrIndex])
-                    .start(Long.parseLong(values[startIndex]))
-                    .end(Long.parseLong(values[endIndex]))
+                    .start(Integer.parseInt(values[startIndex]))
+                    .end(Integer.parseInt(values[endIndex]))
                     .germlineStatus(GermlineStatus.valueOf(values[germlineStatusIndex]))
                     .bafCount(Integer.parseInt(values[bafCountIndex]))
                     .observedBAF(Double.parseDouble(values[observedBAFIndex]))
@@ -101,8 +101,8 @@ public final class SegmentFile
                     .tumorBAF(Double.parseDouble(values[tumorBAFIndex]))
                     .gcContent(Double.parseDouble(values[gcContentIndex]))
                     .eventPenalty(Double.parseDouble(values[eventPenaltyIndex]))
-                    .minStart(Long.parseLong(values[minStartIndex]))
-                    .maxStart(Long.parseLong(values[maxStartIndex]))
+                    .minStart(Integer.parseInt(values[minStartIndex]))
+                    .maxStart(Integer.parseInt(values[maxStartIndex]))
                     .svCluster(false);
 
             regions.add(builder.build());

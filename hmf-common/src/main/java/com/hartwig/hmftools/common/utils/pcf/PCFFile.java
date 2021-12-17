@@ -47,7 +47,7 @@ public final class PCFFile {
         ModifiablePCFPosition builder = null;
 
         String prevChromosome = Strings.EMPTY;
-        long minPosition = 1;
+        int minPosition = 1;
         List<ModifiablePCFPosition> chromosomeResult = Lists.newArrayList();
 
         for (String line : Files.readAllLines(new File(filename).toPath())) {
@@ -67,8 +67,8 @@ public final class PCFFile {
                         prevChromosome = chromosomeName;
                     }
 
-                    long start = window.start(Long.parseLong(values[3]));
-                    long end = window.start(Long.parseLong(values[4])) + windowSize;
+                    int start = window.start(Integer.parseInt(values[3]));
+                    int end = window.start(Integer.parseInt(values[4])) + windowSize;
                     if (builder != null) {
                         chromosomeResult.add(builder.setMaxPosition(start));
                     }
@@ -121,8 +121,8 @@ public final class PCFFile {
         String[] values = line.split(DELIMITER);
         return ImmutablePCFRegion.builder()
                 .chromosome(values[1])
-                .start(Long.parseLong(values[3]))
-                .end(Long.parseLong(values[4]) + windowSize - 1)
+                .start(Integer.parseInt(values[3]))
+                .end(Integer.parseInt(values[4]) + windowSize - 1)
                 .build();
     }
 }

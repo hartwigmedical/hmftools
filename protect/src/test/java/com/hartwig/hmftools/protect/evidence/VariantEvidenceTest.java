@@ -32,7 +32,7 @@ public class VariantEvidenceTest {
     @Test
     public void canDetermineVariantEvidenceForHotspots() {
         String chromosome = "1";
-        long position = 10;
+        int position = 10;
         String ref = "C";
         String alt = "T";
 
@@ -96,8 +96,8 @@ public class VariantEvidenceTest {
     @Test
     public void canDetermineVariantEvidenceForRanges() {
         String chromosome = "1";
-        long start = 5;
-        long end = 15;
+        int start = 5;
+        int end = 15;
         String gene = "gene";
         MutationTypeFilter mutationTypeFilter = MutationTypeFilter.MISSENSE;
 

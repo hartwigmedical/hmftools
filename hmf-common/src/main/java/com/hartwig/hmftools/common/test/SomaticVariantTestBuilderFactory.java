@@ -21,7 +21,7 @@ public final class SomaticVariantTestBuilderFactory {
         return ImmutableSomaticVariantImpl.builder()
                 .qual(100)
                 .chromosome(Strings.EMPTY)
-                .position(0L)
+                .position(0)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
                 .type(VariantType.UNDEFINED)

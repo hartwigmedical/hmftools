@@ -50,9 +50,9 @@ public final class LiftOverChecker {
 
         @NotNull
         private final String chromosome;
-        private final long position;
+        private final int position;
 
-        public GenomePositionImpl(@NotNull final String chromosome, final long position) {
+        public GenomePositionImpl(@NotNull final String chromosome, final int position) {
             this.chromosome = chromosome;
             this.position = position;
         }
@@ -64,7 +64,7 @@ public final class LiftOverChecker {
         }
 
         @Override
-        public long position() {
+        public int position() {
             return position;
         }
 

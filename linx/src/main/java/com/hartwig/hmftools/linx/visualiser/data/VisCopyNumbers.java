@@ -32,20 +32,20 @@ public class VisCopyNumbers
                     span.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
             if (!chromosomeSegments.isEmpty())
             {
-                long minTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::start).min().orElse(0);
-                long maxTrackPosition = chromosomeSegments.stream().mapToLong(GenomeRegion::end).max().orElse(0);
-                long chromosomeDistance = maxTrackPosition - minTrackPosition;
-                long additional = Math.max(1, Math.min(MAX_EXTRA_DISTANCE, Math.round(MIN_EXTRA_DISTANCE_PERCENT * chromosomeDistance)));
+                int minTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::start).min().orElse(0);
+                int maxTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::end).max().orElse(0);
+                int chromosomeDistance = maxTrackPosition - minTrackPosition;
+                int additional = (int)Math.max(1, Math.min(MAX_EXTRA_DISTANCE, Math.round(MIN_EXTRA_DISTANCE_PERCENT * chromosomeDistance)));
                 minTrackPosition = minTrackPosition - additional;
                 maxTrackPosition = maxTrackPosition + additional;
 
                 if (alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition)
                 {
                     boolean isStartDecreasing = i > 0 && lessThan(alteration, alterations.get(i - 1));
-                    long startPosition = isStartDecreasing ? alteration.start() - 1 : alteration.start();
+                    int startPosition = isStartDecreasing ? alteration.start() - 1 : alteration.start();
 
                     boolean isEndIncreasing = i < alterations.size() - 1 && lessThan(alteration, alterations.get(i + 1));
-                    long endPosition = isEndIncreasing ? alteration.end() + 1 : alteration.end();
+                    int endPosition = isEndIncreasing ? alteration.end() + 1 : alteration.end();
 
                     result.add(ImmutableCopyNumberAlteration.builder()
                             .from(alteration)

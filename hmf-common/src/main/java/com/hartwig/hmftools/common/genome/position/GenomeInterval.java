@@ -7,7 +7,7 @@ public interface GenomeInterval extends GenomePosition {
     @Nullable
     Integer startOffset();
 
-    default long startPosition() {
+    default int startPosition() {
         Integer startOffset = startOffset();
         return startOffset == null ? position() : position() + startOffset;
     }
@@ -15,7 +15,7 @@ public interface GenomeInterval extends GenomePosition {
     @Nullable
     Integer endOffset();
 
-    default long endPosition() {
+    default int endPosition() {
         Integer endOffset = endOffset();
         return endOffset == null ? position() : position() + endOffset;
     }

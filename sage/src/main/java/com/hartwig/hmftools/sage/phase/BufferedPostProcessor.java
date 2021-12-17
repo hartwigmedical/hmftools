@@ -43,11 +43,11 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 
     public static boolean longerContainsShorter(@NotNull final VariantHotspot shorter, @NotNull final VariantHotspot longer)
     {
-        long longerStart = longer.position();
-        long longerEnd = longer.end();
+        int longerStart = longer.position();
+        int longerEnd = longer.end();
 
-        long shorterStart = shorter.position();
-        long shorterEnd = shorter.end();
+        int shorterStart = shorter.position();
+        int shorterEnd = shorter.end();
 
         if(shorterStart < longerStart || shorterEnd > longerEnd)
         {
@@ -56,7 +56,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 
         final String shorterAlt = shorter.alt();
 
-        int offset = (int) (shorterStart - longerStart);
+        int offset = shorterStart - longerStart;
         final String longerAlt = new String(longer.alt().getBytes(), offset, shorter.alt().length());
         return shorterAlt.equals(longerAlt);
     }
@@ -75,7 +75,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         while(iterator.hasNext())
         {
             final SageVariant entry = iterator.next();
-            long entryEnd = entry.position() + entry.ref().length() - 1;
+            int entryEnd = entry.position() + entry.ref().length() - 1;
             if(!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - mMaxDistance)
             {
                 iterator.remove();

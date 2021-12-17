@@ -114,7 +114,7 @@ public class ExtendNonDiploidTest
     }
 
     @NotNull
-    private static CombinedRegion createNonDiploidImplied(long start, long end, double copyNumber, double baf, SegmentSupport support)
+    private static CombinedRegion createNonDiploidImplied(int start, int end, double copyNumber, double baf, SegmentSupport support)
     {
         final CombinedRegion region = createCombinedRegion(start, end, copyNumber, baf, support);
         region.setCopyNumberMethod(CopyNumberMethod.NON_DIPLOID);

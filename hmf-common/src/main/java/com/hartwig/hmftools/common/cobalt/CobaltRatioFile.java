@@ -120,7 +120,7 @@ public final class CobaltRatioFile {
         final String[] values = ratioLine.split(DELIMITER);
 
         final String chromosome = values[0].trim();
-        final long position = Long.parseLong(values[1].trim());
+        final int position = Integer.parseInt(values[1].trim());
         final double initialReferenceGCRatio = Double.parseDouble(values[4].trim());
         final double initialReferenceGCDiploidRatio = Double.parseDouble(values[6].trim());
 

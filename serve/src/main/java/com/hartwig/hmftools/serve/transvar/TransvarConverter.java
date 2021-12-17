@@ -87,7 +87,7 @@ final class TransvarConverter {
 
         if (gdna.contains(HGVS_RANGE_INDICATOR)) {
             String[] gdnaParts = gdna.split(HGVS_RANGE_INDICATOR);
-            long position = Long.parseLong(gdnaParts[0]);
+            int position = Integer.parseInt(gdnaParts[0]);
             recordBuilder.gdnaPosition(position);
 
             TransvarAnnotation annotation;
@@ -214,7 +214,7 @@ final class TransvarConverter {
                 .candidateCodons(extractCandidateCodonsFromMessageField(messageField))
                 .build();
 
-        return recordBuilder.gdnaPosition(Long.parseLong(gdnaPos.toString())).annotation(snvAnnotation).build();
+        return recordBuilder.gdnaPosition(Integer.parseInt(gdnaPos.toString())).annotation(snvAnnotation).build();
     }
 
     private static boolean isFrameshift(@NotNull String messageField) {
@@ -222,10 +222,10 @@ final class TransvarConverter {
         return csqn != null && csqn.equals(CSQN_FRAMESHIFT);
     }
 
-    private static long extractLeftAlignedGDNAPositionFromMessageField(@NotNull String messageField) {
+    private static int extractLeftAlignedGDNAPositionFromMessageField(@NotNull String messageField) {
         // Looks like g.139399409_139399411delCAC
         String leftAlignedGDNA = extractValueFromMessageField(messageField, "left_align_gDNA");
-        return Long.parseLong(leftAlignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
+        return Integer.parseInt(leftAlignedGDNA.substring(2).split(HGVS_RANGE_INDICATOR)[0]);
     }
 
     @NotNull

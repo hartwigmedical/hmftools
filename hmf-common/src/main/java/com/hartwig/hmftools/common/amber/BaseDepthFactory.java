@@ -64,7 +64,7 @@ public class BaseDepthFactory
         {
             evidence.setReadDepth(evidence.readDepth() + 1);
 
-            int bafPosition = (int) evidence.position();
+            int bafPosition = evidence.position();
             int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
             if(readPosition != 0)
             {
@@ -109,7 +109,7 @@ public class BaseDepthFactory
     public static int getBaseQuality(@NotNull final GenomePosition position, @NotNull final SAMRecord samRecord)
     {
         // Get quality of base after del if necessary
-        for(int pos = (int) position.position(); pos <= samRecord.getAlignmentEnd(); pos++)
+        for(int pos = position.position(); pos <= samRecord.getAlignmentEnd(); pos++)
         {
             int readPosition = samRecord.getReadPositionAtReferencePosition(pos);
             if(readPosition != 0)

@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class GenomeRegions {
 
     @NotNull
-    public static GenomeRegion create(@NotNull final String chromosome, final long start, final long end) {
+    public static GenomeRegion create(@NotNull final String chromosome, final int start, final int end) {
         return ImmutableGenomeRegionImpl.builder().chromosome(chromosome).start(start).end(end).build();
     }
 
@@ -33,12 +33,12 @@ public class GenomeRegions {
         return regions;
     }
 
-    public void addRegion(final long start, final long end) {
+    public void addRegion(final int start, final int end) {
         addPosition(start);
         int i = indexOf(start);
 
         final GenomeRegion current = regions.get(i);
-        long extendedEnd = Math.max(current.end(), end);
+        int extendedEnd = Math.max(current.end(), end);
 
         while (i + 1 < regions.size()) {
             final GenomeRegion next = regions.get(i + 1);
@@ -54,7 +54,7 @@ public class GenomeRegions {
         regions.set(i, extendedRegion);
     }
 
-    public void addPosition(final long position) {
+    public void addPosition(final int position) {
         GenomeRegion prev = null;
 
         for (int i = 0; i < regions.size(); i++) {
@@ -105,7 +105,7 @@ public class GenomeRegions {
 
     }
 
-    private int indexOf(long position) {
+    private int indexOf(int position) {
         for (int i = regions.size() - 1; i >= 0; i--) {
             GenomeRegion region = regions.get(i);
             if (position >= region.start() && position <= region.end()) {

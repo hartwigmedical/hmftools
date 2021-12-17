@@ -15,7 +15,7 @@ public abstract class TransvarRecord {
     @NotNull
     public abstract String chromosome();
 
-    public abstract long gdnaPosition();
+    public abstract int gdnaPosition();
 
     public abstract boolean variantSpanMultipleExons();
 

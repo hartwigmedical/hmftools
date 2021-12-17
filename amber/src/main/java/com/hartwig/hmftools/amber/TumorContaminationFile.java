@@ -57,7 +57,7 @@ public final class TumorContaminationFile
 
         final BaseDepth template = ModifiableBaseDepth.create()
                 .setChromosome(values[0])
-                .setPosition(Long.parseLong(values[1]))
+                .setPosition(Integer.parseInt(values[1]))
                 .setRef(BaseDepth.Base.valueOf(values[2]))
                 .setAlt(BaseDepth.Base.valueOf(values[3]))
                 .setReadDepth(0)

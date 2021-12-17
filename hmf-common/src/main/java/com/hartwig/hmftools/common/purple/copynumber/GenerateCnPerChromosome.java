@@ -40,7 +40,7 @@ public final class GenerateCnPerChromosome
                     if(copyNumberChromosome.equals(chromosome) && arm.overlaps(purpleCopyNumber))
                     {
                         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
-                        long totalLengthSegment = purpleCopyNumber.bases();
+                        int totalLengthSegment = purpleCopyNumber.bases();
                         copyNumberArm += (copyNumber * totalLengthSegment) / arm.bases();
                     }
                 }
@@ -61,8 +61,8 @@ public final class GenerateCnPerChromosome
 
     private static Map<ChromosomeArm, GenomeRegion> determineArmRegions(final Chromosome chromosome, RefGenomeCoordinates refGenomeCoordinates)
     {
-        long centromerePos = refGenomeCoordinates.centromeres().get(chromosome);
-        long chrLength = refGenomeCoordinates.lengths().get(chromosome);
+        int centromerePos = refGenomeCoordinates.centromeres().get(chromosome);
+        int chrLength = refGenomeCoordinates.lengths().get(chromosome);
 
         Map<ChromosomeArm, GenomeRegion> chromosomeArmGenomeRegionMap = Maps.newHashMap();
 

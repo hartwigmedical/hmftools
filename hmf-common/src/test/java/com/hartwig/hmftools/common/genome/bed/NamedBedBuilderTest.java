@@ -62,7 +62,7 @@ public class NamedBedBuilderTest {
     }
 
     @NotNull
-    private static NamedBed create(final long start, final long end, final String name) {
+    private static NamedBed create(final int start, final int end, final String name) {
         return ImmutableNamedBed.builder().chromosome("1").start(start).end(end).name(name).build();
     }
 }

@@ -32,7 +32,7 @@ public class TumorBAFFactoryTest
     }
 
     @NotNull
-    private static ModifiableTumorBAF createDefault(@NotNull final String chromosome, final long position)
+    private static ModifiableTumorBAF createDefault(@NotNull final String chromosome, final int position)
     {
         final ModifiableBaseDepth normal = ModifiableBaseDepth.create()
                 .setChromosome(chromosome)

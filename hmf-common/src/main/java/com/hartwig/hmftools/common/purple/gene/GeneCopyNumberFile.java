@@ -138,8 +138,8 @@ public final class GeneCopyNumberFile
 
             final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                     .chromosome(values[chrIndex])
-                    .start(Long.parseLong(values[startIndex]))
-                    .end(Long.parseLong(values[endIndex]))
+                    .start(Integer.parseInt(values[startIndex]))
+                    .end(Integer.parseInt(values[endIndex]))
                     .geneName(values[geneIndex])
                     .minCopyNumber(Double.parseDouble(values[minCnIndex]))
                     .maxCopyNumber(Double.parseDouble(values[maxCnIndex]))

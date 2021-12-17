@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class GeneCopyNumberBuilderTest
 {
-
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1E-10;
 
@@ -105,30 +104,30 @@ public class GeneCopyNumberBuilderTest
         assertEquals(expectedMax, geneCopyNumber.maxCopyNumber(), EPSILON);
     }
 
-    private void addExon(long start, long end)
+    private void addExon(int start, int end)
     {
         victim.secondary(exon(start, end));
     }
 
-    private void addCopyNumber(long start, long end, double copyNumber)
+    private void addCopyNumber(int start, int end, double copyNumber)
     {
         victim.primary(createCopyNumber(start, end, copyNumber));
     }
 
     @NotNull
-    private static PurpleCopyNumber createCopyNumber(long start, long end, double copyNumber)
+    private static PurpleCopyNumber createCopyNumber(int start, int end, double copyNumber)
     {
         return PurpleTestUtils.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }
 
     @NotNull
-    private static HmfExonRegion exon(long start, long end)
+    private static HmfExonRegion exon(int start, int end)
     {
         return ImmutableHmfExonRegion.builder().exonRank(1).chromosome(CHROMOSOME).start(start).end(end).build();
     }
 
     @NotNull
-    private static HmfTranscriptRegion create(long start, long end)
+    private static HmfTranscriptRegion create(int start, int end)
     {
         return ImmutableHmfTranscriptRegion.builder()
                 .chromosome(CHROMOSOME)

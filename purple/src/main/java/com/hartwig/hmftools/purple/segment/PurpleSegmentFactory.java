@@ -134,16 +134,16 @@ public class PurpleSegmentFactory
     }
 
     @NotNull
-    private static ModifiablePurpleSegment create(@NotNull String chromosome, long start, @NotNull final List<PCFPosition> pcfPositions)
+    private static ModifiablePurpleSegment create(@NotNull String chromosome, int start, @NotNull final List<PCFPosition> pcfPositions)
     {
-        long minStart = pcfPositions.stream()
+        int minStart = pcfPositions.stream()
                 .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
-                .mapToLong(PCFPosition::minPosition)
+                .mapToInt(PCFPosition::minPosition)
                 .min()
                 .orElse(start);
-        long maxStart = pcfPositions.stream()
+        int maxStart = pcfPositions.stream()
                 .filter(x -> x.source() == PCFSource.TUMOR_RATIO)
-                .mapToLong(PCFPosition::maxPosition)
+                .mapToInt(PCFPosition::maxPosition)
                 .max()
                 .orElse(start);
 

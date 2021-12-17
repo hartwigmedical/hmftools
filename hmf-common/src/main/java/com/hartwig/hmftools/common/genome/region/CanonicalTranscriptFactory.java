@@ -39,11 +39,11 @@ public final class CanonicalTranscriptFactory {
     @VisibleForTesting
     @NotNull
     static CanonicalTranscript create(@NotNull HmfTranscriptRegion region) {
-        long codingStart = region.codingStart();
-        long codingEnd = region.codingEnd();
-        long exonStart = 0;
-        long exonEnd = 0;
-        long exonBases = 0;
+        int codingStart = region.codingStart();
+        int codingEnd = region.codingEnd();
+        int exonStart = 0;
+        int exonEnd = 0;
+        int exonBases = 0;
         int codingBases = 0;
         int codingExons = 0;
 

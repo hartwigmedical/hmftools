@@ -19,8 +19,8 @@ public class SamRecordSelector<P extends GenomePosition> extends PositionSelecto
 
     public void select(final SAMRecord record, final Consumer<P> handler)
     {
-        long startWithSoftClip = record.getAlignmentStart() - SamRecordUtils.leftSoftClip(record);
-        long endWithSoftClip = record.getAlignmentEnd() + SamRecordUtils.rightSoftClip(record);
+        int startWithSoftClip = record.getAlignmentStart() - SamRecordUtils.leftSoftClip(record);
+        int endWithSoftClip = record.getAlignmentEnd() + SamRecordUtils.rightSoftClip(record);
 
         super.select(startWithSoftClip, endWithSoftClip, handler);
     }

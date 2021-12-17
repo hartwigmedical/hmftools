@@ -109,7 +109,7 @@ public class DisruptedExonsTest
     }
 
     @NotNull
-    static Exon create(String chr, long start, long end, int rank)
+    static Exon create(String chr, int start, int end, int rank)
     {
         return ImmutableExon.builder()
                 .type(EXON_LOST)
@@ -125,7 +125,7 @@ public class DisruptedExonsTest
     }
 
     @NotNull
-    static Fusion create(int strandUp, long positionUp, int fusedExonUp, int strandDown, long positionDown, int fusedExonDown)
+    static Fusion create(int strandUp, int positionUp, int fusedExonUp, int strandDown, int positionDown, int fusedExonDown)
     {
         return ImmutableFusion.builder()
                 .sampleId("sample")

@@ -30,7 +30,6 @@ import org.junit.Test;
 
 public class StructuralVariantImpliedTest
 {
-
     private static final String CONTIG = "1";
     private static final Chromosome CHROMOSOME = HumanChromosome.fromString(CONTIG);
     private static final int PLOIDY = 1;
@@ -125,13 +124,13 @@ public class StructuralVariantImpliedTest
     }
 
     @NotNull
-    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF)
+    private static StructuralVariant sv(int start, int end, StructuralVariantType type, double startAF, double endAF)
     {
         return PurpleTestUtils.createStructuralVariant(CONTIG, start, CONTIG, end, type, startAF, endAF).build();
     }
 
     @NotNull
-    private static CombinedRegion copyNumber(long start, long end, double copyNumber, SegmentSupport support)
+    private static CombinedRegion copyNumber(int start, int end, double copyNumber, SegmentSupport support)
     {
         final FittedRegion region = createDefaultFittedRegion(CONTIG, start, end)
                 .tumorCopyNumber(copyNumber)

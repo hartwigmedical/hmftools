@@ -69,7 +69,7 @@ public class ExtendStructuralVariantTest
     }
 
     @NotNull
-    private static CombinedRegion createSVImplied(long start, long end, double copyNumber, double baf, SegmentSupport support)
+    private static CombinedRegion createSVImplied(int start, int end, double copyNumber, double baf, SegmentSupport support)
     {
         final CombinedRegion region = createCombinedRegion(start, end, copyNumber, baf, support);
         region.setCopyNumberMethod(CopyNumberMethod.STRUCTURAL_VARIANT);

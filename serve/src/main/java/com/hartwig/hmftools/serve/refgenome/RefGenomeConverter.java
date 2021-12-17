@@ -281,12 +281,12 @@ class RefGenomeConverter {
             }
 
             @Override
-            public long start() {
+            public int start() {
                 return liftedStart.position();
             }
 
             @Override
-            public long end() {
+            public int end() {
                 return liftedEnd.position();
             }
 

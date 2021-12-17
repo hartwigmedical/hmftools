@@ -41,7 +41,6 @@ import org.junit.Test;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class StructuralVariantPloidyFactoryTest
 {
-
     private static final int AVERAGE_READ_DEPTH = 100;
     private static final double AVERAGE_COPY_NUMBER = 2;
 
@@ -214,7 +213,7 @@ public class StructuralVariantPloidyFactoryTest
     }
 
     @NotNull
-    private static PurpleCopyNumber copyNumber(long start, long end, double copyNumber)
+    private static PurpleCopyNumber copyNumber(int start, int end, double copyNumber)
     {
         return PurpleTestUtils.createCopyNumber(CHROMOSOME, start, end, copyNumber).build();
     }

@@ -50,7 +50,7 @@ class ScalePosition
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
         for (final String contig : contigs)
         {
-            final List<Long> contigPositions = positions.stream()
+            final List<Integer> contigPositions = positions.stream()
                     .filter(x -> x.chromosome().equals(contig))
                     .map(GenomePosition::position)
                     .collect(Collectors.toList());

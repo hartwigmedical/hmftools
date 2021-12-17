@@ -208,7 +208,7 @@ public class CircosDataWriter
         {
             for (final Exon exon : exons)
             {
-                long position = exon.start() + (exon.end() - exon.start()) / 2;
+                int position = exon.start() + (exon.end() - exon.start()) / 2;
 
                 final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
                         .add(String.valueOf(position))
@@ -297,7 +297,7 @@ public class CircosDataWriter
             @NotNull final List<CopyNumberAlteration> segments)
     {
         final List<String> result = Lists.newArrayList();
-        long unadjustedSegments = segments.stream().filter(x -> !x.truncated()).count();
+        int unadjustedSegments = (int)segments.stream().filter(x -> !x.truncated()).count();
         if (unadjustedSegments <= circosConfig.MaxNumberOfDistanceLabels)
         {
             for (int i = 0; i < unadjustedSegment.size(); i++)
@@ -413,7 +413,7 @@ public class CircosDataWriter
     @NotNull
     private String scatterGlyph(boolean isStart, @NotNull final Segment segment, @NotNull final List<VisSvData> links)
     {
-        long location = isStart ? segment.start() : segment.end();
+        int location = isStart ? segment.start() : segment.end();
         final SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
         if (terminal != SegmentTerminal.NONE)
         {
@@ -434,7 +434,7 @@ public class CircosDataWriter
             int glyph_size, int frame)
     {
 
-        long location = isStart ? segment.start() : segment.end();
+        int location = isStart ? segment.start() : segment.end();
 
         return new StringJoiner(DELIMITER).add(circosContig(segment.chromosome()))
                 .add(String.valueOf(location))
@@ -573,19 +573,19 @@ public class CircosDataWriter
 
     @NotNull
     private List<String> createPositionText(int minDistance, @NotNull final List<AdjustedPosition> positions,
-            @NotNull final Function<Long, String> formatter)
+            @NotNull final Function<Integer,String> formatter)
     {
         final Set<String> result = Sets.newHashSet();
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
 
         for (final String contig : contigs)
         {
-            long currentPosition = 0;
+            int currentPosition = 0;
             for (final AdjustedPosition adjustedPosition : positions)
             {
                 if (adjustedPosition.chromosome().equals(contig))
                 {
-                    long newPosition = adjustedPosition.unadjustedPosition();
+                    int newPosition = adjustedPosition.unadjustedPosition();
 
                     if (newPosition - minDistance >= currentPosition)
                     {
@@ -630,7 +630,7 @@ public class CircosDataWriter
     }
 
     @NotNull
-    static String shorthand(long value)
+    static String shorthand(int value)
     {
         if (value < 100)
         {

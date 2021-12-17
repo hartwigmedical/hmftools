@@ -17,7 +17,7 @@ public interface VariantHotspot extends GenomePosition {
     @NotNull
     String alt();
 
-    default long end() {
+    default int end() {
         return position() + ref().length() - 1;
     }
 

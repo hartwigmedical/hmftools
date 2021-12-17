@@ -95,7 +95,7 @@ public class GCRatioNormalization
         }
 
         @Override
-        public long position()
+        public int position()
         {
             return GcProfile.start();
         }

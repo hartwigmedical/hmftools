@@ -144,7 +144,7 @@ public class AltContext implements VariantHotspot
     }
 
     @Override
-    public long position()
+    public int position()
     {
         return RefContext.position();
     }

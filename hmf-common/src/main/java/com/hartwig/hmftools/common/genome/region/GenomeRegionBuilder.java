@@ -8,10 +8,10 @@ public interface GenomeRegionBuilder<T extends GenomeRegion> {
     GenomeRegionBuilder<T> chromosome(@NotNull String chromosome);
 
     @NotNull
-    GenomeRegionBuilder<T> start(long start);
+    GenomeRegionBuilder<T> start(int start);
 
     @NotNull
-    GenomeRegionBuilder<T> end(long end);
+    GenomeRegionBuilder<T> end(int end);
 
     @NotNull
     T build();

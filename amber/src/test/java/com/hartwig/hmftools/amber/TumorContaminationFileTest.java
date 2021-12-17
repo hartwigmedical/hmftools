@@ -53,7 +53,7 @@ public class TumorContaminationFileTest
     {
         return ModifiableBaseDepth.create()
                 .setChromosome(chromosome)
-                .setPosition(random.nextLong())
+                .setPosition(random.nextInt())
                 .setRef(BaseDepth.Base.A)
                 .setAlt(BaseDepth.Base.T)
                 .setReadDepth(random.nextInt())

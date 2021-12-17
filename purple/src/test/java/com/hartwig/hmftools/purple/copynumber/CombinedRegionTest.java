@@ -15,7 +15,6 @@ import org.junit.Test;
 
 public class CombinedRegionTest
 {
-
     private static final double EPSILON = 1e-10;
 
     @Ignore
@@ -94,25 +93,25 @@ public class CombinedRegionTest
     }
 
     @NotNull
-    private static CombinedRegion createCombinedFittedRegion(long start, long end, double copyNumber)
+    private static CombinedRegion createCombinedFittedRegion(int start, int end, double copyNumber)
     {
         return new CombinedRegionImpl(create(start, end, copyNumber));
     }
 
     @NotNull
-    private static FittedRegion create(long start, long end, double copyNumber)
+    private static FittedRegion create(int start, int end, double copyNumber)
     {
         return create("1", start, end, 0, 0, copyNumber);
     }
 
     @NotNull
-    private static FittedRegion create(long start, long end, int bafCount, double baf, double copyNumber)
+    private static FittedRegion create(int start, int end, int bafCount, double baf, double copyNumber)
     {
         return create("1", start, end, bafCount, baf, copyNumber);
     }
 
     @NotNull
-    private static FittedRegion create(@NotNull String chromosome, long start, long end, int bafCount, double baf, double tumorCopyNumber)
+    private static FittedRegion create(@NotNull String chromosome, int start, int end, int bafCount, double baf, double tumorCopyNumber)
     {
         return createDefaultFittedRegion(chromosome, start, end)
                 .bafCount(bafCount)

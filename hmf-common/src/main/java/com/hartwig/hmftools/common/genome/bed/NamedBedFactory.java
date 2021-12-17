@@ -19,16 +19,16 @@ public final class NamedBedFactory {
 
     @NotNull
     public static List<NamedBed> codingRegions(boolean includeUTR, @NotNull final HmfTranscriptRegion transcript) {
-        final long startPosition = includeUTR ? transcript.start() : transcript.codingStart();
-        final long endPosition = includeUTR ? transcript.end() : transcript.codingEnd();
+        final int startPosition = includeUTR ? transcript.start() : transcript.codingStart();
+        final int endPosition = includeUTR ? transcript.end() : transcript.codingEnd();
 
         final List<NamedBed> result = Lists.newArrayList();
         final GenomeRegionsBuilder regionBuilder = new GenomeRegionsBuilder();
 
         for (int i = 0; i < transcript.exons().size(); i++) {
             final HmfExonRegion exon = transcript.exons().get(i);
-            long exonStart = i == 0 ? exon.start() : exon.start() - SPLICE_SIZE;
-            long exonEnd = i == transcript.exons().size() - 1 ? exon.end() : exon.end() + SPLICE_SIZE;
+            int exonStart = i == 0 ? exon.start() : exon.start() - SPLICE_SIZE;
+            int exonEnd = i == transcript.exons().size() - 1 ? exon.end() : exon.end() + SPLICE_SIZE;
 
             if (startPosition < exonEnd && endPosition > exonStart) {
                 regionBuilder.addRegion(exon.chromosome(), Math.max(startPosition, exonStart), Math.min(endPosition, exonEnd));

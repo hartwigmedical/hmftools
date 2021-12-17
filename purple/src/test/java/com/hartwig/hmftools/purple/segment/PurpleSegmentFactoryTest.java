@@ -24,7 +24,6 @@ import org.junit.Test;
 
 public class PurpleSegmentFactoryTest
 {
-
     private static final GenomePosition CHROMOSOME_LENGTH = GenomePositions.create("1", 10_000_000);
     private static final GenomePosition CHROMOSOME_CENTROMERE = GenomePositions.create("1", 5_000_001);
 
@@ -106,7 +105,7 @@ public class PurpleSegmentFactoryTest
         assertPurpleSegment(segments.get(2), CHROMOSOME_CENTROMERE.position(), CHROMOSOME_LENGTH.position(), true, CENTROMERE);
     }
 
-    private static void assertPurpleSegment(@NotNull final PurpleSegment victim, long start, long end, boolean ratioSupport,
+    private static void assertPurpleSegment(@NotNull final PurpleSegment victim, int start, int end, boolean ratioSupport,
             @NotNull final SegmentSupport support)
     {
         assertEquals(start, victim.start());
@@ -116,16 +115,16 @@ public class PurpleSegmentFactoryTest
     }
 
     @NotNull
-    private static ImmutableCluster.Builder cluster(long start)
+    private static ImmutableCluster.Builder cluster(int start)
     {
         return ImmutableCluster.builder().chromosome(CHROMOSOME_LENGTH.chromosome()).start(start).end(start);
     }
 
     @NotNull
-    private static ImmutableCluster.Builder cluster(long start, long... variants)
+    private static ImmutableCluster.Builder cluster(int start, int... variants)
     {
         ImmutableCluster.Builder builder = cluster(start);
-        for(long position : variants)
+        for(int position : variants)
         {
             builder.addVariants(variant(position));
         }
@@ -134,9 +133,9 @@ public class PurpleSegmentFactoryTest
     }
 
     @NotNull
-    private static ImmutableCluster.Builder addRatios(@NotNull ImmutableCluster.Builder builder, long... ratios)
+    private static ImmutableCluster.Builder addRatios(@NotNull ImmutableCluster.Builder builder, int... ratios)
     {
-        for(long position : ratios)
+        for(int position : ratios)
         {
             builder.addPcfPositions(ImmutablePCFPosition.builder()
                     .chromosome(CHROMOSOME_LENGTH.chromosome())
@@ -151,7 +150,7 @@ public class PurpleSegmentFactoryTest
     }
 
     @NotNull
-    private static SVSegment variant(long position)
+    private static SVSegment variant(int position)
     {
         return ImmutableSVSegment.builder()
                 .chromosome(CHROMOSOME_LENGTH.chromosome())

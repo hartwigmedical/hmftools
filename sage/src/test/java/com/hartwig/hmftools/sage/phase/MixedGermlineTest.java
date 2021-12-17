@@ -100,7 +100,7 @@ public class MixedGermlineTest
     }
 
     @NotNull
-    private static SageVariant createGermline(String chromosome, long position, @NotNull String ref, @NotNull String alt)
+    private static SageVariant createGermline(String chromosome, int position, @NotNull String ref, @NotNull String alt)
     {
         SageVariant result = create(chromosome, position, ref, alt);
         result.filters().add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
@@ -108,7 +108,7 @@ public class MixedGermlineTest
     }
 
     @NotNull
-    private static SageVariant create(String chromosome, long position, @NotNull String ref, @NotNull String alt)
+    private static SageVariant create(String chromosome, int position, @NotNull String ref, @NotNull String alt)
     {
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);

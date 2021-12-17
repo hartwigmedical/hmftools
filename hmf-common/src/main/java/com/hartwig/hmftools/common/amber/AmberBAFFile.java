@@ -115,7 +115,7 @@ public final class AmberBAFFile
         String[] values = line.split(DELIMITER);
         ImmutableAmberBAF.Builder builder = ImmutableAmberBAF.builder()
                 .chromosome(values[0])
-                .position(Long.parseLong(values[1]))
+                .position(Integer.parseInt(values[1]))
                 .tumorBAF(Double.parseDouble(values[2]))
                 .tumorDepth(0)
                 .normalBAF(0.5)

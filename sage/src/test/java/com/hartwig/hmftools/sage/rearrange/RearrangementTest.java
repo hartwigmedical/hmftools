@@ -218,7 +218,7 @@ public class RearrangementTest
         return builder.toString();
     }
 
-    private static void assertVariant(long position, String ref, String alt, VariantHotspot victim)
+    private static void assertVariant(int position, String ref, String alt, VariantHotspot victim)
     {
         assertEquals(position, victim.position());
         assertEquals(ref, victim.ref());

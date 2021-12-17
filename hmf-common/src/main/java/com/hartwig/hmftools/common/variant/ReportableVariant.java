@@ -24,7 +24,7 @@ public abstract class ReportableVariant implements Variant {
     public abstract String chromosome();
 
     @Override
-    public abstract long position();
+    public abstract int position();
 
     @NotNull
     @Value.Derived

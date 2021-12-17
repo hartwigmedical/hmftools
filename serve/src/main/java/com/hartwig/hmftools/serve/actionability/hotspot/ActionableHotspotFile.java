@@ -69,7 +69,7 @@ public final class ActionableHotspotFile {
         return ImmutableActionableHotspot.builder()
                 .from(ActionableFileFunctions.fromLine(values, 4))
                 .chromosome(values[0])
-                .position(Long.parseLong(values[1]))
+                .position(Integer.parseInt(values[1]))
                 .ref(values[2])
                 .alt(values[3])
                 .build();

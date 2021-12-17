@@ -14,31 +14,31 @@ class ScaleContig
 {
     private int maxAdjustedPosition;
     private final String contig;
-    private final Map<Long, Integer> positionMap;
+    private final Map<Integer, Integer> positionMap;
 
 
     @VisibleForTesting
-    ScaleContig(@NotNull final String contig, Map<Long, Integer> positionMap) {
+    ScaleContig(@NotNull final String contig, Map<Integer, Integer> positionMap) {
         this.contig = contig;
         this.positionMap = positionMap;
     }
 
-    ScaleContig(@NotNull final String contig, @NotNull final List<Long> positions)
+    ScaleContig(@NotNull final String contig, @NotNull final List<Integer> positions)
     {
         this.contig = contig;
         this.positionMap = Maps.newHashMap();
-        final List<Long> sortedDistinctPositions = positions.stream().sorted().distinct().collect(Collectors.toList());
+        final List<Integer> sortedDistinctPositions = positions.stream().sorted().distinct().collect(Collectors.toList());
 
         if (!sortedDistinctPositions.isEmpty())
         {
             int currentAdjustedPosition = 1;
-            long previousUnadjustedPositionPosition = sortedDistinctPositions.get(0);
+            int previousUnadjustedPositionPosition = sortedDistinctPositions.get(0);
             positionMap.put(previousUnadjustedPositionPosition, currentAdjustedPosition);
 
             for (int i = 1; i < sortedDistinctPositions.size(); i++)
             {
-                long currentUnadjustedPosition = sortedDistinctPositions.get(i);
-                long linearDistance = currentUnadjustedPosition - previousUnadjustedPositionPosition;
+                int currentUnadjustedPosition = sortedDistinctPositions.get(i);
+                int linearDistance = currentUnadjustedPosition - previousUnadjustedPositionPosition;
                 int logDistance = logDistance(linearDistance);
                 currentAdjustedPosition = currentAdjustedPosition + logDistance;
                 positionMap.put(currentUnadjustedPosition, currentAdjustedPosition);
@@ -68,7 +68,7 @@ class ScaleContig
 
     public void expand(double factor)
     {
-        for (Map.Entry<Long, Integer> entry : positionMap.entrySet())
+        for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
         {
             if (entry.getValue() > 1)
             {
@@ -79,7 +79,7 @@ class ScaleContig
         maxAdjustedPosition = (int) Math.round(factor * maxAdjustedPosition);
     }
 
-    public int scale(long position)
+    public int scale(int position)
     {
         if (!positionMap.containsKey(position))
         {
@@ -89,21 +89,21 @@ class ScaleContig
         return positionMap.get(position);
     }
 
-    public int interpolate(long value)
+    public int interpolate(int value)
     {
 
-        final Set<Long> keySet = positionMap.keySet();
+        final Set<Integer> keySet = positionMap.keySet();
 
         if (positionMap.containsKey(value))
         {
             return positionMap.get(value);
         }
 
-        long minValue = keySet.stream().mapToLong(x -> x).min().orElse(0);
-        long maxValue = keySet.stream().mapToLong(x -> x).max().orElse(0);
+        int minValue = keySet.stream().mapToInt(x -> x).min().orElse(0);
+        int maxValue = keySet.stream().mapToInt(x -> x).max().orElse(0);
 
-        long closestToStart = keySet.stream().filter(x -> x < value).mapToLong(x -> x).max().orElse(minValue);
-        long closestToEnd = keySet.stream().filter(x -> x > value).mapToLong(x -> x).min().orElse(maxValue);
+        int closestToStart = keySet.stream().filter(x -> x < value).mapToInt(x -> x).max().orElse(minValue);
+        int closestToEnd = keySet.stream().filter(x -> x > value).mapToInt(x -> x).min().orElse(maxValue);
         if (closestToStart == closestToEnd)
         {
             return positionMap.get(closestToStart);
@@ -117,7 +117,7 @@ class ScaleContig
         return closestIntToStart + (int) Math.floor(longDistanceProportion * Math.abs(closestIntToEnd - closestIntToStart));
     }
 
-    static int logDistance(long distance)
+    static int logDistance(int distance)
     {
         return (int) Math.floor(Math.pow(Math.log10(distance), 3)) + 10;
     }

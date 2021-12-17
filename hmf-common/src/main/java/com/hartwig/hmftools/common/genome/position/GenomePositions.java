@@ -18,7 +18,7 @@ public final class GenomePositions {
     }
 
     @NotNull
-    public static GenomePosition create(@NotNull final String chromosome, final long position) {
+    public static GenomePosition create(@NotNull final String chromosome, final int position) {
         return ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
     }
 

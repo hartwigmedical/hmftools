@@ -44,7 +44,7 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, long position, double ratio) {
+    public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, int position, double ratio) {
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosome)
                 .position(position)
@@ -56,7 +56,7 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutablePurpleCopyNumber.Builder createCopyNumber(@NotNull final String chromosome, final long start, final long end,
+    public static ImmutablePurpleCopyNumber.Builder createCopyNumber(@NotNull final String chromosome, final int start, final int end,
             final double copyNumber) {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(chromosome)
@@ -76,7 +76,7 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutableEnrichedRegion.Builder createObservedRegion(@NotNull final String chromosome, final long start, final long end) {
+    public static ImmutableEnrichedRegion.Builder createObservedRegion(@NotNull final String chromosome, final int start, final int end) {
         return ImmutableEnrichedRegion.builder()
                 .observedBAF(0.5)
                 .bafCount(1)
@@ -98,7 +98,7 @@ public class PurpleTestUtils
 
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
-            final long startPosition, @NotNull final String endChromosome, final long endPosition,
+            final int startPosition, @NotNull final String endChromosome, final int endPosition,
             @NotNull final StructuralVariantType type, double startVaf, double endVaf) {
         return ImmutableStructuralVariantImpl.builder()
                 .id(Strings.EMPTY)
@@ -116,7 +116,7 @@ public class PurpleTestUtils
 
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(@NotNull final String startChromosome,
-            final long startPosition, @NotNull final String endChromosome, final long endPosition,
+            final int startPosition, @NotNull final String endChromosome, final int endPosition,
             @NotNull final StructuralVariantType type) {
         return ImmutableStructuralVariantImpl.builder()
                 .id(Strings.EMPTY)
@@ -134,7 +134,7 @@ public class PurpleTestUtils
 
     @NotNull
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariantSingleBreakend(@NotNull final String startChromosome,
-            final long startPosition, double startVaf) {
+            final int startPosition, double startVaf) {
         return ImmutableStructuralVariantImpl.builder()
                 .id(Strings.EMPTY)
                 .insertSequence(Strings.EMPTY)
@@ -149,8 +149,8 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutableFittedRegion.Builder createDefaultFittedRegion(@NotNull final String chromosome, final long start,
-            final long end) {
+    public static ImmutableFittedRegion.Builder createDefaultFittedRegion(@NotNull final String chromosome, final int start,
+            final int end) {
         final ObservedRegion observedRegion = PurpleTestUtils.createObservedRegion(chromosome, start, end).build();
         return ImmutableFittedRegion.builder()
                 .from(observedRegion)
@@ -168,7 +168,7 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    public static ImmutableStructuralVariantLegImpl.Builder createStartLeg(@NotNull final String startChromosome, final long startPosition,
+    public static ImmutableStructuralVariantLegImpl.Builder createStartLeg(@NotNull final String startChromosome, final int startPosition,
             @NotNull final StructuralVariantType type) {
         final byte startOrientation;
         switch (type) {
@@ -193,7 +193,7 @@ public class PurpleTestUtils
     }
 
     @NotNull
-    private static ImmutableStructuralVariantLegImpl.Builder createEndLeg(@NotNull final String endChromosome, final long endPosition,
+    private static ImmutableStructuralVariantLegImpl.Builder createEndLeg(@NotNull final String endChromosome, final int endPosition,
             @NotNull final StructuralVariantType type) {
         final byte endOrientation;
         switch (type) {

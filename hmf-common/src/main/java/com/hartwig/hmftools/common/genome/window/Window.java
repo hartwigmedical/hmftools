@@ -8,11 +8,11 @@ public class Window {
         this.size = size;
     }
 
-    public long start(long position) {
+    public int start(int position) {
         return (position - 1) / size * size + 1;
     }
 
-    public long end(long position) {
+    public int end(int position) {
         return start(position) + size - 1;
     }
 }

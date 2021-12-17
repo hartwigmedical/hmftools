@@ -18,8 +18,6 @@ public class PanelSelector
         mIndex = 0;
     }
 
-    public boolean inPanel(long start, long end) { return inPanel((int)start, (int)end); }
-
     public boolean inPanel(int start, int end)
     {
         if(mRegions.isEmpty())

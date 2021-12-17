@@ -25,17 +25,17 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
     private final File mInputFile;
     private final SamReaderFactory mReaderFactory;
     private final String mChromosome;
-    private final long mChromosomeLength;
+    private final int mChromosomeLength;
     private final List<ReadCount> mResults;
     private final int mMinMappingQuality;
     private final Window mWindow;
 
-    private long mStart;
+    private int mStart;
     private int mCount;
 
     public ChromosomeReadCount(
             final File inputFile, final SamReaderFactory readerFactory, final String chromosome,
-            final long chromosomeLength, final int windowSize, final int minMappingQuality)
+            final int chromosomeLength, final int windowSize, final int minMappingQuality)
     {
         mInputFile = inputFile;
         mReaderFactory = readerFactory;
@@ -74,7 +74,7 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
     {
         addReadCount(mStart, mCount);
 
-        long lastWindowPosition = lastWindowPosition();
+        int lastWindowPosition = lastWindowPosition();
         if(mResults.get(mResults.size() - 1).position() < lastWindowPosition)
         {
             addReadCount(lastWindowPosition, -1);
@@ -88,7 +88,7 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
         if(!isEligible(record))
             return;
 
-        long window = windowPosition(record.getAlignmentStart());
+        int window = windowPosition(record.getAlignmentStart());
         if(mStart != window)
         {
             addReadCount(mStart, mCount);
@@ -99,7 +99,7 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
         mCount++;
     }
 
-    private void addReadCount(long position, int count)
+    private void addReadCount(int position, int count)
     {
         mResults.add(ImmutableReadCount.builder().chromosome(mChromosome).position(position).readCount(count).build());
     }
@@ -110,12 +110,12 @@ public class ChromosomeReadCount implements Callable<ChromosomeReadCount>
                 && !(record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary());
     }
 
-    private long lastWindowPosition()
+    private int lastWindowPosition()
     {
         return windowPosition(mChromosomeLength);
     }
 
-    private long windowPosition(long position)
+    private int windowPosition(int position)
     {
         return mWindow.start(position);
     }

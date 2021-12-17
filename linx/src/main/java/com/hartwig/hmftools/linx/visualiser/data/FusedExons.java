@@ -204,8 +204,8 @@ public class FusedExons
     @NotNull
     static GenomeRegion convertRegion(int strand, @NotNull final GenomeRegion reference, @NotNull final GenomeRegion region)
     {
-        final long start;
-        final long end;
+        final int start;
+        final int end;
         if (strand < 0)
         {
             start = reference.end() - region.end();

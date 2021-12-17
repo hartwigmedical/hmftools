@@ -47,7 +47,7 @@ public final class GCProfileFactory {
         final String[] values = ratioLine.split(RATIO_COLUMN_SEPARATOR);
 
         final String chromosome = values[CHROMOSOME_COLUMN].trim();
-        final long position = Long.parseLong(values[START_FIELD_COLUMN].trim());
+        final int position = Integer.parseInt(values[START_FIELD_COLUMN].trim());
         final double gcContent = Double.parseDouble(values[GC_CONTENT_COLUMN].trim());
         final double nonNPercentage = Double.parseDouble(values[NON_N_PERCENTAGE_COLUMN].trim());
         final double mappablePercentage = Double.parseDouble(values[MAPPABLE_PERCENTAGE_COLUMN].trim());

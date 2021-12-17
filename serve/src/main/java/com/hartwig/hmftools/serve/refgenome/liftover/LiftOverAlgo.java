@@ -6,5 +6,5 @@ import org.jetbrains.annotations.Nullable;
 public interface LiftOverAlgo {
 
     @Nullable
-    LiftOverResult liftOver(@NotNull String chromosome, long position);
+    LiftOverResult liftOver(@NotNull String chromosome, int position);
 }

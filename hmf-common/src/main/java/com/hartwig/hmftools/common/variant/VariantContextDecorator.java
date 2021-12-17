@@ -115,7 +115,7 @@ public class VariantContextDecorator implements GenomePosition
     }
 
     @Override
-    public long position()
+    public int position()
     {
         return mContext.getStart();
     }

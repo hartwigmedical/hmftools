@@ -85,13 +85,13 @@ public class PhasedInframeIndel extends BufferedPostProcessor
     }
 
     @NotNull
-    static Optional<HmfExonRegion> selectExon(@NotNull final TranscriptRegionSelector selector, long position)
+    static Optional<HmfExonRegion> selectExon(@NotNull final TranscriptRegionSelector selector, int position)
     {
         return selector.select(position).map(x -> selectExon(position, x));
     }
 
     @Nullable
-    static HmfExonRegion selectExon(final long position, @NotNull final HmfTranscriptRegion transcript)
+    static HmfExonRegion selectExon(final int position, @NotNull final HmfTranscriptRegion transcript)
     {
         for(HmfExonRegion exon : transcript.exons())
         {

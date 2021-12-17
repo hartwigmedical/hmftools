@@ -35,7 +35,7 @@ public interface StructuralVariantLeg extends GenomeInterval {
 
     int anchoringSupportDistance();
 
-    default long cnaPosition() {
+    default int cnaPosition() {
         return orientation() ==  -1 ? position() : position() + 1;
     }
 }

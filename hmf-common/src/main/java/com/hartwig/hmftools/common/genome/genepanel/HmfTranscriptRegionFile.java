@@ -158,10 +158,10 @@ public final class HmfTranscriptRegionFile
                         .build());
             }
 
-            long codingStart = values[codingStartIndex].isEmpty() || values[codingStartIndex].equals("NA")
+            int codingStart = values[codingStartIndex].isEmpty() || values[codingStartIndex].equals("NA")
                     ? 0 : Integer.parseInt(values[codingStartIndex]);
 
-            long codingEnd = values[codingEndIndex].isEmpty() || values[codingEndIndex].equals("NA")
+            int codingEnd = values[codingEndIndex].isEmpty() || values[codingEndIndex].equals("NA")
                     ? 0 : Integer.parseInt(values[codingEndIndex]);
 
             transcriptRegions.add(ImmutableHmfTranscriptRegion.builder()

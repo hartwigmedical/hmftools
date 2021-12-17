@@ -19,11 +19,11 @@ public class DiploidRegionBuilder implements Consumer<DiploidCount>
     private final double mCutoff;
     private final int mMaleSamples;
     private final int mFemaleSamples;
-    private long mTotalDiploidBases;
+    private int mTotalDiploidBases;
 
     private String mChromosome = "";
-    private long mStart = 0;
-    private long mEnd = 0;
+    private int mStart = 0;
+    private int mEnd = 0;
     private boolean mIsDiploid;
 
     public DiploidRegionBuilder(final double cutoff, final int femaleSamples, final int maleSamples)

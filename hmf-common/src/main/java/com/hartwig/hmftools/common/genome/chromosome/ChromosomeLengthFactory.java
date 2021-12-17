@@ -27,7 +27,7 @@ public final class ChromosomeLengthFactory {
             List<T> chromosomeList = position.get(chromosome);
             if (!chromosomeList.isEmpty()) {
                 T last = chromosomeList.get(chromosomeList.size() - 1);
-                final long max = last.position() + windowSize - 1;
+                final int max = last.position() + windowSize - 1;
                 final String contig = last.chromosome();
                 result.put(chromosome, ImmutableChromosomeLength.builder().chromosome(contig).length(max).build());
             }

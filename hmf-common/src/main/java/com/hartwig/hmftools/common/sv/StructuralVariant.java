@@ -41,7 +41,7 @@ public interface StructuralVariant {
     }
 
     @Nullable
-    default Long position(boolean isStart) {
+    default Integer position(boolean isStart) {
         if (isStart) {
             return start().position();
         } else {

@@ -70,8 +70,8 @@ public class FusedProteinDomains
     @NotNull
     private static GenomeRegion upGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon firstUpGene)
     {
-        final long upGeneLength = firstUpGene.geneEnd() - firstUpGene.geneStart();
-        final long upGeneStart = fusion.strandUp() < 0 ? fusion.positionUp() : fusion.positionUp() - upGeneLength;
+        final int upGeneLength = firstUpGene.geneEnd() - firstUpGene.geneStart();
+        final int upGeneStart = fusion.strandUp() < 0 ? fusion.positionUp() : fusion.positionUp() - upGeneLength;
 
         return GenomeRegions.create(fusion.chromosomeUp(), upGeneStart, upGeneStart + upGeneLength);
     }
@@ -79,8 +79,8 @@ public class FusedProteinDomains
     @NotNull
     private static GenomeRegion downGeneRegion(@NotNull final Fusion fusion, @NotNull final FusedExon finalDownExon)
     {
-        final long downGeneLength = finalDownExon.geneEnd() - finalDownExon.geneStart();
-        final long downGeneStart = fusion.strandDown() < 0 ? fusion.positionDown() - downGeneLength : fusion.positionDown();
+        final int downGeneLength = finalDownExon.geneEnd() - finalDownExon.geneStart();
+        final int downGeneStart = fusion.strandDown() < 0 ? fusion.positionDown() - downGeneLength : fusion.positionDown();
 
         return GenomeRegions.create(fusion.chromosomeDown(), downGeneStart, downGeneStart + downGeneLength);
     }

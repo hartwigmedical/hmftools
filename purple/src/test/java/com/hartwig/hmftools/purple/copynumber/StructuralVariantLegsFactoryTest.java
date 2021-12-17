@@ -24,7 +24,6 @@ import org.junit.Test;
 
 public class StructuralVariantLegsFactoryTest
 {
-
     @Test
     public void testReduce()
     {
@@ -154,19 +153,19 @@ public class StructuralVariantLegsFactoryTest
     }
 
     @NotNull
-    private static StructuralVariant sv(long start, long end, StructuralVariantType type, double startAF, double endAF)
+    private static StructuralVariant sv(int start, int end, StructuralVariantType type, double startAF, double endAF)
     {
         return PurpleTestUtils.createStructuralVariant(CHROMOSOME, start, CHROMOSOME, end, type, startAF, endAF).build();
     }
 
     @NotNull
-    private static StructuralVariant breakend(long start, double startAF)
+    private static StructuralVariant breakend(int start, double startAF)
     {
         return PurpleTestUtils.createStructuralVariantSingleBreakend(CHROMOSOME, start, startAF).build();
     }
 
     @NotNull
-    static StructuralVariantLeg createLeg(long position, int orientation, double vaf)
+    static StructuralVariantLeg createLeg(int position, int orientation, double vaf)
     {
         return createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)
@@ -175,7 +174,7 @@ public class StructuralVariantLegsFactoryTest
     }
 
     @NotNull
-    static StructuralVariantLeg createLeg(long position, int orientation, double vaf, int tumorVariantFragmentCount)
+    static StructuralVariantLeg createLeg(int position, int orientation, double vaf, int tumorVariantFragmentCount)
     {
         return createStartLeg(CHROMOSOME, position, StructuralVariantType.DEL)
                 .orientation((byte) orientation)

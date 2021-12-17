@@ -30,7 +30,7 @@ public abstract class VisSvData
 
     public abstract String startChromosome();
 
-    public abstract long startPosition();
+    public abstract int startPosition();
 
     public abstract int startOrientation();
 
@@ -38,7 +38,7 @@ public abstract class VisSvData
 
     public abstract String endChromosome();
 
-    public abstract long endPosition();
+    public abstract int endPosition();
 
     public abstract int endOrientation();
 
