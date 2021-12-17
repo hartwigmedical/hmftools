@@ -16,7 +16,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -27,9 +26,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
@@ -304,62 +301,37 @@ public class SampleData
         if(geneList.isEmpty())
             return exonList;
 
+        if(!cmd.hasOption(ENSEMBL_DATA_DIR))
+            return exonList;
+
         final String sampleId = cmd.getOptionValue(SAMPLE);
         final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
-        EnsemblDataCache geneTransCache = null;
-        Map<String, HmfTranscriptRegion> geneMap = null;
+        EnsemblDataCache geneTransCache = new EnsemblDataCache(cmd, refGenomeVersion);
+        geneTransCache.setRequiredData(true, false, false, true);
+        geneTransCache.load(false);
 
-        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        for(final String geneName : geneList)
         {
-            geneTransCache = new EnsemblDataCache(cmd, refGenomeVersion);
-            geneTransCache.setRequiredData(true, false, false, true);
-            geneTransCache.load(false);
-        }
-        else
-        {
-            geneMap = refGenomeVersion.is37() ? HmfGenePanelSupplier.allGenesMap37() : HmfGenePanelSupplier.allGenesMap38();
-        }
-
-        for (final String geneName : geneList)
-        {
-            if (currentExons.stream().anyMatch(x -> x.gene().equals(geneName)))
+            if(currentExons.stream().anyMatch(x -> x.gene().equals(geneName)))
                 continue;
 
             VIS_LOGGER.info("loading exon data for additional gene({})", geneName);
 
-            if(geneTransCache != null)
+            GeneData geneData = geneTransCache.getGeneDataByName(geneName);
+            TranscriptData transcriptData = geneData != null ? geneTransCache.getCanonicalTranscriptData(geneData.GeneId) : null;
+
+            if(transcriptData == null)
             {
-                GeneData geneData = geneTransCache.getGeneDataByName(geneName);
-                TranscriptData transcriptData = geneData != null ? geneTransCache.getTranscriptData(geneData.GeneId, "") : null;
-
-                if (transcriptData == null)
-                {
-                    VIS_LOGGER.warn("data not found for specified gene({})", geneName);
-                    continue;
-                }
-
-                for (Integer clusterId : allClusterIds)
-                {
-                    exonList.addAll(VisExons.extractExonList(sampleId, clusterId, geneData, transcriptData));
-                }
+                VIS_LOGGER.warn("data not found for specified gene({})", geneName);
+                continue;
             }
-            else
+
+            for(Integer clusterId : allClusterIds)
             {
-                HmfTranscriptRegion hmfGene = geneMap.get(geneName);
-                if (hmfGene == null)
-                {
-                    VIS_LOGGER.warn("data not found for specified gene({})", geneName);
-                }
-                else
-                {
-                    for (Integer clusterId : allClusterIds)
-                    {
-                        exonList.addAll(VisExons.extractExonList(sampleId, clusterId, hmfGene));
-                    }
-                }
+                exonList.addAll(VisExons.extractExonList(sampleId, clusterId, geneData, transcriptData));
             }
         }
 
