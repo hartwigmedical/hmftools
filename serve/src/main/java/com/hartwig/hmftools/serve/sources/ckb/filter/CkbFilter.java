@@ -23,8 +23,6 @@ public class CkbFilter {
     private final List<CkbFilterEntry> filters;
     @NotNull
     private final Set<CkbFilterEntry> usedFilters = Sets.newHashSet();
-    @NotNull
-    private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
 
     public CkbFilter(@NotNull final List<CkbFilterEntry> filters) {
         this.filters = filters;
@@ -72,8 +70,8 @@ public class CkbFilter {
     }
 
     private boolean include(@NotNull EventType type, @NotNull Variant variant) {
-        String gene = ckbEventAndGeneExtractor.extractGene(variant);
-        String event = ckbEventAndGeneExtractor.extractEvent(variant);
+        String gene = CkbEventAndGeneExtractor.extractGene(variant);
+        String event = CkbEventAndGeneExtractor.extractEvent(variant);
 
         for (CkbFilterEntry filterEntry : filters) {
             boolean filterMatches = isMatch(filterEntry, type, gene, event, variant.fullName());

@@ -56,13 +56,10 @@ public class CkbExtractor {
     private final EventExtractor eventExtractor;
     @NotNull
     private final ActionableEntryFactory actionableEntryFactory;
-    @NotNull
-    private final CkbEventAndGeneExtractor ckbEventAndGeneExtractor;
 
     public CkbExtractor(@NotNull final EventExtractor eventExtractor, @NotNull final ActionableEntryFactory actionableEntryFactory) {
         this.eventExtractor = eventExtractor;
         this.actionableEntryFactory = actionableEntryFactory;
-        this.ckbEventAndGeneExtractor = new CkbEventAndGeneExtractor();
     }
 
     @NotNull
@@ -75,8 +72,8 @@ public class CkbExtractor {
             assert !entry.variants().isEmpty();
 
             Variant variant = entry.variants().get(0);
-            String gene = ckbEventAndGeneExtractor.extractGene(variant);
-            String event = ckbEventAndGeneExtractor.extractEvent(variant);
+            String gene = CkbEventAndGeneExtractor.extractGene(variant);
+            String event = CkbEventAndGeneExtractor.extractEvent(variant);
 
             if (entry.type() == EventType.UNKNOWN) {
                 LOGGER.warn("No event type known for '{}' on '{}'", event, gene);

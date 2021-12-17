@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.serve.refgenome;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -48,48 +44,6 @@ public class RefGenomeConverterTest {
 
     private static final String TEST_GENE = "BRAF";
     private static final String TEST_CHROMOSOME = "chr1";
-
-    @Test
-    public void canMapNormalGenes() {
-        Map<String, String> v37 = Maps.newHashMap();
-        Map<String, String> v38 = Maps.newHashMap();
-
-        v37.put("X", "Y");
-        v38.put("Y", "X");
-
-        RefGenomeConverter converter37To38 = new RefGenomeConverter(RefGenomeVersion.V37,
-                RefGenomeVersion.V38,
-                RefGenomeResourceTestFactory.loadTestRefSequence38(),
-                new DummyLiftOver(),
-                new GeneNameMapping37to38(v37, v38, Sets.newHashSet()));
-
-        KnownCopyNumber copyNumber37 =
-                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("X").build();
-
-        Set<KnownCopyNumber> convertedCopyNumber38 = converter37To38.convertKnownCopyNumbers(Sets.newHashSet(copyNumber37));
-        assertEquals("Y", convertedCopyNumber38.iterator().next().gene());
-
-        RefGenomeConverter converter38To37 = new RefGenomeConverter(RefGenomeVersion.V38,
-                RefGenomeVersion.V37,
-                RefGenomeResourceTestFactory.loadTestRefSequence37(),
-                new DummyLiftOver(),
-                new GeneNameMapping37to38(v37, v38, Sets.newHashSet()));
-
-        KnownCopyNumber copyNumber38 =
-                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("Y").build();
-
-        Set<KnownCopyNumber> convertedCopyNumber37 = converter38To37.convertKnownCopyNumbers(Sets.newHashSet(copyNumber38));
-        assertEquals("X", convertedCopyNumber37.iterator().next().gene());
-    }
-
-    @Test
-    public void canSkipInvalidGeneMapping() {
-        RefGenomeConverter converter = build37To38NullConverter();
-        KnownCopyNumber copyNumber38 =
-                ImmutableKnownCopyNumber.builder().from(ServeTestFactory.createTestKnownCopyNumber()).gene("RYBP").build();
-
-        assertNotNull(converter.convertKnownCopyNumbers(Sets.newHashSet(copyNumber38)));
-    }
 
     @Test
     public void canConvertKnownHotspots() {
@@ -240,8 +194,7 @@ public class RefGenomeConverterTest {
         return new RefGenomeConverter(RefGenomeVersion.V37,
                 RefGenomeVersion.V38,
                 RefGenomeResourceTestFactory.loadTestRefSequence38(),
-                algo,
-                GeneNameMapping37to38.loadFromEmbeddedResource());
+                algo);
     }
 
     private static class DummyLiftOver implements LiftOverAlgo {

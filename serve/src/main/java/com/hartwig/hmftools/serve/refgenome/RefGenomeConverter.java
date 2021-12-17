@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.refgenome;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -53,17 +52,13 @@ class RefGenomeConverter {
     private final IndexedFastaSequenceFile targetSequence;
     @NotNull
     private final LiftOverAlgo liftOverAlgo;
-    @NotNull
-    private final GeneNameMapping37to38 geneNameMapping;
 
     public RefGenomeConverter(@NotNull final RefGenomeVersion sourceVersion, @NotNull final RefGenomeVersion targetVersion,
-            @NotNull final IndexedFastaSequenceFile targetSequence, @NotNull final LiftOverAlgo liftOverAlgo,
-            @NotNull final GeneNameMapping37to38 geneNameMapping) {
+            @NotNull final IndexedFastaSequenceFile targetSequence, @NotNull final LiftOverAlgo liftOverAlgo) {
         this.sourceVersion = sourceVersion;
         this.targetVersion = targetVersion;
         this.targetSequence = targetSequence;
         this.liftOverAlgo = liftOverAlgo;
-        this.geneNameMapping = geneNameMapping;
     }
 
     @NotNull
@@ -75,7 +70,6 @@ class RefGenomeConverter {
             if (lifted != null) {
                 convertedHotspots.add(ImmutableKnownHotspot.builder()
                         .from(hotspot)
-                        .gene(mapGene(hotspot.gene()))
                         .chromosome(lifted.chromosome())
                         .position(lifted.position())
                         .build());
@@ -133,7 +127,7 @@ class RefGenomeConverter {
     public Set<KnownCopyNumber> convertKnownCopyNumbers(@NotNull Set<KnownCopyNumber> copyNumbers) {
         Set<KnownCopyNumber> convertedCopyNumbers = Sets.newHashSet();
         for (KnownCopyNumber copyNumber : copyNumbers) {
-            convertedCopyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).gene(mapGene(copyNumber.gene())).build());
+            convertedCopyNumbers.add(ImmutableKnownCopyNumber.builder().from(copyNumber).build());
         }
 
         return convertedCopyNumbers;
@@ -143,11 +137,7 @@ class RefGenomeConverter {
     public Set<KnownFusionPair> convertKnownFusionPairs(@NotNull Set<KnownFusionPair> fusionPairs) {
         Set<KnownFusionPair> convertedFusionPairs = Sets.newHashSet();
         for (KnownFusionPair fusionPair : fusionPairs) {
-            convertedFusionPairs.add(ImmutableKnownFusionPair.builder()
-                    .from(fusionPair)
-                    .geneUp(mapGene(fusionPair.geneUp()))
-                    .geneDown(mapGene(fusionPair.geneDown()))
-                    .build());
+            convertedFusionPairs.add(ImmutableKnownFusionPair.builder().from(fusionPair).build());
         }
 
         return convertedFusionPairs;
@@ -177,7 +167,6 @@ class RefGenomeConverter {
             if (lifted != null) {
                 convertedActionableRanges.add(ImmutableActionableRange.builder()
                         .from(actionableRange)
-                        .gene(lifted.gene())
                         .chromosome(lifted.chromosome())
                         .start(lifted.start())
                         .end(lifted.end())
@@ -191,10 +180,7 @@ class RefGenomeConverter {
     public Set<ActionableGene> convertActionableGenes(@NotNull Set<ActionableGene> actionableGenes) {
         Set<ActionableGene> convertedActionableGenes = Sets.newHashSet();
         for (ActionableGene actionableGene : actionableGenes) {
-            convertedActionableGenes.add(ImmutableActionableGene.builder()
-                    .from(actionableGene)
-                    .gene(mapGene(actionableGene.gene()))
-                    .build());
+            convertedActionableGenes.add(ImmutableActionableGene.builder().from(actionableGene).build());
         }
         return convertedActionableGenes;
     }
@@ -203,11 +189,7 @@ class RefGenomeConverter {
     public Set<ActionableFusion> convertActionableFusions(@NotNull Set<ActionableFusion> actionableFusions) {
         Set<ActionableFusion> convertedActionableFusions = Sets.newHashSet();
         for (ActionableFusion actionableFusion : actionableFusions) {
-            convertedActionableFusions.add(ImmutableActionableFusion.builder()
-                    .from(actionableFusion)
-                    .geneUp(mapGene(actionableFusion.geneUp()))
-                    .geneDown(mapGene(actionableFusion.geneDown()))
-                    .build());
+            convertedActionableFusions.add(ImmutableActionableFusion.builder().from(actionableFusion).build());
         }
         return convertedActionableFusions;
     }
@@ -254,7 +236,7 @@ class RefGenomeConverter {
             @NotNull
             @Override
             public String gene() {
-                return mapGene(annotation.gene());
+                return annotation.gene();
             }
 
             @NotNull
@@ -307,39 +289,6 @@ class RefGenomeConverter {
                     lifted.chromosome(),
                     object);
         }
-    }
-
-    @NotNull
-    private String mapGene(@NotNull String gene) {
-        String mappedGene;
-        if (sourceVersion == targetVersion) {
-            mappedGene = gene;
-        } else if (sourceVersion == RefGenomeVersion.V37 && targetVersion == RefGenomeVersion.V38) {
-            if (geneNameMapping.isValidV37Gene(gene)) {
-                mappedGene = geneNameMapping.v38Gene(gene);
-            } else {
-                LOGGER.warn(" Not a valid 37 gene encountered during liftover: '{}'!", gene);
-                mappedGene = gene;
-            }
-        } else if (sourceVersion == RefGenomeVersion.V38 && targetVersion == RefGenomeVersion.V37) {
-            if (geneNameMapping.isValidV38Gene(gene)) {
-                mappedGene = geneNameMapping.v37Gene(gene);
-            } else {
-                LOGGER.warn(" Not a valid 38 gene encountered during liftover: '{}'!", gene);
-                mappedGene = gene;
-            }
-        } else {
-            throw new IllegalStateException("Cannot map genes from ref genome version " + sourceVersion + " to " + targetVersion);
-        }
-
-        if (!mappedGene.equals(gene)) {
-            LOGGER.debug(" Mapped gene '{}' for {} to '{}' on {}", gene, sourceVersion, mappedGene, targetVersion);
-            if (mappedGene.equals("NA")) {
-                LOGGER.warn(" Gene '{}' mapped to 'NA' from {} to {}", gene, sourceVersion, targetVersion);
-            }
-        }
-
-        return mappedGene;
     }
 
     @NotNull

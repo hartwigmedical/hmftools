@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
@@ -27,13 +26,10 @@ public class RefGenomeManager {
     @NotNull
     private final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap;
     @NotNull
-    private final GeneNameMapping37to38 geneNameMapping;
-    @NotNull
     private final ConversionFilter conversionFilter;
 
     RefGenomeManager(@NotNull final Map<RefGenomeVersion, RefGenomeResource> refGenomeResourceMap) {
         this.refGenomeResourceMap = refGenomeResourceMap;
-        this.geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
         this.conversionFilter = new ConversionFilter();
     }
 
@@ -81,7 +77,7 @@ public class RefGenomeManager {
         String chainFromSourceToTarget = sourceResource.chainToOtherRefGenomeMap().get(targetVersion);
 
         LiftOverAlgo liftOverAlgo = UCSCLiftOver.fromChainFile(chainFromSourceToTarget, targetVersion);
-        RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverAlgo, geneNameMapping);
+        RefGenomeConverter converter = new RefGenomeConverter(sourceVersion, targetVersion, targetSequence, liftOverAlgo);
         ExtractionResult filteredExtraction = conversionFilter.filter(extraction);
 
         return ImmutableExtractionResult.builder()

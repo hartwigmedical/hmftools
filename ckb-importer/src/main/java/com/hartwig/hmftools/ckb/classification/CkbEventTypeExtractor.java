@@ -14,7 +14,6 @@ public final class CkbEventTypeExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CkbEventTypeExtractor.class);
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(CkbClassificationConfig.build());
-    private static final CkbEventAndGeneExtractor EXTRACTOR = new CkbEventAndGeneExtractor();
 
     private CkbEventTypeExtractor() {
     }
@@ -27,8 +26,8 @@ public final class CkbEventTypeExtractor {
         } else if (variantCount == 1) {
             Variant variant = entry.variants().get(0);
 
-            String gene = EXTRACTOR.extractGene(variant);
-            String event = EXTRACTOR.extractEvent(variant);
+            String gene = CkbEventAndGeneExtractor.extractGene(variant);
+            String event = CkbEventAndGeneExtractor.extractEvent(variant);
 
             return CLASSIFIER.determineType(gene, event);
         } else {
