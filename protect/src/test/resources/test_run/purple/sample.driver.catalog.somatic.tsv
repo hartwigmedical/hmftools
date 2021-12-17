@@ -1,2 +1,2 @@
-chromosome	chromosomeBand	gene	driver	category	likelihoodMethod	driverLikelihood	NA	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
-13	q12.2	CDX2	AMP	ONCO	AMP	1.0000	0.0000	0	0	1	1	0	false	10.1	12.345
+chromosome	chromosomeBand	gene	transcript	isCanonical	driver	category	likelihoodMethod	driverLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
+13	q12.2	CDX2	ENST	true	AMP	ONCO	AMP	1.0000	0	0	1	1	0	false	10.1	12.345
