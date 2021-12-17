@@ -69,7 +69,7 @@ public final class ServeLocalConfigProvider {
             builder.missingDoidsMappingTsv(baseDir + "serve/curation/missing_doids_mapping.tsv");
             builder.ensemblDataDir(baseDir + "repos/common-resources-public/ensembl_data_cache/37");
             builder.driverGene37Tsv(baseDir + "repos/common-resources-public/gene_panel/37/DriverGenePanel.37.tsv");
-            builder.driverGene38Tsv(baseDir + "repos/common-resources-public/gene_panel/37/DriverGenePanel.38.tsv");
+            builder.driverGene38Tsv(baseDir + "repos/common-resources-public/gene_panel/38/DriverGenePanel.38.tsv");
             builder.knownFusion37File(baseDir + "repos/common-resources-public/fusions/37/known_fusion_data.37.csv");
             builder.knownFusion38File(baseDir + "repos/common-resources-public/fusions/38/known_fusion_data.38.csv");
             builder.refGenome37FastaFile(baseDir + "refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
