@@ -134,7 +134,6 @@ public class HotspotMatcher implements EventMatcher {
     private static boolean isValidSingleCodonMutation(@NotNull String event) {
         // Single codon mutations are expected to look something like V600E (1 char - N digits - M chars (1 char, or "del" or "dup"))
 
-        // TODO This logic has to be moved to the protein annotation extractor
         //Make all codons a single letter codon
         String reformatted = AminoAcids.forceSingleLetterProteinAnnotation(event);
 
