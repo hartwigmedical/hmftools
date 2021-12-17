@@ -48,7 +48,7 @@ public class ActinClassificationConfig {
     @NotNull
     public static EventClassifierConfig build() {
         return ImmutableEventClassifierConfig.builder()
-                .proteinAnnotationExtractor(new CkbProteinAnnotationExtractor())
+                .proteinAnnotationExtractor(new ActinProteinAnnotationExtractor())
                 .exonIdentifiers(EXON_IDENTIFIERS)
                 .exonKeywords(EXON_KEYWORDS)
                 .exonBlacklistKeyPhrases(EXON_BLACKLIST_KEY_PHRASES)

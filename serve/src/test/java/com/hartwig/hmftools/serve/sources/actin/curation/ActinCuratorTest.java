@@ -22,7 +22,7 @@ public class ActinCuratorTest {
         ActinEntry actinEntry = ImmutableActinEntry.builder()
                 .trial("trial1")
                 .rule(ActinRule.ACTIVATION_OF_GENE_X)
-                .parameters(Lists.newArrayList("RABAC1"))
+                .parameters(Lists.newArrayList("MRE11A"))
                 .build();
 
 
