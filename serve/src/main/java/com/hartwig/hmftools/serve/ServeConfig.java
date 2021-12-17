@@ -207,6 +207,7 @@ public interface ServeConfig {
                 .ckbFilterTsv(useCkb ? nonOptionalFile(cmd, CKB_FILTER_TSV) : NOT_APPLICABLE)
                 .useActin(useActin)
                 .actinTrialTsv(useActin ? nonOptionalFile(cmd, ACTIN_TRIAL_TSV) : NOT_APPLICABLE)
+                .actinFilterTsv(useActin ? nonOptionalFile(cmd, ACTIN_FILTER_TSV) : NOT_APPLICABLE)
                 .useDocm(useDocm)
                 .docmTsv(useDocm ? nonOptionalFile(cmd, DOCM_TSV) : NOT_APPLICABLE)
                 .useHartwigCohort(useHartwigCohort)
