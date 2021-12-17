@@ -61,8 +61,7 @@ public class HotspotMatcher implements EventMatcher {
         } else if (event.endsWith(HGVS_INSERTION)) {
             int mutationLength = extractComplexInsertionLength(event);
             return mutationLength > 0 && (maxLength == null || mutationLength <= maxLength);
-        }
-        else if (event.startsWith(HGVS_START_LOST)) {
+        } else if (event.startsWith(HGVS_START_LOST)) {
             return true;
         } else {
             return isValidSingleCodonMutation(event);
@@ -135,25 +134,26 @@ public class HotspotMatcher implements EventMatcher {
     private static boolean isValidSingleCodonMutation(@NotNull String event) {
         // Single codon mutations are expected to look something like V600E (1 char - N digits - M chars (1 char, or "del" or "dup"))
 
-        //Make all codongs a single letter codon
-        event = AminoAcids.forceSingleLetterProteinAnnotation(event);
+        // TODO This logic has to be moved to the protein annotation extractor
+        //Make all codons a single letter codon
+        String reformatted = AminoAcids.forceSingleLetterProteinAnnotation(event);
 
-        if (event.length() < 3) {
+        if (reformatted.length() < 3) {
             return false;
         }
 
-        if (!Character.isLetter(event.charAt(0))) {
+        if (!Character.isLetter(reformatted.charAt(0))) {
             return false;
         }
 
-        if (!Character.isDigit(event.charAt(1))) {
+        if (!Character.isDigit(reformatted.charAt(1))) {
             return false;
         }
 
-        boolean haveObservedNonDigit = !Character.isDigit(event.charAt(2));
+        boolean haveObservedNonDigit = !Character.isDigit(reformatted.charAt(2));
         int firstNotDigit = haveObservedNonDigit ? 2 : -1;
-        for (int i = 3; i < event.length(); i++) {
-            char charToEvaluate = event.charAt(i);
+        for (int i = 3; i < reformatted.length(); i++) {
+            char charToEvaluate = reformatted.charAt(i);
             if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
                 return false;
             }
@@ -169,7 +169,7 @@ public class HotspotMatcher implements EventMatcher {
             return false;
         }
 
-        String newAminoAcid = event.substring(firstNotDigit);
+        String newAminoAcid = reformatted.substring(firstNotDigit);
         // X is a wildcard which should become a codon range rather than a single codon mutation.
         return !newAminoAcid.equals("X") && (newAminoAcid.length() == 1 || newAminoAcid.equals(HGVS_DELETION) || newAminoAcid.equals(
                 HGVS_DUPLICATION));
