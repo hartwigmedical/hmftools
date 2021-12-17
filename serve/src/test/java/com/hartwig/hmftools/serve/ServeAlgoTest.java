@@ -25,6 +25,8 @@ public class ServeAlgoTest {
     private static final String HARTWIG_CURATED_TSV = Resources.getResource("hartwig/example.tsv").getPath();
     private static final String HARTWIG_COHORT_TSV = Resources.getResource("hartwig/example.tsv").getPath();
 
+    private static final String ENSEMBL_DATA_DIR = Resources.getResource("ensembl_data_cache").getPath();
+
     private static final String REF_GENOME_37_FASTA_FILE = Resources.getResource("refgenome/v37/ref.fasta").getPath();
     private static final String REF_GENOME_38_FASTA_FILE = Resources.getResource("refgenome/v38/ref.fasta").getPath();
     private static final String REF_GENOME_37_TO_38_CHAIN = Resources.getResource("refgenome/liftover/V37ToV38.over.chain").getPath();
@@ -32,7 +34,6 @@ public class ServeAlgoTest {
 
     private static final String DRIVER_GENE_37_TSV = Resources.getResource("driver_gene_panel/driver_gene_panel.37.tsv").getPath();
     private static final String DRIVER_GENE_38_TSV = Resources.getResource("driver_gene_panel/driver_gene_panel.38.tsv").getPath();
-
     private static final String KNOWN_FUSION_37_FILE = Resources.getResource("known_fusion_data/known_fusion_data.37.csv").getPath();
     private static final String KNOWN_FUSION_38_FILE = Resources.getResource("known_fusion_data/known_fusion_data.38.csv").getPath();
 
@@ -55,6 +56,7 @@ public class ServeAlgoTest {
                 .hartwigCohortTsv(HARTWIG_COHORT_TSV)
                 .useHartwigCurated(true)
                 .hartwigCuratedTsv(HARTWIG_CURATED_TSV)
+                .ensemblDataDir(ENSEMBL_DATA_DIR)
                 .refGenome37FastaFile(REF_GENOME_37_FASTA_FILE)
                 .refGenome38FastaFile(REF_GENOME_38_FASTA_FILE)
                 .refGenome37To38Chain(REF_GENOME_37_TO_38_CHAIN)

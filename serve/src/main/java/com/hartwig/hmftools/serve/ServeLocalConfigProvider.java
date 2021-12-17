@@ -44,6 +44,7 @@ public final class ServeLocalConfigProvider {
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
             builder.missingDoidsMappingTsv("/data/resources/custom/serve/public_missing_doids_mapping.tsv");
+            builder.ensemblDataDir("/data/resources/public/ensembl_data_cache/37");
             builder.driverGene37Tsv("/data/resources/public/gene_panel/37/DriverGenePanel.37.tsv");
             builder.driverGene38Tsv("/data/resources/public/gene_panel/38/DriverGenePanel.38.tsv");
             builder.knownFusion37File("/data/resources/public/fusions/37/known_fusion_data.37.csv");
@@ -66,10 +67,11 @@ public final class ServeLocalConfigProvider {
             
             builder.outputDir(baseDir + "tmp/serve");
             builder.missingDoidsMappingTsv(baseDir + "serve/curation/missing_doids_mapping.tsv");
-            builder.driverGene37Tsv(baseDir + "driver_gene_panel/DriverGenePanel.37.tsv");
-            builder.driverGene38Tsv(baseDir + "driver_gene_panel/DriverGenePanel.38.tsv");
-            builder.knownFusion37File(baseDir + "fusions/known_fusion_data.37.csv");
-            builder.knownFusion38File(baseDir + "fusions/known_fusion_data.38.csv");
+            builder.ensemblDataDir(baseDir + "repos/common-resources-public/ensembl_data_cache/37");
+            builder.driverGene37Tsv(baseDir + "repos/common-resources-public/gene_panel/37/DriverGenePanel.37.tsv");
+            builder.driverGene38Tsv(baseDir + "repos/common-resources-public/gene_panel/37/DriverGenePanel.38.tsv");
+            builder.knownFusion37File(baseDir + "repos/common-resources-public/fusions/37/known_fusion_data.37.csv");
+            builder.knownFusion38File(baseDir + "repos/common-resources-public/fusions/38/known_fusion_data.38.csv");
             builder.refGenome37FastaFile(baseDir + "refgenomes/grch37/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(baseDir + "refgenomes/grch38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
             builder.refGenome37To38Chain(baseDir + "refgenomes/liftover/hg19ToHg38.over.chain");
