@@ -105,7 +105,7 @@ public final class RefGenomeManagerFactory {
         for (List<GeneData> genesPerChromosome : ensemblDataCache.getChrGeneDataMap().values()) {
             geneCount += genesPerChromosome.size();
         }
-        LOGGER.info("  Loaded ensembl data cache with {} genes", geneCount);
+        LOGGER.info("  Loaded entries for {} genes", geneCount);
         return ensemblDataCache;
     }
 }
