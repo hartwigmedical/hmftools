@@ -14,6 +14,9 @@ public class CurationFactory {
 
     static {
         // CKB uses "genes" to model evidence on characteristics. We map this away from genes.
+        VARIANT_MAPPINGS.put(new CurationEntry("HRD", "positive"), new CurationEntry(CkbConstants.NO_GENE, "HRD pos"));
+        VARIANT_MAPPINGS.put(new CurationEntry("HRD", "negative"), new CurationEntry(CkbConstants.NO_GENE, "HRD neg"));
+        VARIANT_MAPPINGS.put(new CurationEntry("MSI", "high"), new CurationEntry(CkbConstants.NO_GENE, "MSI high"));
         VARIANT_MAPPINGS.put(new CurationEntry("MSI", "high"), new CurationEntry(CkbConstants.NO_GENE, "MSI high"));
         VARIANT_MAPPINGS.put(new CurationEntry("MSI", "low"), new CurationEntry(CkbConstants.NO_GENE, "MSI low"));
         VARIANT_MAPPINGS.put(new CurationEntry("MSI", "negative"), new CurationEntry(CkbConstants.NO_GENE, "MSI neg"));

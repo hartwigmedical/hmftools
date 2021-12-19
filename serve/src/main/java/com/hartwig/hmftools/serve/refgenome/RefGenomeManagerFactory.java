@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -100,7 +101,11 @@ public final class RefGenomeManagerFactory {
             throws IOException {
         LOGGER.info(" Reading ensembl data cache from {}", ensemblDataDir);
         EnsemblDataCache ensemblDataCache = EnsemblDataCacheLoader.load(ensemblDataDir, refGenomeVersion);
-        LOGGER.info("  Loaded ensembl data cache from {}", ensemblDataCache);
+        int geneCount = 0;
+        for (List<GeneData> genesPerChromosome : ensemblDataCache.getChrGeneDataMap().values()) {
+            geneCount += genesPerChromosome.size();
+        }
+        LOGGER.info("  Loaded ensembl data cache with {} genes", geneCount);
         return ensemblDataCache;
     }
 }

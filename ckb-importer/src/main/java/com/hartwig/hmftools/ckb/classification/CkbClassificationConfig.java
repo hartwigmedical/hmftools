@@ -232,7 +232,7 @@ public class CkbClassificationConfig {
 
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
-        return Sets.newHashSet();
+        return Sets.newHashSet("HRD pos");
     }
 
     @NotNull
