@@ -78,11 +78,11 @@
         <patient-db.version>3.64</patient-db.version>
         <patient-reporter.version>7.24</patient-reporter.version>
         <pave.version>1.0</pave.version>
-        <protect.version>1.8</protect.version>
+        <protect.version>1.9</protect.version>
         <purple.version>3.2</purple.version>
         <sage.version>3.0</sage.version>
         <sigs.version>1.0</sigs.version>
-        <serve.version>1.7</serve.version>
+        <serve.version>1.8</serve.version>
         <sv-tools.version>1.0</sv-tools.version>
         <telo.version>1.0</telo.version>
         <vicc-importer.version>1.1</vicc-importer.version>
