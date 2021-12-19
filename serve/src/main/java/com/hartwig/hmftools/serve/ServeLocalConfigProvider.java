@@ -44,7 +44,8 @@ public final class ServeLocalConfigProvider {
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
             builder.missingDoidsMappingTsv("/data/resources/custom/serve/public_missing_doids_mapping.tsv");
-            builder.ensemblDataDir("/data/resources/public/ensembl_data_cache/37");
+            builder.ensemblDataDir37("/data/resources/public/ensembl_data_cache/37");
+            builder.ensemblDataDir38("/data/resources/public/ensembl_data_cache/38");
             builder.driverGene37Tsv("/data/resources/public/gene_panel/37/DriverGenePanel.37.tsv");
             builder.driverGene38Tsv("/data/resources/public/gene_panel/38/DriverGenePanel.38.tsv");
             builder.knownFusion37File("/data/resources/public/fusions/37/known_fusion_data.37.csv");
@@ -67,7 +68,9 @@ public final class ServeLocalConfigProvider {
             
             builder.outputDir(baseDir + "tmp/serve");
             builder.missingDoidsMappingTsv(baseDir + "serve/curation/missing_doids_mapping.tsv");
-            builder.ensemblDataDir(baseDir + "repos/common-resources-public/ensembl_data_cache/37");
+
+            builder.ensemblDataDir37(baseDir + "repos/common-resources-public/ensembl_data_cache/37");
+            builder.ensemblDataDir38(baseDir + "repos/common-resources-public/ensembl_data_cache/38");
             builder.driverGene37Tsv(baseDir + "repos/common-resources-public/gene_panel/37/DriverGenePanel.37.tsv");
             builder.driverGene38Tsv(baseDir + "repos/common-resources-public/gene_panel/38/DriverGenePanel.38.tsv");
             builder.knownFusion37File(baseDir + "repos/common-resources-public/fusions/37/known_fusion_data.37.csv");

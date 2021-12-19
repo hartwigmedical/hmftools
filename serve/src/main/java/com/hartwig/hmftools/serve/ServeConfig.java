@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.commons.cli.CommandLine;
@@ -49,7 +48,8 @@ public interface ServeConfig {
     String MISSING_DOIDS_MAPPING_TSV = "missing_doids_mapping_tsv";
 
     // Additional config for knowledge generation
-    String ENSEMBL_DATA_DIR = EnsemblDataCache.ENSEMBL_DATA_DIR;
+    String ENSEMBL_DATA_DIR_37 = "ensembl_data_dir_37";
+    String ENSEMBL_DATA_DIR_38 = "ensembl_data_dir_38";
     String REF_GENOME_37_FASTA_FILE = "ref_genome_37_fasta_file";
     String REF_GENOME_38_FASTA_FILE = "ref_genome_38_fasta_file";
     String REF_GENOME_37_TO_38_CHAIN = "ref_genome_37_to_38_chain";
@@ -90,7 +90,8 @@ public interface ServeConfig {
 
         options.addOption(MISSING_DOIDS_MAPPING_TSV, true, "Path to the mapping TSV containing entries for missing DOIDs");
 
-        options.addOption(ENSEMBL_DATA_DIR, true, EnsemblDataCache.ENSEMBL_DATA_DIR_CFG);
+        options.addOption(ENSEMBL_DATA_DIR_37, true, "Ensembl data file directory for ref genome V37");
+        options.addOption(ENSEMBL_DATA_DIR_38, true, "Ensembl data file directory for ref genome V38");
         options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
         options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
         options.addOption(REF_GENOME_37_TO_38_CHAIN, true, "Chain file to lift over ref genome V37 to V38");
@@ -153,10 +154,13 @@ public interface ServeConfig {
     String hartwigCuratedTsv();
 
     @NotNull
-    String ensemblDataDir();
+    String missingDoidsMappingTsv();
 
     @NotNull
-    String missingDoidsMappingTsv();
+    String ensemblDataDir37();
+
+    @NotNull
+    String ensemblDataDir38();
 
     @NotNull
     String refGenome37FastaFile();
@@ -221,7 +225,8 @@ public interface ServeConfig {
                 .useHartwigCurated(useHartwigCurated)
                 .hartwigCuratedTsv(useHartwigCurated ? nonOptionalFile(cmd, HARTWIG_CURATED_TSV) : NOT_APPLICABLE)
                 .missingDoidsMappingTsv(nonOptionalFile(cmd, MISSING_DOIDS_MAPPING_TSV))
-                .ensemblDataDir(nonOptionalDir(cmd, ENSEMBL_DATA_DIR))
+                .ensemblDataDir37(nonOptionalDir(cmd, ENSEMBL_DATA_DIR_37))
+                .ensemblDataDir38(nonOptionalDir(cmd, ENSEMBL_DATA_DIR_38))
                 .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
                 .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
                 .refGenome37To38Chain(nonOptionalFile(cmd, REF_GENOME_37_TO_38_CHAIN))
