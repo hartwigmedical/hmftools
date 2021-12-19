@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.serve.extraction;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicExtractor;
 import com.hartwig.hmftools.serve.extraction.codon.CodonExtractor;
@@ -28,7 +31,7 @@ public final class EventExtractorFactory {
     @NotNull
     public static EventExtractor create(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource,
             boolean reportOnDriverInconsistencies) {
-        Set<String> genesInExome = refGenomeResource.canonicalTranscriptPerGeneMap().keySet();
+        Set<String> genesInExome = extractAllValidGenes(refGenomeResource.ensemblDataCache());
         GeneChecker exomeGeneChecker = new GeneChecker(genesInExome);
 
         Set<String> fusionGeneSet = Sets.newHashSet();
@@ -40,8 +43,8 @@ public final class EventExtractorFactory {
         return new EventExtractor(new HotspotExtractor(exomeGeneChecker,
                 refGenomeResource.proteinResolver(),
                 config.proteinAnnotationExtractor()),
-                new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, refGenomeResource.canonicalTranscriptPerGeneMap()),
-                new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, refGenomeResource.canonicalTranscriptPerGeneMap()),
+                new CodonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, refGenomeResource.ensemblDataCache()),
+                new ExonExtractor(exomeGeneChecker, mutationTypeFilterAlgo, refGenomeResource.ensemblDataCache()),
                 new GeneLevelExtractor(exomeGeneChecker,
                         fusionGeneChecker,
                         refGenomeResource.driverGenes(),
@@ -62,6 +65,17 @@ public final class EventExtractorFactory {
                         config.hpvPositiveEvents(),
                         config.ebvPositiveEvents(),
                         config.hlaEvents()));
+    }
+
+    @NotNull
+    private static Set<String> extractAllValidGenes(@NotNull EnsemblDataCache ensemblDataCache) {
+        Set<String> genes = Sets.newHashSet();
+        for (List<GeneData> genesPerChromosome : ensemblDataCache.getChrGeneDataMap().values()) {
+            for (GeneData geneData : genesPerChromosome) {
+                genes.add(geneData.GeneName);
+            }
+        }
+        return genes;
     }
 
     @NotNull

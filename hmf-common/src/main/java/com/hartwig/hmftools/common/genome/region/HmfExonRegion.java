@@ -8,6 +8,5 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class HmfExonRegion implements GenomeRegion {
 
-    @NotNull
     public abstract int exonRank();
 }

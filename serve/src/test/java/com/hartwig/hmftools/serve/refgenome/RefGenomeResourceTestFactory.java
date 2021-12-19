@@ -9,9 +9,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,7 @@ public final class RefGenomeResourceTestFactory {
                 .refSequence(loadTestRefSequence37())
                 .driverGenes(Lists.newArrayList())
                 .knownFusionCache(new KnownFusionCache())
-                .canonicalTranscriptPerGeneMap(HmfGenePanelSupplier.allGenesMap37())
+                .ensemblDataCache(EnsemblDataCacheTestFactory.create37())
                 .proteinResolver(new TestProteinResolver())
                 .build();
     }

@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -50,7 +51,7 @@ public final class RefGenomeManagerFactory {
                 .refSequence(new IndexedFastaSequenceFile(new File(fastaFile37)))
                 .driverGenes(readDriverGenesFromFile(config.driverGene37Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion37File()))
-                .canonicalTranscriptPerGeneMap(transcriptMap37)
+                .ensemblDataCache(loadEnsemblDataCache(RefGenomeVersion.V37, config.ensemblDataDir37()))
                 .putChainToOtherRefGenomeMap(RefGenomeVersion.V38, config.refGenome37To38Chain())
                 .proteinResolver(proteinResolver37)
                 .build();
@@ -69,7 +70,7 @@ public final class RefGenomeManagerFactory {
                 .refSequence(new IndexedFastaSequenceFile(new File(fastaFile38)))
                 .driverGenes(readDriverGenesFromFile(config.driverGene38Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion38File()))
-                .canonicalTranscriptPerGeneMap(transcriptMap38)
+                .ensemblDataCache(loadEnsemblDataCache(RefGenomeVersion.V38, config.ensemblDataDir38()))
                 .putChainToOtherRefGenomeMap(RefGenomeVersion.V37, config.refGenome38To37Chain())
                 .proteinResolver(proteinResolver38)
                 .build();
@@ -92,5 +93,14 @@ public final class RefGenomeManagerFactory {
         }
         LOGGER.info("  Read {} known fusion entries", cache.getData().size());
         return cache;
+    }
+
+    @NotNull
+    private static EnsemblDataCache loadEnsemblDataCache(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String ensemblDataDir)
+            throws IOException {
+        LOGGER.info(" Reading ensembl data cache from {}", ensemblDataDir);
+        EnsemblDataCache ensemblDataCache = EnsemblDataCacheLoader.load(ensemblDataDir, refGenomeVersion);
+        LOGGER.info("  Loaded ensembl data cache from {}", ensemblDataCache);
+        return ensemblDataCache;
     }
 }
