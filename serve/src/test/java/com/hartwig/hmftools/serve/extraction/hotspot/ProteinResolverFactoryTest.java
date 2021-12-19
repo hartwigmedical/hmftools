@@ -4,9 +4,9 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.FileNotFoundException;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 
 import org.junit.Test;
 
@@ -16,7 +16,8 @@ public class ProteinResolverFactoryTest {
 
     @Test
     public void canCreateTransvarResolver() throws FileNotFoundException {
-        assertNotNull(ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37, REF_GENOME_FASTA_FILE, Maps.newHashMap()));
+        assertNotNull(ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37,
+                REF_GENOME_FASTA_FILE,
+                EnsemblDataCacheTestFactory.create37()));
     }
-
 }

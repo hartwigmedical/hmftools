@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
-import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +19,7 @@ import org.junit.Test;
 
 public class HotspotExtractorTest {
 
-    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
+    private static final GeneChecker GENE_CHECKER = new GeneChecker(Sets.newHashSet("BRAF"));
 
     private static final VariantHotspot TEST_HOTSPOT =
             ImmutableVariantHotspotImpl.builder().chromosome("1").position(10).ref("A").alt("T").build();
@@ -47,7 +46,7 @@ public class HotspotExtractorTest {
 
     @NotNull
     private static HotspotExtractor createWithProtein(@NotNull String protein) {
-        return new HotspotExtractor(V37_GENE_CHECKER, new TestProteinResolver(protein), event -> event);
+        return new HotspotExtractor(GENE_CHECKER, new TestProteinResolver(protein), event -> event);
     }
 
     private static class TestProteinResolver implements ProteinResolver {

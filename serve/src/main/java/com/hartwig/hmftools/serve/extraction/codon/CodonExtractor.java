@@ -7,11 +7,10 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -43,9 +42,7 @@ public class CodonExtractor {
     public List<CodonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
-            GeneData geneData = ensemblDataCache.getGeneDataByName(gene);
-            HmfTranscriptRegion canonicalTranscript =
-                    HmfTranscriptRegionUtils.fromTranscript(geneData, ensemblDataCache.getCanonicalTranscriptData(geneData.GeneId));
+            HmfTranscriptRegion canonicalTranscript = EnsemblFunctions.findCanonicalTranscript(ensemblDataCache, gene);
             assert canonicalTranscript != null;
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transName())) {

@@ -10,14 +10,13 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
-import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class FusionExtractorTest {
 
-    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
+    private static final GeneChecker GENE_CHECKER = new GeneChecker(Sets.newHashSet("EGFR", "PDGFRA", "BCR", "MET"));
 
     @Test
     public void canExtractSimpleFusionPair() {
@@ -112,7 +111,7 @@ public class FusionExtractorTest {
 
     @NotNull
     private static FusionExtractor testFusionExtractor() {
-        return buildTestFusionExtractor(V37_GENE_CHECKER, Sets.newHashSet());
+        return buildTestFusionExtractor(GENE_CHECKER, Sets.newHashSet());
     }
 
     @NotNull
@@ -122,7 +121,7 @@ public class FusionExtractorTest {
 
     @NotNull
     private static FusionExtractor testFusionExtractorWithExonicDelDupKeyPhrases(@NotNull Set<String> exonicDelDupKeyPhrases) {
-        return buildTestFusionExtractor(V37_GENE_CHECKER, exonicDelDupKeyPhrases);
+        return buildTestFusionExtractor(GENE_CHECKER, exonicDelDupKeyPhrases);
     }
 
     @NotNull
