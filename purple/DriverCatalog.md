@@ -1,4 +1,4 @@
-# Somatic Driver Catalog
+# Driver Catalog
 
 If a gene panel is configured, PURPLE will compile a catalog of drivers including point mutations and copy number events.  To include point mutations in the driver catalog, the somatic VCF must be annotated with SnpEff.
 
