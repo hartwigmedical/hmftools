@@ -24,10 +24,18 @@ class TransvarCurator {
         // Transvar can't interpret start-lost so we map it to another arbitrary mutation.
         PROTEIN_ANNOTATION_MAPPING.put("M1?", "M1I");
 
-        // These genes have to be mapped for transvar specifically since the HMF v37 gene name does not exist in transvar.
+        // These genes have to be mapped for transvar specifically since the mapping doesn't exist in our gene name mapping.
         MANUAL_GENE_MAPPING_38_TO_37.put("EPOP", "C17orf96");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C1", "HIST1H3A");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C2", "HIST1H3B");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C3", "HIST1H3C");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C6", "HIST1H3E");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C7", "HIST1H3F");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C8", "HIST1H3G");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C10", "HIST1H3H");
+        MANUAL_GENE_MAPPING_38_TO_37.put("H3C11", "HIST1H3I");
 
-        // These genes work fine in transvar and should not be mapped to the HMF v37 name.
+        // These genes work fine in transvar and should not be mapped to our old HMF v37 name.
         GENES_FOR_WHICH_TO_SKIP_38_MAPPING.add("CCDC186");
     }
 

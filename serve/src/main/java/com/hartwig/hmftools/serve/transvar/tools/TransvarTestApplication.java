@@ -3,9 +3,9 @@ package com.hartwig.hmftools.serve.transvar.tools;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.serve.refgenome.EnsemblDataCacheLoader;
 import com.hartwig.hmftools.serve.transvar.Transvar;
 
 import org.apache.commons.cli.DefaultParser;
@@ -16,7 +16,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,17 +37,15 @@ public class TransvarTestApplication {
             System.exit(1);
         }
 
-        // TODO: Load ensembl data cache correctly for 37
         Transvar transvar37 = Transvar.withRefGenome(RefGenomeVersion.V37,
                 config.refGenome37FastaFile(),
-                new EnsemblDataCache(Strings.EMPTY, RefGenomeVersion.V37));
+                EnsemblDataCacheLoader.load(config.ensemblDataDir37(), RefGenomeVersion.V37));
 
         extractAndPrintHotspots(transvar37, config.gene37(), config.transcript37(), config.protein37());
 
-        // TODO: Load ensembl data cache correctly for 38
         Transvar transvar38 = Transvar.withRefGenome(RefGenomeVersion.V38,
                 config.refGenome38FastaFile(),
-                new EnsemblDataCache(Strings.EMPTY, RefGenomeVersion.V38));
+                EnsemblDataCacheLoader.load(config.ensemblDataDir38(), RefGenomeVersion.V38));
 
         extractAndPrintHotspots(transvar38, config.gene38(), config.transcript38(), config.protein38());
     }
