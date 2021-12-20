@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.serve.transvar.tools;
 
+import java.io.File;
+import java.nio.file.Files;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -14,6 +17,9 @@ import org.jetbrains.annotations.Nullable;
 public interface TransvarTestAppConfig {
 
     Logger LOGGER = LogManager.getLogger(TransvarTestAppConfig.class);
+
+    String ENSEMBL_DATA_DIR_37 = "ensembl_data_dir_37";
+    String ENSEMBL_DATA_DIR_38 = "ensembl_data_dir_38";
 
     String REF_GENOME_37_FASTA_FILE = "ref_genome_37_fasta_file";
     String REF_GENOME_38_FASTA_FILE = "ref_genome_38_fasta_file";
@@ -31,6 +37,9 @@ public interface TransvarTestAppConfig {
     static Options createOptions() {
         Options options = new Options();
 
+        options.addOption(ENSEMBL_DATA_DIR_37, true, "Ensembl data file directory for ref genome V37");
+        options.addOption(ENSEMBL_DATA_DIR_38, true, "Ensembl data file directory for ref genome V38");
+
         options.addOption(REF_GENOME_37_FASTA_FILE, true, "Path to the V37 ref genome fasta file");
         options.addOption(REF_GENOME_38_FASTA_FILE, true, "Path to the V38 ref genome fasta file");
 
@@ -45,6 +54,12 @@ public interface TransvarTestAppConfig {
 
         return options;
     }
+
+    @NotNull
+    String ensemblDataDir37();
+
+    @NotNull
+    String ensemblDataDir38();
 
     @NotNull
     String refGenome37FastaFile();
@@ -72,10 +87,11 @@ public interface TransvarTestAppConfig {
 
     @NotNull
     static TransvarTestAppConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
-
         return ImmutableTransvarTestAppConfig.builder()
-                .refGenome37FastaFile(nonOptionalValue(cmd, REF_GENOME_37_FASTA_FILE))
-                .refGenome38FastaFile(nonOptionalValue(cmd, REF_GENOME_38_FASTA_FILE))
+                .ensemblDataDir37(nonOptionalDir(cmd, ENSEMBL_DATA_DIR_37))
+                .ensemblDataDir38(nonOptionalDir(cmd, ENSEMBL_DATA_DIR_38))
+                .refGenome37FastaFile(nonOptionalFile(cmd, REF_GENOME_37_FASTA_FILE))
+                .refGenome38FastaFile(nonOptionalFile(cmd, REF_GENOME_38_FASTA_FILE))
                 .gene37(nonOptionalValue(cmd, GENE_37))
                 .gene38(nonOptionalValue(cmd, GENE_38))
                 .protein37(nonOptionalValue(cmd, PROTEIN_37))
@@ -85,6 +101,27 @@ public interface TransvarTestAppConfig {
                 .build();
     }
 
+    @NotNull
+    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
+
+        if (!pathExists(value) || !pathIsDirectory(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
+        }
+
+        return value;
+    }
+
+    @NotNull
+    static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+        String value = nonOptionalValue(cmd, param);
+
+        if (!pathExists(value)) {
+            throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
+        }
+
+        return value;
+    }
 
     @NotNull
     static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
@@ -99,5 +136,13 @@ public interface TransvarTestAppConfig {
     @Nullable
     static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
         return cmd.getOptionValue(param);
+    }
+
+    static boolean pathExists(@NotNull String path) {
+        return Files.exists(new File(path).toPath());
+    }
+
+    static boolean pathIsDirectory(@NotNull String path) {
+        return Files.isDirectory(new File(path).toPath());
     }
 }
