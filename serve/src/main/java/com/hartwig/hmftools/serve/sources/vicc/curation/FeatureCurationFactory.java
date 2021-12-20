@@ -69,13 +69,11 @@ final class FeatureCurationFactory {
         // Fusions where gene is a synonym of our gene
         FEATURE_MAPPINGS.put(civic("FGFR1", null, "ZNF198-FGFR1"), curation("ZMYM2", "ZMYM2-FGFR1"));
         FEATURE_MAPPINGS.put(civic("KMT2A", null, "MLL-MLLT3"), curation("KMT2A", "KMT2A-MLLT3"));
+        FEATURE_MAPPINGS.put(civic("FGFR2", "ENST00000457416", "FGFR2-MGEA5"), curation("FGFR2", "FGFR2-OGA"));
+        FEATURE_MAPPINGS.put(civic("KIAA1524", "ENST00000295746", "UNDEREXPRESSION"), curation("CIP2A", "UNDEREXPRESSION"));
 
         // Map specific EGFR fusion do a different name to be consistent with other sources.
         FEATURE_MAPPINGS.put(civic("EGFR", "ENST00000275493", "VIII"), curation("EGFR", "EGFRvIII"));
-
-        // These genes are on synonym genes
-        FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "LOSS"), curation("MRE11A", "LOSS"));
-        FEATURE_MAPPINGS.put(civic("MRE11", "ENST00000323929", "FRAMESHIFT MUTATION"), curation("MRE11A", "FRAMESHIFT MUTATION"));
 
         // Fusions are not correct
         FEATURE_MAPPINGS.put(civic("ABL1", "ENST00000318560", "BCR-ABL G398R"), curation("BCR", "BCR-ABL1 G398R"));
