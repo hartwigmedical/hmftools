@@ -63,7 +63,7 @@ public class AlternatePathFinder
         for(AlternatePath altPath : alternatePaths)
         {
             List<Link> transLinks = altPath.transitiveLinks();
-            transLinks.forEach(x -> linkStore.addLink(altPath.First, x));
+            transLinks.forEach(x -> linkStore.addLink(x.breakendStart(), x));
         }
 
         return linkStore;

@@ -90,6 +90,11 @@ public class StructuralVariantFactory
         mFilter.add(filter);
     }
 
+    public StructuralVariantFactory(final CompoundFilter filter)
+    {
+        mFilter = filter;
+    }
+
     public void clear()
     {
         mCompleteVariants.clear();

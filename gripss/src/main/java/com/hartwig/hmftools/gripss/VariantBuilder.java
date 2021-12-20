@@ -15,6 +15,7 @@ import com.hartwig.hmftools.gripss.filters.HardFilters;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
 public class VariantBuilder
 {
@@ -31,7 +32,7 @@ public class VariantBuilder
         mHardFilters = filterConstants != null ? new HardFilters(filterConstants) : null;
         mHotspotCache = hotspotCache;
 
-        mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
+        mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mHardFilteredVcfIds = Sets.newHashSet();
         mHotspotCandidateVcfIds = Sets.newHashSet();
         mHardFilteredCount = 0;

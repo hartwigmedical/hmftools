@@ -267,7 +267,7 @@ public class TransitiveLinkFinder
             Breakend pairedOtherBreakend = otherBreakend.otherBreakend();
 
             List<Link> newLinks = Lists.newArrayList(transLink.links());
-            String linkPrefix = String.format("%s{%d-%d}", transLink.prefix(), MAX_TRANSITIVE_JUMPS, transLink.remainingTransitiveJumps());
+            String linkPrefix = String.format("%s%d", transLink.prefix(), MAX_TRANSITIVE_JUMPS - transLink.remainingTransitiveJumps());
             Link transitiveLink = Link.from(linkPrefix, transBreakend, otherBreakend);
             newLinks.add(transitiveLink);
             newLinks.add(Link.from(otherBreakend));
