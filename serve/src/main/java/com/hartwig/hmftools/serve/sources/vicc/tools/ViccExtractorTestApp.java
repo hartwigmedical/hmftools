@@ -10,8 +10,9 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.serve.ServeConfig;
 import com.hartwig.hmftools.serve.ServeLocalConfigProvider;
@@ -20,6 +21,7 @@ import com.hartwig.hmftools.serve.curation.DoidLookupFactory;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ExtractionResultWriter;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
+import com.hartwig.hmftools.serve.refgenome.EnsemblDataCacheLoader;
 import com.hartwig.hmftools.serve.refgenome.ImmutableRefGenomeResource;
 import com.hartwig.hmftools.serve.refgenome.RefGenomeResource;
 import com.hartwig.hmftools.serve.sources.vicc.ViccExtractor;
@@ -81,15 +83,19 @@ public class ViccExtractorTestApp {
         LOGGER.info("Reading known fusions from {}", config.knownFusion37File());
         KnownFusionCache fusionCache = new KnownFusionCache();
         if (!fusionCache.loadFile(config.knownFusion37File())) {
-            throw new IllegalStateException("Could not load known fusion cache from " + config.knownFusion37File());
+            throw new IOException("Could not load known fusion cache from " + config.knownFusion37File());
         }
         LOGGER.info(" Read {} known fusions", fusionCache.getData().size());
+
+        LOGGER.info(" Reading ensembl data cache from {}", config.ensemblDataDir37());
+        EnsemblDataCache ensemblDataCache = EnsemblDataCacheLoader.load(config.ensemblDataDir37(), RefGenomeVersion.V37);
+        LOGGER.info("  Loaded ensembl data cache from {}", ensemblDataCache);
 
         return ImmutableRefGenomeResource.builder()
                 .refSequence(new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile())))
                 .driverGenes(driverGenes)
                 .knownFusionCache(fusionCache)
-                .canonicalTranscriptPerGeneMap(HmfGenePanelSupplier.allGenesMap37())
+                .ensemblDataCache(ensemblDataCache)
                 .proteinResolver(ProteinResolverFactory.dummy())
                 .build();
     }

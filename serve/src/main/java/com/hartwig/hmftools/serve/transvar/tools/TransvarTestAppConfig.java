@@ -1,18 +1,10 @@
 package com.hartwig.hmftools.serve.transvar.tools;
 
-import java.io.File;
-import java.nio.file.Files;
-
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.serve.ImmutableServeConfig;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,8 +37,8 @@ public interface TransvarTestAppConfig {
         options.addOption(GENE_37, true, "String gene name of V37");
         options.addOption(GENE_38, true, "String gene name of V38");
 
-        options.addOption(PROTEIN_37, true, "String eiwit annotation of V37");
-        options.addOption(PROTEIN_38, true, "String eiwit annotation of V38");
+        options.addOption(PROTEIN_37, true, "String protein annotation of V37");
+        options.addOption(PROTEIN_38, true, "String protein annotation of V38");
 
         options.addOption(TRANSCRIPT_37, true, "String transcript gene of V37");
         options.addOption(TRANSCRIPT_38, true, "String transcript gene of V38");
@@ -105,7 +97,7 @@ public interface TransvarTestAppConfig {
     }
 
     @Nullable
-    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+    static String optionalValue(@NotNull CommandLine cmd, @NotNull String param) {
         return cmd.getOptionValue(param);
     }
 }

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.serve.transvar;
 import java.io.FileNotFoundException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +18,7 @@ public final class TransvarTestFactory {
 
     @NotNull
     static Transvar testTransvar37(@NotNull TransvarProcess process) {
-        return new Transvar(process, testInterpreter37(), HmfGenePanelSupplier.allGenesMap37());
+        return new Transvar(process, testInterpreter37(), EnsemblDataCacheTestFactory.create37());
     }
 
     @NotNull

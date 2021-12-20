@@ -1,4 +1,4 @@
-# Somatic Driver Catalog
+# Driver Catalog
 
 If a gene panel is configured, PURPLE will compile a catalog of drivers including point mutations and copy number events.  To include point mutations in the driver catalog, the somatic VCF must be annotated with SnpEff.
 
@@ -6,11 +6,11 @@ Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx) enri
 
 ## Gene Panel Configuration
 
-The gene panel is a configuration file of which genes to add to the driver catalog and which mutation types to report in each gene.  The format is:
+The gene panel is a configuration file of which genes to add to the driver catalog and which mutation types to report in the canonical transcript and any 'additionalReportedTranscripts' specified for each gene.  The format is:
 
 Field | Values | Description
 ---|---|---
-Gene | | Name of gene
+Gene | | HGNC symbol of gene 
 Report Missense | T/F | Report if any missense variant is found in the gene
 Report Nonsense | T/F | Report if any nonsense or frameshift variant is found in the gene
 Report Splice | T/F |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]  Mutations affecting the last exonic base at a donor location as well as N>G variants only at the -3 acceptor base are also treated as SPLICE.
@@ -21,7 +21,13 @@ Report Hotspot | T/F | Report somatic hotspot mutation regardless of other rules
 Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
 reportGermlineVariant	| 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report any germline variants that meet pathogenic criteria based on specified tumor status
 reportGermlineHotspot | 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report hotspot germline pathogenic variants based on specified tumor status
+reportGermlineDisruption | 'TRUE','FALSE'| Report germline deletions or structural variant disruptions
+additionalReportedTranscript | <Ensembl Transcript Stable Id> | Ensembl transcripts to report on in addition to the ensembl canonical transcript (eg. CDKN2Ap14Arf). Any drivers on the additional transcript will be added to the driver catalog table as a separate record with canonicalTranscript=0. Copy number data for that transcript will also be added to the geneCopyNumber table and any somatic or germline point mutations will report the effect of the variant on the additional transcript in the otherTranscriptEffects column in somaticVariant and germlineVariant tables. Any breakend impacting the additional transcript will also be reported in the svBreakend table
 
+Up to 3 individual driver catalog records may be added per gene per sample if more than 1 type of event is present: 
+* Germline mutations (GERMLINE)
+* Copy number or disruption events (DEL,AMP,HOM_DISRUPTION) 
+* Somatic point mutations (MUTATION).
 
 The Hartwig Medical Foundation curated gene panel is available from [HMFTools-Resources > Gene Panel](https://resources.hartwigmedicalfoundation.nl) and is updated periodically. 
 A detailed description of our gene discovery and initial construction of our gene panel is available in the [supplementary information](https://static-content.springer.com/esm/art%3A10.1038%2Fs41586-019-1689-y/MediaObjects/41586_2019_1689_MOESM1_ESM.pdf) of our ["Pan-cancer whole genome analyses of metastatic solid tumors"](https://www.nature.com/articles/s41586-019-1689-y) paper.

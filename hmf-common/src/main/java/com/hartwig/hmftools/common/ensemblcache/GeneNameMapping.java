@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import org.jetbrains.annotations.NotNull;
-
 // a resource to map gene names between GRCh37 and HGNC + GRCh38
 public class GeneNameMapping
 {
@@ -76,7 +74,7 @@ public class GeneNameMapping
 
     public boolean hasNewGene(final String geneNameNew)
     {
-        return mUnchangedGenes.contains(geneNameNew) || mGeneNameOldToNewMap.containsKey(geneNameNew);
+        return mUnchangedGenes.contains(geneNameNew) || mGeneNameNewToOldMap.containsKey(geneNameNew);
     }
 
     public String getNewName(final String geneNameOld)

@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.serve.extraction.exon;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -32,20 +33,20 @@ public class ExonExtractor {
     @NotNull
     private final MutationTypeFilterAlgo mutationTypeFilterAlgo;
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final EnsemblDataCache ensemblDataCache;
 
     public ExonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final MutationTypeFilterAlgo mutationTypeFilterAlgo,
-            @NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+            @NotNull final EnsemblDataCache ensemblDataCache) {
         this.geneChecker = geneChecker;
         this.mutationTypeFilterAlgo = mutationTypeFilterAlgo;
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+        this.ensemblDataCache = ensemblDataCache;
     }
 
     @Nullable
     public List<ExonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (EXON_EVENTS.contains(type) && geneChecker.isValidGene(gene)) {
-            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+            HmfTranscriptRegion canonicalTranscript = EnsemblFunctions.findCanonicalTranscript(ensemblDataCache, gene);
             assert canonicalTranscript != null;
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transName())) {
@@ -128,7 +129,8 @@ public class ExonExtractor {
             if (word.contains("-")) {
                 String[] splitEvents = word.split("-");
                 int eventStart = Integer.parseInt(splitEvents[0]);
-                String eventEndString = splitEvents[1].endsWith(")") ? splitEvents[1].substring(0, splitEvents[1].length()-1) : splitEvents[1];
+                String eventEndString =
+                        splitEvents[1].endsWith(")") ? splitEvents[1].substring(0, splitEvents[1].length() - 1) : splitEvents[1];
                 int eventEnd = Integer.parseInt(eventEndString);
                 for (int i = eventStart; i <= eventEnd; i++) {
                     exonIndices.add(i);

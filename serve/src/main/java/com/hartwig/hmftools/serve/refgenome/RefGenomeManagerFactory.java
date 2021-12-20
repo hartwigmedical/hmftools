@@ -8,10 +8,10 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.ServeConfig;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolverFactory;
@@ -41,16 +41,16 @@ public final class RefGenomeManagerFactory {
     private static RefGenomeResource buildRefGenomeResource37(@NotNull ServeConfig config) throws IOException {
         String fastaFile37 = config.refGenome37FastaFile();
         LOGGER.info("Creating ref genome resource for V37 using fasta {}", fastaFile37);
-        Map<String, HmfTranscriptRegion> transcriptMap37 = HmfGenePanelSupplier.allGenesMap37();
+        EnsemblDataCache ensemblDataCache37 = loadEnsemblDataCache(RefGenomeVersion.V37, config.ensemblDataDir37());
         ProteinResolver proteinResolver37 = config.skipHotspotResolving()
                 ? ProteinResolverFactory.dummy()
-                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37, fastaFile37, transcriptMap37);
+                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V37, fastaFile37, ensemblDataCache37);
 
         return ImmutableRefGenomeResource.builder()
                 .refSequence(new IndexedFastaSequenceFile(new File(fastaFile37)))
                 .driverGenes(readDriverGenesFromFile(config.driverGene37Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion37File()))
-                .canonicalTranscriptPerGeneMap(transcriptMap37)
+                .ensemblDataCache(ensemblDataCache37)
                 .putChainToOtherRefGenomeMap(RefGenomeVersion.V38, config.refGenome37To38Chain())
                 .proteinResolver(proteinResolver37)
                 .build();
@@ -60,16 +60,16 @@ public final class RefGenomeManagerFactory {
     private static RefGenomeResource buildRefGenomeResource38(@NotNull ServeConfig config) throws IOException {
         String fastaFile38 = config.refGenome38FastaFile();
         LOGGER.info("Creating ref genome resource for V38 using fasta {}", fastaFile38);
-        Map<String, HmfTranscriptRegion> transcriptMap38 = HmfGenePanelSupplier.allGenesMap38();
+        EnsemblDataCache ensemblDataCache38 = loadEnsemblDataCache(RefGenomeVersion.V38, config.ensemblDataDir38());
         ProteinResolver proteinResolver38 = config.skipHotspotResolving()
                 ? ProteinResolverFactory.dummy()
-                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V38, fastaFile38, transcriptMap38);
+                : ProteinResolverFactory.transvarWithRefGenome(RefGenomeVersion.V38, fastaFile38, ensemblDataCache38);
 
         return ImmutableRefGenomeResource.builder()
                 .refSequence(new IndexedFastaSequenceFile(new File(fastaFile38)))
                 .driverGenes(readDriverGenesFromFile(config.driverGene38Tsv()))
                 .knownFusionCache(buildKnownFusionCacheFromFile(config.knownFusion38File()))
-                .canonicalTranscriptPerGeneMap(transcriptMap38)
+                .ensemblDataCache(ensemblDataCache38)
                 .putChainToOtherRefGenomeMap(RefGenomeVersion.V37, config.refGenome38To37Chain())
                 .proteinResolver(proteinResolver38)
                 .build();
@@ -92,5 +92,18 @@ public final class RefGenomeManagerFactory {
         }
         LOGGER.info("  Read {} known fusion entries", cache.getData().size());
         return cache;
+    }
+
+    @NotNull
+    private static EnsemblDataCache loadEnsemblDataCache(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String ensemblDataDir)
+            throws IOException {
+        LOGGER.info(" Reading ensembl data cache from {}", ensemblDataDir);
+        EnsemblDataCache ensemblDataCache = EnsemblDataCacheLoader.load(ensemblDataDir, refGenomeVersion);
+        int geneCount = 0;
+        for (List<GeneData> genesPerChromosome : ensemblDataCache.getChrGeneDataMap().values()) {
+            geneCount += genesPerChromosome.size();
+        }
+        LOGGER.info("  Loaded entries for {} genes", geneCount);
+        return ensemblDataCache;
     }
 }

@@ -3,13 +3,14 @@ package com.hartwig.hmftools.serve.extraction.codon;
 import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeByRank;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -28,20 +29,20 @@ public class CodonExtractor {
     @NotNull
     private final MutationTypeFilterAlgo mutationTypeFilterAlgo;
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final EnsemblDataCache ensemblDataCache;
 
     public CodonExtractor(@NotNull final GeneChecker geneChecker, @NotNull final MutationTypeFilterAlgo mutationTypeFilterAlgo,
-            @NotNull final Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+            @NotNull final EnsemblDataCache ensemblDataCache) {
         this.geneChecker = geneChecker;
         this.mutationTypeFilterAlgo = mutationTypeFilterAlgo;
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+        this.ensemblDataCache = ensemblDataCache;
     }
 
     @Nullable
     public List<CodonAnnotation> extract(@NotNull String gene, @Nullable String transcriptId, @NotNull EventType type,
             @NotNull String event) {
         if (type == EventType.CODON && geneChecker.isValidGene(gene)) {
-            HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+            HmfTranscriptRegion canonicalTranscript = EnsemblFunctions.findCanonicalTranscript(ensemblDataCache, gene);
             assert canonicalTranscript != null;
 
             if (transcriptId == null || transcriptId.equals(canonicalTranscript.transName())) {
@@ -52,10 +53,8 @@ public class CodonExtractor {
                 }
 
                 MutationTypeFilter mutationTypeFilter = mutationTypeFilterAlgo.determine(gene, event);
-                List<CodonAnnotation> codonAnnotations = determineCodonAnnotations(gene,
-                        canonicalTranscript,
-                        codonRank,
-                        mutationTypeFilter);
+                List<CodonAnnotation> codonAnnotations =
+                        determineCodonAnnotations(gene, canonicalTranscript, codonRank, mutationTypeFilter);
 
                 if (codonAnnotations == null) {
                     LOGGER.warn("Could not resolve codon rank {} on transcript '{}' for gene '{}'",

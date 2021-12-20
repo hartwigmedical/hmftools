@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
 
 import org.immutables.value.Value;
@@ -30,7 +30,7 @@ public abstract class RefGenomeResource {
     public abstract KnownFusionCache knownFusionCache();
 
     @NotNull
-    public abstract Map<String, HmfTranscriptRegion> canonicalTranscriptPerGeneMap();
+    public abstract EnsemblDataCache ensemblDataCache();
 
     @NotNull
     public abstract Map<RefGenomeVersion, String> chainToOtherRefGenomeMap();

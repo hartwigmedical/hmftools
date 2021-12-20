@@ -4,16 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
-import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CopyNumberExtractorTest {
-
-    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
 
     @Test
     public void canExtractCopyNumbersAmp() {
@@ -47,6 +45,6 @@ public class CopyNumberExtractorTest {
 
     @NotNull
     private static CopyNumberExtractor createTestExtractor() {
-        return new CopyNumberExtractor(V37_GENE_CHECKER, Lists.newArrayList(), true);
+        return new CopyNumberExtractor(new GeneChecker(Sets.newHashSet("PTEN", "AKT1")), Lists.newArrayList(), true);
     }
 }

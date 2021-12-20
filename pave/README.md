@@ -120,7 +120,6 @@ Type | Location | Examples | Notes
 ---|---|---|---
 Substitutions (SNV)  | Coding | c.76A>C  | Includes start and stop codons
 _ | 5’UTR | c.-14G>C
-_ | Upstream | c.-146C>T | (eg, TERT hotspot)
 _ | Intronic (post) | c.88+1G>T
 _ | Intronic (pre) | c.89-2A>C
 _ | 3’UTR | c.*46T>A

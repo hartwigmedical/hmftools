@@ -3,16 +3,17 @@ package com.hartwig.hmftools.serve.transvar;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.serve.extraction.hotspot.ProteinResolver;
+import com.hartwig.hmftools.serve.extraction.util.EnsemblFunctions;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.transvar.datamodel.TransvarRecord;
 
@@ -30,24 +31,24 @@ public class Transvar implements ProteinResolver {
     @NotNull
     private final TransvarInterpreter interpreter;
     @NotNull
-    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final EnsemblDataCache ensemblDataCache;
     @NotNull
     private final Set<String> unresolvedProteinAnnotations = Sets.newHashSet();
 
     @NotNull
     public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile,
-            @NotNull Map<String, HmfTranscriptRegion> transcriptsPerGeneMap) throws FileNotFoundException {
+            @NotNull EnsemblDataCache ensemblDataCache) throws FileNotFoundException {
         return new Transvar(new TransvarProcessImpl(refGenomeVersion, refGenomeFastaFile),
                 TransvarInterpreter.withRefGenome(refGenomeVersion, refGenomeFastaFile),
-                transcriptsPerGeneMap);
+                ensemblDataCache);
     }
 
     @VisibleForTesting
-    Transvar(@NotNull TransvarProcess process, @NotNull TransvarInterpreter interpreter,
-            @NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
+    Transvar(@NotNull final TransvarProcess process, @NotNull final TransvarInterpreter interpreter,
+            @NotNull final EnsemblDataCache ensemblDataCache) {
         this.process = process;
         this.interpreter = interpreter;
-        this.transcriptPerGeneMap = transcriptPerGeneMap;
+        this.ensemblDataCache = ensemblDataCache;
     }
 
     @Override
@@ -80,9 +81,9 @@ public class Transvar implements ProteinResolver {
             return Lists.newArrayList();
         }
 
-        HmfTranscriptRegion canonicalTranscript = transcriptPerGeneMap.get(gene);
+        HmfTranscriptRegion canonicalTranscript = EnsemblFunctions.findCanonicalTranscript(ensemblDataCache, gene);
         if (canonicalTranscript == null) {
-            LOGGER.warn("Could not find canonical transcript for '{}' in HMF gene panel. Skipping hotspot extraction for 'p.{}'",
+            LOGGER.warn("Could not find canonical transcript for '{}' in ensembl data cache. Skipping hotspot extraction for 'p.{}'",
                     gene,
                     proteinAnnotation);
             return Lists.newArrayList();

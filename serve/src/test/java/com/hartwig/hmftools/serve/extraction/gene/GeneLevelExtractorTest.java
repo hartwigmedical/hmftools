@@ -12,14 +12,14 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
-import com.hartwig.hmftools.serve.extraction.util.GeneCheckerTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GeneLevelExtractorTest {
 
-    private static final GeneChecker V37_GENE_CHECKER = GeneCheckerTestFactory.buildForV37();
+    private static final GeneChecker GENE_CHECKER =
+            new GeneChecker(Sets.newHashSet("KIT", "NTRK3", "STK11", "MET", "TP53", "KRAS", "NOTCH1", "BRCA1"));
 
     @Test
     public void canExtractGeneLevelEventOnco() {
@@ -104,8 +104,8 @@ public class GeneLevelExtractorTest {
 
     @NotNull
     private static GeneLevelExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new GeneLevelExtractor(V37_GENE_CHECKER,
-                V37_GENE_CHECKER,
+        return new GeneLevelExtractor(GENE_CHECKER,
+                GENE_CHECKER,
                 driverGenes,
                 new KnownFusionCache(),
                 Sets.newHashSet("positive", "activating mutation", "act mut"),

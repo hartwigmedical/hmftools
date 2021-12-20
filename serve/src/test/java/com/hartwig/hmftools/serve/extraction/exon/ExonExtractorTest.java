@@ -4,14 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.DriverGeneTestFactory;
+import com.hartwig.hmftools.serve.EnsemblDataCacheTestFactory;
 import com.hartwig.hmftools.serve.extraction.util.GeneChecker;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilterAlgo;
@@ -20,9 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExonExtractorTest {
-
-    private static final Map<String, HmfTranscriptRegion> V37_GENE_MAP = HmfGenePanelSupplier.allGenesMap37();
-    private static final GeneChecker V37_GENE_CHECKER = new GeneChecker(V37_GENE_MAP.keySet());
 
     @Test
     public void canExtractExonForExonAndFusion() {
@@ -98,6 +94,8 @@ public class ExonExtractorTest {
 
     @NotNull
     private static ExonExtractor createWithDriverGenes(@NotNull List<DriverGene> driverGenes) {
-        return new ExonExtractor(V37_GENE_CHECKER, new MutationTypeFilterAlgo(driverGenes), V37_GENE_MAP);
+        return new ExonExtractor(new GeneChecker(Sets.newHashSet("TP53", "KIT", "EGFR", "KRAS")),
+                new MutationTypeFilterAlgo(driverGenes),
+                EnsemblDataCacheTestFactory.create37());
     }
 }

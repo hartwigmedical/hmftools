@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.genepanel.GeneNameMapping37to38;
+import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +26,6 @@ class TransvarCurator {
 
         // These genes have to be mapped for transvar specifically since the HMF v37 gene name does not exist in transvar.
         MANUAL_GENE_MAPPING_38_TO_37.put("EPOP", "C17orf96");
-        MANUAL_GENE_MAPPING_38_TO_37.put("NAPB", "SEPT9");
 
         // These genes work fine in transvar and should not be mapped to the HMF v37 name.
         GENES_FOR_WHICH_TO_SKIP_38_MAPPING.add("CCDC186");
@@ -35,7 +34,7 @@ class TransvarCurator {
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
     @NotNull
-    private final GeneNameMapping37to38 geneNameMapping = GeneNameMapping37to38.loadFromEmbeddedResource();
+    private final GeneNameMapping geneNameMapping = new GeneNameMapping();
 
     public TransvarCurator(@NotNull final RefGenomeVersion refGenomeVersion) {
         this.refGenomeVersion = refGenomeVersion;
@@ -52,8 +51,8 @@ class TransvarCurator {
             } else if (GENES_FOR_WHICH_TO_SKIP_38_MAPPING.contains(gene)) {
                 v37Gene = gene;
                 LOGGER.debug("Skipping mapping gene '{}' for transvar", gene);
-            } else if (geneNameMapping.isValidV38Gene(gene)) {
-                v37Gene = geneNameMapping.v37Gene(gene);
+            } else if (geneNameMapping.hasNewGene(gene)) {
+                v37Gene = geneNameMapping.getOldName(gene);
             } else {
                 LOGGER.warn("Could not map gene '{}' to v37 for transvar!", gene);
             }
