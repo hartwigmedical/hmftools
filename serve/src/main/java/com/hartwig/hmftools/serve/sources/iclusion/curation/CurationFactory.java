@@ -18,6 +18,7 @@ final class CurationFactory {
         GENE_MAPPINGS.put("PDGFRα", "PDGFRA");
         GENE_MAPPINGS.put("PDGFRβ", "PDGFRB");
 
+        MUTATION_MAPPINGS.put(new CurationEntry("FGFR3", "FGFR3-WHSC1"), new CurationEntry("FGFR3", "FGFR3-NSD2"));
         MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF10"), new CurationEntry("KMT2A", "KMT2A-MLLT10"));
         MUTATION_MAPPINGS.put(new CurationEntry("MLL", "MLL-AF9"), new CurationEntry("KMT2A", "KMT2A-MLLT3"));
 
