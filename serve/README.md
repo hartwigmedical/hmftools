@@ -324,7 +324,6 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.7)
   - Extend config file from source iClusion
   - Extend config file from source CKB
-  - Update filters
   - "Advanced solid tumor" in iClusion is mapped to DOID 162 rather than 0050686 to avoid missing it for tumors with unknown tumor type
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.6)
   - Add filter in VICC extraction to ignore evidence that does not support the direction when generating actionability.
