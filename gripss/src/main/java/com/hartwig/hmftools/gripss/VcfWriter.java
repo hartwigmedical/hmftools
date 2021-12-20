@@ -167,6 +167,8 @@ public class VcfWriter
                 .attribute(VT_HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
                 .attribute(VT_EVENT_TYPE, breakend.type());
 
+        builder.rmAttribute(VT_ALT_PATH); // remove if set from an earlier run's file
+
         if(!localLinks.isEmpty())
             builder.attribute(VT_LOCAL_LINKED_BY, localLinks);
         else

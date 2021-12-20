@@ -44,8 +44,19 @@ public class TransitiveLink // previously 'Node'
 
         for (Link link : links)
         {
-            mMinDistance += link.minDistance();
-            mMaxDistance += link.maxDistance();
+            int distance1 = link.minDistance();
+            int distance2 = link.maxDistance();
+
+            if(distance1 >= distance2)
+            {
+                mMaxDistance += distance1;
+                mMinDistance += distance2;
+            }
+            else
+            {
+                mMinDistance += distance1;
+                mMaxDistance += distance2;
+            }
         }
     }
 
@@ -56,10 +67,8 @@ public class TransitiveLink // previously 'Node'
     public List<Link> links() { return mLinks; }
 
     public int remainingAssemblyJumps() { return mRemainingAssemblyJumps; }
-    public void decrementAssemblyJumps() { if(mRemainingAssemblyJumps > 0) --mRemainingAssemblyJumps; }
 
     public int remainingTransitiveJumps() { return mRemainingTransitiveJumps; }
-    public void decrementTransitiveJumps() { if(mRemainingTransitiveJumps > 0) --mRemainingTransitiveJumps; }
 
     public boolean matchesTarget(final Breakend targetEnd)
     {

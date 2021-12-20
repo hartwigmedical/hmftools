@@ -236,6 +236,8 @@ public class GripssCompareVcfs
                     continue;
                 }
             }
+
+            GR_LOGGER.info("loaded {} new SVs", newSvCount);
         }
         catch(IOException e)
         {
