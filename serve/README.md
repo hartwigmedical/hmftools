@@ -25,7 +25,7 @@ SERVE supports the ingestion of the following knowledgebases:
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
  - ACTIN - a database with all actively recruiting clinical trials in the ACTIN study [work in progress]
- along with cancer types and molecular inclusion criteria for these trials.
+ along with molecular inclusion criteria for these trials.
  - HMF Cohort - a database of recurrent somatic mutations in cancer-related genes from the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
  
@@ -75,7 +75,8 @@ genomic events implied to be able to driver cancer:
 ### Gene checking
 
 Evidence that is defined on a gene-level is checked to make sure that the gene exists in Hartwig's definition of the exome. 
-If a gene does not exist in Hartwig's exome definition the evidence is ignored. 
+If a gene does not exist in Hartwig's exome definition the evidence is ignored. For more information about Hartwig's definition 
+of the exome, see [HMF Gene Utils](../gene-utils/README.md).
 
 For fusions, genes are permitted that can exist in the context of a fusion pair (eg @IG genes). 
  
@@ -257,7 +258,7 @@ are used in a ref-dependent manner during knowledge extraction:
  - The reference genome fasta file 
  - The definition of Hartwig driver genes
  - The definition of Hartwig known fusions
- - The Hartwig mapping of gene to (canonical) ensembl transcript 
+ - The Hartwig ensembl data cache 
 
 ### Ref-genome dependent output
 
@@ -297,6 +298,7 @@ A knowledgebase can contribute to known and/or actionable events. Current config
       
 Knowledgebase  | Ref genome version | Contributes to known events? | Contributes to actionable events?
 ---|---|---|---
+ACTIN | v37 | No | Yes
 CKB FLEX | v38 | Yes | Yes
 DoCM | v37 | Yes | No 
 Hartwig Cohort | v37 | Yes | No
@@ -315,6 +317,10 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
+- Upcoming
+  - Support for new gene model implied by [HMF Gene Utils](../gene-utils/README.md)
+  - Support for HR-deficiency events in CKB
+  - Addition of rangeType and rank in actionable range output.
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.7)
   - Extend config file from source iClusion
   - Extend config file from source CKB

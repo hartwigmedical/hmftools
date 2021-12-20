@@ -6,7 +6,7 @@ Schema of the Ensembl database can be found on https://m.ensembl.org/info/docs/a
 
 
 ### Generating cached Ensembl data files
-The Ensembl data cache is primarily used by Linx and Isofox and contains gene, transcript, exon, splice distance and protein data for all genes.
+The Ensembl data cache is primarily used by Linx, SERVE and Isofox and contains gene, transcript, exon, splice distance and protein data for all genes.
 
 To generate the 4 files, run the following command specifying the Ensembl database instance and the ref-genome version (V37 or V38):
 
