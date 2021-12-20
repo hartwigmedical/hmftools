@@ -83,7 +83,7 @@ public final class EnsemblDataLoader
 
             while (line != null)
             {
-                String[] items = line.split(ENSEMBL_DELIM);
+                String[] items = line.split(ENSEMBL_DELIM, -1);
 
                 final String geneId = items[geneIdIndex];
 

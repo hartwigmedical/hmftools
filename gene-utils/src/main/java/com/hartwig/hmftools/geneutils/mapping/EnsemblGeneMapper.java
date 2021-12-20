@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.en
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
@@ -48,6 +50,7 @@ public class EnsemblGeneMapper
     public EnsemblGeneMapper(final CommandLine cmd)
     {
         String outputDir = parseOutputDir(cmd);
+        String outputId = cmd.getOptionValue(OUTPUT_ID);
         String ensemblDir37 = cmd.getOptionValue(ENSEMBL_DIR_37);
         String ensemblDir38 = cmd.getOptionValue(ENSEMBL_DIR_38);
         String liftOverFile = cmd.getOptionValue(LIFT_OVER_INFO_FILE);
@@ -71,7 +74,7 @@ public class EnsemblGeneMapper
         mLiftOverRegions = Maps.newHashMap();
         loadLiftOverFile(liftOverFile);
 
-        mWriter = initialiseWriter(outputDir);
+        mWriter = initialiseWriter(outputDir, outputId);
     }
 
     public void run()
@@ -215,11 +218,14 @@ public class EnsemblGeneMapper
         }
     }
 
-    private static BufferedWriter initialiseWriter(final String outputDir)
+    private static BufferedWriter initialiseWriter(final String outputDir, final String outputId)
     {
         try
         {
-            String outputFile = outputDir + "ensembl_gene_mapping.csv";
+            String outputFile = outputId != null ? String.format("%sensembl_gene_mapping.%s.csv", outputDir, outputId)
+                    : String.format("%sensembl_gene_mapping.csv", outputDir);
+
+            GU_LOGGER.info("writing gene mapping to: {} ", outputFile);
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
@@ -281,7 +287,7 @@ public class EnsemblGeneMapper
         options.addOption(ENSEMBL_DIR_37, true, "Ensembl data cache dir for ref-genome v37");
         options.addOption(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
         options.addOption(LIFT_OVER_INFO_FILE, true, "Unmatched v37 locations lifted-over to v38");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        addOutputOptions(options);
         options.addOption(LOG_DEBUG, false, "Log verbose");
         return options;
     }
