@@ -284,7 +284,7 @@ public class SvVisualiser implements AutoCloseable
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
         final List<Segment> segments = VisSegments.extendTerminals(
                 0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments, mConfig.RefGenomeCoords);
-        
+
         final List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
 
         final ColorPicker color = colorPickerFactory.create(links);

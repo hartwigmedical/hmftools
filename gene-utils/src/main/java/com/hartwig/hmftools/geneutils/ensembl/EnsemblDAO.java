@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_GENE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_EXON_DATA_FILE;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
 import static com.hartwig.hmftools.geneutils.ensembl.GenerateEnsemblDataCache.REF_ENSEMBL_DIR;
@@ -17,6 +19,8 @@ import static com.hartwig.hmftools.geneutils.ensembl.GenerateEnsemblDataCache.HG
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -57,6 +61,7 @@ public class EnsemblDAO
     private final HgncGenes mHgncGenes;
     private final Map<String,GeneData> mReferenceGeneDataById;
     private final Map<String,GeneData> mReferenceGeneDataByName;
+    private final Map<String,String> mGeneIdMappingOverrides;
 
     // reference transcripts are loaded only to evaluate difference between Ensembl versions and v37 vs v38
     private final Map<String,List<TranscriptData>> mReferenceTranscriptMap; // keyed by geneId
@@ -69,20 +74,14 @@ public class EnsemblDAO
             new GeneData("ENSG00000258414", "AL121790.1","14", POS_STRAND,
                     37564047,37579125, "q21.1"));
 
-    // ENSG00000124693 HIST1H3B -> ENSG00000286522 H3C2 - must be manually mapped
-    private static final Map<String,String> GENE_ID_MANUAL_MAPPINGS = Maps.newHashMap();
-
-    static
-    {
-        GENE_ID_MANUAL_MAPPINGS.put("ENSG00000124693", "ENSG00000286522");
-    }
-
     // GOPC processed transcript which matches a ROS1 splice site - only in v38
     private static final List<String> TRANSCRIPT_EXCLUSIONS = Lists.newArrayList("ENST00000467125");
 
     private static final String DB_URL = "ensembl_db";
     private static final String DB_USER = "ensembl_user";
     private static final String DB_PASS = "ensembl_pass";
+
+    private static final String MAPPING_FILE = "gene_id_mapping_file";
 
     public EnsemblDAO(final CommandLine cmd)
     {
@@ -102,6 +101,7 @@ public class EnsemblDAO
         mReferenceTranscriptMap = Maps.newHashMap();
         mReferenceGeneDataById = Maps.newHashMap();
         mReferenceGeneDataByName = Maps.newHashMap();
+        mGeneIdMappingOverrides = Maps.newHashMap();
 
         if(cmd.hasOption(REF_ENSEMBL_DIR))
         {
@@ -124,6 +124,8 @@ public class EnsemblDAO
             // EnsemblDataLoader.loadTranscriptData(ensemblDataDir, mReferenceTranscriptMap, restrictedGeneIds, true, true);
         }
 
+        loadGeneIdMappings(cmd.getOptionValue(MAPPING_FILE));
+
         mDbContext = createEnsemblDbConnection(cmd);
 
         if(mDbContext == null)
@@ -142,6 +144,7 @@ public class EnsemblDAO
         options.addOption(DB_PASS, true, "Ensembl DB password, leave out for anonymous connection");
         options.addOption(DB_URL, true, "Ensembl DB URL");
         options.addOption(DB_USER, true, "Ensembl DB username");
+        options.addOption(MAPPING_FILE, true, "Optional: mapping of v37 to v38 geneIds");
     }
 
     public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
@@ -194,6 +197,39 @@ public class EnsemblDAO
 
         return -1;
     }
+
+    private void loadGeneIdMappings(final String filename)
+    {
+        if(filename == null)
+            return;
+
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+
+            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), ENSEMBL_DELIM);
+            lines.remove(0);
+
+            int geneId37Index = fieldsIndexMap.get("GeneId37");
+            int geneId38Index = fieldsIndexMap.get("GeneId38");
+
+            for(String line : lines)
+            {
+                String[] values = line.split(ENSEMBL_DELIM);
+                String geneId37 = values[geneId37Index];
+                String geneId38 = values[geneId38Index];
+
+                mGeneIdMappingOverrides.put(geneId37, geneId38);
+            }
+
+            GU_LOGGER.info("loaded {} gene ID mappings from file({})", mGeneIdMappingOverrides.size(), filename);
+        }
+        catch(IOException e)
+        {
+            GU_LOGGER.error("failed to read gene ID mappings file({}): {}", filename, e.toString());
+        }
+    }
+
 
     public void writeDataCacheFiles(final String outputDir)
     {
@@ -270,15 +306,16 @@ public class EnsemblDAO
                         if(refGeneData == null)
                         {
                             // check for a manual mapping entry
-                            if(!GENE_ID_MANUAL_MAPPINGS.containsKey(geneId))
+                            if(!mGeneIdMappingOverrides.containsKey(geneId))
                                 continue;
 
-                            refGeneData = mReferenceGeneDataById.get(GENE_ID_MANUAL_MAPPINGS.get(geneId));
+                            String geneId38 = mGeneIdMappingOverrides.get(geneId);
+
+                            refGeneData = mReferenceGeneDataById.get(geneId38);
 
                             if(refGeneData == null)
                             {
-                                GU_LOGGER.error("manual gene mapping({} -> {}) has no reference data",
-                                        geneId, GENE_ID_MANUAL_MAPPINGS.get(geneId));
+                                GU_LOGGER.error("manual gene mapping({} -> {}) has no reference data", geneId, geneId38);
                                 continue;
                             }
                         }
