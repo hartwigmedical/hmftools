@@ -1,17 +1,22 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -41,6 +46,8 @@ public class ReferenceData
     public final List<HmfTranscriptRegion> TranscriptRegions;
     public final EnsemblDataCache GeneDataCache;
 
+    public final Map<String,List<TranscriptData>> ChromosomeTranscripts;
+
     public final IndexedFastaSequenceFile RefGenome;
 
     private final SageConfig mConfig;
@@ -65,8 +72,8 @@ public class ReferenceData
         RefGenome = loadRefGenome(config.RefGenomeFile);
 
         GeneDataCache = new EnsemblDataCache(cmd, config.RefGenVersion);
-        GeneDataCache.setRequiredData(true, false, false, true);
-        GeneDataCache.load(false);
+        ChromosomeTranscripts = Maps.newHashMap();
+        loadGeneData();
     }
 
     public static IndexedFastaSequenceFile loadRefGenome(final String refGenomeFile)
@@ -79,6 +86,37 @@ public class ReferenceData
         {
             SG_LOGGER.error("failed to load ref genome: {}", e.toString());
             return null;
+        }
+    }
+
+    private void loadGeneData()
+    {
+        GeneDataCache.setRequiredData(true, false, false, true);
+        GeneDataCache.load(false);
+
+        for(Map.Entry<String,List<GeneData>> entry : GeneDataCache.getChrGeneDataMap().entrySet())
+        {
+            String chromosome = entry.getKey();
+
+            if(!mConfig.Chromosomes.isEmpty() && !mConfig.Chromosomes.contains(chromosome))
+                continue;
+
+            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
+                continue;
+
+            List<TranscriptData> transDataList = Lists.newArrayList();
+            ChromosomeTranscripts.put(chromosome, transDataList);
+
+            for(GeneData geneData : entry.getValue())
+            {
+                if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream()
+                        .noneMatch(x -> positionsOverlap(x.start(), x.end(), geneData.GeneStart, geneData.GeneEnd)))
+                {
+                    continue;
+                }
+
+                transDataList.add(GeneDataCache.getCanonicalTranscriptData(geneData.GeneId));
+            }
         }
     }
 

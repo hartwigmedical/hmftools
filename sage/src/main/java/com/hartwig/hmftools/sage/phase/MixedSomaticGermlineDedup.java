@@ -120,7 +120,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 
         return new BaseRegion(codonStart, codonEnd);
     }
-    
+
     private static boolean isPassingSnv(final SageVariant variant)
     {
         return variant.isPassing() && variant.isSnv();
