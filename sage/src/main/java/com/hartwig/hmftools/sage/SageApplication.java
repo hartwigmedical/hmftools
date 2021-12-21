@@ -55,7 +55,7 @@ public class SageApplication implements AutoCloseable
     private final VariantVCF mVcfFile;
     private final VariantFile mVariantFile;
 
-    private SageApplication(final CommandLine cmd) throws IOException
+    private SageApplication(final CommandLine cmd)
     {
         final VersionInfo version = new VersionInfo("sage.version");
         SG_LOGGER.info("Sage version: {}", version.version());
@@ -68,7 +68,7 @@ public class SageApplication implements AutoCloseable
             SG_LOGGER.error("invalid config, exiting");
         }
 
-        mRefData = new ReferenceData(mConfig);
+        mRefData = new ReferenceData(mConfig, cmd);
 
         if(!mRefData.load())
         {

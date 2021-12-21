@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.junit.Test;
@@ -17,7 +18,7 @@ public class MixedSomaticGermlineDedupTest
     @Test
     public void testCodonDifferences()
     {
-        final GenomeRegion codon = GenomeRegions.create("1", 100, 102);
+        final BaseRegion codon = new BaseRegion(100, 102);
 
         final VariantHotspot snvBefore = create(99, "A", "T");
         final VariantHotspot snvOne = create(100, "A", "T");

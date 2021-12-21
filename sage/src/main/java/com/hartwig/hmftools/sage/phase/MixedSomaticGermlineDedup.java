@@ -1,16 +1,23 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.common.genome.region.HmfTranscriptRegionUtils.codonRangeAtGenomicPosition;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.select.TranscriptRegionSelector;
+import com.hartwig.hmftools.sage.select.TranscriptSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
@@ -20,12 +27,12 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 {
     private static final int MAX_DISTANCE = 10;
 
-    private final TranscriptRegionSelector mSelector;
+    private final TranscriptSelector mSelector;
 
-    public MixedSomaticGermlineDedup(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts)
+    public MixedSomaticGermlineDedup(final Consumer<SageVariant> consumer, final List<TranscriptData> transcripts)
     {
         super(MAX_DISTANCE, consumer);
-        mSelector = new TranscriptRegionSelector(transcripts);
+        mSelector = new TranscriptSelector(transcripts);
     }
 
     @Override
@@ -33,40 +40,40 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
     {
         int lps = newVariant.localPhaseSet();
 
-        if(!newVariant.isIndel() && lps > 0)
+        if(newVariant.isIndel() || lps < 1)
+            return;
+
+        boolean newVariantIsSnv = isPassingSnv(newVariant);
+        boolean newVariantIsMixedGermlineMnv = isMixedGermlineMnv(newVariant);
+
+        if(!newVariantIsSnv && !newVariantIsMixedGermlineMnv)
+            return;
+
+        for(SageVariant oldVariant : buffer)
         {
-
-            boolean newVariantIsSnv = isPassingSnv(newVariant);
-            boolean newVariantIsMixedGermlineMnv = isMixedGermlineMnv(newVariant);
-
-            if(newVariantIsSnv || newVariantIsMixedGermlineMnv)
+            if(oldVariant.localPhaseSet() == lps)
             {
-                for(SageVariant oldVariant : buffer)
+                if(newVariantIsSnv && isMixedGermlineMnv(oldVariant))
                 {
-                    if(oldVariant.localPhaseSet() == lps)
-                    {
-                        if(newVariantIsSnv && isMixedGermlineMnv(oldVariant))
-                        {
-                            process(oldVariant, newVariant);
-                        }
-                        else if(newVariantIsMixedGermlineMnv && isPassingSnv(oldVariant))
-                        {
-                            process(newVariant, oldVariant);
-                        }
-                    }
+                    process(oldVariant, newVariant);
+                }
+                else if(newVariantIsMixedGermlineMnv && isPassingSnv(oldVariant))
+                {
+                    process(newVariant, oldVariant);
                 }
             }
         }
     }
 
-    private void process(@NotNull final SageVariant mnv, @NotNull final SageVariant snv)
+    private void process(final SageVariant mnv, final SageVariant snv)
     {
         if(longerContainsShorter(snv, mnv))
         {
             snv.mixedGermlineImpact(mnv.mixedGermlineImpact());
 
-            final Optional<GenomeRegion> maybeCodon = codon(snv.position());
-            if(maybeCodon.filter(x -> keepMnv(x, snv.variant(), mnv.variant())).isPresent())
+            final BaseRegion positionCodon = findCodon(snv.position());
+
+            if(positionCodon != null && keepMnv(positionCodon, snv.variant(), mnv.variant()))
             {
                 snv.filters().add(VariantVCF.DEDUP_FILTER);
             }
@@ -77,36 +84,54 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
         }
     }
 
-    @NotNull
-    private Optional<GenomeRegion> codon(int position)
+    private BaseRegion findCodon(int position)
     {
-        final Optional<HmfTranscriptRegion> maybeTranscript = mSelector.select(position);
-        if(maybeTranscript.isPresent())
-        {
-            final List<GenomeRegion> codons = codonRangeAtGenomicPosition(maybeTranscript.get(), position);
-            for(GenomeRegion codon : codons)
-            {
-                if(position >= codon.start() && position <= codon.end())
-                {
-                    return Optional.of(codon);
-                }
-            }
-        }
-        return Optional.empty();
-    }
+        final TranscriptData transcript = mSelector.select(position);
 
-    private static boolean isPassingSnv(@NotNull final SageVariant variant)
+        if(transcript == null || transcript.nonCoding())
+            return null;
+
+        if(!positionWithin(position, transcript.CodingStart, transcript.CodingEnd))
+            return null;
+
+        // find the codon surrounding this position
+        ExonData exon = transcript.exons().stream().filter(x -> positionWithin(position, x.Start, x.End)).findFirst().orElse(null);
+
+        if(exon == null)
+            return null;
+
+        int codingPhase = calcExonicCodingPhase(exon, transcript.CodingStart, transcript.CodingEnd, transcript.Strand, position);
+        int codonStart = position;
+        int codonEnd = position;
+
+        if(codingPhase == PHASE_1)
+        {
+            codonEnd = min(exon.End, position + 2);
+        }
+        else if(codingPhase == PHASE_2)
+        {
+            codonStart = max(exon.Start, position - 1);
+            codonEnd = min(exon.End, position + 1);
+        }
+        else if(codingPhase == PHASE_0)
+        {
+            codonStart = max(exon.Start, position - 2);
+        }
+
+        return new BaseRegion(codonStart, codonEnd);
+    }
+    
+    private static boolean isPassingSnv(final SageVariant variant)
     {
         return variant.isPassing() && variant.isSnv();
     }
 
-    private static boolean isMixedGermlineMnv(@NotNull final SageVariant variant)
+    private static boolean isMixedGermlineMnv(final SageVariant variant)
     {
         return variant.isPassing() && variant.isMnv() && variant.mixedGermlineImpact() > 0;
     }
 
-    static boolean keepMnv(@NotNull final GenomeRegion codon, @NotNull final VariantHotspot somaticSnv,
-            @NotNull final VariantHotspot mixedMnv)
+    static boolean keepMnv(final BaseRegion codon, final VariantHotspot somaticSnv, final VariantHotspot mixedMnv)
     {
         int snvCodonDifferences = codonDifferences(codon, somaticSnv);
         int mnvCodonDifferences = codonDifferences(codon, mixedMnv);
@@ -114,15 +139,13 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
         return mnvCodonDifferences > snvCodonDifferences;
     }
 
-    public static int codonDifferences(@NotNull final GenomeRegion codon, @NotNull final VariantHotspot variant)
+    public static int codonDifferences(final BaseRegion codon, final VariantHotspot variant)
     {
         if(codon.start() > variant.end() || variant.position() > codon.end())
-        {
             return 0;
-        }
 
-        int overlapStart = (int) Math.max(codon.start(), variant.position());
-        int overlapEnd = (int) Math.min(codon.end(), variant.end());
+        int overlapStart = max(codon.start(), variant.position());
+        int overlapEnd = min(codon.end(), variant.end());
 
         int difference = 0;
         for(int position = overlapStart; position <= overlapEnd; position++)

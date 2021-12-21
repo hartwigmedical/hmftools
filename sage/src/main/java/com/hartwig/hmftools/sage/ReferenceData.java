@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SortedSetMultimap;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -25,6 +26,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -32,17 +34,18 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ReferenceData
 {
     public final ListMultimap<Chromosome,NamedBed> CoveragePanel;
-    public final ListMultimap<Chromosome, ChrBaseRegion> PanelWithHotspots;
+    public final ListMultimap<Chromosome,ChrBaseRegion> PanelWithHotspots;
     public final ListMultimap<Chromosome,VariantHotspot> Hotspots;
-    public final ListMultimap<Chromosome, ChrBaseRegion> HighConfidence;
+    public final ListMultimap<Chromosome,ChrBaseRegion> HighConfidence;
 
     public final List<HmfTranscriptRegion> TranscriptRegions;
+    public final EnsemblDataCache GeneDataCache;
 
     public final IndexedFastaSequenceFile RefGenome;
 
     private final SageConfig mConfig;
 
-    public ReferenceData(final SageConfig config)
+    public ReferenceData(final SageConfig config, final CommandLine cmd)
     {
         mConfig = config;
 
@@ -60,6 +63,10 @@ public class ReferenceData
         }
 
         RefGenome = loadRefGenome(config.RefGenomeFile);
+
+        GeneDataCache = new EnsemblDataCache(cmd, config.RefGenVersion);
+        GeneDataCache.setRequiredData(true, false, false, true);
+        GeneDataCache.load(false);
     }
 
     public static IndexedFastaSequenceFile loadRefGenome(final String refGenomeFile)

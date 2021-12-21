@@ -17,6 +17,7 @@ import com.hartwig.hmftools.sage.select.TranscriptRegionSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class RightAlignMicrohomology implements Consumer<SageVariant>
 {
@@ -54,28 +55,21 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
     boolean realign(@NotNull final SageVariant variant)
     {
         if(!variant.isPassing())
-        {
             return false;
-        }
 
         final boolean isInframeDel = variant.variant().isInframeIndel() && variant.alt().length() == 1;
+
         if(!variant.variant().isInframeIndel())
-        {
             return false;
-        }
 
         final String microhomology = variant.microhomology();
-        final int microhomologyLength = microhomology.length();
-        if(microhomologyLength == 0)
-        {
-            return false;
-        }
 
-        final Optional<HmfExonRegion> maybeLeftAlignedRegion = PhasedInframeIndel.selectExon(mSelector, variant.position() + 1);
-        if(maybeLeftAlignedRegion.isPresent())
-        {
+        if(microhomology.length() == 0)
             return false;
-        }
+
+        final Optional<HmfExonRegion> maybeLeftAlignedRegion = selectExon(mSelector, variant.position() + 1);
+        if(maybeLeftAlignedRegion.isPresent())
+            return false;
 
         final VariantHotspot rightAligned =
                 isInframeDel ? rightAlignDel(variant.variant(), microhomology) : rightAlignIns(variant.variant(), microhomology);
@@ -93,7 +87,7 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
         }
 
         final Optional<HmfExonRegion> maybeRightAlignedExon =
-                Optional.ofNullable(PhasedInframeIndel.selectExon(rightAligned.position() + 1, rightAlignedTranscript));
+                Optional.ofNullable(selectExon(rightAligned.position() + 1, rightAlignedTranscript));
         if(!maybeRightAlignedExon.isPresent())
         {
             return false;
@@ -109,6 +103,25 @@ public class RightAlignMicrohomology implements Consumer<SageVariant>
         mRightAlignedList.add(realignedVariant);
 
         return true;
+    }
+
+    @NotNull
+    static Optional<HmfExonRegion> selectExon(@NotNull final TranscriptRegionSelector selector, int position)
+    {
+        return selector.select(position).map(x -> selectExon(position, x));
+    }
+
+    @Nullable
+    static HmfExonRegion selectExon(final int position, @NotNull final HmfTranscriptRegion transcript)
+    {
+        for(HmfExonRegion exon : transcript.exons())
+        {
+            if(position >= exon.start() && position <= exon.end())
+            {
+                return exon;
+            }
+        }
+        return null;
     }
 
     @NotNull

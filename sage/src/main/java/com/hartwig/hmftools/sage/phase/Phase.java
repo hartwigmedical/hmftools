@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
@@ -22,14 +23,14 @@ public class Phase implements Consumer<SageVariant>
     private final MixedSomaticGermlineDedup mMixedSomaticGermlineDedup;
     private final RightAlignMicrohomology mRrightAlignMicrohomology;
 
-    public Phase(final List<HmfTranscriptRegion> transcripts, final Consumer<SageVariant> consumer)
+    public Phase(final List<HmfTranscriptRegion> oldTrans, final List<TranscriptData> transcripts, final Consumer<SageVariant> consumer)
     {
         mDedupRealign = new DedupRealign(consumer);
         mDedupIndel = new DedupIndel(mDedupRealign);
         mDedupMnv = new DedupMnv(mDedupIndel);
         mMixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(mDedupMnv, transcripts);
         mMixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mMixedSomaticGermlineDedup);
-        mRrightAlignMicrohomology = new RightAlignMicrohomology(mMixedSomaticGermlineIdentifier, transcripts);
+        mRrightAlignMicrohomology = new RightAlignMicrohomology(mMixedSomaticGermlineIdentifier, oldTrans);
         mLocalRealignSet = new LocalRealignSet(mRrightAlignMicrohomology);
         mLocalPhaseSet = new LocalPhaseSet(mLocalRealignSet);
     }

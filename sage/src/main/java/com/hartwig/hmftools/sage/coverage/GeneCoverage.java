@@ -75,13 +75,13 @@ public class GeneCoverage implements Consumer<ChrBaseRegion>
         mGene = exons.get(0).name();
         mExonCoverage = exons.stream().map(ExonCoverage::new).collect(Collectors.toList());
 
-        int tmpMin = (int)exons.get(0).start();
-        int tmpMax = (int)exons.get(0).end();
+        int tmpMin = exons.get(0).start();
+        int tmpMax = exons.get(0).end();
 
         for(NamedBed exon : exons)
         {
-            tmpMin = Math.min(tmpMin, (int)exon.start());
-            tmpMax = Math.max(tmpMax, (int)exon.end());
+            tmpMin = Math.min(tmpMin, exon.start());
+            tmpMax = Math.max(tmpMax, exon.end());
         }
 
         mMinPosition = tmpMin;

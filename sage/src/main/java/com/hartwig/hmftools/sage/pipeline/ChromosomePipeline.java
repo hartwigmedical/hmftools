@@ -17,6 +17,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
@@ -66,10 +68,15 @@ public class ChromosomePipeline implements AutoCloseable
 
         mPartition = new ChromosomePartition(config, mRefGenome);
 
-        final List<HmfTranscriptRegion> transcripts =
+        final List<HmfTranscriptRegion> oldTrans =
                 refData.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 
-        mPhase = new Phase(transcripts, this::write);
+        final List<GeneData> genes = refData.GeneDataCache.getChrGeneDataMap().get(chromosome);
+
+        final List<TranscriptData> transcripts =
+                genes.stream().map(x -> refData.GeneDataCache.getCanonicalTranscriptData(x.GeneId)).collect(Collectors.toList());
+
+        mPhase = new Phase(oldTrans, transcripts, this::write);
     }
 
     public String chromosome()

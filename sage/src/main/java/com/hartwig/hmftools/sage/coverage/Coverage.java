@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Coverage
 {
-    private final Map<String, List<GeneCoverage>> mGeneCoverage;
+    private final Map<String,List<GeneCoverage>> mGeneCoverage;
 
     public Coverage(final Set<String> samples, final Collection<NamedBed> panel)
     {
