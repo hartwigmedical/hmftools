@@ -160,6 +160,6 @@ public class ActionableEvidenceFactoryTest {
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Not a direction").kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(undefined).size());
+        assertEquals(1, factory.toActionableEvents(notRecognized).size());
     }
 }

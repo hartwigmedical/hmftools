@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.serve.transvar;
 
 import static com.hartwig.hmftools.common.codon.AminoAcids.findAminoAcidForCodon;
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_LIST;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.AminoAcids;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
@@ -35,8 +34,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 class TransvarInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarInterpreter.class);
-
-    private static final List<String> BASES = Lists.newArrayList("G", "A", "T", "C");
 
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
@@ -364,7 +361,7 @@ class TransvarInterpreter {
                     refSequence(record.chromosome(), posPriorToCodon + 1 + strandCorrection, posPriorToCodon + 1 + strandCorrection);
             String refBase2 =
                     refSequence(record.chromosome(), posPriorToCodon + 2 + strandCorrection, posPriorToCodon + 2 + strandCorrection);
-            for (String base : DNA_BASE_LIST) {
+            for (String base : Nucleotides.DNA_BASE_LIST) {
                 String newRefCodon;
                 if (i == 0) {
                     newRefCodon = base + refBase1 + refBase2;

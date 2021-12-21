@@ -6,8 +6,6 @@ import java.nio.file.Files;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,8 +13,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface TransvarTestAppConfig {
-
-    Logger LOGGER = LogManager.getLogger(TransvarTestAppConfig.class);
 
     String ENSEMBL_DATA_DIR_37 = "ensembl_data_dir_37";
     String ENSEMBL_DATA_DIR_38 = "ensembl_data_dir_38";

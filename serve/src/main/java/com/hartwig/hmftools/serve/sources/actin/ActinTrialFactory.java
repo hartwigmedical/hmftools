@@ -20,8 +20,8 @@ public final class ActinTrialFactory {
                 .treatment(actionTrial.trial())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .cancerType(Strings.EMPTY)
-                .doid(Strings.EMPTY)
+                .cancerType("Advanced Solid Tumor")
+                .doid("162")
                 .build();
     }
 }

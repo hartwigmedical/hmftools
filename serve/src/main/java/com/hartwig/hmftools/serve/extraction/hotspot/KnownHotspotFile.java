@@ -50,7 +50,7 @@ public final class KnownHotspotFile {
                     .chr(hotspot.chromosome())
                     .start(hotspot.position())
                     .alleles(hotspotAlleles)
-                    .computeEndFromAlleles(hotspotAlleles, (int) hotspot.position())
+                    .computeEndFromAlleles(hotspotAlleles, hotspot.position())
                     .attribute(VCFWriterFactory.INPUT_FIELD,
                             KeyFormatter.toProteinKey(hotspot.gene(), hotspot.transcript(), hotspot.proteinAnnotation()))
                     .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(hotspot.sources()))

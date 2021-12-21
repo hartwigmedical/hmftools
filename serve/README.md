@@ -184,7 +184,7 @@ LOW_TUMOR_MUTATIONAL_LOAD | Evidence is applicable when the genome does not have
 HOMOLOGOUS_RECOMBINATION_DEFICIENT | Evidence is applicable when the genome has a HRD status
 HPV_POSITIVE | Evidence is applicable when viral presence of some form of HPV has been found
 EBV_POSITIVE | Evidence is applicable when viral presence of some form of EBV has been found
-IMMUNO_HLA / Evidence is applicable when there is a HLA typering
+IMMUNO_HLA / Evidence is applicable in case of an HLA type match
 
 ## Curation and harmonization of individual knowledgebases
 

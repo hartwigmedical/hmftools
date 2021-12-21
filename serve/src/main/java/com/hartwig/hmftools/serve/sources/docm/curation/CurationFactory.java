@@ -1,14 +1,23 @@
 package com.hartwig.hmftools.serve.sources.docm.curation;
 
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 final class CurationFactory {
 
     static final Set<CurationKey> ENTRY_BLACKLIST = Sets.newHashSet();
 
+    static final Map<String, String> GENE_MAPPINGS = Maps.newHashMap();
+
     static {
+        // Some gene names in DoCM are not HGNC-compliant, so we map them to the HGNC versions
+        GENE_MAPPINGS.put("H3F3A", "H3-3A");
+        GENE_MAPPINGS.put("RQCD1", "CNOT9");
+        GENE_MAPPINGS.put("TCEB1", "ELOC");
+
         // Not clear what the "minus" means, so ignoring. Could be DEL?
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000288602", "K601-"));
         ENTRY_BLACKLIST.add(new CurationKey("CTNNB1", "ENST00000349496", "VSHWQQQSYLDSGIHSG22-"));
@@ -60,6 +69,10 @@ final class CurationFactory {
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "T207I"));
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "G77L"));
         ENTRY_BLACKLIST.add(new CurationKey("BRAF", "ENST00000496384", "G77V"));
+
+        // Genes that don't exist in our v37 model (This gene is H3C11 in v38)
+        ENTRY_BLACKLIST.add(new CurationKey("HIST1H3I", "ENST00000328488", "K28M"));
+        ENTRY_BLACKLIST.add(new CurationKey("HIST1H3I", "ENST00000328488", "K28E"));
     }
 
     private CurationFactory() {
