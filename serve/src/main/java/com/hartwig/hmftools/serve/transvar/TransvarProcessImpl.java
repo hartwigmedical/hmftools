@@ -32,12 +32,11 @@ class TransvarProcessImpl implements TransvarProcess {
     @NotNull
     private final String refGenomeFastaFile;
     @NotNull
-    private final TransvarCurator curator;
+    private final TransvarCurator curator = new TransvarCurator();
 
     TransvarProcessImpl(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
         this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
-        this.curator = new TransvarCurator(refGenomeVersion);
     }
 
     @Override

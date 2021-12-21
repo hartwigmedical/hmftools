@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.extraction.util.KeyFormatter;
 import com.hartwig.hmftools.serve.sources.docm.DocmEntry;
+import com.hartwig.hmftools.serve.sources.docm.ImmutableDocmEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,6 +29,10 @@ public class DocmCurator {
             if (CurationFactory.ENTRY_BLACKLIST.contains(key)) {
                 LOGGER.debug("Removing DocmEntry '{}' because of blacklist curation.",
                         KeyFormatter.toProteinKey(entry.gene(), entry.transcript(), entry.proteinAnnotation()));
+            } else if (CurationFactory.GENE_MAPPINGS.containsKey(entry.gene())) {
+                String mappedGene = CurationFactory.GENE_MAPPINGS.get(entry.gene());
+                LOGGER.debug("Mapping gene '{}' to '{}'", entry.gene(), mappedGene);
+                curatedEntries.add(ImmutableDocmEntry.builder().from(entry).gene(mappedGene).build());
             } else {
                 curatedEntries.add(entry);
             }
