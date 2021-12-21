@@ -7,19 +7,14 @@ import com.hartwig.hmftools.common.serve.classification.EventClassifierFactory;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
-import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActinEventTypeExtractor {
 
     @NotNull
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ActinClassificationConfig.build());
-    private static final Logger LOGGER = LogManager.getLogger(ActinEventTypeExtractor.class);
 
     private ActinEventTypeExtractor() {
     }
