@@ -11,13 +11,13 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -36,6 +36,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -55,14 +56,17 @@ public class GripssCompareVcfs
     private final VariantBuilder mVariantBuilder;
 
     private final Map<String,SvData> mOriginalSvData;
+    private final Map<String, List<SvData>> mOriginalCoordsSvData; // keyed by chromosome pair
 
     private final BufferedWriter mWriter;
 
     private final boolean mIgnorePonDiff;
+    private final boolean mKeyByCoords; // instead of assuming VCF Ids match
 
     private static final String ORIGINAL_VCF = "original_vcf";
     private static final String NEW_VCF = "new_vcf";
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
+    private static final String KEY_BY_COORDS = "key_by_coords";
 
     public GripssCompareVcfs(final CommandLine cmd)
     {
@@ -73,10 +77,12 @@ public class GripssCompareVcfs
         mOutputId = cmd.getOptionValue(OUTPUT_ID);
 
         mOriginalSvData = Maps.newHashMap();
+        mOriginalCoordsSvData = Maps.newHashMap();
 
         mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd));
 
         mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
+        mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
 
         mWriter = initialiseWriter();
     }
@@ -123,6 +129,20 @@ public class GripssCompareVcfs
                     continue;
 
                 mOriginalSvData.put(svData.id(), svData);
+
+                if(mKeyByCoords)
+                {
+                    String chrPair = chromosomePair(svData);
+                    List<SvData> svList = mOriginalCoordsSvData.get(chrPair);
+
+                    if(svList == null)
+                    {
+                        svList = Lists.newArrayList();
+                        mOriginalCoordsSvData.put(chrPair, svList);
+                    }
+
+                    svList.add(svData);
+                }
             }
         }
         catch(IOException e)
@@ -131,9 +151,19 @@ public class GripssCompareVcfs
         }
     }
 
+    private static String chromosomePair(final SvData sv)
+    {
+        if(sv.isSgl())
+            return sv.chromosomeStart();
+        else
+            return String.format("%s_%s", sv.chromosomeStart(), sv.chromosomeEnd());
+    }
+
     private void compareVariants(final String newVcfFile)
     {
         mVariantBuilder.clearState();
+
+        GR_LOGGER.info("loading new VCF({})", newVcfFile);
 
         final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
                 newVcfFile, new VCFCodec(), false);
@@ -164,7 +194,7 @@ public class GripssCompareVcfs
                     GR_LOGGER.debug("processed {} variants", newSvCount);
                 }
 
-                SvData origSv = mOriginalSvData.get(newSv.id());
+                SvData origSv = findOriginalSv(newSv);
 
                 if(origSv == null)
                 {
@@ -253,6 +283,36 @@ public class GripssCompareVcfs
         GR_LOGGER.info("diffTotal({})", diffCount);
     }
 
+    private SvData findOriginalSv(final SvData newSv)
+    {
+        if(!mKeyByCoords)
+            return mOriginalSvData.get(newSv.id());
+
+        List<SvData> svList = mOriginalCoordsSvData.get(chromosomePair(newSv));
+
+        if(svList == null)
+            return null;
+
+        for(int i = 0; i < svList.size(); ++i)
+        {
+            SvData sv = svList.get(i);
+
+            if(sv.type() != newSv.type())
+                continue;
+
+            if(sv.posStart() != newSv.posStart() || sv.orientStart() != newSv.orientStart())
+                continue;
+
+            if(!sv.isSgl() && (sv.posEnd() != newSv.posEnd() || sv.orientEnd() != newSv.orientEnd()))
+                continue;
+
+            svList.remove(i);
+            return sv;
+        }
+
+        return null;
+    }
+
     private String filtersStr(final Set<String> filters)
     {
         StringJoiner sj = new StringJoiner(";");
@@ -275,7 +335,12 @@ public class GripssCompareVcfs
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("SvId,Coords,Type,DiffType,OrigValue,NewValue");
+            if(mKeyByCoords)
+                writer.write("OrigId,NewId");
+            else
+                writer.write("SvId");
+
+            writer.write(",Coords,Type,DiffType,OrigValue,NewValue");
             writer.newLine();
 
             return writer;
@@ -294,8 +359,18 @@ public class GripssCompareVcfs
             String coords = origSv != null ? makeSvCoords(origSv) : makeSvCoords(newSv);
             StructuralVariantType type = origSv != null ? origSv.type() : newSv.type();
 
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%s",
-                    origSv != null ? origSv.id() : newSv.id(), coords, type, diffType, origValue, newValue));
+            if(mKeyByCoords)
+            {
+                mWriter.write(String.format("%s,%s",
+                        origSv != null ? origSv.id() : "", newSv != null ? newSv.id() : ""));
+            }
+            else
+            {
+                mWriter.write(String.format("%s", origSv != null ? origSv.id() : newSv.id()));
+            }
+
+            mWriter.write(String.format(",%s,%s,%s,%s,%s",
+                    coords, type, diffType, origValue, newValue));
 
             mWriter.newLine();
         }
@@ -325,6 +400,7 @@ public class GripssCompareVcfs
         options.addOption(ORIGINAL_VCF, true, "Optional, name of the reference sample");
         options.addOption(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
         options.addOption(IGNORE_PON_DIFF, false, "Ignore diffs if just PON filter");
+        options.addOption(KEY_BY_COORDS, false, "Match SVs on coords rather than VcfId");
 
         addOutputOptions(options);
         addLoggingOptions(options);
