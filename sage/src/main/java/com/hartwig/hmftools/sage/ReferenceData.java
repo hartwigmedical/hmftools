@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -21,18 +22,14 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -43,7 +40,6 @@ public class ReferenceData
     public final ListMultimap<Chromosome,VariantHotspot> Hotspots;
     public final ListMultimap<Chromosome,ChrBaseRegion> HighConfidence;
 
-    public final List<HmfTranscriptRegion> TranscriptRegions;
     public final EnsemblDataCache GeneDataCache;
 
     public final Map<String,List<TranscriptData>> ChromosomeTranscripts;
@@ -60,14 +56,6 @@ public class ReferenceData
         PanelWithHotspots = ArrayListMultimap.create();
         Hotspots = ArrayListMultimap.create();
         HighConfidence = ArrayListMultimap.create();
-
-        TranscriptRegions = Lists.newArrayList();
-
-        if(!config.AppendMode)
-        {
-            TranscriptRegions.addAll(config.RefGenVersion.is37() ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38());
-            config.Quality.populateGeneData(TranscriptRegions);
-        }
 
         RefGenome = loadRefGenome(config.RefGenomeFile);
 
@@ -104,10 +92,17 @@ public class ReferenceData
             if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
                 continue;
 
+            List<GeneData> geneDataList = entry.getValue();
+
+            if(!mConfig.AppendMode)
+            {
+                mConfig.Quality.populateGeneData(geneDataList);
+            }
+
             List<TranscriptData> transDataList = Lists.newArrayList();
             ChromosomeTranscripts.put(chromosome, transDataList);
 
-            for(GeneData geneData : entry.getValue())
+            for(GeneData geneData : geneDataList)
             {
                 if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream()
                         .noneMatch(x -> positionsOverlap(x.start(), x.end(), geneData.GeneStart, geneData.GeneEnd)))

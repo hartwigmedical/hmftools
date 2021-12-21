@@ -67,7 +67,7 @@ public class MixedGermlineTest
         final SageVariant mixedMnv = create(CHR_1, 104, "GT", "AG"); // was 43382367
         final SageVariant germlineSnv = create(CHR_1, 105, "T", "G"); // was 43382368
 
-        process(CHR_1, somaticSnv, mixedMnv, germlineSnv);
+        process(somaticSnv, mixedMnv, germlineSnv);
 
         assertEquals(1, mixedMnv.mixedGermlineImpact());
         assertEquals(1, somaticSnv.mixedGermlineImpact());
@@ -84,7 +84,7 @@ public class MixedGermlineTest
         final SageVariant somaticSnv = create(CHR_1, germlinePosition + 2, "A", "G");
         final SageVariant mixedMnv = create(CHR_1, germlinePosition, "ACA", "GCG");
 
-        process(CHR_1, germlineSnv, somaticSnv, mixedMnv);
+        process(germlineSnv, somaticSnv, mixedMnv);
 
         assertEquals(1, mixedMnv.mixedGermlineImpact());
         assertEquals(1, somaticSnv.mixedGermlineImpact());
@@ -95,7 +95,7 @@ public class MixedGermlineTest
         assertEquals(mvnPass, mixedMnv.isPassing());
     }
 
-    private void process(final String chromosome, SageVariant... variants)
+    private void process(SageVariant... variants)
     {
         final List<SageVariant> consumer = Lists.newArrayList();
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
@@ -24,7 +26,7 @@ public class QualityConfig
     public final int DistanceFromReadEdgeFixedPenalty;
     public final int MapQualityFixedPenalty;
     public final int MapQualityReadEventsPenalty;
-    public final List<HmfTranscriptRegion> HighlyPolymorphicGenes;
+    public final List<GeneData> HighlyPolymorphicGenes;
     public final int MapQualityImproperPairPenalty;
 
     private final Set<String> mHighlyPolymorphicGeneNames;
@@ -64,10 +66,10 @@ public class QualityConfig
         MapQualityImproperPairPenalty = getConfigValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY);
     }
 
-    public void populateGeneData(final List<HmfTranscriptRegion> allTranscripts)
+    public void populateGeneData(final List<GeneData> geneDataList)
     {
-        HighlyPolymorphicGenes.addAll(allTranscripts.stream()
-                .filter(x -> mHighlyPolymorphicGeneNames.contains(x.geneName())).collect(Collectors.toList()));
+        HighlyPolymorphicGenes.addAll(geneDataList.stream()
+                .filter(x -> mHighlyPolymorphicGeneNames.contains(x.GeneName)).collect(Collectors.toList()));
     }
 
     public QualityConfig()
@@ -83,9 +85,9 @@ public class QualityConfig
         MapQualityImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
     }
 
-    public boolean isHighlyPolymorphic(@NotNull final GenomePosition position)
+    public boolean isHighlyPolymorphic(final GenomePosition position)
     {
-        return HighlyPolymorphicGenes.stream().anyMatch(x -> x.contains(position));
+        return HighlyPolymorphicGenes.stream().anyMatch(x -> positionWithin(position.position(), x.GeneStart, x.GeneEnd));
     }
 
     public int modifiedMapQuality(@NotNull final GenomePosition position, int mapQuality, int readEvents, boolean properPairFlag)
