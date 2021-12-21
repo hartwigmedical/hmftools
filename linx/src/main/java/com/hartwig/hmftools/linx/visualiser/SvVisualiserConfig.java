@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.linx.visualiser;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -18,6 +23,7 @@ public class SvVisualiserConfig
     public final String CircosBin;
 
     public final boolean IncludeLineElements;
+    public final RefGenomeCoordinates RefGenomeCoords;
 
     public final int Threads;
     public final boolean Debug;
@@ -78,6 +84,9 @@ public class SvVisualiserConfig
         {
             throw new IOException("Unable to write to data directory " + OutputConfPath);
         }
+
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenomeCoords = refGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "1"));
 

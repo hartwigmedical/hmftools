@@ -191,7 +191,7 @@ public class SvVisualiser implements AutoCloseable
 
         for(String chromosome : chromosomes)
         {
-            chromosomeSegments.add(VisSegments.entireChromosome(mSampleData.Sample, chromosome));
+            chromosomeSegments.add(VisSegments.entireChromosome(mSampleData.Sample, chromosome, mConfig.RefGenomeCoords));
         }
 
         final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosomes);
@@ -282,7 +282,9 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(alterations));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
-        final List<Segment> segments = VisSegments.extendTerminals(0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments);
+        final List<Segment> segments = VisSegments.extendTerminals(
+                0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments, mConfig.RefGenomeCoords);
+        
         final List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
 
         final ColorPicker color = colorPickerFactory.create(links);

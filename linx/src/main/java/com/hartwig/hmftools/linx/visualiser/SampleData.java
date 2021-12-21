@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
@@ -181,7 +182,7 @@ public class SampleData
         options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
         addEnsemblDir(options);
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - accepts 37 (default), or 38");
+        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
 
