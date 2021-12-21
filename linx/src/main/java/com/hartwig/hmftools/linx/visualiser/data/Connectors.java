@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class Connectors
 {
-
     private final boolean showSimpleSvSegments;
 
     public Connectors(final boolean showSimpleSvSegments)

@@ -48,7 +48,7 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
@@ -399,7 +399,7 @@ public class SampleAnalyser implements Callable
 
             VisSvDataFile.write(VisSvDataFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             VisCopyNumberFile.write(VisCopyNumberFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            VisGeneExonFile.write(VisGeneExonFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             VisSegmentFile.write(VisSegmentFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             VisFusionFile.write(VisFusionFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
             VisProteinDomainFile.write(VisProteinDomainFile.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());

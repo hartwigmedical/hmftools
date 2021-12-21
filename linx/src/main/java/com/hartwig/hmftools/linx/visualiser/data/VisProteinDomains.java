@@ -7,39 +7,34 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 
 import org.jetbrains.annotations.NotNull;
 
 public class VisProteinDomains
 {
-
     public static final String UTR = "UTR/Non-coding";
 
-    @NotNull
-    public static List<ProteinDomain> readProteinDomains(@NotNull final String fileName, @NotNull final List<Fusion> fusions)
+    public static List<ProteinDomain> readProteinDomains(final String fileName, final List<Fusion> fusions)
             throws IOException
     {
-        final List<ProteinDomain> all =
-                VisProteinDomainFile.read(fileName).stream().map(VisProteinDomains::fromFile).collect(Collectors.toList());
+        final List<ProteinDomain> all = VisProteinDomainFile.read(fileName).stream()
+                .map(VisProteinDomains::fromFile).collect(Collectors.toList());
+
         return proteinDomainsInFusionGenes(fusions, all);
     }
 
-    @NotNull
-    public static List<ProteinDomain> exonicProteinDomains(@NotNull final List<ProteinDomain> proteinDomains,
-            @NotNull final List<Exon> exons)
+    public static List<ProteinDomain> exonicProteinDomains(final List<ProteinDomain> proteinDomains, final List<VisGeneExon> exons)
     {
-
         final List<ProteinDomain> result = Lists.newArrayList();
         for (ProteinDomain proteinDomain : proteinDomains)
         {
             if (proteinDomain.name().equals(UTR))
             {
+                final List<VisGeneExon> proteinDomainExons = exons.stream().filter(x -> x.Transcript.equals(proteinDomain.transcript())).sorted().collect(Collectors.toList());
 
-                final List<Exon> proteinDomainExons =
-                        exons.stream().filter(x -> x.transcript().equals(proteinDomain.transcript())).sorted().collect(Collectors.toList());
-
-                for (Exon exon : proteinDomainExons)
+                for(VisGeneExon exon : proteinDomainExons)
                 {
                     if (proteinDomain.overlaps(exon))
                     {
@@ -62,7 +57,7 @@ public class VisProteinDomains
     }
 
     @NotNull
-    private static ProteinDomain fromFile(@NotNull final VisProteinDomainFile file)
+    private static ProteinDomain fromFile(final VisProteinDomainFile file)
     {
         return ImmutableProteinDomain.builder()
                 .sampleId(file.SampleId)
@@ -76,8 +71,8 @@ public class VisProteinDomains
     }
 
     @NotNull
-    private static List<ProteinDomain> proteinDomainsInFusionGenes(@NotNull final List<Fusion> fusions,
-            @NotNull final List<ProteinDomain> proteinDomains)
+    private static List<ProteinDomain> proteinDomainsInFusionGenes(final List<Fusion> fusions,
+            final List<ProteinDomain> proteinDomains)
     {
         final Set<String> transcripts = Sets.newHashSet();
         fusions.forEach(x ->
@@ -90,7 +85,7 @@ public class VisProteinDomains
     }
 
     @NotNull
-    private static String utr(@NotNull final String utr)
+    private static String utr(final String utr)
     {
         switch (utr)
         {

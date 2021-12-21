@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,25 +20,23 @@ public class FusedExons
 {
     private static final String DELIMITER = "\t";
 
-    public static void write(@NotNull final String fileName, @NotNull final List<FusedExon> fusedExons) throws IOException
+    public static void write(final String fileName, final List<FusedExon> fusedExons) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(fusedExons));
     }
 
-    @NotNull
-    public static List<FusedExon> fusedExons(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    public static List<FusedExon> fusedExons(final Fusion fusion, final List<VisGeneExon> exons)
     {
         final List<FusedExon> result = Lists.newArrayList();
 
-        final List<Exon> fusionExons = VisExons.fusionExons(fusion, exons);
-        final List<Exon> upStreamExons = sortedUpstreamExons(fusion, fusionExons);
-        final List<Exon> downStreamExons = sortedDownstreamExons(fusion, fusionExons);
-        if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
-        {
-            return result;
-        }
+        final List<VisGeneExon> fusionExons = VisExons.fusionExons(fusion, exons);
+        final List<VisGeneExon> upStreamExons = sortedUpstreamExons(fusion, fusionExons);
+        final List<VisGeneExon> downStreamExons = sortedDownstreamExons(fusion, fusionExons);
 
-        final Exon firstUpExon = upStreamExons.get(0);
+        if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
+            return result;
+
+        final VisGeneExon firstUpExon = upStreamExons.get(0);
         final GenomeRegion upGeneRegion = upGeneRegion(fusion, firstUpExon);
         final GenomeRegion convertedUpGeneRegion = convertRegion(fusion.strandUp(), upGeneRegion, upGeneRegion);
 
@@ -52,23 +51,23 @@ public class FusedExons
                 .geneEnd(convertedUpGeneRegion.end())
                 .transcript(fusion.transcriptUp());
 
-        for (final Exon exon : upStreamExons)
+        for (final VisGeneExon exon : upStreamExons)
         {
             final GenomeRegion convertedExon = convertRegion(fusion.strandUp(), upGeneRegion, exon);
 
-            if (upGeneRegion.overlaps(exon))
+            if(upGeneRegion.overlaps(exon))
             {
                 final FusedExon fusedExon = upFusedExonBuilder
                         .start(convertedExon.start())
                         .end(convertedExon.end())
-                        .rank(exon.rank())
-                        .skipped(exon.rank() > fusion.fusedExonUp())
+                        .rank(exon.ExonRank)
+                        .skipped(exon.ExonRank > fusion.fusedExonUp())
                         .build();
                 result.add(fusedExon);
             }
         }
 
-        final Exon finalDownExon = downStreamExons.get(downStreamExons.size() - 1);
+        final VisGeneExon finalDownExon = downStreamExons.get(downStreamExons.size() - 1);
         final GenomeRegion downGeneRegion = downGene(fusion, finalDownExon);
         final GenomeRegion convertedDownGeneRegion = convertRegion(fusion.strandDown(), downGeneRegion, downGeneRegion);
 
@@ -84,34 +83,31 @@ public class FusedExons
 
         for (int i = 0; i < downStreamExons.size(); i++)
         {
-            final Exon exon = downStreamExons.get(i);
+            final VisGeneExon exon = downStreamExons.get(i);
             final GenomeRegion convertedExon = convertRegion(fusion.strandDown(), downGeneRegion, exon);
 
-            if (downGeneRegion.overlaps(exon))
+            if(downGeneRegion.overlaps(exon))
             {
                 final FusedExon fusedExon = downFusedExonBuilder
                         .start(convertedExon.start() + convertedUpGeneRegion.end())
                         .end(convertedExon.end() + convertedUpGeneRegion.end())
-                        .rank(exon.rank())
-                        .skipped(exon.rank() < fusion.fusedExonDown() || (i == 0 && intronicToExonicFusion))
+                        .rank(exon.ExonRank)
+                        .skipped(exon.ExonRank < fusion.fusedExonDown() || (i == 0 && intronicToExonicFusion))
                         .build();
                 result.add(fusedExon);
             }
-
         }
 
         return result;
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<FusedExon> exons)
+    static List<String> toLines(final List<FusedExon> exons)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         exons.stream().map(FusedExons::toString).forEach(lines::add);
         return lines;
     }
-
     @NotNull
     private static String header()
     {
@@ -131,7 +127,7 @@ public class FusedExons
     }
 
     @NotNull
-    private static String toString(@NotNull final FusedExon exon)
+    private static String toString(final FusedExon exon)
     {
         return new StringJoiner(DELIMITER)
                 .add(exon.sampleId())
@@ -149,24 +145,23 @@ public class FusedExons
                 .toString();
     }
 
-    @NotNull
-    private static Gene upGeneRegion(@NotNull final Fusion fusion, @NotNull final Exon firstUpExon)
+    private static Gene upGeneRegion(final Fusion fusion, final VisGeneExon firstUpExon)
     {
         return fusion.strandUp() < 0 ?
                 ImmutableGene.builder()
-                        .type(firstUpExon.type())
-                        .chromosome(firstUpExon.chromosome())
+                        .type(firstUpExon.AnnotationType)
+                        .chromosome(firstUpExon.Chromosome)
                         .start(fusion.positionUp())
-                        .end(firstUpExon.end())
+                        .end(firstUpExon.ExonEnd)
                         .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptUp())
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
-                        .type(firstUpExon.type())
-                        .chromosome(firstUpExon.chromosome())
-                        .start(firstUpExon.start())
+                        .type(firstUpExon.AnnotationType)
+                        .chromosome(firstUpExon.Chromosome)
+                        .start(firstUpExon.ExonStart)
                         .end(fusion.positionUp())
                         .strand(fusion.strandUp())
                         .name(fusion.geneDown())
@@ -175,14 +170,13 @@ public class FusedExons
                         .build();
     }
 
-    @NotNull
-    static Gene downGene(@NotNull final Fusion fusion, @NotNull final Exon finalDownGene)
+    static Gene downGene(final Fusion fusion, final VisGeneExon finalDownGene)
     {
         return fusion.strandDown() < 0 ?
                 ImmutableGene.builder()
-                        .type(finalDownGene.type())
-                        .chromosome(finalDownGene.chromosome())
-                        .start(finalDownGene.start())
+                        .type(finalDownGene.AnnotationType)
+                        .chromosome(finalDownGene.Chromosome)
+                        .start(finalDownGene.ExonStart)
                         .end(fusion.positionDown())
                         .strand(fusion.strandDown())
                         .name(fusion.geneDown())
@@ -190,10 +184,10 @@ public class FusedExons
                         .namePosition(0)
                         .build() :
                 ImmutableGene.builder()
-                        .type(finalDownGene.type())
-                        .chromosome(finalDownGene.chromosome())
+                        .type(finalDownGene.AnnotationType)
+                        .chromosome(finalDownGene.Chromosome)
                         .start(fusion.positionDown())
-                        .end(finalDownGene.end())
+                        .end(finalDownGene.ExonEnd)
                         .strand(fusion.strandDown())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
@@ -201,12 +195,11 @@ public class FusedExons
                         .build();
     }
 
-    @NotNull
-    static GenomeRegion convertRegion(int strand, @NotNull final GenomeRegion reference, @NotNull final GenomeRegion region)
+    static GenomeRegion convertRegion(int strand, final GenomeRegion reference, final GenomeRegion region)
     {
         final int start;
         final int end;
-        if (strand < 0)
+        if(strand < 0)
         {
             start = reference.end() - region.end();
             end = reference.end() - region.start();

@@ -11,13 +11,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Genes
 {
     @NotNull
-    public static List<Gene> uniqueGenes(@NotNull final List<Exon> exons)
+    public static List<Gene> uniqueGenes(@NotNull final List<VisGeneExon> exons)
     {
         return unique(genes(exons));
     }
@@ -43,31 +44,31 @@ public class Genes
     }
 
     @NotNull
-    public static List<Gene> genes(@NotNull final List<Exon> exons)
+    public static List<Gene> genes(@NotNull final List<VisGeneExon> exons)
     {
         final List<Gene> result = Lists.newArrayList();
 
         final Set<String> transcripts = exons.stream()
-                .filter(x -> x.type() != EXON_LOST)
-                .map(Exon::transcript)
+                .filter(x -> x.AnnotationType != EXON_LOST)
+                .map(x -> x.Transcript)
                 .collect(Collectors.toSet());
 
         for (final String transcript : transcripts)
         {
-            final List<Exon> transcriptExons = exons.stream().filter(x -> x.transcript().equals(transcript)).sorted().collect(toList());
-            final Exon first = transcriptExons.get(0);
-            final Exon last = transcriptExons.get(transcriptExons.size() - 1);
+            final List<VisGeneExon> transcriptExons = exons.stream().filter(x -> x.Transcript.equals(transcript)).sorted().collect(toList());
+            final VisGeneExon first = transcriptExons.get(0);
+            final VisGeneExon last = transcriptExons.get(transcriptExons.size() - 1);
 
-            long namePosition = first.rank() <= last.rank() ? first.start() : last.end();
+            long namePosition = first.ExonRank <= last.ExonRank ? first.ExonStart : last.ExonEnd;
 
             final Gene gene = ImmutableGene.builder()
                     .from(first)
-                    .type(first.type())
-                    .transcript(first.transcript())
-                    .name(first.gene())
-                    .end(last.end())
+                    .type(first.AnnotationType)
+                    .transcript(first.Transcript)
+                    .name(first.Gene)
+                    .end(last.ExonEnd)
                     .namePosition(namePosition)
-                    .strand(first.rank() <= last.rank() ? 1 : -1)
+                    .strand(first.ExonRank <= last.ExonRank ? 1 : -1)
                     .build();
             result.add(gene);
         }

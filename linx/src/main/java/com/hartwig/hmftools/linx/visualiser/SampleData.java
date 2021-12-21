@@ -31,7 +31,6 @@ import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusion;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
@@ -44,7 +43,7 @@ import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
 import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumberFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomainFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegmentFile;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvDataFile;
@@ -62,7 +61,7 @@ public class SampleData
     public final List<CopyNumberAlteration> CopyNumberAlterations;
     public final List<ProteinDomain> ProteinDomains;
     public final List<Fusion> Fusions;
-    public final List<Exon> Exons;
+    public final List<VisGeneExon> Exons;
     public final List<Integer> Clusters;
 
     public final List<String> Chromosomes;
@@ -102,7 +101,7 @@ public class SampleData
                 VisCopyNumberFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, CNA, missingJoiner);
 
         final String geneExonFile = mSampleDataDir != null ?
-                VisGeneExonFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, EXON, missingJoiner);
+                VisGeneExon.generateFilename(mSampleDataDir, Sample) : parameter(cmd, EXON, missingJoiner);
 
         final String proteinDomainFile = mSampleDataDir != null ?
                 VisProteinDomainFile.generateFilename(mSampleDataDir, Sample) : parameter(cmd, PROTEIN_DOMAIN, missingJoiner);
@@ -119,7 +118,7 @@ public class SampleData
         Fusions = loadFusions(fusionFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
         SvData = VisLinks.readSvData(svDataFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
-        Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
+        Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.SampleId.equals(Sample)).collect(toList());
         Segments = VisSegments.readTracks(linksFile).stream().filter(x -> x.sampleId().equals(Sample)).collect(toList());
 
         CopyNumberAlterations = VisCopyNumbers.read(cnaFile)
@@ -293,10 +292,10 @@ public class SampleData
         return result;
     }
 
-    private static List<Exon> additionalExons(
-            final Set<String> geneList, final CommandLine cmd, final List<Exon> currentExons, final List<Integer> clusterIds)
+    private static List<VisGeneExon> additionalExons(
+            final Set<String> geneList, final CommandLine cmd, final List<VisGeneExon> currentExons, final List<Integer> clusterIds)
     {
-        final List<Exon> exonList = Lists.newArrayList();
+        final List<VisGeneExon> exonList = Lists.newArrayList();
 
         if(geneList.isEmpty())
             return exonList;
@@ -315,7 +314,7 @@ public class SampleData
 
         for(final String geneName : geneList)
         {
-            if(currentExons.stream().anyMatch(x -> x.gene().equals(geneName)))
+            if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName)))
                 continue;
 
             VIS_LOGGER.info("loading exon data for additional gene({})", geneName);

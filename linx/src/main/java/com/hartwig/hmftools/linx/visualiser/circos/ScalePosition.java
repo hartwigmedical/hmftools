@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.circos;
 
+import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,11 +17,9 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableCopyNumberAlteration;
-import com.hartwig.hmftools.linx.visualiser.data.ImmutableExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableFusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableGene;
 import com.hartwig.hmftools.linx.visualiser.data.ImmutableProteinDomain;
@@ -28,9 +28,8 @@ import com.hartwig.hmftools.linx.visualiser.data.ImmutableVisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class ScalePosition
@@ -38,13 +37,11 @@ class ScalePosition
     private static final double MIN_CONTIG_PERCENTAGE = 0.01;
     private static final double GENE_NAME_DISTANCE = 1.5 / 360d;
 
-    private static final Logger LOGGER = LogManager.getLogger(ScalePosition.class);
+    private final int mTotalLength;
+    private final Set<GenomePosition> mContigLength = Sets.newHashSet();
+    private final Map<String, ScaleContig> mContigMap = Maps.newHashMap();
 
-    private final int totalLength;
-    private final Set<GenomePosition> contigLength = Sets.newHashSet();
-    private final Map<String, ScaleContig> contigMap = Maps.newHashMap();
-
-    ScalePosition(@NotNull final List<? extends GenomePosition> positions)
+    ScalePosition(final List<? extends GenomePosition> positions)
     {
         int totalLength = 0;
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
@@ -56,66 +53,66 @@ class ScalePosition
                     .collect(Collectors.toList());
 
             ScaleContig scaleContig = new ScaleContig(contig, contigPositions);
-            contigMap.put(contig, scaleContig);
+            mContigMap.put(contig, scaleContig);
             totalLength += scaleContig.length();
         }
 
         long minContigDistance = Math.round(MIN_CONTIG_PERCENTAGE * totalLength);
 
         totalLength = 0;
-        for (final ScaleContig scaleContig : contigMap.values())
+        for (final ScaleContig scaleContig : mContigMap.values())
         {
             if (scaleContig.length() < minContigDistance)
             {
                 scaleContig.expand(1d * minContigDistance / scaleContig.length());
             }
             totalLength += scaleContig.length();
-            contigLength.add(GenomePositions.create(scaleContig.contig(), scaleContig.length()));
+            mContigLength.add(GenomePositions.create(scaleContig.contig(), scaleContig.length()));
         }
 
-        this.totalLength = totalLength;
+        mTotalLength = totalLength;
     }
 
-    @NotNull
-    public Set<GenomePosition> contigLengths()
-    {
-        return contigLength;
-    }
+    public Set<GenomePosition> contigLengths() { return mContigLength; }
 
-    @NotNull
-    public List<Segment> scaleSegments(@NotNull final List<Segment> segments)
+    public List<Segment> scaleSegments(final List<Segment> segments)
     {
         return scale(segments, x -> ImmutableSegment.builder().from(x));
     }
 
-
-    @NotNull
-    public List<CopyNumberAlteration> interpolateAlterations(@NotNull final List<CopyNumberAlteration> segments)
+    public List<CopyNumberAlteration> interpolateAlterations(final List<CopyNumberAlteration> segments)
     {
         return segments.stream().map(x -> interpolate(x, y -> ImmutableCopyNumberAlteration.builder().from(x))).collect(Collectors.toList());
     }
 
-
-    @NotNull
-    public List<ProteinDomain> interpolateProteinDomains(@NotNull final List<ProteinDomain> exons)
+    public List<ProteinDomain> interpolateProteinDomains(final List<ProteinDomain> exons)
     {
         return exons.stream().map(x -> interpolate(x, y -> ImmutableProteinDomain.builder().from(x))).collect(Collectors.toList());
     }
 
-    @NotNull
-    public List<Exon> interpolateExons(@NotNull final List<Exon> exons)
+    public List<VisGeneExon> interpolateExons(final List<VisGeneExon> exons)
     {
-        return exons.stream().map(x -> interpolate(x, y -> ImmutableExon.builder().from(x))).collect(Collectors.toList());
+        List<VisGeneExon> interpolatedExons = Lists.newArrayList();
+
+        for(VisGeneExon exon : exons)
+        {
+            final ScaleContig positionMap = mContigMap.get(exon.chromosome());
+
+            interpolatedExons.add(new VisGeneExon(
+                    exon.SampleId, exon.ClusterId, exon.Gene, exon.Transcript, exon.Chromosome, exon.AnnotationType, exon.ExonRank,
+                    positionMap.interpolate(exon.ExonStart), positionMap.interpolate(exon.ExonEnd)));
+        }
+
+        return interpolatedExons;
     }
 
-    @NotNull
-    public List<Gene> interpolateGene(@NotNull final List<Gene> genes)
+    public List<Gene> interpolateGene(final List<Gene> genes)
     {
-        double geneNameDistance = GENE_NAME_DISTANCE * totalLength;
+        double geneNameDistance = GENE_NAME_DISTANCE * mTotalLength;
 
         return genes.stream().map(x ->
         {
-            ScaleContig positionMap = contigMap.get(x.chromosome());
+            ScaleContig positionMap = mContigMap.get(x.chromosome());
             final int scaledGeneStart = positionMap.interpolate(x.start());
             final int scaledGeneEnd = positionMap.interpolate(x.end());
             int geneNamePosition = (int) Math.round(x.strand() > 0
@@ -139,11 +136,11 @@ class ScalePosition
 
 
     @NotNull
-    public List<FusedExon> scaleFusedExon(@NotNull final List<FusedExon> exons)
+    public List<FusedExon> scaleFusedExon(final List<FusedExon> exons)
     {
         return exons.stream().map(x ->
         {
-            ScaleContig positionMap = contigMap.get(x.fusion());
+            ScaleContig positionMap = mContigMap.get(x.fusion());
             return scale(x, y -> ImmutableFusedExon.builder()
                     .from(y)
                     .geneStart(positionMap.scale(y.geneStart()))
@@ -151,10 +148,9 @@ class ScalePosition
         }).collect(Collectors.toList());
     }
 
-    @NotNull
-    private <T extends GenomeRegion> T interpolate(@NotNull final T exon, Function<T, GenomeRegionBuilder<T>> builderFunction)
+    private <T extends GenomeRegion> T interpolate(final T exon, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
-        final ScaleContig positionMap = contigMap.get(exon.chromosome());
+        final ScaleContig positionMap = mContigMap.get(exon.chromosome());
         assert (positionMap != null && !positionMap.isEmpty());
 
         return builderFunction.apply(exon)
@@ -163,20 +159,17 @@ class ScalePosition
                 .build();
     }
 
-    @NotNull
-    public List<GenomeRegion> scaleRegions(@NotNull final List<GenomeRegion> regions)
+    public List<GenomeRegion> scaleRegions(final List<GenomeRegion> regions)
     {
-        return regions.stream().map(x -> scale(x, contigMap.get(x.chromosome()))).collect(Collectors.toList());
+        return regions.stream().map(x -> scale(x, mContigMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
-    @NotNull
-    public List<GenomeRegion> interpolateRegions(@NotNull final List<GenomeRegion> regions)
+    public List<GenomeRegion> interpolateRegions(final List<GenomeRegion> regions)
     {
-        return regions.stream().map(x -> interpolate(x, contigMap.get(x.chromosome()))).collect(Collectors.toList());
+        return regions.stream().map(x -> interpolate(x, mContigMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
-    @NotNull
-    public List<VisSvData> scaleLinks(@NotNull final List<VisSvData> links)
+    public List<VisSvData> scaleLinks(final List<VisSvData> links)
     {
         final List<VisSvData> results = Lists.newArrayList();
         for (final VisSvData link : links)
@@ -186,18 +179,18 @@ class ScalePosition
                 final ImmutableVisSvData.Builder builder = ImmutableVisSvData.builder().from(link);
                 if (link.isValidStart())
                 {
-                    builder.startPosition(contigMap.get(link.startChromosome()).scale(link.startPosition()));
+                    builder.startPosition(mContigMap.get(link.startChromosome()).scale(link.startPosition()));
                 }
 
                 if (link.isValidEnd())
                 {
-                    builder.endPosition(contigMap.get(link.endChromosome()).scale(link.endPosition()));
+                    builder.endPosition(mContigMap.get(link.endChromosome()).scale(link.endPosition()));
                 }
 
                 results.add(builder.build());
             } catch (Exception e)
             {
-                LOGGER.error("Unable to scale link {}", link);
+                VIS_LOGGER.error("Unable to scale link {}", link);
                 throw e;
             }
         }
@@ -206,26 +199,26 @@ class ScalePosition
     }
 
     @NotNull
-    private static GenomeRegion scale(@NotNull final GenomeRegion region, @NotNull final ScaleContig positionMap)
+    private static GenomeRegion scale(final GenomeRegion region, final ScaleContig positionMap)
     {
         return GenomeRegions.create(region.chromosome(), positionMap.scale(region.start()), positionMap.scale(region.end()));
     }
 
     @NotNull
-    private static GenomeRegion interpolate(@NotNull final GenomeRegion region, @NotNull final ScaleContig positionMap)
+    private static GenomeRegion interpolate(final GenomeRegion region, final ScaleContig positionMap)
     {
         return GenomeRegions.create(region.chromosome(), positionMap.interpolate(region.start()), positionMap.interpolate(region.end()));
     }
 
     @NotNull
-    private <T extends GenomeRegion> List<T> scale(@NotNull final List<T> inputs, Function<T, GenomeRegionBuilder<T>> builderFunction)
+    private <T extends GenomeRegion> List<T> scale(final List<T> inputs, Function<T, GenomeRegionBuilder<T>> builderFunction)
     {
-        return inputs.stream().map(x -> scale(x, builderFunction, contigMap.get(x.chromosome()))).collect(Collectors.toList());
+        return inputs.stream().map(x -> scale(x, builderFunction, mContigMap.get(x.chromosome()))).collect(Collectors.toList());
     }
 
     @NotNull
-    private static <T extends GenomeRegion> T scale(@NotNull final T victim, Function<T, GenomeRegionBuilder<T>> builderFunction,
-            @NotNull final ScaleContig positionMap)
+    private static <T extends GenomeRegion> T scale(final T victim, Function<T, GenomeRegionBuilder<T>> builderFunction,
+            final ScaleContig positionMap)
     {
         return builderFunction.apply(victim)
                 .start(positionMap.scale(victim.start()))

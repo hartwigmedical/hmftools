@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -18,10 +19,10 @@ public class DisruptedExonsTest
     private static final String UP = "UP";
     private static final String DOWN = "DOWN";
 
-    private List<Exon> normalUp = Lists.newArrayList();
-    private List<Exon> reverseUp = Lists.newArrayList();
-    private List<Exon> normalDown = Lists.newArrayList();
-    private List<Exon> reverseDown = Lists.newArrayList();
+    private List<VisGeneExon> normalUp = Lists.newArrayList();
+    private List<VisGeneExon> reverseUp = Lists.newArrayList();
+    private List<VisGeneExon> normalDown = Lists.newArrayList();
+    private List<VisGeneExon> reverseDown = Lists.newArrayList();
 
     @Before
     public void setup()
@@ -43,7 +44,7 @@ public class DisruptedExonsTest
     @Test
     public void testNormalOrientation()
     {
-        final List<Exon> exons = Lists.newArrayList();
+        final List<VisGeneExon> exons = Lists.newArrayList();
         exons.addAll(normalUp);
         exons.addAll(normalDown);
 
@@ -58,7 +59,7 @@ public class DisruptedExonsTest
     @Test
     public void testNormalOrientationPartialExon()
     {
-        final List<Exon> exons = Lists.newArrayList();
+        final List<VisGeneExon> exons = Lists.newArrayList();
         exons.addAll(normalUp);
         exons.addAll(normalDown);
 
@@ -73,7 +74,7 @@ public class DisruptedExonsTest
     @Test
     public void testReverseOrientation()
     {
-        final List<Exon> exons = Lists.newArrayList();
+        final List<VisGeneExon> exons = Lists.newArrayList();
         exons.addAll(reverseUp);
         exons.addAll(reverseDown);
 
@@ -88,7 +89,7 @@ public class DisruptedExonsTest
     @Test
     public void testReverseOrientationPartialExon()
     {
-        final List<Exon> exons = Lists.newArrayList();
+        final List<VisGeneExon> exons = Lists.newArrayList();
         exons.addAll(reverseUp);
         exons.addAll(reverseDown);
 
@@ -109,19 +110,9 @@ public class DisruptedExonsTest
     }
 
     @NotNull
-    static Exon create(String chr, int start, int end, int rank)
+    static VisGeneExon create(String chr, int start, int end, int rank)
     {
-        return ImmutableExon.builder()
-                .type(EXON_LOST)
-                .clusterId(1)
-                .chromosome(chr)
-                .transcript(chr)
-                .gene(chr)
-                .start(start)
-                .end(end)
-                .rank(rank)
-                .sampleId("sample")
-                .build();
+        return new VisGeneExon("sample", 1, chr, chr, chr, EXON_LOST, rank, start, end);
     }
 
     @NotNull

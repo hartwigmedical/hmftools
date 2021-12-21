@@ -34,13 +34,13 @@ import com.hartwig.hmftools.linx.visualiser.circos.FusionExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.Span;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.VisSegments;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -202,8 +202,8 @@ public class SvVisualiser implements AutoCloseable
         });
         chromosomeSegments.forEach(x -> chromosomesOfInterest.add(x.chromosome()));
 
-        final List<Exon> chromosomeExons =
-                mSampleData.Exons.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
+        final List<VisGeneExon> chromosomeExons =
+                mSampleData.Exons.stream().filter(x -> chromosomesOfInterest.contains(x.Chromosome)).collect(toList());
 
         final List<ProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
@@ -216,8 +216,8 @@ public class SvVisualiser implements AutoCloseable
     {
         final List<VisSvData> clusterLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Segment> clusterSegments = mSampleData.Segments.stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        final List<Exon> clusterExons =
-                mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.clusterId())).distinct().collect(toList());
+        final List<VisGeneExon> clusterExons =
+                mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
 
         String clusterIdsStr = "";
 
@@ -261,13 +261,13 @@ public class SvVisualiser implements AutoCloseable
                 sample, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
     }
 
-    private void submitFiltered(@NotNull final ColorPickerFactory colorPickerFactory,
-            @NotNull final String sample,
-            @NotNull final List<VisSvData> filteredLinks,
-            @NotNull final List<Segment> filteredSegments,
-            @NotNull final List<Exon> filteredExons,
-            @NotNull final List<ProteinDomain> filteredProteinDomains,
-            @NotNull final List<Fusion> filteredFusions,
+    private void submitFiltered(final ColorPickerFactory colorPickerFactory,
+            final String sample,
+            final List<VisSvData> filteredLinks,
+            final List<Segment> filteredSegments,
+            final List<VisGeneExon> filteredExons,
+            final List<ProteinDomain> filteredProteinDomains,
+            final List<Fusion> filteredFusions,
             boolean showSimpleSvSegments)
     {
 
@@ -318,7 +318,7 @@ public class SvVisualiser implements AutoCloseable
     private Object createImageFrame(
             int frame,
             double labelSize,
-            @NotNull final String sample,
+            final String sample,
             boolean plotFusion,
             boolean plotChromosome) throws IOException, InterruptedException
     {
@@ -347,7 +347,7 @@ public class SvVisualiser implements AutoCloseable
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException
+    private static CommandLine createCommandLine(final String[] args, Options options) throws ParseException
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);

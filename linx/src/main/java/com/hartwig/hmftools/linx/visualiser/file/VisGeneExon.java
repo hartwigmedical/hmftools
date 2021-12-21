@@ -11,23 +11,26 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VisGeneExonFile
+public class VisGeneExon implements GenomeRegion
 {
     public final String SampleId;
     public final int ClusterId;
     public final String Gene;
     public final String Transcript;
     public final String Chromosome;
-    public final String AnnotationType;
+    public final VisGeneAnnotationType AnnotationType;
     public final int ExonRank;
     public final int ExonStart;
     public final int ExonEnd;
 
-    public VisGeneExonFile(final String sampleId, int clusterId, final String gene, final String transcript, final String chromosome,
-            final String type, int exonRank, int exonStart, int exonEnd)
+    public VisGeneExon(
+            final String sampleId, int clusterId, final String gene, final String transcript, final String chromosome,
+            final VisGeneAnnotationType type, int exonRank, int exonStart, int exonEnd)
     {
         SampleId = sampleId;
         ClusterId = clusterId;
@@ -40,6 +43,17 @@ public class VisGeneExonFile
         ExonEnd = exonEnd;
     }
 
+    public abstract static class Builder implements GenomeRegionBuilder<VisGeneExon> { }
+
+    @Override
+    public String chromosome() { return Chromosome; }
+
+    @Override
+    public int start() { return ExonStart; }
+
+    @Override
+    public int end() { return ExonEnd; }
+
     private static final String FILE_EXTENSION = ".linx.vis_gene_exon.tsv";
 
     @NotNull
@@ -49,18 +63,18 @@ public class VisGeneExonFile
     }
 
     @NotNull
-    public static List<VisGeneExonFile> read(final String filePath) throws IOException
+    public static List<VisGeneExon> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisGeneExonFile> cnDataList) throws IOException
+    public static void write(@NotNull final String filename, @NotNull List<VisGeneExon> cnDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(cnDataList));
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<VisGeneExonFile> cnDataList)
+    static List<String> toLines(@NotNull final List<VisGeneExon> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -69,9 +83,9 @@ public class VisGeneExonFile
     }
 
     @NotNull
-    static List<VisGeneExonFile> fromLines(@NotNull List<String> lines)
+    static List<VisGeneExon> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisGeneExonFile::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisGeneExon::fromString).collect(toList());
     }
 
     @NotNull
@@ -91,7 +105,7 @@ public class VisGeneExonFile
     }
 
     @NotNull
-    public static String toString(@NotNull final VisGeneExonFile geData)
+    public static String toString(@NotNull final VisGeneExon geData)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(geData.SampleId))
@@ -107,19 +121,19 @@ public class VisGeneExonFile
     }
 
     @NotNull
-    private static VisGeneExonFile fromString(@NotNull final String tiData)
+    private static VisGeneExon fromString(@NotNull final String tiData)
     {
         String[] values = tiData.split(DELIMITER);
 
         int index = 0;
 
-        return new VisGeneExonFile(
+        return new VisGeneExon(
                 values[index++],
                 Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
-                values[index++],
+                VisGeneAnnotationType.valueOf(values[index++]),
                 Integer.parseInt(values[index++]),
                 Integer.parseInt(values[index++]),
                 Integer.parseInt(values[index++]));

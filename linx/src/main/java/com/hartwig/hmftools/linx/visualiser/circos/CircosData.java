@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -14,7 +15,6 @@ import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.Connectors;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.DisruptedExons;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
@@ -22,12 +22,13 @@ import com.hartwig.hmftools.linx.visualiser.data.Genes;
 import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
 import com.hartwig.hmftools.linx.visualiser.data.Segment;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosData
 {
-    private final List<Exon> exons;
+    private final List<VisGeneExon> exons;
     private final List<VisSvData> links;
     private final List<Gene> genes;
     private final List<Segment> segments;
@@ -56,13 +57,9 @@ public class CircosData
     private final int maxFrame;
 
     public CircosData(
-            boolean showSimpleSvSegments,
-            @NotNull final CircosConfig config,
-            @NotNull final List<Segment> unadjustedSegments,
-            @NotNull final List<VisSvData> unadjustedLinks,
-            @NotNull final List<CopyNumberAlteration> unadjustedAlterations,
-            @NotNull final List<Exon> unadjustedExons,
-            @NotNull final List<Fusion> fusions)
+            boolean showSimpleSvSegments, final CircosConfig config, final List<Segment> unadjustedSegments,
+            final List<VisSvData> unadjustedLinks, final List<CopyNumberAlteration> unadjustedAlterations,
+            final List<VisGeneExon> unadjustedExons, final List<Fusion> fusions)
     {
         this.upstreamGenes = fusions.stream().map(Fusion::geneUp).collect(toSet());
         this.downstreamGenes = fusions.stream().map(Fusion::geneDown).collect(toSet());
@@ -73,7 +70,9 @@ public class CircosData
         final List<GenomeRegion> unadjustedDisruptedGeneRegions = DisruptedExons.disruptedGeneRegions(fusions, unadjustedExons);
 
         final List<Gene> unadjustedGenes = Genes.uniqueGenes(unadjustedExons);
-        final List<Exon> unadjustedGeneExons = VisExons.geneExons(unadjustedGenes, unadjustedExons);
+
+        final List<VisGeneExon> unadjustedGeneExons = VisExons.geneExons(unadjustedGenes, unadjustedExons);
+        final List<GenomeRegion> unadjustedGeneExonRegions = unadjustedGeneExons.stream().collect(Collectors.toList());
 
         final List<GenomePosition> positionsToScale = Lists.newArrayList();
         positionsToScale.addAll(VisLinks.allPositions(unadjustedLinks));
@@ -83,7 +82,7 @@ public class CircosData
                 : Span.allPositions(unadjustedAlterations));
         if (!config.InterpolateExonPositions)
         {
-            positionsToScale.addAll(Span.allPositions(unadjustedGeneExons));
+            positionsToScale.addAll(Span.allPositions(unadjustedGeneExonRegions));
         }
 
         final List<GenomeRegion> unadjustedFragileSites =
@@ -212,7 +211,7 @@ public class CircosData
     }
 
     @NotNull
-    public List<Exon> exons()
+    public List<VisGeneExon> exons()
     {
         return exons;
     }

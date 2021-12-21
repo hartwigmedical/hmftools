@@ -7,28 +7,26 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExon;
 import com.hartwig.hmftools.linx.visualiser.data.FusedExons;
 import com.hartwig.hmftools.linx.visualiser.data.FusedProteinDomains;
 import com.hartwig.hmftools.linx.visualiser.data.Fusion;
 import com.hartwig.hmftools.linx.visualiser.data.ProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 
 public class FusionDataWriter
 {
-    private final List<FusedExon> finalExons;
-    private final List<ProteinDomain> finalProteinDomains;
-    private final ProteinDomainColors proteinDomainColors;
+    private final List<FusedExon> mFinalExons;
+    private final List<ProteinDomain> mFinalProteinDomains;
+    private final ProteinDomainColors mProteinDomainColors;
 
-    public FusionDataWriter(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons,
-            @NotNull final List<ProteinDomain> proteinDomains)
+    public FusionDataWriter(final List<Fusion> fusions, final List<VisGeneExon> exons, final List<ProteinDomain> proteinDomains)
     {
-
-        this.finalExons = Lists.newArrayList();
-        this.finalProteinDomains = Lists.newArrayList();
+        mFinalExons = Lists.newArrayList();
+        mFinalProteinDomains = Lists.newArrayList();
 
         final List<ProteinDomain> exonicProteinDomains = VisProteinDomains.exonicProteinDomains(proteinDomains, exons);
 
@@ -57,26 +55,26 @@ public class FusionDataWriter
             }
 
             final ScalePosition scalePosition = new ScalePosition(unadjustedPositions);
-            finalExons.addAll(scalePosition.scaleFusedExon(intronScaledExons));
-            finalProteinDomains.addAll(scalePosition.interpolateProteinDomains(intronScaledProteinDomains));
+            mFinalExons.addAll(scalePosition.scaleFusedExon(intronScaledExons));
+            mFinalProteinDomains.addAll(scalePosition.interpolateProteinDomains(intronScaledProteinDomains));
         }
 
-        this.proteinDomainColors = new ProteinDomainColors(finalProteinDomains);
+        this.mProteinDomainColors = new ProteinDomainColors(mFinalProteinDomains);
     }
 
     @NotNull
-    public Object write(@NotNull final String sample, @NotNull final String outputDir)
+    public Object write(final String sample, final String outputDir)
             throws IOException
     {
         String filePrefix = outputDir + File.separator + sample;
-        FusedExons.write(filePrefix + ".fusions.tsv", finalExons);
-        FusedProteinDomains.write(filePrefix + ".protein_domains.tsv", proteinDomainColors, finalProteinDomains);
+        FusedExons.write(filePrefix + ".fusions.tsv", mFinalExons);
+        FusedProteinDomains.write(filePrefix + ".protein_domains.tsv", mProteinDomainColors, mFinalProteinDomains);
         return this;
     }
 
     public List<FusedExon> finalExons()
     {
-        return finalExons;
+        return mFinalExons;
     }
 
 }

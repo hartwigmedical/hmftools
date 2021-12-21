@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HmfTranscriptRegionUtils
@@ -196,74 +195,5 @@ public class HmfTranscriptRegionUtils
             }
         }
         return null;
-    }
-
-    @NotNull
-    public static List<GenomeRegion> codonRangeAtGenomicPosition(final HmfTranscriptRegion transcript, int position)
-    {
-        // TODO - remove this function, is a more complicated duplicate of TranscriptUtils::getCodingBaseRanges()
-        final List<GenomeRegion> codonRegions = Lists.newArrayList();
-
-        if(position < transcript.codingStart() || position > transcript.codingEnd())
-        {
-            return codonRegions;
-        }
-
-        int basesCovered = 0;
-        for(int i = 0; i < transcript.exons().size(); i++)
-        {
-            final HmfExonRegion exon = transcript.exons().get(i);
-            int exonCodingStart = Math.max(exon.start(), transcript.codingStart());
-            int exonCodingEnd = Math.min(exon.end(), transcript.codingEnd());
-            int exonBaseLength = exonCodingEnd - exonCodingStart + 1;
-
-            if(exonBaseLength <= 0)
-            {
-                // Exon is entirely non-coding so can be skipped.
-                continue;
-            }
-
-            if(position >= exonCodingStart && position <= exonCodingEnd)
-            {
-                int lookBack = (basesCovered + position - exonCodingStart) % 3;
-                int lookForward = 2 - lookBack;
-
-                // Do we need previous exon?
-                if(position - lookBack < exon.start() && i > 0)
-                {
-                    final HmfExonRegion previous = transcript.exons().get(i - 1);
-                    final int previousExonLookBack = lookBack + exon.start() - position - 1;
-                    codonRegions.add(GenomeRegions.create(transcript.chromosome(),
-                            Math.max(previous.start(), previous.end() - previousExonLookBack),
-                            previous.end()));
-                }
-
-                // Current exon
-                codonRegions.add(GenomeRegions.create(transcript.chromosome(),
-                        Math.max(exon.start(), position - lookBack),
-                        Math.min(exon.end(), position + lookForward)));
-
-                // Do we need next exon?
-                if(position + lookForward > exon.end() && i < transcript.exons().size() - 1)
-                {
-                    final HmfExonRegion next = transcript.exons().get(i + 1);
-                    final int nextExonLookForward = lookForward - exon.end() + position - 1;
-                    codonRegions.add(GenomeRegions.create(transcript.chromosome(),
-                            next.start(),
-                            Math.min(next.end(), next.start() + nextExonLookForward)));
-                }
-
-                return codonRegions;
-            }
-
-            if(exonCodingStart > position)
-            {
-                return codonRegions;
-            }
-
-            basesCovered += exonBaseLength;
-        }
-
-        return codonRegions;
     }
 }

@@ -10,16 +10,19 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 
 public class DisruptedExons
 {
-
-    @NotNull
-    public static List<GenomeRegion> disruptedGeneRegions(@NotNull final List<Fusion> fusions, @NotNull final List<Exon> exons)
+    public static List<GenomeRegion> disruptedGeneRegions(final List<Fusion> fusions, final List<VisGeneExon> exons)
     {
-        List<GenomeRegion> result = exons.stream().filter(x -> x.type() == EXON_LOST).collect(Collectors.toList());
+        List<GenomeRegion> result = exons.stream().filter(x -> x.AnnotationType == EXON_LOST)
+                .map(x -> GenomeRegions.create(x.Chromosome, x.ExonStart, x.ExonEnd))
+                .collect(Collectors.toList());
+
         for (Fusion fusion : fusions)
         {
             result.addAll(disruptedGeneRegions(fusion, exons));
@@ -28,40 +31,39 @@ public class DisruptedExons
         return result;
     }
 
-    @NotNull
-    public static List<GenomeRegion> disruptedGeneRegions(@NotNull final Fusion fusion, @NotNull final List<Exon> exons)
+    public static List<GenomeRegion> disruptedGeneRegions(final Fusion fusion, final List<VisGeneExon> exons)
     {
-        final List<Exon> upStreamExons =
-                sortedUpstreamExons(fusion, exons).stream().filter(x -> x.rank() >= fusion.fusedExonUp()).collect(Collectors
-                        .toList());
-        final List<Exon> downStreamExons =
-                sortedDownstreamExons(fusion, exons).stream().filter(x -> x.rank() <= fusion.fusedExonDown()).collect(Collectors.toList());
+        final List<VisGeneExon> upStreamExons = sortedUpstreamExons(fusion, exons).stream()
+                .filter(x -> x.ExonRank >= fusion.fusedExonUp()).collect(Collectors .toList());
+
+        final List<VisGeneExon> downStreamExons = sortedDownstreamExons(fusion, exons).stream()
+                .filter(x -> x.ExonRank <= fusion.fusedExonDown()).collect(Collectors.toList());
+
         if (upStreamExons.isEmpty() || downStreamExons.isEmpty())
         {
             return Collections.emptyList();
         }
 
-        final Exon finalIncludedUpExon = upStreamExons.get(0);
-        final Exon finalExcludedUpExon = upStreamExons.get(upStreamExons.size() - 1);
+        final VisGeneExon finalIncludedUpExon = upStreamExons.get(0);
+        final VisGeneExon finalExcludedUpExon = upStreamExons.get(upStreamExons.size() - 1);
         final GenomeRegion upGeneRegion = upGeneExcludedRegion(fusion, finalIncludedUpExon, finalExcludedUpExon);
 
-        final Exon firstExcludedDownExon = downStreamExons.get(0);
-        final Exon firstIncludedDownExon = downStreamExons.get(downStreamExons.size() - 1);
+        final VisGeneExon firstExcludedDownExon = downStreamExons.get(0);
+        final VisGeneExon firstIncludedDownExon = downStreamExons.get(downStreamExons.size() - 1);
         final GenomeRegion downGeneRegion = downGeneExcludedRegion(fusion, firstExcludedDownExon, firstIncludedDownExon);
 
         return Lists.newArrayList(upGeneRegion, downGeneRegion);
     }
 
-    @NotNull
-    private static Gene downGeneExcludedRegion(@NotNull final Fusion fusion, @NotNull final Exon firstExcludedDownExon,
-            @NotNull final Exon firstIncludedDoneExon)
+    private static Gene downGeneExcludedRegion(final Fusion fusion, final VisGeneExon firstExcludedDownExon,
+            final VisGeneExon firstIncludedDoneExon)
     {
         return fusion.strandDown() < 0 ?
                 ImmutableGene.builder()
                         .type(EXON_LOST)
-                        .chromosome(firstExcludedDownExon.chromosome())
-                        .end(firstExcludedDownExon.end())
-                        .start(Math.min(fusion.positionDown(), firstIncludedDoneExon.end()))
+                        .chromosome(firstExcludedDownExon.Chromosome)
+                        .end(firstExcludedDownExon.ExonEnd)
+                        .start(Math.min(fusion.positionDown(), firstIncludedDoneExon.ExonEnd))
                         .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
@@ -69,9 +71,9 @@ public class DisruptedExons
                         .build() :
                 ImmutableGene.builder()
                         .type(EXON_LOST)
-                        .chromosome(firstExcludedDownExon.chromosome())
-                        .start(firstExcludedDownExon.start())
-                        .end(Math.max(fusion.positionDown(), firstIncludedDoneExon.start()))
+                        .chromosome(firstExcludedDownExon.Chromosome)
+                        .start(firstExcludedDownExon.ExonStart)
+                        .end(Math.max(fusion.positionDown(), firstIncludedDoneExon.ExonStart))
                         .strand(fusion.strandUp())
                         .name(fusion.geneDown())
                         .transcript(fusion.transcriptDown())
@@ -79,16 +81,15 @@ public class DisruptedExons
                         .build();
     }
 
-    @NotNull
-    private static Gene upGeneExcludedRegion(@NotNull final Fusion fusion, @NotNull final Exon finalIncludedExon,
-            @NotNull final Exon finalExcludedUpExon)
+    private static Gene upGeneExcludedRegion(final Fusion fusion, final VisGeneExon finalIncludedExon,
+            final VisGeneExon finalExcludedUpExon)
     {
         return fusion.strandUp() < 0 ?
                 ImmutableGene.builder()
                         .type(EXON_LOST)
-                        .chromosome(finalExcludedUpExon.chromosome())
-                        .start(finalExcludedUpExon.start())
-                        .end(Math.max(fusion.positionUp(), finalIncludedExon.start()))
+                        .chromosome(finalExcludedUpExon.Chromosome)
+                        .start(finalExcludedUpExon.ExonStart)
+                        .end(Math.max(fusion.positionUp(), finalIncludedExon.ExonStart))
                         .strand(fusion.strandDown())
                         .name(fusion.geneUp())
                         .transcript(fusion.transcriptUp())
@@ -96,9 +97,9 @@ public class DisruptedExons
                         .build() :
                 ImmutableGene.builder()
                         .type(EXON_LOST)
-                        .chromosome(finalExcludedUpExon.chromosome())
-                        .start(Math.min(fusion.positionUp(), finalIncludedExon.end()))
-                        .end(finalExcludedUpExon.end())
+                        .chromosome(finalExcludedUpExon.Chromosome)
+                        .start(Math.min(fusion.positionUp(), finalIncludedExon.ExonEnd))
+                        .end(finalExcludedUpExon.ExonEnd)
                         .strand(fusion.strandDown())
                         .name(fusion.geneUp())
                         .transcript(fusion.transcriptUp())
