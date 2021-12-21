@@ -99,7 +99,7 @@ public class MixedGermlineTest
     {
         final List<SageVariant> consumer = Lists.newArrayList();
 
-        final Phase victim = new Phase( Lists.newArrayList(), mTranscripts, consumer::add);
+        final Phase victim = new Phase(mTranscripts, consumer::add);
 
         for(SageVariant variant : variants)
         {

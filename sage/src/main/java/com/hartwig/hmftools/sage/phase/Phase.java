@@ -21,17 +21,15 @@ public class Phase implements Consumer<SageVariant>
     private final DedupIndel mDedupIndel;
     private final MixedSomaticGermlineIdentifier mMixedSomaticGermlineIdentifier;
     private final MixedSomaticGermlineDedup mMixedSomaticGermlineDedup;
-    private final RightAlignMicrohomology mRrightAlignMicrohomology;
 
-    public Phase(final List<HmfTranscriptRegion> oldTrans, final List<TranscriptData> transcripts, final Consumer<SageVariant> consumer)
+    public Phase(final List<TranscriptData> transcripts, final Consumer<SageVariant> consumer)
     {
         mDedupRealign = new DedupRealign(consumer);
         mDedupIndel = new DedupIndel(mDedupRealign);
         mDedupMnv = new DedupMnv(mDedupIndel);
         mMixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(mDedupMnv, transcripts);
         mMixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mMixedSomaticGermlineDedup);
-        mRrightAlignMicrohomology = new RightAlignMicrohomology(mMixedSomaticGermlineIdentifier, oldTrans);
-        mLocalRealignSet = new LocalRealignSet(mRrightAlignMicrohomology);
+        mLocalRealignSet = new LocalRealignSet(mMixedSomaticGermlineIdentifier);
         mLocalPhaseSet = new LocalPhaseSet(mLocalRealignSet);
     }
 
@@ -51,7 +49,6 @@ public class Phase implements Consumer<SageVariant>
     {
         mLocalPhaseSet.flush();
         mLocalRealignSet.flush();
-        mRrightAlignMicrohomology.flush();
         mMixedSomaticGermlineIdentifier.flush();
         mMixedSomaticGermlineDedup.flush();
         mDedupMnv.flush();

@@ -68,10 +68,7 @@ public class ChromosomePipeline implements AutoCloseable
 
         mPartition = new ChromosomePartition(config, mRefGenome);
 
-        final List<HmfTranscriptRegion> oldTrans =
-                refData.TranscriptRegions.stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
-
-        mPhase = new Phase(oldTrans, refData.ChromosomeTranscripts.get(chromosome), this::write);
+        mPhase = new Phase(refData.ChromosomeTranscripts.get(chromosome), this::write);
     }
 
     public String chromosome()
