@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.orange.algo.OrangeReport;
 import com.hartwig.hmftools.orange.cohort.datamodel.Evaluation;
@@ -191,7 +192,14 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String somaticDriverString() {
-        return variantDriverString(report.purple().reportableSomaticVariants());
+        List<ReportableVariant> reportableVariants;
+        if (reportGermline) {
+            reportableVariants = report.purple().reportableSomaticVariants();
+        } else {
+            reportableVariants = ReportableVariantFactory.mergeVariantLists(report.purple().reportableSomaticVariants(),
+                    report.purple().reportableGermlineVariants());
+        }
+        return variantDriverString(reportableVariants);
     }
 
     @NotNull
