@@ -33,7 +33,6 @@ public class SvData
     private final Breakend[] mBreakends;
 
     // repeatedly used values for filtering are cached
-    private final int[] mInexactHomology;
     private final String mInsertSequence;
     private final boolean mImprecise;
     private boolean mIsShortLocal;
@@ -71,14 +70,6 @@ public class SvData
 
         mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
-
-        mInexactHomology = new int[] {0, 0};
-        if(sv.startContext().hasAttribute(VT_IHOMPOS))
-        {
-            List<Integer> values = sv.startContext().getAttributeAsIntList(VT_IHOMPOS, 0);
-            mInexactHomology[SE_START] = abs(values.get(0));
-            mInexactHomology[SE_END] = abs(values.get(1));
-        }
     }
 
     public void onPositionsUpdated()
@@ -137,7 +128,6 @@ public class SvData
 
     public String startHomology() { return contextStart().getAttributeAsString(VT_HOMSEQ, ""); }
     public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(VT_HOMSEQ, "") : ""; }
-    public int[] inexactHomology() { return mInexactHomology; }
 
     public String toString()
     {

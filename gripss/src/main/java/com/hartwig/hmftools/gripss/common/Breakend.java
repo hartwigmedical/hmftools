@@ -55,7 +55,7 @@ public class Breakend
 
     public final Interval ConfidenceInterval;
     public final Interval RemoteConfidenceInterval;
-    public final int[] InexactHomology;
+    public final Interval InexactHomology;
     public final boolean IsLineInsertion;
 
     private final SvData mSvData;
@@ -120,13 +120,14 @@ public class Breakend
             Qual = VcfUtils.getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
         }
 
-        InexactHomology = new int[SE_PAIR];
-
         if(context.hasAttribute(VT_IHOMPOS))
         {
             final List<Integer> ihompos = context.getAttributeAsIntList(VT_IHOMPOS, 0);
-            InexactHomology[SE_START] = ihompos.get(0);
-            InexactHomology[SE_END] = ihompos.get(1);
+            InexactHomology = new Interval(ihompos.get(0), ihompos.get(1));
+        }
+        else
+        {
+            InexactHomology = new Interval();
         }
 
         mAssemblies = parseAssemblies(context);
@@ -182,7 +183,6 @@ public class Breakend
     public boolean posOrient() { return Orientation == POS_ORIENT; }
 
     public int insertSequenceLength() { return InsertSequence.length(); }
-    public int inexactHomologyLength() { return max(InexactHomology[SE_END] - InexactHomology[SE_START], 0); }
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 
 import static junit.framework.TestCase.assertFalse;
@@ -89,6 +90,7 @@ public class PonTest
         var1 = mGripss.createDel(CHR_1, 108, 305, null, null);
         assertFalse(mPonCache.getPonCount(var1) > 0);
 
+        commonAttributes.put(VT_CIPOS, new int[] {-15, 15});
         commonAttributes.put(VT_IHOMPOS, new int[] {-20, 20});
 
         var1 = mGripss.createDel(CHR_1, 110, 205, commonAttributes, commonAttributes);

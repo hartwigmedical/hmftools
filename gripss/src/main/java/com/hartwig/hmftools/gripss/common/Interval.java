@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.gripss.common;
 
+import static java.lang.Math.abs;
+
 public class Interval
 {
     public final int Start;
@@ -16,6 +18,8 @@ public class Interval
         Start = start;
         End = end;
     }
+
+    public int length() { return abs(End - Start); }
 
     public boolean matches(final Interval other)
     {

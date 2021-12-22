@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
 
 import static junit.framework.TestCase.assertEquals;
@@ -42,10 +43,12 @@ public class RealignmentTest
         Map<String, Object> attributesStart = Maps.newHashMap();
         attributesStart.put(VT_CIPOS, new int[] {-10, 50});
         attributesStart.put(VT_CIRPOS, new int[] {-20, 40});
+        attributesStart.put(VT_IHOMPOS, new int[] {-15, 25});
 
         Map<String, Object> attributesEnd = Maps.newHashMap();
         attributesEnd.put(VT_CIRPOS, new int[] {-10, 50});
         attributesEnd.put(VT_CIPOS, new int[] {-20, 40});
+        attributesEnd.put(VT_IHOMPOS, new int[] {-15, 5});
 
         SvData var = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_2, 20, 80, POS_ORIENT, NEG_ORIENT, "",
@@ -53,10 +56,16 @@ public class RealignmentTest
 
         Breakend newBreakendStart = mRealigner.realign(var.breakendStart(), var.isSgl(), var.imprecise());
         assertTrue(newBreakendStart.realigned());
+        assertEquals(-30, newBreakendStart.ConfidenceInterval.Start);
+        assertEquals(30, newBreakendStart.ConfidenceInterval.End);
         assertEquals(40, newBreakendStart.Position);
+        assertEquals(-35, newBreakendStart.InexactHomology.Start);
+        assertEquals(5, newBreakendStart.InexactHomology.End);
 
         Breakend newBreakendEnd = mRealigner.realignRemote(var.breakendEnd(), newBreakendStart);
         assertTrue(newBreakendEnd.realigned());
+        assertEquals(-30, newBreakendEnd.RemoteConfidenceInterval.Start);
+        assertEquals(30, newBreakendEnd.RemoteConfidenceInterval.End);
         assertEquals(80, newBreakendEnd.Position);
 
         // no realignment for inserts

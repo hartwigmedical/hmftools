@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.gripss;
 
+import static java.lang.Integer.max;
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -18,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 
 import org.apache.commons.cli.CommandLine;
@@ -106,13 +112,23 @@ public class PonCache
         return 0;
     }
 
+    private static int[] breakendMargin(final Breakend breakend)
+    {
+        int[] margins = new int[SE_PAIR];
+        int inexactHomology = abs(breakend.IsStart ? breakend.InexactHomology.Start : breakend.InexactHomology.End);
+        margins[SE_START] = min(breakend.ConfidenceInterval.Start, -inexactHomology);
+        margins[SE_END] = max(breakend.ConfidenceInterval.End, inexactHomology);
+        return margins;
+    }
+
     private int findPonMatch(final List<PonSvRegion> regions, final SvData var)
     {
-        final int[] inexactHom = var.inexactHomology();
+        final int[] marginStart = breakendMargin(var.breakendStart());
+        final int[] marginEnd = breakendMargin(var.breakendEnd());
 
         BaseRegion svStart = new BaseRegion(
-                var.posStart() + var.breakendStart().ConfidenceInterval.Start - inexactHom[SE_START] - mPositionMargin,
-                var.posStart() + var.breakendStart().ConfidenceInterval.End + inexactHom[SE_START] + mPositionMargin);
+                var.posStart() + marginStart[SE_START] - mPositionMargin,
+                var.posStart() + marginStart[SE_END] + mPositionMargin);
 
         for(; mCurrentSvIndex < regions.size(); ++mCurrentSvIndex)
         {
@@ -123,8 +139,8 @@ public class PonCache
                 // test the PON entries around this position
                 ChrBaseRegion svEnd = new ChrBaseRegion(
                         var.chromosomeEnd(),
-                        var.posEnd() + var.breakendEnd().ConfidenceInterval.Start - inexactHom[SE_END] - mPositionMargin,
-                        var.posEnd() + var.breakendEnd().ConfidenceInterval.End + inexactHom[SE_END] + mPositionMargin);
+                        var.posEnd() + marginEnd[SE_START] - mPositionMargin,
+                        var.posEnd() + marginEnd[SE_END] + mPositionMargin);
 
                 return findPonMatch(regions, var, svStart, svEnd, mCurrentSvIndex);
             }
@@ -174,11 +190,11 @@ public class PonCache
 
     private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var)
     {
-        final int[] inexactHom = var.inexactHomology();
+        final int[] marginStart = breakendMargin(var.breakendStart());
 
         BaseRegion svStart = new BaseRegion(
-                var.posStart() + var.breakendStart().ConfidenceInterval.Start - inexactHom[SE_START] - mPositionMargin,
-                var.posStart() + var.breakendStart().ConfidenceInterval.End + inexactHom[SE_START] + mPositionMargin);
+                var.posStart() + marginStart[SE_START] - mPositionMargin,
+                var.posStart() + marginStart[SE_END] + mPositionMargin);
 
         for(; mCurrentSglIndex < regions.size(); ++mCurrentSglIndex)
         {

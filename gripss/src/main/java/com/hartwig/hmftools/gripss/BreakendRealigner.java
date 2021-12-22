@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPair
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
+import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
 
 import java.util.List;
@@ -55,6 +56,7 @@ public class BreakendRealigner
 
     public Breakend realignRemote(final Breakend breakend, final Breakend realignedOther)
     {
+        // realign the breakend, using the already realigned other breakend's new coords
         Allele refAllele = breakend.Context.getReference();
 
         List<Allele> alleles = Lists.newArrayList();
@@ -127,13 +129,22 @@ public class BreakendRealigner
         alleles.add(Allele.create(newRef, true));
         alleles.add(Allele.create(newAlt));
 
-        VariantContext newContext = new VariantContextBuilder(breakend.Context)
+        VariantContextBuilder builder = new VariantContextBuilder(breakend.Context)
                 .start(newStart)
                 .stop(newStart)
                 .alleles(alleles)
                 .attribute(VT_REALIGN, true)
-                .attribute(VT_CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
-                .make();
+                .attribute(VT_CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End));
+
+        if(breakend.InexactHomology.length() > 0)
+        {
+            int ciposShift = newCipos.Start - breakend.ConfidenceInterval.Start;
+
+            builder.attribute(VT_IHOMPOS, Lists.newArrayList(
+                    breakend.InexactHomology.Start + ciposShift, breakend.InexactHomology.End + ciposShift));
+        }
+
+        VariantContext newContext = builder.make();
 
         return Breakend.realigned(breakend, newContext, newStart);
     }
