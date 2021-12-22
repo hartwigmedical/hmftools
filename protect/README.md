@@ -106,6 +106,8 @@ sources | A list of sources from where the evidence has been extracted | vicc_cg
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.9)
+  - A release that is technically compatible with SERVE v1.8
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.8)
   - Support for [PAVE](../pave/README.md). 
   - Handle multiple drivers per gene where non-canonical transcripts are included. 
