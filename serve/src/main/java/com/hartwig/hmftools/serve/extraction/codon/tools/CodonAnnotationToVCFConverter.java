@@ -34,7 +34,7 @@ public class CodonAnnotationToVCFConverter {
 
     private static final Logger LOGGER = LogManager.getLogger(CodonAnnotationToVCFConverter.class);
 
-    private static final boolean LOG_DEBUG = true;
+    private static final boolean LOG_DEBUG = false;
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE codon VCF converter");
