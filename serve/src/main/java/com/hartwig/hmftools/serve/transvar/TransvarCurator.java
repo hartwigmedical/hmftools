@@ -24,6 +24,9 @@ class TransvarCurator {
 
         // These genes work fine in transvar and should not be mapped to our old HMF v37 name.
         GENES_FOR_WHICH_TO_SKIP_MAPPING.add("CCDC186");
+
+        // This gene has swapped name with UGT1A8 in the new gene model.
+        GENES_FOR_WHICH_TO_SKIP_MAPPING.add("UGT1A1");
     }
 
     @NotNull
