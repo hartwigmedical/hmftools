@@ -14,6 +14,7 @@ public class CommonUtils
 {
     public static final String DATA_DELIM = ",";
     public static final String ITEM_DELIM = ";";
+    public static final String SUB_ITEM_DELIM = "=";
 
     public static final double DEFAULT_DIFF = 0.1;
     public static final double DEFAULT_DIFF_PERC = 0.1;

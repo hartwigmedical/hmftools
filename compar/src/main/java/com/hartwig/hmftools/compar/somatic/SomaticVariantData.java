@@ -57,7 +57,7 @@ public class SomaticVariantData implements ComparableItem
 
         checkDiff(diffs, "hotspot", Variant.hotspot().toString(), otherVar.Variant.hotspot().toString());
         checkDiff(diffs, "canonicalEffect", Variant.canonicalEffect(), otherVar.Variant.canonicalEffect());
-        checkDiff(diffs, "worstCodingEffect", Variant.worstCodingEffect().toString(), otherVar.Variant.worstCodingEffect().toString());
+        checkDiff(diffs, "canonicalCodingEffect", Variant.canonicalCodingEffect().toString(), otherVar.Variant.canonicalCodingEffect().toString());
         checkDiff(diffs, "tier", Variant.tier().toString(), otherVar.Variant.tier().toString());
         checkDiff(diffs, "subclonalLikelihood", Variant.subclonalLikelihood(), otherVar.Variant.subclonalLikelihood());
         checkDiff(diffs, "variantCopyNumber", Variant.variantCopyNumber(), otherVar.Variant.variantCopyNumber());

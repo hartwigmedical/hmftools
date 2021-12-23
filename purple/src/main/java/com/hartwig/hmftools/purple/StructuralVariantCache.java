@@ -69,7 +69,7 @@ public class StructuralVariantCache
     }
 
     public StructuralVariantCache(
-            @NotNull final String version, @NotNull final String templateVCF, @NotNull final String outputVCF, final ReferenceData referenceData)
+            final String version, final String templateVCF, final String outputVCF, final ReferenceData referenceData)
     {
         final VCFFileReader vcfReader = new VCFFileReader(new File(templateVCF), false);
         mOutputVcfFilename = outputVCF;
@@ -85,7 +85,7 @@ public class StructuralVariantCache
         vcfReader.close();
     }
 
-    void addVariant(@NotNull final VariantContext variantContext)
+    void addVariant(final VariantContext variantContext)
     {
         if(enabled())
         {
@@ -93,7 +93,7 @@ public class StructuralVariantCache
         }
     }
 
-    void inferMissingVariant(@NotNull final List<PurpleCopyNumber> copyNumbers)
+    void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
     {
         if(enabled())
         {
@@ -110,7 +110,7 @@ public class StructuralVariantCache
     }
 
     @NotNull
-    private VariantContext infer(@NotNull final PurpleCopyNumber copyNumber, @NotNull final PurpleCopyNumber prev)
+    private VariantContext infer(final PurpleCopyNumber copyNumber, final PurpleCopyNumber prev)
     {
         final long position;
         final Allele allele;
@@ -140,7 +140,7 @@ public class StructuralVariantCache
                 .make();
     }
 
-    void write(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) throws IOException
+    void write(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
         if(mVcfHeader.isPresent())
         {
@@ -254,7 +254,7 @@ public class StructuralVariantCache
 
     @NotNull
     @VisibleForTesting
-    static VCFHeader generateOutputHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
+    static VCFHeader generateOutputHeader(final String purpleVersion, final VCFHeader template)
     {
         return StructuralVariantHeader.generateHeader(purpleVersion, template);
     }

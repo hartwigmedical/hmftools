@@ -131,11 +131,27 @@ public class Compar
     {
         try
         {
-            final String diffFilename = mConfig.OutputDir + "COMPAR_DIFFS.csv";
+            String outputFile = mConfig.OutputDir;
 
-            mDiffWriter = createBufferedWriter(diffFilename, false);
+            if(mConfig.singleSample())
+            {
+                outputFile += mConfig.SampleIds.get(0);
+            }
+            else
+            {
+                outputFile += "COMPAR_DIFFS";
+            }
 
-            mDiffWriter.write("SampleId,");
+            if(mConfig.OutputId != null)
+                outputFile += "." + mConfig.OutputId;
+
+            outputFile += ".csv";
+
+            mDiffWriter = createBufferedWriter(outputFile, false);
+
+            if(mConfig.multiSample())
+                mDiffWriter.write("SampleId,");
+
             mDiffWriter.write(Mismatch.header());
 
             mDiffWriter.newLine();
@@ -155,7 +171,9 @@ public class Compar
         {
             for(Mismatch mismatch : mismatches)
             {
-                mDiffWriter.write(String.format("%s,", sampleId));
+                if(mConfig.multiSample())
+                    mDiffWriter.write(String.format("%s,", sampleId));
+
                 mDiffWriter.write(mismatch.toCsv());
                 mDiffWriter.newLine();
             }

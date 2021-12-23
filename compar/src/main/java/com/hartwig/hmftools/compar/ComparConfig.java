@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.compar;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
+import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
+import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
+import static com.hartwig.hmftools.compar.FileSources.fromConfig;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -30,11 +36,14 @@ public class ComparConfig
 
     public final Map<Category,MatchLevel> Categories;
 
-    // database access
-    public final Map<String,DatabaseAccess> DbConnections;
-    public final List<String> DbSourceNames;
+    public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
+
+    public final Map<String,DatabaseAccess> DbConnections; // database access details keyed by source
+    public final Map<String,FileSources> FileSources; // directories per type and keyed by source
+    public final Map<String,String> SourceSampleIds; // as required, mapping from sampleId to source sampleId
 
     public final String OutputDir;
+    public final String OutputId;
 
     private boolean mIsValid;
 
@@ -43,8 +52,10 @@ public class ComparConfig
     public static final String MATCH_LEVEL = "match_level";
 
     public static final String DB_SOURCES = "db_sources";
+    public static final String FILE_SOURCES = "file_sources";
 
     public static final String SAMPLE = "sample";
+    public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
@@ -92,13 +103,36 @@ public class ComparConfig
         CMP_LOGGER.info("comparing categories: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
 
         OutputDir = parseOutputDir(cmd);
+        OutputId = cmd.getOptionValue(OUTPUT_ID);
 
         DbConnections = Maps.newHashMap();
-        DbSourceNames = Lists.newArrayList();
+        FileSources = Maps.newHashMap();
+        SourceNames = Lists.newArrayList();
         loadDatabaseSources(cmd);
+        loadFileSources(cmd);
+
+        SourceSampleIds = Maps.newHashMap();
+        if(cmd.hasOption(SOURCE_SAMPLE_MAPPINGS))
+        {
+            String[] sampleMappings = cmd.getOptionValue(SOURCE_SAMPLE_MAPPINGS).split(DATA_DELIM);
+
+            for(String sampleMapping : sampleMappings)
+            {
+                String[] mappingItems = sampleMapping.split(SUB_ITEM_DELIM);
+                SourceSampleIds.put(mappingItems[0], mappingItems[1]);
+            }
+        }
+    }
+
+    public String sourceSampleId(final String source, final String sampleId)
+    {
+        String suffix = SourceSampleIds.get(source);
+        return suffix != null ? sampleId + suffix : sampleId;
     }
 
     public boolean isValid() { return mIsValid; }
+    public boolean singleSample() { return SampleIds.size() == 1; }
+    public boolean multiSample() { return SampleIds.size() > 1; }
 
     private void loadSampleIds(final CommandLine cmd)
     {
@@ -119,13 +153,16 @@ public class ComparConfig
 
     private void loadDatabaseSources(final CommandLine cmd)
     {
+        if(!cmd.hasOption(DB_SOURCES))
+            return;
+
         // form DB1;db_url;db_user;db_pass DB2;db_url;db_user;db_pass etc
         String dbSourcesStr = cmd.getOptionValue(DB_SOURCES, "");
         String[] dbSources = dbSourcesStr.split(DATA_DELIM, -1);
 
         for(String dbSourceStr : dbSources)
         {
-            String[] dbItems = dbSourceStr.split(";", -1);
+            String[] dbItems = dbSourceStr.split(ITEM_DELIM, -1);
 
             if(dbItems.length != 4)
             {
@@ -151,14 +188,38 @@ public class ComparConfig
                 }
 
                 DbConnections.put(sourceName, dbAccess);
-                DbSourceNames.add(sourceName);
+                SourceNames.add(sourceName);
             }
             catch(SQLException e)
             {
                 mIsValid = false;
             }
         }
+    }
 
+    private void loadFileSources(final CommandLine cmd)
+    {
+        if(!cmd.hasOption(FILE_SOURCES))
+            return;
+
+        // form: sample_dir=pipe_v1;/path_to_sample_dir/;linx_dir=linx;purple_dir=purple etc OR
+        // form: linx_dir=pipe_v1;/path_to_linx_data/;purple_dir/path_to_purple_data/ etc OR
+        String fileSourcesStr = cmd.getOptionValue(FILE_SOURCES, "");
+        String[] fileSourceEntries = fileSourcesStr.split(DATA_DELIM, -1);
+
+        for(String fileSourceStr : fileSourceEntries)
+        {
+            FileSources fileSources = fromConfig(fileSourceStr);
+
+            if(fileSources == null)
+            {
+                FileSources.clear();
+                return;
+            }
+
+            FileSources.put(fileSources.Source, fileSources);
+            SourceNames.add(fileSources.Source);
+        }
     }
 
     public static void addCmdLineArgs(Options options)
@@ -170,12 +231,13 @@ public class ComparConfig
         options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE, MODERATE or DETAILED");
         options.addOption(SAMPLE, true, "Sample data file");
         options.addOption(SAMPLE_ID_FILE, true, "Sample data file");
+        options.addOption(SOURCE_SAMPLE_MAPPINGS, true, "Optional specific source suffixes");
 
-        options.addOption(DB_SOURCES, true, "Directory containing standard sample files from pipeline");
+        options.addOption(DB_SOURCES, true, "Database configurations keyed by soure name");
+        options.addOption(FILE_SOURCES, true, "File locations keyed by source name");
 
         addDatabaseCmdLineArgs(options);
-
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        addOutputOptions(options);
+        addLoggingOptions(options);
     }
 }

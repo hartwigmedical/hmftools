@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.gene.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELETION;
@@ -565,7 +566,7 @@ public class PurpleApplication
 
         PPL_LOGGER.info("Loading structural variants from {}", sampleDataFiles.SvVcfFile);
 
-        final String outputVcf = mConfig.OutputDir + File.separator + tumorSample + ".purple.sv.vcf.gz";
+        final String outputVcf = mConfig.OutputDir + File.separator + tumorSample + PURPLE_SV_VCF_SUFFIX;
 
         return new StructuralVariantCache(mPurpleVersion.version(), sampleDataFiles.SvVcfFile, outputVcf, mReferenceData);
     }
