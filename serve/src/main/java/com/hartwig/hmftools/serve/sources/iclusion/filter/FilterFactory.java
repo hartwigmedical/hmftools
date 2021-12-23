@@ -18,7 +18,6 @@ final class FilterFactory {
     private static void populateMutationsToFilter() {
         // We don't interpret "expression" evidence on WGS
         MUTATIONS_TO_FILTER.add("EXPRESSION");
-
     }
 
     private static void populateMutationKeysToFilter() {

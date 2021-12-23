@@ -222,6 +222,8 @@ DoCM is used exclusively for known hotspot generation. The filtering is therefor
  - Unusual notations for inframe deletions and insertions are removed.
  - Mutations that don't exist on the transcript specified by DoCM are removed.
  
+Also, genes that do not follow HGNC model are renamed to their HGNC name.
+ 
 ### iClusion Curation
 
 iClusion contributes to actionability only. SERVE configures every trial to B-level evidence with responsive direction. 
@@ -317,10 +319,18 @@ Knowledge extraction is performed on a per-knowledgebase level after which all e
   - The actionable output is the database that [PROTECT](../protect/README.md) bases its clinical evidence matching on.
   
 ## Version History and Download Links
-- Upcoming
-  - Support for new gene model implied by [HMF Gene Utils](../gene-utils/README.md)
-  - Support for HR-deficiency events in CKB
-  - Addition of rangeType and rank in actionable range output.
+- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.8)
+  - Add full support for HGNC gene model implied by [HMF Gene Utils](../gene-utils/README.md)
+    - Removed gene name mapping from ref genome converter when mapping between 37 and 38 (since gene names are always equal)
+    - Remove gene name mapping from CKB gene extractor since CKB follows HGNC as well.
+    - The ensembl data cache is used for resolving genes and canonical transcripts
+    - Transvar uses new temporarily "new to old" gene mapping
+    - Support for gene mapping in DoCM which does not follow HGNC
+  - Add range annotation to (actionable) range:
+    - Rename exonIndex to exonRank in KnownExons
+    - Rename codonIndex to codonRank in KnownCodons
+    - Add transcript, rangeType and rank to ActionableRange
+  - Support for HRD in CKB
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/serve-v1.7)
   - Extend config file from source iClusion
   - Extend config file from source CKB

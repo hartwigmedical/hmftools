@@ -34,7 +34,7 @@ public class ExonAnnotationToVCFConverter {
 
     private static final Logger LOGGER = LogManager.getLogger(ExonAnnotationToVCFConverter.class);
 
-    private static final boolean LOG_DEBUG = true;
+    private static final boolean LOG_DEBUG = false;
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running SERVE exon VCF converter");
@@ -46,7 +46,7 @@ public class ExonAnnotationToVCFConverter {
         ServeConfig config = ServeLocalConfigProvider.create();
         IndexedFastaSequenceFile refSequence37 = new IndexedFastaSequenceFile(new File(config.refGenome37FastaFile()));
 
-        String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/KnownExons.SERVE.38.tsv";
+        String knownExonsTsv = System.getProperty("user.home") + "/hmf/tmp/KnownExons.SERVE.37.tsv";
         String outputVcf = System.getProperty("user.home") + "/hmf/tmp/exons.vcf.gz";
         GenerateAltBase altBaseGenerator = new GenerateAltBase(RefGenomeVersion.V37, refSequence37);
 
