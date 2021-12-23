@@ -176,3 +176,6 @@ _ Inframe insertion + stop gained | p.Leu339delinsHisPhe* | Ignore any AA insert
 
 We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for GRCH37).  We filter the Gnomad file for variants with at least 0.00005 frequency and and we annotate with a resolution of 0.0001. 
 
+## Known Issues
+- Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
+
