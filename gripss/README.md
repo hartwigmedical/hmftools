@@ -70,6 +70,7 @@ discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) 
 PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
+singleStrandBias | 0.05 and 0.95 | SGLs must have strand bias within these bounds
 
 We also have 6 special filters applying to specific short variant categories:
 

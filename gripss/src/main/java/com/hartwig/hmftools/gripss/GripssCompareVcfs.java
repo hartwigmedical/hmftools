@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINK
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -98,7 +99,7 @@ public class GripssCompareVcfs
         GR_LOGGER.info("loading original VCF({})", mOriginalVcf);
         loadOriginalVariants(mOriginalVcf);
 
-        GR_LOGGER.info("loaded {} original SVs", mOriginalSvData.size());
+        GR_LOGGER.info("loaded {} original SVs, incomplete({})", mOriginalSvData.size(), mVariantBuilder.incompleteSVs());
 
         compareVariants(mNewVcf);
         closeBufferedWriter(mWriter);
@@ -125,7 +126,7 @@ public class GripssCompareVcfs
             {
                 SvData svData = mVariantBuilder.checkCreateVariant(variantContext, genotypeIds);
 
-                if(svData == null)
+                if(svData == null || svData.type() == INF)
                     continue;
 
                 mOriginalSvData.put(svData.id(), svData);
@@ -184,7 +185,7 @@ public class GripssCompareVcfs
             {
                 SvData newSv = mVariantBuilder.checkCreateVariant(variantContext, genotypeIds);
 
-                if(newSv == null)
+                if(newSv == null || newSv.type() == INF)
                     continue;
 
                 ++newSvCount;
