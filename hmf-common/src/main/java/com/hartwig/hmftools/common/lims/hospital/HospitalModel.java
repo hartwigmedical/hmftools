@@ -89,6 +89,7 @@ public abstract class HospitalModel {
         switch (cohorts) {
             case "CPCT":
             case "CPCTpancreas":
+            case "CPCTBLINC":
                 return hospitalPersonsCPCT().get(hospitalId);
             case "DRUP":
             case "DRUPstage3":
