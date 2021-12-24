@@ -53,8 +53,8 @@ public class NeoEpitopeTest
         // tests: SNP, delete, insertion
 
         int[] exonStarts = {0, 20, 40, 60, 80, 100};
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(85);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(85);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -236,8 +236,8 @@ public class NeoEpitopeTest
         // tests: SNP, delete, insertion
 
         int[] exonStarts = {0, 20, 40, 60, 80, 100};
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(85);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(85);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -407,8 +407,8 @@ public class NeoEpitopeTest
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         int[] exonStarts = { 0, 20, 40, 60, 80, 100 };
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(85);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(85);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -709,8 +709,8 @@ public class NeoEpitopeTest
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         int[] exonStarts = { 0, 20, 40, 60, 80, 100 };
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(85);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(85);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -874,8 +874,8 @@ public class NeoEpitopeTest
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         int[] exonStarts = { 0, 20, 40, 60, 80, 100 };
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(66);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(66);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -923,8 +923,8 @@ public class NeoEpitopeTest
         // tests: intronic vs exonic, with and without insertions
 
         int[] exonStarts = { 0, 20, 40, 60, 80, 100 };
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(85);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(85);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");

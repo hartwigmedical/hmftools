@@ -123,13 +123,13 @@ public class VcfUtils
     public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
     {
         Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : Integer.valueOf(value.toString());
+        return value == null ? defaultVaue : Integer.parseInt(value.toString());
     }
 
     public static double getGenotypeAttributeAsDouble(final Genotype genotype, final String attribute, double defaultVaue)
     {
         Object value = genotype.getExtendedAttribute(attribute);
-        return value == null ? defaultVaue : Double.valueOf(value.toString());
+        return value == null ? defaultVaue : Double.parseDouble(value.toString());
     }
 
     public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)

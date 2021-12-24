@@ -550,8 +550,8 @@ public class ProteinImpactTest
         int[] exonStarts = { 0, 100, 200 };
 
         // codons start on at 10, 13, 16 etc
-        Integer codingStart = new Integer(10);
-        Integer codingEnd = new Integer(250);
+        Integer codingStart = Integer.valueOf(10);
+        Integer codingEnd = Integer.valueOf(250);
 
         TranscriptData transDataPos = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 80, codingStart, codingEnd, false, "");
@@ -692,8 +692,8 @@ public class ProteinImpactTest
         int[] exonStarts = { 10, 30, 50, 70};
 
         // codons start on at 10, 13, 16 etc
-        Integer codingStart = new Integer(15);
-        Integer codingEnd = new Integer(75);
+        Integer codingStart = Integer.valueOf(15);
+        Integer codingEnd = Integer.valueOf(75);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
