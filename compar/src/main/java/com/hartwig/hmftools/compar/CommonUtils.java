@@ -3,12 +3,15 @@ package com.hartwig.hmftools.compar;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.PRESENCE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
 
 import java.util.List;
 import java.util.StringJoiner;
+
+import com.google.common.collect.Lists;
 
 public class CommonUtils
 {
@@ -74,6 +77,36 @@ public class CommonUtils
             return hasAbsDiff && hasRelDiff;
         else
             return hasAbsDiff || hasRelDiff;
+    }
+
+    public static void processSample(
+            final ItemComparer comparer, final ComparConfig config, final String sampleId, final List<Mismatch> mismatches)
+    {
+        final MatchLevel matchLevel = config.Categories.get(comparer.category());
+
+        final List<List<ComparableItem>> sourceItems = Lists.newArrayList();
+
+        for(String sourceName : config.SourceNames)
+        {
+            String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
+
+            if(!config.DbConnections.isEmpty())
+                sourceItems.add(comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName)));
+            else
+                sourceItems.add(comparer.loadFromFile(sourceSampleId, config.FileSources.get(sourceName)));
+        }
+
+        for(int i = 0; i < config.SourceNames.size() - 1; ++i)
+        {
+            final String source1 = config.SourceNames.get(i);
+
+            for(int j = i + 1; j < config.SourceNames.size(); ++j)
+            {
+                final String source2 = config.SourceNames.get(j);
+
+                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceItems.get(i), sourceItems.get(j));
+            }
+        }
     }
 
     public static void compareItems(

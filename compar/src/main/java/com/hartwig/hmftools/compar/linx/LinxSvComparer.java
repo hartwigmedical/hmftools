@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SOMATIC_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
@@ -19,12 +18,12 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
+import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -37,36 +36,17 @@ public class LinxSvComparer implements ItemComparer
         mConfig = config;
     }
 
+    @Override
+    public Category category() { return LINX_DATA; }
+
+    @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        final MatchLevel matchLevel = mConfig.Categories.get(LINX_DATA);
-
-        final List<List<ComparableItem>> sourceItems = Lists.newArrayList();
-
-        for(String sourceName : mConfig.SourceNames)
-        {
-            String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
-
-            if(!mConfig.DbConnections.isEmpty())
-                sourceItems.add(loadFromDb(sourceSampleId, mConfig.DbConnections.get(sourceName)));
-            else
-                sourceItems.add(loadFromFile(sourceSampleId, mConfig.FileSources.get(sourceName)));
-        }
-
-        for(int i = 0; i < mConfig.SourceNames.size() - 1; ++i)
-        {
-            final String source1 = mConfig.SourceNames.get(i);
-
-            for(int j = i + 1; j < mConfig.SourceNames.size(); ++j)
-            {
-                final String source2 = mConfig.SourceNames.get(j);
-
-                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceItems.get(i), sourceItems.get(j));
-            }
-        }
+        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
-    private List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    @Override
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         final List<LinxCluster> clusters = dbAccess.readClusters(sampleId);
         final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
@@ -75,7 +55,7 @@ public class LinxSvComparer implements ItemComparer
         return buildComparableItems(svDataList, annotations, clusters);
     }
 
-    private List<ComparableItem> buildComparableItems(
+    public List<ComparableItem> buildComparableItems(
             final List<StructuralVariantData> svDataList, final List<LinxSvAnnotation> annotations, final List<LinxCluster> clusters)
     {
         final List<ComparableItem> svItems = Lists.newArrayList();
@@ -101,7 +81,8 @@ public class LinxSvComparer implements ItemComparer
         return svItems;
     }
 
-    private List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    @Override
+    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
     {
         try
         {

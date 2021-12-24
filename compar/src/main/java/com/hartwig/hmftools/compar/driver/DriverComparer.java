@@ -11,11 +11,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
+import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.FileSources;
-import com.hartwig.hmftools.compar.MatchLevel;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -29,36 +29,17 @@ public class DriverComparer implements ItemComparer
         mConfig = config;
     }
 
+    @Override
+    public Category category() { return DRIVER; }
+
+    @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        final MatchLevel matchLevel = mConfig.Categories.get(DRIVER);
-
-        final List<List<ComparableItem>> sourceItems = Lists.newArrayList();
-
-        for(String sourceName : mConfig.SourceNames)
-        {
-            String sourceSampleId = mConfig.sourceSampleId(sourceName, sampleId);
-
-            if(!mConfig.DbConnections.isEmpty())
-                sourceItems.add(loadFromDb(sourceSampleId, mConfig.DbConnections.get(sourceName)));
-            else
-                sourceItems.add(loadFromFile(sourceSampleId, mConfig.FileSources.get(sourceName)));
-        }
-
-        for(int i = 0; i < mConfig.SourceNames.size() - 1; ++i)
-        {
-            final String source1 = mConfig.SourceNames.get(i);
-
-            for(int j = i + 1; j < mConfig.SourceNames.size(); ++j)
-            {
-                final String source2 = mConfig.SourceNames.get(j);
-
-                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceItems.get(i), sourceItems.get(j));
-            }
-        }
+        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
     }
 
-    private List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    @Override
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
         final List<LinxDriver> svDrivers = dbAccess.readSvDriver(sampleId);
@@ -74,7 +55,8 @@ public class DriverComparer implements ItemComparer
         return driverDataList;
     }
 
-    private List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
+    @Override
+    public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 

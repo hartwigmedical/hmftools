@@ -75,7 +75,7 @@ public class ComparConfig
         }
         else
         {
-            final String[] catDataList = cmd.getOptionValue(CATEGORIES).split(";");
+            final String[] catDataList = cmd.getOptionValue(CATEGORIES).split(DATA_DELIM);
 
             for(String catData : catDataList)
             {

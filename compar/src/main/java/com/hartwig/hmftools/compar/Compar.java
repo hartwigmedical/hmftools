@@ -84,11 +84,7 @@ public class Compar
             return;
         }
 
-        if(mConfig.SampleIds.size() == 1)
-        {
-            CMP_LOGGER.info("running comparison for {}", mConfig.SampleIds.get(0));
-        }
-        else
+        if(mConfig.multiSample())
         {
             CMP_LOGGER.info("running comparison for {} sample(s)", mConfig.SampleIds.size());
         }
@@ -120,6 +116,7 @@ public class Compar
 
         for(ItemComparer comparator : mComparators)
         {
+            CMP_LOGGER.debug("sample({}) checking {}", sampleId, comparator.category());
             comparator.processSample(sampleId, mismatches);
         }
 

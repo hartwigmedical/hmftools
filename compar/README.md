@@ -18,10 +18,10 @@ java -jar compar.jar \
 The following filters are applied to all variants
 
 Filter | Description
----|---|---
+---|---
 sample | Tumor sample ID or
 sample_id_file | File with column header SampleId and then list of sample IDs
-categories | 'ALL', otherwise specify from PURITY, COPY_NUMBER, DRIVER, SOMATIC_VARIANT, LINX_DATA, FUSION, DISRUPTION
+categories | 'ALL', otherwise specify a comma-separated list from PURITY, COPY_NUMBER, DRIVER, SOMATIC_VARIANT, LINX_DATA, FUSION, DISRUPTION
 match_level | REPORTABLE, KEY_FIELDS or DETAILED
 file_sources | List of sources and their file locations - see format below
 db_sources |  List of sources and their DB locations - see format below
@@ -36,18 +36,23 @@ Specify 'file_sources' config with a comma-separated list of the follow:
 - optional Linx, Purple and Somatic file directories, with relative path used if sample directory is specified
 
 Example 1
-'RUN_01;sample_dir=/path_to_sample_data/run_01/,RUN_02;sample_dir=/path_to_sample_data/run_02/'
+```
+file_sources="RUN_01;sample_dir=/path_to_sample_data/run_01/,RUN_02;sample_dir=/path_to_sample_data/run_02/"
+```
 
 will load run 01 data from /path_to_sample_data/run_01/ and run 02 data from /path_to_sample_data/run_02/
 
 Example 2
-'RUN_01;sample_dir=/path_to_sample_data/run_01/;linx_dir=linx;purple_dir=purple,RUN_02 etc'
+```
+file_sources="RUN_01;sample_dir=/path_to_sample_data/run_01/;linx_dir=linx;purple_dir=purple,RUN_02 etc"
+```
 
 will load run 01 data Linx data from /path_to_sample_data/run_01/linx/ and Purple data from /path_to_sample_data/run_01/purple/ 
 
 Example 3
-
-'RUN_01;linx_dir=/path_to_sample_data/run_01/linx;purple_dir=/path_to_sample_data/run_01/purple/,RUN_02 etc'
+```
+file_sources="RUN_01;linx_dir=/path_to_sample_data/run_01/linx;purple_dir=/path_to_sample_data/run_01/purple/,RUN_02 etc"
+```
 
 will load run 01 data Linx data from /path_to_sample_data/run_01/linx/ and Purple data from /path_to_sample_data/run_01/purple/ 
 
@@ -56,8 +61,9 @@ Specify 'db_sources' config with a comma-separated list of the follow:
 - SourceName;DbURL;DbUser;DbPassword
 
 Example:
-
-"PROD;mysql://localhost/prod;user1;pass1,TEST;mysql://localhost/test;user1;pass1"
+```
+db_sources="PROD;mysql://localhost/prod;user1;pass1,TEST;mysql://localhost/test;user1;pass1"
+```
 
 
 ## Data Categories

@@ -67,7 +67,7 @@ public class DriverData implements ComparableItem
         {
             for(final LinxDriver svDriver : SvDrivers)
             {
-                if(((DriverData) other).SvDrivers.stream().noneMatch(x -> x.eventType() == svDriver.eventType()))
+                if(otherDriver.SvDrivers.stream().noneMatch(x -> x.eventType().equals(svDriver.eventType())))
                 {
                     hasDiffs = true;
                     break;
@@ -81,7 +81,7 @@ public class DriverData implements ComparableItem
             SvDrivers.stream().map(x -> x.eventType()).forEach(x -> eventTypes.add(x));
 
             final StringJoiner otherEventTypes = new StringJoiner(ITEM_DELIM);
-            ((DriverData) other).SvDrivers.stream().map(x -> x.eventType()).forEach(x -> otherEventTypes.add(x));
+            otherDriver.SvDrivers.stream().map(x -> x.eventType()).forEach(x -> otherEventTypes.add(x));
 
             diffs.add(String.format("svDriver eventTypes(%s/%s)",
                     eventTypes.toString(), otherEventTypes.toString()));
