@@ -5,7 +5,7 @@ GRIPSS processes the GRIDSS output and produces a somatic vcf.
 
 Repeat masker annotations must be included in the GRIDSS output before running GRIPSS. Details on how to include these are available on the GRIDSS readme [here](https://github.com/PapenfussLab/gridss#how-do-i-do-repeatmasker-annotation-of-breakend-sequences). 
 
-# Usage
+## Usage
 
 ```
 java -jar gripss.jar \

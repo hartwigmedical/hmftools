@@ -3,6 +3,6 @@ package com.hartwig.hmftools.compar;
 public enum MatchLevel
 {
     REPORTABLE,
-    MODERATE,
+    KEY_FIELDS,
     DETAILED;
 }

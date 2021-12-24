@@ -99,7 +99,9 @@ public class CommonUtils
                     matched = true;
 
                     // skip checking for diffs if the items are not reportable
-                    if(matchLevel != REPORTABLE || item2.reportable() || item2.reportable())
+                    boolean eitherReportable = item2.reportable() || item2.reportable();
+
+                    if(matchLevel != REPORTABLE || eitherReportable)
                     {
                         final List<String> diffs = item1.findDifferences(item2, matchLevel);
 
@@ -108,8 +110,10 @@ public class CommonUtils
                             StringJoiner differencesStr = new StringJoiner(ITEM_DELIM);
                             diffs.forEach(x -> differencesStr.add(x));
 
+
                             mismatches.add(new Mismatch(
-                                    item1.category(), VALUE, source1, source2, item1.description(), differencesStr.toString()));
+                                    item1.category(), VALUE, source1, source2, eitherReportable,
+                                    item1.description(), differencesStr.toString()));
                         }
                     }
 
@@ -126,10 +130,10 @@ public class CommonUtils
         }
 
         items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source1, source2, x.description(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source1, source2, x.reportable(), x.description(), "")));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source2, source1, x.description(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source2, source1, x.reportable(), x.description(), "")));
     }
 
 }

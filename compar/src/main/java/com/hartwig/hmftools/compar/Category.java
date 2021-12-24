@@ -5,7 +5,6 @@ public enum Category
     PURITY,
     COPY_NUMBER,
     DRIVER,
-    VIRUS,
     SOMATIC_VARIANT,
     LINX_DATA,
     FUSION,
