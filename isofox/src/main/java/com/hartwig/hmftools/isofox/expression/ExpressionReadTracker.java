@@ -116,7 +116,7 @@ public class ExpressionReadTracker
         final List<String> unsplicedGeneIds = mGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END], true)
                 .stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
-        final List<Integer> transIds = mGenes.getEnrichedTranscripts().stream().map(x -> new Integer(x.TransId)).collect(Collectors.toList());
+        final List<Integer> transIds = mGenes.getEnrichedTranscripts().stream().map(x -> Integer.valueOf(x.TransId)).collect(Collectors.toList());
         CategoryCountsData catCounts = getCategoryCountsData(transIds, unsplicedGeneIds);
 
         // compute and cache GC data

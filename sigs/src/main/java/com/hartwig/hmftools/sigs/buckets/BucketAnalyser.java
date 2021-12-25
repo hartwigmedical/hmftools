@@ -209,7 +209,7 @@ public class BucketAnalyser
         mSigDiscovery = new SigDiscovery(this);
 
         // initialise data stores
-        mCancerSamplesMap = new HashMap();
+        mCancerSamplesMap = new HashMap<>();
 
         // initialise run state
         mHasErrors = false;
@@ -220,7 +220,7 @@ public class BucketAnalyser
         mBackgroundCount = 0;
         mPermittedElevRange = null;
         mPermittedBgRange = null;
-        mNoiseRangeMap = new HashMap();
+        mNoiseRangeMap = new HashMap<>();
 
         mSampleData = Lists.newArrayList();
 
@@ -3041,7 +3041,7 @@ public class BucketAnalyser
 
         int categoryCount = fieldNames.size() - 1; // since sampleId is the first column
 
-        HashMap<String,Integer> categoryCounts = new HashMap();
+        HashMap<String,Integer> categoryCounts = new HashMap<>();
 
         for(Integer sampleId : sampleIds)
         {

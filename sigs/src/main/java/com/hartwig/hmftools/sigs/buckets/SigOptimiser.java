@@ -308,7 +308,7 @@ public class SigOptimiser
         mSamples.addAll(samples);
         mSampleCount = mSamples.size();
 
-        mBucketInfo = new HashMap();
+        mBucketInfo = new HashMap<>();
 
         mStartRatios = new double[mBucketCount];
         copyVector(refRatios, mStartRatios);

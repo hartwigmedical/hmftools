@@ -71,13 +71,13 @@ public class NucleotideGeneEnrichment
 
         Set<String> genes = fragment.getGenes();
 
-        if(!genes.contains(HLA_A) && matchToGene(fragment, HLA_A, new Pair(HLA_B, mAbMinBoundary), new Pair(HLA_C, mAcMinBoundary)))
+        if(!genes.contains(HLA_A) && matchToGene(fragment, HLA_A, Pair.create(HLA_B, mAbMinBoundary), Pair.create(HLA_C, mAcMinBoundary)))
             genes.add(HLA_A);
 
-        if(!genes.contains(HLA_B) && matchToGene(fragment, HLA_B, new Pair(HLA_A, mAbMinBoundary), new Pair(HLA_C, mBcMinBoundary)))
+        if(!genes.contains(HLA_B) && matchToGene(fragment, HLA_B, Pair.create(HLA_A, mAbMinBoundary), Pair.create(HLA_C, mBcMinBoundary)))
             genes.add(HLA_B);
 
-        if(!genes.contains(HLA_C) && matchToGene(fragment, HLA_C, new Pair(HLA_A, mAcMinBoundary), new Pair(HLA_B, mBcMinBoundary)))
+        if(!genes.contains(HLA_C) && matchToGene(fragment, HLA_C, Pair.create(HLA_A, mAcMinBoundary), Pair.create(HLA_B, mBcMinBoundary)))
             genes.add(HLA_C);
 
         return fragment;

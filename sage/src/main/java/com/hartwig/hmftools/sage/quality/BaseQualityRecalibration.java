@@ -76,21 +76,21 @@ public class BaseQualityRecalibration
     private void processSample(final String sampleId, final String bamFile, final List<ChrBaseRegion> regions)
     {
         List<BaseQualityRegionCounter> regionCounters = Lists.newArrayList();
-        List<FutureTask> taskList = new ArrayList<FutureTask>();
+        List<FutureTask<Long>> taskList = new ArrayList<>();
 
         for(ChrBaseRegion region : regions)
         {
             BaseQualityRegionCounter regionCounter = new BaseQualityRegionCounter(mConfig, bamFile, mRefGenome, region);
             regionCounters.add(regionCounter);
 
-            FutureTask futureTask = new FutureTask(regionCounter);
+            FutureTask<Long> futureTask = new FutureTask<>(regionCounter);
             taskList.add(futureTask);
             mExecutorService.execute(futureTask);
         }
 
         try
         {
-            for(FutureTask task : taskList)
+            for(FutureTask<Long> task : taskList)
             {
                 task.get();
             }

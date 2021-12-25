@@ -301,7 +301,7 @@ public final class SequenceCount
                         ++index;
                     }
 
-                    sortedCounts.add(index, new Pair(entry.getKey(), entry.getValue()));
+                    sortedCounts.add(index, Pair.create(entry.getKey(), entry.getValue()));
                 }
 
                 for(int j = 0; j <= min(5, sortedCounts.size() - 1); ++j)

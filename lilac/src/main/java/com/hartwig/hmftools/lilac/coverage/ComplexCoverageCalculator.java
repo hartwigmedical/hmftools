@@ -46,7 +46,7 @@ public class ComplexCoverageCalculator
         ExecutorService executorService = Executors.newFixedThreadPool(mThreadCount, namedThreadFactory);
 
         List<CoverageCalcTask> coverageCalcTasks = Lists.newArrayList();
-        List<FutureTask> taskList = new ArrayList<FutureTask>();
+        List<FutureTask<Long>> taskList = new ArrayList<>();
 
         List<HlaComplex>[] complexLists = new List[mThreadCount];
 
@@ -71,7 +71,7 @@ public class ComplexCoverageCalculator
             CoverageCalcTask coverageTask = new CoverageCalcTask(threadIndex++, complexList, fragAlleleMatrix, mTopScoreThreshold);
             coverageCalcTasks.add(coverageTask);
 
-            FutureTask futureTask = new FutureTask(coverageTask);
+            FutureTask<Long> futureTask = new FutureTask<>(coverageTask);
 
             taskList.add(futureTask);
             executorService.execute(futureTask);
@@ -79,7 +79,7 @@ public class ComplexCoverageCalculator
 
         try
         {
-            for (FutureTask futureTask : taskList)
+            for (FutureTask<Long> futureTask : taskList)
             {
                 futureTask.get();
             }

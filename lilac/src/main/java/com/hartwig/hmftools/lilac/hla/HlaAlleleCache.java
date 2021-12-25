@@ -83,7 +83,7 @@ public class HlaAlleleCache
                 .filter(x -> x.getKey().equals(groupAllele)).findFirst().orElse(null);
 
         if(entry != null)
-            return new Pair(entry.getKey(), entry.getValue());
+            return Pair.create(entry.getKey(), entry.getValue());
 
         Map<HlaAllele,List<HlaAllele>> groupMap = Maps.newHashMap();
 
@@ -91,7 +91,7 @@ public class HlaAlleleCache
                 allele.Gene, allele.AlleleGroup, "", "", "", null, null);
 
         mAlleleMap.put(newGroup, groupMap);
-        return new Pair(newGroup, groupMap);
+        return Pair.create(newGroup, groupMap);
     }
 
     private static Pair<HlaAllele,List<HlaAllele>> getOrCreateFourDigitList(
@@ -103,7 +103,7 @@ public class HlaAlleleCache
                 .filter(x -> x.getKey().equals(fourDigitAllele)).findFirst().orElse(null);
 
         if(entry != null)
-            return new Pair(entry.getKey(), entry.getValue());
+            return Pair.create(entry.getKey(), entry.getValue());
 
         List<HlaAllele> alleleList = Lists.newArrayList();
 
@@ -111,7 +111,7 @@ public class HlaAlleleCache
                 allele.Gene, allele.AlleleGroup, allele.Protein, "", "", null, groupAllele);
 
         groupMap.put(newFourDigit, alleleList);
-        return new Pair(newFourDigit, alleleList);
+        return Pair.create(newFourDigit, alleleList);
     }
 
     public void rebuildProteinAlleles(final List<HlaAllele> list)

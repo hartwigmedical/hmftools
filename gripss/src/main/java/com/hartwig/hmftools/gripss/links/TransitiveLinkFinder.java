@@ -51,9 +51,9 @@ public class TransitiveLinkFinder
 
         String tranksLinkPrefix = String.format("%s_%s_",TRANS_LINK_PREFIX, breakend.VcfId);
 
-        ArrayDeque assemblyTransLinks = new ArrayDeque<TransitiveLink>();
-        ArrayDeque transLinks = new ArrayDeque<TransitiveLink>();
-        ArrayDeque matchedTransLinks = new ArrayDeque<TransitiveLink>();
+        var assemblyTransLinks = new ArrayDeque<TransitiveLink>();
+        var transLinks = new ArrayDeque<TransitiveLink>();
+        var matchedTransLinks = new ArrayDeque<TransitiveLink>();
 
         for(Breakend alternative : alternatives)
         {
@@ -78,7 +78,7 @@ public class TransitiveLinkFinder
     private static final int MAX_ITERATIONS = 500   ; // logically not required but in as a safety measure
 
     private List<Link> findLinks(
-            final Breakend target, final ArrayDeque assemblyTransLinks, final ArrayDeque transLinks, final ArrayDeque matchedTransLinks)
+            final Breakend target, final ArrayDeque<TransitiveLink> assemblyTransLinks, final ArrayDeque<TransitiveLink> transLinks, final ArrayDeque<TransitiveLink> matchedTransLinks)
     {
         ++mRecursiveInterations;
 

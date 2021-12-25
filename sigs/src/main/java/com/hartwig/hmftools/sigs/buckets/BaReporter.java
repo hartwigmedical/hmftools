@@ -580,7 +580,7 @@ public class BaReporter
         }
         else
         {
-            Map<String,Integer> groupComboMap = new HashMap();
+            Map<String,Integer> groupComboMap = new HashMap<>();
 
             for (int i = 0; i < cssResults.size(); ++i)
             {

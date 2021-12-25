@@ -132,7 +132,7 @@ public final class ExtendEvidence
             return merge(current, current, right);
         }
 
-        return new Pair(current, Sets.newHashSet());
+        return Pair.create(current, Sets.newHashSet());
     }
 
     private final int minTotalFragments(List<Integer> indices)
@@ -164,11 +164,11 @@ public final class ExtendEvidence
 
                 if (combined.totalEvidence() >= minTotalFragments)
                 {
-                    return new Pair(combined, Sets.newHashSet(left, right));
+                    return Pair.create(combined, Sets.newHashSet(left, right));
                 }
             }
         }
 
-        return new Pair(current, Sets.newHashSet());
+        return Pair.create(current, Sets.newHashSet());
     }
 }
