@@ -164,6 +164,7 @@ public class EnsemblDAO
             final String jdbcUrl = "jdbc:" + databaseUrl;
 
             System.setProperty("org.jooq.no-logo", "true");
+            System.setProperty("org.jooq.no-tips", "true");
             Connection conn = DriverManager.getConnection(jdbcUrl, userName, password);
             String catalog = conn.getCatalog();
 

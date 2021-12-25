@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
@@ -81,7 +83,9 @@ public class DatabaseAccess implements AutoCloseable {
     public static final String DB_DEFAULT_ARGS = "?serverTimezone=UTC&useSSL=false";
 
     @NotNull
-    private final CloseableDSLContext context;
+    private final Connection connection;
+    @NotNull
+    private final DSLContext context;
     @NotNull
     private final EcrfDAO ecrfDAO;
     @NotNull
@@ -138,8 +142,11 @@ public class DatabaseAccess implements AutoCloseable {
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        LOGGER.debug("Connecting to database {} @ {}", userName, url);
-        this.context = DSL.using(url, userName, password);
+        System.setProperty("org.jooq.no-tips", "true");
+        connection = DriverManager.getConnection(url, userName, password);
+        String catalog = connection.getCatalog();
+        LOGGER.debug("Connecting to database {}", catalog);
+        this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
         this.ecrfDAO = new EcrfDAO(context);
         this.clinicalDAO = new ClinicalDAO(context);
@@ -223,7 +230,11 @@ public class DatabaseAccess implements AutoCloseable {
 
     @Override
     public void close() {
-        context.close();
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOGGER.error("DB connection close failed: {}", e.toString());
+        }
     }
 
     @Nullable
