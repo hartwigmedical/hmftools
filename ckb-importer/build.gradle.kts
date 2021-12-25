@@ -2,7 +2,6 @@
 plugins {
     id("com.hartwig.java-conventions")
     id("nu.studer.jooq")
-    application
 }
 
 description = "HMF Tools - CKB Importer"
@@ -16,7 +15,7 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.ckb.CkbImporterApplication")
 }
 

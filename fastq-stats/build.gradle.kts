@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - FASTQ Stats"
@@ -15,6 +14,6 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.fastqstats.FastqStatsRunner")
 }

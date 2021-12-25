@@ -34,6 +34,7 @@ include(":orange")
 include(":patient-reporter")
 include(":telo")
 
+// values defined in gradle.properties
 val javaVersion = settings.extra.get("java.version").toString()
 val kotlinVersion = settings.extra.get("kotlin.version").toString()
 
@@ -42,6 +43,7 @@ pluginManagement {
     plugins {
         kotlin("jvm") version kotlinVersion
         id("nu.studer.jooq") version "6.0.1"
+        id("com.github.johnrengelman.shadow") version "7.1.1"
     }
 }
 

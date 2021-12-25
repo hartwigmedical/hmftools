@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - Virus Interpreter"
@@ -14,6 +13,6 @@ dependencies {
     testImplementation(project(path = ":hmf-common", configuration = "tests"))
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.virusinterpreter.VirusInterpreterApplication")
 }

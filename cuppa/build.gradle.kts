@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - Cuppa"
@@ -16,8 +15,8 @@ dependencies {
     compileOnly(libs.immutables.value)
 }
 
-description = "HMF Tools - Cuppa"
-
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.cup.CupAnalyser")
 }
+
+description = "HMF Tools - Cuppa"

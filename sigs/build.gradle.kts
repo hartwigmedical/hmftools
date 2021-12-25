@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - Sigs"
@@ -12,6 +11,6 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.sigs.fitter.SampleFitter")
 }

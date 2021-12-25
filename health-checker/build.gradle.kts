@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - Health Checker"
@@ -13,6 +12,6 @@ dependencies {
     compileOnly(libs.immutables.value)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.healthchecker.HealthChecksApplication")
 }

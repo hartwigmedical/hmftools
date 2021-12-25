@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    id("com.hartwig.tests-jar") // create a jar for tests
 }
 
 description = "HMF Tools - Common"

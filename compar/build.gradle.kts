@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - DB Comparision Tool"
@@ -11,6 +10,6 @@ dependencies {
     implementation(project(":patient-db"))
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.compar.Compar")
 }

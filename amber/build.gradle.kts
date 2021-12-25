@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - AMBER"
@@ -16,6 +15,6 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.amber.AmberApplication")
 }

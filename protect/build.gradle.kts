@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - PROTECT"
@@ -16,6 +15,6 @@ dependencies {
     testImplementation(project(path = ":serve", configuration = "tests"))
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.protect.ProtectApplication")
 }

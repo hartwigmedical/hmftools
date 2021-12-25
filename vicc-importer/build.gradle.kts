@@ -2,7 +2,6 @@
 plugins {
     id("com.hartwig.java-conventions")
     id("nu.studer.jooq")
-    application
 }
 
 description = "HMF Tools - VICC Importer"
@@ -46,6 +45,6 @@ jooq {
     }
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.vicc.ViccJsonSQLImporter")
 }

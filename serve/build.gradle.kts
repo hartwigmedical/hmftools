@@ -1,8 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    id("com.hartwig.tests-jar") // create a jar for tests
-    application
 }
 
 description = "HMF Tools - SERVE"
@@ -17,6 +15,10 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-application {
+// create a jar for tests
+testsJar {
+}
+
+shadowJar {
     mainClass.set("com.hartwig.hmftools.serve.ServeApplication")
 }

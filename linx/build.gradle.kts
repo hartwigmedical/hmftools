@@ -1,7 +1,6 @@
 
 plugins {
     id("com.hartwig.java-conventions")
-    application
 }
 
 description = "HMF Tools - Linx"
@@ -14,6 +13,6 @@ dependencies {
     compileOnly(libs.immutables.value)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.linx.LinxApplication")
 }

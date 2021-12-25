@@ -10,7 +10,7 @@ if (!hasProperty("java.version"))
     logger.error("java.version property missing")
 
 // set java version to the one specified in gradle.properties
-val javaVersion = project.property("java.version").toString()
+val javaVersion = property("java.version").toString()
 group = "com.hartwig"
 version = "local-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.toVersion(javaVersion)

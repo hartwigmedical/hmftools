@@ -2,7 +2,6 @@
 plugins {
     kotlin("jvm")
     id("com.hartwig.kotlin-conventions")
-    application
 }
 
 description = "HMF Tools - HMF ID Generator"
@@ -20,6 +19,6 @@ dependencies {
     testImplementation(libs.kotest.assertions.core.jvm)
 }
 
-application {
+shadowJar {
     mainClass.set("com.hartwig.hmftools.idgenerator.HmfIdApplicationKt")
 }
