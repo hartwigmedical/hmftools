@@ -21,13 +21,16 @@ public class SomaticVariantData implements ComparableItem
         Variant = variant;
     }
 
+    @Override
     public Category category() { return SOMATIC_VARIANT; }
 
+    @Override
     public boolean reportable()
     {
         return Variant.reported();
     }
 
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final SomaticVariantData otherVar = (SomaticVariantData)other;
@@ -44,6 +47,7 @@ public class SomaticVariantData implements ComparableItem
         return true;
     }
 
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final SomaticVariantData otherVar = (SomaticVariantData)other;
@@ -65,6 +69,7 @@ public class SomaticVariantData implements ComparableItem
         return diffs;
     }
 
+    @Override
     public String description()
     {
         return String.format("%s:%d %s>%s %s",

@@ -105,6 +105,8 @@ public class SomaticVariantComparer implements ItemComparer
                     comparableItems.add(new SomaticVariantData(somaticVariant));
                 }
             }
+
+            CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, comparableItems.size());
         }
         catch(IOException e)
         {

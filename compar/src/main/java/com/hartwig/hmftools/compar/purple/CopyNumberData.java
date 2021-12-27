@@ -21,10 +21,13 @@ public class CopyNumberData implements ComparableItem
         CopyNumber = copyNumber;
     }
 
+    @Override
     public Category category() { return COPY_NUMBER; }
 
+    @Override
     public boolean reportable() { return false; }
 
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final CopyNumberData otherCn = (CopyNumberData)other;
@@ -38,6 +41,7 @@ public class CopyNumberData implements ComparableItem
         return true;
     }
 
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final CopyNumberData otherCn = (CopyNumberData)other;
@@ -54,6 +58,7 @@ public class CopyNumberData implements ComparableItem
         return diffs;
     }
 
+    @Override
     public String description()
     {
         return String.format("location(%s %d-%d) %s_%s",

@@ -28,10 +28,13 @@ public class DriverData implements ComparableItem
         SvDrivers = svDrivers;
     }
 
+    @Override
     public Category category() { return DRIVER; }
 
+    @Override
     public boolean reportable() { return true; }
 
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final DriverData otherDriver = (DriverData)other;
@@ -45,6 +48,7 @@ public class DriverData implements ComparableItem
         return true;
     }
 
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final DriverData otherDriver = (DriverData)other;
@@ -91,6 +95,7 @@ public class DriverData implements ComparableItem
         return diffs;
     }
 
+    @Override
     public String description()
     {
         return String.format("%s_%s", DriverCatalog.driver(), DriverCatalog.gene());

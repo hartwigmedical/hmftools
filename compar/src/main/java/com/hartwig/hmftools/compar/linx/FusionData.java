@@ -23,10 +23,13 @@ public class FusionData implements ComparableItem
         Fusion = fusion;
     }
 
+    @Override
     public Category category() { return FUSION; }
 
+    @Override
     public boolean reportable() { return Fusion.reported(); }
 
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final FusionData otherFusion = (FusionData)other;
@@ -34,6 +37,7 @@ public class FusionData implements ComparableItem
         return otherFusion.Fusion.name().equals(Fusion.name());
     }
 
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final FusionData otherFusion = (FusionData)other;

@@ -22,10 +22,13 @@ public class DisruptionData implements ComparableItem
         Breakend = breakend;
     }
 
+    @Override
     public Category category() { return DISRUPTION; }
 
+    @Override
     public boolean reportable() { return Breakend.reportedDisruption(); }
 
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final DisruptionData otherBreakend = (DisruptionData)other;
@@ -51,6 +54,7 @@ public class DisruptionData implements ComparableItem
         return true;
     }
 
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final DisruptionData otherBreakend = (DisruptionData)other;
@@ -66,6 +70,7 @@ public class DisruptionData implements ComparableItem
         return diffs;
     }
 
+    @Override
     public String description()
     {
         return String.format("%d_%s_%s", Breakend.svId(), Breakend.isStart(), Breakend.gene());

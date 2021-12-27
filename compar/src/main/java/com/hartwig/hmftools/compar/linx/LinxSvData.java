@@ -34,10 +34,13 @@ public class LinxSvData implements ComparableItem
         Annotation = annotation;
     }
 
+    @Override
     public Category category() { return LINX_DATA; }
 
+    @Override
     public boolean reportable() { return false; }
 
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final LinxSvData otherSv = (LinxSvData)other;
@@ -57,6 +60,7 @@ public class LinxSvData implements ComparableItem
         return true;
     }
 
+    @Override
     public List<String> findDifferences(final ComparableItem other, final MatchLevel matchLevel)
     {
         final LinxSvData otherSv = (LinxSvData)other;
@@ -97,6 +101,7 @@ public class LinxSvData implements ComparableItem
         return !geneNames1.stream().noneMatch(x -> geneNames2.contains(x));
     }
 
+    @Override
     public String description()
     {
         return String.format("%d_%s %s_%d - %s_%d",

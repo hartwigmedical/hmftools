@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -55,32 +56,6 @@ public class LinxSvComparer implements ItemComparer
         return buildComparableItems(svDataList, annotations, clusters);
     }
 
-    public List<ComparableItem> buildComparableItems(
-            final List<StructuralVariantData> svDataList, final List<LinxSvAnnotation> annotations, final List<LinxCluster> clusters)
-    {
-        final List<ComparableItem> svItems = Lists.newArrayList();
-
-        for(StructuralVariantData svData : svDataList)
-        {
-            if(!svData.filter().isEmpty() && !svData.filter().equals(PASS))
-                continue;
-
-            LinxSvAnnotation annotation = annotations.stream().filter(x -> x.svId() == svData.id()).findFirst().orElse(null);
-
-            if(annotation == null)
-                continue;
-
-            LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
-
-            if(cluster == null)
-                continue;
-
-            svItems.add(new LinxSvData(svData, annotation, cluster));
-        }
-
-        return svItems;
-    }
-
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
     {
@@ -103,12 +78,61 @@ public class LinxSvComparer implements ItemComparer
                 svDataList.add(convertSvData(variant, svId++));
             }
 
-            return buildComparableItems(svDataList, annotations, clusters);
+            CMP_LOGGER.debug("sample({}) loaded {} SVs, {} annotations and {} clusters",
+                    sampleId, svDataList.size(), annotations.size(), clusters.size());
+
+            List<ComparableItem> comparableItems = buildComparableItems(svDataList, annotations, clusters);
+
+            CMP_LOGGER.debug("sample({}) loaded {} annotated SVs", sampleId, comparableItems.size());
+
+            return comparableItems;
         }
         catch(IOException e)
         {
             CMP_LOGGER.info("sample({}) failed to load Linx SV and cluster data: {}", sampleId, e.toString());
             return Lists.newArrayList();
         }
+    }
+
+    private List<ComparableItem> buildComparableItems(
+            final List<StructuralVariantData> svDataList, final List<LinxSvAnnotation> annotations, final List<LinxCluster> clusters)
+    {
+        final List<ComparableItem> svItems = Lists.newArrayList();
+
+        for(StructuralVariantData svData : svDataList)
+        {
+            if(!svData.filter().isEmpty() && !svData.filter().equals(PASS) && !svData.filter().equals(INFERRED))
+                continue;
+
+            LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(svData.vcfId())).findFirst().orElse(null);
+
+            if(annotation == null)
+            {
+                CMP_LOGGER.debug("sv({}:{}) missing Linx annotation", svData.vcfId(), svData.id());
+                continue;
+            }
+
+            LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
+
+            if(cluster == null)
+            {
+                CMP_LOGGER.debug("sv({}:{}) missing Linx cluster", svData.vcfId(), annotation.svId());
+                continue;
+            }
+
+            svItems.add(new LinxSvData(svData, annotation, cluster));
+
+            annotations.remove(annotation);
+        }
+
+        if(CMP_LOGGER.isDebugEnabled())
+        {
+            for(LinxSvAnnotation annotation : annotations)
+            {
+                CMP_LOGGER.debug("sv({}:{}) unmatched Linx annotation", annotation.vcfId(), annotation.svId());
+            }
+        }
+
+        return svItems;
     }
 }
