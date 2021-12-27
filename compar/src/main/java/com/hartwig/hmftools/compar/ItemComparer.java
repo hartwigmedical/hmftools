@@ -13,4 +13,6 @@ public interface ItemComparer
     List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess);
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
+
+
 }

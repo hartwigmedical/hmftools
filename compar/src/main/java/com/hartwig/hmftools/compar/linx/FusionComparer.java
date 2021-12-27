@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.CommonUtils;
@@ -38,7 +39,9 @@ public class FusionComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
-        return dbAccess.readFusions(sampleId).stream().map(x -> new FusionData(x)).collect(Collectors.toList());
+        return dbAccess.readFusions(sampleId).stream()
+                .filter(x -> !x.reportedType().equals(KnownFusionType.NONE.toString()))
+                .map(x -> new FusionData(x)).collect(Collectors.toList());
     }
 
     @Override
@@ -49,7 +52,10 @@ public class FusionComparer implements ItemComparer
         try
         {
             List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(fileSources.Linx, sampleId));
-            fusions.forEach(x -> comparableItems.add(new FusionData(x)));
+
+            fusions.stream()
+                    .filter(x -> !x.reportedType().equals(KnownFusionType.NONE.toString()))
+                    .forEach(x -> comparableItems.add(new FusionData(x)));
         }
         catch(IOException e)
         {

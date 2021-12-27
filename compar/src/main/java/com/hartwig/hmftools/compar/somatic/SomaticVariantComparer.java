@@ -102,6 +102,17 @@ public class SomaticVariantComparer implements ItemComparer
                     if(somaticVariant == null)
                         continue;
 
+                    if(somaticVariant.isFiltered())
+                        continue;
+
+                    if(somaticVariant.gene().isEmpty())
+                        continue;
+
+                    if(somaticVariant.canonicalCodingEffect() != NONSENSE_OR_FRAMESHIFT
+                    && somaticVariant.canonicalCodingEffect() != SPLICE
+                    && somaticVariant.canonicalCodingEffect() != MISSENSE)
+                        continue;
+
                     comparableItems.add(new SomaticVariantData(somaticVariant));
                 }
             }

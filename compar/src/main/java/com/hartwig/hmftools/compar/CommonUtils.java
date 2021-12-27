@@ -3,7 +3,14 @@ package com.hartwig.hmftools.compar;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
+import static com.hartwig.hmftools.compar.Category.FUSION;
+import static com.hartwig.hmftools.compar.Category.LINX_DATA;
+import static com.hartwig.hmftools.compar.Category.PURITY;
+import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.Category.SV;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.MismatchType.PRESENCE;
 import static com.hartwig.hmftools.compar.MismatchType.VALUE;
@@ -12,6 +19,13 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.compar.driver.DriverComparer;
+import com.hartwig.hmftools.compar.linx.DisruptionComparer;
+import com.hartwig.hmftools.compar.linx.FusionComparer;
+import com.hartwig.hmftools.compar.linx.LinxSvComparer;
+import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
+import com.hartwig.hmftools.compar.purple.PurityComparer;
+import com.hartwig.hmftools.compar.somatic.SomaticVariantComparer;
 
 public class CommonUtils
 {
@@ -21,6 +35,34 @@ public class CommonUtils
 
     public static final double DEFAULT_DIFF = 0.1;
     public static final double DEFAULT_DIFF_PERC = 0.1;
+
+    public static List<ItemComparer> buildComparers(final ComparConfig config)
+    {
+        List<ItemComparer> comparators = Lists.newArrayList();
+
+        if(config.Categories.containsKey(PURITY))
+            comparators.add(new PurityComparer(config));
+
+        if(config.Categories.containsKey(COPY_NUMBER))
+            comparators.add(new CopyNumberComparer(config));
+
+        if(config.Categories.containsKey(DRIVER))
+            comparators.add(new DriverComparer(config));
+
+        if(config.Categories.containsKey(LINX_DATA) || config.Categories.containsKey(SV))
+            comparators.add(new LinxSvComparer(config));
+
+        if(config.Categories.containsKey(FUSION))
+            comparators.add(new FusionComparer(config));
+
+        if(config.Categories.containsKey(DISRUPTION))
+            comparators.add(new DisruptionComparer(config));
+
+        if(config.Categories.containsKey(SOMATIC_VARIANT))
+            comparators.add(new SomaticVariantComparer(config));
+
+        return comparators;
+    }
 
     public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2)
     {
@@ -104,13 +146,13 @@ public class CommonUtils
             {
                 final String source2 = config.SourceNames.get(j);
 
-                CommonUtils.compareItems(sampleId, mismatches, matchLevel, source1, source2, sourceItems.get(i), sourceItems.get(j));
+                CommonUtils.compareItems(mismatches, matchLevel, source1, source2, sourceItems.get(i), sourceItems.get(j));
             }
         }
     }
 
     public static void compareItems(
-            final String sampleId, final List<Mismatch> mismatches, final MatchLevel matchLevel,
+            final List<Mismatch> mismatches, final MatchLevel matchLevel,
             final String source1, final String source2, final List<ComparableItem> items1, final List<ComparableItem> items2)
     {
         int index1 = 0;
@@ -142,7 +184,6 @@ public class CommonUtils
                         {
                             StringJoiner differencesStr = new StringJoiner(ITEM_DELIM);
                             diffs.forEach(x -> differencesStr.add(x));
-
 
                             mismatches.add(new Mismatch(
                                     item1.category(), VALUE, source1, source2, eitherReportable,

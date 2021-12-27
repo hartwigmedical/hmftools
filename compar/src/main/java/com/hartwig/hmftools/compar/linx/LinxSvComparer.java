@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.compar.Category.LINX_DATA;
+import static com.hartwig.hmftools.compar.Category.SV;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.MismatchType.PRESENCE;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,7 +45,28 @@ public class LinxSvComparer implements ItemComparer
     @Override
     public void processSample(final String sampleId, final List<Mismatch> mismatches)
     {
-        CommonUtils.processSample(this, mConfig, sampleId, mismatches);
+        final List<Mismatch> svMismatches = Lists.newArrayList();
+
+        CommonUtils.processSample(this, mConfig, sampleId, svMismatches);
+
+        if(svMismatches.isEmpty())
+            return;
+
+        for(Mismatch mismatch : svMismatches)
+        {
+            if(mismatch.MismatchType == PRESENCE)
+            {
+                if(mConfig.Categories.containsKey(SV))
+                {
+                    mismatches.add(new Mismatch(
+                            SV, PRESENCE, mismatch.RefSource, mismatch.OtherSource, mismatch.Reportable, mismatch.ItemName, ""));
+                }
+            }
+            else if(mConfig.Categories.containsKey(LINX_DATA))
+            {
+                mismatches.add(mismatch);
+            }
+        }
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -13,13 +15,18 @@ import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -40,8 +47,12 @@ public class ComparConfig
     public final Map<String,FileSources> FileSources; // directories per type and keyed by source
     public final Map<String,String> SourceSampleIds; // as required, mapping from sampleId to source sampleId
 
+    public final Set<String> DriverGenes;
+
     public final String OutputDir;
     public final String OutputId;
+
+    public final int Threads;
 
     private boolean mIsValid;
 
@@ -55,6 +66,7 @@ public class ComparConfig
     public static final String SAMPLE = "sample";
     public static final String SOURCE_SAMPLE_MAPPINGS = "source_sample_mappings";
     public static final String SAMPLE_ID_FILE = "sample_id_file";
+    public static final String THREADS = "threads";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
@@ -102,6 +114,7 @@ public class ComparConfig
 
         OutputDir = parseOutputDir(cmd);
         OutputId = cmd.getOptionValue(OUTPUT_ID);
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();
@@ -118,6 +131,20 @@ public class ComparConfig
             {
                 String[] mappingItems = sampleMapping.split(SUB_ITEM_DELIM);
                 SourceSampleIds.put(mappingItems[0], mappingItems[1]);
+            }
+        }
+
+        DriverGenes = Sets.newHashSet();
+
+        if(cmd.hasOption(DRIVER_GENE_PANEL_OPTION))
+        {
+            try
+            {
+                DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION)).forEach(x -> DriverGenes.add(x.gene()));
+            }
+            catch(IOException e)
+            {
+                CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
         }
     }
@@ -230,9 +257,11 @@ public class ComparConfig
         options.addOption(SAMPLE, true, "Sample data file");
         options.addOption(SAMPLE_ID_FILE, true, "Sample data file");
         options.addOption(SOURCE_SAMPLE_MAPPINGS, true, "Optional specific source suffixes");
+        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
 
         options.addOption(DB_SOURCES, true, "Database configurations keyed by soure name");
         options.addOption(FILE_SOURCES, true, "File locations keyed by source name");
+        options.addOption(THREADS, true, "Thread count (default 0, not multi-threaded)");
 
         addDatabaseCmdLineArgs(options);
         addOutputOptions(options);

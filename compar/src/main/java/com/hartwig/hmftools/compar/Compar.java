@@ -1,29 +1,20 @@
 package com.hartwig.hmftools.compar;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
-import static com.hartwig.hmftools.compar.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.Category.DRIVER;
-import static com.hartwig.hmftools.compar.Category.FUSION;
-import static com.hartwig.hmftools.compar.Category.LINX_DATA;
-import static com.hartwig.hmftools.compar.Category.PURITY;
-import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.compar.driver.DriverComparer;
-import com.hartwig.hmftools.compar.linx.DisruptionComparer;
-import com.hartwig.hmftools.compar.linx.FusionComparer;
-import com.hartwig.hmftools.compar.linx.LinxSvComparer;
-import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
-import com.hartwig.hmftools.compar.purple.PurityComparer;
-import com.hartwig.hmftools.compar.somatic.SomaticVariantComparer;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -36,36 +27,11 @@ public class Compar
 {
     private final ComparConfig mConfig;
 
-    private final List<ItemComparer> mComparators;
-
     private BufferedWriter mDiffWriter;
 
     public Compar(final CommandLine cmd)
     {
         mConfig = new ComparConfig(cmd);
-
-        mComparators = Lists.newArrayList();
-
-        if(mConfig.Categories.containsKey(PURITY))
-            mComparators.add(new PurityComparer(mConfig));
-
-        if(mConfig.Categories.containsKey(COPY_NUMBER))
-            mComparators.add(new CopyNumberComparer(mConfig));
-
-        if(mConfig.Categories.containsKey(DRIVER))
-            mComparators.add(new DriverComparer(mConfig));
-
-        if(mConfig.Categories.containsKey(LINX_DATA))
-            mComparators.add(new LinxSvComparer(mConfig));
-
-        if(mConfig.Categories.containsKey(FUSION))
-            mComparators.add(new FusionComparer(mConfig));
-
-        if(mConfig.Categories.containsKey(DISRUPTION))
-            mComparators.add(new DisruptionComparer(mConfig));
-
-        if(mConfig.Categories.containsKey(SOMATIC_VARIANT))
-            mComparators.add(new SomaticVariantComparer(mConfig));
 
         mDiffWriter = null;
     }
@@ -91,37 +57,42 @@ public class Compar
 
         initialiseOutputFiles();
 
-        for(int i = 0; i < mConfig.SampleIds.size(); ++i)
+        List<ComparTask> sampleTasks = Lists.newArrayList();
+
+        if(mConfig.Threads > 1)
         {
-            final String sampleId = mConfig.SampleIds.get(i);
-
-            CMP_LOGGER.debug("sample({}) running comparison", sampleId);
-
-            processSample(sampleId);
-
-            if(i > 0 && (i % 100) == 0)
+            for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
-                CMP_LOGGER.info("processed {} samples", i);
+                sampleTasks.add(new ComparTask(i, mConfig, mDiffWriter));
             }
+
+            int taskIndex = 0;
+            for(String sampleId : mConfig.SampleIds)
+            {
+                if(taskIndex >= sampleTasks.size())
+                    taskIndex = 0;
+
+                sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
+
+                ++taskIndex;
+            }
+
+            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        }
+        else
+        {
+            ComparTask sampleTask = new ComparTask(0, mConfig, mDiffWriter);
+
+            sampleTask.getSampleIds().addAll(mConfig.SampleIds);
+
+            sampleTasks.add(sampleTask);
+            sampleTask.call();
         }
 
         closeBufferedWriter(mDiffWriter);
 
         CMP_LOGGER.info("comparison complete");
-    }
-
-    private void processSample(final String sampleId)
-    {
-        final List<Mismatch> mismatches = Lists.newArrayList();
-
-        for(ItemComparer comparator : mComparators)
-        {
-            CMP_LOGGER.debug("sample({}) checking {}", sampleId, comparator.category());
-            comparator.processSample(sampleId, mismatches);
-        }
-
-        CMP_LOGGER.debug("sample({}) writing {} mismatches", sampleId, mismatches.size());
-        writeSampleMismatches(sampleId, mismatches);
     }
 
     private void initialiseOutputFiles()
@@ -159,20 +130,20 @@ public class Compar
         }
     }
 
-    private void writeSampleMismatches(final String sampleId, final List<Mismatch> mismatches)
+    public synchronized static void writeSampleMismatches(final BufferedWriter writer, final String sampleId, final List<Mismatch> mismatches)
     {
-        if(mismatches.isEmpty() || mDiffWriter == null)
+        if(mismatches.isEmpty() || writer == null)
             return;
 
         try
         {
             for(Mismatch mismatch : mismatches)
             {
-                if(mConfig.multiSample())
-                    mDiffWriter.write(String.format("%s,", sampleId));
+                if(sampleId != null)
+                    writer.write(String.format("%s,", sampleId));
 
-                mDiffWriter.write(mismatch.toCsv());
-                mDiffWriter.newLine();
+                writer.write(mismatch.toCsv());
+                writer.newLine();
             }
         }
         catch(IOException e)

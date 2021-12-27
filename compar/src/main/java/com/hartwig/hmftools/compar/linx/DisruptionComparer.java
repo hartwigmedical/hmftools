@@ -40,6 +40,7 @@ public class DisruptionComparer implements ItemComparer
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
         return dbAccess.readBreakends(sampleId).stream()
+                .filter(x -> mConfig.DriverGenes.isEmpty() || mConfig.DriverGenes.contains(x.gene()))
                 .map(x -> new DisruptionData(x)).collect(Collectors.toList());
     }
 
@@ -52,7 +53,9 @@ public class DisruptionComparer implements ItemComparer
         {
             List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(fileSources.Linx, sampleId));
 
-            breakends.forEach(x -> comparableItems.add(new DisruptionData(x)));
+            breakends.stream()
+                    .filter(x -> mConfig.DriverGenes.isEmpty() || mConfig.DriverGenes.contains(x.gene()))
+                    .forEach(x -> comparableItems.add(new DisruptionData(x)));
         }
         catch(IOException e)
         {
