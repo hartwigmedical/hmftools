@@ -1,6 +1,5 @@
 
 plugins {
-    kotlin("jvm")
     id("com.hartwig.kotlin-conventions")
 }
 

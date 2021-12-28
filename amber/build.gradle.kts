@@ -1,6 +1,7 @@
 
 plugins {
     id("com.hartwig.java-conventions")
+    id("com.hartwig.build-version")
 }
 
 description = "HMF Tools - AMBER"
