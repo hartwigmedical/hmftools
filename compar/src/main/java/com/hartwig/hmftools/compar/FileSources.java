@@ -18,7 +18,7 @@ public class FileSources
     public static final String SAMPLE_DIR = "sample_dir";
     public static final String LINX_DIR = "linx_dir";
     public static final String PURPLE_DIR = "purple_dir";
-    public static final String SOMATIC_DIR = "somatic_dir";
+    // public static final String SOMATIC_DIR = "somatic_dir";
 
     public FileSources(final String source, final String linx, final String somatic, final String purple)
     {
@@ -26,6 +26,18 @@ public class FileSources
         Linx = linx;
         Somatic = somatic;
         Purple = purple;
+    }
+
+    public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
+    {
+        if(!fileSources.Linx.contains("*") && !fileSources.Purple.contains("*") && !fileSources.Somatic.contains("*"))
+            return fileSources;
+
+        return new FileSources(
+                fileSources.Source,
+                fileSources.Linx.replaceAll("\\*", sampleId),
+                fileSources.Purple.replaceAll("\\*", sampleId),
+                fileSources.Somatic.replaceAll("\\*", sampleId));
     }
 
     public static FileSources fromConfig(final String fileSourceStr)
@@ -67,10 +79,12 @@ public class FileSources
             {
                 purpleDir = getDirectory(sampleDir, itemStr[1]);
             }
+            /*
             else if(itemStr[0].equals(SOMATIC_DIR))
             {
                 somaticDir = getDirectory(sampleDir, itemStr[1]);
             }
+            */
         }
 
         if(linxDir.isEmpty())

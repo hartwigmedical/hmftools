@@ -133,9 +133,14 @@ public class CommonUtils
             String sourceSampleId = config.sourceSampleId(sourceName, sampleId);
 
             if(!config.DbConnections.isEmpty())
+            {
                 sourceItems.add(comparer.loadFromDb(sourceSampleId, config.DbConnections.get(sourceName)));
+            }
             else
-                sourceItems.add(comparer.loadFromFile(sourceSampleId, config.FileSources.get(sourceName)));
+            {
+                FileSources fileSources = config.FileSources.get(sourceName);
+                sourceItems.add(comparer.loadFromFile(sourceSampleId, FileSources.sampleInstance(fileSources, sampleId)));
+            }
         }
 
         for(int i = 0; i < config.SourceNames.size() - 1; ++i)
