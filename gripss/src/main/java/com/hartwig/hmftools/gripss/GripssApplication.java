@@ -142,8 +142,18 @@ public class GripssApplication
         GR_LOGGER.info("read VCF: breakends({}) unmatched({}) complete({}) hardFiltered({})",
                 mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
 
+        GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
+
+        final VersionInfo version = new VersionInfo("gripss.version");
+
+        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache, mFilterCache);
+
         if(mSvDataCache.getSvList().isEmpty())
+        {
+            GR_LOGGER.info("writing empty VCF");
+            writer.close();
             return;
+        }
 
         GR_LOGGER.info("applying soft-filters and realignment");
         int realignedCount = 0;
@@ -248,12 +258,6 @@ public class GripssApplication
         mFilterCache.updateFilters(rescuedBreakends, Sets.newHashSet());
 
         LinkStore combinedLinks = LinkStore.from(combinedTransitiveAssemblyLinks, dsbLinkStore);
-
-        GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
-
-        final VersionInfo version = new VersionInfo("gripss.version");
-
-        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache, mFilterCache);
 
         Map<Breakend,String> idPathMap = AlternatePathFinder.createPathMap(alternatePaths);
 
