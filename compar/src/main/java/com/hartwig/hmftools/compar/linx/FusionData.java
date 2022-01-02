@@ -2,7 +2,6 @@ package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
-import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
@@ -17,10 +16,12 @@ import org.apache.commons.compress.utils.Lists;
 public class FusionData implements ComparableItem
 {
     public final LinxFusion Fusion;
+    public final String GeneMappedName;
 
-    public FusionData(final LinxFusion fusion)
+    public FusionData(final LinxFusion fusion, final String geneMappedName)
     {
         Fusion = fusion;
+        GeneMappedName = geneMappedName;
     }
 
     @Override

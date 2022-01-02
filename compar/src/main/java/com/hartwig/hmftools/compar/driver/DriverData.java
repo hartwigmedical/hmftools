@@ -3,13 +3,13 @@ package com.hartwig.hmftools.compar.driver;
 import static com.hartwig.hmftools.compar.Category.DRIVER;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.checkDiff;
-import static com.hartwig.hmftools.compar.CommonUtils.diffValue;
 import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
 
 import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.compar.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -20,12 +20,14 @@ import org.apache.commons.compress.utils.Lists;
 public class DriverData implements ComparableItem
 {
     public final DriverCatalog DriverCatalog;
+    public final String MappedGeneName; // overridden with new mapped name if applicable
     public final List<LinxDriver> SvDrivers;
 
-    public DriverData(final DriverCatalog driverCatalog, final List<LinxDriver> svDrivers)
+    public DriverData(final DriverCatalog driverCatalog, final List<LinxDriver> svDrivers, final String mappedName)
     {
         DriverCatalog = driverCatalog;
         SvDrivers = svDrivers;
+        MappedGeneName = mappedName;
     }
 
     @Override
@@ -39,11 +41,24 @@ public class DriverData implements ComparableItem
     {
         final DriverData otherDriver = (DriverData)other;
 
-        if(DriverCatalog.driver() != otherDriver.DriverCatalog.driver())
+        //if(!DriverCatalog.gene().equals(otherDriver.DriverCatalog.gene()))
+
+        if(!MappedGeneName.equals(otherDriver.MappedGeneName))
             return false;
 
-        if(!DriverCatalog.gene().equals(otherDriver.DriverCatalog.gene()))
-            return false;
+        if(DriverCatalog.driver() != otherDriver.DriverCatalog.driver())
+        {
+            if(DriverType.DRIVERS_LINX_SOMATIC.contains(DriverCatalog.driver())
+            && DriverType.DRIVERS_LINX_SOMATIC.contains(otherDriver.DriverCatalog.driver()))
+            {
+                // matched due to 1.17 type expansion
+            }
+            else
+            {
+                return false;
+            }
+        }
+
 
         return true;
     }

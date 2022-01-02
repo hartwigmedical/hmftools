@@ -49,7 +49,7 @@ public class DriverComparer implements ItemComparer
         for(DriverCatalog driver : drivers)
         {
             List<LinxDriver> svDriverList = svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
-            driverDataList.add(new DriverData(driver, svDriverList));
+            driverDataList.add(new DriverData(driver, svDriverList, mConfig.getGeneMappedName(driver.gene())));
         }
 
         return driverDataList;
@@ -70,7 +70,7 @@ public class DriverComparer implements ItemComparer
             for(DriverCatalog driver : drivers)
             {
                 List<LinxDriver> svDriverList = svDrivers.stream().filter(x -> x.gene().equals(driver.gene())).collect(Collectors.toList());
-                comparableItems.add(new DriverData(driver, svDriverList));
+                comparableItems.add(new DriverData(driver, svDriverList, mConfig.getGeneMappedName(driver.gene())));
             }
         }
         catch(IOException e)

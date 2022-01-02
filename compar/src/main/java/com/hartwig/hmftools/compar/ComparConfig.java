@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.Category.DRIVER;
+import static com.hartwig.hmftools.compar.Category.FUSION;
 import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
@@ -25,8 +27,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.utils.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -48,6 +50,7 @@ public class ComparConfig
     public final Map<String,String> SourceSampleIds; // as required, mapping from sampleId to source sampleId
 
     public final Set<String> DriverGenes;
+    public final GeneNameMapping GeneMapping;
 
     public final String OutputDir;
     public final String OutputId;
@@ -147,6 +150,15 @@ public class ComparConfig
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
         }
+
+        if(Categories.containsKey(FUSION) || Categories.containsKey(DRIVER))
+        {
+            GeneMapping = new GeneNameMapping();
+        }
+        else
+        {
+            GeneMapping = null;
+        }
     }
 
     public String sourceSampleId(final String source, final String sampleId)
@@ -158,6 +170,14 @@ public class ComparConfig
     public boolean isValid() { return mIsValid; }
     public boolean singleSample() { return SampleIds.size() == 1; }
     public boolean multiSample() { return SampleIds.size() > 1; }
+
+    public String getGeneMappedName(final String geneName)
+    {
+        if(GeneMapping == null || GeneMapping.hasNewGene(geneName))
+            return geneName;
+
+        return GeneMapping.getNewName(geneName);
+    }
 
     private void loadSampleIds(final CommandLine cmd)
     {

@@ -41,7 +41,7 @@ public class FusionComparer implements ItemComparer
     {
         return dbAccess.readFusions(sampleId).stream()
                 .filter(x -> !x.reportedType().equals(KnownFusionType.NONE.toString()))
-                .map(x -> new FusionData(x)).collect(Collectors.toList());
+                .map(x -> new FusionData(x, getGeneMappedName(x.name()))).collect(Collectors.toList());
     }
 
     @Override
@@ -55,7 +55,7 @@ public class FusionComparer implements ItemComparer
 
             fusions.stream()
                     .filter(x -> !x.reportedType().equals(KnownFusionType.NONE.toString()))
-                    .forEach(x -> comparableItems.add(new FusionData(x)));
+                    .forEach(x -> comparableItems.add(new FusionData(x, getGeneMappedName(x.name()))));
         }
         catch(IOException e)
         {
@@ -63,5 +63,14 @@ public class FusionComparer implements ItemComparer
         }
 
         return comparableItems;
+    }
+
+    private String getGeneMappedName(final String fusionName)
+    {
+        String[] genes = fusionName.split("_");
+        if(genes.length != 2)
+            return fusionName;
+
+        return mConfig.getGeneMappedName(genes[0]) + "_" + mConfig.getGeneMappedName(genes[1]);
     }
 }
