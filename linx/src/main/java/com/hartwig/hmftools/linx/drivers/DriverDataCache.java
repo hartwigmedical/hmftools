@@ -40,7 +40,6 @@ public class DriverDataCache
     private final List<DriverGeneData> mDriverGeneDataList;
 
     private final List<GeneCopyNumber> mGeneCopyNumberData;
-    private final Map<String, List<GeneCopyNumber>> mSampleGeneCopyNumberMap;
 
     private String mSampleId;
     private double mSamplePloidy;
@@ -54,7 +53,6 @@ public class DriverDataCache
         mDbAccess = dbAccess;
         mDriverCatalog = Lists.newArrayList();
         mDriverGeneDataList = Lists.newArrayList();
-        mSampleGeneCopyNumberMap = Maps.newHashMap();
         mGeneCopyNumberData = Lists.newArrayList();
 
         mSampleId = "";
@@ -76,6 +74,7 @@ public class DriverDataCache
     {
         mDriverCatalog.clear();
         mDriverGeneDataList.clear();
+        mGeneCopyNumberData.clear();
     }
 
     public void loadDataFromDatabase()
@@ -101,20 +100,8 @@ public class DriverDataCache
 
         LNX_LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
 
-        if (!mDriverCatalog.isEmpty())
+        if(!mDriverCatalog.isEmpty())
         {
-            mGeneCopyNumberData.clear();
-
-            if(!mSampleGeneCopyNumberMap.isEmpty())
-            {
-                final List<GeneCopyNumber> gcnDataList = mSampleGeneCopyNumberMap.get(mSampleId);
-
-                if(gcnDataList != null)
-                    mGeneCopyNumberData.addAll(gcnDataList);
-
-                return;
-            }
-
             final List<String> driverGenes = mDriverCatalog.stream().map(x -> x.gene()).collect(Collectors.toList());
             mGeneCopyNumberData.addAll(mDbAccess.readGeneCopynumbers(mSampleId, driverGenes));
         }
