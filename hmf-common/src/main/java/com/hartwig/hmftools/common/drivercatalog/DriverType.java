@@ -28,4 +28,17 @@ public enum DriverType
     {
         return type == GERMLINE_DELETION || type == GERMLINE_DISRUPTION || type == GERMLINE_MUTATION || type == GERMLINE;
     }
+
+    public static DriverType checkConvertType(final String driverTypeStr)
+    {
+        // support old Purple and Linx names prior to splits for new germline types
+        if(driverTypeStr.equals("HOM_DISRUPTION"))
+            return HOM_DEL_DISRUPTION;
+
+        if(driverTypeStr.equals("GERMLINE"))
+            return GERMLINE_MUTATION;
+
+        return DriverType.valueOf(driverTypeStr);
+    }
+
 }

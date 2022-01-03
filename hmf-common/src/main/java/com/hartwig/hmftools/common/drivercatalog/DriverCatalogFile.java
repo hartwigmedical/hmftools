@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.drivercatalog;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_MUTATION;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DEL_DISRUPTION;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.checkConvertType;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -145,17 +146,4 @@ public final class DriverCatalogFile
 
         return drivers;
     }
-
-    public static DriverType checkConvertType(final String driverTypeStr)
-    {
-        // support old Purple and Linx names prior to splits for new germline types
-        if(driverTypeStr.equals("HOM_DISRUPTION"))
-            return HOM_DEL_DISRUPTION;
-
-        if(driverTypeStr.equals("GERMLINE"))
-            return GERMLINE_MUTATION;
-
-        return DriverType.valueOf(driverTypeStr);
-    }
-
 }
