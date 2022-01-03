@@ -140,7 +140,7 @@ class DriverCatalogDAO
                     .gene(record.getValue(DRIVERCATALOG.GENE))
                     .chromosome(record.getValue(DRIVERCATALOG.CHROMOSOME))
                     .chromosomeBand(record.getValue(DRIVERCATALOG.CHROMOSOMEBAND))
-                    .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
+                    .driver(DriverType.checkConvertType(record.getValue(DRIVERCATALOG.DRIVER)))
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .transcript(record.getValue(DRIVERCATALOG.TRANSCRIPTID))
                     .isCanonical(record.getValue(DRIVERCATALOG.CANONICALTRANSCRIPT) != 0)
