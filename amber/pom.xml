@@ -23,10 +23,6 @@
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>patient-db</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

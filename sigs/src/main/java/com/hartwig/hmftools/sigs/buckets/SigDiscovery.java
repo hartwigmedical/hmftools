@@ -475,7 +475,7 @@ public class SigDiscovery
 
         LOGGER.debug("created {} overlap-unallocated bucket groups, samplesIncluded({})", newGroups.size(), allSamples.size());
 
-        Map<Integer, Integer> candidateBucketCounts = new HashMap();
+        Map<Integer, Integer> candidateBucketCounts = new HashMap<>();
         List<Integer> candidateBuckets = Lists.newArrayList();
         List<SampleData> samplesList = Lists.newArrayList();
 

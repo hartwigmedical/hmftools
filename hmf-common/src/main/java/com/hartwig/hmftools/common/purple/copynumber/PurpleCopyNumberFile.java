@@ -12,14 +12,14 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class PurpleCopyNumberFile
 {
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
+    private static final DecimalFormat FORMAT = PurpleCommon.decimalFormat("0.0000");
     private static final String DELIMITER = "\t";
 
     private static final String SOMATIC_EXTENSION = ".purple.cnv.somatic.tsv";

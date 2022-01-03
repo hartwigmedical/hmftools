@@ -46,12 +46,12 @@
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>11</java.version>
 
-        <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
-        <maven.jaxb2.plugin.version>0.14.0</maven.jaxb2.plugin.version>
         <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
-        <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
+        <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
         <maven.site.plugin.version>3.7.1</maven.site.plugin.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
 
@@ -87,39 +87,37 @@
         <virus-interpreter.version>1.1</virus-interpreter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
-        <immutables.version>2.4.4</immutables.version>
+        <immutables.version>2.5.5</immutables.version>
         <htsjdk.version>2.23.0</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
-        <google.guava.version>23.0</google.guava.version>
-        <google.gson.version>2.8.1</google.gson.version>
+        <google.guava.version>31.0.1-jre</google.guava.version>
+        <google.gson.version>2.8.9</google.gson.version>
         <apache.commons.lang3.version>3.6</apache.commons.lang3.version>
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
         <apache.commons.dbcp2.version>2.1.1</apache.commons.dbcp2.version>
-        <apache.log4j.version>2.8.1</apache.log4j.version>
-        <apache.log4j.slf4j.version>2.8.1</apache.log4j.slf4j.version>
+        <apache.log4j.version>2.17.1</apache.log4j.version>
         <apache.lucene.version>7.1.0</apache.lucene.version>
-        <jooq.version>3.9.5</jooq.version>
-        <mysqlconnector.version>8.0.11</mysqlconnector.version>
+        <jooq.version>3.15.5</jooq.version>
+        <mysqlconnector.version>8.0.16</mysqlconnector.version>
         <rxjava2.version>2.1.2</rxjava2.version>
         <retrofit.version>2.4.0</retrofit.version>
         <moshi.version>1.6.0</moshi.version>
-        <aws.sdk.version>1.11.213</aws.sdk.version>
         <okhttp.version>3.9.0</okhttp.version>
         <bouncycastle.jdk15.version>1.53</bouncycastle.jdk15.version>
-        <kotlin.version>1.2.61</kotlin.version>
-        <kotlin.coroutines.version>0.23.4</kotlin.coroutines.version>
+        <kotlin.version>1.5.32</kotlin.version>
+        <kotlin.coroutines.version>1.5.2</kotlin.coroutines.version>
         <selenium.version>3.14.0</selenium.version>
         <itext.version>7.1.5</itext.version>
         <tablesaw.version>0.38.5</tablesaw.version>
 
-        <kotlintest.version>2.0.7</kotlintest.version>
+        <kotest.version>4.6.4</kotest.version>
         <junit.version>4.13.1</junit.version>
-        <jmockit.version>1.38</jmockit.version>
+        <mockito.version>2.23.4</mockito.version>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
     </properties>
 
     <build>
@@ -146,11 +144,6 @@
                     <version>${maven.jar.plugin.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.jvnet.jaxb2.maven2</groupId>
-                    <artifactId>maven-jaxb2-plugin</artifactId>
-                    <version>${maven.jaxb2.plugin.version}</version>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>${maven.site.plugin.version}</version>
@@ -164,11 +157,6 @@
                     <groupId>org.jetbrains.kotlin</groupId>
                     <artifactId>kotlin-maven-plugin</artifactId>
                     <version>${kotlin.version}</version>
-                    <configuration>
-                        <args>
-                            <arg>-Xcoroutines=enable</arg>
-                        </args>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.jooq</groupId>
@@ -279,7 +267,7 @@
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-slf4j-impl</artifactId>
-                <version>${apache.log4j.slf4j.version}</version>
+                <version>${apache.log4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jooq</groupId>
@@ -342,11 +330,6 @@
                 <groupId>com.squareup.moshi</groupId>
                 <artifactId>moshi-kotlin</artifactId>
                 <version>${moshi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-s3</artifactId>
-                <version>${aws.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.lucene</groupId>
@@ -435,9 +418,9 @@
                 <type>test-jar</type>
             </dependency>
             <dependency>
-                <groupId>org.jmockit</groupId>
-                <artifactId>jmockit</artifactId>
-                <version>${jmockit.version}</version>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -447,9 +430,15 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>io.kotlintest</groupId>
-                <artifactId>kotlintest</artifactId>
-                <version>${kotlintest.version}</version>
+                <groupId>io.kotest</groupId>
+                <artifactId>kotest-runner-junit5-jvm</artifactId>
+                <version>${kotest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.kotest</groupId>
+                <artifactId>kotest-assertions-core-jvm</artifactId>
+                <version>${kotest.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

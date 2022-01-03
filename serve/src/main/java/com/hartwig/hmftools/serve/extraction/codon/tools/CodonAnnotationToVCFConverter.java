@@ -94,7 +94,7 @@ public class CodonAnnotationToVCFConverter {
                 .chr(chromosome)
                 .start(position)
                 .alleles(alleles)
-                .computeEndFromAlleles(alleles, new Long(position).intValue())
+                .computeEndFromAlleles(alleles, Long.valueOf(position).intValue())
                 .attribute(VCFWriterFactory.INPUT_FIELD, KeyFormatter.toCodonKey(gene, transcript, codonRank))
                 .attribute(VCFWriterFactory.SOURCES_FIELD, Knowledgebase.toCommaSeparatedSourceString(knowledgebases))
                 .make();

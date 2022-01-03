@@ -32,7 +32,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-class BaseQualityRegionCounter implements CigarHandler, Callable
+class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
 {
     private final String mBamFile;
     private final ChrBaseRegion mRegion;

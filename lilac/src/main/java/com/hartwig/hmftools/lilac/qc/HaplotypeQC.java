@@ -150,7 +150,7 @@ public class HaplotypeQC
         for(Map.Entry<String,Integer> entry : unmatched.entrySet())
         {
             Haplotype haplotype = Haplotype.create(
-                    evidence.getAminoAcidLoci(), new Pair(entry.getKey(), entry.getValue()), aminoAcidCount);
+                    evidence.getAminoAcidLoci(), Pair.create(entry.getKey(), entry.getValue()), aminoAcidCount);
 
             haplotypes.add(haplotype);
         }

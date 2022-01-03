@@ -107,7 +107,7 @@
                     </jdbc>
                     <generator>
                         <database>
-                            <name>org.jooq.util.mysql.MySQLDatabase</name>
+                            <name>org.jooq.meta.mysql.MySQLDatabase</name>
                             <includes>.*</includes>
                             <inputSchema>ckb_test</inputSchema>
                         </database>

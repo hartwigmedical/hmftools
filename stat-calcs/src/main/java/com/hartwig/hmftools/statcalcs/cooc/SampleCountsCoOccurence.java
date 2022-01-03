@@ -55,9 +55,9 @@ public class SampleCountsCoOccurence
         mGenes = Lists.newArrayList();
 
         mCategories = Lists.newArrayList();
-        mCategoryIndexMap = new HashMap();
-        mGeneIndexMap = new HashMap();
-        mCancerSampleData = new HashMap();
+        mCategoryIndexMap = new HashMap<>();
+        mGeneIndexMap = new HashMap<>();
+        mCancerSampleData = new HashMap<>();
         mSampleCountsMatrix = null;
 
         mFisherET = new FisherExactTest();
@@ -152,10 +152,10 @@ public class SampleCountsCoOccurence
 
         mFisherET.initialise(sampleCount);
 
-        Map<String, Integer> withCategoryTotals = new HashMap();
-        Map<String, Integer> unclearCategoryTotals = new HashMap();
-        Map<String, Integer> withGeneTotals = new HashMap();
-        Map<String, Integer> unclearGeneTotals = new HashMap();
+        Map<String, Integer> withCategoryTotals = new HashMap<>();
+        Map<String, Integer> unclearCategoryTotals = new HashMap<>();
+        Map<String, Integer> withGeneTotals = new HashMap<>();
+        Map<String, Integer> unclearGeneTotals = new HashMap<>();
 
         for(final SampleGeneData sampleData : sampleDataList)
         {

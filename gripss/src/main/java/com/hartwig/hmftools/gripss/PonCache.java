@@ -4,7 +4,6 @@ import static java.lang.Integer.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -28,8 +27,6 @@ import com.hartwig.hmftools.gripss.common.SvData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-
-import jdk.nashorn.internal.runtime.regexp.RegExp;
 
 public class PonCache
 {

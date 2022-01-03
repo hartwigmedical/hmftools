@@ -8,8 +8,8 @@ data class EnumValidator<T : Enum<T>>(private val enumClass: Class<T>) : OptionV
 
     override fun validate(option: HmfOption, cmd: CommandLine): String? {
         if (!cmd.hasOption(option.name)) return null
-        val optionValue = cmd.getOptionValue(option.name).toLowerCase()
-        val valueSet = enumClass.enumConstants.map { it.name.toLowerCase() }.toSet()
+        val optionValue = cmd.getOptionValue(option.name).lowercase()
+        val valueSet = enumClass.enumConstants.map { it.name.lowercase() }.toSet()
         if (!valueSet.contains(optionValue)) return "-${option.name}: $optionValue is not a valid choice."
         return null
     }

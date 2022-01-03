@@ -45,8 +45,8 @@ public final class ImpactTestUtils
         // codons: 15-17, 18-20, 30-32, 33-35, 36-38, 39-50, 51-53 etc
         int[] exonStarts = { 10, 30, 50, 70, 90 };
 
-        Integer codingStart = new Integer(15);
-        Integer codingEnd = new Integer(75);
+        Integer codingStart = Integer.valueOf(15);
+        Integer codingEnd = Integer.valueOf(75);
 
         return createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -57,8 +57,8 @@ public final class ImpactTestUtils
         // codons: 95-93, 92-90, 80-78, 77-75, 74-72, 71-60, 59-57 etc
         int[] exonStarts = { 10, 30, 50, 70, 90, 110, 130 };
 
-        Integer codingStart = new Integer(15);
-        Integer codingEnd = new Integer(95);
+        Integer codingStart = Integer.valueOf(15);
+        Integer codingEnd = Integer.valueOf(95);
 
         return createTransExons(
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");

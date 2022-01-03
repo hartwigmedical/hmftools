@@ -392,8 +392,8 @@ public class DelCodingContextTest
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         int[] exonStarts = { 0, 100, 200 };
-        Integer codingStart = new Integer(10);
-        Integer codingEnd = new Integer(250);
+        Integer codingStart = Integer.valueOf(10);
+        Integer codingEnd = Integer.valueOf(250);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 80, codingStart, codingEnd, false, "");

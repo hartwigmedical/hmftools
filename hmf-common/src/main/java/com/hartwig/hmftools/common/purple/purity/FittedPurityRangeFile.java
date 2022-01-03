@@ -13,13 +13,14 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class FittedPurityRangeFile {
 
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-    private static final int MAX_RECORDS = 10000;
+    private static final DecimalFormat FORMAT = PurpleCommon.decimalFormat("0.0000");
+
     private static final String DELIMITER = "\t";
     private static final String COMMENT = "#";
 

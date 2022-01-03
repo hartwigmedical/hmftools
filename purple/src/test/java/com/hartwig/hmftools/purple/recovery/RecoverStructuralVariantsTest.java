@@ -20,16 +20,21 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import mockit.Injectable;
 
 public class RecoverStructuralVariantsTest
 {
-    @Injectable
     private RecoveredVariantFactory recoveredVariantFactory;
     private final PurityAdjuster purityAdjuster = new PurityAdjusterTypicalChromosome(Gender.FEMALE, 1, 0.68);
+
+    @Before
+    public void setup() {
+        recoveredVariantFactory = Mockito.mock(RecoveredVariantFactory.class);
+    }
 
     @Test
     public void testRecoverUnbalancedSingle() throws IOException

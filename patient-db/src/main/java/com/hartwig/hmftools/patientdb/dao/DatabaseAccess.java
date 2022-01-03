@@ -59,6 +59,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.CloseableDSLContext;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.conf.MappedSchema;
@@ -81,6 +82,8 @@ public class DatabaseAccess implements AutoCloseable {
 
     public static final String DB_DEFAULT_ARGS = "?serverTimezone=UTC&useSSL=false";
 
+    @NotNull
+    private final Connection connection;
     @NotNull
     private final DSLContext context;
     @NotNull
@@ -139,10 +142,11 @@ public class DatabaseAccess implements AutoCloseable {
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        Connection conn = DriverManager.getConnection(url, userName, password);
-        String catalog = conn.getCatalog();
+        System.setProperty("org.jooq.no-tips", "true");
+        connection = DriverManager.getConnection(url, userName, password);
+        String catalog = connection.getCatalog();
         LOGGER.debug("Connecting to database {}", catalog);
-        this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
+        this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
         this.ecrfDAO = new EcrfDAO(context);
         this.clinicalDAO = new ClinicalDAO(context);
@@ -226,7 +230,11 @@ public class DatabaseAccess implements AutoCloseable {
 
     @Override
     public void close() {
-        context.close();
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOGGER.error("DB connection close failed: {}", e.toString());
+        }
     }
 
     @Nullable

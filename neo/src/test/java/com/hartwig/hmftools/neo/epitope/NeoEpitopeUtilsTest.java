@@ -56,8 +56,8 @@ public class NeoEpitopeUtilsTest
         // tests: repeated for each strand
 
         int[] exonStarts = {0, 20, 40, 60, 80, 100};
-        Integer codingStart = new Integer(25);
-        Integer codingEnd = new Integer(85);
+        Integer codingStart = Integer.valueOf(25);
+        Integer codingEnd = Integer.valueOf(85);
 
         TranscriptData transDataUp = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -168,8 +168,8 @@ public class NeoEpitopeUtilsTest
         // non-coding - get all bases
 
         int[] exonStarts = { 100, 120, 140, 160, 180, 200, 220, 240, 260 };
-        Integer codingStart = new Integer(125);
-        Integer codingEnd = new Integer(245);
+        Integer codingStart = Integer.valueOf(125);
+        Integer codingEnd = Integer.valueOf(245);
 
         TranscriptData transData = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");

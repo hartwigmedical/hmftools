@@ -39,7 +39,7 @@ public class ProtectAlgoTest {
     public void canRunProtectAlgo() throws IOException {
         ProtectConfig config = ImmutableProtectConfig.builder()
                 .tumorSampleId("sample")
-                .referenceSampleId(null)
+                .referenceSampleId("ref")
                 .outputDir(Strings.EMPTY)
                 .serveActionabilityDir(SERVE_DIR)
                 .refGenomeVersion(RefGenomeVersion.V37)

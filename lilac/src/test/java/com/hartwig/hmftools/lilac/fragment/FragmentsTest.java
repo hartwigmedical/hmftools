@@ -52,7 +52,7 @@ public class FragmentsTest
         assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.getGenes().size());
         assertEquals(1, mergedFrag.getNucleotideLoci().size());
-        assertEquals(new Integer(1), mergedFrag.getNucleotideLoci().get(0));
+        assertEquals(Integer.valueOf(1), mergedFrag.getNucleotideLoci().get(0));
         assertEquals(1, mergedFrag.getNucleotideQuality().size());
         assertEquals(1, mergedFrag.getNucleotides().size());
 
@@ -66,8 +66,8 @@ public class FragmentsTest
         assertTrue(frag1.validate());
         assertEquals(2, mergedFrag.getGenes().size());
         assertEquals(4, mergedFrag.getNucleotideLoci().size());
-        assertEquals(new Integer(0), mergedFrag.getNucleotideLoci().get(0));
-        assertEquals(new Integer(1), mergedFrag.getNucleotideLoci().get(1));
+        assertEquals(Integer.valueOf(0), mergedFrag.getNucleotideLoci().get(0));
+        assertEquals(Integer.valueOf(1), mergedFrag.getNucleotideLoci().get(1));
         assertEquals(4, mergedFrag.getNucleotideQuality().size());
         assertEquals(4, mergedFrag.getNucleotides().size());
 
@@ -81,10 +81,10 @@ public class FragmentsTest
         assertTrue(frag1.validate());
         assertEquals(3, mergedFrag.getGenes().size());
         assertEquals(6, mergedFrag.getNucleotideLoci().size());
-        assertEquals(new Integer(0), mergedFrag.getNucleotideLoci().get(0));
-        assertEquals(new Integer(3), mergedFrag.getNucleotideLoci().get(3));
-        assertEquals(new Integer(4), mergedFrag.getNucleotideLoci().get(4));
-        assertEquals(new Integer(5), mergedFrag.getNucleotideLoci().get(5));
+        assertEquals(Integer.valueOf(0), mergedFrag.getNucleotideLoci().get(0));
+        assertEquals(Integer.valueOf(3), mergedFrag.getNucleotideLoci().get(3));
+        assertEquals(Integer.valueOf(4), mergedFrag.getNucleotideLoci().get(4));
+        assertEquals(Integer.valueOf(5), mergedFrag.getNucleotideLoci().get(5));
         assertEquals(6, mergedFrag.getNucleotideQuality().size());
         assertEquals(6, mergedFrag.getNucleotides().size());
     }

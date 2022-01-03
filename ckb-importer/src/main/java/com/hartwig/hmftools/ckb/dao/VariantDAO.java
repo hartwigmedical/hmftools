@@ -58,8 +58,8 @@ class VariantDAO {
                 VARIANT.DESCRIPTION)
                 .values(ckbEntryId,
                         variant.id(),
-                        Util.sqlDate(variant.createDate()),
-                        Util.sqlDate(variant.updateDate()),
+                        variant.createDate(),
+                        variant.updateDate(),
                         variant.fullName(),
                         variant.variant(),
                         variant.impact(),
@@ -107,8 +107,8 @@ class VariantDAO {
                 GENE.DESCRIPTION)
                 .values(variantId,
                         gene.id(),
-                        Util.sqlDate(gene.createDate()),
-                        Util.sqlDate(gene.updateDate()),
+                        gene.createDate(),
+                        gene.updateDate(),
                         gene.geneSymbol(),
                         gene.geneRole(),
                         gene.entrezId(),

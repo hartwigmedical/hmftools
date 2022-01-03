@@ -23,7 +23,7 @@ public class PhasedEvidenceTest
         Map<String,Integer> evidence = Maps.newHashMap();
         evidence.put("CAT", 4);
         evidence.put("ATC", 5);
-        PhasedEvidence victim = new PhasedEvidence(Lists.newArrayList(new Integer(0), new Integer(1), new Integer(3)), evidence);
+        PhasedEvidence victim = new PhasedEvidence(Lists.newArrayList(Integer.valueOf(0), Integer.valueOf(1), Integer.valueOf(3)), evidence);
         HlaSequenceLoci catCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:01"), "CART"));
         HlaSequenceLoci atcCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:02"), "ATRC"));
         HlaSequenceLoci wildAtcCandidate = createSequenceLoci(new HlaSequence(HlaAllele.fromString("A*01:03"), "*TRC"));
