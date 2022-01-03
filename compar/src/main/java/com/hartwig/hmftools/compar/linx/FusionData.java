@@ -35,7 +35,7 @@ public class FusionData implements ComparableItem
     {
         final FusionData otherFusion = (FusionData)other;
 
-        return otherFusion.Fusion.name().equals(Fusion.name());
+        return otherFusion.GeneMappedName.equals(GeneMappedName);
     }
 
     @Override
@@ -72,6 +72,6 @@ public class FusionData implements ComparableItem
 
     public String description()
     {
-        return String.format("%s", Fusion.name());
+        return String.format("%s%s", Fusion.name(), Fusion.reportedType());
     }
 }

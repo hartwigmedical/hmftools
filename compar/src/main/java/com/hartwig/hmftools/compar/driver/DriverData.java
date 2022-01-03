@@ -113,6 +113,6 @@ public class DriverData implements ComparableItem
     @Override
     public String description()
     {
-        return String.format("%s_%s", DriverCatalog.driver(), DriverCatalog.gene());
+        return String.format("%s_%s_%s", DriverCatalog.driver(), DriverCatalog.gene(), DriverCatalog.likelihoodMethod());
     }
 }
