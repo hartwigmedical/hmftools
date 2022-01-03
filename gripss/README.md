@@ -20,12 +20,12 @@ java -jar gripss.jar \
 ```
 
 This will write 2 files:
-- SAMPLE_T.gridss.vcf.gz - all non-hard-filtered SVs
-- SAMPLE_T.gridss.filtered.vcf.gz - filtered for PASS and PON only
+- SAMPLE_T.gripss.somatic.vcf.gz - all non-hard-filtered SVs
+- SAMPLE_T.gripss.somatic.filtered.vcf.gz - filtered for PASS and PON only
 
 These two files are used in purple as the structural variant recovery vcf and structural variant vcf respectively.
 
-The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/) for both GRCh 37. Files for GRCh38 will be available early next year. Both files need to be sorted by chromsome and start breakend start position.
+The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
 
 ## Tumor-only mode
 The `reference` argument is optional and if not supplied, GRIPSS will run in tumor-only mode in which case  all filters that require the normal sample are de-activated. This includes
