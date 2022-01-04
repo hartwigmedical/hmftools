@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.protect;
 
+import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -13,8 +16,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
+import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ProtectEvidenceFile {
 
@@ -42,16 +48,20 @@ public final class ProtectEvidenceFile {
     public static List<ProtectEvidence> read(@NotNull String file) throws IOException {
         List<ProtectEvidence> evidence = Lists.newArrayList();
         List<String> lines = Files.readAllLines(new File(file).toPath());
-        // Skip header
+
+        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
         for (String line : lines.subList(1, lines.size())) {
-            evidence.add(fromLine(line));
+            evidence.add(fromLine(fields, line));
         }
         return evidence;
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("event")
+        return new StringJoiner(FIELD_DELIMITER).add("gene")
+                .add("event")
+                .add("evidenceType")
+                .add("rangeRank")
                 .add("germline")
                 .add("reported")
                 .add("treatment")
@@ -75,7 +85,10 @@ public final class ProtectEvidenceFile {
             sourceJoiner.add(source.technicalDisplay());
         }
 
-        return new StringJoiner(FIELD_DELIMITER).add(evidence.genomicEvent())
+        return new StringJoiner(FIELD_DELIMITER).add(nullToEmpty(evidence.gene()))
+                .add(evidence.event())
+                .add(evidence.evidenceType().toString())
+                .add(nullToEmpty(evidence.rangeRank()))
                 .add(String.valueOf(evidence.germline()))
                 .add(String.valueOf(evidence.reported()))
                 .add(evidence.treatment())
@@ -88,19 +101,45 @@ public final class ProtectEvidenceFile {
     }
 
     @NotNull
-    private static ProtectEvidence fromLine(@NotNull String line) {
-        String[] values = line.split(FIELD_DELIMITER);
+    private static String nullToEmpty(@Nullable String string) {
+        return string != null ? string : Strings.EMPTY;
+    }
 
-        Set<String> urls = values.length == 9 ? Sets.newHashSet(values[8].split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
-        return ImmutableProtectEvidence.builder().genomicEvent(values[0])
-                .germline(Boolean.parseBoolean(values[1]))
-                .reported(Boolean.parseBoolean(values[2]))
-                .treatment(values[3])
-                .onLabel(Boolean.parseBoolean(values[4]))
-                .level(EvidenceLevel.valueOf(values[5]))
-                .direction(EvidenceDirection.valueOf(values[6]))
-                .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[7]))
+    @NotNull
+    private static String nullToEmpty(@Nullable Integer integer) {
+        return integer != null ? String.valueOf(integer) : Strings.EMPTY;
+    }
+
+    @NotNull
+    private static ProtectEvidence fromLine(@NotNull Map<String, Integer> fields, @NotNull String line) {
+        String[] values = line.split(FIELD_DELIMITER, -1);
+
+        String urlField = values[fields.get("urls")];
+        Set<String> urls = !urlField.isEmpty() ? Sets.newHashSet(urlField.split(SUBFIELD_DELIMITER)) : Sets.newHashSet();
+
+        return ImmutableProtectEvidence.builder()
+                .gene(emptyToNullString(values[fields.get("gene")]))
+                .event(values[fields.get("event")])
+                .evidenceType(ProtectEvidenceType.valueOf(values[fields.get("evidenceType")]))
+                .rangeRank(emptyToNullInteger(values[fields.get("rangeRank")]))
+                .germline(Boolean.parseBoolean(values[fields.get("germline")]))
+                .reported(Boolean.parseBoolean(values[fields.get("reported")]))
+                .treatment(values[fields.get("treatment")])
+                .onLabel(Boolean.parseBoolean(values[fields.get("onLabel")]))
+                .level(EvidenceLevel.valueOf(values[fields.get("level")]))
+                .direction(EvidenceDirection.valueOf(values[fields.get("direction")]))
+                .sources(Knowledgebase.fromCommaSeparatedTechnicalDisplayString(values[fields.get("sources")]))
                 .urls(urls)
                 .build();
+    }
+
+    @Nullable
+    private static String emptyToNullString(@NotNull String value) {
+        return !value.isEmpty() ? value : null;
+    }
+
+    @Nullable
+    private static Integer emptyToNullInteger(@NotNull String value) {
+        return !value.isEmpty() ? Integer.valueOf(value) : null;
     }
 }

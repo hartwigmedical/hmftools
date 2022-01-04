@@ -153,12 +153,12 @@ public class EvidenceReportingFunctionsTest {
         String event4 = "event4";
 
         ProtectEvidence evidence1 =
-                testEvidenceBuilder().genomicEvent(event1).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(true).build();
+                testEvidenceBuilder().event(event1).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(true).build();
         ProtectEvidence evidence2 =
-                testEvidenceBuilder().genomicEvent(event2).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(false).build();
+                testEvidenceBuilder().event(event2).addSources(Knowledgebase.ICLUSION).reported(true).onLabel(false).build();
         ProtectEvidence evidence3 =
-                testEvidenceBuilder().genomicEvent(event3).addSources(Knowledgebase.VICC_CGI).reported(true).onLabel(false).build();
-        ProtectEvidence evidence4 = testEvidenceBuilder().genomicEvent(event4)
+                testEvidenceBuilder().event(event3).addSources(Knowledgebase.VICC_CGI).reported(true).onLabel(false).build();
+        ProtectEvidence evidence4 = testEvidenceBuilder().event(event4)
                 .addSources(Knowledgebase.VICC_CGI, Knowledgebase.ICLUSION)
                 .reported(true)
                 .onLabel(false)
@@ -179,7 +179,7 @@ public class EvidenceReportingFunctionsTest {
     @NotNull
     private static ProtectEvidence findByEvent(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String event) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.genomicEvent().equals(event)) {
+            if (evidence.event().equals(event)) {
                 return evidence;
             }
         }

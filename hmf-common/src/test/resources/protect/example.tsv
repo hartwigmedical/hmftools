@@ -1,5 +1,5 @@
-event	germline	reported	treatment	onLabel	level	direction	sources	urls
-BRAF p.Val600Glu	false	true	Cobimetinib + Vemurafenib	false	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA
-BRAF p.Val600Glu	false	true	Dabrafenib	false	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA,https://www.google.com/#q=NCCN
-BRAF p.Val600Glu	false	true	Dabrafenib + Trametinib	false	A	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25399551,http://www.ncbi.nlm.nih.gov/pubmed/27283860,https://www.google.com/#q=FDA
-BRAF p.Val600Glu	false	true	Vemurafenib	false	A	RESPONSIVE	vicc_cgi
+gene	event	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	sources	urls
+BRAF	p.Val600Glu	HOTSPOT_MUTATION		false	true	Cobimetinib + Vemurafenib	false	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA
+BRAF	p.Val600Glu	HOTSPOT_MUTATION		false	true	Dabrafenib	false	A	RESPONSIVE	vicc_cgi	https://www.google.com/#q=FDA,https://www.google.com/#q=NCCN
+BRAF	p.Val600Glu	HOTSPOT_MUTATION		false	true	Dabrafenib + Trametinib	false	A	RESPONSIVE	vicc_cgi,vicc_civic	http://www.ncbi.nlm.nih.gov/pubmed/25399551,http://www.ncbi.nlm.nih.gov/pubmed/27283860,https://www.google.com/#q=FDA
+BRAF	p.Val600Glu	HOTSPOT_MUTATION		false	true	Vemurafenib	false	A	RESPONSIVE	vicc_cgi	

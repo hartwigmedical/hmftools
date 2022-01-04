@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -39,8 +40,9 @@ public class VirusEvidence {
                 case HPV_POSITIVE: {
                     if (!hpv.isEmpty()) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .genomicEvent("HPV Positive")
                                 .reported(hpv.stream().anyMatch(x -> x.reported()))
+                                .event("HPV Positive")
+                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
                         result.add(evidence);
                     }
@@ -49,8 +51,9 @@ public class VirusEvidence {
                 case EBV_POSITIVE: {
                     if (!ebv.isEmpty()) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .genomicEvent("EBV Positive")
                                 .reported(ebv.stream().anyMatch(x -> x.reported()))
+                                .event("EBV Positive")
+                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
                         result.add(evidence);
                     }

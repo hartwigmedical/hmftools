@@ -133,7 +133,8 @@ public final class OrangeReportTestFactory {
 
         evidences.add(ImmutableProtectEvidence.builder()
                 .from(ProtectTestFactory.createTestProtectEvidence())
-                .genomicEvent("USH2A c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                .gene("USH2A")
+                .event("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
                 .build());
 
         return evidences;

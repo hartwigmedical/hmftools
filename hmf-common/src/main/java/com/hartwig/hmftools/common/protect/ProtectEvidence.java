@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.common.protect;
 
+import java.util.Objects;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
+import org.apache.commons.lang3.StringUtils;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,8 +17,23 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
 
+    @Value.Derived
     @NotNull
-    public abstract String genomicEvent();
+    public String genomicEvent() {
+        return gene() != null ? gene() + " " + event() : event();
+    }
+
+    @Nullable
+    public abstract String gene();
+
+    @NotNull
+    public abstract String event();
+
+    @NotNull
+    public abstract ProtectEvidenceType evidenceType();
+
+    @Nullable
+    public abstract Integer rangeRank();
 
     public abstract boolean germline();
 
@@ -46,9 +63,19 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return reportedCompare;
         }
 
-        int eventCompare = genomicEvent().compareTo(o.genomicEvent());
-        if (eventCompare != 0) {
-            return eventCompare;
+        int genomicEventCompare = StringUtils.compare(genomicEvent(), o.genomicEvent());
+        if (genomicEventCompare != 0) {
+            return genomicEventCompare;
+        }
+
+        int evidenceTypeCompare = evidenceType().compareTo(o.evidenceType());
+        if (evidenceTypeCompare != 0) {
+            return evidenceTypeCompare;
+        }
+
+        int rangeRankCompare = compareInteger(rangeRank(), o.rangeRank());
+        if (rangeRankCompare != 0) {
+            return rangeRankCompare;
         }
 
         int levelCompare = level().compareTo(o.level());
@@ -72,5 +99,17 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
         }
 
         return 0;
+    }
+
+    public static int compareInteger(@Nullable Integer int1, @Nullable Integer int2) {
+        if (Objects.equals(int1, int2)) {
+            return 0;
+        } else if (int1 == null) {
+            return -1;
+        } else if (int2 == null) {
+            return 1;
+        } else {
+            return int1.compareTo(int2);
+        }
     }
 }

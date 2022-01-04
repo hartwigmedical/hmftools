@@ -72,8 +72,8 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGeneratePatientReportForCOLO829_disabled_config() throws IOException {
-        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_disables_config")
+    public void canGeneratePatientReportForCOLO829DisabledConfig() throws IOException {
+        ExampleAnalysisConfig config = new ExampleAnalysisConfig.Builder().sampleId("PNT00012345T_disabled_config")
                 .comments(COLO_COMMENT_STRING)
                 .limsCohortConfig(LimsCohortTestFactory.createAllDisabledCohortConfig("COLO"))
                 .build();

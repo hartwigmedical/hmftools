@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceReportingCuration {
 
-    private static final Set<String> EVENT_REPORTING_BLACKLIST_KEYWORDS = Sets.newHashSet("TP53");
+    private static final Set<String> GENE_REPORTING_BLACKLIST = Sets.newHashSet("TP53");
     private static final Set<String> TREATMENT_REPORTING_BLACKLIST = Sets.newHashSet("Chemotherapy", "Aspirin", "Steroids");
 
     private EvidenceReportingCuration() {
@@ -22,7 +22,7 @@ public final class EvidenceReportingCuration {
     public static List<ProtectEvidence> applyReportingBlacklist(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (hasBlacklistedEvent(evidence) || hasBlacklistedTreatment(evidence)) {
+            if (isEventOnBlacklistedGene(evidence) || hasBlacklistedTreatment(evidence)) {
                 result.add(ImmutableProtectEvidence.builder().from(evidence).reported(false).build());
             } else {
                 result.add(evidence);
@@ -31,9 +31,14 @@ public final class EvidenceReportingCuration {
         return result;
     }
 
-    private static boolean hasBlacklistedEvent(@NotNull ProtectEvidence evidence) {
-        for (String entry : EVENT_REPORTING_BLACKLIST_KEYWORDS) {
-            if (evidence.genomicEvent().contains(entry)) {
+    private static boolean isEventOnBlacklistedGene(@NotNull ProtectEvidence evidence) {
+        String gene = evidence.gene();
+        if (gene == null) {
+            return false;
+        }
+
+        for (String blacklistedGene : GENE_REPORTING_BLACKLIST) {
+            if (gene.equals(blacklistedGene)) {
                 return true;
             }
         }
