@@ -28,7 +28,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class BreakendGenePrep
+public final class BreakendGenePrep
 {
     public static void setSvGeneData(
             final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache, boolean applyPromotorDistance, boolean loadBreakendGenes)

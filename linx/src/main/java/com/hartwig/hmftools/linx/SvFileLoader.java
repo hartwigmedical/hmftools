@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.germline.GermlineFilter.GERMLINE_MIN_QUAL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
@@ -26,7 +25,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
 import org.apache.commons.cli.CommandLine;
 
-public class SvFileLoader
+public final class SvFileLoader
 {
     public static final String VCF_FILE = "sv_vcf";
 

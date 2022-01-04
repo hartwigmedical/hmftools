@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class HmfGenePanelSupplier
 {
-
     private HmfGenePanelSupplier()
     {
     }

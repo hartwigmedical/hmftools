@@ -305,24 +305,33 @@ public class DisruptionFinder implements CohortFileInterface
             if(genesList.isEmpty())
                 continue;
 
-            List<BreakendGeneData> otherGenesList = var.getGenesList(!isStart(se));
+            List<BreakendGeneData> otherBreakendGenes = var.getGenesList(!isStart(se));
+
+            // ignore if the other breakend may be in a different gene
+            if(!otherBreakendGenes.isEmpty())
+            {
+                if(otherBreakendGenes.stream().noneMatch(x -> genesList.stream().anyMatch(y -> y.geneName().equals(x.geneName()))))
+                    continue;
+            }
 
             for(BreakendGeneData gene : genesList)
             {
-                BreakendGeneData otherGene = otherGenesList.stream()
-                        .filter(x -> x.geneId().equals(gene.geneId())).findFirst().orElse(null);
-
-                if(otherGene == null)
+                if(otherBreakendGenes.isEmpty())
                 {
                     // other breakend isn't in any genic region
                     gene.transcripts().forEach(x -> markNonDisruptiveTranscript(x, NON_DISRUPT_REASON_PARTIAL_DUP));
                     continue;
                 }
-                else
+
+                BreakendGeneData otherBreakendGeneData = otherBreakendGenes.stream()
+                        .filter(x -> x.geneId().equals(gene.geneId())).findFirst().orElse(null);
+
+                if(otherBreakendGeneData != null)
                 {
+                    // other breakend is in the same gene, so check each transcript for a matching transcript in the other breakend
                     for(BreakendTransData trans : gene.transcripts())
                     {
-                        BreakendTransData matchingTrans = otherGene.transcripts().stream()
+                        BreakendTransData matchingTrans = otherBreakendGeneData.transcripts().stream()
                                 .filter(x -> x.transId() == trans.transId()).findFirst().orElse(null);
 
                         if(matchingTrans == null)
@@ -341,20 +350,28 @@ public class DisruptionFinder implements CohortFileInterface
                             }
                         }
                     }
-                }
 
-                if(gene.isUpstream())
-                {
-                    for(BreakendTransData upTrans : gene.transcripts())
+                    if(gene.isUpstream())
                     {
-                        final BreakendTransData downTrans = otherGene.transcripts().stream()
-                                .filter(x -> x.transId() == upTrans.transId()).findFirst().orElse(null);
-
-                        if(downTrans != null && upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
+                        for(BreakendTransData upTrans : gene.transcripts())
                         {
-                            markNonDisruptiveTranscript(upTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
-                            markNonDisruptiveTranscript(downTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                            final BreakendTransData downTrans = otherBreakendGeneData.transcripts().stream()
+                                    .filter(x -> x.transId() == upTrans.transId()).findFirst().orElse(null);
+
+                            if(downTrans != null && upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
+                            {
+                                markNonDisruptiveTranscript(upTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                                markNonDisruptiveTranscript(downTrans, NON_DISRUPT_REASON_PARTIAL_DUP);
+                            }
                         }
+                    }
+                }
+                else
+                {
+                    for(BreakendTransData trans : gene.transcripts())
+                    {
+                        markNonDisruptiveTranscript(trans, NON_DISRUPT_REASON_PARTIAL_DUP);
+
                     }
                 }
             }

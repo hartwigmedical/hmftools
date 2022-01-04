@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -127,7 +129,7 @@ public class LinxConfig
             SampleDataPath = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
             PurpleDataPath = SampleDataPath;
 
-            OutputDataPath = isSingleSample() ? SampleDataPath : parseOutputDir(cmd);
+            OutputDataPath = isSingleSample() && !cmd.hasOption(OUTPUT_DIR) ? SampleDataPath : parseOutputDir(cmd);
 
             if(svVcfFile.isEmpty() && mSampleIds.size() == 1)
             {

@@ -118,6 +118,7 @@ public class DriverDataCache
 
             mDriverCatalog.addAll(
                     DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)).stream()
+                            .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
                             .filter(x -> x.isCanonical())
                             .collect(Collectors.toList()));
 
