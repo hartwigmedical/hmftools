@@ -138,29 +138,46 @@ public class HotspotCache
 
             int itemCount = 0;
             String line = fileReader.readLine();
-            String currentChr = "";
-            List<KnownHotspot> svRegions = null;
 
             while(line != null)
             {
                 final String[] items = line.split("\t", -1);
 
                 String chrStart = items[0];
-
-                if(!chrStart.equals(currentChr))
-                {
-                    currentChr = chrStart;
-                    svRegions = Lists.newArrayList();
-                    mHotspotRegions.put(chrStart, svRegions);
-                }
+                String chrEnd = items[3];
 
                 ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(items[1]), Integer.parseInt(items[2]));
-                ChrBaseRegion regionEnd = new ChrBaseRegion(items[3], Integer.parseInt(items[4]), Integer.parseInt(items[5]));
+                ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]), Integer.parseInt(items[5]));
                 Byte orientStart = items[8].equals("+") ? POS_ORIENT : NEG_ORIENT;
                 Byte orientEnd = items[9].equals("+") ? POS_ORIENT : NEG_ORIENT;
                 String geneInfo = items[6];
 
-                svRegions.add(new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo));
+                KnownHotspot knownHotspot = new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo);
+
+                // add to both chromosome lists
+                List<KnownHotspot> svRegions = mHotspotRegions.get(chrStart);
+
+                if(svRegions == null)
+                {
+                    svRegions = Lists.newArrayList();
+                    mHotspotRegions.put(chrStart, svRegions);
+                }
+
+                svRegions.add(knownHotspot);
+
+                if(!chrStart.equals(chrEnd))
+                {
+                    svRegions = mHotspotRegions.get(chrEnd);
+
+                    if(svRegions == null)
+                    {
+                        svRegions = Lists.newArrayList();
+                        mHotspotRegions.put(chrEnd, svRegions);
+                    }
+
+                    svRegions.add(knownHotspot);
+                }
+
                 ++itemCount;
 
                 line = fileReader.readLine();
