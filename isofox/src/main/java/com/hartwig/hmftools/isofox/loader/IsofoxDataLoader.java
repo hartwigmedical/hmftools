@@ -1,65 +1,20 @@
 package com.hartwig.hmftools.isofox.loader;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.CANCER_TYPE_OTHER;
-import static com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles.PAN_CANCER;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_CHR;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COHORT_COUNT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_COVERAGE;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_DISCORD_FRAGS;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_JUNC_TYPE;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_ORIENT;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_POS;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_REALIGN_FLAGS;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SPLIT_FRAGS;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
-import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
-import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
-import static com.hartwig.hmftools.isofox.loader.DataLoaderConfig.ALT_SJ_COHORT_FILE;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
+import static java.lang.Math.min;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.loader.DataLoadType.GENE_EXPRESSION;
+import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
+
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
-import com.hartwig.hmftools.common.rna.GeneExpression;
-import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
-import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
-import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.common.rna.RnaFusion;
-import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
-import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -67,22 +22,26 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
-import org.jooq.Record;
-import org.jooq.Result;
 
 public class IsofoxDataLoader
 {
     private final DataLoaderConfig mConfig;
     private final AltSjCohortCache mAltSjCohortCache;
+    private final CohortGenePercentiles mGeneDistribution;
 
     public IsofoxDataLoader(final CommandLine cmd)
     {
         mConfig = new DataLoaderConfig(cmd);
 
-        if(mConfig.loadDataType(NOVEL_JUNCTION) && cmd.hasOption(ALT_SJ_COHORT_FILE))
-            mAltSjCohortCache = new AltSjCohortCache(cmd.getOptionValue(ALT_SJ_COHORT_FILE));
+        if(mConfig.loadDataType(NOVEL_JUNCTION) && mConfig.AltSjCohortFile != null)
+            mAltSjCohortCache = new AltSjCohortCache(mConfig.AltSjCohortFile);
         else
             mAltSjCohortCache = null;
+
+        if(mConfig.loadDataType(GENE_EXPRESSION) && mConfig.GeneDistributionFile != null)
+            mGeneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
+        else
+            mGeneDistribution = null;
     }
 
     public boolean load()
@@ -99,278 +58,40 @@ public class IsofoxDataLoader
             return false;
         }
 
-        final IsofoxDAO rnaDAO = new IsofoxDAO(mConfig.DbAccess.context());
+        List<SampleLoaderTask> sampleTasks = Lists.newArrayList();
 
-        for(String sampleId : mConfig.SampleIds)
+        if(mConfig.Threads > 1)
         {
-            final String cancerType = getSampleCancerType(sampleId);
+            for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
+            {
+                sampleTasks.add(new SampleLoaderTask(i, mConfig, mAltSjCohortCache, mGeneDistribution));
+            }
 
-            ISF_LOGGER.info("sample({}) cancerType({}) loading Isofox RNA data", sampleId, cancerType);
+            int taskIndex = 0;
+            for(String sampleId : mConfig.SampleIds)
+            {
+                if(taskIndex >= sampleTasks.size())
+                    taskIndex = 0;
 
-            loadStatistics(sampleId, rnaDAO);
-            loadGeneExpression(sampleId, cancerType, rnaDAO);
-            loadNovelJunctions(sampleId, rnaDAO);
-            loadFusions(sampleId, rnaDAO);
+                sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
+
+                ++taskIndex;
+            }
+
+            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        }
+        else
+        {
+            SampleLoaderTask sampleTask = new SampleLoaderTask(0, mConfig, mAltSjCohortCache, mGeneDistribution);
+
+            sampleTask.getSampleIds().addAll(mConfig.SampleIds);
+
+            sampleTasks.add(sampleTask);
+            sampleTask.call();
         }
 
         return true;
-    }
-
-    private String getSampleCancerType(final String sampleId)
-    {
-        if(mConfig.SampleCancerTypes.containsKey(sampleId))
-            return mConfig.SampleCancerTypes.get(sampleId);
-
-        try
-        {
-            final String queryStr = String.format("select primaryTumorLocation from clinical where sampleId = '%s';", sampleId);
-
-            final Result<Record> result = mConfig.DbAccess.context().fetch(queryStr);
-
-            String primaryTumorLocation = CANCER_TYPE_OTHER;
-
-            for(Record record : result)
-            {
-                primaryTumorLocation = record.getValue("primaryTumorLocation").toString();
-                break;
-            }
-
-            if(mConfig.PrimaryCancerTypes.contains(primaryTumorLocation))
-                return primaryTumorLocation;
-        }
-        catch(Exception e)
-        {
-            ISF_LOGGER.error("failed to retrieve clinical data for sample({}): {}", e.toString());
-        }
-
-        return CANCER_TYPE_OTHER;
-    }
-
-    private void loadStatistics(final String sampleId, final IsofoxDAO rnaDAO)
-    {
-        if(!mConfig.loadDataType(DataLoadType.STATISTICS))
-            return;
-
-        final String sampleDataDir = mConfig.StatisticsDataDir.contains("*") ?
-                mConfig.StatisticsDataDir.replaceAll("\\*", sampleId) : mConfig.StatisticsDataDir;
-
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + SUMMARY_FILE;
-
-        try
-        {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
-
-            if(lines.size() != 2)
-            {
-                ISF_LOGGER.error("sample({}) invalid summary file", sampleId);
-                return;
-            }
-
-            final RnaStatistics statistics = RnaStatistics.fromCsv(lines.get(1));
-
-            ISF_LOGGER.debug("sample({}) writing summary statistics to DB", sampleId);
-            rnaDAO.writeRnaStatistics(sampleId, statistics);
-
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load summary statistics data file({}): {}", filename, e.toString());
-            return;
-        }
-    }
-
-    private void loadGeneExpression(final String sampleId, final String cancerType, final IsofoxDAO rnaDAO)
-    {
-        if(!mConfig.loadDataType(DataLoadType.GENE_EXPRESSION))
-            return;
-
-        CohortGenePercentiles geneDistribution = new CohortGenePercentiles(mConfig.GeneDistributionFile);
-
-        final List<GeneExpression> geneExpressions = Lists.newArrayList();
-
-        final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
-                mConfig.GeneDataDir.replaceAll("\\*", sampleId) : mConfig.GeneDataDir;
-
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + GENE_DATA_FILE_ID;
-
-        try
-        {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
-
-            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
-
-            for(String line : lines)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                final String geneId = items[fieldsIndexMap.get(FLD_GENE_ID)];
-
-                if(!mConfig.processGeneId(geneId))
-                    continue;
-
-                double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_TPM)]);
-
-                double medianCancer = geneDistribution.getTpmMedian(geneId, cancerType);
-                double percentileCancer = geneDistribution.getTpmPercentile(geneId, cancerType, tpm);
-                double medianCohort = geneDistribution.getTpmMedian(geneId, PAN_CANCER);
-                double percentileCohort = geneDistribution.getTpmPercentile(geneId, PAN_CANCER, tpm);
-
-                geneExpressions.add(ImmutableGeneExpression.builder()
-                        .geneName(items[fieldsIndexMap.get(FLD_GENE_NAME)])
-                        .tpm(tpm)
-                        .splicedFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLICED_FRAGS)]))
-                        .unsplicedFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_UNSPLICED_FRAGS)]))
-                        .medianTpmCancer(medianCancer)
-                        .percentileCancer(percentileCancer)
-                        .medianTpmCohort(medianCohort)
-                        .percentileCohort(percentileCohort)
-                        .build());
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load gene data file({}): {}", filename, e.toString());
-            return;
-        }
-
-        ISF_LOGGER.debug("sample({}) writing {} gene expression records to DB", sampleId, geneExpressions.size());
-        rnaDAO.writeGeneExpressions(sampleId, geneExpressions);
-    }
-
-    private void loadNovelJunctions(final String sampleId, final IsofoxDAO rnaDAO)
-    {
-        if(!mConfig.loadDataType(NOVEL_JUNCTION))
-            return;
-
-        final List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
-
-        final String sampleDataDir = mConfig.AltSjDataDir.contains("*") ?
-                mConfig.AltSjDataDir.replaceAll("\\*", sampleId) : mConfig.AltSjDataDir;
-
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + ALT_SJ_FILE_ID;
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            String line = fileReader.readLine();
-            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
-                int geneName = fieldsIndexMap.get(FLD_GENE_NAME);
-                int chr = fieldsIndexMap.get(FLD_CHROMOSOME);
-                int posStart = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
-                int posEnd = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-                int type = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
-                int fragCount = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
-                int depthStart = fieldsIndexMap.get("DepthStart");
-                int depthEnd = fieldsIndexMap.get("DepthEnd");
-                int regionStart = fieldsIndexMap.containsKey("RegionStart") ? fieldsIndexMap.get("RegionStart") : fieldsIndexMap.get("ContextStart");
-                int regionEnd = fieldsIndexMap.containsKey("RegionEnd") ? fieldsIndexMap.get("RegionEnd") : fieldsIndexMap.get("ContextEnd");
-                int basesStart = fieldsIndexMap.get("BasesStart");
-                int basesEnd = fieldsIndexMap.get("BasesEnd");
-                int transStart = fieldsIndexMap.get("TransStart");
-                int transEnd = fieldsIndexMap.get("TransEnd");
-
-                final String geneId = items[geneIdIndex];
-
-                if(!mConfig.processGeneId(geneId))
-                    continue;
-
-                final AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.fromCsv(
-                        items, geneIdIndex, geneName, chr, posStart, posEnd, type,
-                        fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd);
-
-                int cohortFrequency = mAltSjCohortCache.getCohortFrequency(altSJ.key());
-
-                novelJunctions.add(ImmutableNovelSpliceJunction.builder()
-                        .geneName(items[fieldsIndexMap.get(FLD_GENE_NAME)])
-                        .chromosome(altSJ.Chromosome)
-                        .junctionStart(altSJ.SpliceJunction[SE_START])
-                        .junctionEnd(altSJ.SpliceJunction[SE_END])
-                        .type(altSJ.Type.toString())
-                        .fragmentCount(altSJ.FragmentCount)
-                        .depthStart(altSJ.DepthCounts[SE_START])
-                        .depthEnd(altSJ.DepthCounts[SE_END])
-                        .regionStart(altSJ.RegionContexts[SE_START].toString())
-                        .regionEnd(altSJ.RegionContexts[SE_END].toString())
-                        .basesStart(altSJ.BaseContexts[SE_START])
-                        .basesEnd(altSJ.BaseContexts[SE_END])
-                        .cohortFrequency(cohortFrequency)
-                        .build());
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load alt-SJ file({}): {}", filename, e.toString());
-            return;
-        }
-
-        ISF_LOGGER.debug("sample({}) writing {} novel SJs records to DB", sampleId, novelJunctions.size());
-        rnaDAO.writeNovelSpliceJunctions(sampleId, novelJunctions);
-    }
-
-    private void loadFusions(final String sampleId, final IsofoxDAO rnaDAO)
-    {
-        if(!mConfig.loadDataType(DataLoadType.FUSION))
-            return;
-
-        final List<RnaFusion> fusions = Lists.newArrayList();
-
-        final String sampleDataDir = mConfig.FusionDataDir.contains("*") ?
-                mConfig.FusionDataDir.replaceAll("\\*", sampleId) : mConfig.FusionDataDir;
-
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + PASS_FUSION_FILE_ID;
-
-        try
-        {
-            final List<String> lines = Files.readAllLines(Paths.get(filename));
-            final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-            lines.remove(0);
-
-            for(String line : lines)
-            {
-                final String[] items = line.split(DELIMITER, -1);
-
-                String fusionName = String.format("%s_%s",
-                        items[fieldsIndexMap.get(formStreamField(FLD_GENE_NAME, FS_UP))],
-                        items[fieldsIndexMap.get(formStreamField(FLD_GENE_NAME, FS_DOWN))]);
-
-                fusions.add(ImmutableRnaFusion.builder()
-                        .name(fusionName)
-                        .chromosomeUp(items[fieldsIndexMap.get(formStreamField(FLD_CHR, FS_UP))])
-                        .chromosomeDown(items[fieldsIndexMap.get(formStreamField(FLD_CHR, FS_DOWN))])
-                        .positionUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_POS, FS_UP))]))
-                        .positionDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_POS, FS_DOWN))]))
-                        .orientationUp(Byte.parseByte(items[fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_UP))]))
-                        .orientationDown(Byte.parseByte(items[fieldsIndexMap.get(formStreamField(FLD_ORIENT, FS_DOWN))]))
-                        .junctionTypeUp(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_UP))])
-                        .junctionTypeDown(items[fieldsIndexMap.get(formStreamField(FLD_JUNC_TYPE, FS_DOWN))])
-                        .svType(items[fieldsIndexMap.get(FLD_SV_TYPE)])
-                        .splitFragments(Integer.parseInt(items[fieldsIndexMap.get(FLD_SPLIT_FRAGS)]))
-                        .realignedFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_REALIGN_FLAGS )]))
-                        .discordantFrags(Integer.parseInt(items[fieldsIndexMap.get(FLD_DISCORD_FRAGS)]))
-                        .depthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
-                        .depthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))
-                        .maxAnchorLengthUp(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_UP))]))
-                        .maxAnchorLengthDown(Integer.parseInt(items[fieldsIndexMap.get(formStreamField(FLD_COVERAGE, FS_DOWN))]))
-                        .cohortFrequency(Integer.parseInt(items[fieldsIndexMap.get(FLD_COHORT_COUNT)]))
-                        .build());
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to load fusions file({}): {}", filename, e.toString());
-            return;
-        }
-
-        ISF_LOGGER.debug("sample({}) writing {} fusion records to DB", sampleId, fusions.size());
-        rnaDAO.writeRnaFusions(sampleId, fusions);
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
@@ -391,5 +112,4 @@ public class IsofoxDataLoader
 
         ISF_LOGGER.info("Isofox data loading complete");
     }
-
 }
