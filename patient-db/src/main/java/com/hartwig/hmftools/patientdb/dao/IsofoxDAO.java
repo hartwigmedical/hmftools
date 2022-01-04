@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENEEXPRESSION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.NOVELSPLICEJUNCTION;
@@ -27,6 +26,8 @@ public class IsofoxDAO
 {
     @NotNull
     private final DSLContext context;
+
+    private static final int DB_BATCH_INSERT_SIZE = 10000;
 
     public IsofoxDAO(@NotNull final DSLContext context) {
         this.context = context;
