@@ -43,15 +43,18 @@ public final class CkbDAO {
 
     @NotNull
     public static CkbDAO connectToCkbDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
-        LOGGER.info("Connecting to database CKB at {}", url);
+        System.setProperty("org.jooq.no-logo", "true");
+        System.setProperty("org.jooq.no-tips", "true");
+
         Connection conn = DriverManager.getConnection(url, userName, password);
         String catalog = conn.getCatalog();
+        LOGGER.info("Connecting to database '{}'", catalog);
 
         return new CkbDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
     }
 
     @Nullable
-    private static org.jooq.conf.Settings settings(@NotNull String catalog) {
+    private static Settings settings(@NotNull String catalog) {
         if (catalog.equals(DEV_CATALOG)) {
             return null;
         }
@@ -86,8 +89,8 @@ public final class CkbDAO {
     public void write(@NotNull CkbEntry ckbEntry) {
         int id = context.insertInto(CKBENTRY, CKBENTRY.CKBPROFILEID, CKBENTRY.CREATEDATE, CKBENTRY.UPDATEDATE, CKBENTRY.PROFILENAME)
                 .values(ckbEntry.profileId(),
-                        Util.sqlDate(ckbEntry.createDate()),
-                        Util.sqlDate(ckbEntry.updateDate()),
+                        ckbEntry.createDate(),
+                        ckbEntry.updateDate(),
                         ckbEntry.profileName())
                 .returning(CKBENTRY.ID)
                 .fetchOne()

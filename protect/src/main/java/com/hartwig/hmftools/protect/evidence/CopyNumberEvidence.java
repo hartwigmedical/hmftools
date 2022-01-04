@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
@@ -50,7 +51,9 @@ public class CopyNumberEvidence {
             if (actionable.gene().equals(gainLoss.gene()) && isTypeMatch(actionable, gainLoss)) {
                 ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(actionable)
                         .reported(report)
-                        .genomicEvent(gainLoss.genomicEvent())
+                        .gene(gainLoss.gene())
+                        .event(gainLoss.interpretation().display())
+                        .evidenceType(fromGeneLevelEvent(actionable.event()))
                         .build();
                 result.add(evidence);
             }
@@ -71,6 +74,20 @@ public class CopyNumberEvidence {
             default:
                 throw new IllegalStateException(
                         "Actionable event found in copy number evidence that should not exist: " + actionable.event());
+        }
+    }
+
+    @NotNull
+    private static ProtectEvidenceType fromGeneLevelEvent(@NotNull GeneLevelEvent event) {
+        switch (event) {
+            case AMPLIFICATION:
+                return ProtectEvidenceType.AMPLIFICATION;
+            case DELETION:
+                return ProtectEvidenceType.DELETION;
+            case INACTIVATION:
+                return ProtectEvidenceType.INACTIVATION;
+            default:
+                throw new IllegalStateException("Gene level event found in copy number evidence that should not exist: " + event);
         }
     }
 }

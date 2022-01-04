@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class VariantEvidence {
 
@@ -94,8 +96,15 @@ public class VariantEvidence {
 
     @NotNull
     private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable) {
+        String event = !variant.canonicalHgvsProteinImpact().isEmpty()
+                ? variant.canonicalHgvsProteinImpact()
+                : variant.canonicalHgvsCodingImpact();
+
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
-                .genomicEvent(variant.genomicEvent())
+                .gene(variant.gene())
+                .event(event)
+                .evidenceType(typeFromActionable(actionable))
+                .rangeRank(rangeRankFromActionable(actionable))
                 .germline(germline)
                 .reported(report)
                 .build();
@@ -148,5 +157,43 @@ public class VariantEvidence {
 
     private static boolean isDelete(@NotNull Variant variant) {
         return variant.type() == VariantType.INDEL && variant.alt().length() < variant.ref().length();
+    }
+
+    @NotNull
+    private static ProtectEvidenceType typeFromActionable(@NotNull ActionableEvent actionable) {
+        if (actionable instanceof ActionableHotspot) {
+            return ProtectEvidenceType.HOTSPOT_MUTATION;
+        } else if (actionable instanceof ActionableRange) {
+            ActionableRange range = (ActionableRange) actionable;
+            switch (range.rangeType()) {
+                case EXON:
+                    return ProtectEvidenceType.EXON_MUTATION;
+                case CODON:
+                    return ProtectEvidenceType.CODON_MUTATION;
+                default: {
+                    throw new IllegalStateException("Unsupported range type in protect: " + range.rangeType());
+                }
+            }
+        } else if (actionable instanceof ActionableGene) {
+            ActionableGene gene = (ActionableGene) actionable;
+            switch (gene.event()) {
+                case INACTIVATION:
+                    return ProtectEvidenceType.INACTIVATION;
+                case ACTIVATION:
+                    return ProtectEvidenceType.ACTIVATION;
+                case ANY_MUTATION:
+                    return ProtectEvidenceType.ANY_MUTATION;
+                default: {
+                    throw new IllegalStateException("Unexpected gene event detected in variant evidence: " + gene.event());
+                }
+            }
+        } else {
+            throw new IllegalStateException("Unexpected actionable event detected in variant evidence: " + actionable);
+        }
+    }
+
+    @Nullable
+    private static Integer rangeRankFromActionable(@NotNull ActionableEvent actionable) {
+        return actionable instanceof ActionableRange ? ((ActionableRange) actionable).rank() : null;
     }
 }

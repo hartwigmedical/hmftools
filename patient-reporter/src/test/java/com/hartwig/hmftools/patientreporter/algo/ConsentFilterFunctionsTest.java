@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingLevel;
-import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
@@ -64,8 +64,8 @@ public class ConsentFilterFunctionsTest {
 
     @Test
     public void canFilterEvidenceForGermlineConsent() {
-        ProtectEvidence evidence = ImmutableProtectEvidence.builder()
-                .genomicEvent("HR deficiency signature")
+        ProtectEvidence evidence = ProtectTestFactory.testEvidenceBuilder()
+                .event("HR deficiency")
                 .germline(true)
                 .reported(true)
                 .treatment("TryMe")

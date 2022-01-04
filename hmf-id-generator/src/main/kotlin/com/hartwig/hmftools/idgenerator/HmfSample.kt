@@ -14,7 +14,7 @@ data class HmfSample(val patientId: Int, val sampleId: Int, val deleted: Boolean
         operator fun invoke(amberAnonymous: AmberAnonymous): HmfSample {
             val hmfSampleId = amberAnonymous.hmfSampleId()
 
-            val sampleId = hmfSampleId[hmfSampleId.length - 1].toInt() - 64
+            val sampleId = hmfSampleId[hmfSampleId.length - 1].code - 64
             val patientId = hmfSampleId.substring(prefix.length, hmfSampleId.length - 1).toInt()
 
             return HmfSample(patientId, sampleId, amberAnonymous.deleted(), amberAnonymous.sampleId())

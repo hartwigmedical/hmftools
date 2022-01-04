@@ -212,7 +212,7 @@ public class ClusterAnalyser {
 
         // take note of DM clusters so they can be rechecked after any final cluster merging
         final List<Integer> dmClusterIds = mClusters.stream().filter(x -> x.hasAnnotation(CLUSTER_ANNOT_DM))
-                .map(x -> new Integer(x.id())).collect(Collectors.toList());
+                .map(x -> Integer.valueOf(x.id())).collect(Collectors.toList());
 
         // re-check foldbacks amongst newly formed chains and then DM status
         if(FoldbackFinder.markFoldbacks(mState.getChrBreakendMap(), true))

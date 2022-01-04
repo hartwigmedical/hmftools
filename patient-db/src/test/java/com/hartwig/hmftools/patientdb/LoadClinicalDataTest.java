@@ -76,7 +76,7 @@ public class LoadClinicalDataTest {
 
         BaselineData baselineData = patient.baselineData();
         assertNotNull(baselineData);
-        assertEquals(new Integer(1963), baselineData.birthYear());
+        assertEquals(Integer.valueOf(1963), baselineData.birthYear());
         assertEquals("Breast cancer", baselineData.curatedPrimaryTumor().searchTerm());
         assertEquals("female", baselineData.gender());
         assertEquals(LocalDate.parse("2012-02-17", DATE_FORMATTER), baselineData.informedConsentDate());

@@ -80,7 +80,7 @@ public class BucketGroup  {
         mExtraBucketIds = Lists.newArrayList();
         mSampleCountTotals = Lists.newArrayList();
         mSampleCounts = Lists.newArrayList();
-        mSampleCountsMap = new HashMap();
+        mSampleCountsMap = new HashMap<>();
         mCombinedBucketCounts = null;
         mBucketRatios = null;
         mBucketRatioRanges = null;

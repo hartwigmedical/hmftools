@@ -9,15 +9,17 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 
 import org.jetbrains.annotations.NotNull;
 
- public final class PurpleQCFile {
+public final class PurpleQCFile {
 
-    private static final DecimalFormat FORMATTER = new DecimalFormat("0.0000");
+    private static final DecimalFormat FORMAT = PurpleCommon.decimalFormat("0.0000");
+
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.qc";
 
@@ -85,7 +87,7 @@ import org.jetbrains.annotations.NotNull;
         result.add("Method" + DELIMITER + check.method());
         result.add("CopyNumberSegments" + DELIMITER + check.copyNumberSegments());
         result.add("UnsupportedCopyNumberSegments" + DELIMITER + check.unsupportedCopyNumberSegments());
-        result.add("Purity" + DELIMITER + FORMATTER.format(check.purity()));
+        result.add("Purity" + DELIMITER + FORMAT.format(check.purity()));
         result.add("AmberGender" + DELIMITER + check.amberGender());
         result.add("CobaltGender" + DELIMITER + check.cobaltGender());
         result.add("DeletedGenes" + DELIMITER + check.deletedGenes());

@@ -59,20 +59,20 @@ public class FusionEvidenceTest {
 
         assertEquals(3, evidences.size());
 
-        ProtectEvidence evidence1 = findByEvent(evidences, reportedFusionMatch.genomicEvent());
+        ProtectEvidence evidence1 = findByEvent(evidences, geneUp + " - " + geneDown + " fusion");
         assertTrue(evidence1.reported());
 
-        ProtectEvidence evidence2 = findByEvent(evidences, reportedPromiscuousMatch.genomicEvent());
+        ProtectEvidence evidence2 = findByEvent(evidences, genePromiscuous + " - other gene fusion");
         assertTrue(evidence2.reported());
 
-        ProtectEvidence evidence3 = findByEvent(evidences, unreportedPromiscuousMatch.genomicEvent());
+        ProtectEvidence evidence3 = findByEvent(evidences, "other gene - " + genePromiscuous + " fusion");
         assertFalse(evidence3.reported());
     }
 
     @NotNull
     private static ProtectEvidence findByEvent(@NotNull List<ProtectEvidence> evidences, @NotNull String event) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.genomicEvent().equals(event)) {
+            if (evidence.event().equals(event)) {
                 return evidence;
             }
         }

@@ -1,2 +1,2 @@
-event	germline	reported	treatment	onLabel	level	direction	sources	urls
-A p.1M	true	true	Olaparib	false	A	RESPONSIVE	vicc_cgi	A
+gene	event	evidenceType	rangeRank	germline	reported	treatment	onLabel	level	direction	sources	urls
+A	p.1M	ANY_MUTATION		true	true	Olaparib	false	A	RESPONSIVE	vicc_cgi	A

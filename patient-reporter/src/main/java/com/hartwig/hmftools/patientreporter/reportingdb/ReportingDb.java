@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import com.google.gson.GsonBuilder;
@@ -39,7 +41,7 @@ public class ReportingDb {
 
             GenomicAnalysis analysis = report.genomicAnalysis();
 
-            String purity = new DecimalFormat("0.00").format(analysis.impliedPurity());
+            String purity = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(analysis.impliedPurity());
             boolean hasReliableQuality = analysis.hasReliableQuality();
             boolean hasReliablePurity = analysis.hasReliablePurity();
 

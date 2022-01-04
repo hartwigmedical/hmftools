@@ -31,6 +31,10 @@
             <artifactId>commons-dbcp2</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
         </dependency>
@@ -127,7 +131,7 @@
                     </jdbc>
                     <generator>
                         <database>
-                            <name>org.jooq.util.mysql.MySQLDatabase</name>
+                            <name>org.jooq.meta.mysql.MySQLDatabase</name>
                             <includes>.*</includes>
                             <inputSchema>hmfpatients_test</inputSchema>
                         </database>

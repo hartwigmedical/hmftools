@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 
-public class CoverageCalcTask implements Callable
+public class CoverageCalcTask implements Callable<Long>
 {
     private final int mId;
     private final List<HlaComplex> mComplexes;

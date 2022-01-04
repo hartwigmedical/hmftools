@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import java.time.LocalDate;
-
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,11 +11,6 @@ final public class DatabaseUtil {
     }
 
     public static final int DB_BATCH_INSERT_SIZE = 1000;
-
-    @Nullable
-    public static java.sql.Date sqlDate(@Nullable LocalDate date) {
-        return date != null ? java.sql.Date.valueOf(date) : null;
-    }
 
     @Nullable
     public static Double decimal(@Nullable Double number) {

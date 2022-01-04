@@ -33,17 +33,16 @@ import com.hartwig.hmftools.common.purple.gene.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
-import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.sv.linx.LinxLink;
 import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.sv.linx.LinxViralInsertion;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
@@ -81,6 +80,8 @@ public class DatabaseAccess implements AutoCloseable {
 
     public static final String DB_DEFAULT_ARGS = "?serverTimezone=UTC&useSSL=false";
 
+    @NotNull
+    private final Connection connection;
     @NotNull
     private final DSLContext context;
     @NotNull
@@ -137,12 +138,13 @@ public class DatabaseAccess implements AutoCloseable {
     private final ProtectDAO protectDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
-        // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        Connection conn = DriverManager.getConnection(url, userName, password);
-        String catalog = conn.getCatalog();
-        LOGGER.debug("Connecting to database {}", catalog);
-        this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
+        System.setProperty("org.jooq.no-tips", "true");
+
+        this.connection = DriverManager.getConnection(url, userName, password);
+        String catalog = connection.getCatalog();
+        LOGGER.debug("Connecting to database '{}'", catalog);
+        this.context = DSL.using(connection, SQLDialect.MYSQL, settings(catalog));
 
         this.ecrfDAO = new EcrfDAO(context);
         this.clinicalDAO = new ClinicalDAO(context);
@@ -226,15 +228,21 @@ public class DatabaseAccess implements AutoCloseable {
 
     @Override
     public void close() {
-        context.close();
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOGGER.error("DB connection close failed: {}", e.toString());
+        }
     }
 
     @Nullable
     private static Settings settings(@NotNull String catalog) {
-        return !catalog.equals(DEV_CATALOG)
-                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
-                .withOutput(catalog)))
-                : null;
+        if (catalog.equals(DEV_CATALOG)) {
+            return null;
+        }
+
+        return new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
+                .withOutput(catalog)));
     }
 
     @NotNull
@@ -428,13 +436,13 @@ public class DatabaseAccess implements AutoCloseable {
         geneCopyNumberDAO.writeGermlineDeletions(sample, deletions);
     }
 
-    public void writeLinxDriverCatalog(
-            @NotNull String sample, @NotNull  List<DriverCatalog> driverCatalog, final EnumSet<DriverType> driverTypes) {
+    public void writeLinxDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog,
+            final EnumSet<DriverType> driverTypes) {
         driverCatalogDAO.writeLinxDrivers(sample, driverCatalog, driverTypes);
     }
 
-    public void writePurpleDriverCatalog(
-            @NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog) {
+    public void writePurpleDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog,
+            @NotNull List<DriverCatalog> germlineCatalog) {
         driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
     }
 

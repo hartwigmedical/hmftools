@@ -17,18 +17,18 @@ import org.junit.Test;
 public class EvidenceReportingCurationTest {
 
     @Test
-    public void canApplyEventBlacklist() {
-        String event1 = "any event";
-        String event2 = "TP53 loss";
+    public void canApplyGeneBlacklist() {
+        String gene1 = "any gene";
+        String gene2 = "TP53";
 
-        ProtectEvidence evidence1 = testEvidenceBuilder().genomicEvent(event1).reported(true).build();
-        ProtectEvidence evidence2 = testEvidenceBuilder().genomicEvent(event2).reported(true).build();
+        ProtectEvidence evidence1 = testEvidenceBuilder().gene(gene1).reported(true).build();
+        ProtectEvidence evidence2 = testEvidenceBuilder().gene(gene2).reported(true).build();
 
         List<ProtectEvidence> evidence = EvidenceReportingCuration.applyReportingBlacklist(Lists.newArrayList(evidence1, evidence2));
         assertEquals(2, evidence.size());
         assertTrue(evidence.contains(evidence1));
 
-        ProtectEvidence blacklisted = findByEvent(evidence, event2);
+        ProtectEvidence blacklisted = findByGene(evidence, gene2);
         assertFalse(blacklisted.reported());
     }
 
@@ -60,13 +60,13 @@ public class EvidenceReportingCurationTest {
     }
 
     @NotNull
-    private static ProtectEvidence findByEvent(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String event) {
+    private static ProtectEvidence findByGene(@NotNull Iterable<ProtectEvidence> evidences, @NotNull String gene) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.genomicEvent().equals(event)) {
+            if (gene.equals(evidence.gene())) {
                 return evidence;
             }
         }
 
-        throw new IllegalStateException("Could not find evidence with genomic event: " + event);
+        throw new IllegalStateException("Could not find evidence with gene: " + gene);
     }
 }

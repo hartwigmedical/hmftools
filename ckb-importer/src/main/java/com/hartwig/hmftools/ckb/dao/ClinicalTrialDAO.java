@@ -60,7 +60,7 @@ class ClinicalTrialDAO {
                 CLINICALTRIAL.SPONSORS,
                 CLINICALTRIAL.VARIANTREQUIREMENT)
                 .values(ckbEntryId,
-                        Util.sqlDate(clinicalTrial.updateDate()),
+                        clinicalTrial.updateDate(),
                         clinicalTrial.nctId(),
                         clinicalTrial.title(),
                         clinicalTrial.phase(),

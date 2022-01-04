@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import java.sql.Timestamp;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
@@ -21,7 +20,7 @@ public class CuppaDAO {
 
     void writeCuppa(@NotNull String sample, @NotNull MolecularTissueOrginData molecularTissueOrginData) {
         deleteCuppaForSample(sample);
-        Timestamp timestamp = new Timestamp(new Date().getTime());
+        LocalDateTime timestamp = LocalDateTime.now();
 
         context.insertInto(CUPPA, CUPPA.MODIFIED, CUPPA.SAMPLEID, CUPPA.CUPPATUMORLOCATION, CUPPA.CUPPAPREDICTION)
                 .values(timestamp, sample, molecularTissueOrginData.predictedOrigin(), molecularTissueOrginData.predictionLikelihood())

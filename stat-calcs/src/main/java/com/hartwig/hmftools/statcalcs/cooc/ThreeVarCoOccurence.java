@@ -61,7 +61,7 @@ public class ThreeVarCoOccurence
         initialiseOutput(outputFile);
 
         mSamples = Lists.newArrayList();
-        mGroupingSampleGenericData = new HashMap();
+        mGroupingSampleGenericData = new HashMap<>();
         mGroupingValues = Lists.newArrayList();
         mCat1Values = Lists.newArrayList();
         mCat2Values = Lists.newArrayList();

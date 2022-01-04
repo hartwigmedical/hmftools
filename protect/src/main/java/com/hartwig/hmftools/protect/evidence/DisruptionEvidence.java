@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.serve.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
@@ -41,12 +42,29 @@ public class DisruptionEvidence {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableGene actionable : actionableGenes) {
             if (actionable.gene().equals(reportable.gene())) {
-                ProtectEvidence evidence =
-                        personalizedEvidenceFactory.somaticReportableEvidence(actionable).genomicEvent(reportable.genomicEvent()).build();
+                ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(actionable)
+                        .gene(reportable.gene())
+                        .event("homozygous disruption")
+                        .evidenceType(fromGeneLevelEvent(actionable.event()))
+                        .build();
                 result.add(evidence);
             }
         }
 
         return result;
+    }
+
+    @NotNull
+    private static ProtectEvidenceType fromGeneLevelEvent(@NotNull GeneLevelEvent event) {
+        switch (event) {
+            case ANY_MUTATION:
+                return ProtectEvidenceType.ANY_MUTATION;
+            case DELETION:
+                return ProtectEvidenceType.DELETION;
+            case INACTIVATION:
+                return ProtectEvidenceType.INACTIVATION;
+            default:
+                throw new IllegalStateException("Gene level event found in disruption evidence that should not exist: " + event);
+        }
     }
 }

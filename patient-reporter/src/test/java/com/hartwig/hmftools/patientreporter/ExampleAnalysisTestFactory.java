@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.cnchromosome.CnPerChromosomeArmData;
 import com.hartwig.hmftools.common.purple.cnchromosome.ImmutableCnPerChromosomeArmData;
@@ -321,80 +322,82 @@ public final class ExampleAnalysisTestFactory {
     private static List<ProtectEvidence> createCOLO829TumorSpecificEvidence() {
         List<ProtectEvidence> evidenceItemsOnLabel = Lists.newArrayList();
 
-        ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder();
+        ImmutableProtectEvidence.Builder onLabelBuilder =
+                ImmutableProtectEvidence.builder().evidenceType(ProtectEvidenceType.ANY_MUTATION).onLabel(true);
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Cobimetinib + Vemurafenib")
-                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .urls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .build());
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Dabrafenib")
-                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .urls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .build());
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Dabrafenib + Trametinib")
-                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25399551", "https://www.google.com/#q=FDA"))
                 .build());
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Trametinib")
-                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .urls(Lists.newArrayList("https://www.google.com/#q=FDA"))
                 .build());
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Vemurafenib")
-                .onLabel(true)
                 .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
-                .urls(Lists.newArrayList("https://www.google.com/#q=NCCN", "http://www.ncbi.nlm.nih.gov/pubmed/21639808",
+                .urls(Lists.newArrayList("https://www.google.com/#q=NCCN",
+                        "http://www.ncbi.nlm.nih.gov/pubmed/21639808",
                         "https://www.google.com/#q=FDA"))
                 .build());
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("RO4987655")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/24947927"))
                 .build());
 
-        evidenceItemsOnLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("Buparlisib + Carboplatin + Paclitaxel")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
@@ -407,112 +410,111 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static List<ProtectEvidence> createCOLO829ClinicalTrials() {
         List<ProtectEvidence> trialsOnLabel = Lists.newArrayList();
-        ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder();
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        ImmutableProtectEvidence.Builder onLabelBuilder =
+                ImmutableProtectEvidence.builder().evidenceType(ProtectEvidenceType.ANY_MUTATION).onLabel(true);
+
+        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Array 818-103")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/13054"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("CLXH254C12201")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/13660"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("COWBOY")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://iclusion.org/hmf/12301"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("COWBOY")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/12301"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        trialsOnLabel.add(onLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("EBIN (EORTC-1612-MG)")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/11284"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("High tumor mutation load")
+        trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .germline(false)
                 .reported(true)
                 .treatment("BASKET OF BASKETS (VHIO17002)")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/11087"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("High tumor mutation load")
+        trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/10299"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("High tumor mutation load")
+        trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
                 .germline(false)
                 .reported(true)
                 .treatment("KEYNOTE-158")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
                 .urls(Lists.newArrayList("https://trial-eye.com/hmf/4866"))
                 .build());
 
-        trialsOnLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        trialsOnLabel.add(onLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
-                .onLabel(true)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.ICLUSION))
@@ -526,35 +528,36 @@ public final class ExampleAnalysisTestFactory {
     private static List<ProtectEvidence> createCOLO829OffLabelEvidence() {
         List<ProtectEvidence> evidenceItemsOffLabel = Lists.newArrayList();
 
-        ImmutableProtectEvidence.Builder onLabelBuilder = ImmutableProtectEvidence.builder();
+        ImmutableProtectEvidence.Builder offLabelBuilder =
+                ImmutableProtectEvidence.builder().evidenceType(ProtectEvidenceType.ANY_MUTATION).onLabel(false);
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Bevacizumab")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024", "http://www.ncbi.nlm.nih.gov/pubmed/19571295"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("CI-1040")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506", "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Cetuximab")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
@@ -566,55 +569,55 @@ public final class ExampleAnalysisTestFactory {
                         "http://www.ncbi.nlm.nih.gov/pubmed/25666295"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Cetuximab + Irinotecan + Vemurafenib")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/27729313"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Fluorouracil")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Irinotecan")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Oxaliplatin")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/19603024"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Panitumumab")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI, Knowledgebase.VICC_CIVIC))
@@ -624,88 +627,88 @@ public final class ExampleAnalysisTestFactory {
                         "http://www.ncbi.nlm.nih.gov/pubmed/20619739"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Selumetinib")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/22492957"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Sorafenib")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/18682506", "http://www.ncbi.nlm.nih.gov/pubmed/21882184"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("BRAF p.Val600Glu")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
+                .event("p.Val600Glu")
                 .germline(false)
                 .reported(true)
                 .treatment("Vemurafenib")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/26287849"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("Anti-EGFR monoclonal antibody")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CGI))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703", "http://www.ncbi.nlm.nih.gov/pubmed/19398573"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("Cetuximab")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/21163703"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("Everolimus")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/23989949"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("Lapatinib + Trastuzumab")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))
                 .urls(Lists.newArrayList("http://www.ncbi.nlm.nih.gov/pubmed/25300346"))
                 .build());
 
-        evidenceItemsOffLabel.add(onLabelBuilder.genomicEvent("PTEN partial loss")
+        evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
+                .event("partial loss")
                 .germline(false)
                 .reported(true)
                 .treatment("Trastuzumab")
-                .onLabel(false)
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESISTANT)
                 .sources(Sets.newHashSet(Knowledgebase.VICC_CIVIC))

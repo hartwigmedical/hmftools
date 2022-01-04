@@ -527,7 +527,7 @@ public class FusionLikelihoodTest
         likelihoodCalc.initialise(delLengths, 0);
         likelihoodCalc.generateSameGeneCounts(geneData);
 
-        Integer overlapCount = new Integer((100 * 100) * 3);
+        Integer overlapCount = Integer.valueOf((100 * 100) * 3);
 
         assertEquals(1, geneData.getDelFusionBaseCounts().size());
         assertEquals(overlapCount, geneData.getDelFusionBaseCounts().get(0));

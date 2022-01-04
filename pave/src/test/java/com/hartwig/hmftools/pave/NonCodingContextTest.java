@@ -137,8 +137,8 @@ public class NonCodingContextTest
     {
         int[] exonStarts = { 10, 30, 50, 70, 90 };
 
-        Integer codingStart = new Integer(35);
-        Integer codingEnd = new Integer(55);
+        Integer codingStart = Integer.valueOf(35);
+        Integer codingEnd = Integer.valueOf(55);
 
         TranscriptData transDataPos = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -224,8 +224,8 @@ public class NonCodingContextTest
     {
         int[] exonStarts = { 10, 30, 50, 70, 90 };
 
-        Integer codingStart = new Integer(35);
-        Integer codingEnd = new Integer(55);
+        Integer codingStart = Integer.valueOf(35);
+        Integer codingEnd = Integer.valueOf(55);
 
         TranscriptData transDataNeg = createTransExons(
                 GENE_ID_1, TRANS_ID_1, NEG_STRAND, exonStarts, 10, codingStart, codingEnd, false, "");
@@ -316,8 +316,8 @@ public class NonCodingContextTest
         refGenome.RefGenomeMap.put(CHR_1, refBases);
 
         int[] exonStarts = { 100, 200, 300, 400 };
-        Integer codingStart = new Integer(125);
-        Integer codingEnd = new Integer(425);
+        Integer codingStart = Integer.valueOf(125);
+        Integer codingEnd = Integer.valueOf(425);
 
         TranscriptData transDataPosStrand = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, exonStarts, 50, codingStart, codingEnd, false, "");

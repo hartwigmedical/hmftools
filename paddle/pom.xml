@@ -32,8 +32,8 @@
         </dependency>
 
         <dependency>
-            <groupId>io.kotlintest</groupId>
-            <artifactId>kotlintest</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -52,8 +52,8 @@ class TherapyDAO {
                 THERAPY.THERAPYNAME,
                 THERAPY.DESCRIPTION)
                 .values(therapy.id(),
-                        Util.sqlDate(therapy.createDate()),
-                        Util.sqlDate(therapy.updateDate()),
+                        therapy.createDate(),
+                        therapy.updateDate(),
                         therapy.therapyName(),
                         therapy.description())
                 .returning(THERAPY.ID)
@@ -103,7 +103,7 @@ class TherapyDAO {
                 DRUG.DESCRIPTION)
                 .values(therapyId,
                         drug.id(),
-                        Util.sqlDate(drug.createDate()),
+                        drug.createDate(),
                         drug.drugName(),
                         drug.tradeName(),
                         drug.casRegistryNum(),
@@ -115,7 +115,7 @@ class TherapyDAO {
 
         for (DrugClass drugClass : drug.drugClasses()) {
             context.insertInto(DRUGCLASS, DRUGCLASS.DRUGID, DRUGCLASS.CKBDRUGCLASSID, DRUGCLASS.CREATEDATE, DRUGCLASS.DRUGCLASS_)
-                    .values(id, drugClass.id(), Util.sqlDate(drugClass.createDate()), drugClass.drugClass())
+                    .values(id, drugClass.id(), drugClass.createDate(), drugClass.drugClass())
                     .execute();
         }
 

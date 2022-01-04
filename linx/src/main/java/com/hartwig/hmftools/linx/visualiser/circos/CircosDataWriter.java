@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -27,16 +29,16 @@ import com.hartwig.hmftools.linx.visualiser.data.AdjustedPositions;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.Gene;
+import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.data.VisSvData;
 import com.hartwig.hmftools.linx.visualiser.data.VisLinks;
-import com.hartwig.hmftools.linx.visualiser.data.Segment;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExon;
 
 import org.jetbrains.annotations.NotNull;
 
 public class CircosDataWriter
 {
-    private static final DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###");
+    private static final DecimalFormat RATIO_FORMAT = new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     private static final DecimalFormat POSITION_FORMAT = new DecimalFormat("#,###");
     private static final String SINGLE_BLUE = "(107,174,214)";
     private static final String SINGLE_RED = "(214,144,107)";
@@ -633,10 +635,10 @@ public class CircosDataWriter
 
         if (value < 99_950)
         {
-            return String.format("%.1fk", value / 1_000d);
+            return String.format(Locale.ENGLISH, "%.1fk", value / 1_000d);
         }
 
-        return String.format("%.1fm", value / 1_000_000d);
+        return String.format(Locale.ENGLISH, "%.1fm", value / 1_000_000d);
     }
 
 }

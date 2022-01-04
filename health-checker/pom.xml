@@ -25,12 +25,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hartwig</groupId>
-            <artifactId>hmf-common</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>

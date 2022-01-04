@@ -19,7 +19,8 @@ public final class ProtectTestFactory {
     @NotNull
     public static ImmutableProtectEvidence.Builder testEvidenceBuilder() {
         return ImmutableProtectEvidence.builder()
-                .genomicEvent(Strings.EMPTY)
+                .event(Strings.EMPTY)
+                .evidenceType(ProtectEvidenceType.ANY_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment(Strings.EMPTY)
