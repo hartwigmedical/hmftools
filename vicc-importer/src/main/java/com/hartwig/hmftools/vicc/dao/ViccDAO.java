@@ -79,9 +79,12 @@ public class ViccDAO {
 
     @NotNull
     public static ViccDAO connectToViccDAO(@NotNull String userName, @NotNull String password, @NotNull String url) throws SQLException {
+        System.setProperty("org.jooq.no-logo", "true");
+        System.setProperty("org.jooq.no-tips", "true");
+
         Connection conn = DriverManager.getConnection(url, userName, password);
         String catalog = conn.getCatalog();
-        LOGGER.info("Connecting to database {}", catalog);
+        LOGGER.info("Connecting to database '{}'", catalog);
 
         return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
     }
