@@ -1,12 +1,14 @@
 
-### Example Usage
+## Germline Linx
+Linx may be run in a germline mode which chains on proximity only and does not rely on copy number.  It is optimised to detect germline pathogenic structural variants.
+## Example Usage
 This is a typical command to run LINX for a single sample from PURPLE output.
 
 ```
 java -jar linx.jar 
 TO DO!!!!!!!!!!!
 ```
-### Algorithm
+## Algorithm
 For the Germline, LINX is run in a limited mode  where we perform only the following operations
 - Artefact filtering
 - Proximity clustering
