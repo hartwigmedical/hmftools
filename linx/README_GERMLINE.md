@@ -26,7 +26,7 @@ Disruptive breakends are marked as ‘reportable’ and added to the driver cata
 The impacted gene has been configured as report_germline_disruptions=”TRUE” in the driver gene panel.
 - CohortFrequency (ie PonCount) < 3
 
-The following output is produced i
+## Output
 
 Field | Description
 --|--
