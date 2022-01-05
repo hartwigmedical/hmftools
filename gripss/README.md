@@ -71,7 +71,7 @@ PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
 
-We also have 7 special filters applying to specific  variant categories:
+We also have 8 special filters applying to specific  variant categories:
 
 Filter | Default | Scope | Description 
 ---|---|---|---
