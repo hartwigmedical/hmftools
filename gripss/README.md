@@ -67,7 +67,7 @@ maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample 
 minTumorAF | 0.005 (SGL:0.015) | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
 discordantPairSupport | TRUE | Breakpoints (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes. 
-PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
+PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
 
