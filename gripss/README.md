@@ -27,9 +27,8 @@ These two files are used in purple as the structural variant recovery vcf and st
 
 The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
 
-## Tumor-only mode
-The `reference` argument is optional and if not supplied, GRIPSS will run in tumor-only mode in which case  all filters that require the normal sample are de-activated. This includes
-`minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`, `discordantPairSupport`
+## Tumor-only / Germline mode
+The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.   GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.   In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below)
  
 # Algorithm
 
@@ -61,7 +60,7 @@ The following filters are applied to all variants
 
 Filter | Default | Description / purpose
 ---|---|---
-minQual | 400 (SGL:500) | Minimum absolute tumor support for variant
+minQual | 400 (SGL:500) | Minimum absolute tumor support for variant.   For PMS2 (an important MMR gene) only (including 10kb upstream and downstream) the minimum qual is set to half the normal value due to the poor mappability of PMS2 due to it's close homolog PMS2CL.
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
 minTumorAF | 0.005 (SGL:0.015) | Low AF variants in high depth regions may be artefacts
