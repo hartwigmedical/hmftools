@@ -72,6 +72,10 @@ public class FusionData implements ComparableItem
 
     public String description()
     {
-        return String.format("%s%s", Fusion.name(), Fusion.reportedType());
+        return String.format("%s_%s", Fusion.name(), Fusion.reportedType());
     }
+
+    @Override
+    public String gene() { return GeneMappedName; }
+
 }

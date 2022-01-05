@@ -59,7 +59,8 @@ public class LinxSvComparer implements ItemComparer
                 if(mConfig.Categories.containsKey(SV))
                 {
                     mismatches.add(new Mismatch(
-                            SV, PRESENCE, mismatch.RefSource, mismatch.OtherSource, mismatch.Reportable, mismatch.ItemName, ""));
+                            SV, PRESENCE, mismatch.RefSource, mismatch.OtherSource, mismatch.Reportable, mismatch.
+                            ItemName, mismatch.Gene, ""));
                 }
             }
             else if(mConfig.Categories.containsKey(LINX_DATA))

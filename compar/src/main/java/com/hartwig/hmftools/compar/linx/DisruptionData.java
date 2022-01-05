@@ -15,27 +15,35 @@ import org.apache.commons.compress.utils.Lists;
 
 public class DisruptionData implements ComparableItem
 {
-    public final LinxBreakend Breakend;
+    public final String MappedGeneName;
 
-    public DisruptionData(final LinxBreakend breakend)
+    private final List<LinxBreakend> mBreakends;
+
+    public DisruptionData(final String mappedName)
     {
-        Breakend = breakend;
+        MappedGeneName = mappedName;
+        mBreakends = Lists.newArrayList();
     }
+
+    public final List<LinxBreakend> breakends() { return mBreakends; }
 
     @Override
     public Category category() { return DISRUPTION; }
 
     @Override
-    public boolean reportable() { return Breakend.reportedDisruption(); }
+    public boolean reportable() { return mBreakends.stream().anyMatch(x -> x.reportedDisruption()); }
+
+    public boolean hasDisruptive() { return mBreakends.stream().anyMatch(x -> x.disruptive()); }
 
     @Override
     public boolean matches(final ComparableItem other)
     {
         final DisruptionData otherBreakend = (DisruptionData)other;
 
-        if(!otherBreakend.Breakend.gene().equals(Breakend.gene()))
+        if(!otherBreakend.MappedGeneName.equals(MappedGeneName))
             return false;
 
+        /*
         if(!otherBreakend.Breakend.transcriptId().equals(Breakend.transcriptId()))
             return false;
 
@@ -50,6 +58,7 @@ public class DisruptionData implements ComparableItem
 
         if(otherBreakend.Breakend.isStart() != Breakend.isStart())
             return false;
+        */
 
         return true;
     }
@@ -61,8 +70,8 @@ public class DisruptionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, "reported", Breakend.reportedDisruption(), otherBreakend.Breakend.reportedDisruption());
-        checkDiff(diffs, "disruptive", Breakend.disruptive(), otherBreakend.Breakend.disruptive());
+        checkDiff(diffs, "reported", reportable(), otherBreakend.reportable());
+        checkDiff(diffs, "disruptive", hasDisruptive(), otherBreakend.hasDisruptive());
 
         if(matchLevel == REPORTABLE)
             return diffs;
@@ -73,6 +82,11 @@ public class DisruptionData implements ComparableItem
     @Override
     public String description()
     {
-        return String.format("%d_%s_%s", Breakend.svId(), Breakend.isStart(), Breakend.gene());
+        return String.format("%s_%s_%d", MappedGeneName, reportable(), mBreakends.size());
+        // return String.format("%d_%s_%s", Breakend.svId(), Breakend.isStart(), Breakend.gene());
     }
+
+    @Override
+    public String gene() { return MappedGeneName; }
+
 }

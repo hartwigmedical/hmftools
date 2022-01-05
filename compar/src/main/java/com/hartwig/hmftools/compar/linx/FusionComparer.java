@@ -18,6 +18,8 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+import org.apache.commons.compress.utils.Lists;
+
 public class FusionComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
@@ -39,27 +41,41 @@ public class FusionComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
     {
-        return dbAccess.readFusions(sampleId).stream()
-                .filter(x -> !x.reportedType().equals(KnownFusionType.NONE.toString()))
-                .map(x -> new FusionData(x, getGeneMappedName(x.name()))).collect(Collectors.toList());
+        List<LinxFusion> fusions = dbAccess.readFusions(sampleId);
+        return processFusions(fusions);
     }
 
     @Override
     public List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources)
     {
-        final List<ComparableItem> comparableItems = com.google.common.collect.Lists.newArrayList();
-
         try
         {
             List<LinxFusion> fusions = LinxFusion.read(LinxFusion.generateFilename(fileSources.Linx, sampleId));
 
-            fusions.stream()
-                    .filter(x -> !x.reportedType().equals(KnownFusionType.NONE.toString()))
-                    .forEach(x -> comparableItems.add(new FusionData(x, getGeneMappedName(x.name()))));
+            return processFusions(fusions);
         }
         catch(IOException e)
         {
             CMP_LOGGER.info("sample({}) failed to load Linx fusion data: {}", sampleId, e.toString());
+            return Lists.newArrayList();
+        }
+    }
+
+    private List<ComparableItem> processFusions(final List<LinxFusion> fusions)
+    {
+        final List<ComparableItem> comparableItems = Lists.newArrayList();
+
+        for(LinxFusion fusion : fusions)
+        {
+            if(fusion.reportedType().equals(KnownFusionType.NONE.toString()))
+                continue;
+
+            String mappedFusionName = getGeneMappedName(fusion.name());
+
+            if(mappedFusionName == null)
+                continue;
+
+            comparableItems.add(new FusionData(fusion, mappedFusionName));
         }
 
         return comparableItems;
@@ -71,6 +87,12 @@ public class FusionComparer implements ItemComparer
         if(genes.length != 2)
             return fusionName;
 
-        return mConfig.getGeneMappedName(genes[0]) + "_" + mConfig.getGeneMappedName(genes[1]);
+        String upGeneName = mConfig.getGeneMappedName(genes[0]);
+        String downGeneName = mConfig.getGeneMappedName(genes[1]);
+
+        if(upGeneName == null || downGeneName == null)
+            return null;
+
+        return upGeneName  + "_" + downGeneName;
     }
 }

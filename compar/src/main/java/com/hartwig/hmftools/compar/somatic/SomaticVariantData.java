@@ -75,4 +75,8 @@ public class SomaticVariantData implements ComparableItem
         return String.format("%s:%d %s>%s %s",
                 Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.type());
     }
+
+    @Override
+    public String gene() { return Variant.gene(); }
+
 }

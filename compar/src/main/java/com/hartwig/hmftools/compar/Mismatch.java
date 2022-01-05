@@ -12,11 +12,12 @@ public class Mismatch
     public final String RefSource;
     public final String OtherSource;
     public final String ItemName;
+    public final String Gene; // if applicable
     public final String DiffValue;
 
     public Mismatch(
             final Category category, final MismatchType mismatchType, final String refSource, final String otherSource,
-            final boolean reportable, final String itemName, final String diffValue)
+            final boolean reportable, final String itemName, final String gene, final String diffValue)
     {
         Category = category;
         MismatchType = mismatchType;
@@ -24,12 +25,13 @@ public class Mismatch
         RefSource = refSource;
         OtherSource = otherSource;
         ItemName = itemName;
+        Gene = gene;
         DiffValue = diffValue;
     }
 
     public static String header()
     {
-        return "Category,MismatchType,Reportable,RefSource,OtherSource,Item,Diff";
+        return "Category,MismatchType,Reportable,RefSource,OtherSource,Item,Gene,Diff";
     }
 
     public String toCsv()
@@ -41,6 +43,7 @@ public class Mismatch
         sj.add(RefSource);
         sj.add(OtherSource);
         sj.add(ItemName);
+        sj.add(Gene);
         sj.add(DiffValue);
         return sj.toString();
     }

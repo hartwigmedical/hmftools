@@ -65,4 +65,7 @@ public class CopyNumberData implements ComparableItem
                 CopyNumber.chromosome(), CopyNumber.start(), CopyNumber.end(),
                 CopyNumber.segmentStartSupport(), CopyNumber.segmentEndSupport());
     }
+
+    @Override
+    public String gene() { return ""; }
 }

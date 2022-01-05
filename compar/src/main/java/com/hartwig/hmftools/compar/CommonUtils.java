@@ -192,7 +192,7 @@ public class CommonUtils
 
                             mismatches.add(new Mismatch(
                                     item1.category(), VALUE, source1, source2, eitherReportable,
-                                    item1.description(), differencesStr.toString()));
+                                    item1.description(), item1.gene(), differencesStr.toString()));
                         }
                     }
 
@@ -209,10 +209,12 @@ public class CommonUtils
         }
 
         items1.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source1, source2, x.reportable(), x.description(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source1, source2,
+                        x.reportable(), x.description(), x.gene(), "")));
 
         items2.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
-                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source2, source1, x.reportable(), x.description(), "")));
+                .forEach(x -> mismatches.add(new Mismatch(x.category(), PRESENCE, source2, source1,
+                        x.reportable(), x.description(),  x.gene(),"")));
     }
 
 }

@@ -14,4 +14,5 @@ public interface ComparableItem
 
     String description();
 
+    String gene();
 }

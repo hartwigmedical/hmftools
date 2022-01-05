@@ -107,4 +107,7 @@ public class LinxSvData implements ComparableItem
         return String.format("%d_%s %s_%d - %s_%d",
                 SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition());
     }
+
+    @Override
+    public String gene() { return ""; }
 }

@@ -61,4 +61,8 @@ public class PurityData implements ComparableItem
         return String.format("%s_%.2f_%.2f",
                 Purity.qc().pass(), Purity.bestFit().purity(), Purity.bestFit().ploidy());
     }
+
+    @Override
+    public String gene() { return ""; }
+
 }
