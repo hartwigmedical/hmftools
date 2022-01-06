@@ -18,4 +18,6 @@ public abstract class VirusReportingDb {
     @Nullable
     public abstract Integer nonIntegratedMinimalCoverage();
 
+    @Nullable
+    public abstract Boolean isHighRisk();
 }

@@ -53,10 +53,17 @@ public class VirusInterpreterAlgo {
                             ? coveragesAnalysis.expectedClonalCoverage()
                             : null)
                     .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status()))
+                    .isHighRisk(isHighRiskVirus(virusBreakend))
                     .build());
         }
 
         return annotatedViruses;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    Boolean isHighRiskVirus(@NotNull VirusBreakend virusBreakend) {
+        return virusReportingDbModel.isHighRiskVirus(virusBreakend.taxidSpecies());
     }
 
     @VisibleForTesting

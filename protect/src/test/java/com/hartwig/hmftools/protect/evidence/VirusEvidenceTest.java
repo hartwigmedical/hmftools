@@ -63,14 +63,15 @@ public class VirusEvidenceTest {
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportable = Lists.newArrayList();
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("MCV").reported(true).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(true).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(true).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(false).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("MCV").reported(true).isHighRisk(null).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(true).isHighRisk(null).build());
 
         List<AnnotatedVirus> unreported = Lists.newArrayList();
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(false).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).isHighRisk(null).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).isHighRisk(null).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(false).isHighRisk(null).build());
 
         return ImmutableVirusInterpreterData.builder().unreportedViruses(unreported).reportableViruses(reportable).build();
     }

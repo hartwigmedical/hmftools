@@ -1,2 +1,4 @@
-taxidSpecies	virusName	integratedMinimalCoverage	nonIntegratedMinimalCoverage
+taxidSpecies	virusName	integratedMinimalCoverage	nonIntegratedMinimalCoverage	isHighRisk
 1	MCV		90
+2	MCV		90	true
+3	MCV		90	false

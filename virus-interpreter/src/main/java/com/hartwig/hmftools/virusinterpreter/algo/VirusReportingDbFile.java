@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,15 +30,23 @@ public final class VirusReportingDbFile {
 
         for (String line : linesVirusReportingDb.subList(1, linesVirusReportingDb.size())) {
             String[] parts = line.split(SEPARATOR);
+            ImmutableVirusReportingDb.Builder virusReportingDbBuilder = ImmutableVirusReportingDb.builder();
             if (parts.length == 4) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
-                VirusReportingDb virusReportingDb = ImmutableVirusReportingDb.builder()
-                        .virusInterpretation(parts[1].trim())
+                virusReportingDbBuilder.virusInterpretation(parts[1].trim())
                         .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
                         .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
-                        .build();
-                speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDb);
-            } else {
+                        .isHighRisk(null);
+                speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDbBuilder.build());
+            } else if (parts.length == 5) {
+                int speciesTaxid = Integer.parseInt(parts[0].trim());
+                virusReportingDbBuilder.virusInterpretation(parts[1].trim())
+                        .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
+                        .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
+                        .isHighRisk(parts[4].trim().isEmpty() ? null : parts[4].trim().equals("true"));
+                speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDbBuilder.build());
+
+            }else {
                 LOGGER.warn("Suspicious line detected in virus reporting db tsv: {}", line);
             }
         }

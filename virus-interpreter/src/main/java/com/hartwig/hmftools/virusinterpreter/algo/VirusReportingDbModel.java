@@ -34,6 +34,18 @@ public class VirusReportingDbModel {
     }
 
     @Nullable
+    public Boolean isHighRiskVirus(int speciesTaxid) {
+        boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
+        if (!speciesHasInterpretation) {
+            LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
+        }
+
+        VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
+
+        return speciesHasInterpretation ? virusReportingDb.isHighRisk() : null;
+    }
+
+    @Nullable
     public Integer integratedMinimalCoverage(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
         if (!speciesHasInterpretation) {

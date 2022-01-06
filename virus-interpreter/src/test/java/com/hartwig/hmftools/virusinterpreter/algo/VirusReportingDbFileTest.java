@@ -19,17 +19,29 @@ public class VirusReportingDbFileTest {
     @Test
     public void canReadVirusReportingDbTsv() throws IOException {
         VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(VIRUS_REPORTING_DB_TSV);
-        assertEquals(1, virusReportingDbModel.count());
+        assertEquals(3, virusReportingDbModel.count());
+
 
         assertTrue(virusReportingDbModel.hasInterpretation(1));
-        assertFalse(virusReportingDbModel.hasInterpretation(2));
-
         assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(1));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(1));
+        assertNull(virusReportingDbModel.isHighRiskVirus(1));
 
+        assertTrue(virusReportingDbModel.hasInterpretation(2));
+        assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(2));
+        assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(2));
+        assertNull(virusReportingDbModel.integratedMinimalCoverage(2));
+        assertTrue(virusReportingDbModel.isHighRiskVirus(2));
+
+        assertTrue(virusReportingDbModel.hasInterpretation(3));
+        assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(3));
+        assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(3));
+        assertNull(virusReportingDbModel.integratedMinimalCoverage(3));
+        assertFalse(virusReportingDbModel.isHighRiskVirus(3));
+
+        assertFalse(virusReportingDbModel.hasInterpretation(4));
         assertNotEquals("HPV", virusReportingDbModel.interpretVirusSpecies(2));
-
         assertNull(virusReportingDbModel.interpretVirusSpecies(5));
     }
 }

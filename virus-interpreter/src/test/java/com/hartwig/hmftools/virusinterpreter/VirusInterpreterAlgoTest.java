@@ -91,6 +91,16 @@ public class VirusInterpreterAlgoTest {
     }
 
     @Test
+    public void canDetermineHighRiskVirus() {
+        VirusInterpreterAlgo algo = createTestAlgo();
+
+        assertNull(algo.isHighRiskVirus(createTestVirusBreakendsForHighRiskVirus(1)));
+        assertTrue(algo.isHighRiskVirus(createTestVirusBreakendsForHighRiskVirus(2)));
+        assertFalse(algo.isHighRiskVirus(createTestVirusBreakendsForHighRiskVirus(3)));
+
+    }
+
+    @Test
     public void canReportTest() {
         VirusInterpreterAlgo algo = createTestAlgo();
 
@@ -111,12 +121,21 @@ public class VirusInterpreterAlgoTest {
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
+                .isHighRisk(null)
                 .build();
 
         VirusReportingDb virusReporting2 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
+                .isHighRisk(true)
+                .build();
+
+        VirusReportingDb virusReporting3 = ImmutableVirusReportingDb.builder()
+                .virusInterpretation("EBV")
+                .integratedMinimalCoverage(null)
+                .nonIntegratedMinimalCoverage(null)
+                .isHighRisk(false)
                 .build();
 
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
@@ -126,12 +145,25 @@ public class VirusInterpreterAlgoTest {
         Map<Integer, VirusReportingDb> virusReportingMap = Maps.newHashMap();
         virusReportingMap.put(1, virusReporting1);
         virusReportingMap.put(2, virusReporting2);
+        virusReportingMap.put(3, virusReporting3);
 
         VirusReportingDbModel virusReportingModel = new VirusReportingDbModel(virusReportingMap);
 
         CoveragesAnalysis coveragesAnalysis = ImmutableCoveragesAnalysis.builder().expectedClonalCoverage(34.5).build();
 
         return new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
+    }
+
+    @NotNull
+    private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies) {
+
+        return VirusTestFactory.testVirusBreakendBuilder()
+                .referenceTaxid(1)
+                .taxidGenus(2)
+                .taxidSpecies(taxidSpecies)
+                .integrations(2)
+                .coverage(0)
+                .build();
     }
 
     @NotNull
