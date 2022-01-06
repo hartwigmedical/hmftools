@@ -21,7 +21,7 @@ Report Hotspot | T/F | Report somatic hotspot mutation regardless of other rules
 Likelihood Type | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
 reportGermlineVariant	| 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report any germline variants that meet pathogenic criteria based on specified tumor status
 reportGermlineHotspot | 'WILDTYPE_LOST','NONE', 'ANY','VARIANT_NOT_LOST'| Report hotspot germline pathogenic variants based on specified tumor status
-reportGermlineDisruption | 'TRUE','FALSE'| Report germline deletions or structural variant disruptions
+reportGermlineDisruption | 'TRUE','FALSE'| Report germline gene deletions and structural variant disruptions
 additionalReportedTranscript | <Ensembl Transcript Stable Id> | Ensembl transcripts to report on in addition to the ensembl canonical transcript (eg. CDKN2Ap14Arf). Any drivers on the additional transcript will be added to the driver catalog table as a separate record with canonicalTranscript=0. Copy number data for that transcript will also be added to the geneCopyNumber table and any somatic or germline point mutations will report the effect of the variant on the additional transcript in the otherTranscriptEffects column in somaticVariant and germlineVariant tables. Any breakend impacting the additional transcript will also be reported in the svBreakend table
 
 Up to 3 individual driver catalog records may be added per gene per sample if more than 1 type of event is present: 

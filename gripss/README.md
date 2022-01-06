@@ -27,13 +27,12 @@ These two files are used in purple as the structural variant recovery vcf and st
 
 The bed and bedpe files are available to download from [HMFTools-Resources > Gripss](https://resources.hartwigmedicalfoundation.nl/). Both files need to be sorted by chromosome and start breakend start position.
 
-## Tumor-only mode
-The `reference` argument is optional and if not supplied, GRIPSS will run in tumor-only mode in which case  all filters that require the normal sample are de-activated. This includes
-`minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`, `discordantPairSupport`
+## Tumor-only / Germline mode
+The `reference` argument is optional and if not supplied, GRIPSS will run in 'tumor-only' mode in which case  all filters that require the normal sample are de-activated. This includes `minNormalCoverage`, `minRelativeCoverage`, `maxNormalSupport`, `shortSRNormalSupport`.   GRIPSS can be run in a germline mode by setting the 'sample' to the germline and not supplying a 'reference' argument.   In the hartwig pipeline we use the same filter settings for tumor and germline structural variants in GRIDSS (see below)
  
 # Algorithm
 
-There are 5 steps in GRIPSS described in detail below:
+There are 4 steps in GRIPSS described in detail below:
   1. [Hard filters](#1-hard-filters)
   2. [Realignment](#2-realignment)
   3. [Soft filters](#3-soft-filters)
@@ -51,7 +50,7 @@ Three hard filters are applied upfront before other processing occurs:
 We realign imprecise variants where the breakend can be precisely resolved but the length of the insert sequence is unknown.  By default GRIDSS offsets these variants by the uncertainty of the insert sequence with a wide CIPOS.  GRIPSS realigns the variant to the earliest possible base in the uncertainty window which is the most likely base for the soft clipping.
 
 For the purposes of backwards compatibility we also perform 3 other fixes to correct errors in earlier GRIDSS versions
-* Breakends are shifted to the centre of homology.  
+* Breakends are shifted to the centre of homology.  inexact homology bounds are also realigned
 * Ensure that breakends pairs are internally consistent in their positions
 * Ensure that local and remote inexact homology are internally consistent.
 
@@ -61,22 +60,23 @@ The following filters are applied to all variants
 
 Filter | Default | Description / purpose
 ---|---|---
-minQual | 400 (single breakend:500) | Minimum absolute tumor support for variant
+minQual | 400 (SGL:500) | Minimum absolute tumor support for variant.   For PMS2 (an important MMR gene) only (including 10kb upstream and downstream) the minimum qual is set to half the normal value due to the poor mappability of PMS2 due to it's close homolog PMS2CL.
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
 maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
-minTumorAF | 0.005 | Low AF variants in high depth regions may be artefacts
+minTumorAF | 0.005 (SGL:0.015) | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
-discordantPairSupport | TRUE | Variants (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes.  Single breakends without any assembly read pairs (BASRP=0) are also filtered
-PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  MH is counted in overlap and a 2bp margin of error is allowed for. 
+discordantPairSupport | TRUE | Breakpoints (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes. 
+PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
-singleStrandBias | 0.05 and 0.95 | SGLs must have strand bias within these bounds
 
-We also have 6 special filters applying to specific short variant categories:
+We also have 8 special filters applying to specific  variant categories:
 
 Filter | Default | Scope | Description 
 ---|---|---|---
 minLength | 32 | DEL, DUP & INS | Minimum absolute length (including insert sequence length) for short DEL and DUP SV to be called. 
+minSingleInsertLength | 16 | SGL | Minimum insert sequence length for a single breakend
+singleStrandBias | 0.05<SB<0.95 | SGL (excluding polyA tails) | Minimum/maximum proportion of reads from the forward strand supporting the single breakend
 maxHomLengthShortInv | 6 | INV(<40b) | Very short INV with high homology are a common sequencer artefact
 shortStrandBias | TRUE | INS,DEL & DUP(<1kb) | Short DEL and DUP must be strand balanced
 shortSRTumorSupport | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must be supported by at least 1 split read or in the case of very short DEL and INS at least 1 supporting indel containing read.
@@ -121,9 +121,14 @@ Double stranded break sites can lead to 2 proximate breakends in very close prox
 
 Any breakend that is linked to a PASS breakend (by one of the 3 above rules) and is NOT filtered as DEDUP is rescued from soft filtering and marked as PASS. Breakend pairs that link a pair of genes to make a known pathogenic fusions are also rescued for all soft filters except maxPolyAHomLength.
 
-To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, with combined qual > 1000 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. We define a poly-A tail as either at least 16 of the last 20 bases of the sequence are A or there is a repeat of 10 or more consecutive A or within the last 20 bases of the insert sequence. At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
+To improve detection of mobile element insertions, we also rescue pairs of breakends or breakjunctions which are linked by ‘DSB’ and NOT PON filtered, with combined qual > 500 and with at least one of the breakends having the characteristic poly-A insert sequence tail of a mobile element insertion. We define a poly-A tail as 16 of the last 18 bases of the insert sequence are A. At the insertion site, negative oriented breakends must have poly-A tails at the end of the insert sequence and positive oriented breakends must have poly-T at the start of the insert sequence (if inserted on the reverse strand).
 
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
+
+## Counting Conventions in GRIPSS
+- **Read support** - the count of supporting reads for breakpoints is set to VF field from GRIDSS and for single breakends is set to BVF (with an exception that if a single breakend has BSC=BASRP=BASSR=0 then read support is set to 0).
+- **Qual score** - for breakpoints the qual is set to the qual.   For breakends the BAQ field (ie sum of qual for assembled reads supporting the breakend) is used for the qual except where the insert sequence has a poly-A tail in which case the BQ (qual of all reads supporting the breakend) is used.
+
 
 ## Version History and Download Links
 - [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.0)

@@ -2,6 +2,8 @@
 
 Linx is an annotation, interpretation and [visualisation](./README_VIS.md) tool for structural variants. The primary function of Linx is grouping together individual SV calls into distinct events and properly classify and annotating the event to understand both its mechanism and genomic impact.
 
+Whilst Linx is designed primarily for somatic SV, it can also be run in a more limited [germline mode](./README_GERMLINE.md) to annotate and intepret germline rearrangements
+
 ## Contents
 
 * [Configuration](#configuration)
