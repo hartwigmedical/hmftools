@@ -211,12 +211,15 @@ public class GripssCompareVcfs
                 // filtered vs PASS - likely due to rescue
                 // LINKED_BY local and remote -
 
-                if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
-                || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
+                if(!mKeyByCoords)
                 {
-                    ++diffCount;
-                    writeDiffs(origSv, newSv, "COORDS", makeSvCoords(origSv), makeSvCoords(newSv));
-                    continue;
+                    if(origSv.posStart() != newSv.posStart() || origSv.posEnd() != newSv.posEnd()
+                    || origSv.orientStart() != newSv.orientStart() || origSv.orientEnd() != newSv.orientEnd())
+                    {
+                        ++diffCount;
+                        writeDiffs(origSv, newSv, "COORDS", makeSvCoords(origSv), makeSvCoords(newSv));
+                        continue;
+                    }
                 }
 
                 Breakend origStart = origSv.breakends()[SE_START];
@@ -341,7 +344,7 @@ public class GripssCompareVcfs
             else
                 writer.write("SvId");
 
-            writer.write(",Coords,Type,DiffType,OrigValue,NewValue");
+            writer.write(",Coords,Type,DiffType,OrigValue,NewValue,OrigQual,NewQual,OrigFilters,NewFilters");
             writer.newLine();
 
             return writer;
@@ -372,6 +375,11 @@ public class GripssCompareVcfs
 
             mWriter.write(String.format(",%s,%s,%s,%s,%s",
                     coords, type, diffType, origValue, newValue));
+
+            mWriter.write(String.format(",%.1f,%.1f,%s,%s",
+                    origSv != null ? origSv.breakendStart().Qual : -1, newSv != null ? newSv.breakendStart().Qual : -1,
+                    origSv != null ? filtersStr(origSv.breakendStart().Context.getFilters()) : "",
+                    newSv != null ? filtersStr(newSv.breakendStart().Context.getFilters()) : ""));
 
             mWriter.newLine();
         }
