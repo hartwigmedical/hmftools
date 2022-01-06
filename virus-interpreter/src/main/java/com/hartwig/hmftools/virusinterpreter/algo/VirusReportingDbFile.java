@@ -43,7 +43,7 @@ public final class VirusReportingDbFile {
                 virusReportingDbBuilder.virusInterpretation(parts[1].trim())
                         .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
                         .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
-                        .isHighRisk(parts[4].trim().isEmpty() ? null : parts[4].trim().equals("true"));
+                        .isHighRisk(parts[4].trim().isEmpty() ? null : parts[4].trim().equals("HPV high"));
                 speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDbBuilder.build());
 
             }else {

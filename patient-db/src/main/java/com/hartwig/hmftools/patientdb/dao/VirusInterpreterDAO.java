@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep11;
+import org.jooq.InsertValuesStep12;
 
 public class VirusInterpreterDAO {
 
@@ -28,7 +29,7 @@ public class VirusInterpreterDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<AnnotatedVirus> virusAnnotation : Iterables.partition(virusAnnotations, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep11 inserter = context.insertInto(VIRUSANNOTATION,
+            InsertValuesStep12 inserter = context.insertInto(VIRUSANNOTATION,
                     VIRUSANNOTATION.MODIFIED,
                     VIRUSANNOTATION.SAMPLEID,
                     VIRUSANNOTATION.TAXID,
@@ -39,13 +40,14 @@ public class VirusInterpreterDAO {
                     VIRUSANNOTATION.PERCENTAGECOVERED,
                     VIRUSANNOTATION.MEANCOVERAGE,
                     VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE,
-                    VIRUSANNOTATION.REPORTED);
+                    VIRUSANNOTATION.REPORTED,
+                    VIRUSANNOTATION.ISHIGHRISK);
             virusAnnotation.forEach(x -> addVirusAnnotation(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep11 inserter, @NotNull String sample,
+    private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
             @NotNull AnnotatedVirus annotatedVirus) {
         inserter.values(timestamp,
                 sample,
@@ -57,7 +59,8 @@ public class VirusInterpreterDAO {
                 annotatedVirus.percentageCovered(),
                 annotatedVirus.meanCoverage(),
                 annotatedVirus.expectedClonalCoverage(),
-                annotatedVirus.reported());
+                annotatedVirus.reported(),
+                annotatedVirus.isHighRisk());
     }
 
     void deleteVirusAnnotationForSample(@NotNull String sample) {
