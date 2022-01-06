@@ -40,7 +40,7 @@ public class VirusEvidenceTest {
                 new VirusEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(hpvEvidence, ebvEvidence));
 
         List<ProtectEvidence> evidences = virusEvidence.evidence(testData);
-        assertEquals(2, evidences.size());
+        assertEquals(4, evidences.size());
 
         // The test data has reportable HPV virus
         assertTrue(findByEvent(evidences, "HPV Positive").reported());
@@ -65,6 +65,7 @@ public class VirusEvidenceTest {
         List<AnnotatedVirus> reportable = Lists.newArrayList();
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(true).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(false).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(null).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("MCV").reported(true).isHighRisk(null).build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(true).isHighRisk(null).build());
 

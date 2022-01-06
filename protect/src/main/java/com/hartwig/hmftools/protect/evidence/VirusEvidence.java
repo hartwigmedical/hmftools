@@ -38,13 +38,15 @@ public class VirusEvidence {
         for (ActionableCharacteristic virus : actionableViruses) {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
-                    if (!hpv.isEmpty()) {
-                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .reported(hpv.stream().anyMatch(x -> x.reported()))
-                                .event("HPV Positive")
-                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
-                                .build();
-                        result.add(evidence);
+                    for (AnnotatedVirus hpvVirus: hpv) {
+                        if (hpvVirus.reported()) {
+                            ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
+                                    .reported(hpv.stream().anyMatch(x -> x.reported() && x.isHighRisk()))
+                                    .event("HPV Positive")
+                                    .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
+                                    .build();
+                            result.add(evidence);
+                        }
                     }
                     break;
                 }
