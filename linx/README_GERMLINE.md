@@ -1,13 +1,22 @@
 
 ## Germline Linx
-Linx may be run in a germline mode which chains on proximity only and does not rely on copy number.  It is optimised to detect germline pathogenic structural variants.
+Linx may be run in a germline mode which chains on proximity only and does not rely on copy number. It is optimised to detect germline pathogenic structural variants.
+
 ## Example Usage
-This is a typical command to run LINX for a single sample from PURPLE output.
 
 ```
 java -jar linx.jar 
-TO DO!!!!!!!!!!!
+    -sample SAMPLE_ID 
+    -germline
+    -ref_genome_version 37
+    -sv_vcf /path_to_purple_vcf/
+    -output_dir /path_to_sample_data/ 
+    -fragile_site_file fragile_sites.csv 
+    -line_element_file line_elements.csv 
+    -ensembl_data_dir /path_to_ensembl_data_cache/ 
+    -driver_gene_panel DriverGenePanel.tsv
 ```
+
 ## Algorithm
 For the Germline, LINX is run in a limited mode  where we perform only the following operations
 - Artefact filtering
