@@ -30,7 +30,7 @@ Whole exome sequenced (WES) data is not supported.
   + [5. Inferring copy number for regions without read depth information](#5-inferring-copy-number-for-regions-without-read-depth-information)
   + [6. Allele specific copy number inferring](#6-allele-specific-copy-number-inferring)
   + [7. Structural Variant Recovery](#7-structural-variant-recovery)
-  + [8. Identify germline copy number alterations that are homozygously deleted in the tumor](#8-identify-germline-copy-number-alterations-that-are-homozygously-deleted-in-the-tumor)
+  + [8. Identify germline gene_deletions](#8-identify-germline-gene-deletions)
   + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
   + [10. Somatic enrichment](#10-somatic-enrichment)
   + [11. Germline enrichment](#11-germline-enrichment)
@@ -520,10 +520,16 @@ Eligible recovery candidates must:
 
 Following the successful recovery any structural variants we will rerun the segmentation, copy number smoothing and minor allele copy number smoothing with the updated structural variants to produce a final set of copy number segments and breakpoints. Note that the purity estimation does not change.
 
-### 8. Identify germline copy number alterations that are homozygously deleted in the tumor
+### 8. Identify germline gene deletions
 
-During the smoothing process, regions that are homozygously or heterozygously deleted from the germline are smoothed over for the purposes of producing the somatic output. However, as some of these regions are of specific interest we include them in a separate germline copy number output that contains the homozygous deletes from the germline as well as any deletes that are heterozygous in the germline but homozygous in the tumor. 
+PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  For the purposes of purity and ploidy fitting and copy number smoothing each segment  is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID ( = 0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE.    Any driver gene panel gene with a  HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
+Deletions  are filtered with the following criteria
+Filter|Description
+--|--
+minLength|the deleted segment must be >1kb long
+inconsistentTumorCN|the implied refNormalisedCopyNumber of the deleted segment in the tumor must be less than the major allele copy number +max(20%,0.5)
+highNormalRatio|the deleted segment must have an observedNormalCopyNumberRatio < 0.65 (ie equivalent to germline copyNumber < 1.3)
 
 ### 9. Determine a QC Status for the tumor
 
