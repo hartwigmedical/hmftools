@@ -58,7 +58,7 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
         <amber.version>3.5</amber.version>
-        <ckb-importer.version>1.1</ckb-importer.version>
+        <ckb-importer.version>1.2</ckb-importer.version>
         <cobalt.version>1.12</cobalt.version>
         <compar.version>1.0</compar.version>
         <cuppa.version>1.6</cuppa.version>
@@ -66,7 +66,7 @@
         <gripss.version>2.0</gripss.version>
         <health-checker.version>3.2</health-checker.version>
         <hmf-id-generator.version>2.9</hmf-id-generator.version>
-        <iclusion-importer.version>1.4</iclusion-importer.version>
+        <iclusion-importer.version>1.5</iclusion-importer.version>
         <isofox.version>1.3</isofox.version>
         <lilac.version>1.0</lilac.version>
         <linx.version>1.17</linx.version>
@@ -83,7 +83,7 @@
         <serve.version>1.8</serve.version>
         <sv-tools.version>1.0</sv-tools.version>
         <telo.version>1.0</telo.version>
-        <vicc-importer.version>1.1</vicc-importer.version>
+        <vicc-importer.version>1.2</vicc-importer.version>
         <virus-interpreter.version>1.1</virus-interpreter.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
