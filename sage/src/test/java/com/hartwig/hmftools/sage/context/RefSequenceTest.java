@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.sage.ref;
+package com.hartwig.hmftools.sage.context;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 
 import org.jetbrains.annotations.NotNull;

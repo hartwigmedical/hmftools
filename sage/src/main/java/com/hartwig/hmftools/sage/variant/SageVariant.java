@@ -140,10 +140,7 @@ public class SageVariant
     }
 
     @NotNull
-    public ReadContext readContext()
-    {
-        return mTumorAltContexts.get(0).ReadContext;
-    }
+    public ReadContext readContext() { return mTumorAltContexts.get(0).readContext(); }
 
     @NotNull
     public String microhomology()

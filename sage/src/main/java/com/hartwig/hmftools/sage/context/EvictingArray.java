@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage.context;
 
 import static com.google.common.math.IntMath.ceilingPowerOfTwo;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;

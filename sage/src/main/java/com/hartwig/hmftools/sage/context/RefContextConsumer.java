@@ -15,7 +15,6 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
-import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 
 import org.apache.commons.compress.utils.Lists;

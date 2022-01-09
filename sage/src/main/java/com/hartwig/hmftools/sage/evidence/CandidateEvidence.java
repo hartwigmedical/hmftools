@@ -16,7 +16,7 @@ import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefContextFactory;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
-import com.hartwig.hmftools.sage.ref.RefSequence;
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 

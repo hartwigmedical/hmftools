@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
-import com.hartwig.hmftools.sage.ref.RefSequence;
+import com.hartwig.hmftools.sage.context.RefSequence;
 
 import org.jetbrains.annotations.NotNull;
 

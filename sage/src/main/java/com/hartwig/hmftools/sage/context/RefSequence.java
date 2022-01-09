@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.ref;
+package com.hartwig.hmftools.sage.context;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;

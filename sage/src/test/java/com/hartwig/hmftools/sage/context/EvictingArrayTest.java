@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.sage.count;
+package com.hartwig.hmftools.sage.context;
 
-import static com.hartwig.hmftools.sage.count.EvictingArray.calculateSize;
-import static com.hartwig.hmftools.sage.count.EvictingArray.calculateSizeOld;
+import static com.hartwig.hmftools.sage.context.EvictingArray.calculateSize;
+import static com.hartwig.hmftools.sage.context.EvictingArray.calculateSizeOld;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.sage.context.RefContext;
 
 import org.junit.Before;
 import org.junit.Test;

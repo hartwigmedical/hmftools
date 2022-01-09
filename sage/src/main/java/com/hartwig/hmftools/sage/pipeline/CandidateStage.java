@@ -13,7 +13,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
-import com.hartwig.hmftools.sage.ref.RefSequence;
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 
 import org.jetbrains.annotations.NotNull;

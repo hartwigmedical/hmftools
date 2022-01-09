@@ -123,7 +123,7 @@ public class MixedGermlineTest
     {
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
-        final Candidate candidate = new Candidate(VariantTier.PANEL, variant, counter.ReadContext, 0, 0);
+        final Candidate candidate = new Candidate(VariantTier.PANEL, variant, counter.readContext(), 0, 0);
         return new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
     }
 

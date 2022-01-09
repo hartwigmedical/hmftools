@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.read;
 
-import com.hartwig.hmftools.sage.ref.RefSequence;
+import com.hartwig.hmftools.sage.context.RefSequence;
 
 import org.jetbrains.annotations.NotNull;
 

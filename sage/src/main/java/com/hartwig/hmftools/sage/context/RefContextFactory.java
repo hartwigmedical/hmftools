@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.count.EvictingArray;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.select.PanelSelector;
 
