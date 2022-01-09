@@ -62,11 +62,11 @@ Filter | Default | Description / purpose
 ---|---|---
 minQual | 400 (SGL:500) | Minimum absolute tumor support for variant.   For PMS2 (an important MMR gene) only (including 10kb upstream and downstream) the minimum qual is set to half the normal value due to the poor mappability of PMS2 due to it's close homolog PMS2CL.
 minNormalCoverage | 8 | Variants with low coverage in germline may be germline variants.
-maxNormalRelativeSupport | 0.03 | Reads supporting variant in the normal sample may not exceed 3% of read support in the tumor.
+maxNormalRelativeSupport | 0.03 | Fragments supporting variant in the normal sample may not exceed 3% of read support in the tumor.
 minTumorAF | 0.005 (SGL:0.015) | Low AF variants in high depth regions may be artefacts
 imprecise | FALSE | Imprecise variants may be artefacts linking low mappability regions of the genome.   
 discordantPairSupport | TRUE | Breakpoints (except for DEL,INS & DUP < 1000 bases) must have at least 1 read mapped at each end.   Avoids artefacts linking regions of low mappability.   Not suitable for non paired reads or very short fragment sizes. 
-PON | FALSE | Breakpoint must be found < 3 times in our cohort in ~3800 germline samples (panel of normals). The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
+PON | FALSE | Breakpoint must be found < 3 times in our cohort in pon_sv_file (or pon_sgl_file in the case of breakends).  The Hartwig PON files are generated from ~3800 germline samples. The PON excludes imprecise calls and breakpoints <75 qual score and breakends < 428 qual score.  Inexact homology is allowed in overlap and an additional 3p margin of error is allowed for. 
 maxPolyAHomLength | 6 | Variants with long POLYA homology are frequent artefacts at low VAF
 maxPolyGLength | 16 | Long stretches of polyG/polyC are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in the POLY-G region of LINC00486 (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700).
 
@@ -126,7 +126,7 @@ To improve detection of mobile element insertions, we also rescue pairs of break
 Note that for DSB and hotspot rescue, neither the rescued variant nor the rescuing variant is permitted to be a DEL, INS or DUP < 10kb in length.  
 
 ## Counting Conventions in GRIPSS
-- **Read support** - the count of supporting reads for breakpoints is set to VF field from GRIDSS and for single breakends is set to BVF (with an exception that if a single breakend has BSC=BASRP=BASSR=0 then read support is set to 0).
+- **Fragment support** - the count of supporting fragments for breakpoints is set to VF field from GRIDSS and for single breakends is set to BVF (with an exception that if a single breakend has BSC=BASRP=BASSR=0 then read support is set to 0).   The fragment support is used in the various support filters as described above
 - **Qual score** - for breakpoints the qual is set to the qual.   For breakends the BAQ field (ie sum of qual for assembled reads supporting the breakend) is used for the qual except where the insert sequence has a poly-A tail in which case the BQ (qual of all reads supporting the breakend) is used.
 
 

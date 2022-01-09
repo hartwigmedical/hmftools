@@ -321,7 +321,7 @@ Event Category | Description
 SIMPLE | Single junction cluster which forms a local deletion, tandem duplication or unbalanced translocation
 RECIPROCAL | Reciprocal inversion or translocation events forming from 2 concurrent breaks interacting with each other
 TEMPLATED INSERTION | DEL or DUP or unbalanced translocation (‘chain’) with templated insertion
-INSERTION | SV that are formed by the insertion of a templated piece of DNA normally via either a mobile element insertion or virus.
+INSERTION | SV that are formed by the insertion of a templated piece of DNA normally via a mobile element insertion.
 DOUBLE_MINUTE | Any 1 or 2 variant cluster where all variants form part of an ecDNA ring
 COMPLEX | Clusters with 3 or more variants that cannot be resolved into one of the above categories
 INCOMPLETE | 1 or 2 breakpoint clusters which are inconsistent, but cannot be clustered further OR clusters which are inferred from copy number changes only
