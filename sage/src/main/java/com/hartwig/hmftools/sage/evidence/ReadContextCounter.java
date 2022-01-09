@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -11,9 +9,6 @@ import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextMatch;
-import com.hartwig.hmftools.sage.realign.Realigned;
-import com.hartwig.hmftools.sage.realign.RealignedContext;
-import com.hartwig.hmftools.sage.realign.RealignedType;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;

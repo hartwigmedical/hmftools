@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.evidence;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
@@ -160,7 +161,7 @@ public class ReadContextCounterTest
     }
 
     @NotNull
-    static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
+    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
             @NotNull final String qualities)
     {
         final SAMRecord record = new SAMRecord(null);

@@ -20,7 +20,7 @@ public class ReadContext
     private static final int BONUS_FLANK = 50;
 
     @VisibleForTesting
-    ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+    public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases, final String microhomology)
     {
 

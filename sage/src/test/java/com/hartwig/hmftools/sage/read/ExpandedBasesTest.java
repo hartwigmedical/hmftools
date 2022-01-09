@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.sage.evidence.ReadContextCounterTest;
+
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;

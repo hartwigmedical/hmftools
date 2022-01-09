@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.sage.realign;
+package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.realign.RealignedType.LENGTHENED;
-import static com.hartwig.hmftools.sage.realign.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
+import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.read.ReadContext;

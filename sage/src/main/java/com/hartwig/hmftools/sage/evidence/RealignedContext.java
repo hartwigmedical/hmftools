@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.realign;
+package com.hartwig.hmftools.sage.evidence;
 
 public class RealignedContext
 {
