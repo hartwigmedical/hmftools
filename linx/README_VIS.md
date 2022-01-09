@@ -171,8 +171,8 @@ exon | Path to exon file
 
 Argument |  Description 
 ---|---
-clusterId | Only generate image for specified comma separated clusters
-chromosome | Only generate images for specified comma separated chromosomes
+clusterId | Only generate image for specified comma-separated clusters
+chromosome | Only generate images for specified comma-separated chromosomes, or 'All' to show full genome
 include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
 gene | Add canonical transcriptions of supplied comma-separated genes to image. Requires config 'ensembl_data_dir' to be set as well.
 plot_reportable | Plot any cluster with reported fusion, disruption, or driver
