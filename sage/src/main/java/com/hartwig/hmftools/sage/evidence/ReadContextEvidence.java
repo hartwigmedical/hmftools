@@ -14,7 +14,7 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounterFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
-import com.hartwig.hmftools.sage.samtools.NumberEvents;
+import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
 
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +73,8 @@ public class ReadContextEvidence
                 consumerSelector.select(samRecord, x -> x.accept(samRecord, mSageConfig, numberOfEvents));
 
             });
-        } catch(IOException e)
+        }
+        catch(IOException e)
         {
             throw new CompletionException(e);
         }

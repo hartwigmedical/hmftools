@@ -105,16 +105,25 @@ public class SageApplication implements AutoCloseable
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
-            final String contig = samSequenceRecord.getSequenceName();
-            if(mConfig.Chromosomes.isEmpty() || mConfig.Chromosomes.contains(contig))
-            {
-                if(!HumanChromosome.contains(contig) && !MitochondrialChromosome.contains(contig))
-                continue;
+            final String chromosome = samSequenceRecord.getSequenceName();
 
-                try(final ChromosomePipeline pipeline = createChromosomePipeline(contig, coverage, recalibrationMap))
+            if(mConfig.Chromosomes.isEmpty() || mConfig.Chromosomes.contains(chromosome))
+            {
+                if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
+                    continue;
+
+                try //(final ChromosomePipeline pipeline = createChromosomePipeline(chromosome, coverage, recalibrationMap))
                 {
+                    final ChromosomePipeline pipeline = new ChromosomePipeline(
+                            chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, this::writeVariant);
+
                     pipeline.process();
                 }
+                catch(Exception e)
+                {
+                    SG_LOGGER.error("chromosome({}} failed to excute pipeline tasks", chromosome);
+                }
+
                 System.gc();
             }
         }
@@ -145,13 +154,6 @@ public class SageApplication implements AutoCloseable
         tumorReader.close();
 
         return dictionary;
-    }
-
-    private ChromosomePipeline createChromosomePipeline(
-            final String chromosome, final Coverage coverage, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
-    {
-        return new ChromosomePipeline(
-                chromosome, mConfig, mExecutorService, mRefData, qualityRecalibrationMap, coverage, this::writeVariant);
     }
 
     public void writeVariant(final SageVariant variant)

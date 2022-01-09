@@ -18,7 +18,7 @@ public class RawContextCigarHandler implements CigarHandler
 
     private RawContext mResult;
 
-    RawContextCigarHandler(final int maxSkippedReferenceRegions, final VariantHotspot variant)
+    public RawContextCigarHandler(final int maxSkippedReferenceRegions, final VariantHotspot variant)
     {
         mVariant = variant;
         mIsInsert = variant.ref().length() < variant.alt().length();
@@ -47,9 +47,7 @@ public class RawContextCigarHandler implements CigarHandler
     public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
     {
         if(mResult != null)
-        {
             return;
-        }
 
         int refPositionEnd = refPosition + element.getLength() - 1;
         if(refPositionEnd < mVariant.position())

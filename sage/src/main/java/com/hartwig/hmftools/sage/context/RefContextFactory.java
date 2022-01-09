@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -66,11 +67,8 @@ public class RefContextFactory
     {
         for(int i = 0; i < altContext.ref().length(); i++)
         {
-            char base = altContext.ref().charAt(i);
-            if(base != 'G' && base != 'A' && base != 'T' && base != 'C')
-            {
+            if(!Nucleotides.isValidDnaBase(altContext.ref().charAt(i)))
                 return false;
-            }
         }
 
         return true;

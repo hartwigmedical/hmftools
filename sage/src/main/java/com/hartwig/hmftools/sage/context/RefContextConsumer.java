@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.context;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -14,7 +16,7 @@ import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.samtools.NumberEvents;
+import com.hartwig.hmftools.sage.read.NumberEvents;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -138,7 +140,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         {
             final String ref = new String(refBases.Bases, refIndex, 1);
             final String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
-            boolean findReadContext = findReadContext(readIndex, record);
+            boolean findReadContext = withinReadContext(readIndex, record);
 
             final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
             if(!refContext.reachedLimit())
@@ -165,7 +167,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         {
             final String ref = new String(refBases.Bases, refIndex, element.getLength() + 1);
             final String alt = new String(record.getReadBases(), readIndex, 1);
-            boolean findReadContext = findReadContext(readIndex, record);
+            boolean findReadContext = withinReadContext(readIndex, record);
 
             final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
             if(refContext != null && !refContext.reachedLimit())
@@ -196,23 +198,23 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             int readBaseIndex = readBasesStartIndex + i;
             int refBaseIndex = refIndex + i;
 
-            if(!inBounds(refPosition))
+            if(!mBounds.containsPosition(refPosition))
                 continue;
 
             final byte refByte = refBases.Bases[refBaseIndex];
             final String ref = String.valueOf((char) refByte);
             final byte readByte = record.getReadBases()[readBaseIndex];
-            boolean findReadContext = findReadContext(readBaseIndex, record);
+            boolean isWithinReadContext = withinReadContext(readBaseIndex, record);
 
             final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
             if(refContext != null && !refContext.reachedLimit())
             {
-                int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if(readByte != refByte)
                 {
+                    int baseQuality = record.getBaseQualities()[readBaseIndex];
                     final String alt = String.valueOf((char) readByte);
                     final ReadContext readContext =
-                            findReadContext ? mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
+                            isWithinReadContext ? mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
 
                     result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
@@ -228,7 +230,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                             // ie CA > TA is not a valid subset of CAC > TAT
                             if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                             {
-                                final ReadContext mnvReadContext = findReadContext ? mReadContextFactory.createMNVContext(refPosition,
+                                final ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
                                         readBaseIndex,
                                         mnvLength,
                                         record,
@@ -255,7 +257,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return result;
     }
 
-    private boolean findReadContext(int readIndex, final SAMRecord record)
+    private boolean withinReadContext(int readIndex, final SAMRecord record)
     {
         return readIndex >= mConfig.ReadContextFlankSize && readIndex < record.getReadLength() - mConfig.ReadContextFlankSize;
     }
@@ -288,12 +290,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
     private boolean inBounds(final SAMRecord record)
     {
-        return record.getEnd() >= mBounds.start() && record.getStart() <= mBounds.end();
-    }
-
-    private boolean inBounds(int position)
-    {
-        return position >= mBounds.start() && position <= mBounds.end();
+        return positionsOverlap(record.getStart(), record.getEnd(), mBounds.start(), mBounds.end());
     }
 
     private boolean reachedDepthLimit(final SAMRecord record)

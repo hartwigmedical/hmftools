@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.samtools;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 
 import org.jetbrains.annotations.NotNull;

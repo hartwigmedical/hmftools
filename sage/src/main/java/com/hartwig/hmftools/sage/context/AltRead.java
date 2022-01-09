@@ -7,14 +7,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class AltRead
 {
-    @Nullable
     public final RefContext RefContext;
     public final String Ref;
     public final String Alt;
     public final int BaseQuality;
     public final int NumberOfEvents;
     public final boolean SufficientMapQuality;
-    
+
+    @Nullable
     private ReadContext mReadContext;
 
     public AltRead(
@@ -25,9 +25,10 @@ public class AltRead
         Ref = ref;
         Alt = alt;
         BaseQuality = baseQuality;
-        mReadContext = readContext;
         NumberOfEvents = numberOfEvents;
         SufficientMapQuality = sufficientMapQuality;
+
+        mReadContext = readContext;
     }
 
     public boolean containsReadContext()
@@ -73,7 +74,7 @@ public class AltRead
 
     public void updateRefContext()
     {
-        RefContext.altRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
+        RefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
     }
 
 }

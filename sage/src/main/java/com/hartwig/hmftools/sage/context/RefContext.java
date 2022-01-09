@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.sage.context;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Longs;
+import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.read.ReadContext;
 
@@ -47,16 +46,15 @@ public class RefContext implements GenomePosition
             mRawDepth++;
     }
 
-    public void altRead(
+    public void processAltRead(
             final String ref, final String alt, int baseQuality, boolean sufficientMapQuality,
             int numberOfEvents, final ReadContext readContext)
     {
-        final AltContext altContext = altContext(ref, alt);
+        final AltContext altContext = getOrCreateAltContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
+
         if(sufficientMapQuality)
-        {
             mRawDepth++;
-        }
 
         if(readContext != null && !readContext.incompleteCore())
         {
@@ -85,9 +83,8 @@ public class RefContext implements GenomePosition
     public boolean equals(@Nullable Object another)
     {
         if(this == another)
-        {
             return true;
-        }
+
         return another instanceof RefContext && equalTo((RefContext) another);
     }
 
@@ -101,13 +98,21 @@ public class RefContext implements GenomePosition
     {
         int h = 5381;
         h += (h << 5) + chromosome().hashCode();
-        h += (h << 5) + Longs.hashCode(position());
+        h += (h << 5) + Ints.hashCode(position());
         return h;
     }
 
-    private AltContext altContext(final String ref, final String alt)
+    private AltContext getOrCreateAltContext(final String ref, final String alt)
     {
         final String refAltKey = ref + "|" + alt;
-        return mAlts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
+        AltContext altContext = mAlts.get(refAltKey);
+
+        if(altContext == null)
+        {
+            altContext = new AltContext(this, ref, alt);
+            mAlts.put(refAltKey, altContext);
+        }
+
+        return altContext;
     }
 }

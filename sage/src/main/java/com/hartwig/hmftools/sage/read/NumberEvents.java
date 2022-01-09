@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.samtools;
+package com.hartwig.hmftools.sage.read;
 
 import com.hartwig.hmftools.sage.ref.RefSequence;
 

@@ -9,7 +9,6 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
-import com.hartwig.hmftools.sage.samtools.NumberEvents;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
@@ -206,19 +205,19 @@ public class ReadContextCounter implements VariantHotspot
             }
 
             final RawContext rawContext = RawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
-            if(rawContext.isReadIndexInSkipped())
+            if(rawContext.ReadIndexInSkipped)
             {
                 return;
             }
 
-            final int readIndex = rawContext.readIndex();
-            final boolean baseDeleted = rawContext.isReadIndexInDelete();
+            final int readIndex = rawContext.ReadIndex;
+            final boolean baseDeleted = rawContext.ReadIndexInDelete;
 
-            mRawDepth += rawContext.isDepthSupport() ? 1 : 0;
-            mRawAltSupport += rawContext.isAltSupport() ? 1 : 0;
-            mRawRefSupport += rawContext.isRefSupport() ? 1 : 0;
-            mRawAltBaseQuality += rawContext.altQuality();
-            mRawRefBaseQuality += rawContext.refQuality();
+            mRawDepth += rawContext.DepthSupport ? 1 : 0;
+            mRawAltSupport += rawContext.AltSupport ? 1 : 0;
+            mRawRefSupport += rawContext.RefSupport ? 1 : 0;
+            mRawAltBaseQuality += rawContext.AltQuality;
+            mRawRefBaseQuality += rawContext.RefQuality;
 
             if(readIndex < 0)
             {
@@ -283,19 +282,19 @@ public class ReadContextCounter implements VariantHotspot
                 return;
             }
 
-            if(realignmentType.equals(RealignedType.NONE) && rawContext.isReadIndexInSoftClip())
+            if(realignmentType.equals(RealignedType.NONE) && rawContext.ReadIndexInSoftClip)
             {
                 return;
             }
 
             mCoverage++;
             mTotalQuality += quality;
-            if(rawContext.isRefSupport())
+            if(rawContext.RefSupport)
             {
                 mReference++;
                 mReferenceQuality += quality;
             }
-            else if(rawContext.isAltSupport())
+            else if(rawContext.AltSupport)
             {
                 mAlt++;
                 mAltQuality++;

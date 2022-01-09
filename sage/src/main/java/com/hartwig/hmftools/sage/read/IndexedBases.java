@@ -12,22 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases
 {
-    public static final byte MATCH_WILDCARD = (byte) '.';
-
-    @NotNull
-    public static IndexedBases resize(final int position, final int recordIndex, final int recordLeftCoreIndex,
-            final int recordRightCoreIndex, final int flankSize, final int additionalFlank, final byte[] recordBases)
-    {
-        int recordLeftFlankIndex = Math.max(0, recordLeftCoreIndex - flankSize - additionalFlank);
-        int recordLeftFlankLength = recordLeftCoreIndex - recordLeftFlankIndex;
-        int recordRightFlankIndex = Math.min(recordBases.length - 1, recordRightCoreIndex + flankSize + additionalFlank);
-
-        int rightCentreIndex = recordLeftFlankLength + recordRightCoreIndex - recordLeftCoreIndex;
-        int index = recordLeftFlankLength + recordIndex - recordLeftCoreIndex;
-        byte[] bases = Arrays.copyOfRange(recordBases, recordLeftFlankIndex, recordRightFlankIndex + 1);
-        return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
-    }
-
     public final int Position;
     public final int Index;
     public final int FlankSize;
@@ -36,6 +20,8 @@ public class IndexedBases
     public final int RightCoreIndex;
     public final int RightFlankIndex;
     public final byte[] Bases;
+
+    public static final byte MATCH_WILDCARD = (byte) '.';
 
     public IndexedBases(final int position, final int index, final byte[] bases)
     {
@@ -72,22 +58,19 @@ public class IndexedBases
         int otherReadIndex = other.Index + offset;
 
         boolean centreMatch = coreMatch(false, otherReadIndex, other.Bases);
+
         if(!centreMatch)
-        {
             return false;
-        }
 
         boolean otherCentreMatch = other.coreMatch(false, Index - offset, Bases);
+
         if(!otherCentreMatch)
-        {
             return false;
-        }
 
         int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.Bases);
+
         if(leftFlankingBases < 0)
-        {
             return false;
-        }
 
         int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.Bases);
         return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
@@ -96,10 +79,9 @@ public class IndexedBases
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherReadIndex);
+
         if(otherLeftCentreIndex < 0)
-        {
             return false;
-        }
 
         int otherRightCentreIndex = otherRightCentreIndex(otherReadIndex);
         return otherRightCentreIndex < otherBases.length;
@@ -121,35 +103,25 @@ public class IndexedBases
     public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, int otherReadIndex, int otherLength, byte[] otherBases)
     {
         if(otherReadIndex < 0)
-        {
             return NONE;
-        }
 
         boolean centreMatch = coreMatch(wildcardAllowedInCore, otherReadIndex, otherBases);
         if(!centreMatch)
-        {
             return NONE;
-        }
 
         int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases);
         if(leftFlankingBases < 0)
-        {
             return CORE;
-        }
 
         int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases);
         if(rightFlankingBases < 0)
-        {
             return CORE;
-        }
 
         int leftFlankLength = leftFlankLength();
         int rightFlankLength = rightFlankLength();
 
         if(leftFlankingBases != leftFlankLength && rightFlankingBases != rightFlankLength)
-        {
             return CORE;
-        }
 
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
@@ -157,25 +129,22 @@ public class IndexedBases
     protected boolean coreMatch(final boolean wildcardAllowed, final int otherRefIndex, final byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
+
         if(otherLeftCentreIndex < 0)
-        {
             return false;
-        }
 
         int otherRightCentreIndex = otherRightCentreIndex(otherRefIndex);
+
         if(otherRightCentreIndex >= otherBases.length)
-        {
             return false;
-        }
 
         for(int i = 0; i < centreLength(); i++)
         {
             byte ourByte = Bases[LeftCoreIndex + i];
             byte otherByte = otherBases[otherLeftCentreIndex + i];
+
             if(!bytesMatch(wildcardAllowed, ourByte, otherByte))
-            {
                 return false;
-            }
         }
 
         return true;
@@ -195,10 +164,9 @@ public class IndexedBases
         for(int i = 1; i <= maxLength; i++)
         {
             byte otherByte = otherBases[otherRightCentreIndex + i];
+
             if(Bases[RightCoreIndex + i] != otherByte && otherByte != MATCH_WILDCARD)
-            {
                 return -1;
-            }
         }
 
         return maxLength;
@@ -213,10 +181,9 @@ public class IndexedBases
         for(int i = 1; i <= totalLength; i++)
         {
             byte otherByte = otherBases[otherLeftCentreIndex - i];
+
             if(Bases[LeftCoreIndex - i] != otherByte && otherByte != MATCH_WILDCARD)
-            {
                 return -1;
-            }
         }
 
         return totalLength;
@@ -254,7 +221,7 @@ public class IndexedBases
     @Override
     public String toString()
     {
-        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length());
+            return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length());
     }
 
     public int indexInCore()
@@ -300,6 +267,21 @@ public class IndexedBases
     public byte[] trinucleotideContext(int position)
     {
         return new byte[] { base(position - 1), base(position), base(position + 1) };
+    }
+
+
+    public static IndexedBases resize(
+            final int position, final int recordIndex, final int recordLeftCoreIndex,
+            final int recordRightCoreIndex, final int flankSize, final int additionalFlank, final byte[] recordBases)
+    {
+        int recordLeftFlankIndex = Math.max(0, recordLeftCoreIndex - flankSize - additionalFlank);
+        int recordLeftFlankLength = recordLeftCoreIndex - recordLeftFlankIndex;
+        int recordRightFlankIndex = Math.min(recordBases.length - 1, recordRightCoreIndex + flankSize + additionalFlank);
+
+        int rightCentreIndex = recordLeftFlankLength + recordRightCoreIndex - recordLeftCoreIndex;
+        int index = recordLeftFlankLength + recordIndex - recordLeftCoreIndex;
+        byte[] bases = Arrays.copyOfRange(recordBases, recordLeftFlankIndex, recordRightFlankIndex + 1);
+        return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
     }
 
 }

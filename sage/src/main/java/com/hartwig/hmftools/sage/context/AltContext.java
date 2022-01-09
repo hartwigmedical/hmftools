@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.primitives.Longs;
+import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextMatch;
@@ -20,7 +20,7 @@ public class AltContext implements VariantHotspot
     public final String Alt;
     public final RefContext RefContext;
     
-    private final List<ReadContextCandidate> mInterimReadContexts = Lists.newArrayList();
+    private final List<ReadContextCandidate> mInterimReadContexts;
 
     private int mRawSupportAlt;
     private int mRawBaseQualityAlt;
@@ -31,6 +31,8 @@ public class AltContext implements VariantHotspot
         RefContext = refContext;
         Ref = ref;
         Alt = alt;
+
+        mInterimReadContexts = Lists.newArrayList();
     }
 
     public void incrementAltRead(int baseQuality)
@@ -42,9 +44,7 @@ public class AltContext implements VariantHotspot
     public void addReadContext(int numberOfEvents, @NotNull final ReadContext newReadContext)
     {
         if(mCandidate != null)
-        {
             throw new IllegalStateException();
-        }
 
         int partialMatch = 0;
         int coreMatch = 0;
@@ -86,7 +86,6 @@ public class AltContext implements VariantHotspot
             candidate.incrementFull(fullMatchCandidate.mFullMatch, fullMatchCandidate.mMinNumberOfEvents);
             mInterimReadContexts.add(candidate);
         }
-
     }
 
     public int readContextSupport()
@@ -171,9 +170,8 @@ public class AltContext implements VariantHotspot
     public boolean equals(@Nullable Object another)
     {
         if(this == another)
-        {
             return true;
-        }
+
         return another instanceof VariantHotspot && equalTo((VariantHotspot) another);
     }
 
@@ -190,7 +188,7 @@ public class AltContext implements VariantHotspot
         h += (h << 5) + Ref.hashCode();
         h += (h << 5) + Alt.hashCode();
         h += (h << 5) + chromosome().hashCode();
-        h += (h << 5) + Longs.hashCode(position());
+        h += (h << 5) + Ints.hashCode(position());
         return h;
     }
 
@@ -253,18 +251,15 @@ public class AltContext implements VariantHotspot
         @Override
         public int compareTo(@NotNull final ReadContextCandidate o)
         {
-
             int fullCompare = -Integer.compare(mFullMatch, o.mFullMatch);
+
             if(fullCompare != 0)
-            {
                 return fullCompare;
-            }
 
             int partialCompare = -Integer.compare(mPartialMatch, o.mPartialMatch);
+
             if(partialCompare != 0)
-            {
                 return partialCompare;
-            }
 
             return -Integer.compare(mCoreMatch, o.mCoreMatch);
         }

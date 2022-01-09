@@ -18,6 +18,8 @@ public class Nucleotides
         return base;
     }
 
+    public static boolean isValidDnaBase(final char base) { return base == 'G' || base == 'A' || base == 'T' || base == 'C'; }
+
     public static String reverseStrandBases(final String bases)
     {
         // reverse and swap base pairs

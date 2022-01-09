@@ -13,31 +13,31 @@ public final class Rearrangement
 {
     private static final int MAX_MNV_LENGTH = 2;
 
-    public static List<VariantHotspot> rearrangeInsert(int position, int indelLength, int readIndex, byte[] readBases, int refIndex,
-            byte[] refBases)
+    public static List<VariantHotspot> rearrangeInsert(
+            int position, int indelLength, int readIndex, byte[] readBases, int refIndex, byte[] refBases)
     {
         final List<VariantHotspot> left = moveLeft(false, position, indelLength, readIndex, readBases, refIndex, refBases);
+
         if(!left.isEmpty())
-        {
             return left;
-        }
+
         return moveRight(false, position, indelLength, readIndex, readBases, refIndex, refBases);
     }
 
-    public static List<VariantHotspot> rearrangeDelete(int position, int indelLength, int readIndex, byte[] readBases, int refIndex,
-            byte[] refBases)
+    public static List<VariantHotspot> rearrangeDelete(
+            int position, int indelLength, int readIndex, byte[] readBases, int refIndex, byte[] refBases)
     {
         final List<VariantHotspot> left = moveLeft(true, position, indelLength, refIndex, refBases, readIndex, readBases);
+
         if(!left.isEmpty())
-        {
             return left;
-        }
+
         return moveRight(true, position, indelLength, refIndex, refBases, readIndex, readBases);
     }
 
     @NotNull
-    public static List<VariantHotspot> moveLeft(boolean delete, int position, int indelLength, int readIndex, byte[] readBases,
-            int refIndex, byte[] refBases)
+    public static List<VariantHotspot> moveLeft(
+            boolean delete, int position, int indelLength, int readIndex, byte[] readBases, int refIndex, byte[] refBases)
     {
         int absIndelLength = Math.abs(indelLength);
         int minReadIndex = Math.max(0, readIndex - absIndelLength);
@@ -104,8 +104,8 @@ public final class Rearrangement
     }
 
     @NotNull
-    public static List<VariantHotspot> moveRight(boolean delete, int position, int indelLength, int readIndex, byte[] readBases,
-            int refIndex, byte[] refBases)
+    public static List<VariantHotspot> moveRight(
+            boolean delete, int position, int indelLength, int readIndex, byte[] readBases, int refIndex, byte[] refBases)
     {
         int absIndelLength = Math.abs(indelLength);
         int maxReadIndex = Math.min(readBases.length - 1, readIndex + 2 * absIndelLength + 1);
