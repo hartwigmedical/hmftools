@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 

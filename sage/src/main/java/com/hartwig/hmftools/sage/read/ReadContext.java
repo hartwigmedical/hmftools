@@ -152,7 +152,7 @@ public class ReadContext
         return mIncompleteCore;
     }
 
-    int avgCentreQuality(int readIndex, @NotNull final SAMRecord record)
+    public int avgCentreQuality(int readIndex, @NotNull final SAMRecord record)
     {
         int leftOffset = this.readIndex() - ReadBases.LeftCoreIndex;
         int rightOffset = ReadBases.RightCoreIndex - this.readIndex();

@@ -71,8 +71,6 @@ public class VariantVCF implements AutoCloseable
 
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
-    public static final String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
-    public static final String RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION = "Right aligned microhomology";
 
     private final VariantContextWriter mWriter;
     private final Consumer<VariantContext> mConsumer;
@@ -182,10 +180,6 @@ public class VariantVCF implements AutoCloseable
                 1,
                 VCFHeaderLineType.Integer,
                 MIXED_SOMATIC_GERMLINE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(RIGHT_ALIGNED_MICROHOMOLOGY,
-                0,
-                VCFHeaderLineType.Flag,
-                RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
 

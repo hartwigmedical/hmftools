@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.evidence;
 
 import java.util.EnumSet;
 import java.util.List;

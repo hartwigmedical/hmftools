@@ -12,7 +12,7 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 @NotThreadSafe
 public class SageVariantFactory
@@ -21,12 +21,11 @@ public class SageVariantFactory
 
     public SageVariantFactory(final FilterConfig config)
     {
-        this.mConfig = config;
+        mConfig = config;
     }
 
     public SageVariant create(final Candidate candidate, final List<ReadContextCounter> normal, final List<ReadContextCounter> tumor)
     {
-        assert (!tumor.isEmpty());
         final Set<String> filters = Sets.newHashSet();
         final boolean isNormalEmpty = normal.isEmpty();
 
@@ -91,10 +90,11 @@ public class SageVariantFactory
         Set<String> result = Sets.newHashSet();
 
         // Germline Tests
-        final boolean chromosomeIsAllosome =
-                HumanChromosome.contains(normal.chromosome()) && HumanChromosome.fromString(normal.chromosome()).isAllosome();
-        int minGermlineCoverage =
-                chromosomeIsAllosome ? config.MinGermlineReadContextCoverageAllosome : config.MinGermlineReadContextCoverage;
+        boolean chromosomeIsAllosome = HumanChromosome.contains(normal.chromosome())
+                && HumanChromosome.fromString(normal.chromosome()).isAllosome();
+
+        int minGermlineCoverage = chromosomeIsAllosome ? config.MinGermlineReadContextCoverageAllosome : config.MinGermlineReadContextCoverage;
+
         if(normal.coverage() < minGermlineCoverage)
         {
             result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
@@ -117,7 +117,7 @@ public class SageVariantFactory
         }
 
         // MNV Tests
-        if(tier != VariantTier.HOTSPOT && normal.Variant.isMNV() && this.mConfig.MnvFilter)
+        if(tier != VariantTier.HOTSPOT && normal.variant().isMNV() && this.mConfig.MnvFilter)
         {
             if(normal.altSupport() != 0)
             {

@@ -15,7 +15,6 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -26,7 +25,7 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
+import com.hartwig.hmftools.sage.variant.VariantContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantFile;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
@@ -36,14 +35,12 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageApplication implements AutoCloseable
 {
@@ -158,7 +155,7 @@ public class SageApplication implements AutoCloseable
 
     public void writeVariant(final SageVariant variant)
     {
-        mVcfFile.write(SageVariantContextFactory.create(variant));
+        mVcfFile.write(VariantContextFactory.create(variant));
 
         if(mVariantFile != null)
             mVariantFile.writeToFile(variant);

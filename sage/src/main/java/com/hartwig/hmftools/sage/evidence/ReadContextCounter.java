@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -6,6 +6,11 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
+import com.hartwig.hmftools.sage.read.IndexedBases;
+import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.read.ReadContextMatch;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
@@ -19,14 +24,14 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextCounter implements VariantHotspot
 {
     public final String Sample;
-    public final VariantHotspot Variant;
-    public final ReadContext ReadContext;
-    public final RawContextFactory RawFactory;
+    public final com.hartwig.hmftools.sage.read.ReadContext ReadContext;
     public final QualityRecalibrationMap QualityRecalibrationMap;
     public final VariantTier Tier;
     public final boolean Realign;
     public final int MaxCoverage;
     public final int MinNumberOfEvents;
+
+    private final VariantHotspot mVariant;
 
     private final ExpandedBasesFactory mExpandedBasesFactory;
 
@@ -59,15 +64,15 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawAltBaseQuality;
     private int mRawRefBaseQuality;
 
-    public ReadContextCounter(final String sample, final VariantHotspot variant, final ReadContext readContext,
+    public ReadContextCounter(
+            final String sample, final VariantHotspot variant, final ReadContext readContext,
             final QualityRecalibrationMap recalibrationMap, final VariantTier tier, final int maxCoverage, final int minNumberOfEvents,
             final int maxSkippedReferenceRegions, boolean realign)
     {
         Sample = sample;
         Tier = tier;
-        Variant = variant;
+        mVariant = variant;
         ReadContext = readContext;
-        RawFactory = new RawContextFactory(variant);
         Realign = realign;
         MaxCoverage = maxCoverage;
         QualityRecalibrationMap = recalibrationMap;
@@ -75,31 +80,27 @@ public class ReadContextCounter implements VariantHotspot
         mExpandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
     }
 
-    @NotNull
+    public VariantHotspot variant() { return mVariant; }
+
     @Override
-    public String chromosome()
-    {
-        return Variant.chromosome();
-    }
+    public String chromosome() { return mVariant.chromosome(); }
 
     @Override
     public int position()
     {
-        return Variant.position();
+        return mVariant.position();
     }
 
-    @NotNull
     @Override
     public String ref()
     {
-        return Variant.ref();
+        return mVariant.ref();
     }
 
-    @NotNull
     @Override
     public String alt()
     {
-        return Variant.alt();
+        return mVariant.alt();
     }
 
     public int altSupport()
@@ -204,11 +205,10 @@ public class ReadContextCounter implements VariantHotspot
                 return;
             }
 
-            final RawContext rawContext = RawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
+            final RawContext rawContext = RawContext.create(mVariant, record, sageConfig.maxSkippedReferenceRegions());
+
             if(rawContext.ReadIndexInSkipped)
-            {
                 return;
-            }
 
             final int readIndex = rawContext.ReadIndex;
             final boolean baseDeleted = rawContext.ReadIndexInDelete;
@@ -232,13 +232,13 @@ public class ReadContextCounter implements VariantHotspot
 
             final QualityConfig qualityConfig = sageConfig.Quality;
             int numberOfEvents =
-                    Math.max(MinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, Variant.ref(), Variant.alt()));
+                    Math.max(MinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()));
             double quality = calculateQualityScore(readIndex, record, qualityConfig, numberOfEvents);
 
             // Check if FULL, PARTIAL, OR CORE
             if(!baseDeleted)
             {
-                final boolean wildcardMatchInCore = Variant.isSNV() && ReadContext.microhomology().isEmpty();
+                final boolean wildcardMatchInCore = mVariant.isSNV() && ReadContext.microhomology().isEmpty();
                 final IndexedBases expandedBases = mExpandedBasesFactory.expand((int) position(), readIndex, record);
                 final ReadContextMatch match =
                         ReadContext.matchAtPosition(wildcardMatchInCore, expandedBases.Index, expandedBases.Bases);
@@ -349,7 +349,7 @@ public class ReadContextCounter implements VariantHotspot
 
         final int mapQuality = record.getMappingQuality();
         boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(Variant, mapQuality, numberOfEvents, properPairFlag);
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mVariant, mapQuality, numberOfEvents, properPairFlag);
         double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
@@ -357,8 +357,8 @@ public class ReadContextCounter implements VariantHotspot
 
     private double baseQuality(int readBaseIndex, SAMRecord record)
     {
-        return Variant.ref().length() == Variant.alt().length()
-                ? baseQuality(readBaseIndex, record, Variant.ref().length())
+        return mVariant.ref().length() == mVariant.alt().length()
+                ? baseQuality(readBaseIndex, record, mVariant.ref().length())
                 : ReadContext.avgCentreQuality(readBaseIndex, record);
     }
 

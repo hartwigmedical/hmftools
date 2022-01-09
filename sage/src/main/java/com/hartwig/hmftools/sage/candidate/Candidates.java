@@ -12,8 +12,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Candidates
 {
     private final List<VariantHotspot> mHotspots;
@@ -29,7 +27,7 @@ public class Candidates
         mHighConfidence = highConfidence;
     }
 
-    public void add(@NotNull final Collection<AltContext> altContexts)
+    public void add(final Collection<AltContext> altContexts)
     {
         if(mCandidateList != null)
         {
@@ -43,7 +41,6 @@ public class Candidates
         }
     }
 
-    @NotNull
     public List<Candidate> candidates()
     {
         if(mCandidateList == null)

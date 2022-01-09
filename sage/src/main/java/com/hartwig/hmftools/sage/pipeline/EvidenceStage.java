@@ -8,10 +8,8 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.read.ReadContextCounters;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 

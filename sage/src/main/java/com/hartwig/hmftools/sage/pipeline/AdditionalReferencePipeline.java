@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.variant.VariantContextFactory.createGenotype;
 
 import java.util.List;
 import java.util.Map;
@@ -17,15 +18,14 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.read.ReadContextCounters;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.ref.RefSequence;
-import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class AdditionalReferencePipeline
 {
@@ -34,8 +34,9 @@ public class AdditionalReferencePipeline
     private final ReferenceSequenceFile mRefGenome;
     private final Executor mExecutor;
 
-    public AdditionalReferencePipeline(@NotNull final SageConfig config, @NotNull final Executor executor, ReferenceSequenceFile refGenome,
-            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    public AdditionalReferencePipeline(
+            final SageConfig config, final Executor executor, ReferenceSequenceFile refGenome,
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mConfig = config;
         mRefGenome = refGenome;
@@ -43,7 +44,6 @@ public class AdditionalReferencePipeline
         mExecutor = executor;
     }
 
-    @NotNull
     public CompletableFuture<List<VariantContext>> appendReference(final ChrBaseRegion region, final List<VariantContext> variants)
     {
         if(variants.isEmpty())
@@ -77,9 +77,23 @@ public class AdditionalReferencePipeline
         {
             VariantHotspot variant = CandidateSerialization.toVariantHotspot(old);
             List<ReadContextCounter> counters = readContextCounters.readContextCounters(variant);
-            result.add(SageVariantContextFactory.addGenotype(old, counters));
+            result.add(addGenotype(old, counters));
         }
 
         return result;
     }
+
+    private static VariantContext addGenotype(final VariantContext parent, final List<ReadContextCounter> counters)
+    {
+        final VariantContextBuilder builder = new VariantContextBuilder(parent);
+        final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
+
+        for(ReadContextCounter counter : counters)
+        {
+            Genotype genotype = createGenotype(counter);
+            genotypes.add(genotype);
+        }
+        return builder.genotypes(genotypes).make();
+    }
+
 }

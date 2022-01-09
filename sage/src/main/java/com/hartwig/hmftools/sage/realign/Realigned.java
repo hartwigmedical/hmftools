@@ -6,19 +6,17 @@ import static com.hartwig.hmftools.sage.realign.RealignedType.SHORTENED;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.read.ReadContext;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Realigned
 {
     private static final int MIN_REPEAT_COUNT = 4;
     public static final int MAX_REPEAT_SIZE = 5;
+
     private static final RealignedContext NONE = new RealignedContext(RealignedType.NONE, 0);
     private static final RealignedContext EXACT = new RealignedContext(RealignedType.EXACT, 0);
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
-    @NotNull
-    public static RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex,
-            final byte[] otherBases, int maxSize)
+    public static RealignedContext realignedAroundIndex(
+            final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize)
     {
         int baseStartIndex = readContext.readBasesLeftFlankIndex();
         int baseEndIndex = readContext.readBasesRightFlankIndex();
@@ -29,9 +27,8 @@ public class Realigned
         return realigned(baseStartIndex, baseEndIndex, readContext.readBases(), otherStartIndex, otherBases, maxSize);
     }
 
-    @NotNull
-    static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex,
-            final byte[] otherBases, int maxDistance)
+    public static RealignedContext realigned(
+            int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex, final byte[] otherBases, int maxDistance)
     {
         if(otherBaseIndex >= 0)
         {
@@ -64,8 +61,7 @@ public class Realigned
         return result;
     }
 
-    @NotNull
-    static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases)
+    public static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases)
     {
         int exactLength = baseEndIndex - baseStartIndex + 1;
 
@@ -84,7 +80,7 @@ public class Realigned
         int otherNextIndex = otherIndex + matchingBases;
 
         final Repeat repeat = repeatCount(otherNextIndex, otherBases);
-        int repeatLength = repeat.repeatLength;
+        int repeatLength = repeat.RepeatLength;
         if(repeatLength == 0)
         {
             return NONE;
@@ -93,13 +89,13 @@ public class Realigned
         int matchingBasesShortened = matchingBasesFromLeft(baseNextIndex + repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
         if(matchingBasesShortened > 0 && matchingBases + matchingBasesShortened == exactLength - repeatLength)
         {
-            return new RealignedContext(SHORTENED, repeat.repeatCount);
+            return new RealignedContext(SHORTENED, repeat.RepeatCount);
         }
 
         int matchingBasesLengthened = matchingBasesFromLeft(baseNextIndex - repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
         if(matchingBasesLengthened > 0 && matchingBases + matchingBasesLengthened == exactLength + repeatLength)
         {
-            return new RealignedContext(LENGTHENED, repeat.repeatCount + 1);
+            return new RealignedContext(LENGTHENED, repeat.RepeatCount + 1);
         }
 
         return NONE;
@@ -142,13 +138,13 @@ public class Realigned
 
     private static class Repeat
     {
-        private final int repeatLength;
-        private final int repeatCount;
+        public final int RepeatLength;
+        public final int RepeatCount;
 
         Repeat(final int repeatLength, final int repeatCount)
         {
-            this.repeatLength = repeatLength;
-            this.repeatCount = repeatCount;
+            RepeatLength = repeatLength;
+            RepeatCount = repeatCount;
         }
     }
 }

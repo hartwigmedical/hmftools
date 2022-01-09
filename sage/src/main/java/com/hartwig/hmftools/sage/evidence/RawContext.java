@@ -1,4 +1,9 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.evidence;
+
+import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+
+import htsjdk.samtools.SAMRecord;
 
 public class RawContext
 {
@@ -12,6 +17,16 @@ public class RawContext
     public final boolean DepthSupport;
     public final int AltQuality;
     public final int RefQuality;
+
+    private static final RawContext DUMMY = RawContext.inSoftClip(-1);
+
+    public static RawContext create(final VariantHotspot variant, final SAMRecord record, final int maxSkippedReferenceRegions)
+    {
+        RawContextCigarHandler handler = new RawContextCigarHandler(maxSkippedReferenceRegions, variant);
+        CigarTraversal.traverseCigar(record, handler);
+        RawContext result = handler.result();
+        return result == null ? DUMMY : result;
+    }
 
     static RawContext inSoftClip(final int readIndex)
     {

@@ -6,7 +6,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +20,6 @@ public class SageVariant
     private int mLocalPhaseSet;
     private int mLocalRealignSet;
     private int mMixedImpact;
-    private boolean mRealigned;
 
     public SageVariant(
             final Candidate candidate, final Set<String> filters,
@@ -45,16 +44,6 @@ public class SageVariant
     public String alt()
     {
         return variant().alt();
-    }
-
-    public boolean isRealigned()
-    {
-        return mRealigned;
-    }
-
-    public void realigned(final boolean realigned)
-    {
-        mRealigned = realigned;
     }
 
     public int end()

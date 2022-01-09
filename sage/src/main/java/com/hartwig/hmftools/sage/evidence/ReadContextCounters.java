@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.evidence;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -19,7 +19,7 @@ public class ReadContextCounters
     private final List<Candidate> mCandidates;
     private final ListMultimap<VariantHotspot, ReadContextCounter> mMap = ArrayListMultimap.create();
 
-    public ReadContextCounters(@NotNull final String primarySample, @NotNull final List<Candidate> candidates)
+    public ReadContextCounters(final String primarySample, final List<Candidate> candidates)
     {
         mCandidates = candidates;
         mComparator = (o1, o2) ->
@@ -35,7 +35,7 @@ public class ReadContextCounters
     }
 
     @NotNull
-    public List<ReadContextCounter> readContextCounters(@NotNull final VariantHotspot variant)
+    public List<ReadContextCounter> readContextCounters(final VariantHotspot variant)
     {
         assert (mMap.containsKey(variant));
         final List<ReadContextCounter> result = mMap.get(variant);
@@ -47,12 +47,12 @@ public class ReadContextCounters
     {
         for(ReadContextCounter counter : counters)
         {
-            mMap.put(counter.Variant, counter);
+            mMap.put(counter.variant(), counter);
         }
     }
 
     @NotNull
-    public List<Candidate> candidates(@NotNull final Predicate<ReadContextCounter> anyPredicate)
+    public List<Candidate> candidates(final Predicate<ReadContextCounter> anyPredicate)
     {
         final List<Candidate> result = Lists.newArrayList();
         for(Candidate candidate : mCandidates)

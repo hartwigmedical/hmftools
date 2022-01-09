@@ -11,13 +11,12 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RIGHT_ALIGNED_MICROHOMOLOGY;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -26,34 +25,21 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFConstants;
 
-public final class SageVariantContextFactory
+public final class VariantContextFactory
 {
     private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
-    public static VariantContext addGenotype(final VariantContext parent, final List<ReadContextCounter> counters)
-    {
-        final VariantContextBuilder builder = new VariantContextBuilder(parent);
-        final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
-
-        for(ReadContextCounter counter : counters)
-        {
-            Genotype genotype = createGenotype(counter);
-            genotypes.add(genotype);
-        }
-        return builder.genotypes(genotypes).make();
-    }
-
-    public static VariantContext create(final SageVariant entry)
+    public static VariantContext create(final SageVariant variant)
     {
         final List<Genotype> genotypes = Lists.newArrayList();
-        for(int i = 0; i < entry.normalAltContexts().size(); i++)
+        for(int i = 0; i < variant.normalAltContexts().size(); i++)
         {
-            ReadContextCounter normalContext = entry.normalAltContexts().get(i);
+            ReadContextCounter normalContext = variant.normalAltContexts().get(i);
             genotypes.add(createGenotype(normalContext));
         }
 
-        entry.tumorAltContexts().stream().map(SageVariantContextFactory::createGenotype).forEach(genotypes::add);
-        return createContext(entry, genotypes);
+        variant.tumorAltContexts().stream().map(VariantContextFactory::createGenotype).forEach(genotypes::add);
+        return createContext(variant, genotypes);
     }
 
     private static VariantContext createContext(final SageVariant variant, final List<Genotype> genotypes)
@@ -78,11 +64,6 @@ public final class SageVariantContextFactory
             builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
         }
 
-        if(variant.isRealigned())
-        {
-            builder.attribute(RIGHT_ALIGNED_MICROHOMOLOGY, true);
-        }
-
         final VariantContext context = builder.make();
         if(context.isNotFiltered())
         {
@@ -92,7 +73,7 @@ public final class SageVariantContextFactory
         return context;
     }
 
-    private static Genotype createGenotype(final ReadContextCounter counter)
+    public static Genotype createGenotype(final ReadContextCounter counter)
     {
         return new GenotypeBuilder(counter.Sample).DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })

@@ -27,7 +27,7 @@ public class VariantFile
 
             writer.write("Chromosome,Position,Ref,Alt");
             writer.write(",Pass,MaxReadDepth,Tier,TotalQuality");
-            writer.write(",LocalPhaseSet,IsRealigned,LocalRealignSet");
+            writer.write(",LocalPhaseSet,LocalRealignSet");
             writer.newLine();
             return writer;
         }
@@ -50,8 +50,8 @@ public class VariantFile
             mWriter.write(String.format(",%s,%d,%s,%d",
                     variant.isPassing(), variant.candidate().maxReadDepth(), variant.candidate().tier(), variant.totalQuality()));
 
-            mWriter.write(String.format(",%d,%s,%d",
-                    variant.localPhaseSet(), variant.isRealigned(), variant.localRealignSet()));
+            mWriter.write(String.format(",%d,%d",
+                    variant.localPhaseSet(), variant.localRealignSet()));
 
             mWriter.newLine();
         }
