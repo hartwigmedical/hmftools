@@ -9,7 +9,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
 public class Candidates
@@ -17,7 +16,7 @@ public class Candidates
     private final List<VariantHotspot> mHotspots;
     private final List<ChrBaseRegion> mPanel;
     private final List<ChrBaseRegion> mHighConfidence;
-    private final Map<VariantHotspot, Candidate> mCandidateMap = Maps.newHashMap();
+    private final Map<VariantHotspot,Candidate> mCandidateMap;
     private List<Candidate> mCandidateList;
 
     public Candidates(final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel, final List<ChrBaseRegion> highConfidence)
@@ -25,6 +24,8 @@ public class Candidates
         mHotspots = hotspots;
         mPanel = panel;
         mHighConfidence = highConfidence;
+
+        mCandidateMap = Maps.newHashMap();
     }
 
     public void add(final Collection<AltContext> altContexts)
@@ -35,9 +36,18 @@ public class Candidates
         }
 
         final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
+
         for(final AltContext altContext : altContexts)
         {
-            mCandidateMap.computeIfAbsent(altContext, x -> new Candidate(tierSelector.tier(altContext), altContext)).update(altContext);
+            Candidate candidate = mCandidateMap.get(altContext);
+
+            if(candidate == null)
+            {
+                candidate = new Candidate(tierSelector.tier(altContext), altContext);
+                mCandidateMap.put(altContext, candidate);
+            }
+
+            candidate.update(altContext);
         }
     }
 

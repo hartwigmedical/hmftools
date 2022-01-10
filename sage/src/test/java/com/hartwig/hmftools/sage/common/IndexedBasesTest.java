@@ -1,8 +1,12 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.read.ReadContextMatch;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Assert;

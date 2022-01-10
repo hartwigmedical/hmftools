@@ -10,11 +10,10 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
-import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.RefSequence;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,13 +32,11 @@ public class CandidateStage
             final List<ChrBaseRegion> highConfidenceRegions, final Coverage coverage)
     {
         mConfig = config;
-
-        final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
-
         mHotspots = hotspots;
         mPanelRegions = panelRegions;
         mHighConfidenceRegions = highConfidenceRegions;
-        mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome, coverage);
+
+        mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, refGenome, coverage);
     }
 
     @NotNull

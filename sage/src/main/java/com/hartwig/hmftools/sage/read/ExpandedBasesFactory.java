@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.jetbrains.annotations.NotNull;
 

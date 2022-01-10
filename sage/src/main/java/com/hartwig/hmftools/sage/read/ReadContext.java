@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.jetbrains.annotations.NotNull;
 

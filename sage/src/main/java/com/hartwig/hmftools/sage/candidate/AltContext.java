@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.candidate;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +20,7 @@ public class AltContext implements VariantHotspot
     public final String Alt;
     public final RefContext RefContext;
     
-    private final List<ReadContextCandidate> mInterimReadContexts;
+    private final List<ReadContextCandidate> mReadContextCandidates;
 
     private int mRawSupportAlt;
     private int mRawBaseQualityAlt;
@@ -32,7 +32,7 @@ public class AltContext implements VariantHotspot
         Ref = ref;
         Alt = alt;
 
-        mInterimReadContexts = Lists.newArrayList();
+        mReadContextCandidates = Lists.newArrayList();
     }
 
     public void incrementAltRead(int baseQuality)
@@ -50,7 +50,7 @@ public class AltContext implements VariantHotspot
         int coreMatch = 0;
         ReadContextCandidate fullMatchCandidate = null;
 
-        for(ReadContextCandidate candidate : mInterimReadContexts)
+        for(ReadContextCandidate candidate : mReadContextCandidates)
         {
             final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
             switch(match)
@@ -75,16 +75,16 @@ public class AltContext implements VariantHotspot
             final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
             candidate.incrementCore(coreMatch);
             candidate.incrementPartial(partialMatch);
-            mInterimReadContexts.add(candidate);
+            mReadContextCandidates.add(candidate);
         }
         else if(newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength())
         {
-            mInterimReadContexts.remove(fullMatchCandidate);
+            mReadContextCandidates.remove(fullMatchCandidate);
             final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
             candidate.incrementCore(fullMatchCandidate.mCoreMatch);
             candidate.incrementPartial(fullMatchCandidate.mPartialMatch);
             candidate.incrementFull(fullMatchCandidate.mFullMatch, fullMatchCandidate.mMinNumberOfEvents);
-            mInterimReadContexts.add(candidate);
+            mReadContextCandidates.add(candidate);
         }
     }
 
@@ -101,18 +101,22 @@ public class AltContext implements VariantHotspot
     @VisibleForTesting
     List<ReadContextCandidate> interimReadContexts()
     {
-        return mInterimReadContexts;
+        return mReadContextCandidates;
     }
 
     public boolean finaliseAndValidate()
     {
-        mInterimReadContexts.removeIf(x -> x.readContext().incompleteFlanks());
-        Collections.sort(mInterimReadContexts);
-        if(!mInterimReadContexts.isEmpty())
+        mReadContextCandidates.removeIf(x -> x.readContext().incompleteFlanks());
+
+        Collections.sort(mReadContextCandidates);
+
+        if(!mReadContextCandidates.isEmpty())
         {
-            mCandidate = mInterimReadContexts.get(0);
+            mCandidate = mReadContextCandidates.get(0);
         }
-        mInterimReadContexts.clear();
+
+        mReadContextCandidates.clear();
+
         return mCandidate != null;
     }
 
@@ -163,9 +167,6 @@ public class AltContext implements VariantHotspot
         return mRawBaseQualityAlt;
     }
 
-    @NotNull
-    public String sample() { return RefContext.Sample; }
-
     @Override
     public boolean equals(@Nullable Object another)
     {
@@ -175,7 +176,7 @@ public class AltContext implements VariantHotspot
         return another instanceof VariantHotspot && equalTo((VariantHotspot) another);
     }
 
-    private boolean equalTo(VariantHotspot another)
+    private boolean equalTo(final VariantHotspot another)
     {
         return ref().equals(another.ref()) && alt().equals(another.alt()) && chromosome().equals(another.chromosome())
                 && position() == another.position();
@@ -190,6 +191,11 @@ public class AltContext implements VariantHotspot
         h += (h << 5) + chromosome().hashCode();
         h += (h << 5) + Ints.hashCode(position());
         return h;
+    }
+
+    public String toString()
+    {
+        return String.format("var(%s:%d %s->%s) candidates({})", chromosome(), position(), Ref, Alt, mReadContextCandidates.size());
     }
 
     static class ReadContextCandidate implements Comparable<ReadContextCandidate>
@@ -262,6 +268,11 @@ public class AltContext implements VariantHotspot
                 return partialCompare;
 
             return -Integer.compare(mCoreMatch, o.mCoreMatch);
+        }
+
+        public String toString()
+        {
+            return String.format("matches(f=%d p=%d c=%d)", mFullMatch, mPartialMatch, mCoreMatch);
         }
     }
 }

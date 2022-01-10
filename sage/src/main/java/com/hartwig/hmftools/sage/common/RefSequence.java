@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.common;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.sage.read.IndexedBases;
 
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;

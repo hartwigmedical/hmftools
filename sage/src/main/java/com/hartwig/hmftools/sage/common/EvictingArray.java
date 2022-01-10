@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.common;
 
 import static com.google.common.math.IntMath.ceilingPowerOfTwo;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.sage.context.RefContext;
+import com.hartwig.hmftools.sage.candidate.RefContext;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,10 +30,10 @@ public class EvictingArray
     {
         if(mMinPosition == 0)
         {
-            mMinPosition = (int) position - mCapacity + 1;
+            mMinPosition = position - mCapacity + 1;
         }
 
-        int distanceFromMinPosition = (int) position - mMinPosition;
+        int distanceFromMinPosition = position - mMinPosition;
         if(distanceFromMinPosition < 0)
         {
             SG_LOGGER.warn("ignoring read with position({}) before prior position({})", position, mMinPosition);
@@ -43,8 +43,8 @@ public class EvictingArray
 
         if(distanceFromMinPosition >= mCapacity)
         {
-            flush((int) position - mMinPosition - mCapacity + 1);
-            distanceFromMinPosition = (int) position - mMinPosition;
+            flush(position - mMinPosition - mCapacity + 1);
+            distanceFromMinPosition = position - mMinPosition;
         }
 
         int index = (mMinPositionIndex + distanceFromMinPosition) & (mElements.length - 1);

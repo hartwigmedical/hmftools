@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.read.IndexedBases;
-import com.hartwig.hmftools.sage.read.IndexedBasesTest;
+import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.IndexedBasesTest;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.VariantTier;
 

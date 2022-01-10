@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.samtools;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.sage.read.NumberEvents;
-import com.hartwig.hmftools.sage.context.RefSequence;
+import com.hartwig.hmftools.sage.common.RefSequence;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 
@@ -8,11 +8,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.read.IndexedBases;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.read.NumberEvents;
@@ -29,15 +31,15 @@ public class RefContextConsumer implements Consumer<SAMRecord>
     private final SageConfig mConfig;
     private final ChrBaseRegion mBounds;
     private final RefSequence mRefGenome;
-    private final RefContextFactory mCandidates;
+    private final RefContextCache mRefContextCache;
     private final ReadContextFactory mReadContextFactory;
 
     public RefContextConsumer(
-            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextFactory candidates)
+            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextCache refContextCache)
     {
         mBounds = bounds;
         mRefGenome = refGenome;
-        mCandidates = candidates;
+        mRefContextCache = refContextCache;
         mReadContextFactory = new ReadContextFactory(config.ReadContextFlankSize);
 
         mConfig = config;
@@ -82,52 +84,11 @@ public class RefContextConsumer implements Consumer<SAMRecord>
 
         CigarTraversal.traverseCigar(record, handler);
 
-        // if an SNV core overlaps an indel core, then extend the cores of both
-        for(int i = 0; i < altReads.size(); i++)
-        {
-            final AltRead snv = altReads.get(i);
-            if(!snv.isIndel() && snv.containsReadContext())
-            {
-                for(int j = altReads.size() - 1; j > i; j--)
-                {
-                    final AltRead nextIndel = altReads.get(j);
-                    if(nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext())
-                    {
-                        if(nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex())
-                        {
-                            snv.extend(nextIndel);
-                            nextIndel.extend(snv);
-                        }
-                    }
-                }
-            }
-        }
-
-        for(int i = altReads.size() - 1; i >= 0; i--)
-        {
-            final AltRead snv = altReads.get(i);
-            if(!snv.isIndel() && snv.containsReadContext())
-            {
-                for(int j = 0; j < i; j++)
-                {
-                    final AltRead previousIndel = altReads.get(j);
-                    if(previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext())
-                    {
-                        if(previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex())
-                        {
-                            previousIndel.extend(snv);
-                            snv.extend(previousIndel);
-                        }
-                    }
-                }
-
-            }
-        }
+        checkCoreExtension(altReads);
 
         altReads.forEach(AltRead::updateRefContext);
     }
 
-    @Nullable
     private AltRead processInsert(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents)
@@ -141,8 +102,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
             boolean findReadContext = withinReadContext(readIndex, record);
 
-            final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
-            if(!refContext.reachedLimit())
+            final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+            if(!reachedDepthLimit(refContext))
             {
                 final int baseQuality = baseQuality(readIndex, record, alt.length());
                 final ReadContext readContext =
@@ -154,7 +115,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return null;
     }
 
-    @Nullable
     private AltRead processDel(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases, int numberOfEvents)
@@ -168,8 +128,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final String alt = new String(record.getReadBases(), readIndex, 1);
             boolean findReadContext = withinReadContext(readIndex, record);
 
-            final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
-            if(refContext != null && !refContext.reachedLimit())
+            final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+            if(refContext != null && !reachedDepthLimit(refContext))
             {
                 final int baseQuality = baseQuality(readIndex, record, 2);
                 final ReadContext readContext =
@@ -181,7 +141,6 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return null;
     }
 
-    @NotNull
     private List<AltRead> processAlignment(
             final SAMRecord record, int readBasesStartIndex, int refPositionStart,
             int alignmentLength, final IndexedBases refBases, int numberOfEvents)
@@ -205,8 +164,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
             final byte readByte = record.getReadBases()[readBaseIndex];
             boolean isWithinReadContext = withinReadContext(readBaseIndex, record);
 
-            final RefContext refContext = mCandidates.refContext(record.getContig(), refPosition);
-            if(refContext != null && !refContext.reachedLimit())
+            final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+            if(refContext != null && !reachedDepthLimit(refContext))
             {
                 if(readByte != refByte)
                 {
@@ -269,9 +228,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                         + i];
 
         if(isDifferent.apply(2))
-        {
             return 3;
-        }
 
         return isDifferent.apply((1)) ? 2 : 1;
     }
@@ -292,14 +249,69 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return positionsOverlap(record.getStart(), record.getEnd(), mBounds.start(), mBounds.end());
     }
 
+    private boolean reachedDepthLimit(final RefContext refContext)
+    {
+        return refContext.exceedsDepthLimit(mConfig.MaxReadDepth, mConfig.MaxReadDepthPanel);
+    }
+
     private boolean reachedDepthLimit(final SAMRecord record)
     {
-        int alignmentStart = record.getAlignmentStart();
-        int alignmentEnd = record.getAlignmentEnd();
+        RefContext startRefContext = mRefContextCache.getOrCreateRefContext(mBounds.Chromosome, record.getAlignmentStart());
 
-        RefContext startRefContext = mCandidates.refContext(mBounds.Chromosome, alignmentStart);
-        RefContext endRefContext = mCandidates.refContext(mBounds.Chromosome, alignmentEnd);
+        if(reachedDepthLimit(startRefContext))
+            return true;
 
-        return startRefContext.reachedLimit() && endRefContext.reachedLimit();
+        RefContext endRefContext = mRefContextCache.getOrCreateRefContext(mBounds.Chromosome, record.getAlignmentEnd());
+
+        return reachedDepthLimit(endRefContext);
+    }
+
+    private void checkCoreExtension(final List<AltRead> altReads)
+    {
+        if(altReads.size() < 2)
+            return;
+
+        // if an SNV core overlaps an indel core, then extend the cores of both
+        for(int i = 0; i < altReads.size(); i++)
+        {
+            final AltRead snv = altReads.get(i);
+            if(!snv.isIndel() && snv.containsReadContext())
+            {
+                for(int j = altReads.size() - 1; j > i; j--)
+                {
+                    final AltRead nextIndel = altReads.get(j);
+                    if(nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext())
+                    {
+                        if(nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex())
+                        {
+                            snv.extend(nextIndel);
+                            nextIndel.extend(snv);
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int i = altReads.size() - 1; i >= 0; i--)
+        {
+            final AltRead snv = altReads.get(i);
+
+            if(!snv.isIndel() && snv.containsReadContext())
+            {
+                for(int j = 0; j < i; j++)
+                {
+                    final AltRead previousIndel = altReads.get(j);
+                    if(previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext())
+                    {
+                        if(previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex())
+                        {
+                            previousIndel.extend(snv);
+                            snv.extend(previousIndel);
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }

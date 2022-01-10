@@ -9,6 +9,7 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.variant.MicrohomologyContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

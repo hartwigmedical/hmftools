@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.candidate;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.RefContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextTest;
 
@@ -25,7 +27,7 @@ public class AltContextTest
     @Test
     public void testIncompleteReadContext()
     {
-        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final RefContext refContext = new RefContext(CHROM, POS, false);
         final AltContext victim = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
         final String core2 = "GATAA";
@@ -45,7 +47,7 @@ public class AltContextTest
     @Test
     public void testFullMatch()
     {
-        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final RefContext refContext = new RefContext(CHROM, POS, false);
         final AltContext victim = new AltContext(refContext, "C", "T");
         final String core1 = "GATAC";
 
@@ -65,7 +67,7 @@ public class AltContextTest
     @Test
     public void testCoreMatchAfterFullMatch()
     {
-        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final RefContext refContext = new RefContext(CHROM, POS, false);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
         final String core1 = "GATAC";
@@ -94,7 +96,7 @@ public class AltContextTest
     @Test
     public void testPartialMatchAfterFullMatch()
     {
-        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final RefContext refContext = new RefContext(CHROM, POS, false);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
         final String core1 = "GATAC";
@@ -125,7 +127,7 @@ public class AltContextTest
     {
         String core = "CAT";
 
-        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final RefContext refContext = new RefContext(CHROM, POS, false);
         final AltContext victim = new AltContext(refContext, "C", "T");
 
         victim.addReadContext(3, simpleReadContext("AAA", core, "CCC"));

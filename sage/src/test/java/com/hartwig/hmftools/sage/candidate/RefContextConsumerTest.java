@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.candidate;
 
 import static org.junit.Assert.assertEquals;
+
+import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
 import org.junit.Test;
 

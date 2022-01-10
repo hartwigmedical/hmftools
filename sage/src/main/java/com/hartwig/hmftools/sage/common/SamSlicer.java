@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.sam;
+package com.hartwig.hmftools.sage.common;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,8 +7,6 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -44,7 +42,7 @@ public class SamSlicer
         }
     }
 
-    public void slice(final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer)
+    public void slice(final SamReader samReader, final Consumer<SAMRecord> consumer)
     {
         mBamSlicer.slice(samReader, mRegions, consumer);
 

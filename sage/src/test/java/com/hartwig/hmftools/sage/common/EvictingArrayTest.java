@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.common;
 
-import static com.hartwig.hmftools.sage.context.EvictingArray.calculateSize;
-import static com.hartwig.hmftools.sage.context.EvictingArray.calculateSizeOld;
+import static com.hartwig.hmftools.sage.common.EvictingArray.calculateSize;
+import static com.hartwig.hmftools.sage.common.EvictingArray.calculateSizeOld;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.sage.candidate.RefContext;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -98,10 +99,8 @@ public class EvictingArrayTest
         }
     }
 
-    private static final String TEST_SAMPLE_ID = "SAMPLE";
-
     private static RefContext create(int pos)
     {
-        return new RefContext(TEST_SAMPLE_ID, "1", pos, 100);
+        return new RefContext("1", pos, false);
     }
 }

@@ -11,14 +11,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RefContextConsumer;
-import com.hartwig.hmftools.sage.context.RefContextFactory;
+import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
+import com.hartwig.hmftools.sage.candidate.RefContextCache;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
-import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.sam.SamSlicer;
-import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.RefSequence;
+import com.hartwig.hmftools.sage.common.SamSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,16 +33,14 @@ public class CandidateEvidence
     private final List<VariantHotspot> mHotspots;
     private final List<ChrBaseRegion> mPanel;
     private final ReferenceSequenceFile mRefGenome;
-    private final SamSlicerFactory mSamSlicerFactory;
     private final Coverage mCoverage;
 
     public CandidateEvidence(
             final SageConfig config, final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel,
-            final SamSlicerFactory samSlicerFactory, final ReferenceSequenceFile refGenome, final Coverage coverage)
+            final ReferenceSequenceFile refGenome, final Coverage coverage)
     {
         mConfig = config;
         mPanel = panel;
-        mSamSlicerFactory = samSlicerFactory;
         mHotspots = hotspots;
         mRefGenome = refGenome;
         mCoverage = coverage;
@@ -55,8 +52,8 @@ public class CandidateEvidence
     {
         SG_LOGGER.trace("variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
-        final RefContextFactory candidates = new RefContextFactory(mConfig, sample, mHotspots, mPanel);
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, candidates);
+        final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
+        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache);
 
         final Consumer<SAMRecord> consumer = record ->
         {
@@ -68,16 +65,17 @@ public class CandidateEvidence
             }
         };
 
-        return readBam(bamFile, bounds, consumer, candidates);
+        return readBam(bamFile, bounds, consumer, refContextCache);
     }
 
     @NotNull
     private List<AltContext> readBam(
-            final String bamFile, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextFactory candidates)
+            final String bamFile, final ChrBaseRegion bounds, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
     {
         final List<AltContext> altContexts = Lists.newArrayList();
 
-        final SamSlicer slicer = mSamSlicerFactory.create(bounds);
+        final SamSlicer slicer = mConfig.PanelOnly ?
+                new SamSlicer(0, bounds, mPanel) : new SamSlicer(0, bounds);
 
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(mConfig.Stringency)
@@ -88,7 +86,7 @@ public class CandidateEvidence
             slicer.slice(tumorReader, recordConsumer);
 
             // Add all valid alt contexts
-            altContexts.addAll(candidates.altContexts());
+            altContexts.addAll(refContextCache.altContexts());
         }
         catch(Exception e)
         {

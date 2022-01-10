@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.candidate;
 
 import java.util.Collection;
 import java.util.Map;
@@ -12,32 +12,25 @@ import com.hartwig.hmftools.sage.read.ReadContext;
 
 public class RefContext implements GenomePosition
 {
-    public final String Sample;
     public final String Chromosome;
-    public final int MaxDepth;
+    private final boolean mUsePanelDepth;
     public final int Position;
     
-    private final Map<String,AltContext> mAlts;
+    private Map<String,AltContext> mAlts;
 
     private int mRawDepth;
 
-    public RefContext(final String sample, final String chromosome, int position, int maxDepth)
+    public RefContext(final String chromosome, int position, boolean usePanelDepth)
     {
-        Sample = sample;
         Chromosome = chromosome;
         Position = position;
-        MaxDepth = maxDepth;
-        mAlts = Maps.newHashMap();
+        mUsePanelDepth = usePanelDepth;
+        mAlts = null;
     }
 
-    public Collection<AltContext> alts()
+    public Collection<AltContext> altContexts()
     {
-        return mAlts.values();
-    }
-
-    public boolean reachedLimit()
-    {
-        return mRawDepth >= MaxDepth;
+        return mAlts != null ? mAlts.values() : null;
     }
 
     public void refRead(boolean sufficientMapQuality)
@@ -79,6 +72,15 @@ public class RefContext implements GenomePosition
         return mRawDepth;
     }
 
+
+    public boolean exceedsDepthLimit(int standardDepthLimit, int panelDepthLimit)
+    {
+        if(mUsePanelDepth)
+            return mRawDepth >= panelDepthLimit;
+        else
+            return mRawDepth >= standardDepthLimit;
+    }
+
     @Override
     public boolean equals(@Nullable Object another)
     {
@@ -104,6 +106,9 @@ public class RefContext implements GenomePosition
 
     private AltContext getOrCreateAltContext(final String ref, final String alt)
     {
+        if(mAlts == null)
+            mAlts = Maps.newHashMap();
+
         final String refAltKey = ref + "|" + alt;
         AltContext altContext = mAlts.get(refAltKey);
 

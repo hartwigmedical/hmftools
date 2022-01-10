@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.candidate;
 
 import com.hartwig.hmftools.sage.read.ReadContext;
 
@@ -7,12 +7,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class AltRead
 {
-    public final RefContext RefContext;
     public final String Ref;
     public final String Alt;
     public final int BaseQuality;
     public final int NumberOfEvents;
     public final boolean SufficientMapQuality;
+
+    private final RefContext mRefContext;
 
     @Nullable
     private ReadContext mReadContext;
@@ -21,7 +22,7 @@ public class AltRead
             final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
             final boolean sufficientMapQuality, final ReadContext readContext)
     {
-        RefContext = refContext;
+        mRefContext = refContext;
         Ref = ref;
         Alt = alt;
         BaseQuality = baseQuality;
@@ -38,7 +39,7 @@ public class AltRead
 
     public int position()
     {
-        return RefContext.position();
+        return mRefContext.position();
     }
 
     public boolean isIndel()
@@ -74,7 +75,7 @@ public class AltRead
 
     public void updateRefContext()
     {
-        RefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
+        mRefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.sage.read.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.read.ReadContextMatch.FULL;
@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.sage.read.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.read.ReadContextMatch.PARTIAL;
 
 import java.util.Arrays;
+
+import com.hartwig.hmftools.sage.read.ReadContextMatch;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +50,7 @@ public class IndexedBases
         FlankSize = flankSize;
     }
 
-    boolean flanksComplete()
+    public boolean flanksComplete()
     {
         return leftFlankLength() == FlankSize && rightFlankLength() == FlankSize;
     }

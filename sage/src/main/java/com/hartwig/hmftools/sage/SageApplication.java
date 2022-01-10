@@ -118,7 +118,8 @@ public class SageApplication implements AutoCloseable
                 }
                 catch(Exception e)
                 {
-                    SG_LOGGER.error("chromosome({}} failed to excute pipeline tasks", chromosome);
+                    SG_LOGGER.error("chromosome({}) failed to excute pipeline tasks: {}", chromosome, e.toString());
+                    e.printStackTrace();
                 }
 
                 System.gc();
