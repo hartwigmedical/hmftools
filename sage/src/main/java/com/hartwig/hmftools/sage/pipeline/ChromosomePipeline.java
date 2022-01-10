@@ -90,15 +90,20 @@ public class ChromosomePipeline implements AutoCloseable
         // even if regions were executed out of order, they must be phased in order
         mRegions.sort(Comparator.comparing(RegionFuture::region));
 
+        // SG_LOGGER.trace("sorted {} completed(?) regions", mRegions.size());
+
         // Phasing must be done in order but we can do it eagerly as each new region comes in
         // It is not necessary to wait for the entire chromosome to be finished to start
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
         final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = mRegions.iterator();
         while(regionsIterator.hasNext())
         {
-            CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
-            done = done.thenCombine(region, (aVoid, sageVariants) ->
+            ChrBaseRegion region = regionsIterator.next().region();
+            CompletableFuture<List<SageVariant>> regionVariantsFuture = regionsIterator.next().future();
+
+            done = done.thenCombine(regionVariantsFuture, (aVoid, sageVariants) ->
             {
+                SG_LOGGER.trace("region({}) phasing {} variants", region, sageVariants.size());
                 sageVariants.forEach(mVariantPhaser);
                 return null;
             });
@@ -144,10 +149,9 @@ public class ChromosomePipeline implements AutoCloseable
         && !passingPhaseSets.contains(variant.localPhaseSet()))
         {
             final ReadContextCounter normal = variant.normalAltContexts().get(0);
+
             if(normal.altSupport() > mConfig.Filter.FilteredMaxNormalAltSupport)
-            {
                 return false;
-            }
         }
 
         return true;

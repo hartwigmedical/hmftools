@@ -32,7 +32,6 @@ public class VariantPhaser implements Consumer<SageVariant>
         mLocalPhaseSet = new LocalPhaseSet(phaseSetCounter, mLocalRealignSet);
     }
 
-    @NotNull
     public Set<Integer> passingPhaseSets()
     {
         return mLocalPhaseSet.passingPhaseSets();

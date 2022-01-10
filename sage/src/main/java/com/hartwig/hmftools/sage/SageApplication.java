@@ -94,7 +94,7 @@ public class SageApplication implements AutoCloseable
         SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
     }
 
-    private void run() throws InterruptedException, ExecutionException, IOException
+    private void run() throws IOException
     {
         long startTime = System.currentTimeMillis();
         final Coverage coverage = createCoverage();

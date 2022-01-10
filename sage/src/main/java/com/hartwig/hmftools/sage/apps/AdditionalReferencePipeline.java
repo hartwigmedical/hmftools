@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.pipeline;
+package com.hartwig.hmftools.sage.apps;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -65,7 +66,7 @@ public class AdditionalReferencePipeline
                 .collect(Collectors.toList()));
 
         final CompletableFuture<ReadContextCounters> evidenceFutures =
-                mEvidenceStage.findEvidence(mConfig.ReferenceIds, mConfig.ReferenceBams, candidateFutures);
+                mEvidenceStage.findEvidence(region, "reference", mConfig.ReferenceIds, mConfig.ReferenceBams, candidateFutures);
 
         return evidenceFutures.thenApply(x -> update(x, variants));
     }

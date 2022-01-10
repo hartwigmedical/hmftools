@@ -33,31 +33,6 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 
     protected abstract void processSageVariant(final SageVariant newVariant, final Collection<SageVariant> buffer);
 
-    public static boolean longerContainsShorter(final SageVariant shorter, final SageVariant longer)
-    {
-        return longerContainsShorter(shorter.variant(), longer.variant());
-    }
-
-    public static boolean longerContainsShorter(final VariantHotspot shorter, final VariantHotspot longer)
-    {
-        int longerStart = longer.position();
-        int longerEnd = longer.end();
-
-        int shorterStart = shorter.position();
-        int shorterEnd = shorter.end();
-
-        if(shorterStart < longerStart || shorterEnd > longerEnd)
-        {
-            return false;
-        }
-
-        final String shorterAlt = shorter.alt();
-
-        int offset = shorterStart - longerStart;
-        final String longerAlt = new String(longer.alt().getBytes(), offset, shorter.alt().length());
-        return shorterAlt.equals(longerAlt);
-    }
-
     public void flush()
     {
         preFlush(mVariantQueue);
@@ -65,18 +40,20 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         mVariantQueue.clear();
     }
 
-    protected void flush(final SageVariant position)
+    protected void flush(final SageVariant variant)
     {
         final List<SageVariant> flushed = Lists.newArrayList();
         final Iterator<SageVariant> iterator = mVariantQueue.iterator();
+
         while(iterator.hasNext())
         {
-            final SageVariant entry = iterator.next();
-            int entryEnd = entry.position() + entry.ref().length() - 1;
-            if(!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - mMaxDistance)
+            final SageVariant queuedVariant = iterator.next();
+
+            int entryEnd = queuedVariant.position() + queuedVariant.ref().length() - 1;
+            if(!queuedVariant.chromosome().equals(variant.chromosome()) || entryEnd < variant.position() - mMaxDistance)
             {
                 iterator.remove();
-                flushed.add(entry);
+                flushed.add(queuedVariant);
             }
             else
             {
@@ -93,8 +70,29 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         flushed.clear();
     }
 
-    protected void preFlush(final Collection<SageVariant> variants)
-    {
+    protected void preFlush(final Collection<SageVariant> variants) { }
 
+    public static boolean longerContainsShorter(final SageVariant shorter, final SageVariant longer)
+    {
+        return longerContainsShorter(shorter.variant(), longer.variant());
     }
+
+    public static boolean longerContainsShorter(final VariantHotspot shorter, final VariantHotspot longer)
+    {
+        int longerStart = longer.position();
+        int longerEnd = longer.end();
+
+        int shorterStart = shorter.position();
+        int shorterEnd = shorter.end();
+
+        if(shorterStart < longerStart || shorterEnd > longerEnd)
+            return false;
+
+        final String shorterAlt = shorter.alt();
+
+        int offset = shorterStart - longerStart;
+        final String longerAlt = new String(longer.alt().getBytes(), offset, shorter.alt().length());
+        return shorterAlt.equals(longerAlt);
+    }
+
 }

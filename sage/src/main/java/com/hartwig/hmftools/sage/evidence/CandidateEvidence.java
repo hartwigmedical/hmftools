@@ -50,7 +50,6 @@ public class CandidateEvidence
     public List<AltContext> readBam(
             final String sample, final String bamFile, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
-        SG_LOGGER.trace("variant candidates {} position {}:{}", sample, bounds.Chromosome, bounds.start());
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache);
@@ -58,6 +57,7 @@ public class CandidateEvidence
         final Consumer<SAMRecord> consumer = record ->
         {
             refContextConsumer.accept(record);
+
             if(!geneCoverage.isEmpty())
             {
                 ChrBaseRegion alignment = new ChrBaseRegion(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());

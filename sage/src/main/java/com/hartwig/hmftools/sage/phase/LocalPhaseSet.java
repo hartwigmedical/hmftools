@@ -24,7 +24,6 @@ public class LocalPhaseSet extends BufferedPostProcessor
         mPhaseSetCounter = phaseSetCounter;
     }
 
-    @NotNull
     public Set<Integer> passingPhaseSets()
     {
         return mPassingPhaseSets;
@@ -44,31 +43,32 @@ public class LocalPhaseSet extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(final SageVariant newEntry, final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant newVariant, final Collection<SageVariant> existingVariants)
     {
-        final ReadContext newReadContext = newEntry.readContext();
-        for(final SageVariant oldEntry : buffer)
-        {
-            final ReadContext oldReadContext = oldEntry.readContext();
+        final ReadContext newReadContext = newVariant.readContext();
 
-            if(!rightInLeftDel(oldEntry.variant(), newEntry.variant()))
+        for(final SageVariant existingVariant : existingVariants)
+        {
+            final ReadContext oldReadContext = existingVariant.readContext();
+
+            if(!rightInLeftDel(existingVariant.variant(), newVariant.variant()))
             {
-                int offset = adjustedOffset(oldEntry.variant(), newEntry.variant());
+                int offset = adjustedOffset(existingVariant.variant(), newVariant.variant());
                 if(oldReadContext.phased(offset, newReadContext))
                 {
-                    if(oldEntry.localPhaseSet() != 0)
+                    if(existingVariant.localPhaseSet() != 0)
                     {
-                        newEntry.localPhaseSet(oldEntry.localPhaseSet());
+                        newVariant.localPhaseSet(existingVariant.localPhaseSet());
                     }
-                    else if(newEntry.localPhaseSet() != 0)
+                    else if(newVariant.localPhaseSet() != 0)
                     {
-                        oldEntry.localPhaseSet(newEntry.localPhaseSet());
+                        existingVariant.localPhaseSet(newVariant.localPhaseSet());
                     }
                     else
                     {
                         int nextLps = mPhaseSetCounter.getNext();
-                        oldEntry.localPhaseSet(nextLps);
-                        newEntry.localPhaseSet(nextLps);
+                        existingVariant.localPhaseSet(nextLps);
+                        newVariant.localPhaseSet(nextLps);
                     }
                 }
             }

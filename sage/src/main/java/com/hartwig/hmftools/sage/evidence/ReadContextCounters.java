@@ -17,11 +17,13 @@ public class ReadContextCounters
 {
     private final Comparator<ReadContextCounter> mComparator;
     private final List<Candidate> mCandidates;
-    private final ListMultimap<VariantHotspot, ReadContextCounter> mMap = ArrayListMultimap.create();
+
+    private final ListMultimap<VariantHotspot,ReadContextCounter> mMap;
 
     public ReadContextCounters(final String primarySample, final List<Candidate> candidates)
     {
         mCandidates = candidates;
+        mMap = ArrayListMultimap.create();
         mComparator = (o1, o2) ->
         {
             if(o1.Sample.equals(primarySample))
@@ -33,6 +35,8 @@ public class ReadContextCounters
             return o1.Sample.compareTo(o2.Sample);
         };
     }
+
+    public ListMultimap<VariantHotspot,ReadContextCounter> readContextCounters() { return mMap; }
 
     @NotNull
     public List<ReadContextCounter> readContextCounters(final VariantHotspot variant)

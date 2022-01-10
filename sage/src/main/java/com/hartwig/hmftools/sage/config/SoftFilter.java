@@ -50,14 +50,10 @@ public enum SoftFilter
         for(final String softFilter : softFilters)
         {
             if(TUMOR_FILTERS.contains(softFilter))
-            {
                 return false;
-            }
 
             if(!GERMLINE_FILTERS.contains(softFilter))
-            {
                 return false;
-            }
         }
 
         return !softFilters.isEmpty();
