@@ -169,7 +169,7 @@ public class ReadContext
         return Math.round(quality / (rightIndex - leftIndex + 1));
     }
 
-    public boolean phased(int offset, @NotNull final ReadContext other)
+    public boolean phased(int offset, final ReadContext other)
     {
         return ReadBases.phased(offset, other.ReadBases);
     }

@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneDepthFile;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
@@ -48,6 +49,7 @@ public class SageApplication implements AutoCloseable
     private final ReferenceData mRefData;
 
     private final ExecutorService mExecutorService;
+    private final PhaseSetCounter mPhaseSetCounter;
 
     private final VariantVCF mVcfFile;
     private final VariantFile mVariantFile;
@@ -75,6 +77,8 @@ public class SageApplication implements AutoCloseable
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+
+        mPhaseSetCounter = new PhaseSetCounter();
 
         mVcfFile = new VariantVCF(mRefData.RefGenome, mConfig);
 
@@ -109,16 +113,16 @@ public class SageApplication implements AutoCloseable
                 if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
                     continue;
 
-                try //(final ChromosomePipeline pipeline = createChromosomePipeline(chromosome, coverage, recalibrationMap))
+                try
                 {
                     final ChromosomePipeline pipeline = new ChromosomePipeline(
-                            chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, this::writeVariant);
+                            chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
 
                     pipeline.process();
                 }
                 catch(Exception e)
                 {
-                    SG_LOGGER.error("chromosome({}) failed to excute pipeline tasks: {}", chromosome, e.toString());
+                    SG_LOGGER.error("chromosome({}) failed to execute pipeline tasks: {}", chromosome, e.toString());
                     e.printStackTrace();
                 }
 

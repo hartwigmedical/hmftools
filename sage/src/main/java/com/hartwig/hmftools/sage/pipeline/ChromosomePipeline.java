@@ -23,7 +23,8 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
-import com.hartwig.hmftools.sage.phase.Phase;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
+import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -38,21 +39,21 @@ public class ChromosomePipeline implements AutoCloseable
     private final List<RegionFuture<List<SageVariant>>> mRegions = Lists.newArrayList();
     private final IndexedFastaSequenceFile mRefGenome;
     private final SomaticPipeline mSomaticPipeline;
-    private final Consumer<SageVariant> mConsumer;
+    private final Consumer<SageVariant> mWriteConsumer;
     private final ChromosomePartition mPartition;
-    private final Phase mPhase;
+    private final VariantPhaser mVariantPhaser;
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     public ChromosomePipeline(
             final String chromosome, final SageConfig config, final Executor executor,
-            final ReferenceData refData, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final Coverage coverage, final Consumer<SageVariant> consumer)
+            final ReferenceData refData, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
+            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
     {
         mChromosome = chromosome;
         mConfig = config;
         mRefGenome = loadRefGenome(config.RefGenomeFile);
-        mConsumer = consumer;
+        mWriteConsumer = consumer;
 
         final Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
@@ -64,7 +65,7 @@ public class ChromosomePipeline implements AutoCloseable
 
         mPartition = new ChromosomePartition(config, mRefGenome);
 
-        mPhase = new Phase(refData.ChromosomeTranscripts.get(chromosome), this::write);
+        mVariantPhaser = new VariantPhaser(refData.ChromosomeTranscripts.get(chromosome), phaseSetCounter, this::write);
     }
 
     public String chromosome()
@@ -89,8 +90,8 @@ public class ChromosomePipeline implements AutoCloseable
         // even if regions were executed out of order, they must be phased in order
         mRegions.sort(Comparator.comparing(RegionFuture::region));
 
-        // Phasing must be done in order but we can do it eagerly as each new region comes in.
-        // It is not necessary to wait for the entire chromosome to be finished to start.
+        // Phasing must be done in order but we can do it eagerly as each new region comes in
+        // It is not necessary to wait for the entire chromosome to be finished to start
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
         final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = mRegions.iterator();
         while(regionsIterator.hasNext())
@@ -98,7 +99,7 @@ public class ChromosomePipeline implements AutoCloseable
             CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
             done = done.thenCombine(region, (aVoid, sageVariants) ->
             {
-                sageVariants.forEach(mPhase);
+                sageVariants.forEach(mVariantPhaser);
                 return null;
             });
 
@@ -107,42 +108,42 @@ public class ChromosomePipeline implements AutoCloseable
 
         return done.thenApply(aVoid ->
         {
-            mPhase.flush();
+            mVariantPhaser.flush();
             SG_LOGGER.info("processing chromosome {} complete", mChromosome);
             return ChromosomePipeline.this;
         });
     }
 
-    private void write(final SageVariant entry)
+    private void write(final SageVariant variant)
     {
-        if(include(entry, mPhase.passingPhaseSets()))
+        if(checkWriteVariant(variant, mVariantPhaser.passingPhaseSets()))
         {
-            mConsumer.accept(entry);
+            mWriteConsumer.accept(variant);
         }
     }
 
-    private boolean include(final SageVariant entry, final Set<Integer> passingPhaseSets)
+    private boolean checkWriteVariant(final SageVariant variant, final Set<Integer> passingPhaseSets)
     {
-        if(mConfig.PanelOnly && !PANEL_ONLY_TIERS.contains(entry.tier()))
+        if(mConfig.PanelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
             return false;
 
-        if(entry.isPassing())
+        if(variant.isPassing())
             return true;
 
         if(mConfig.Filter.HardFilter)
             return false;
 
-        if(entry.tier() == VariantTier.HOTSPOT)
+        if(variant.tier() == VariantTier.HOTSPOT)
             return true;
 
         // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records
-        if(entry.mixedGermlineImpact() > 0)
+        if(variant.mixedGermlineImpact() > 0)
             return true;
 
-        if(!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())
-        && !passingPhaseSets.contains(entry.localPhaseSet()))
+        if(!variant.isNormalEmpty() && !variant.isTumorEmpty() && !MitochondrialChromosome.contains(variant.chromosome())
+        && !passingPhaseSets.contains(variant.localPhaseSet()))
         {
-            final ReadContextCounter normal = entry.normalAltContexts().get(0);
+            final ReadContextCounter normal = variant.normalAltContexts().get(0);
             if(normal.altSupport() > mConfig.Filter.FilteredMaxNormalAltSupport)
             {
                 return false;

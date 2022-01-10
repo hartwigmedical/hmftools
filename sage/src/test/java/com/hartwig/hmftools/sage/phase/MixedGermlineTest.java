@@ -99,11 +99,14 @@ public class MixedGermlineTest
     {
         final List<SageVariant> consumer = Lists.newArrayList();
 
-        final Phase victim = new Phase(mTranscripts, consumer::add);
+        PhaseSetCounter phaseSetCounter = new PhaseSetCounter();
+        final VariantPhaser victim = new VariantPhaser(mTranscripts, phaseSetCounter, consumer::add);
+
+        int nextLps = phaseSetCounter.getNext();
 
         for(SageVariant variant : variants)
         {
-            variant.localPhaseSet(1);
+            variant.localPhaseSet(nextLps);
             victim.accept(variant);
         }
         assertEquals(0, consumer.size());

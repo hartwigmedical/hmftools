@@ -6,18 +6,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-
-import org.apache.commons.compress.utils.Lists;
-import org.jetbrains.annotations.NotNull;
 
 public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 {
     private final int mMaxDistance;
 
-    private final ArrayDeque<SageVariant> buffer = new ArrayDeque<>();
+    private final ArrayDeque<SageVariant> mVariantQueue = new ArrayDeque<>();
     private final Consumer<SageVariant> mConsumer;
 
     public BufferedPostProcessor(int maxDistance, final Consumer<SageVariant> consumer)
@@ -30,18 +27,18 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
     public void accept(final SageVariant newVariant)
     {
         flush(newVariant);
-        processSageVariant(newVariant, buffer);
-        buffer.add(newVariant);
+        processSageVariant(newVariant, mVariantQueue);
+        mVariantQueue.add(newVariant);
     }
 
-    protected abstract void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer);
+    protected abstract void processSageVariant(final SageVariant newVariant, final Collection<SageVariant> buffer);
 
-    public static boolean longerContainsShorter(@NotNull final SageVariant shorter, @NotNull final SageVariant longer)
+    public static boolean longerContainsShorter(final SageVariant shorter, final SageVariant longer)
     {
         return longerContainsShorter(shorter.variant(), longer.variant());
     }
 
-    public static boolean longerContainsShorter(@NotNull final VariantHotspot shorter, @NotNull final VariantHotspot longer)
+    public static boolean longerContainsShorter(final VariantHotspot shorter, final VariantHotspot longer)
     {
         int longerStart = longer.position();
         int longerEnd = longer.end();
@@ -63,15 +60,15 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 
     public void flush()
     {
-        preFlush(buffer);
-        buffer.forEach(mConsumer);
-        buffer.clear();
+        preFlush(mVariantQueue);
+        mVariantQueue.forEach(mConsumer);
+        mVariantQueue.clear();
     }
 
     protected void flush(final SageVariant position)
     {
         final List<SageVariant> flushed = Lists.newArrayList();
-        final Iterator<SageVariant> iterator = buffer.iterator();
+        final Iterator<SageVariant> iterator = mVariantQueue.iterator();
         while(iterator.hasNext())
         {
             final SageVariant entry = iterator.next();
@@ -96,7 +93,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         flushed.clear();
     }
 
-    protected void preFlush(@NotNull final Collection<SageVariant> variants)
+    protected void preFlush(final Collection<SageVariant> variants)
     {
 
     }

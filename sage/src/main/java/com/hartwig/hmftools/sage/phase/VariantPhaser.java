@@ -9,7 +9,7 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Phase implements Consumer<SageVariant>
+public class VariantPhaser implements Consumer<SageVariant>
 {
     public static final int PHASE_BUFFER = 150;
 
@@ -21,7 +21,7 @@ public class Phase implements Consumer<SageVariant>
     private final MixedSomaticGermlineIdentifier mMixedSomaticGermlineIdentifier;
     private final MixedSomaticGermlineDedup mMixedSomaticGermlineDedup;
 
-    public Phase(final List<TranscriptData> transcripts, final Consumer<SageVariant> consumer)
+    public VariantPhaser(final List<TranscriptData> transcripts, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
     {
         mDedupRealign = new DedupRealign(consumer);
         mDedupIndel = new DedupIndel(mDedupRealign);
@@ -29,7 +29,7 @@ public class Phase implements Consumer<SageVariant>
         mMixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(mDedupMnv, transcripts);
         mMixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mMixedSomaticGermlineDedup);
         mLocalRealignSet = new LocalRealignSet(mMixedSomaticGermlineIdentifier);
-        mLocalPhaseSet = new LocalPhaseSet(mLocalRealignSet);
+        mLocalPhaseSet = new LocalPhaseSet(phaseSetCounter, mLocalRealignSet);
     }
 
     @NotNull

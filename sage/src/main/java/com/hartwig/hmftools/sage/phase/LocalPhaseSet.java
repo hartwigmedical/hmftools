@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.PHASE_BUFFER;
 
 import java.util.Collection;
 import java.util.Set;
@@ -15,12 +15,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class LocalPhaseSet extends BufferedPostProcessor
 {
-    private int mPhase;
+    private final PhaseSetCounter mPhaseSetCounter;
     private final Set<Integer> mPassingPhaseSets = Sets.newHashSet();
 
-    public LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer)
+    public LocalPhaseSet(final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
     {
         super(PHASE_BUFFER, consumer);
+        mPhaseSetCounter = phaseSetCounter;
     }
 
     @NotNull
@@ -65,9 +66,9 @@ public class LocalPhaseSet extends BufferedPostProcessor
                     }
                     else
                     {
-                        mPhase++;
-                        oldEntry.localPhaseSet(mPhase);
-                        newEntry.localPhaseSet(mPhase);
+                        int nextLps = mPhaseSetCounter.getNext();
+                        oldEntry.localPhaseSet(nextLps);
+                        newEntry.localPhaseSet(nextLps);
                     }
                 }
             }
@@ -77,19 +78,19 @@ public class LocalPhaseSet extends BufferedPostProcessor
     static int positionOffset(final VariantHotspot left, final VariantHotspot right)
     {
         int positionOffset = left.position() - right.position();
-        return (int) (positionOffset);
+        return positionOffset;
     }
 
     static int adjustedOffset(final VariantHotspot left, final VariantHotspot right)
     {
         int positionOffset = positionOffset(left, right);
-        if(positionOffset == 0)
-        {
-            return 0;
-        }
 
-        return (int) (positionOffset + Math.max(0, left.ref().length() - left.alt().length()) - Math.max(0,
-                left.alt().length() - left.ref().length()));
+        if(positionOffset == 0)
+            return 0;
+
+        return positionOffset
+                + Math.max(0, left.ref().length() - left.alt().length())
+                - Math.max(0, left.alt().length() - left.ref().length());
     }
 
     static boolean rightInLeftDel(final VariantHotspot left, final VariantHotspot right)

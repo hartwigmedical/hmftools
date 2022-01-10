@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.phase.Phase.PHASE_BUFFER;
+import static com.hartwig.hmftools.sage.phase.VariantPhaser.PHASE_BUFFER;
 
 import java.util.Collection;
 import java.util.function.Consumer;

@@ -55,7 +55,7 @@ public class IndexedBases
         return leftFlankLength() == FlankSize && rightFlankLength() == FlankSize;
     }
 
-    public boolean phased(int offset, @NotNull final IndexedBases other)
+    public boolean phased(int offset, final IndexedBases other)
     {
         int otherReadIndex = other.Index + offset;
 
