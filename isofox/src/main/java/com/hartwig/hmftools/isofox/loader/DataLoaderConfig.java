@@ -57,10 +57,11 @@ public class DataLoaderConfig
     public final Map<String,String> SampleCancerTypes;
     public final Integer Threads;
 
-    public final DatabaseAccess DbAccess;
+    public final CommandLine CmdLineArgs;
 
     public DataLoaderConfig(final CommandLine cmd)
     {
+        CmdLineArgs = cmd;
         SampleIds = Lists.newArrayList();
         PrimaryCancerTypes = Lists.newArrayList();
         LoadTypes = Lists.newArrayList();
@@ -133,8 +134,6 @@ public class DataLoaderConfig
             RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
-
-        DbAccess = createDatabaseAccess(cmd);
     }
 
     public boolean loadDataType(final DataLoadType type)

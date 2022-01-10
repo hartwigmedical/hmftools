@@ -52,12 +52,6 @@ public class IsofoxDataLoader
             return false;
         }
 
-        if(mConfig.DbAccess == null)
-        {
-            ISF_LOGGER.error("invalid DB connection");
-            return false;
-        }
-
         List<SampleLoaderTask> sampleTasks = Lists.newArrayList();
 
         if(mConfig.Threads > 1)

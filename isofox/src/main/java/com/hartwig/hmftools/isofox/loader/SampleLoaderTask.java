@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -57,6 +58,7 @@ import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.IsofoxDAO;
 
 import org.jooq.Record;
@@ -70,6 +72,7 @@ public class SampleLoaderTask implements Callable
     private final CohortGenePercentiles mGeneDistribution;
 
     private final List<String> mSampleIds;
+    private final DatabaseAccess mDbAccess;
     private final IsofoxDAO mRnaDAO;
 
     public SampleLoaderTask(
@@ -81,7 +84,18 @@ public class SampleLoaderTask implements Callable
         mGeneDistribution = geneDistribution;
 
         mSampleIds = Lists.newArrayList();
-        mRnaDAO = new IsofoxDAO(mConfig.DbAccess.context());
+
+        mDbAccess = createDatabaseAccess(mConfig.CmdLineArgs);
+
+        if(mDbAccess == null)
+        {
+            ISF_LOGGER.error("invalid DB connection");
+            mRnaDAO = null;
+        }
+        else
+        {
+            mRnaDAO = new IsofoxDAO(mDbAccess.context());
+        }
     }
 
     public final List<String> getSampleIds() { return mSampleIds; }
@@ -89,6 +103,9 @@ public class SampleLoaderTask implements Callable
     @Override
     public Long call()
     {
+        if(mRnaDAO == null)
+            return (long)0;
+
         ISF_LOGGER.info("{}: loading data for {} samples", mTaskId, mSampleIds.size());
 
         for(int i = 0; i < mSampleIds.size(); ++i)
@@ -132,7 +149,7 @@ public class SampleLoaderTask implements Callable
         {
             final String queryStr = String.format("select primaryTumorLocation from clinical where sampleId = '%s';", sampleId);
 
-            final Result<Record> result = mConfig.DbAccess.context().fetch(queryStr);
+            final Result<Record> result = mDbAccess.context().fetch(queryStr);
 
             String primaryTumorLocation = CANCER_TYPE_OTHER;
 

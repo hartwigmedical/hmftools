@@ -31,7 +31,7 @@ public class AltSjCohortCache
     public int getCohortFrequency(final String asjKey)
     {
         Integer cohortFrequency = mCohortFrequency.get(asjKey);
-        return cohortFrequency != null ? cohortFrequency : 0;
+        return cohortFrequency != null ? cohortFrequency : 1;
     }
 
     private void loadAltSjCohortFile(final String cohortFile)
