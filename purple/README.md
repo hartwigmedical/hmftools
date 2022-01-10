@@ -1086,6 +1086,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.2)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.0)
 - [2.54](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.54) 
