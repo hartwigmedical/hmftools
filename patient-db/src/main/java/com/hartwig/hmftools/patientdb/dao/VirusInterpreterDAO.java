@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep11;
 import org.jooq.InsertValuesStep12;
 
 public class VirusInterpreterDAO {
@@ -41,7 +40,7 @@ public class VirusInterpreterDAO {
                     VIRUSANNOTATION.MEANCOVERAGE,
                     VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE,
                     VIRUSANNOTATION.REPORTED,
-                    VIRUSANNOTATION.ISHIGHRISK);
+                    VIRUSANNOTATION.LIKELIHOOD);
             virusAnnotation.forEach(x -> addVirusAnnotation(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -60,7 +59,7 @@ public class VirusInterpreterDAO {
                 annotatedVirus.meanCoverage(),
                 annotatedVirus.expectedClonalCoverage(),
                 annotatedVirus.reported(),
-                annotatedVirus.isHighRisk());
+                annotatedVirus.virusDriverLikelihoodType());
     }
 
     void deleteVirusAnnotationForSample(@NotNull String sample) {

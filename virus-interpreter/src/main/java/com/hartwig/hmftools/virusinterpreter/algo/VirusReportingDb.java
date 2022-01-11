@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.virusinterpreter.algo;
 
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +20,6 @@ public abstract class VirusReportingDb {
     @Nullable
     public abstract Integer nonIntegratedMinimalCoverage();
 
-    @Nullable
-    public abstract Boolean isHighRisk();
+    @NotNull
+    public abstract VirusLikelihoodType virusDriverLikelihoodType();
 }

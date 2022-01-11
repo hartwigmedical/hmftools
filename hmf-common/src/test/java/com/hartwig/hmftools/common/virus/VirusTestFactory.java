@@ -49,6 +49,6 @@ public final class VirusTestFactory {
                 .meanCoverage(1.0)
                 .expectedClonalCoverage(1.0)
                 .reported(false)
-                .isHighRisk(null);
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH);
     }
 }
