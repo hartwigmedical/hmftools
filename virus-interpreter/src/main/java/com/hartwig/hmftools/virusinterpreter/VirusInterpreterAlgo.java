@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
@@ -53,17 +54,17 @@ public class VirusInterpreterAlgo {
                             ? coveragesAnalysis.expectedClonalCoverage()
                             : null)
                     .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status()))
-                    .isHighRisk(isHighRiskVirus(virusBreakend))
+                            .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend))
                     .build());
         }
 
         return annotatedViruses;
     }
 
-    @Nullable
+    @NotNull
     @VisibleForTesting
-    Boolean isHighRiskVirus(@NotNull VirusBreakend virusBreakend) {
-        return virusReportingDbModel.isHighRiskVirus(virusBreakend.taxidSpecies());
+    VirusLikelihoodType virusLikelihoodType(@NotNull VirusBreakend virusBreakend) {
+        return virusReportingDbModel.virusLikelihoodType(virusBreakend.taxidSpecies());
     }
 
     @VisibleForTesting

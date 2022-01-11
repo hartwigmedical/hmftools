@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
 
@@ -26,19 +27,19 @@ public class VirusReportingDbFileTest {
         assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(1));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(1));
-        assertNull(virusReportingDbModel.isHighRiskVirus(1));
+        assertEquals(virusReportingDbModel.virusLikelihoodType(1), VirusLikelihoodType.LOW);
 
         assertTrue(virusReportingDbModel.hasInterpretation(2));
         assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(2));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(2));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(2));
-        assertTrue(virusReportingDbModel.isHighRiskVirus(2));
+        assertEquals(virusReportingDbModel.virusLikelihoodType(2), VirusLikelihoodType.HIGH);
 
         assertTrue(virusReportingDbModel.hasInterpretation(3));
         assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(3));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(3));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(3));
-        assertFalse(virusReportingDbModel.isHighRiskVirus(3));
+        assertEquals(virusReportingDbModel.virusLikelihoodType(3), VirusLikelihoodType.HIGH);
 
         assertFalse(virusReportingDbModel.hasInterpretation(4));
         assertNotEquals("HPV", virusReportingDbModel.interpretVirusSpecies(2));

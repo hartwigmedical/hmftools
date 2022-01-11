@@ -1154,7 +1154,7 @@ CREATE TABLE virusAnnotation
     meanCoverage double NOT NULL,
     expectedClonalCoverage double,
     reported BOOLEAN NOT NULL,
-    isHighRisk BOOLEAN,
+    likelihood VARCHAR(10) NOT NULL,
     PRIMARY KEY (id)
 );
 

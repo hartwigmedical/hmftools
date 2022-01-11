@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 
@@ -38,15 +39,15 @@ public class VirusEvidence {
         for (ActionableCharacteristic virus : actionableViruses) {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
-                    for (AnnotatedVirus hpvVirus: hpv) {
-                        if (hpvVirus.reported()) {
+
+                        if (!hpv.isEmpty()) {
                             ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                    .reported(hpv.stream().anyMatch(x -> x.reported() && x.isHighRisk()))
+                                    .reported(hpv.stream().anyMatch(x -> x.reported() && x.virusDriverLikelihoodType().equals(
+                                            VirusLikelihoodType.HIGH)))
                                     .event("HPV Positive")
                                     .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                     .build();
                             result.add(evidence);
-                        }
                     }
                     break;
                 }

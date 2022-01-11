@@ -7,4 +7,4 @@ ALTER TABLE somaticVariant
 ####
 # virus-interpreter
 ALTER TABLE virusAnnotation
-    ADD COLUMN isHighRisk BOOLEAN AFTER reported;
+    ADD COLUMN lilikelihood VARCHAR(10) NOT NULL,;

@@ -3,10 +3,10 @@ package com.hartwig.hmftools.virusinterpreter.algo;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,8 +33,8 @@ public class VirusReportingDbModel {
         return speciesHasInterpretation ? virusReportingDb.virusInterpretation() : null;
     }
 
-    @Nullable
-    public Boolean isHighRiskVirus(int speciesTaxid) {
+    @NotNull
+    public VirusLikelihoodType virusLikelihoodType(int speciesTaxid) {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
         if (!speciesHasInterpretation) {
             LOGGER.debug("No interpretation found for virus with species taxid {}", speciesTaxid);
@@ -42,7 +42,7 @@ public class VirusReportingDbModel {
 
         VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
 
-        return speciesHasInterpretation ? virusReportingDb.isHighRisk() : null;
+        return speciesHasInterpretation ? virusReportingDb.virusDriverLikelihoodType() : VirusLikelihoodType.LOW;
     }
 
     @Nullable

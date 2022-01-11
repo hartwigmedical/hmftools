@@ -31,7 +31,7 @@ public abstract class AnnotatedVirus {
 
     public abstract boolean reported();
 
-    @Nullable
-    public abstract Boolean isHighRisk();
+    @NotNull
+    public abstract VirusLikelihoodType virusDriverLikelihoodType();
 
 }

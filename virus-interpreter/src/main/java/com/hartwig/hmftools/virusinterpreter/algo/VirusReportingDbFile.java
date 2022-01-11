@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,22 +32,14 @@ public final class VirusReportingDbFile {
         for (String line : linesVirusReportingDb.subList(1, linesVirusReportingDb.size())) {
             String[] parts = line.split(SEPARATOR);
             ImmutableVirusReportingDb.Builder virusReportingDbBuilder = ImmutableVirusReportingDb.builder();
-            if (parts.length == 4) {
+            if (parts.length == 6) {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
                 virusReportingDbBuilder.virusInterpretation(parts[1].trim())
                         .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
                         .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
-                        .isHighRisk(null);
+                        .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(parts[4]));
                 speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDbBuilder.build());
-            } else if (parts.length == 5) {
-                int speciesTaxid = Integer.parseInt(parts[0].trim());
-                virusReportingDbBuilder.virusInterpretation(parts[1].trim())
-                        .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
-                        .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
-                        .isHighRisk(parts[4].trim().isEmpty() ? null : parts[4].trim().equals("HPV high"));
-                speciesVirusReportingDbMap.put(speciesTaxid, virusReportingDbBuilder.build());
-
-            }else {
+            } else {
                 LOGGER.warn("Suspicious line detected in virus reporting db tsv: {}", line);
             }
         }
