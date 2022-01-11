@@ -59,9 +59,6 @@ public final class AnnotatedVirusFile {
         Integer meanCoverageIndex = fieldsIndexMap.get("meanCoverage");
         Integer expectedClonalCoverageIndex = fieldsIndexMap.get("expectedClonalCoverage");
 
-        // support for version 1.2 not having coverage columns
-        Integer expectedIsHighIndex = fieldsIndexMap.get("isHighRisk");
-
         for (String line : lines) {
             String[] values = line.split(DELIMITER, -1);
 
@@ -72,12 +69,6 @@ public final class AnnotatedVirusFile {
                 }
             }
 
-            Boolean isHighRiskHPV= null;
-            if (expectedIsHighIndex != null) {
-                if (!values[expectedIsHighIndex].equals("null")) {
-                    isHighRiskHPV = Boolean.parseBoolean(values[expectedIsHighIndex]);
-                }
-            }
             virusList.add(ImmutableAnnotatedVirus.builder()
                     .taxid(Integer.parseInt(values[fieldsIndexMap.get("taxid")]))
                     .name(values[fieldsIndexMap.get("name")])
@@ -90,7 +81,7 @@ public final class AnnotatedVirusFile {
                     .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
                     .expectedClonalCoverage(expectedClonalCoverage)
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
-                    .isHighRisk(isHighRiskHPV)
+                            .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(values[fieldsIndexMap.get("driverLikelihood")]))
                     .build());
         }
         return virusList;
@@ -107,7 +98,7 @@ public final class AnnotatedVirusFile {
                 .add("meanCoverage")
                 .add("expectedClonalCoverage")
                 .add("reported")
-                .add("isHighRisk")
+                .add("driverLikelihood")
                 .toString();
     }
 
@@ -122,7 +113,7 @@ public final class AnnotatedVirusFile {
                 .add(String.valueOf(annotatedVirus.meanCoverage()))
                 .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))
                 .add(String.valueOf(annotatedVirus.reported()))
-                .add(String.valueOf(annotatedVirus.isHighRisk()))
+                .add(String.valueOf(annotatedVirus.virusDriverLikelihoodType()))
                 .toString();
     }
 }

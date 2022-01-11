@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
@@ -40,7 +41,7 @@ public class VirusEvidenceTest {
                 new VirusEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(hpvEvidence, ebvEvidence));
 
         List<ProtectEvidence> evidences = virusEvidence.evidence(testData);
-        assertEquals(4, evidences.size());
+        assertEquals(2, evidences.size());
 
         // The test data has reportable HPV virus
         assertTrue(findByEvent(evidences, "HPV Positive").reported());
@@ -63,16 +64,38 @@ public class VirusEvidenceTest {
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportable = Lists.newArrayList();
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(true).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(false).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("HPV").reported(true).isHighRisk(null).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("MCV").reported(true).isHighRisk(null).build());
-        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(true).isHighRisk(null).build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("HPV")
+                .reported(true)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
+                .build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("MCV")
+                .reported(true)
+                .virusDriverLikelihoodType(VirusLikelihoodType.LOW)
+                .build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("")
+                .reported(true)
+                .virusDriverLikelihoodType(VirusLikelihoodType.UNKNOWN)
+                .build());
 
         List<AnnotatedVirus> unreported = Lists.newArrayList();
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).isHighRisk(null).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("EBV").reported(false).isHighRisk(null).build());
-        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder().interpretation("").reported(false).isHighRisk(null).build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("EBV")
+                .reported(false)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
+                .build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("EBV")
+                .reported(false)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
+                .build());
+        unreported.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation("")
+                .reported(false)
+                .virusDriverLikelihoodType(VirusLikelihoodType.UNKNOWN)
+                .build());
 
         return ImmutableVirusInterpreterData.builder().unreportedViruses(unreported).reportableViruses(reportable).build();
     }

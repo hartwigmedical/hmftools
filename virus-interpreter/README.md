@@ -28,7 +28,12 @@ Every virus detected by VIRUSBreakend is evaluated for reporting. For a virus to
    - percentage covered of the viral genome is greater than 90% 
    - coverage of the virus is higher than expected clonal mean coverage 
    - The QC status of sample should not be `FAIL_CONTAMINATION` or `FAIL_NO_TUMOR`
-   
+
+### Reporting
+For the viruses which we should potentially report (i.e. present in the reporting db), the virus is annotate whith a driver 
+likelihood (HIGH/LOW) in the configuration. There should be also other potentially called viruses which didn't exist in this reporting db, 
+and those viruses we annotate with the driver likelihood UNKNOWN.
+
 ### Output data
 
 Virus Interpreter produces a tsv file where every line (record) is an entry from the VIRUSBreakend summary file. 
@@ -45,8 +50,11 @@ percentageCovered | The percentage of the viral reference sequence that has been
 meanCoverage | The average coverage of the viral genome as reported by VIRUSBreakend  ("meanDepth" field of VIRUSBreakend)
 expectedClonalMeanCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA 
 reported | A boolean indicating whether the detected viral presence is considered a driver
+driverLikelihood / The driver likelihood of the virus which is annotated in the configuration file
 
  ## Version History and Download Links
+ - [1.2] (upcoming)
+   - Annotate the viruses with a driver likelihood 
  - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.1)
    - New reporting strategy of viruses to report only clinical relevant viruses
  - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.0)

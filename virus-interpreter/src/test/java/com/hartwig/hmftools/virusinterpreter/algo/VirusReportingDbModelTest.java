@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
 
@@ -20,6 +21,7 @@ public class VirusReportingDbModelTest {
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         speciesToInterpretationMap.put(1, virusWhitelist);

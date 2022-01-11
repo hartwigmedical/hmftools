@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.coverages.ImmutableCoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
@@ -94,9 +95,9 @@ public class VirusInterpreterAlgoTest {
     public void canDetermineHighRiskVirus() {
         VirusInterpreterAlgo algo = createTestAlgo();
 
-        assertNull(algo.isHighRiskVirus(createTestVirusBreakendsForHighRiskVirus(1)));
-        assertTrue(algo.isHighRiskVirus(createTestVirusBreakendsForHighRiskVirus(2)));
-        assertFalse(algo.isHighRiskVirus(createTestVirusBreakendsForHighRiskVirus(3)));
+        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(1)), VirusLikelihoodType.HIGH);
+        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(2)), VirusLikelihoodType.HIGH);
+        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(3)), VirusLikelihoodType.HIGH);
 
     }
 
@@ -121,21 +122,21 @@ public class VirusInterpreterAlgoTest {
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
-                .isHighRisk(null)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         VirusReportingDb virusReporting2 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
-                .isHighRisk(true)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         VirusReportingDb virusReporting3 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
-                .isHighRisk(false)
+                .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         Map<Integer, String> taxonomyMap = Maps.newHashMap();
