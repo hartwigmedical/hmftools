@@ -118,7 +118,7 @@ DROP TABLE IF EXISTS molecularMatchClassificationExon;
 DROP TABLE IF EXISTS molecularMatchClassificationExonicFunc;
 DROP TABLE IF EXISTS molecularMatchClassificationPathology;
 DROP TABLE IF EXISTS molecularMatchClassificationSource;
-DROP TABLE IF EXISTS molecularMatchClassificationCosmicID;
+DROP TABLE IF EXISTS molecularMatchClassificationCosmicId;
 DROP TABLE IF EXISTS molecularMatchClassificationDbSNP;
 DROP TABLE IF EXISTS molecularMatchClassificationPopFreqMax;
 DROP TABLE IF EXISTS molecularMatchClassificationParent;
