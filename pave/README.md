@@ -178,4 +178,5 @@ We annotate the population frequency using gnomAD (v3.1.2 for hg38, v2.1.1 for G
 
 ## Known Issues
 - Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
+- Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple recorrds first (eg.  the -m none option in bcftools).
 
