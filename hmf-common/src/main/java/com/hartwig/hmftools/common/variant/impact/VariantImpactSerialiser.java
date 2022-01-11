@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.impact;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.snpeff.SnpEffUtils.fromSnpEffEnrichedVariant;
 
 import java.util.List;
@@ -75,6 +76,13 @@ public final class VariantImpactSerialiser
 
     public static VariantImpact fromAttributeValues(final List<String> impactValues)
     {
+        if(impactValues.size() != 10)
+        {
+            return new VariantImpact(
+                    "", "", "", UNDEFINED, "", "",
+                    false, "", UNDEFINED, 0);
+        }
+
         int index = 0;
         String canonicalGeneName = impactValues.get(index++);
         String canonicalTranscript = impactValues.get(index++);

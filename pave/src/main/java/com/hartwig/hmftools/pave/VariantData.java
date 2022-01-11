@@ -154,7 +154,10 @@ public class VariantData
         String chromosome = variantContext.getContig();
 
         String ref = variantContext.getReference().getBaseString();
-        String alt = variantContext.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.joining(","));
+
+        // only support the first of multiple alts (as can be the case for Strelka)
+        // String alt = variantContext.getAlternateAlleles().get(0)stream().map(Allele::toString).collect(Collectors.joining(","));
+        String alt = variantContext.getAlternateAlleles().get(0).toString();
 
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
