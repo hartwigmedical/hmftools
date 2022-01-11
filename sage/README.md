@@ -470,9 +470,10 @@ In practice, somatic variants are phased using the read contexts of nearby germl
 As we are comparing read contexts (with an additional buffer of 50 bases) we are only able to phase variants within a maximum of 60 bases of each other.
 This distance is further reduced if the read contexts we are comparing have been extended in opposing directions due to repeats or microhomology.
 
-Phasing is interesting for somatic calling from 2 perspectives: 
+Phasing is interesting for somatic calling from 3 perspectives: 
   - understanding the somatic mutational mechanism which has led to the variant; and 
   - understanding the functional impact of the variation.
+  - prediction of neoeptiopes for MHC class 1 presentation
   
 Regarding mechanism, multiple somatic cis-phased variants can frequently occur together with prominent mechanisms being 2 base MNVs (eg. CC>TT in UV Signatures and CC>AA in Lung smoking signatures) and micro-inversions (which are normally called as offsetting INS and DEL).
 
