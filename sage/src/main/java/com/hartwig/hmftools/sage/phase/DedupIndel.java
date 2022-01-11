@@ -16,35 +16,32 @@ public class DedupIndel extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant variant, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        if(isPassingPhasedIndel(variant))
+        if(!isPassingPhasedIndel(variant))
+            return;
+
+        for(final SageVariant other : variants)
         {
-            for(final SageVariant other : buffer)
+            if(isPassingPhasedIndel(other) && variant.localPhaseSet() == other.localPhaseSet())
             {
-                if(isPassingPhasedIndel(other) && variant.localPhaseSet() == other.localPhaseSet())
+                if(variant.isDelete() && other.isDelete())
                 {
+                    processDel(variant, other);
+                }
 
-                    if(variant.isDelete() && other.isDelete())
-                    {
-                        processDel(variant, other);
-                    }
-
-                    if(variant.isInsert() && other.isInsert())
-                    {
-                        processIns(variant, other);
-                    }
+                if(variant.isInsert() && other.isInsert())
+                {
+                    processIns(variant, other);
                 }
             }
         }
     }
 
-    private void processDel(@NotNull final SageVariant left, @NotNull final SageVariant right)
+    private void processDel(final SageVariant left, final SageVariant right)
     {
         if(!left.alt().equals(right.alt()))
-        {
             return;
-        }
 
         final SageVariant shorter;
         final SageVariant longer;
@@ -65,12 +62,10 @@ public class DedupIndel extends BufferedPostProcessor
         }
     }
 
-    private void processIns(@NotNull final SageVariant left, @NotNull final SageVariant right)
+    private void processIns(final SageVariant left, final SageVariant right)
     {
         if(!left.ref().equals(right.ref()))
-        {
             return;
-        }
 
         final SageVariant shorter;
         final SageVariant longer;
@@ -91,8 +86,8 @@ public class DedupIndel extends BufferedPostProcessor
         }
     }
 
-    private static boolean isPassingPhasedIndel(@NotNull final SageVariant newEntry)
+    private static boolean isPassingPhasedIndel(final SageVariant variant)
     {
-        return newEntry.isPassing() && newEntry.localPhaseSet() > 0 && newEntry.isIndel();
+        return variant.isPassing() && variant.localPhaseSet() > 0 && variant.isIndel();
     }
 }

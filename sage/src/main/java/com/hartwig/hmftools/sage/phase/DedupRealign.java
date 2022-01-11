@@ -21,19 +21,18 @@ public class DedupRealign extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
         // Empty
     }
 
     @Override
-    protected void preFlush(@NotNull final Collection<SageVariant> variants)
+    protected void preFlush(final Collection<SageVariant> variants)
     {
-        super.preFlush(variants);
         final Set<Integer> localRealignedSets = variants.stream()
                 .filter(x -> x.filters().isEmpty())
+                .filter(x -> x.hasLocalRealignSet())
                 .map(SageVariant::localRealignSet)
-                .filter(x -> x > 0)
                 .collect(Collectors.toSet());
 
         for(Integer localRealignedSet : localRealignedSets)
@@ -42,7 +41,7 @@ public class DedupRealign extends BufferedPostProcessor
         }
     }
 
-    private void process(int localRealignSet, @NotNull final Collection<SageVariant> buffer)
+    private void process(int localRealignSet, final Collection<SageVariant> buffer)
     {
         final List<SageVariant> localRealigned = buffer.stream()
                 .filter(x -> x.filters().isEmpty())

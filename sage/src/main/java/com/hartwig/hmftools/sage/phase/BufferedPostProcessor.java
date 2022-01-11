@@ -23,21 +23,14 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         mConsumer = consumer;
     }
 
-    /* routine flow:
-    - receive new variant
-    - examine existing queue
-    -
-
-
-
-
-    */
-
     @Override
     public void accept(final SageVariant newVariant)
     {
         flush(newVariant);
-        processSageVariant(newVariant, mVariantQueue);
+
+        if(!mVariantQueue.isEmpty())
+            processSageVariant(newVariant, mVariantQueue);
+        
         mVariantQueue.add(newVariant);
     }
 
@@ -52,6 +45,9 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 
     protected void flush(final SageVariant variant)
     {
+        if(mVariantQueue.isEmpty())
+            return;
+
         final List<SageVariant> flushed = Lists.newArrayList();
         final Iterator<SageVariant> iterator = mVariantQueue.iterator();
 
@@ -71,11 +67,10 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
             }
         }
 
-        if(!flushed.isEmpty())
-        {
-            preFlush(flushed);
-        }
+        if(flushed.isEmpty())
+            return;
 
+        preFlush(flushed);
         flushed.forEach(mConsumer);
         flushed.clear();
     }

@@ -36,30 +36,30 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        int lps = newVariant.localPhaseSet();
+        int lps = variant.localPhaseSet();
 
-        if(newVariant.isIndel() || lps < 1)
+        if(variant.isIndel() || lps <= 0)
             return;
 
-        boolean newVariantIsSnv = isPassingSnv(newVariant);
-        boolean newVariantIsMixedGermlineMnv = isMixedGermlineMnv(newVariant);
+        boolean newVariantIsSnv = isPassingSnv(variant);
+        boolean newVariantIsMixedGermlineMnv = isMixedGermlineMnv(variant);
 
         if(!newVariantIsSnv && !newVariantIsMixedGermlineMnv)
             return;
 
-        for(SageVariant oldVariant : buffer)
+        for(SageVariant other : variants)
         {
-            if(oldVariant.localPhaseSet() == lps)
+            if(other.localPhaseSet() == lps)
             {
-                if(newVariantIsSnv && isMixedGermlineMnv(oldVariant))
+                if(newVariantIsSnv && isMixedGermlineMnv(other))
                 {
-                    process(oldVariant, newVariant);
+                    process(other, variant);
                 }
-                else if(newVariantIsMixedGermlineMnv && isPassingSnv(oldVariant))
+                else if(newVariantIsMixedGermlineMnv && isPassingSnv(other))
                 {
-                    process(newVariant, oldVariant);
+                    process(variant, other);
                 }
             }
         }

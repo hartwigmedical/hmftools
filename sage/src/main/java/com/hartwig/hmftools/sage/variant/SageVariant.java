@@ -29,6 +29,8 @@ public class SageVariant
         mNormalAltContexts = normal;
         mTumorAltContexts = tumorAltContexts;
         mFilters = filters;
+        mLocalPhaseSet = 0;
+        mLocalRealignSet = 0;
     }
 
     public Candidate candidate()
@@ -76,11 +78,8 @@ public class SageVariant
         return variant().ref().length() > variant().alt().length();
     }
 
-    public int localPhaseSet()
-    {
-        return mLocalPhaseSet;
-    }
-
+    public int localPhaseSet() { return mLocalPhaseSet; }
+    public boolean hasLocalPhaseSet() { return mLocalPhaseSet > 0; }
     public void localPhaseSet(int localPhaseSet)
     {
         mLocalPhaseSet = localPhaseSet;
@@ -90,7 +89,7 @@ public class SageVariant
     {
         return mLocalRealignSet;
     }
-
+    public boolean hasLocalRealignSet() { return mLocalRealignSet > 0; }
     public void localRealignSet(int localRealignSet)
     {
         mLocalRealignSet = localRealignSet;

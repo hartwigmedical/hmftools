@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -18,37 +19,36 @@ public class DedupMnv extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        int lps = newVariant.localPhaseSet();
+        if(!variant.isPassing() || variant.isIndel() || variant.localPhaseSet() <= 0)
+            return;
 
-        if(newVariant.isPassing() && !newVariant.isIndel() && lps > 0)
+        int lps = variant.localPhaseSet();
+        int newVariantSize = variant.alt().length();
+
+        for(final SageVariant other : variants)
         {
-
-            int newVariantSize = newVariant.alt().length();
-            for(final SageVariant oldVariant : buffer)
+            if(other.isPassing() && !other.isIndel() && other.localPhaseSet() == lps)
             {
-                if(oldVariant.isPassing() && !oldVariant.isIndel() && oldVariant.localPhaseSet() == lps)
+                int oldVariantSize = other.alt().length();
+                if(newVariantSize != oldVariantSize)
                 {
-                    int oldVariantSize = oldVariant.alt().length();
-                    if(newVariantSize != oldVariantSize)
+                    final SageVariant shorter;
+                    final SageVariant longer;
+                    if(newVariantSize > oldVariantSize)
                     {
-                        final SageVariant shorter;
-                        final SageVariant longer;
-                        if(newVariantSize > oldVariantSize)
-                        {
-                            shorter = oldVariant;
-                            longer = newVariant;
-                        }
-                        else
-                        {
-                            shorter = newVariant;
-                            longer = oldVariant;
-                        }
-                        if(longerContainsShorter(shorter, longer))
-                        {
-                            shorter.filters().add(VariantVCF.DEDUP_FILTER);
-                        }
+                        shorter = other;
+                        longer = variant;
+                    }
+                    else
+                    {
+                        shorter = variant;
+                        longer = other;
+                    }
+                    if(longerContainsShorter(shorter, longer))
+                    {
+                        shorter.filters().add(VariantVCF.DEDUP_FILTER);
                     }
                 }
             }

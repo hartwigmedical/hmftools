@@ -20,30 +20,30 @@ public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        if(!newVariant.isIndel())
+        if(variant.isIndel())
+            return;
+
+        boolean newIsPassingMnv = isPassingMnv(variant);
+        boolean newIsGermlineSnv = isGermlineFilteredSnv(variant);
+        if(newIsPassingMnv || newIsGermlineSnv)
         {
-            boolean newIsPassingMnv = isPassingMnv(newVariant);
-            boolean newIsGermlineSnv = isGermlineFilteredSnv(newVariant);
-            if(newIsPassingMnv || newIsGermlineSnv)
+            for(final SageVariant other : variants)
             {
-                for(final SageVariant other : buffer)
+                if(newIsPassingMnv && isGermlineFilteredSnv(other))
                 {
-                    if(newIsPassingMnv && isGermlineFilteredSnv(other))
-                    {
-                        process(newVariant, other);
-                    }
-                    else if(newIsGermlineSnv && isPassingMnv(other))
-                    {
-                        process(other, newVariant);
-                    }
+                    process(variant, other);
+                }
+                else if(newIsGermlineSnv && isPassingMnv(other))
+                {
+                    process(other, variant);
                 }
             }
         }
     }
 
-    private void process(@NotNull final SageVariant mnv, @NotNull final SageVariant germlineSnv)
+    private void process(final SageVariant mnv, final SageVariant germlineSnv)
     {
         if(DedupMnv.longerContainsShorter(germlineSnv, mnv))
         {

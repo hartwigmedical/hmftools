@@ -14,41 +14,41 @@ class LocalRealignSet extends BufferedPostProcessor
 {
     private int mRealign;
 
-    LocalRealignSet(@NotNull final Consumer<SageVariant> consumer)
+    LocalRealignSet(final Consumer<SageVariant> consumer)
     {
         super(PHASE_BUFFER, consumer);
     }
 
     @Override
-    protected void processSageVariant(@NotNull final SageVariant newEntry, @NotNull final Collection<SageVariant> buffer)
+    protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        final ReadContext newReadContext = newEntry.readContext();
-        boolean newIsIndel = newEntry.isIndel();
+        final ReadContext newReadContext = variant.readContext();
+        boolean newIsIndel = variant.isIndel();
 
-        for(final SageVariant oldEntry : buffer)
+        for(final SageVariant other : variants)
         {
-            boolean oldIsIndel = oldEntry.isIndel();
+            boolean oldIsIndel = other.isIndel();
             if(newIsIndel || oldIsIndel)
             {
-                final ReadContext oldReadContext = oldEntry.readContext();
-                int positionOffset = LocalPhaseSet.positionOffset(oldEntry.variant(), newEntry.variant());
-                int offset = LocalPhaseSet.adjustedOffset(oldEntry.variant(), newEntry.variant());
+                final ReadContext oldReadContext = other.readContext();
+                int positionOffset = LocalPhaseSet.positionOffset(other.variant(), variant.variant());
+                int offset = LocalPhaseSet.adjustedOffset(other.variant(), variant.variant());
 
                 if(positionOffset != offset && oldReadContext.phased(positionOffset, newReadContext))
                 {
-                    if(oldEntry.localRealignSet() != 0)
+                    if(other.localRealignSet() != 0)
                     {
-                        newEntry.localRealignSet(oldEntry.localRealignSet());
+                        variant.localRealignSet(other.localRealignSet());
                     }
-                    else if(newEntry.localRealignSet() != 0)
+                    else if(variant.localRealignSet() != 0)
                     {
-                        oldEntry.localRealignSet(newEntry.localRealignSet());
+                        other.localRealignSet(variant.localRealignSet());
                     }
                     else
                     {
                         mRealign++;
-                        oldEntry.localRealignSet(mRealign);
-                        newEntry.localRealignSet(mRealign);
+                        other.localRealignSet(mRealign);
+                        variant.localRealignSet(mRealign);
                     }
                 }
             }
