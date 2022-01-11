@@ -42,7 +42,7 @@ public class VirusReportingDbModel {
 
         VirusReportingDb virusReportingDb = speciesToInterpretationMap.get(speciesTaxid);
 
-        return speciesHasInterpretation ? virusReportingDb.virusDriverLikelihoodType() : VirusLikelihoodType.LOW;
+        return speciesHasInterpretation ? virusReportingDb.virusDriverLikelihoodType() : VirusLikelihoodType.UNKNOWN;
     }
 
     @Nullable
