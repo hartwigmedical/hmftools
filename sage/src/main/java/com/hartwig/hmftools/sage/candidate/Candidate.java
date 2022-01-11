@@ -76,4 +76,6 @@ public class Candidate
 
     public int position() { return (int)mVariant.position(); }
 
+    public String toString() { return String.format("var(%s:%d %s>%s) tier(%s)",
+            chromosome(), position(), mVariant.ref(), mVariant.alt(), mTier); }
 }

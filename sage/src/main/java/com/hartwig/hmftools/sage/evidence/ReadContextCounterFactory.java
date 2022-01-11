@@ -19,12 +19,10 @@ public class ReadContextCounterFactory
     private static final Set<VariantTier> HIGH_COVERAGE = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     private final SageConfig mConfig;
-    private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;
 
-    public ReadContextCounterFactory(final SageConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    public ReadContextCounterFactory(final SageConfig config)
     {
         mConfig = config;
-        mQualityRecalibrationMap = qualityRecalibrationMap;
     }
 
     public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates)
@@ -33,7 +31,6 @@ public class ReadContextCounterFactory
                 .map(x -> new ReadContextCounter(sample,
                         x.variant(),
                         x.readContext(),
-                        mQualityRecalibrationMap.get(sample),
                         x.tier(),
                         maxCoverage(x),
                         x.minNumberOfEvents(),

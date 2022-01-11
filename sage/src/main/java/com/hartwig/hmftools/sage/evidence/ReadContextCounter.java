@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -26,7 +27,6 @@ public class ReadContextCounter implements VariantHotspot
 
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
-    private final QualityRecalibrationMap mQualityRecalibrationMap;
 
     private final ExpandedBasesFactory mExpandedBasesFactory;
 
@@ -60,15 +60,13 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawRefBaseQuality;
 
     public ReadContextCounter(
-            final String sample, final VariantHotspot variant, final ReadContext readContext,
-            final QualityRecalibrationMap recalibrationMap, final VariantTier tier, final int maxCoverage, final int minNumberOfEvents,
-            final int maxSkippedReferenceRegions, boolean realign)
+            final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
+            final int maxCoverage, final int minNumberOfEvents, final int maxSkippedReferenceRegions, boolean realign)
     {
         Sample = sample;
         Tier = tier;
         Realign = realign;
         MaxCoverage = maxCoverage;
-        mQualityRecalibrationMap = recalibrationMap;
         MinNumberOfEvents = minNumberOfEvents;
 
         mReadContext = readContext;
@@ -139,15 +137,13 @@ public class ReadContextCounter implements VariantHotspot
         return mReadContext.toString();
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig, final int rawNumberOfEvents)
+    public void accept(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
     {
         if(mCoverage >= MaxCoverage)
             return;
 
         if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality)
-        {
             return;
-        }
 
         final RawContext rawContext = RawContext.create(mVariant, record, sageConfig.maxSkippedReferenceRegions());
 
@@ -176,7 +172,7 @@ public class ReadContextCounter implements VariantHotspot
         int numberOfEvents = Math.max(
                 MinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()));
 
-        double quality = calculateQualityScore(readIndex, record, qualityConfig, numberOfEvents);
+        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, numberOfEvents);
 
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
@@ -288,46 +284,6 @@ public class ReadContextCounter implements VariantHotspot
                 Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
     }
 
-    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig, int numberOfEvents)
-    {
-        final double baseQuality = baseQuality(readBaseIndex, record);
-        final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
-
-        final int mapQuality = record.getMappingQuality();
-        boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mVariant, mapQuality, numberOfEvents, properPairFlag);
-        double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
-
-        return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
-    }
-
-    private double baseQuality(int readBaseIndex, SAMRecord record)
-    {
-        return mVariant.ref().length() == mVariant.alt().length()
-                ? baseQuality(readBaseIndex, record, mVariant.ref().length())
-                : mReadContext.avgCentreQuality(readBaseIndex, record);
-    }
-
-    private double baseQuality(int startReadIndex, final SAMRecord record, int length)
-    {
-        int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
-        int maxLength = maxIndex - startReadIndex + 1;
-
-        double quality = Integer.MAX_VALUE;
-        for(int i = 0; i < maxLength; i++)
-        {
-            int refPosition = (int) position() + i;
-            int readIndex = startReadIndex + i;
-            byte rawQuality = record.getBaseQualities()[readIndex];
-            byte[] trinucleotideContext = mReadContext.refTrinucleotideContext(refPosition);
-            double recalibratedQuality =
-                    mQualityRecalibrationMap.quality((byte) ref().charAt(i), (byte) alt().charAt(i), trinucleotideContext, rawQuality);
-            quality = Math.min(quality, recalibratedQuality);
-        }
-
-        return quality;
-    }
-
     private int qualityJitterPenalty() { return (int) mJitterPenalty; }
 
     private void incrementQualityFlags(final SAMRecord record)
@@ -353,20 +309,5 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         return result;
-    }
-
-    private int readDistanceFromEdge(int readIndex, final SAMRecord record)
-    {
-        int index = mReadContext.readBasesPositionIndex();
-        int leftIndex = mReadContext.readBasesLeftCentreIndex();
-        int rightIndex = mReadContext.readBasesRightCentreIndex();
-
-        int leftOffset = index - leftIndex;
-        int rightOffset = rightIndex - index;
-
-        int adjustedLeftIndex = readIndex - leftOffset;
-        int adjustedRightIndex = readIndex + rightOffset;
-
-        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
 }

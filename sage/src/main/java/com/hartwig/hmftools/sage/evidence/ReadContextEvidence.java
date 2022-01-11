@@ -9,6 +9,7 @@ import java.util.concurrent.CompletionException;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicer;
@@ -28,6 +29,7 @@ public class ReadContextEvidence
     private final SageConfig mSageConfig;
     private final ReferenceSequenceFile mRefGenome;
     private final ReadContextCounterFactory mFactory;
+    private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
 
     public ReadContextEvidence(
             final SageConfig config, final ReferenceSequenceFile refGenome,
@@ -35,8 +37,9 @@ public class ReadContextEvidence
     {
         mSageConfig = config;
         mRefGenome = refGenome;
-        mFactory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
+        mFactory = new ReadContextCounterFactory(config);
         mTypicalReadLength = config.typicalReadLength();
+        mQualityRecalibrationMap = qualityRecalibrationMap;
     }
 
     @NotNull
@@ -60,6 +63,8 @@ public class ReadContextEvidence
 
         final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
 
+        final QualityCalculator qualityCalculator = new QualityCalculator(mSageConfig.Quality, mQualityRecalibrationMap);
+
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(mSageConfig.Stringency)
                 .referenceSource(new ReferenceSource(mRefGenome))
@@ -68,7 +73,7 @@ public class ReadContextEvidence
             slicer.slice(tumorReader, samRecord ->
             {
                 int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
-                consumerSelector.select(samRecord, x -> x.accept(samRecord, mSageConfig, numberOfEvents));
+                consumerSelector.select(samRecord, x -> x.accept(samRecord, mSageConfig, qualityCalculator, numberOfEvents));
 
             });
         }

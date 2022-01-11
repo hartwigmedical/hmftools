@@ -134,10 +134,10 @@ public class MixedGermlineTest
     static ReadContextCounter dummyCounter(@NotNull VariantHotspot variant, @NotNull final String microhomology)
     {
         ReadContext dummyReadContext = ReadContextCounterTest.readContext(100, 0, 0, 0, "AAA", microhomology);
+
         return new ReadContextCounter("SAMPLE",
                 variant,
                 dummyReadContext,
-                new QualityRecalibrationMap(Collections.emptyList()),
                 VariantTier.PANEL,
                 1000,
                 0,

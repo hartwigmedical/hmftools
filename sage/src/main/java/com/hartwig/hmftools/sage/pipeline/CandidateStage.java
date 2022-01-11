@@ -49,7 +49,7 @@ public class CandidateStage
                 SG_LOGGER.info("processing chromosome {}", region.Chromosome);
             }
 
-            SG_LOGGER.trace("region({}) finding candidates", region.toString());
+            // SG_LOGGER.trace("region({}) finding candidates", region.toString());
 
             final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
 

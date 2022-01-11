@@ -23,6 +23,16 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
         mConsumer = consumer;
     }
 
+    /* routine flow:
+    - receive new variant
+    - examine existing queue
+    -
+
+
+
+
+    */
+
     @Override
     public void accept(final SageVariant newVariant)
     {

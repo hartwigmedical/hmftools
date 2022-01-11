@@ -172,4 +172,6 @@ public class SageVariant
     {
         return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
+
+    public String toString() { return String.format("%s", mCandidate.toString()); }
 }

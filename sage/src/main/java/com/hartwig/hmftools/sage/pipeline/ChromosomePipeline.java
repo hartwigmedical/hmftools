@@ -98,12 +98,12 @@ public class ChromosomePipeline implements AutoCloseable
         final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = mRegions.iterator();
         while(regionsIterator.hasNext())
         {
-            ChrBaseRegion region = regionsIterator.next().region();
+            // ChrBaseRegion region = regionsIterator.next().region();
             CompletableFuture<List<SageVariant>> regionVariantsFuture = regionsIterator.next().future();
 
             done = done.thenCombine(regionVariantsFuture, (aVoid, sageVariants) ->
             {
-                SG_LOGGER.trace("region({}) phasing {} variants", region, sageVariants.size());
+                SG_LOGGER.trace("phasing {} variants", sageVariants.size());
                 sageVariants.forEach(mVariantPhaser);
                 return null;
             });

@@ -38,7 +38,7 @@ public class EvidenceStage
 
             final ReadContextCounters result = new ReadContextCounters(primarySample, initialCandidates);
 
-            SG_LOGGER.trace("region({}) gathering {} evidence for {} candidates", region, sampleType, initialCandidates.size());
+            // SG_LOGGER.trace("region({}) gathering {} evidence for {} candidates", region, sampleType, initialCandidates.size());
 
             CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
             for(int i = 0; i < samples.size(); i++)
