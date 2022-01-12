@@ -189,7 +189,7 @@ geneOrientation | Orientation which breakend points relative to the gene taking 
 Disruptive | Breakend is part of a break junction which disrupts the exonic sequence of the transcript
 ReportedDisruption | Breakend is disruptive and gene is flagged as reportable for disruption
 UndisruptedCopyNumber | Number of remaining wildtype alleles of the gene that are not disrupted by the breakend.  If <0.5 then disruption is considered Homozygous
-RegionType | Location of the breakend relative to the transcript.  One of 'UPSTREAM' (within 10kb upstream of the 1st base of the transcript), 'INTRONIC' or 'EXONIC'
+RegionType | Location of the breakend relative to the transcript.  One of 'UPSTREAM' (within 100kb upstream of the 1st base of the transcript), 'INTRONIC' or 'EXONIC'
 CodingContext | Location of the breakend relative to the coding context of the transcript.  One of  'CODING', 'NON_CODING','UTR_5P','UTR_3P' or 'ENHANCER' (IG enhancer rearrangements only)
 Biotype | Ensembl biotype of the transcript
 ExonicBasePhase | If regionType = EXONIC, the exact base phase of the breakend, else -1
