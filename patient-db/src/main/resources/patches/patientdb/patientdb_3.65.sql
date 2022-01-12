@@ -5,6 +5,6 @@ ALTER TABLE somaticVariant
 	DROP COLUMN phasedInframeIndel;
 
 ####
-# virus-interpreter
+# Virus Interpreter
 ALTER TABLE virusAnnotation
-    ADD COLUMN lilikelihood VARCHAR(10) NOT NULL,;
+    ADD COLUMN likelihood VARCHAR(10) NOT NULL;

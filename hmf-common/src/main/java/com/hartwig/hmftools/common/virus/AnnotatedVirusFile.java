@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.virus;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +59,7 @@ public final class AnnotatedVirusFile {
         Integer percentageCoveredIndex = fieldsIndexMap.get("percentageCovered");
         Integer meanCoverageIndex = fieldsIndexMap.get("meanCoverage");
         Integer expectedClonalCoverageIndex = fieldsIndexMap.get("expectedClonalCoverage");
+        Integer driverLikelihoodIndex = fieldsIndexMap.get("driverLikelihood");
 
         for (String line : lines) {
             String[] values = line.split(DELIMITER, -1);
@@ -81,7 +83,8 @@ public final class AnnotatedVirusFile {
                     .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
                     .expectedClonalCoverage(expectedClonalCoverage)
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
-                            .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(values[fieldsIndexMap.get("driverLikelihood")]))
+                    .virusDriverLikelihoodType(driverLikelihoodIndex != null ?
+                            VirusLikelihoodType.valueOf(values[driverLikelihoodIndex]) : UNKNOWN)
                     .build());
         }
         return virusList;
