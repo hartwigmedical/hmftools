@@ -16,6 +16,8 @@ public class SageConstants
     public static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
+    public static final int MATCHING_BASE_QUALITY = 25;
+
     public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";
 }

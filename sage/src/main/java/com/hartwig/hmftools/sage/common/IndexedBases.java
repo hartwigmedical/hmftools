@@ -89,19 +89,16 @@ public class IndexedBases
         return otherRightCentreIndex < otherBases.length;
     }
 
-    @NotNull
     public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, @NotNull final IndexedBases other)
     {
         return matchAtPosition(wildcardAllowedInCore, other.Index, other.length(), other.Bases);
     }
 
-    @NotNull
     public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, int otherReadIndex, byte[] otherBases)
     {
         return matchAtPosition(wildcardAllowedInCore, otherReadIndex, length(), otherBases);
     }
 
-    @NotNull
     public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, int otherReadIndex, int otherLength, byte[] otherBases)
     {
         if(otherReadIndex < 0)

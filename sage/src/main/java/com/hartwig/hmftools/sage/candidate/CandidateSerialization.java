@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
+import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_COUNT
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -31,8 +33,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialization
 {
-    @NotNull
-    public static VariantHotspot toVariantHotspot(@NotNull final VariantContext context)
+    public static VariantHotspot toVariantHotspot(final VariantContext context)
     {
         return ImmutableVariantHotspotImpl.builder()
                 .chromosome(context.getContig())
@@ -42,15 +43,13 @@ public final class CandidateSerialization
                 .build();
     }
 
-    @NotNull
-    public static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final RefSequence refGenome)
+    public static Candidate toCandidate(final VariantContext context, final RefSequence refGenome)
     {
         final IndexedBases readBases = readBases(context);
         return toCandidate(context, readBases, refGenome.alignment());
     }
 
-    @NotNull
-    public static IndexedBases readBases(@NotNull final VariantContext context)
+    public static IndexedBases readBases(final VariantContext context)
     {
         final int position = context.getStart();
 
@@ -75,9 +74,7 @@ public final class CandidateSerialization
                 bases);
     }
 
-    @NotNull
-    static Candidate toCandidate(@NotNull final VariantContext context, @NotNull final IndexedBases readBases,
-            @NotNull final IndexedBases refBases)
+    static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
     {
         final VariantHotspot variant = toVariantHotspot(context);
 
@@ -86,7 +83,12 @@ public final class CandidateSerialization
         final String repeat = context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);
 
-        final ReadContext readContext = new ReadContext(refBases, readBases, repeatCount, repeat, mh);
+        // TODO - cache and reload read base qualities
+        int coreAndFlankLength = readBases.leftFlankString().length() + readBases.centerString().length() + readBases.rightFlankString().length();
+        final int[] baseQualities = new int[coreAndFlankLength];
+        Arrays.fill(baseQualities, MATCHING_BASE_QUALITY);
+
+        final ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, baseQualities, false);
 
         int maxDepth = 0;
         for(Genotype genotype : context.getGenotypes().immutable())
@@ -98,8 +100,7 @@ public final class CandidateSerialization
         return new Candidate(tier, variant, readContext, maxDepth, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }
 
-    @NotNull
-    public static VariantContextBuilder toContext(@NotNull final Candidate candidate)
+    public static VariantContextBuilder toContext(final Candidate candidate)
     {
         final List<Allele> alleles = createAlleles(candidate.variant());
         final ReadContext readContext = candidate.readContext();
@@ -131,7 +132,7 @@ public final class CandidateSerialization
     }
 
     @NotNull
-    private static List<Allele> createAlleles(@NotNull final VariantHotspot variant)
+    private static List<Allele> createAlleles(final VariantHotspot variant)
     {
         final Allele ref = Allele.create(variant.ref(), true);
         final Allele alt = Allele.create(variant.alt(), false);

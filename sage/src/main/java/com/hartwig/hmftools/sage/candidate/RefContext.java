@@ -49,7 +49,7 @@ public class RefContext implements GenomePosition
         if(sufficientMapQuality)
             mRawDepth++;
 
-        if(readContext != null && !readContext.incompleteCore())
+        if(readContext != null && !readContext.hasIncompleteCore())
         {
             altContext.addReadContext(numberOfEvents, readContext);
         }

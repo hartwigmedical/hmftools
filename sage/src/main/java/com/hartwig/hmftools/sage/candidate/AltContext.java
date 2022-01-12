@@ -109,7 +109,7 @@ public class AltContext implements VariantHotspot
         if(mReadContextCandidates.isEmpty())
             return false;
 
-        mReadContextCandidates.removeIf(x -> x.readContext().incompleteFlanks());
+        mReadContextCandidates.removeIf(x -> x.readContext().hasIncompleteFlanks());
 
         Collections.sort(mReadContextCandidates);
 
@@ -182,9 +182,9 @@ public class AltContext implements VariantHotspot
         private int mCoreMatch;
         private int mMinNumberOfEvents;
 
-        ReadContextCandidate(int numberOfEvents, @NotNull final ReadContext readContext)
+        ReadContextCandidate(int numberOfEvents, final ReadContext readContext)
         {
-            mReadContext = readContext.minimiseFootprint();
+            mReadContext = readContext.cloneAndExpand();
             mMinNumberOfEvents = numberOfEvents;
         }
 
@@ -219,7 +219,6 @@ public class AltContext implements VariantHotspot
             return mReadContext.maxFlankLength();
         }
 
-        @NotNull
         public ReadContext readContext() { return mReadContext; }
 
         public int fullMatch()

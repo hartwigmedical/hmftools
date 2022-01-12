@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.read.ReadContextTest.makeDefaultBaseQualitities;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
@@ -46,7 +48,7 @@ public class ReadContextCounterTest
     public void testInsertInLeftSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
 
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
@@ -62,7 +64,7 @@ public class ReadContextCounterTest
     public void testDeleteInLeftSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -77,7 +79,7 @@ public class ReadContextCounterTest
     public void testSnvInLeftSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 2, 0, "CAT".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(554, 1, 0, 2, "CAT", Strings.EMPTY);
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -92,7 +94,7 @@ public class ReadContextCounterTest
     public void testRefInLeftSoftClipDoesNotContributeToDepth()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 2, 0, "CAT".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(554, 1, 0, 2,"CAT", Strings.EMPTY);
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -107,7 +109,7 @@ public class ReadContextCounterTest
     public void testMnvInLeftSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -122,7 +124,7 @@ public class ReadContextCounterTest
     public void testInsertInRightSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -137,7 +139,7 @@ public class ReadContextCounterTest
     public void testDeleteInRightSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes(), Strings.EMPTY);
+        final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -152,7 +154,9 @@ public class ReadContextCounterTest
     public void testMnvInRightSoftClip()
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes(), Strings.EMPTY);
+
+        final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
+
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
@@ -163,21 +167,19 @@ public class ReadContextCounterTest
         assertEquals(1, victim.altSupport());
     }
 
-    @NotNull
-    public static ReadContext readContext(
-            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases, String microhomology)
+    public static ReadContext createReadContext(
+            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
     {
-        return new ReadContext(Strings.EMPTY,
-                refPosition,
-                readIndex,
-                leftCentreIndex,
-                rightCentreIndex,
-                0,
-                bases.getBytes(),
-                microhomology);
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
+        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+
+        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
+        int[] baseQualities = makeDefaultBaseQualitities(readBases.length());
+
+        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, baseQualities, incompleteCore);
     }
 
-    @NotNull
     public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
             @NotNull final String qualities)
     {

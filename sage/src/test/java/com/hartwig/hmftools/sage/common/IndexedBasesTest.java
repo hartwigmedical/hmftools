@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.sage.read.ReadContextTest.makeDefaultBaseQualitities;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextMatch;
 
@@ -70,7 +71,7 @@ public class IndexedBasesTest
     @Test
     public void testPartialMatchMustHaveAtLeastOneFullSide()
     {
-        ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
+        ReadContext victim = createReadContext(1000, 2, 2, 2, 2, "GGTAA", Strings.EMPTY);
         Assert.assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(false, 2, "GGTAA".getBytes()));
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(false, 2, "GGTA".getBytes()));
@@ -86,7 +87,7 @@ public class IndexedBasesTest
     @Test
     public void testNegativeReadIndex()
     {
-        ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
+        ReadContext victim = createReadContext(1000, 2, 2, 2, 2, "GGTAA", Strings.EMPTY);
         assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(false, 2, "GGTAA".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(false, -1, "GGTAA".getBytes()));
     }
@@ -94,8 +95,8 @@ public class IndexedBasesTest
     @Test
     public void testPhasedMNV()
     {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGAT".getBytes(), Strings.EMPTY);
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATC".getBytes(), Strings.EMPTY);
+        ReadContext victim1 = createReadContext(1000, 4, 4, 4, 4, "GATCTTGAT", Strings.EMPTY);
+        ReadContext victim2 = createReadContext(1001, 5, 5, 5, 4, "GATCTTGATC", Strings.EMPTY);
 
         assertTrue(victim1.phased(-1, victim2));
         assertTrue(victim2.phased(1, victim1));
@@ -104,8 +105,8 @@ public class IndexedBasesTest
     @Test
     public void testPhasedReadLongEnoughOnAtLeastOneSide()
     {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGA".getBytes(), Strings.EMPTY);
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATCT".getBytes(), Strings.EMPTY);
+        ReadContext victim1 = createReadContext(1000, 4, 4, 4, 4, "GATCTTGA", Strings.EMPTY);
+        ReadContext victim2 = createReadContext(1001, 5, 5, 5, 4, "GATCTTGATCT", Strings.EMPTY);
 
         assertTrue(victim1.phased(-1, victim2));
         assertTrue(victim2.phased(1, victim1));
@@ -115,8 +116,8 @@ public class IndexedBasesTest
     public void testLongReadShortFlanks()
     {
         final String read = "TACCACAAATACATATACGTGTATCTGTCTGTGTGTTATGAACTTATATAAACCATCAC";
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1010, 10, 9, 11, 3, read.getBytes(), Strings.EMPTY);
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1030, 40, 39, 41, 3, read.getBytes(), Strings.EMPTY);
+        ReadContext victim1 = createReadContext(1010, 10, 9, 11, 3, read, Strings.EMPTY);
+        ReadContext victim2 = createReadContext(1030, 40, 39, 41, 3, read, Strings.EMPTY);
 
         assertTrue(victim1.phased(-30, victim2));
         assertTrue(victim2.phased(30, victim1));
@@ -125,8 +126,8 @@ public class IndexedBasesTest
     @Test
     public void testBothCentreMatches()
     {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "AAAATGGGG".getBytes(), Strings.EMPTY);
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1005, 5, 5, 5, 4, "TGGGGACCCC".getBytes(), Strings.EMPTY);
+        ReadContext victim1 = createReadContext(1000, 4, 4, 4, 4, "AAAATGGGG", Strings.EMPTY);
+        ReadContext victim2 = createReadContext(1005, 5, 5, 5, 4, "TGGGGACCCC", Strings.EMPTY);
         assertFalse(victim1.phased(-5, victim2));
         assertFalse(victim2.phased(5, victim1));
     }
@@ -134,31 +135,45 @@ public class IndexedBasesTest
     @Test
     public void testStrings()
     {
-        ReadContext victim = new ReadContext(Strings.EMPTY, 1000, 4, 3, 5, 2, "AACATGAGG".getBytes(), Strings.EMPTY);
+        ReadContext victim = createReadContext(1000, 4, 3, 5, 2, "AACATGAGG", Strings.EMPTY);
         assertEquals("ATG", victim.centerBases());
         assertEquals("AC", victim.leftFlankString());
         assertEquals("AG", victim.rightFlankString());
     }
 
+    public static ReadContext createReadContext(
+            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, int flankSize, String readBases, String microhomology)
+    {
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
+        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+
+        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
+        int[] baseQualities = makeDefaultBaseQualitities(readBases.length());
+
+        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, baseQualities, incompleteCore);
+    }
+
+
     @Test
     public void testCreate()
     {
-        IndexedBases victimWithExtra = create(1000, 1, "AA", "TA", "ATG", "CG", "TT");
+        IndexedBases victimWithExtra = createIndexedBases(1000, 1, "AA", "TA", "ATG", "CG", "TT");
         assertEquals(1, victimWithExtra.indexInCore());
         assertEquals(5, victimWithExtra.Index);
         assertEquals("TA", victimWithExtra.leftFlankString());
         assertEquals("ATG", victimWithExtra.centerString());
         assertEquals("CG", victimWithExtra.rightFlankString());
 
-        IndexedBases victimWithoutExtra = create(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
+        IndexedBases victimWithoutExtra = createIndexedBases(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
         assertEquals(1, victimWithoutExtra.indexInCore());
         assertEquals("TA", victimWithoutExtra.leftFlankString());
         assertEquals("ATG", victimWithoutExtra.centerString());
         assertEquals("CG", victimWithoutExtra.rightFlankString());
     }
 
-    public static IndexedBases create(int position, int indexInCore, String leftExtra, String leftFlank, String core, String rightFlank,
-            String rightExtra)
+    public static IndexedBases createIndexedBases(
+            int position, int indexInCore, String leftExtra, String leftFlank, String core, String rightFlank, String rightExtra)
     {
         assertTrue(indexInCore <= core.length());
 

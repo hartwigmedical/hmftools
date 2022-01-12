@@ -61,16 +61,11 @@ public class ReadContextFactory
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-        return new ReadContext(microhomologyContext.toString(),
+        return ReadContext.fromReadRecord(
+                microhomologyContext.toString(),
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
-                refPosition,
-                readIndex,
-                startIndex,
-                endIndex,
-                mFlankSize,
-                refBases,
-                record);
+                refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
     }
 
     @NotNull
@@ -106,16 +101,11 @@ public class ReadContextFactory
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-        return new ReadContext(microhomologyContext.toString(),
+        return ReadContext.fromReadRecord(
+                microhomologyContext.toString(),
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
-                refPosition,
-                readIndex,
-                startIndex,
-                endIndex,
-                mFlankSize,
-                refBases,
-                record);
+                refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
     }
 
     @NotNull
@@ -160,6 +150,13 @@ public class ReadContextFactory
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
+        return ReadContext.fromReadRecord(
+                Strings.EMPTY,
+                readRepeatContext.map(RepeatContext::count).orElse(0),
+                readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
+                refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
+
+        /*
         return new ReadContext(Strings.EMPTY,
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
@@ -170,5 +167,6 @@ public class ReadContextFactory
                 mFlankSize,
                 refBases,
                 record);
+         */
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static com.hartwig.hmftools.sage.read.ReadContextTest.makeDefaultBaseQualitities;
+
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
@@ -53,9 +55,13 @@ public class CandidateSerializationTest
         final int expositionPosition = 1000;
         final VariantHotspot variant =
                 ImmutableVariantHotspotImpl.builder().position(expositionPosition).chromosome("1").ref("T").alt("C").build();
-        final IndexedBases refBases = IndexedBasesTest.create(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
-        final IndexedBases readBases = IndexedBasesTest.create(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
-        final ReadContext readContext = new ReadContext(refBases, readBases, expectedRepeatCount, expectedRepeat, expectedMH);
+        final IndexedBases refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
+        final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
+
+        int[] baseQualitities = makeDefaultBaseQualitities(readBases.Bases.length);
+
+        final ReadContext readContext = new ReadContext(
+                expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, baseQualitities, false);
 
         final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2, 0);
 

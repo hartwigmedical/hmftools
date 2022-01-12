@@ -10,7 +10,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -20,7 +19,6 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SoftFilter;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounterTest;
@@ -133,7 +131,7 @@ public class MixedGermlineTest
     @NotNull
     static ReadContextCounter dummyCounter(@NotNull VariantHotspot variant, @NotNull final String microhomology)
     {
-        ReadContext dummyReadContext = ReadContextCounterTest.readContext(100, 0, 0, 0, "AAA", microhomology);
+        ReadContext dummyReadContext = ReadContextCounterTest.createReadContext(100, 0, 0, 0, "AAA", microhomology);
 
         return new ReadContextCounter("SAMPLE",
                 variant,

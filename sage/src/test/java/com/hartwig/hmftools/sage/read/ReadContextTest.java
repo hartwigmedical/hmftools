@@ -1,8 +1,14 @@
 package com.hartwig.hmftools.sage.read;
 
+import static java.util.Arrays.fill;
+
+import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -20,38 +26,35 @@ public class ReadContextTest
         assertEquals("ACGCAG", initial.extend(initial.readBasesLeftCentreIndex(), initial.readBasesRightCentreIndex() + 1).centerBases());
 
         final ReadContext allComplete = initial.extend(initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 2);
-        assertFalse(allComplete.incompleteCore());
+        assertFalse(allComplete.hasIncompleteCore());
         assertEquals("CATACGCAGT", allComplete.centerBases());
 
         final ReadContext allIncompleteLeft =
                 initial.extend(initial.readBasesLeftCentreIndex() - 4, initial.readBasesRightCentreIndex() + 2);
-        assertTrue(allIncompleteLeft.incompleteCore());
+        assertTrue(allIncompleteLeft.hasIncompleteCore());
         assertEquals("CATACGCAGT", allIncompleteLeft.centerBases());
 
         final ReadContext allIncompleteRight =
                 initial.extend(initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 3);
-        assertTrue(allIncompleteRight.incompleteCore());
+        assertTrue(allIncompleteRight.hasIncompleteCore());
         assertEquals("CATACGCAGT", allIncompleteRight.centerBases());
     }
 
     @NotNull
-    public static ReadContext simpleSnv(int refPosition, @NotNull final String leftFlank, @NotNull final String core,
-            @NotNull final String rightFlank)
+    public static ReadContext simpleSnv(int refPosition, final String leftFlank, final String core,
+            final String rightFlank)
     {
         assert (core.length() == 5);
         return create(refPosition, 2, leftFlank, core, rightFlank);
     }
 
-    @NotNull
-    public static ReadContext create(int refPosition, int indexInCore, @NotNull final String leftFlank, @NotNull final String core,
-            @NotNull final String rightFlank)
+    public static ReadContext create(int refPosition, int indexInCore, final String leftFlank, final String core, final String rightFlank)
     {
         return create(refPosition, indexInCore, leftFlank, core, rightFlank, Math.max(leftFlank.length(), rightFlank.length()));
     }
 
-    @NotNull
-    public static ReadContext create(int refPosition, int indexInCore, @NotNull final String leftFlank, @NotNull final String core,
-            @NotNull final String rightFlank, int flankSize)
+    public static ReadContext create(
+            int refPosition, int indexInCore, final String leftFlank, final String core, final String rightFlank, int flankSize)
     {
         if(indexInCore >= core.length())
         {
@@ -60,15 +63,37 @@ public class ReadContextTest
 
         int leftCentreIndex = leftFlank.length();
         int rightCentreIndex = leftCentreIndex + core.length() - 1;
-        int index = leftFlank.length() - 1 + indexInCore;
+        int readIndex = leftFlank.length() - 1 + indexInCore;
+        String readBases = leftFlank + core + rightFlank;
+        int coreFlankLength = readBases.length();
 
+        /*
         return new ReadContext("",
                 refPosition,
-                index,
+                readIndex,
                 leftFlank.length(),
                 rightCentreIndex,
                 flankSize,
                 (leftFlank + core + rightFlank).getBytes(),
                 Strings.EMPTY);
+        */
+
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, coreFlankLength - 1);
+        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+
+        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
+
+        int[] baseQualities = makeDefaultBaseQualitities(coreFlankLength);
+
+        return new ReadContext(refPosition, "", 0, "", readBasesIndexed, baseQualities, incompleteCore);
+    }
+
+    public static int[] makeDefaultBaseQualitities(int coreFlankLength)
+    {
+        int[] qualities = new int[coreFlankLength];
+        fill(qualities, MATCHING_BASE_QUALITY);
+        return qualities;
+
     }
 }
