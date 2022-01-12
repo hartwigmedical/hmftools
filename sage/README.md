@@ -355,7 +355,7 @@ To do this we first calculate a modified base quality as follows:
 <pre>
 distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
 baseQuality (SNV/MNV) = BASEQ at variant location(s)  
-baseQuality (Indel) = min BASEQ over core read context  
+baseQuality (Indel) = average BASEQ over core read context  
 modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge) 
 </pre>
 
