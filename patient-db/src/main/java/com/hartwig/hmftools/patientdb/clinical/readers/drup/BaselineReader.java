@@ -34,7 +34,7 @@ class BaselineReader {
     private static final String ITEMGROUP_CSF = "GRP.CSF"; // Not sure where CSF stands for, could be "clinical study fields"?
     private static final String ITEMGROUP_REGISTRATION = "GRP.REG";
     private static final String ITEMGROUP_END_OF_TRIAL = "GRP.EOT";
-    private static final String ITEMGROUP_COHORT_DATA = "GRP.COHORTDATA";
+    private static final String ITEMGROUP_TUMOR_TYPE = "GRP.TumorType";
 
     private static final String FIELD_INFORMED_CONSENT_DATE = "FLD.ICDTC";
     private static final String FIELD_HOSPITAL = "FLD.INST";
@@ -101,8 +101,8 @@ class BaselineReader {
     @Nullable
     private static String getCohortPrimaryTumor(@NotNull EcrfStudyEvent cohortEvent) {
         for (EcrfForm cohortForm : cohortEvent.nonEmptyFormsPerOID(FORM_COHORT_DATA)) {
-            for (EcrfItemGroup cohortItemGroup : cohortForm.nonEmptyItemGroupsPerOID(ITEMGROUP_COHORT_DATA)) {
-                return cohortItemGroup.readItemString(FIELD_PRIMARY_TUMOR_ICD10_DESCRIPTION);
+            for (EcrfItemGroup tumorTypeItemGroup : cohortForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_TYPE)) {
+                return tumorTypeItemGroup.readItemString(FIELD_PRIMARY_TUMOR_ICD10_DESCRIPTION);
             }
         }
         return null;
