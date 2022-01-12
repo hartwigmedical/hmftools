@@ -170,7 +170,7 @@ class GeneCopyNumberDAO
     {
         inserter.values(
                 sample,
-                deletion.GeneName,
+                DatabaseUtil.checkStringLength(deletion.GeneName, GERMLINEDELETION.GENE),
                 deletion.Chromosome,
                 deletion.RegionStart,
                 deletion.RegionEnd,
