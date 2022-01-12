@@ -95,7 +95,7 @@ public final class CandidateSerialization
             maxDepth = Math.max(maxDepth, genotype.getAttributeAsInt(RAW_DEPTH, 0));
         }
 
-        return new Candidate(tier, variant, readContext, maxDepth, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0));
+        return new Candidate(tier, variant, readContext, maxDepth, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }
 
     @NotNull

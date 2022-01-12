@@ -128,7 +128,7 @@ public class IndexedBases
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
-    protected boolean coreMatch(final boolean wildcardAllowed, final int otherRefIndex, final byte[] otherBases)
+    protected boolean coreMatch(boolean wildcardAllowed, final int otherRefIndex, final byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
 
@@ -201,19 +201,16 @@ public class IndexedBases
         return otherRefIndex + RightCoreIndex - Index;
     }
 
-    @NotNull
     public String centerString()
     {
         return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, centreLength());
     }
 
-    @NotNull
     public String leftFlankString()
     {
         return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, leftFlankLength());
     }
 
-    @NotNull
     public String rightFlankString()
     {
         int rightFlankLength = rightFlankLength();
@@ -270,7 +267,6 @@ public class IndexedBases
     {
         return new byte[] { base(position - 1), base(position), base(position + 1) };
     }
-
 
     public static IndexedBases resize(
             final int position, final int recordIndex, final int recordLeftCoreIndex,

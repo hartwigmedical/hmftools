@@ -34,7 +34,7 @@ public class QualityCalculator
 
     private double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, SAMRecord record)
     {
-        return readContextCounter.variant().ref().length() == readContextCounter.variant().alt().length()
+        return !readContextCounter.variant().isIndel()
                 ? baseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length())
                 : readContextCounter.readContext().avgCentreQuality(readBaseIndex, record);
     }

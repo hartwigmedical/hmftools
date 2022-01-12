@@ -16,23 +16,22 @@ public class Candidate
     private ReadContext mReadContext;
 
     public Candidate(
-            final VariantTier tier, final VariantHotspot variant, final ReadContext readContext, int maxDepth, int minNumberOfEvents)
+            final VariantTier tier, final VariantHotspot variant, final ReadContext readContext,
+            int maxDepth, int minNumberOfEvents, int readContextSupport)
     {
         mTier = tier;
         mVariant = variant;
         mReadContext = readContext;
         mMaxDepth = maxDepth;
         mMinNumberOfEvents = minNumberOfEvents;
+        mReadContextSupport = readContextSupport;
     }
 
-    public Candidate(final VariantTier tier, final AltContext altContext)
+    public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
     {
-        mTier = tier;
-        mVariant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
-        mMaxDepth = altContext.rawDepth();
-        mReadContext = altContext.readContext();
-        mReadContextSupport = altContext.readContextSupport();
-        mMinNumberOfEvents = altContext.minNumberOfEvents();
+        return new Candidate(
+                tier, ImmutableVariantHotspotImpl.builder().from(altContext).build(), altContext.readContext(),
+                altContext.rawDepth(), altContext.readContextSupport(), altContext.minNumberOfEvents());
     }
 
     public void update(final AltContext altContext)
@@ -48,33 +47,16 @@ public class Candidate
     }
 
     public VariantTier tier() { return mTier; }
+    public VariantHotspot variant() { return mVariant; }
 
-    public VariantHotspot variant()
-    {
-        return mVariant;
-    }
+    public ReadContext readContext() { return mReadContext; }
 
-    public int maxReadDepth()
-    {
-        return mMaxDepth;
-    }
+    public int maxReadDepth() { return mMaxDepth; }
+    public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
-    public ReadContext readContext()
-    {
-        return mReadContext;
-    }
+    public String chromosome() { return mVariant.chromosome(); }
 
-    public int minNumberOfEvents()
-    {
-        return mMinNumberOfEvents;
-    }
-
-    public String chromosome()
-    {
-        return mVariant.chromosome();
-    }
-
-    public int position() { return (int)mVariant.position(); }
+    public int position() { return mVariant.position(); }
 
     public String toString() { return String.format("var(%s:%d %s>%s) tier(%s)",
             chromosome(), position(), mVariant.ref(), mVariant.alt(), mTier); }

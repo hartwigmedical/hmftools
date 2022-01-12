@@ -57,7 +57,7 @@ public class CandidateSerializationTest
         final IndexedBases readBases = IndexedBasesTest.create(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
         final ReadContext readContext = new ReadContext(refBases, readBases, expectedRepeatCount, expectedRepeat, expectedMH);
 
-        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2);
+        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2, 0);
 
         final VariantContext serialized = toContext(candidate);
         final IndexedBases deserializedReadBases = CandidateSerialization.readBases(serialized);

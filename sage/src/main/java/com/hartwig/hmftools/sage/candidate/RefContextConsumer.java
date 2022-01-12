@@ -171,8 +171,8 @@ public class RefContextConsumer implements Consumer<SAMRecord>
                 {
                     int baseQuality = record.getBaseQualities()[readBaseIndex];
                     final String alt = String.valueOf((char) readByte);
-                    final ReadContext readContext =
-                            isWithinReadContext ? mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
+                    final ReadContext readContext = isWithinReadContext ?
+                            mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
 
                     result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
@@ -233,7 +233,7 @@ public class RefContextConsumer implements Consumer<SAMRecord>
         return isDifferent.apply((1)) ? 2 : 1;
     }
 
-    private int baseQuality(int readIndex, SAMRecord record, int length)
+    private int baseQuality(int readIndex, final SAMRecord record, int length)
     {
         int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
         int quality = Integer.MAX_VALUE;

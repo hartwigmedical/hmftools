@@ -34,15 +34,6 @@ public class RefContextCache
 
         mHotspotSelector = new HotspotSelector(hotspots);
 
-        final Predicate<AltContext> altContextPredicate = config.Filter.altContextFilter(new HotspotSelector(hotspots));
-
-        final Consumer<RefContext> evictionHandlerOld = (refContext) -> refContext.altContexts()
-                .stream()
-                .filter(AltContext::finaliseAndValidate)
-                .filter(this::hasValidDnaBases)
-                .filter(altContextPredicate)
-                .forEach(mSavedCandidates::add);
-
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
         mRollingCandidates = new EvictingArray(MIN_ARRAY_CAPACITY, evictionHandler);

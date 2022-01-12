@@ -106,6 +106,9 @@ public class AltContext implements VariantHotspot
 
     public boolean finaliseAndValidate()
     {
+        if(mReadContextCandidates.isEmpty())
+            return false;
+
         mReadContextCandidates.removeIf(x -> x.readContext().incompleteFlanks());
 
         Collections.sort(mReadContextCandidates);
@@ -120,52 +123,25 @@ public class AltContext implements VariantHotspot
         return mCandidate != null;
     }
 
-    public ReadContext readContext()
-    {
-        return mCandidate.readContext();
-    }
-
-    @NotNull
-    @Override
-    public String ref()
-    {
-        return Ref;
-    }
-
-    @NotNull
-    @Override
-    public String alt()
-    {
-        return Alt;
-    }
-
-    @NotNull
-    @Override
-    public String chromosome()
-    {
-        return RefContext.chromosome();
-    }
+    public ReadContext readContext() { return mCandidate.readContext(); }
 
     @Override
-    public int position()
-    {
-        return RefContext.position();
-    }
+    public String ref() { return Ref; }
 
-    public int rawAltSupport()
-    {
-        return mRawSupportAlt;
-    }
+    @Override
+    public String alt() { return Alt; }
 
-    public int rawDepth()
-    {
-        return RefContext.rawDepth();
-    }
+    @Override
+    public String chromosome() { return RefContext.chromosome(); }
 
-    public int rawAltBaseQuality()
-    {
-        return mRawBaseQualityAlt;
-    }
+    @Override
+    public int position() { return RefContext.position(); }
+
+    public int rawAltSupport() { return mRawSupportAlt; }
+
+    public int rawDepth() { return RefContext.rawDepth(); }
+
+    public int rawAltBaseQuality() { return mRawBaseQualityAlt; }
 
     @Override
     public boolean equals(@Nullable Object another)
@@ -195,7 +171,7 @@ public class AltContext implements VariantHotspot
 
     public String toString()
     {
-        return String.format("var(%s:%d %s->%s) candidates({})", chromosome(), position(), Ref, Alt, mReadContextCandidates.size());
+        return String.format("var(%s:%d %s->%s) candidates(%d)", chromosome(), position(), Ref, Alt, mReadContextCandidates.size());
     }
 
     static class ReadContextCandidate implements Comparable<ReadContextCandidate>
@@ -244,10 +220,7 @@ public class AltContext implements VariantHotspot
         }
 
         @NotNull
-        public ReadContext readContext()
-        {
-            return mReadContext;
-        }
+        public ReadContext readContext() { return mReadContext; }
 
         public int fullMatch()
         {

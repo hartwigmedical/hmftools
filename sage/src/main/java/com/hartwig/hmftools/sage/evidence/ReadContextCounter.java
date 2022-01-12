@@ -4,7 +4,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
@@ -150,8 +149,8 @@ public class ReadContextCounter implements VariantHotspot
         if(rawContext.ReadIndexInSkipped)
             return;
 
-        final int readIndex = rawContext.ReadIndex;
-        final boolean baseDeleted = rawContext.ReadIndexInDelete;
+        int readIndex = rawContext.ReadIndex;
+        boolean baseDeleted = rawContext.ReadIndexInDelete;
 
         mRawDepth += rawContext.DepthSupport ? 1 : 0;
         mRawAltSupport += rawContext.AltSupport ? 1 : 0;
@@ -251,24 +250,13 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
                 break;
         }
-
-        /*
-        } can't see the point in a try-catch here
-        catch(Exception e)
-        {
-            SG_LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
-            throw e;
-        }
-        */
     }
 
     @NotNull
     private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record)
     {
         if(!realign)
-        {
             return new RealignedContext(RealignedType.NONE, 0);
-        }
 
         int index = mReadContext.readBasesPositionIndex();
         int leftIndex = mReadContext.readBasesLeftCentreIndex();
@@ -278,6 +266,7 @@ public class ReadContextCounter implements VariantHotspot
         int rightOffset = rightIndex - index;
 
         int indelLength = indelLength(record);
+
         return Realigned.realignedAroundIndex(mReadContext,
                 readIndex,
                 record.getReadBases(),

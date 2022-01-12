@@ -30,7 +30,7 @@ public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 
         if(!mVariantQueue.isEmpty())
             processSageVariant(newVariant, mVariantQueue);
-        
+
         mVariantQueue.add(newVariant);
     }
 

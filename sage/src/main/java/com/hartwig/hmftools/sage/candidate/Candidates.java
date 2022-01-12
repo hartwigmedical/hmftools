@@ -43,7 +43,7 @@ public class Candidates
 
             if(candidate == null)
             {
-                candidate = new Candidate(tierSelector.tier(altContext), altContext);
+                candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
                 mCandidateMap.put(altContext, candidate);
             }
 

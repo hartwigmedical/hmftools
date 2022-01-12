@@ -56,17 +56,13 @@ public class AltRead
     {
         return mReadContext.readBasesRightCentreIndex();
     }
-
     public int leftCoreIndex()
     {
         return mReadContext.readBasesLeftCentreIndex();
     }
 
-    public void extend(@NotNull final AltRead other)
+    public void extend(final AltRead other)
     {
-        assert (mReadContext != null);
-        assert (other.mReadContext != null);
-
         int leftIndex = Math.min(mReadContext.readBasesLeftCentreIndex(), other.mReadContext.readBasesLeftCentreIndex());
         int rightIndex = Math.max(mReadContext.readBasesRightCentreIndex(), other.mReadContext.readBasesRightCentreIndex());
 
@@ -78,4 +74,5 @@ public class AltRead
         mRefContext.processAltRead(Ref, Alt, BaseQuality, SufficientMapQuality, NumberOfEvents, mReadContext);
     }
 
+    public String toString() { return String.format("%s>%s", Ref, Alt); }
 }

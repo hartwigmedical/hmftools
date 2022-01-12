@@ -21,7 +21,8 @@ public class ReadContext
     private static final int BONUS_FLANK = 50;
 
     @VisibleForTesting
-    public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+    public ReadContext(
+            final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases, final String microhomology)
     {
 
@@ -37,8 +38,8 @@ public class ReadContext
         RefBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
     }
 
-    public ReadContext(final IndexedBases refBases, final IndexedBases readBases, final int repeatCount, final String repeat,
-            final String microhomology)
+    public ReadContext(
+            final IndexedBases refBases, final IndexedBases readBases, final int repeatCount, final String repeat, final String microhomology)
     {
         if(refBases.Bases.length < readBases.Bases.length)
         {
@@ -54,9 +55,10 @@ public class ReadContext
         Microhomology = microhomology;
     }
 
-    ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
+    ReadContext(
+            final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
-            @NotNull final SAMRecord record)
+            final SAMRecord record)
     {
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, record.getReadBases().length - 1);
@@ -78,7 +80,7 @@ public class ReadContext
         mIncompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
-    private ReadContext(int leftCentreIndex, int rightCentreIndex, @NotNull final ReadContext readContext)
+    private ReadContext(int leftCentreIndex, int rightCentreIndex, final ReadContext readContext)
     {
         Position = readContext.Position;
         Repeat = readContext.Repeat;
@@ -114,6 +116,7 @@ public class ReadContext
         Microhomology = clone.Microhomology;
         mIncompleteCore = clone.mIncompleteCore;
 
+        // take just the tiny part of the ref bases covering this alt
         RefBases = IndexedBases.resize(Position,
                 clone.RefBases.Index,
                 clone.RefBases.LeftCoreIndex,
@@ -131,14 +134,12 @@ public class ReadContext
                 clone.ReadBases.Bases);
     }
 
-    @NotNull
     public ReadContext extend(int leftCentreIndex, int rightCentreIndex)
     {
         return new ReadContext(leftCentreIndex, rightCentreIndex, this);
     }
 
-    @NotNull
-    public ReadContext minimiseFootprint()
+    public ReadContext  minimiseFootprint()
     {
         return new ReadContext(this);
     }
