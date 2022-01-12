@@ -171,7 +171,7 @@ public class AltContext implements VariantHotspot
 
     public String toString()
     {
-        return String.format("var(%s:%d %s->%s) candidates(%d)", chromosome(), position(), Ref, Alt, mReadContextCandidates.size());
+        return String.format("var(%s:%d %s->%s) readCandidates(%d)", chromosome(), position(), Ref, Alt, mReadContextCandidates.size());
     }
 
     static class ReadContextCandidate implements Comparable<ReadContextCandidate>

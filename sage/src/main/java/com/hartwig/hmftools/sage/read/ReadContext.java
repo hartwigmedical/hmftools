@@ -13,9 +13,8 @@ public class ReadContext
     public final String Repeat;
     public final int RepeatCount;
     public final String Microhomology;
-    public final IndexedBases ReadBases;
-    public final IndexedBases RefBases;
 
+    private IndexedBases mReadBases;
     private final boolean mIncompleteCore;
 
     private static final int BONUS_FLANK = 50;
@@ -25,7 +24,6 @@ public class ReadContext
             final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases, final String microhomology)
     {
-
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length - 1);
         mIncompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
@@ -34,8 +32,7 @@ public class ReadContext
         Repeat = repeat;
         Microhomology = microhomology;
         RepeatCount = 0;
-        ReadBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
-        RefBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
+        mReadBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
     }
 
     public ReadContext(
@@ -46,18 +43,17 @@ public class ReadContext
             throw new IllegalArgumentException();
         }
 
-        ReadBases = readBases;
-        RefBases = refBases;
         Position = refBases.Position;
         mIncompleteCore = false;
         RepeatCount = repeatCount;
         Repeat = repeat;
         Microhomology = microhomology;
+        mReadBases = readBases;
     }
 
     ReadContext(
             final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
-            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
+            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, final IndexedBases refSequence,
             final SAMRecord record)
     {
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
@@ -67,15 +63,8 @@ public class ReadContext
         Repeat = repeat;
         RepeatCount = repeatCount;
         Microhomology = microhomology;
-        ReadBases = new IndexedBases(Position, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
 
-        int refIndex = refSequence.index(Position);
-        RefBases = new IndexedBases(Position,
-                refIndex,
-                refIndex + adjLeftCentreIndex - readIndex,
-                refIndex + adjRightCentreIndex - readIndex,
-                0,
-                refSequence.Bases);
+        mReadBases = new IndexedBases(Position, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
 
         mIncompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
@@ -88,22 +77,14 @@ public class ReadContext
         Microhomology = readContext.Microhomology;
 
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, readContext.ReadBases.Bases.length - 1);
-        int readIndex = readContext.ReadBases.Index;
-        ReadBases = new IndexedBases(Position,
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readContext.mReadBases.Bases.length - 1);
+        int readIndex = readContext.mReadBases.Index;
+        mReadBases = new IndexedBases(Position,
                 readIndex,
                 adjLeftCentreIndex,
                 adjRightCentreIndex,
-                readContext.ReadBases.FlankSize,
+                readContext.mReadBases.FlankSize,
                 readContext.readBases());
-
-        int refIndex = readContext.RefBases.index(Position);
-        RefBases = new IndexedBases(Position,
-                refIndex,
-                refIndex + adjLeftCentreIndex - readIndex,
-                refIndex + adjRightCentreIndex - readIndex,
-                0,
-                readContext.RefBases.Bases);
 
         mIncompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
@@ -116,22 +97,13 @@ public class ReadContext
         Microhomology = clone.Microhomology;
         mIncompleteCore = clone.mIncompleteCore;
 
-        // take just the tiny part of the ref bases covering this alt
-        RefBases = IndexedBases.resize(Position,
-                clone.RefBases.Index,
-                clone.RefBases.LeftCoreIndex,
-                clone.RefBases.RightCoreIndex,
-                clone.RefBases.FlankSize,
-                0,
-                clone.RefBases.Bases);
-
-        ReadBases = IndexedBases.resize(Position,
-                clone.ReadBases.Index,
-                clone.ReadBases.LeftCoreIndex,
-                clone.ReadBases.RightCoreIndex,
-                clone.ReadBases.FlankSize,
+        mReadBases = IndexedBases.resize(Position,
+                clone.mReadBases.Index,
+                clone.mReadBases.LeftCoreIndex,
+                clone.mReadBases.RightCoreIndex,
+                clone.mReadBases.FlankSize,
                 BONUS_FLANK,
-                clone.ReadBases.Bases);
+                clone.mReadBases.Bases);
     }
 
     public ReadContext extend(int leftCentreIndex, int rightCentreIndex)
@@ -139,14 +111,14 @@ public class ReadContext
         return new ReadContext(leftCentreIndex, rightCentreIndex, this);
     }
 
-    public ReadContext  minimiseFootprint()
+    public ReadContext minimiseFootprint()
     {
         return new ReadContext(this);
     }
 
     public boolean incompleteFlanks()
     {
-        return !ReadBases.flanksComplete();
+        return !mReadBases.flanksComplete();
     }
 
     public boolean incompleteCore()
@@ -156,8 +128,8 @@ public class ReadContext
 
     public int avgCentreQuality(int readIndex, @NotNull final SAMRecord record)
     {
-        int leftOffset = this.readIndex() - ReadBases.LeftCoreIndex;
-        int rightOffset = ReadBases.RightCoreIndex - this.readIndex();
+        int leftOffset = this.readIndex() - mReadBases.LeftCoreIndex;
+        int rightOffset = mReadBases.RightCoreIndex - this.readIndex();
 
         int leftIndex = readIndex - leftOffset;
         int rightIndex = readIndex + rightOffset;
@@ -172,89 +144,69 @@ public class ReadContext
 
     public boolean phased(int offset, final ReadContext other)
     {
-        return ReadBases.phased(offset, other.ReadBases);
+        return mReadBases.phased(offset, other.mReadBases);
     }
 
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
     {
-        return ReadBases.isCentreCovered(otherReadIndex, otherBases);
+        return mReadBases.isCentreCovered(otherReadIndex, otherBases);
     }
 
     @NotNull
     public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCoreMatch, int otherReadIndex, byte[] otherBases)
     {
-        return ReadBases.matchAtPosition(wildcardAllowedInCoreMatch, otherReadIndex, otherBases);
+        return mReadBases.matchAtPosition(wildcardAllowedInCoreMatch, otherReadIndex, otherBases);
     }
 
     @NotNull
     public ReadContextMatch matchAtPosition(@NotNull final ReadContext other)
     {
-        return ReadBases.matchAtPosition(false, other.ReadBases);
+        return mReadBases.matchAtPosition(false, other.mReadBases);
     }
 
     public int readBasesPositionIndex()
     {
-        return ReadBases.Index;
+        return mReadBases.Index;
     }
 
     public int readBasesLeftFlankIndex()
     {
-        return ReadBases.LeftFlankIndex;
+        return mReadBases.LeftFlankIndex;
     }
 
     public int readBasesRightFlankIndex()
     {
-        return ReadBases.RightFlankIndex;
+        return mReadBases.RightFlankIndex;
     }
 
     public int readBasesLeftCentreIndex()
     {
-        return ReadBases.LeftCoreIndex;
+        return mReadBases.LeftCoreIndex;
     }
 
     public int readBasesRightCentreIndex()
     {
-        return ReadBases.RightCoreIndex;
+        return mReadBases.RightCoreIndex;
     }
 
     @Override
     public String toString()
     {
-        return ReadBases.centerString();
+        return mReadBases.centerString();
     }
 
     @VisibleForTesting
     @NotNull
-    public String centerBases()
-    {
-        return ReadBases.centerString();
-    }
+    public String centerBases() { return mReadBases.centerString(); }
 
     @NotNull
-    public String microhomology()
-    {
-        return Microhomology;
-    }
+    public String microhomology() { return Microhomology; }
 
-    public byte[] readBases()
-    {
-        return ReadBases.Bases;
-    }
+    public byte[] readBases() { return mReadBases.Bases; }
 
-    private int readIndex()
-    {
-        return ReadBases.Index;
-    }
+    private int readIndex() { return mReadBases.Index; }
 
-    public int maxFlankLength()
-    {
-        return ReadBases.maxFlankLength();
-    }
-
-    public byte[] refTrinucleotideContext(int position)
-    {
-        return RefBases.trinucleotideContext(position);
-    }
+    public int maxFlankLength() { return mReadBases.maxFlankLength(); }
 
     public int length()
     {
@@ -262,15 +214,9 @@ public class ReadContext
     }
 
     @NotNull
-    public String leftFlankString()
-    {
-        return ReadBases.leftFlankString();
-    }
+    public String leftFlankString() { return mReadBases.leftFlankString(); }
 
     @NotNull
-    public String rightFlankString()
-    {
-        return ReadBases.rightFlankString();
-    }
+    public String rightFlankString() { return mReadBases.rightFlankString(); }
 
 }

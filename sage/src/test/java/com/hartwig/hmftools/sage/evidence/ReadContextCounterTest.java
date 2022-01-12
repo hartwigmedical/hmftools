@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -31,12 +32,15 @@ public class ReadContextCounterTest
 
     private static final Map<String,QualityRecalibrationMap> RECALIBRATION_MAP = Maps.newHashMap();
 
+    // convert to using MockRefGenome
+    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
+
     static
     {
         RECALIBRATION_MAP.put(SAMPLE, RECALIBRATION);
     }
 
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION_MAP);
+    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION_MAP, REF_BASES);
 
     @Test
     public void testInsertInLeftSoftClip()
@@ -160,8 +164,8 @@ public class ReadContextCounterTest
     }
 
     @NotNull
-    public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases,
-            String microhomology)
+    public static ReadContext readContext(
+            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases, String microhomology)
     {
         return new ReadContext(Strings.EMPTY,
                 refPosition,

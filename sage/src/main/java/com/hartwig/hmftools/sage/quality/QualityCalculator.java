@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.quality;
 
 import java.util.Map;
 
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -11,11 +12,14 @@ public class QualityCalculator
 {
     private final QualityConfig mConfig;
     private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final IndexedBases mRefBases;
 
-    public QualityCalculator(final QualityConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+    public QualityCalculator(
+            final QualityConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap, final IndexedBases refBases)
     {
         mConfig = config;
         mQualityRecalibrationMap = qualityRecalibrationMap;
+        mRefBases = refBases;
     }
 
     public double calculateQualityScore(
@@ -52,7 +56,7 @@ public class QualityCalculator
             int refPosition = readContextCounter.position() + i;
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
-            byte[] trinucleotideContext = readContextCounter.readContext().refTrinucleotideContext(refPosition);
+            byte[] trinucleotideContext = mRefBases.trinucleotideContext(refPosition);
 
             if(qrMap != null)
             {
