@@ -48,6 +48,9 @@ public class ReadContextCounter implements VariantHotspot
     private int mReferenceQuality;
     private int mTotalQuality;
 
+    private int mForwardStrand;
+    private int mReverseStrand;
+
     private double mJitterPenalty;
 
     private int mImproperPair;
@@ -71,6 +74,39 @@ public class ReadContextCounter implements VariantHotspot
         mReadContext = readContext;
         mVariant = variant;
         mExpandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
+
+        mFull = 0;
+        mPartial = 0;
+        mCore = 0;
+        mAlt = 0;
+        mRealigned = 0;
+        mReference = 0;
+        mCoverage = 0;
+
+        mLengthened = 0;
+        mShortened = 0;
+
+        mFullQuality = 0;
+        mPartialQuality = 0;
+        mCoreQuality = 0;
+        mAltQuality = 0;
+        mRealignedQuality = 0;
+        mReferenceQuality = 0;
+        mTotalQuality = 0;
+
+        mForwardStrand = 0;
+        mReverseStrand = 0;
+
+        mJitterPenalty = 0;
+
+        mImproperPair = 0;
+
+        mRawDepth = 0;
+        mRawAltSupport = 0;
+        mRawRefSupport = 0;
+        mRawAltBaseQuality = 0;
+        mRawRefBaseQuality = 0;
+
     }
 
     public VariantHotspot variant() { return mVariant; }
@@ -115,6 +151,12 @@ public class ReadContextCounter implements VariantHotspot
     public int[] jitter()
     {
         return new int[] { mShortened, mLengthened, qualityJitterPenalty() };
+    }
+
+    public double strandBias()
+    {
+        double total = mForwardStrand + mReverseStrand;
+        return total > 0 ? mForwardStrand / total : 0;
     }
 
     public int[] quality()
@@ -237,6 +279,11 @@ public class ReadContextCounter implements VariantHotspot
             mAlt++;
             mAltQuality++;
         }
+
+        if(record.getFirstOfPairFlag())
+            mForwardStrand++;
+        else
+            mReverseStrand++;
 
         // Jitter Penalty
         switch(realignmentType)

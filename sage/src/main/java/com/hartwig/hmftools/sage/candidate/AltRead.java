@@ -66,7 +66,7 @@ public class AltRead
         int leftIndex = Math.min(mReadContext.readBasesLeftCentreIndex(), other.mReadContext.readBasesLeftCentreIndex());
         int rightIndex = Math.max(mReadContext.readBasesRightCentreIndex(), other.mReadContext.readBasesRightCentreIndex());
 
-        mReadContext = mReadContext.extend(leftIndex, rightIndex);
+        mReadContext.extendCore(leftIndex, rightIndex);
     }
 
     public void updateRefContext()

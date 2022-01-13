@@ -15,8 +15,14 @@ public class ReadContext
     public final String Microhomology;
 
     private IndexedBases mReadBases;
-    private final int[] mBaseQualitities;
-    private final boolean mIncompleteCore;
+
+    // base quals are recorded across the flanks and core
+    private final int[] mBaseQualities;
+
+    // distance in bases from read index to start of base-qualities, cached in case the flank index changes
+    private final int mBaseQualIndexOffset;
+
+    private boolean mIncompleteCore;
 
     private static final int BONUS_FLANK = 50;
 
@@ -28,8 +34,12 @@ public class ReadContext
         RepeatCount = repeatCount;
         Repeat = repeat;
         Microhomology = microhomology;
+
         mReadBases = readBases;
-        mBaseQualitities = baseQualities;
+
+        mBaseQualities = baseQualities;
+        mBaseQualIndexOffset = mReadBases.Index - mReadBases.LeftFlankIndex;
+
         mIncompleteCore = incompleteCore;
     }
 
@@ -56,27 +66,23 @@ public class ReadContext
             baseQualities[i] = baseQuals[startIndex + i];
         }
 
-        return new ReadContext(
-                refPosition, repeat, repeatCount, microhomology, readBases, baseQualities, incompleteCore);
+        return new ReadContext(refPosition, repeat, repeatCount, microhomology, readBases, baseQualities, incompleteCore);
     }
 
-    public ReadContext extend(int leftCentreIndex, int rightCentreIndex)
+    public void extendCore(int leftCentreIndex, int rightCentreIndex)
     {
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, mReadBases.Bases.length - 1);
 
-        int readIndex = mReadBases.Index;
-
         IndexedBases newReadBases = new IndexedBases(Position,
-                readIndex,
+                mReadBases.Index,
                 adjLeftCentreIndex,
                 adjRightCentreIndex,
                 mReadBases.FlankSize,
                 readBases());
 
-        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
-
-        return new ReadContext(Position, Repeat, RepeatCount, Microhomology, newReadBases, mBaseQualitities, incompleteCore);
+        mReadBases = newReadBases;
+        mIncompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
     public ReadContext cloneAndExpand()
@@ -89,10 +95,10 @@ public class ReadContext
                 BONUS_FLANK,
                 mReadBases.Bases);
 
-        return new ReadContext(Position, Repeat, RepeatCount, Microhomology, newReadBases, mBaseQualitities, mIncompleteCore);
+        return new ReadContext(Position, Repeat, RepeatCount, Microhomology, newReadBases, mBaseQualities, mIncompleteCore);
     }
 
-    public int[] baseQualities() { return mBaseQualitities; }
+    public int[] baseQualities() { return mBaseQualities; }
 
     public boolean hasIncompleteFlanks()
     {
@@ -146,6 +152,7 @@ public class ReadContext
 
     public String microhomology() { return Microhomology; }
 
+    public IndexedBases indexedBases() { return mReadBases; }
     public byte[] readBases() { return mReadBases.Bases; }
     private int readIndex() { return mReadBases.Index; }
 

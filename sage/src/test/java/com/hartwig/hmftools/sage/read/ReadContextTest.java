@@ -16,26 +16,44 @@ import org.junit.Test;
 
 public class ReadContextTest
 {
+    private ReadContext expandClonedReadContext(final ReadContext readContext, int leftCentreIndex, int rightCentreIndex)
+    {
+        ReadContext newContext = new ReadContext(
+                readContext.Position, readContext.Repeat, readContext.RepeatCount, readContext.Microhomology,
+                readContext.indexedBases(), readContext.baseQualities(), readContext.hasIncompleteCore());
+
+        newContext.extendCore(leftCentreIndex, rightCentreIndex);
+        return newContext;
+    }
 
     @Test
     public void testExpand()
     {
         final ReadContext initial = create(1000, 2, "CAT", "ACGCA", "GT", 2);
-        assertEquals("ACGCA", initial.centerBases());
-        assertEquals("TACGCA", initial.extend(initial.readBasesLeftCentreIndex() - 1, initial.readBasesRightCentreIndex()).centerBases());
-        assertEquals("ACGCAG", initial.extend(initial.readBasesLeftCentreIndex(), initial.readBasesRightCentreIndex() + 1).centerBases());
 
-        final ReadContext allComplete = initial.extend(initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 2);
+        assertEquals("ACGCA", initial.centerBases());
+        assertEquals("TACGCA", expandClonedReadContext(
+                initial, initial.readBasesLeftCentreIndex() - 1, initial.readBasesRightCentreIndex()).centerBases());
+
+        assertEquals("ACGCAG", expandClonedReadContext(
+                initial, initial.readBasesLeftCentreIndex(), initial.readBasesRightCentreIndex() + 1).centerBases());
+
+        final ReadContext allComplete = expandClonedReadContext(
+                initial, initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 2);
+
         assertFalse(allComplete.hasIncompleteCore());
         assertEquals("CATACGCAGT", allComplete.centerBases());
 
-        final ReadContext allIncompleteLeft =
-                initial.extend(initial.readBasesLeftCentreIndex() - 4, initial.readBasesRightCentreIndex() + 2);
+        final ReadContext allIncompleteLeft = expandClonedReadContext(
+                initial, initial.readBasesLeftCentreIndex() - 4, initial.readBasesRightCentreIndex() + 2);
+
         assertTrue(allIncompleteLeft.hasIncompleteCore());
         assertEquals("CATACGCAGT", allIncompleteLeft.centerBases());
 
         final ReadContext allIncompleteRight =
-                initial.extend(initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 3);
+                expandClonedReadContext(
+                        initial, initial.readBasesLeftCentreIndex() - 3, initial.readBasesRightCentreIndex() + 3);
+
         assertTrue(allIncompleteRight.hasIncompleteCore());
         assertEquals("CATACGCAGT", allIncompleteRight.centerBases());
     }
