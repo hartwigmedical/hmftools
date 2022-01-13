@@ -21,7 +21,4 @@ public class LinxConstants
     public static final int MIN_SIMPLE_DUP_DEL_CUTOFF = 100000;
 
     public static final double LOW_JCN_THRESHOLD = 0.75;
-
-    // exclude clusters with too many SVs from chaining
-    public static final int DEFAULT_CHAINING_SV_LIMIT = 2000;
 }

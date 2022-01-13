@@ -7,14 +7,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.SvFileLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.germline.GermlineFilter.GERMLINE_MIN_QUAL;
-import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
@@ -181,7 +179,7 @@ public class LinxConfig
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
 
-        ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
+        ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : 0;
 
         RestrictedGeneIds = Lists.newArrayList();
         if(cmd.hasOption(GENE_ID_FILE))
@@ -296,7 +294,7 @@ public class LinxConfig
         mSampleIds = Lists.newArrayList();
         LogVerbose = false;
         Output = new LinxOutput();
-        ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
+        ChainingSvLimit = 0;
         DriverGenes = Lists.newArrayList();
         RestrictedGeneIds = Lists.newArrayList();
         RunDrivers = false;
