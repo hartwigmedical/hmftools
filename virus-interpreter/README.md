@@ -32,7 +32,7 @@ Every virus detected by VIRUSBreakend is evaluated for reporting. For a virus to
 ### Driver likelihood
 
 Viruses that are potentially reportable (i.e. present in the reporting db) are annotated with a driver 
-likelihood (HIGH/LOW) in the configuration. All other viruses (i.e. the viruses that are not present in reporting db), 
+likelihood (HIGH/LOW) in the reporting db. All other viruses (i.e. the viruses that are not present in reporting db), 
 will be annotated with driver likelihood UNKNOWN.
 
 ### Output data
@@ -51,7 +51,7 @@ percentageCovered | The percentage of the viral reference sequence that has been
 meanCoverage | The average coverage of the viral genome as reported by VIRUSBreakend  ("meanDepth" field of VIRUSBreakend)
 expectedClonalMeanCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA 
 reported | A boolean indicating whether the detected viral presence is considered a driver
-driverLikelihood | The driver likelihood of the virus as annotated in the configuration file
+driverLikelihood | The driver likelihood of the virus as annotated in the reporting db 
 
  ## Version History and Download Links
  - [1.2] (upcoming)
