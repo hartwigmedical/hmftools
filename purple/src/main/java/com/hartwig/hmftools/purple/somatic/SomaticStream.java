@@ -148,6 +148,11 @@ public class SomaticStream implements Consumer<VariantContext>
 
             boolean isPaveAnnotated = vcfReader.getFileHeader().hasInfoLine(VAR_TRANS_IMPACT_ANNOATATION);
 
+            if(!isPaveAnnotated)
+            {
+                PPL_LOGGER.info("SnpEff annotation enabled");
+            }
+
             mVcfWriter = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
                     .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
