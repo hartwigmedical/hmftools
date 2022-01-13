@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
@@ -23,15 +24,14 @@ public class SamSlicer
         mRegions = Collections.singletonList(slice);
     }
 
-    public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice, final List<ChrBaseRegion> panel)
+    public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice, final List<BaseRegion> panel)
     {
         mBamSlicer = new BamSlicer(minMappingQuality);
         mRegions = Lists.newArrayList();
 
-        for(final ChrBaseRegion panelRegion : panel)
+        for(final BaseRegion panelRegion : panel)
         {
-            if(slice.Chromosome.equals(panelRegion.Chromosome) && panelRegion.start() <= slice.end()
-                    && panelRegion.end() >= slice.start())
+            if(panelRegion.start() <= slice.end() && panelRegion.end() >= slice.start())
             {
                 ChrBaseRegion overlap = new ChrBaseRegion(slice.Chromosome,
                         Math.max(panelRegion.start(), slice.start()),

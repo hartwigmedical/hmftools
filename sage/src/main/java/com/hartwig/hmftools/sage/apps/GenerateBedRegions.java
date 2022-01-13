@@ -225,7 +225,6 @@ public class GenerateBedRegions
         {
             final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 
-            final String header = fileContents.get(0);
             fileContents.remove(0);
 
             for(final String line : fileContents)

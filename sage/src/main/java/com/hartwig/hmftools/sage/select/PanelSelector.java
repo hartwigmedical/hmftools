@@ -4,15 +4,15 @@ import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 @NotThreadSafe
 public class PanelSelector
 {
-    private final List<ChrBaseRegion> mRegions;
+    private final List<BaseRegion> mRegions;
     private int mIndex;
 
-    public PanelSelector(final List<ChrBaseRegion> regions)
+    public PanelSelector(final List<BaseRegion> regions)
     {
         mRegions = regions;
         mIndex = 0;
@@ -23,7 +23,7 @@ public class PanelSelector
         if(mRegions.isEmpty())
             return false;
 
-        ChrBaseRegion current = current();
+        BaseRegion current = current();
         while(mIndex > 0 && current.start() > end)
         {
             mIndex--;
@@ -42,7 +42,7 @@ public class PanelSelector
         return false;
     }
 
-    private ChrBaseRegion current()
+    private BaseRegion current()
     {
         return mRegions.get(mIndex);
     }

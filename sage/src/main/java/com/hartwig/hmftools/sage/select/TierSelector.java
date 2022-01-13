@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.variant.VariantTier;
@@ -16,7 +17,7 @@ public class TierSelector extends HotspotSelector
     private final PanelSelector mPanelRegionSelector;
     private final PanelSelector mHighConfidenceRegionSelector;
 
-    public TierSelector(final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel, final List<ChrBaseRegion> highConfidence)
+    public TierSelector(final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
         super(hotspots);
         mPanelRegionSelector = new PanelSelector(panel);

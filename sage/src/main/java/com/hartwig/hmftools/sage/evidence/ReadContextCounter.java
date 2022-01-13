@@ -219,7 +219,7 @@ public class ReadContextCounter implements VariantHotspot
         if(!baseDeleted)
         {
             final boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
-            final IndexedBases expandedBases = mExpandedBasesFactory.expand((int) position(), readIndex, record);
+            final IndexedBases expandedBases = mExpandedBasesFactory.expand(position(), readIndex, record);
 
             final ReadContextMatch match = mReadContext.matchAtPosition(wildcardMatchInCore, expandedBases.Index, expandedBases.Bases);
 

@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.EvictingArray;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -26,7 +26,7 @@ public class RefContextCache
 
     private static final int MIN_ARRAY_CAPACITY = 256;
 
-    public RefContextCache(final SageConfig config, final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel)
+    public RefContextCache(final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel)
     {
         mConfig = config;
         mPanelSelector = new PanelSelector(panel);

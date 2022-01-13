@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -31,12 +30,12 @@ public class CandidateEvidence
 {
     private final SageConfig mConfig;
     private final List<VariantHotspot> mHotspots;
-    private final List<ChrBaseRegion> mPanel;
+    private final List<BaseRegion> mPanel;
     private final ReferenceSequenceFile mRefGenome;
     private final Coverage mCoverage;
 
     public CandidateEvidence(
-            final SageConfig config, final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel,
+            final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel,
             final ReferenceSequenceFile refGenome, final Coverage coverage)
     {
         mConfig = config;

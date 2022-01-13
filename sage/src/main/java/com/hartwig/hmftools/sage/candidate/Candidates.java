@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
 import com.hartwig.hmftools.sage.select.TierSelector;
@@ -14,12 +14,12 @@ import com.hartwig.hmftools.sage.select.TierSelector;
 public class Candidates
 {
     private final List<VariantHotspot> mHotspots;
-    private final List<ChrBaseRegion> mPanel;
-    private final List<ChrBaseRegion> mHighConfidence;
+    private final List<BaseRegion> mPanel;
+    private final List<BaseRegion> mHighConfidence;
     private final Map<VariantHotspot,Candidate> mCandidateMap;
     private List<Candidate> mCandidateList;
 
-    public Candidates(final List<VariantHotspot> hotspots, final List<ChrBaseRegion> panel, final List<ChrBaseRegion> highConfidence)
+    public Candidates(final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
         mHotspots = hotspots;
         mPanel = panel;

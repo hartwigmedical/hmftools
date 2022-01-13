@@ -3,12 +3,20 @@ package com.hartwig.hmftools.sage;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -24,6 +32,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
@@ -36,9 +45,9 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ReferenceData
 {
     public final ListMultimap<Chromosome,NamedBed> CoveragePanel;
-    public final ListMultimap<Chromosome,ChrBaseRegion> PanelWithHotspots;
+    public final Map<Chromosome,List<BaseRegion>> PanelWithHotspots;
     public final ListMultimap<Chromosome,VariantHotspot> Hotspots;
-    public final ListMultimap<Chromosome,ChrBaseRegion> HighConfidence;
+    public final Map<Chromosome,List<BaseRegion>> HighConfidence;
 
     public final EnsemblDataCache GeneDataCache;
 
@@ -53,9 +62,9 @@ public class ReferenceData
         mConfig = config;
 
         CoveragePanel = ArrayListMultimap.create();
-        PanelWithHotspots = ArrayListMultimap.create();
+        PanelWithHotspots = Maps.newHashMap();
         Hotspots = ArrayListMultimap.create();
-        HighConfidence = ArrayListMultimap.create();
+        HighConfidence = Maps.newHashMap();
 
         RefGenome = loadRefGenome(config.RefGenomeFile);
 
@@ -130,7 +139,8 @@ public class ReferenceData
 
             loadHotspots();
 
-            final ListMultimap<Chromosome, ChrBaseRegion> panelWithoutHotspots = readUnnamedBedFile(mConfig.PanelBed);
+            /*
+            final Map<Chromosome,List<BaseRegion>> panelWithoutHotspots = loadBedFile(mConfig.PanelBed);
 
             if(!mConfig.PanelBed.isEmpty())
             {
@@ -138,10 +148,17 @@ public class ReferenceData
             }
 
             PanelWithHotspots.putAll(panelWithHotspots(panelWithoutHotspots, Hotspots));
+            */
+
+            if(!mConfig.PanelBed.isEmpty())
+            {
+                PanelWithHotspots.putAll(loadBedFile(mConfig.PanelBed));
+                SG_LOGGER.info("read {} panel entries from bed file: {}", PanelWithHotspots.size(), mConfig.PanelBed);
+            }
 
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
-                HighConfidence.putAll(readUnnamedBedFile(mConfig.HighConfidenceBed));
+                HighConfidence.putAll(loadBedFile(mConfig.HighConfidenceBed));
                 SG_LOGGER.info("read {} high-confidence entries from bed file: {}", HighConfidence.size(), mConfig.HighConfidenceBed);
             }
         }
@@ -175,8 +192,9 @@ public class ReferenceData
         }
     }
 
+    /*
     private ListMultimap<Chromosome, ChrBaseRegion> panelWithHotspots(
-            final ListMultimap<Chromosome, ChrBaseRegion> panelWithoutHotspots, final ListMultimap<Chromosome,VariantHotspot> hotspots)
+            final Map<Chromosome,List<BaseRegion>> panelWithoutHotspots, final ListMultimap<Chromosome,VariantHotspot> hotspots)
     {
         final ListMultimap<Chromosome, ChrBaseRegion> result = ArrayListMultimap.create();
 
@@ -201,6 +219,7 @@ public class ReferenceData
 
         return result;
     }
+    */
 
     private static ListMultimap<Chromosome,NamedBed> readNamedBedFile(final String panelBed) throws IOException
     {
@@ -219,23 +238,43 @@ public class ReferenceData
         return panel;
     }
 
-    private static ListMultimap<Chromosome, ChrBaseRegion> readUnnamedBedFile(final String panelBed) throws IOException
+    private static Map<Chromosome,List<BaseRegion>> loadBedFile(final String bedFile)
     {
-        final ListMultimap<Chromosome, ChrBaseRegion> panel = ArrayListMultimap.create();
+        final Map<Chromosome,List<BaseRegion>> panel = Maps.newHashMap();
 
-        if(!panelBed.isEmpty())
+        try
         {
-            SortedSetMultimap<String,GenomeRegion> bed = BEDFileLoader.fromBedFile(panelBed);
+            BufferedReader fileReader = bedFile.endsWith(".gz") ?
+                    new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(bedFile)))) :
+                    new BufferedReader(new FileReader(bedFile));
 
-            for(String contig : bed.keySet())
+            final String fileDelim = "\t";
+            String line = "";
+
+            List<BaseRegion> chrRegions = null;
+            Chromosome currentChr = null;
+
+            while((line = fileReader.readLine()) != null)
             {
-                if(HumanChromosome.contains(contig))
+                final String[] values = line.split(fileDelim, -1);
+
+                Chromosome chromosome = HumanChromosome.fromString(values[0]);
+                int posStart = Integer.parseInt(values[1]);
+                int posEnd = Integer.parseInt(values[2]);
+
+                if(currentChr != chromosome)
                 {
-                    panel.putAll(
-                            HumanChromosome.fromString(contig),
-                            bed.get(contig).stream().map(x -> ChrBaseRegion.from(x)).collect(Collectors.toSet()));
+                    currentChr = chromosome;
+                    chrRegions = Lists.newArrayList();
+                    panel.put(chromosome, chrRegions);
                 }
+
+                chrRegions.add(new BaseRegion(posStart, posEnd));
             }
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("failed to load panel BED file({}): {}", bedFile, e.toString());
         }
 
         return panel;
