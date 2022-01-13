@@ -172,10 +172,11 @@ public class ReadContextCounter implements VariantHotspot
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
 
-    @Override
     public String toString()
     {
-        return mReadContext.toString();
+        return String.format("var(%s:%d %s>%s) core(%s) counts(f=%d p=%d c=%d)",
+                mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(),
+                mReadContext.toString(), mFull, mPartial, mCore);
     }
 
     public void accept(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)

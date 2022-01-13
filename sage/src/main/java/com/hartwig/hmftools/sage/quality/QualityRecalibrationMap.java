@@ -19,6 +19,6 @@ public class QualityRecalibrationMap
         final BaseQualityKey key = new BaseQualityKey(ref, alt, trinucleotideContext, qual);
 
         QualityRecalibrationRecord record = mMap.get(key);
-        return record != null ? record.RecalibratedQuality : 1.0;
+        return record != null ? record.RecalibratedQuality : qual;
     }
 }

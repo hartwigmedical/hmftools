@@ -153,13 +153,15 @@ public class ReferenceData
             if(!mConfig.PanelBed.isEmpty())
             {
                 PanelWithHotspots.putAll(loadBedFile(mConfig.PanelBed));
-                SG_LOGGER.info("read {} panel entries from bed file: {}", PanelWithHotspots.size(), mConfig.PanelBed);
+                SG_LOGGER.info("read {} panel entries from bed file: {}",
+                        PanelWithHotspots.values().stream().mapToInt(x -> x.size()).sum(), mConfig.PanelBed);
             }
 
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
                 HighConfidence.putAll(loadBedFile(mConfig.HighConfidenceBed));
-                SG_LOGGER.info("read {} high-confidence entries from bed file: {}", HighConfidence.size(), mConfig.HighConfidenceBed);
+                SG_LOGGER.info("read {} high-confidence entries from bed file: {}",
+                        HighConfidence.values().stream().mapToInt(x -> x.size()).sum(), mConfig.HighConfidenceBed);
             }
         }
         catch(IOException e)

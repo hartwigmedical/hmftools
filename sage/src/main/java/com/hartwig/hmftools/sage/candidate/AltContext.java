@@ -209,10 +209,7 @@ public class AltContext implements VariantHotspot
             return mFullMatch + mPartialMatch;
         }
 
-        public int minNumberOfEvents()
-        {
-            return mMinNumberOfEvents;
-        }
+        public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
         public int maxFlankLength()
         {

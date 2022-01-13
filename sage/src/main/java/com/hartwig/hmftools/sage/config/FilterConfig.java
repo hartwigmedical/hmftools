@@ -121,7 +121,7 @@ public class FilterConfig
     }
 
 
-    public SoftFilterConfig softConfig(@NotNull final VariantTier tier)
+    public SoftFilterConfig softConfig(final VariantTier tier)
     {
         switch(tier)
         {
@@ -134,19 +134,6 @@ public class FilterConfig
             default:
                 return SoftLowConfidenceFilter;
         }
-    }
-
-    public Predicate<AltContext> altContextFilter(final HotspotSelector hotspotSelector)
-    {
-        return altContext ->
-        {
-            if(hotspotSelector.isHotspot(altContext))
-            {
-                return true;
-            }
-            return altContext.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
-                    && altContext.rawAltSupport() >= HardMinTumorRawAltSupport;
-        };
     }
 
     public Predicate<ReadContextCounter> readContextFilter()
