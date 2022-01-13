@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.apps;
+package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;

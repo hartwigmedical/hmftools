@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.apps;
+package com.hartwig.hmftools.sage.panel;
 
 public enum RegionType
 {

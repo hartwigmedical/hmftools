@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.candidate;
+package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
@@ -18,6 +18,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -74,7 +75,7 @@ public final class CandidateSerialization
                 bases);
     }
 
-    static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
+    public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
     {
         final VariantHotspot variant = toVariantHotspot(context);
 

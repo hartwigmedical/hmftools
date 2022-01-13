@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
+import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.variant.variantcontext.Allele;

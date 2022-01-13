@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.apps;
+package com.hartwig.hmftools.sage.append;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -15,7 +15,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.candidate.CandidateSerialization;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;

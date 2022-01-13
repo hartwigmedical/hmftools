@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.candidate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -51,6 +52,9 @@ public class Candidates
         }
     }
 
+    private static final int DEBUG_POSITION = -1;
+    // private static final int DEBUG_POSITION = 149801;
+
     public List<Candidate> candidates()
     {
         if(mCandidateList == null)
@@ -59,6 +63,9 @@ public class Candidates
             mCandidateList = Lists.newArrayList(mCandidateMap.values());
             mCandidateList.sort((o1, o2) -> variantHotspotComparator.compare(o1.variant(), o2.variant()));
         }
+
+        if(DEBUG_POSITION > 0)
+            mCandidateList = mCandidateList.stream().filter(x -> x.position() == DEBUG_POSITION).collect(Collectors.toList());
 
         return mCandidateList;
     }

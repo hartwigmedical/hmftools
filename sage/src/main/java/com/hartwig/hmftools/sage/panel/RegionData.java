@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.apps;
+package com.hartwig.hmftools.sage.panel;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

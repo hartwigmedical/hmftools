@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.candidate.CandidateSerializationTest;
+import com.hartwig.hmftools.sage.misc.CandidateSerializationTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

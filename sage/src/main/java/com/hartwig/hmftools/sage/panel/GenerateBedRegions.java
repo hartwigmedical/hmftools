@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.apps;
+package com.hartwig.hmftools.sage.panel;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.sage.apps.RegionData.validate;
-import static com.hartwig.hmftools.sage.apps.RegionType.CODING;
+import static com.hartwig.hmftools.sage.panel.RegionData.validate;
+import static com.hartwig.hmftools.sage.panel.RegionType.CODING;
 
 import java.io.BufferedWriter;
 import java.io.File;

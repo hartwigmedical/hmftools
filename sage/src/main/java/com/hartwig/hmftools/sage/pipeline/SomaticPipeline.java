@@ -61,11 +61,10 @@ public class SomaticPipeline
         final CompletableFuture<ReadContextCounters> normalEvidence =
                 mEvidenceStage.findEvidence(region, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates);
 
-        return combine(region, finalCandidates, tumorEvidence, normalEvidence);
+        return combine(finalCandidates, tumorEvidence, normalEvidence);
     }
 
     private CompletableFuture<List<SageVariant>> combine(
-            final ChrBaseRegion region,
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
             final CompletableFuture<ReadContextCounters> doneNormal)
     {

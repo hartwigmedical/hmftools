@@ -31,7 +31,7 @@ public class Candidate
     {
         return new Candidate(
                 tier, ImmutableVariantHotspotImpl.builder().from(altContext).build(), altContext.readContext(),
-                altContext.rawDepth(), altContext.readContextSupport(), altContext.minNumberOfEvents());
+                altContext.rawDepth(), altContext.minNumberOfEvents(), altContext.readContextSupport());
     }
 
     public void update(final AltContext altContext)
