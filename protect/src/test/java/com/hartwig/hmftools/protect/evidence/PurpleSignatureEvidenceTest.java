@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
@@ -43,10 +44,15 @@ public class PurpleSignatureEvidenceTest {
                 Lists.newArrayList(signature1, signature2, signature3));
 
         PurpleData all = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.HIGH);
-        List<ProtectEvidence> evidence = purpleSignatureEvidence.evidence(all);
-        assertEquals(2, evidence.size());
-        assertTrue(evidence.get(0).reported());
-        assertTrue(evidence.get(1).reported());
+        List<ProtectEvidence> evidences = purpleSignatureEvidence.evidence(all);
+        assertEquals(2, evidences.size());
+        ProtectEvidence msiEvidence = find(evidences, PurpleSignatureEvidence.MICROSATELLITE_UNSTABLE_EVENT);
+        assertTrue(msiEvidence.reported());
+        assertEquals(ProtectEvidenceType.SIGNATURE, msiEvidence.evidenceType());
+
+        ProtectEvidence tmlEvidence = find(evidences, PurpleSignatureEvidence.HIGH_TUMOR_LOAD_EVENT);
+        assertTrue(tmlEvidence.reported());
+        assertEquals(ProtectEvidenceType.SIGNATURE, tmlEvidence.evidenceType());
 
         PurpleData msi = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.LOW);
         assertEquals(1, purpleSignatureEvidence.evidence(msi).size());
@@ -56,6 +62,17 @@ public class PurpleSignatureEvidenceTest {
 
         PurpleData none = createPurpleData(MicrosatelliteStatus.MSS, TumorMutationalStatus.LOW);
         assertTrue(purpleSignatureEvidence.evidence(none).isEmpty());
+    }
+
+    @NotNull
+    private static ProtectEvidence find(@NotNull List<ProtectEvidence> evidences, @NotNull String eventToFind) {
+        for (ProtectEvidence evidence : evidences) {
+            if (evidence.event().equals(eventToFind)) {
+                return evidence;
+            }
+        }
+
+        throw new IllegalStateException("Could not event in evidences: " + eventToFind);
     }
 
     @NotNull

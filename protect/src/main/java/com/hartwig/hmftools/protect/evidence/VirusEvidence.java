@@ -17,6 +17,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class VirusEvidence {
 
+    static final String HPV_POSITIVE_EVENT = "HPV positive";
+    static final String EBV_POSITIVE_EVENT = "EBV positive";
+
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
@@ -32,22 +35,21 @@ public class VirusEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull VirusInterpreterData virusInterpreterData) {
-        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("HPV"));
-        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("EBV"));
+        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.HPV);
+        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.EBV);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
-
-                        if (!hpv.isEmpty()) {
-                            ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                    .reported(hpv.stream().anyMatch(x -> x.reported() && x.virusDriverLikelihoodType().equals(
-                                            VirusLikelihoodType.HIGH)))
-                                    .event("HPV Positive")
-                                    .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
-                                    .build();
-                            result.add(evidence);
+                    if (!hpv.isEmpty()) {
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
+                                .reported(hpv.stream()
+                                        .anyMatch(x -> x.reported() && x.virusDriverLikelihoodType().equals(VirusLikelihoodType.HIGH)))
+                                .event(HPV_POSITIVE_EVENT)
+                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
+                                .build();
+                        result.add(evidence);
                     }
                     break;
                 }
@@ -55,7 +57,7 @@ public class VirusEvidence {
                     if (!ebv.isEmpty()) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
                                 .reported(ebv.stream().anyMatch(x -> x.reported()))
-                                .event("EBV Positive")
+                                .event(EBV_POSITIVE_EVENT)
                                 .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
                         result.add(evidence);
@@ -73,7 +75,7 @@ public class VirusEvidence {
         List<AnnotatedVirus> virusesWithInterpretation = Lists.newArrayList();
         for (AnnotatedVirus virus : virusInterpreterData.reportableViruses()) {
             String interpretation = virus.interpretation();
-            if (interpretation!= null && interpretation.equals(interpretationToInclude.name())) {
+            if (interpretation != null && interpretation.equals(interpretationToInclude.name())) {
                 virusesWithInterpretation.add(virus);
             }
         }

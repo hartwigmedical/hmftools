@@ -16,6 +16,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurpleSignatureEvidence {
 
+    static final String MICROSATELLITE_UNSTABLE_EVENT = "Microsatellite unstable";
+    static final String HIGH_TUMOR_LOAD_EVENT = "High tumor mutation load";
+
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
@@ -38,7 +41,7 @@ public class PurpleSignatureEvidence {
                 case MICROSATELLITE_UNSTABLE: {
                     if (purpleData.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                                .event("Microsatellite unstable")
+                                .event(MICROSATELLITE_UNSTABLE_EVENT)
                                 .evidenceType(ProtectEvidenceType.SIGNATURE)
                                 .build();
                         result.add(evidence);
@@ -48,7 +51,7 @@ public class PurpleSignatureEvidence {
                 case HIGH_TUMOR_MUTATIONAL_LOAD: {
                     if (purpleData.tumorMutationalLoadStatus() == TumorMutationalStatus.HIGH) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                                .event("High tumor mutation load")
+                                .event(HIGH_TUMOR_LOAD_EVENT)
                                 .evidenceType(ProtectEvidenceType.SIGNATURE)
                                 .build();
                         result.add(evidence);

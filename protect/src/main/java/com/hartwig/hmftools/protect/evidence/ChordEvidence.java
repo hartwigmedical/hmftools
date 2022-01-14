@@ -15,6 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ChordEvidence {
 
+    static final String HR_DEFICIENCY_EVENT = "HR deficiency";
+
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
@@ -36,7 +38,7 @@ public class ChordEvidence {
                 assert signature.name() == TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
 
                 result.add(personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                        .event("HR deficiency")
+                        .event(HR_DEFICIENCY_EVENT)
                         .evidenceType(ProtectEvidenceType.SIGNATURE)
                         .build());
             }

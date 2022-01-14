@@ -9,6 +9,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.serve.ServeTestFactory;
@@ -48,11 +49,11 @@ public class FusionEvidenceTest {
                 Lists.newArrayList(promiscuous, amp),
                 Lists.newArrayList(fusion));
 
-        LinxFusion reportedFusionMatch = linxFusionBuilder().reported(true).geneStart(geneUp).geneEnd(geneDown).build();
-        LinxFusion reportedPromiscuousMatch = linxFusionBuilder().reported(true).geneStart(genePromiscuous).geneEnd("other gene").build();
-        LinxFusion reportedPromiscuousNonMatch = linxFusionBuilder().reported(true).geneStart("other gene").geneEnd(geneDown).build();
-        LinxFusion unreportedPromiscuousMatch =
-                linxFusionBuilder().reported(false).geneStart("other gene").geneEnd(genePromiscuous).build();
+        LinxFusion reportedFusionMatch = create(geneUp, geneDown, true);
+        LinxFusion reportedPromiscuousMatch = create(genePromiscuous, "other gene", true);
+        LinxFusion reportedPromiscuousNonMatch = create("other gene", geneDown, true);
+        LinxFusion unreportedPromiscuousMatch = create("other gene", genePromiscuous, false);
+
         List<ProtectEvidence> evidences =
                 fusionEvidence.evidence(Lists.newArrayList(reportedFusionMatch, reportedPromiscuousMatch, reportedPromiscuousNonMatch),
                         Lists.newArrayList(unreportedPromiscuousMatch));
@@ -61,12 +62,15 @@ public class FusionEvidenceTest {
 
         ProtectEvidence evidence1 = findByEvent(evidences, geneUp + " - " + geneDown + " fusion");
         assertTrue(evidence1.reported());
+        assertEquals(ProtectEvidenceType.FUSION_PAIR, evidence1.evidenceType());
 
         ProtectEvidence evidence2 = findByEvent(evidences, genePromiscuous + " - other gene fusion");
         assertTrue(evidence2.reported());
+        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence2.evidenceType());
 
         ProtectEvidence evidence3 = findByEvent(evidences, "other gene - " + genePromiscuous + " fusion");
         assertFalse(evidence3.reported());
+        assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence3.evidenceType());
     }
 
     @NotNull
@@ -102,7 +106,7 @@ public class FusionEvidenceTest {
         FusionEvidence fusionEvidence =
                 new FusionEvidence(EvidenceTestFactory.createTestEvidenceFactory(), Lists.newArrayList(), Lists.newArrayList(fusion));
 
-        ImmutableLinxFusion.Builder builder = linxFusionBuilder().reported(true).geneStart(geneUp).geneEnd(geneDown);
+        ImmutableLinxFusion.Builder builder = linxFusionBuilder(geneUp, geneDown, true);
 
         List<LinxFusion> onMinRange = Lists.newArrayList(builder.fusedExonUp(minExonUp).fusedExonDown(minExonDown).build());
         assertEquals(1, fusionEvidence.evidence(onMinRange, Lists.newArrayList()).size());
@@ -124,7 +128,16 @@ public class FusionEvidenceTest {
     }
 
     @NotNull
-    private static ImmutableLinxFusion.Builder linxFusionBuilder() {
-        return ImmutableLinxFusion.builder().from(LinxTestFactory.createMinimalTestFusion());
+    private static LinxFusion create(@NotNull String geneStart, @NotNull String geneEnd, boolean reported) {
+        return linxFusionBuilder(geneStart, geneEnd, reported).build();
+    }
+
+    @NotNull
+    private static ImmutableLinxFusion.Builder linxFusionBuilder(@NotNull String geneStart, @NotNull String geneEnd, boolean reported) {
+        return ImmutableLinxFusion.builder()
+                .from(LinxTestFactory.createMinimalTestFusion())
+                .geneStart(geneStart)
+                .geneEnd(geneEnd)
+                .reported(reported);
     }
 }
