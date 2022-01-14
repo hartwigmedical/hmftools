@@ -10,12 +10,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableHomozygousDisruption {
 
     @NotNull
-    @Value.Derived
-    public String genomicEvent() {
-        return this.gene() + " homozygous disruption";
-    }
-
-    @NotNull
     public abstract String chromosome();
 
     @NotNull

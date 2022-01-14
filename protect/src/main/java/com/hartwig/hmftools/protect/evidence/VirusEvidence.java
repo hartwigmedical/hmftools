@@ -17,6 +17,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class VirusEvidence {
 
+    static final String HPV_POSITIVE_EVENT = "HPV positive";
+    static final String EBV_POSITIVE_EVENT = "EBV positive";
+
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
@@ -32,30 +35,31 @@ public class VirusEvidence {
 
     @NotNull
     public List<ProtectEvidence> evidence(@NotNull VirusInterpreterData virusInterpreterData) {
-        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("HPV"));
-        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.fromVirusName("EBV"));
+        List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.HPV);
+        List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.EBV);
+
+        boolean reportHPV = hasReportedWithHighConfidence(hpv);
+        boolean reportEBV = hasReportedWithHighConfidence(ebv);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
-
-                        if (!hpv.isEmpty()) {
-                            ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                    .reported(hpv.stream().anyMatch(x -> x.reported() && x.virusDriverLikelihoodType().equals(
-                                            VirusLikelihoodType.HIGH)))
-                                    .event("HPV Positive")
-                                    .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
-                                    .build();
-                            result.add(evidence);
+                    if (!hpv.isEmpty()) {
+                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
+                                .reported(reportHPV)
+                                .event(HPV_POSITIVE_EVENT)
+                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
+                                .build();
+                        result.add(evidence);
                     }
                     break;
                 }
                 case EBV_POSITIVE: {
                     if (!ebv.isEmpty()) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .reported(ebv.stream().anyMatch(x -> x.reported()))
-                                .event("EBV Positive")
+                                .reported(reportEBV)
+                                .event(EBV_POSITIVE_EVENT)
                                 .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
                         result.add(evidence);
@@ -67,13 +71,23 @@ public class VirusEvidence {
         return result;
     }
 
+    private static boolean hasReportedWithHighConfidence(@NotNull List<AnnotatedVirus> annotatedViruses) {
+        for (AnnotatedVirus virus : annotatedViruses) {
+            if (virus.reported() && virus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @NotNull
     private static List<AnnotatedVirus> virusesWithInterpretation(@NotNull VirusInterpreterData virusInterpreterData,
             @NotNull VirusConstants interpretationToInclude) {
         List<AnnotatedVirus> virusesWithInterpretation = Lists.newArrayList();
         for (AnnotatedVirus virus : virusInterpreterData.reportableViruses()) {
             String interpretation = virus.interpretation();
-            if (interpretation!= null && interpretation.equals(interpretationToInclude.name())) {
+            if (interpretation != null && interpretation.equals(interpretationToInclude.name())) {
                 virusesWithInterpretation.add(virus);
             }
         }

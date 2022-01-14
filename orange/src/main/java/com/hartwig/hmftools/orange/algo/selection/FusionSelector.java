@@ -17,7 +17,9 @@ public final class FusionSelector {
     public static List<LinxFusion> selectNonDriverFusions(@NotNull List<LinxFusion> fusions, @NotNull List<ProtectEvidence> evidences) {
         List<LinxFusion> filtered = Lists.newArrayList();
         for (LinxFusion fusion : fusions) {
-            if (!fusion.reportedType().equals("NONE") || EvidenceSelector.hasEvidence(evidences, fusion.genomicEvent())) {
+            // TODO Remove implicit dependency on genomic event.
+            String fusionEvent = fusion.geneStart() + " - " + fusion.geneEnd() + " fusion";
+            if (!fusion.reportedType().equals("NONE") || EvidenceSelector.hasEvidence(evidences, fusionEvent)) {
                 filtered.add(fusion);
             }
         }
