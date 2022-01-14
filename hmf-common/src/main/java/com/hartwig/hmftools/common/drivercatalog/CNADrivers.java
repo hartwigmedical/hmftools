@@ -76,16 +76,29 @@ public class CNADrivers
     @NotNull
     public List<DriverCatalog> deletions(@NotNull final List<GeneCopyNumber> geneCopyNumbers)
     {
-        Predicate<GeneCopyNumber> qcStatusPredicate =
-                mQcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES) || mQcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE) ? x ->
-                        supportedByTwoSVs(x) || shortAndSupportedByOneSVAndMere(x) : x -> true;
+        List<DriverCatalog> drivers = Lists.newArrayList();
 
-        return geneCopyNumbers.stream()
-                .filter(x -> x.minCopyNumber() < MAX_COPY_NUMBER_DEL)
-                .filter(x -> mDeletionTargets.containsKey(x.geneName()))
-                .filter(qcStatusPredicate)
-                .map(this::createDelDriver)
-                .collect(Collectors.toList());
+        boolean checkQcStatus = mQcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES)
+                || mQcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
+
+        for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
+        {
+            if(geneCopyNumber.minCopyNumber() >= MAX_COPY_NUMBER_DEL)
+                continue;
+
+            if(!mDeletionTargets.containsKey(geneCopyNumber.geneName()))
+                continue;
+
+            if(checkQcStatus)
+            {
+                if(!supportedByTwoSVs(geneCopyNumber) && !shortAndSupportedByOneSVAndMere(geneCopyNumber))
+                    continue;
+            }
+
+            drivers.add(createDelDriver(geneCopyNumber));
+        }
+
+        return drivers;
     }
 
     static boolean supportedByOneSV(final GeneCopyNumber geneCopyNumber)
