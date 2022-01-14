@@ -54,7 +54,8 @@ public class DisruptionEvidenceTest {
         assertEquals(1, evidences.size());
         ProtectEvidence evidence = evidences.get(0);
         assertTrue(evidence.reported());
-        assertEquals(matchInact.gene(), evidence.gene());
+        assertEquals(geneInact, evidence.gene());
+        assertEquals(DisruptionEvidence.HOMOZYGOUS_DISRUPTION_EVENT, evidence.event());
         assertEquals(ProtectEvidenceType.INACTIVATION, evidence.evidenceType());
     }
 

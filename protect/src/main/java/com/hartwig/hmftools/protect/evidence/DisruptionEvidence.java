@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class DisruptionEvidence {
 
+    static final String HOMOZYGOUS_DISRUPTION_EVENT = "homozygous disruption";
+
     @NotNull
     private final PersonalizedEvidenceFactory personalizedEvidenceFactory;
     @NotNull
@@ -44,7 +46,7 @@ public class DisruptionEvidence {
             if (actionable.gene().equals(reportable.gene())) {
                 ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(actionable)
                         .gene(reportable.gene())
-                        .event("homozygous disruption")
+                        .event(HOMOZYGOUS_DISRUPTION_EVENT)
                         .evidenceType(fromGeneLevelEvent(actionable.event()))
                         .build();
                 result.add(evidence);
