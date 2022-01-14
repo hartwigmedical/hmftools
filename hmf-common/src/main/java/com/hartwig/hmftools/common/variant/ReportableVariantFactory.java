@@ -33,10 +33,7 @@ public final class ReportableVariantFactory {
     @NotNull
     private static List<ReportableVariant> toReportableVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull ReportableVariantSource source) {
-
-        Map<String, DriverCatalog> geneDriverMap = driverCatalog.stream()
-                .filter(x -> x.isCanonical())
-                .collect(Collectors.toMap(DriverCatalog::gene, x -> x));
+        Map<String, DriverCatalog> geneDriverMap = toDriverMap(driverCatalog);
 
         List<ReportableVariant> result = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
@@ -52,6 +49,18 @@ public final class ReportableVariantFactory {
             }
         }
         return result;
+    }
+
+    @NotNull
+    private static Map<String, DriverCatalog> toDriverMap(@NotNull List<DriverCatalog> driverCatalog) {
+        Map<String, DriverCatalog> map = Maps.newHashMap();
+        for (DriverCatalog driver : driverCatalog) {
+            boolean genePresent = map.containsKey(driver.gene());
+            if (!genePresent || (genePresent && driver.isCanonical())) {
+                map.put(driver.gene(), driver);
+            }
+        }
+        return map;
     }
 
     @NotNull
