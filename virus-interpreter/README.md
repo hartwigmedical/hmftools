@@ -29,10 +29,11 @@ Every virus detected by VIRUSBreakend is evaluated for reporting. For a virus to
    - coverage of the virus is higher than expected clonal mean coverage 
    - The QC status of sample should not be `FAIL_CONTAMINATION` or `FAIL_NO_TUMOR`
 
-### Reporting
-For the viruses which we should potentially report (i.e. present in the reporting db), the virus is annotate whith a driver 
-likelihood (HIGH/LOW) in the configuration. There should be also other potentially called viruses which didn't exist in this reporting db, 
-and those viruses we annotate with the driver likelihood UNKNOWN.
+### Driver likelihood
+
+Viruses that are potentially reportable (i.e. present in the reporting db) are annotated with a driver 
+likelihood (HIGH/LOW) in the reporting db. All other viruses (i.e. the viruses that are not present in reporting db), 
+will be annotated with driver likelihood UNKNOWN.
 
 ### Output data
 
@@ -50,7 +51,7 @@ percentageCovered | The percentage of the viral reference sequence that has been
 meanCoverage | The average coverage of the viral genome as reported by VIRUSBreakend  ("meanDepth" field of VIRUSBreakend)
 expectedClonalMeanCoverage | The expected coverage assuming the virus is clonally integrated once in the tumor DNA 
 reported | A boolean indicating whether the detected viral presence is considered a driver
-driverLikelihood / The driver likelihood of the virus which is annotated in the configuration file
+driverLikelihood | The driver likelihood of the virus as annotated in the reporting db 
 
  ## Version History and Download Links
  - [1.2] (upcoming)

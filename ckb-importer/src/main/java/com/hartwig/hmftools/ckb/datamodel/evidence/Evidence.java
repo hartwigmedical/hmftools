@@ -5,6 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.ckb.datamodel.indication.Indication;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.therapy.Therapy;
+import com.hartwig.hmftools.ckb.datamodel.treatmentapproaches.RelevantTreatmentApproaches;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +25,9 @@ public abstract class Evidence {
 
     @NotNull
     public abstract String responseType();
+
+    @NotNull
+    public abstract List<RelevantTreatmentApproaches> relevantTreatmentApproaches();
 
     @NotNull
     public abstract String evidenceType();

@@ -60,7 +60,7 @@ public final class DrugFactory {
     }
 
     @NotNull
-    private static DrugClass resolveDrugClass(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull DrugClassInfo drugClassInfo) {
+    public static DrugClass resolveDrugClass(@NotNull CkbJsonDatabase ckbJsonDatabase, @NotNull DrugClassInfo drugClassInfo) {
         for (JsonDrugClass drugClass : ckbJsonDatabase.drugClasses()) {
             if (drugClassInfo.id() == drugClass.id()) {
                 return ImmutableDrugClass.builder()
