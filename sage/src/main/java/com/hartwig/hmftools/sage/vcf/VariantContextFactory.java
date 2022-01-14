@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.variant;
+package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_REALIGN_SET;
@@ -18,6 +18,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.common.SageVariant;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;

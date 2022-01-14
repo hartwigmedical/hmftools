@@ -5,9 +5,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class VariantPhaser implements Consumer<SageVariant>
 {

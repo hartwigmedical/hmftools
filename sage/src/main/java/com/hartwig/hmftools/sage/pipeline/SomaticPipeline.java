@@ -2,8 +2,6 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -20,8 +18,8 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantFactory;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SageVariantFactory;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 

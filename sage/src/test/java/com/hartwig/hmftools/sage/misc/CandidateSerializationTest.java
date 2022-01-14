@@ -12,7 +12,7 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.IndexedBasesTest;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.variant.VariantTier;
+import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

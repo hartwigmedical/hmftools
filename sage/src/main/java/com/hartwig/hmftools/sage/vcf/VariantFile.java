@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class VariantFile
 {

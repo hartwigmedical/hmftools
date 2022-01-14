@@ -8,10 +8,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
-
-import org.jetbrains.annotations.NotNull;
 
 public class DedupRealign extends BufferedPostProcessor
 {

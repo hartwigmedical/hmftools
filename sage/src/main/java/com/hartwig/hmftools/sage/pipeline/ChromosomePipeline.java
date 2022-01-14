@@ -27,8 +27,8 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.VariantTier;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.VariantTier;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 

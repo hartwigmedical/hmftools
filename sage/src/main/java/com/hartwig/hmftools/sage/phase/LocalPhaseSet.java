@@ -9,9 +9,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class LocalPhaseSet extends BufferedPostProcessor
 {

@@ -252,7 +252,7 @@ public class ReferenceData
                 final String[] values = line.split(fileDelim, -1);
 
                 Chromosome chromosome = HumanChromosome.fromString(values[0]);
-                int posStart = Integer.parseInt(values[1]);
+                int posStart = Integer.parseInt(values[1]) + 1; // as per convention
                 int posEnd = Integer.parseInt(values[2]);
 
                 if(currentChr != chromosome)

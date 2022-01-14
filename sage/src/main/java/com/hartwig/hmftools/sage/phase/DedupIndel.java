@@ -3,10 +3,8 @@ package com.hartwig.hmftools.sage.phase;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
-
-import org.jetbrains.annotations.NotNull;
 
 public class DedupIndel extends BufferedPostProcessor
 {

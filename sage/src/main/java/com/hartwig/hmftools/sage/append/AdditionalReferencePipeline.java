@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.append;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.variant.VariantContextFactory.createGenotype;
+import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 
 import java.util.List;
 import java.util.Map;

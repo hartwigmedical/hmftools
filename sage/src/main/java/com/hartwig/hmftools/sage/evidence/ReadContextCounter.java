@@ -9,7 +9,7 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextMatch;
-import com.hartwig.hmftools.sage.variant.VariantTier;
+import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 

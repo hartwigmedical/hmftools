@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.variant;
+package com.hartwig.hmftools.sage.common;
 
 public enum VariantTier
 {

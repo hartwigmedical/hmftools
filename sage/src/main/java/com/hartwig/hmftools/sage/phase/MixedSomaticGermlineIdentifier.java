@@ -4,9 +4,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.sage.config.SoftFilter;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor
 {

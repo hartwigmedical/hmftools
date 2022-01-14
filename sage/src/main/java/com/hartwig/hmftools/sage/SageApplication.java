@@ -25,8 +25,8 @@ import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.VariantContextFactory;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.vcf.VariantContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantFile;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 

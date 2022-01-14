@@ -5,9 +5,8 @@ import java.util.List;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.variant.VariantTier;
+import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
 

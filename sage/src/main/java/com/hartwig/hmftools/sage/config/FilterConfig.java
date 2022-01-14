@@ -4,14 +4,11 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.select.HotspotSelector;
-import com.hartwig.hmftools.sage.variant.VariantTier;
+import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class FilterConfig
 {

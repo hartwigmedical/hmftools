@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.common.SageVariant;
 
 public abstract class BufferedPostProcessor implements Consumer<SageVariant>
 {
