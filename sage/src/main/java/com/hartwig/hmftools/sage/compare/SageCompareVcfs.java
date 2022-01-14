@@ -339,8 +339,8 @@ public class SageCompareVcfs
                 maxDepth = max(maxDepth, newVar.allelicDepth() + newVar.referenceDepth());
             }
 
-            mWriter.write(String.format(",%.0f,%.0f,%s,%s,%d",
-                    origVar != null ? origVar.qual() : -1, newVar != null ? newVar.qual() : -1, sharedFilters, maxDepth));
+            mWriter.write(String.format(",%.0f,%.0f,%s,%d",
+                    origVar != null ? origVar.qual() : -1, newVar != null ? newVar.qual() : -1, filtersStr(sharedFilters), maxDepth));
 
             mWriter.newLine();
         }
