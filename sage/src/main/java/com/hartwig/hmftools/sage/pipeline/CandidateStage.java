@@ -74,7 +74,7 @@ public class CandidateStage
 
     private List<Candidate> collectCandidates(final ChrBaseRegion region, final Candidates initialCandidates)
     {
-        List<Candidate> candidates = initialCandidates.candidates();
+        List<Candidate> candidates = initialCandidates.candidates(mConfig.SpecificPositions);
         SG_LOGGER.trace("region({}) found {} candidates", region.toString(), candidates.size());
 
         return candidates;

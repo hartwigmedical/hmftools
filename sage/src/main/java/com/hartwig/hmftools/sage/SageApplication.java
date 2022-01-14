@@ -108,7 +108,7 @@ public class SageApplication implements AutoCloseable
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(mConfig.Chromosomes.isEmpty() || mConfig.Chromosomes.contains(chromosome))
+            if(mConfig.SpecificChromosomes.isEmpty() || mConfig.SpecificChromosomes.contains(chromosome))
             {
                 if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
                     continue;

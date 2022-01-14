@@ -84,7 +84,7 @@ public class SageCompareVcfs
             {
                 int totalComparisons = compareCount + unmatchedNewCount + unmatchedOrigCount;
 
-                if(totalComparisons > 0 && (totalComparisons % 1000) == 0)
+                if(totalComparisons > 0 && (totalComparisons % 10000) == 0)
                 {
                     SG_LOGGER.info("processed {} variants", totalComparisons);
                 }

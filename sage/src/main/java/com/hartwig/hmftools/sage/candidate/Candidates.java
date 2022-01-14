@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.candidate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -52,10 +53,7 @@ public class Candidates
         }
     }
 
-    private static final int DEBUG_POSITION = -1;
-    // private static final int DEBUG_POSITION = 149801;
-
-    public List<Candidate> candidates()
+    public List<Candidate> candidates(final Set<Integer> restrictedPositions)
     {
         if(mCandidateList == null)
         {
@@ -64,8 +62,11 @@ public class Candidates
             mCandidateList.sort((o1, o2) -> variantHotspotComparator.compare(o1.variant(), o2.variant()));
         }
 
-        if(DEBUG_POSITION > 0)
-            mCandidateList = mCandidateList.stream().filter(x -> x.position() == DEBUG_POSITION).collect(Collectors.toList());
+        if(!restrictedPositions.isEmpty())
+        {
+            mCandidateList = mCandidateList.stream()
+                    .filter(x -> restrictedPositions.contains(x.position())).collect(Collectors.toList());
+        }
 
         return mCandidateList;
     }

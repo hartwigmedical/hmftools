@@ -247,6 +247,7 @@ public class ReadContextCounter implements VariantHotspot
 
                 mCoverage++;
                 mTotalQuality += quality;
+                countStrandedness(record);
                 return;
             }
         }
@@ -274,17 +275,14 @@ public class ReadContextCounter implements VariantHotspot
         {
             mReference++;
             mReferenceQuality += quality;
+            countStrandedness(record);
         }
         else if(rawContext.AltSupport)
         {
             mAlt++;
             mAltQuality++;
+            countStrandedness(record);
         }
-
-        if(record.getFirstOfPairFlag())
-            mForwardStrand++;
-        else
-            mReverseStrand++;
 
         // Jitter Penalty
         switch(realignmentType)
@@ -298,6 +296,14 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
                 break;
         }
+    }
+
+    private void countStrandedness(final SAMRecord record)
+    {
+        if(record.getFirstOfPairFlag())
+            mForwardStrand++;
+        else
+            mReverseStrand++;
     }
 
     @NotNull

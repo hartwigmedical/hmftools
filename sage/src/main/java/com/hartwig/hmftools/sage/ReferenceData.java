@@ -86,7 +86,7 @@ public class ReferenceData
         {
             String chromosome = entry.getKey();
 
-            if(!mConfig.Chromosomes.isEmpty() && !mConfig.Chromosomes.contains(chromosome))
+            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
                 continue;
 
             if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))

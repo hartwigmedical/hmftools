@@ -71,6 +71,8 @@ public class BaseQualityRecalibration
 
         if(SG_LOGGER.isDebugEnabled())
             mPerfCounter.logStats();
+
+        SG_LOGGER.info("base quality recalibration cache generated");
     }
 
     private void processSample(final String sampleId, final String bamFile, final List<ChrBaseRegion> regions)
@@ -190,7 +192,7 @@ public class BaseQualityRecalibration
         {
             final String chromosome = sequenceRecord.getSequenceName();
 
-            if(!mConfig.Chromosomes.isEmpty() && !mConfig.Chromosomes.contains(chromosome))
+            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
                 continue;
 
             if(!HumanChromosome.contains(chromosome) || !HumanChromosome.fromString(chromosome).isAutosome())

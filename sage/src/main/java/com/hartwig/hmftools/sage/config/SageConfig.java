@@ -60,7 +60,8 @@ public class SageConfig
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final QualityRecalibrationConfig QualityRecalibration;
-    public final Set<String> Chromosomes;
+    public final Set<String> SpecificChromosomes;
+    public final Set<Integer> SpecificPositions;
     public final List<ChrBaseRegion> SpecificRegions;
     public final int RegionSliceSize;
     public final int MinMapQuality;
@@ -110,6 +111,7 @@ public class SageConfig
     private static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String SPECIFIC_CHROMOSOMES = "specific_chr";
     private static final String SPECIFIC_REGIONS = "specific_regions";
+    private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String SLICE_SIZE = "slice_size";
     private static final String MNV = "mnv_enabled";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
@@ -154,7 +156,8 @@ public class SageConfig
                     .forEach(x -> TumorBams.add(SampleDataDir + x));
         }
 
-        Chromosomes = Sets.newHashSet();
+        SpecificChromosomes = Sets.newHashSet();
+        SpecificPositions = Sets.newHashSet();
         SpecificRegions = Lists.newArrayList();
 
         if(cmd.hasOption(SPECIFIC_REGIONS))
@@ -175,7 +178,7 @@ public class SageConfig
 
                     SG_LOGGER.info("filtering for specific region: {}", region);
                     SpecificRegions.add(region);
-                    Chromosomes.add(region.Chromosome);
+                    SpecificChromosomes.add(region.Chromosome);
                 }
             }
         }
@@ -184,7 +187,16 @@ public class SageConfig
             final String chromosomeList = cmd.getOptionValue(SPECIFIC_CHROMOSOMES, Strings.EMPTY);
             if(!chromosomeList.isEmpty())
             {
-                Chromosomes.addAll(Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
+                SpecificChromosomes.addAll(Lists.newArrayList(chromosomeList.split(ITEM_DELIM)));
+            }
+        }
+
+        if(cmd.hasOption(SPECIFIC_POSITIONS))
+        {
+            final String positionList = cmd.getOptionValue(SPECIFIC_POSITIONS, Strings.EMPTY);
+            if(!positionList.isEmpty())
+            {
+                Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
             }
         }
 
@@ -358,6 +370,7 @@ public class SageConfig
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(SPECIFIC_CHROMOSOMES, true, "Run for subset of chromosomes, split by ';'");
         options.addOption(SPECIFIC_REGIONS, true, "Run for specific regions(s) separated by ';' in format Chr:PosStart:PosEnd");
+        options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
@@ -396,7 +409,8 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig();
         QualityRecalibration = new QualityRecalibrationConfig();
-        Chromosomes = Sets.newHashSet();
+        SpecificChromosomes = Sets.newHashSet();
+        SpecificPositions = Sets.newHashSet();
         SpecificRegions = Lists.newArrayList();
         RegionSliceSize = 500_000;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
