@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
@@ -48,7 +49,7 @@ public class VirusEvidenceTest {
         assertTrue(hpvEvidence.reported());
         assertEquals(ProtectEvidenceType.VIRAL_PRESENCE, hpvEvidence.evidenceType());
 
-        // The test data has a non-reportable EBV virus
+        // The test data has a reportable LOW driver EBV virus
         ProtectEvidence ebvEvidence = find(evidences, VirusEvidence.EBV_POSITIVE_EVENT);
         assertFalse(ebvEvidence.reported());
         assertEquals(ProtectEvidenceType.VIRAL_PRESENCE, ebvEvidence.evidenceType());
@@ -69,12 +70,17 @@ public class VirusEvidenceTest {
     private static VirusInterpreterData createTestVirusInterpreterData() {
         List<AnnotatedVirus> reportable = Lists.newArrayList();
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder()
-                .interpretation("HPV")
+                .interpretation(VirusConstants.HPV.name())
                 .reported(true)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build());
         reportable.add(VirusTestFactory.testAnnotatedVirusBuilder()
-                .interpretation("MCV")
+                .interpretation(VirusConstants.MCV.name())
+                .reported(true)
+                .virusDriverLikelihoodType(VirusLikelihoodType.LOW)
+                .build());
+        reportable.add(VirusTestFactory.testAnnotatedVirusBuilder()
+                .interpretation(VirusConstants.EBV.name())
                 .reported(true)
                 .virusDriverLikelihoodType(VirusLikelihoodType.LOW)
                 .build());
@@ -85,12 +91,12 @@ public class VirusEvidenceTest {
 
         List<AnnotatedVirus> unreported = Lists.newArrayList();
         unreported.add(VirusTestFactory.testAnnotatedVirusBuilder()
-                .interpretation("EBV")
+                .interpretation(VirusConstants.EBV.name())
                 .reported(false)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build());
         unreported.add(VirusTestFactory.testAnnotatedVirusBuilder()
-                .interpretation("EBV")
+                .interpretation(VirusConstants.EBV.name())
                 .reported(false)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build());

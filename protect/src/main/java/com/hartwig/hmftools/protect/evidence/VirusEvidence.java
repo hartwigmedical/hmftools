@@ -38,14 +38,16 @@ public class VirusEvidence {
         List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.HPV);
         List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.EBV);
 
+        boolean reportHPV = hasReportedWithHighConfidence(hpv);
+        boolean reportEBV = hasReportedWithHighConfidence(ebv);
+
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
             switch (virus.name()) {
                 case HPV_POSITIVE: {
                     if (!hpv.isEmpty()) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .reported(hpv.stream()
-                                        .anyMatch(x -> x.reported() && x.virusDriverLikelihoodType().equals(VirusLikelihoodType.HIGH)))
+                                .reported(reportHPV)
                                 .event(HPV_POSITIVE_EVENT)
                                 .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
@@ -56,7 +58,7 @@ public class VirusEvidence {
                 case EBV_POSITIVE: {
                     if (!ebv.isEmpty()) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
-                                .reported(ebv.stream().anyMatch(x -> x.reported()))
+                                .reported(reportEBV)
                                 .event(EBV_POSITIVE_EVENT)
                                 .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
@@ -67,6 +69,16 @@ public class VirusEvidence {
             }
         }
         return result;
+    }
+
+    private static boolean hasReportedWithHighConfidence(@NotNull List<AnnotatedVirus> annotatedViruses) {
+        for (AnnotatedVirus virus : annotatedViruses) {
+            if (virus.reported() && virus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull
