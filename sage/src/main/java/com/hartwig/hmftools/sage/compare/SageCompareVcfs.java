@@ -146,7 +146,8 @@ public class SageCompareVcfs
                     }
                     else if(posCompare < 0)
                     {
-                        writeUnmatchedVariant(newVar, false);
+                        // original SV has a lower positions
+                        writeUnmatchedVariant(origVar, false);
                         origVar = getNextVariant(origIter);
                     }
                     else
@@ -162,7 +163,7 @@ public class SageCompareVcfs
                 }
                 else if(origVar != null)
                 {
-                    writeUnmatchedVariant(newVar, false);
+                    writeUnmatchedVariant(origVar, false);
                     origVar = getNextVariant(origIter);
                 }
             }
