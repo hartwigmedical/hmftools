@@ -86,12 +86,6 @@ public abstract class LinxFusion
 
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
 
-        if(!header.contains("likelihood"))
-        {
-            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(header, LinxCluster.DELIMITER);
-            return lines.stream().map(x -> fromString_v1_10(x, fieldIndexMap)).collect(toList());
-        }
-
         List<LinxFusion> fusions = Lists.newArrayList();
 
         for(int i = 0; i < lines.size(); ++i)
@@ -187,38 +181,6 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.geneTranscriptEnd()))
                 .add(String.format("%.4f", fusion.junctionCopyNumber()))
                 .toString();
-    }
-
-    @NotNull
-    private static LinxFusion fromString_v1_10(@NotNull final String fusion, final Map<String,Integer> fieldIndexMap)
-    {
-        String[] values = fusion.split(LinxCluster.DELIMITER, -1);
-
-        return ImmutableLinxFusion.builder()
-                .fivePrimeBreakendId(Integer.parseInt(values[fieldIndexMap.get("FivePrimeBreakendId")]))
-                .threePrimeBreakendId(Integer.parseInt(values[fieldIndexMap.get("ThreePrimeBreakendId")]))
-                .name(values[fieldIndexMap.get("Name")])
-                .reported(Boolean.parseBoolean(values[fieldIndexMap.get("Reported")]))
-                .reportedType(values[fieldIndexMap.get("ReportedType")])
-                .phased(values[fieldIndexMap.get("Phased")].equals("1") ? INFRAME : OUT_OF_FRAME)
-                .likelihood(NA)
-                .chainLength(Integer.parseInt(values[fieldIndexMap.get("ChainLength")]))
-                .chainLinks(Integer.parseInt(values[fieldIndexMap.get("ChainLinks")]))
-                .chainTerminated(Boolean.parseBoolean(values[fieldIndexMap.get("ChainTerminated")]))
-                .domainsKept(values[fieldIndexMap.get("DomainsKept")])
-                .domainsLost(values[fieldIndexMap.get("DomainsLost")])
-                .skippedExonsUp(Integer.parseInt(values[fieldIndexMap.get("SkippedExonsUp")]))
-                .skippedExonsDown(Integer.parseInt(values[fieldIndexMap.get("SkippedExonsDown")]))
-                .fusedExonUp(Integer.parseInt(values[fieldIndexMap.get("FusedExonUp")]))
-                .fusedExonDown(Integer.parseInt(values[fieldIndexMap.get("FusedExonDown")]))
-                .geneStart("")
-                .geneContextStart("")
-                .geneTranscriptStart("")
-                .geneEnd("")
-                .geneContextEnd("")
-                .geneTranscriptEnd("")
-                .junctionCopyNumber(0.0)
-                .build();
     }
 
     public static String context(@NotNull TranscriptRegionType regionType, int fusedExon)
