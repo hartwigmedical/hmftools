@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.sage.phase.VariantPhaser.PHASE_BUFFER;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
 class LocalRealignSet extends BufferedPostProcessor

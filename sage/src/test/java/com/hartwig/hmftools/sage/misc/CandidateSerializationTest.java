@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.misc;
 
-import static com.hartwig.hmftools.sage.read.ReadContextTest.makeDefaultBaseQualitities;
-
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
@@ -11,7 +9,7 @@ import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.IndexedBasesTest;
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
@@ -60,10 +58,8 @@ public class CandidateSerializationTest
         final IndexedBases refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
         final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
 
-        int[] baseQualitities = makeDefaultBaseQualitities(readBases.Bases.length);
-
         final ReadContext readContext = new ReadContext(
-                expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, baseQualitities, false);
+                expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, false);
 
         final Candidate candidate = new Candidate(expectedTier, variant, readContext, 1000, 2, 0);
 

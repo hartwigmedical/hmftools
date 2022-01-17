@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContext;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AltRead

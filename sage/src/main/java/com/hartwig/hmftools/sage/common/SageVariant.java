@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;

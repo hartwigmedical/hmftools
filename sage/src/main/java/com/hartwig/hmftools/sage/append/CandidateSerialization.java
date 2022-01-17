@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -84,12 +84,7 @@ public final class CandidateSerialization
         final String repeat = context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);
 
-        // TODO - cache and reload read base qualities
-        int coreAndFlankLength = readBases.leftFlankString().length() + readBases.centerString().length() + readBases.rightFlankString().length();
-        final int[] baseQualities = new int[coreAndFlankLength];
-        Arrays.fill(baseQualities, MATCHING_BASE_QUALITY);
-
-        final ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, baseQualities, false);
+        final ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, false);
 
         int maxDepth = 0;
         for(Genotype genotype : context.getGenotypes().immutable())

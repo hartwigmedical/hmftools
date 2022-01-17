@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static java.util.Arrays.fill;
 
@@ -9,8 +9,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.ReadContext;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ public class ReadContextTest
     {
         ReadContext newContext = new ReadContext(
                 readContext.Position, readContext.Repeat, readContext.RepeatCount, readContext.Microhomology,
-                readContext.indexedBases(), readContext.baseQualities(), readContext.hasIncompleteCore());
+                readContext.indexedBases(), readContext.hasIncompleteCore());
 
         newContext.extendCore(leftCentreIndex, rightCentreIndex);
         return newContext;
@@ -85,33 +85,12 @@ public class ReadContextTest
         String readBases = leftFlank + core + rightFlank;
         int coreFlankLength = readBases.length();
 
-        /*
-        return new ReadContext("",
-                refPosition,
-                readIndex,
-                leftFlank.length(),
-                rightCentreIndex,
-                flankSize,
-                (leftFlank + core + rightFlank).getBytes(),
-                Strings.EMPTY);
-        */
-
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
         int adjRightCentreIndex = Math.min(rightCentreIndex, coreFlankLength - 1);
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
         IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
 
-        int[] baseQualities = makeDefaultBaseQualitities(coreFlankLength);
-
-        return new ReadContext(refPosition, "", 0, "", readBasesIndexed, baseQualities, incompleteCore);
-    }
-
-    public static int[] makeDefaultBaseQualitities(int coreFlankLength)
-    {
-        int[] qualities = new int[coreFlankLength];
-        fill(qualities, MATCHING_BASE_QUALITY);
-        return qualities;
-
+        return new ReadContext(refPosition, "", 0, "", readBasesIndexed, incompleteCore);
     }
 }

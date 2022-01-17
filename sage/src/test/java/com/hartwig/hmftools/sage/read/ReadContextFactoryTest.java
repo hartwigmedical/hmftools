@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.read;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

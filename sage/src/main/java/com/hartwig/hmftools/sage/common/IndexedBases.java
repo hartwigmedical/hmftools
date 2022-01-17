@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.sage.common;
 
-import static com.hartwig.hmftools.sage.read.ReadContextMatch.CORE;
-import static com.hartwig.hmftools.sage.read.ReadContextMatch.FULL;
-import static com.hartwig.hmftools.sage.read.ReadContextMatch.NONE;
-import static com.hartwig.hmftools.sage.read.ReadContextMatch.PARTIAL;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL;
 
 import java.util.Arrays;
 
-import com.hartwig.hmftools.sage.read.ReadContextMatch;
-
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases
 {
@@ -50,6 +47,69 @@ public class IndexedBases
         FlankSize = flankSize;
     }
 
+    public String centerString()
+    {
+        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, centreLength());
+    }
+
+    public String leftFlankString()
+    {
+        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, leftFlankLength());
+    }
+
+    public String rightFlankString()
+    {
+        int rightFlankLength = rightFlankLength();
+        return rightFlankLength == 0 ? Strings.EMPTY : new String(Bases, RightCoreIndex + 1, rightFlankLength);
+    }
+
+    @Override
+    public String toString()
+    {
+        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length());
+    }
+
+    public int indexInCore()
+    {
+        return Index - LeftCoreIndex;
+    }
+
+    public int index(int position)
+    {
+        return position - Position + Index;
+    }
+
+    private int length()
+    {
+        return RightFlankIndex - LeftFlankIndex + 1;
+    }
+
+    private int leftFlankLength() { return LeftCoreIndex - LeftFlankIndex; }
+    private int rightFlankLength()
+    {
+        return RightFlankIndex - RightCoreIndex;
+    }
+
+    private int centreLength()
+    {
+        return RightCoreIndex - LeftCoreIndex + 1;
+    }
+
+    public byte base(int position)
+    {
+        return Bases[position - Position + Index];
+    }
+
+    public int maxFlankLength()
+    {
+        return Math.min(LeftCoreIndex, Bases.length - RightCoreIndex - 1);
+    }
+
+    public byte[] trinucleotideContext(int position)
+    {
+        return new byte[] { base(position - 1), base(position), base(position + 1) };
+    }
+
     public boolean flanksComplete()
     {
         return leftFlankLength() == FlankSize && rightFlankLength() == FlankSize;
@@ -78,6 +138,12 @@ public class IndexedBases
         return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
     }
 
+    private int otherLeftCentreIndex(int otherRefIndex) { return otherRefIndex + LeftCoreIndex - Index; }
+    private int otherRightCentreIndex(int otherRefIndex)
+    {
+        return otherRefIndex + RightCoreIndex - Index;
+    }
+
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherReadIndex);
@@ -89,17 +155,12 @@ public class IndexedBases
         return otherRightCentreIndex < otherBases.length;
     }
 
-    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, @NotNull final IndexedBases other)
+    public ReadContextMatch matchAtPosition(final IndexedBases other, boolean wildcardAllowedInCore)
     {
-        return matchAtPosition(wildcardAllowedInCore, other.Index, other.length(), other.Bases);
+        return getMatchType(wildcardAllowedInCore, other.Index, other.length(), other.Bases);
     }
 
-    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, int otherReadIndex, byte[] otherBases)
-    {
-        return matchAtPosition(wildcardAllowedInCore, otherReadIndex, length(), otherBases);
-    }
-
-    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCore, int otherReadIndex, int otherLength, byte[] otherBases)
+    private ReadContextMatch getMatchType(boolean wildcardAllowedInCore, int otherReadIndex, int otherLength, byte[] otherBases)
     {
         if(otherReadIndex < 0)
             return NONE;
@@ -125,7 +186,8 @@ public class IndexedBases
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
-    protected boolean coreMatch(boolean wildcardAllowed, final int otherRefIndex, final byte[] otherBases)
+    protected boolean coreMatch(
+            boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
 
@@ -137,24 +199,43 @@ public class IndexedBases
         if(otherRightCentreIndex >= otherBases.length)
             return false;
 
+        // LFI Change = ReadIndex - BQ Index Offset - LFI = 128 - 36 - 90 = 2
+        // BQ index (LCI + 0) - LFI - LFI Change = 102 + 0 - 90 - 2 = 10, so use BQI = 10
+        // implying that for BQ at LFI + 1: BQ index = 91 - 90 - 2 < 0, so cannot be used -> correct
+        //int bqOffset = Index - baseQualIndexOffset - LeftFlankIndex;
+        //int otherBqOffset = otherRefIndex - otherBaseQualIndexOffset - LeftFlankIndex;
+
         for(int i = 0; i < centreLength(); i++)
         {
             byte ourByte = Bases[LeftCoreIndex + i];
             byte otherByte = otherBases[otherLeftCentreIndex + i];
 
             if(!bytesMatch(wildcardAllowed, ourByte, otherByte))
+            {
+                /*
+                if(baseQualities != null && otherBaseQualities != null)
+                {
+
+                    int qualIndex = LeftFlankIndex;
+                    int ourQual =
+                }
+                 */
+
                 return false;
+            }
         }
 
         return true;
     }
+
+    // public int getBaseQual(int readIndex)
 
     private boolean bytesMatch(final boolean wildcardAllowed, byte ours, byte other)
     {
         return (wildcardAllowed && other == MATCH_WILDCARD) || ours == other;
     }
 
-    int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases)
+    protected int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases)
     {
         int otherRightCentreIndex = otherRefIndex + RightCoreIndex - Index;
         int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + FlankSize) - otherRightCentreIndex;
@@ -171,7 +252,7 @@ public class IndexedBases
         return maxLength;
     }
 
-    int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases)
+    protected int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases)
     {
         int otherLeftCentreIndex = otherRefIndex + LeftCoreIndex - Index;
         int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - FlankSize);
@@ -186,83 +267,6 @@ public class IndexedBases
         }
 
         return totalLength;
-    }
-
-    private int otherLeftCentreIndex(int otherRefIndex)
-    {
-        return otherRefIndex + LeftCoreIndex - Index;
-    }
-
-    private int otherRightCentreIndex(int otherRefIndex)
-    {
-        return otherRefIndex + RightCoreIndex - Index;
-    }
-
-    public String centerString()
-    {
-        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, centreLength());
-    }
-
-    public String leftFlankString()
-    {
-        return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, leftFlankLength());
-    }
-
-    public String rightFlankString()
-    {
-        int rightFlankLength = rightFlankLength();
-        return rightFlankLength == 0 ? Strings.EMPTY : new String(Bases, RightCoreIndex + 1, rightFlankLength);
-    }
-
-    @Override
-    public String toString()
-    {
-            return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length());
-    }
-
-    public int indexInCore()
-    {
-        return Index - LeftCoreIndex;
-    }
-
-    public int index(int position)
-    {
-        return position - Position + Index;
-    }
-
-    private int length()
-    {
-        return RightFlankIndex - LeftFlankIndex + 1;
-    }
-
-    private int leftFlankLength()
-    {
-        return LeftCoreIndex - LeftFlankIndex;
-    }
-
-    private int rightFlankLength()
-    {
-        return RightFlankIndex - RightCoreIndex;
-    }
-
-    private int centreLength()
-    {
-        return RightCoreIndex - LeftCoreIndex + 1;
-    }
-
-    public byte base(int position)
-    {
-        return Bases[position - Position + Index];
-    }
-
-    public int maxFlankLength()
-    {
-        return Math.min(LeftCoreIndex, Bases.length - RightCoreIndex - 1);
-    }
-
-    public byte[] trinucleotideContext(int position)
-    {
-        return new byte[] { base(position - 1), base(position), base(position + 1) };
     }
 
     public static IndexedBases resize(

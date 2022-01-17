@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.sage.read.ReadContextTest.makeDefaultBaseQualitities;
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
@@ -14,7 +12,7 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
@@ -174,9 +172,8 @@ public class ReadContextCounterTest
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
         IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
-        int[] baseQualities = makeDefaultBaseQualitities(readBases.length());
 
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, baseQualities, incompleteCore);
+        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
     }
 
     public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,

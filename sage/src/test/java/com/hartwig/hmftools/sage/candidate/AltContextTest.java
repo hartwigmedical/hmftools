@@ -10,10 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.candidate.AltContext;
-import com.hartwig.hmftools.sage.candidate.RefContext;
-import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextTest;
+import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContextTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

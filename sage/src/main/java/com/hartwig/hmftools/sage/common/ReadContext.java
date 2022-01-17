@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -16,19 +16,13 @@ public class ReadContext
 
     private IndexedBases mReadBases;
 
-    // base quals are recorded across the flanks and core
-    private final int[] mBaseQualities;
-
-    // distance in bases from read index to start of base-qualities, cached in case the flank index changes
-    private final int mBaseQualIndexOffset;
-
     private boolean mIncompleteCore;
 
     private static final int BONUS_FLANK = 50;
 
     public ReadContext(
             int position, final String repeat, final int repeatCount, final String microhomology, final IndexedBases readBases,
-            final int[] baseQualities, final boolean incompleteCore)
+            final boolean incompleteCore)
     {
         Position = position;
         RepeatCount = repeatCount;
@@ -36,10 +30,6 @@ public class ReadContext
         Microhomology = microhomology;
 
         mReadBases = readBases;
-
-        mBaseQualities = baseQualities;
-        mBaseQualIndexOffset = mReadBases.Index - mReadBases.LeftFlankIndex;
-
         mIncompleteCore = incompleteCore;
     }
 
@@ -47,32 +37,21 @@ public class ReadContext
             final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, final SAMRecord record)
     {
-        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, record.getReadBases().length - 1);
-
-        IndexedBases readBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
+        int adjLeftCentreIndex = max(leftCentreIndex, 0);
+        int adjRightCentreIndex = min(rightCentreIndex, record.getReadBases().length - 1);
 
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
-        // extract base qualities for the flanks and core
-        int coreFlankLength = readBases.leftFlankString().length() + readBases.centerString().length() + readBases.rightFlankString().length();
+        IndexedBases readBases = new IndexedBases(
+                refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
 
-        int[] baseQualities = new int[coreFlankLength];
-        final byte[] baseQuals = record.getBaseQualities();
-        int startIndex = readBases.LeftFlankIndex;
-
-        for(int i = 0; i < baseQualities.length; ++i)
-        {
-            baseQualities[i] = baseQuals[startIndex + i];
-        }
-
-        return new ReadContext(refPosition, repeat, repeatCount, microhomology, readBases, baseQualities, incompleteCore);
+        return new ReadContext(refPosition, repeat, repeatCount, microhomology, readBases, incompleteCore);
     }
 
     public void extendCore(int leftCentreIndex, int rightCentreIndex)
     {
-        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, mReadBases.Bases.length - 1);
+        int adjLeftCentreIndex = max(leftCentreIndex, 0);
+        int adjRightCentreIndex = min(rightCentreIndex, mReadBases.Bases.length - 1);
 
         IndexedBases newReadBases = new IndexedBases(Position,
                 mReadBases.Index,
@@ -95,10 +74,8 @@ public class ReadContext
                 BONUS_FLANK,
                 mReadBases.Bases);
 
-        return new ReadContext(Position, Repeat, RepeatCount, Microhomology, newReadBases, mBaseQualities, mIncompleteCore);
+        return new ReadContext(Position, Repeat, RepeatCount, Microhomology, newReadBases, mIncompleteCore);
     }
-
-    public int[] baseQualities() { return mBaseQualities; }
 
     public boolean hasIncompleteFlanks()
     {
@@ -132,16 +109,6 @@ public class ReadContext
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
     {
         return mReadBases.isCentreCovered(otherReadIndex, otherBases);
-    }
-
-    public ReadContextMatch matchAtPosition(boolean wildcardAllowedInCoreMatch, int otherReadIndex, byte[] otherBases)
-    {
-        return mReadBases.matchAtPosition(wildcardAllowedInCoreMatch, otherReadIndex, otherBases);
-    }
-
-    public ReadContextMatch matchAtPosition(@NotNull final ReadContext other)
-    {
-        return mReadBases.matchAtPosition(false, other.mReadBases);
     }
 
     public int readBasesPositionIndex() { return mReadBases.Index; }

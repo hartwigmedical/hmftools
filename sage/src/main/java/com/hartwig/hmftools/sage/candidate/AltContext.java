@@ -9,8 +9,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,7 +41,7 @@ public class AltContext implements VariantHotspot
         mRawBaseQualityAlt += baseQuality;
     }
 
-    public void addReadContext(int numberOfEvents, @NotNull final ReadContext newReadContext)
+    public void addReadContext(int numberOfEvents, final ReadContext newReadContext)
     {
         if(mCandidate != null)
             throw new IllegalStateException();
@@ -52,7 +52,9 @@ public class AltContext implements VariantHotspot
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
-            final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
+            final ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(
+                    newReadContext.indexedBases(), false);
+
             switch(match)
             {
                 case FULL:

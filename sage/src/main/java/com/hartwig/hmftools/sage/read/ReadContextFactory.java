@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.variant.MicrohomologyContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.ReadContext;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -155,18 +156,5 @@ public class ReadContextFactory
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
-
-        /*
-        return new ReadContext(Strings.EMPTY,
-                readRepeatContext.map(RepeatContext::count).orElse(0),
-                readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
-                refPosition,
-                readIndex,
-                startIndex,
-                endIndex,
-                mFlankSize,
-                refBases,
-                record);
-         */
     }
 }

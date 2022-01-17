@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContext;
 
 public class Realigned
 {

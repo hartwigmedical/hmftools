@@ -7,8 +7,8 @@ import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
-import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
@@ -219,10 +219,26 @@ public class ReadContextCounter implements VariantHotspot
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
         {
-            final boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
+            boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
             final IndexedBases expandedBases = mExpandedBasesFactory.expand(position(), readIndex, record);
 
-            final ReadContextMatch match = mReadContext.matchAtPosition(wildcardMatchInCore, expandedBases.Index, expandedBases.Bases);
+            /*
+            // extract base qualities across flanks and core for use in match
+            int coreFlankLength = RightFlankIndex - LeftFlankIndex + 1;
+            BaseQualities = new int[coreFlankLength];
+            mBaseQualIndexOffset = Index - LeftFlankIndex;
+
+            final byte[] baseQuals = record.getBaseQualities();
+            final byte[] indexedBaseQuals = record.getBaseQualities();
+
+            for(int i = 0; i < indexedBaseQuals.length; ++i)
+            {
+                indexedBaseQuals[i] = baseQuals[readBases.LeftFlankIndex + i];
+            }
+
+            */
+
+            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(expandedBases, wildcardMatchInCore);
 
             if(!match.equals(ReadContextMatch.NONE))
             {
@@ -275,7 +291,6 @@ public class ReadContextCounter implements VariantHotspot
         {
             mReference++;
             mReferenceQuality += quality;
-            countStrandedness(record);
         }
         else if(rawContext.AltSupport)
         {
