@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
@@ -67,7 +68,7 @@ public class FusionEvidence {
         return personalizedEvidenceFactory.somaticEvidence(actionable)
                 .reported(fusion.reported())
                 .gene(geneFromActionable(actionable))
-                .event(fusion.event())
+                .event(ProtectEventGenerator.fusionEvent(fusion))
                 .evidenceType(typeFromActionable(actionable))
                 .build();
     }

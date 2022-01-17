@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariantFactory;
@@ -28,7 +29,7 @@ public final class SomaticVariantSelector {
         List<ReportableVariant> filtered = Lists.newArrayList();
         for (SomaticVariant variant : unreportedVariants) {
             boolean isHotspot = variant.isHotspot();
-            boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, variant.event());
+            boolean hasEvidence = EvidenceSelector.hasEvidence(evidences, ProtectEventGenerator.variantEvent(variant));
             boolean isCodingAndHasPhasedReportedVariant =
                     !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.localPhaseSet());
             boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);

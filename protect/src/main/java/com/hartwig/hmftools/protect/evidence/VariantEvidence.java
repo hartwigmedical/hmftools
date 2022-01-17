@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -98,7 +99,7 @@ public class VariantEvidence {
     private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable) {
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
-                .event(variant.event())
+                .event(ProtectEventGenerator.variantEvent(variant))
                 .evidenceType(typeFromActionable(actionable))
                 .rangeRank(rangeRankFromActionable(actionable))
                 .germline(germline)

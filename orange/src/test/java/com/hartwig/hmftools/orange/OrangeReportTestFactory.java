@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
-import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectTestFactory;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
@@ -131,8 +130,7 @@ public final class OrangeReportTestFactory {
     private static List<ProtectEvidence> createTestProtectData() {
         List<ProtectEvidence> evidences = Lists.newArrayList();
 
-        evidences.add(ImmutableProtectEvidence.builder()
-                .from(ProtectTestFactory.createTestProtectEvidence())
+        evidences.add(ProtectTestFactory.testEvidenceBuilder()
                 .gene("USH2A")
                 .event("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
                 .build());
