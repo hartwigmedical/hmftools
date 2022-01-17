@@ -21,3 +21,12 @@
  db_pass | Required: The password needed for the DB user to authenticate on the URL.
  
  Resources for v1.0 can be found on https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.0
+
+## Version History and Download Links
+- [1.3] (Upcoming)
+  - Implemention treatment approches of the evidence into the datamodel  
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.2)
+  - Support for java11
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.1)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/ckb-importer-v1.0)
+- Initial release. 
