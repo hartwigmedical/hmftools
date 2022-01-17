@@ -778,7 +778,6 @@ CREATE TABLE driverCatalog
 );
 
 DROP TABLE IF EXISTS germlineDeletion;
-
 CREATE TABLE germlineDeletion
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -1006,7 +1005,6 @@ CREATE TABLE svFusion
 );
 
 DROP TABLE IF EXISTS structuralVariantGermline;
-
 CREATE TABLE structuralVariantGermline
 (   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
@@ -1174,7 +1172,10 @@ CREATE TABLE protect
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
     sampleId varchar(255) NOT NULL,
+    gene varchar(255),
     event varchar(255) NOT NULL,
+    evidenceType varchar(50) NOT NULL,
+    rangeRank int,
     germline BOOLEAN NOT NULL,
     reported BOOLEAN NOT NULL,
     treatment varchar(255) NOT NULL,
