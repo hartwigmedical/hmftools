@@ -67,7 +67,7 @@ public class FusionEvidence {
         return personalizedEvidenceFactory.somaticEvidence(actionable)
                 .reported(fusion.reported())
                 .gene(geneFromActionable(actionable))
-                .event(fusion.geneStart() + " - " + fusion.geneEnd() + " fusion")
+                .event(fusion.event())
                 .evidenceType(typeFromActionable(actionable))
                 .build();
     }
@@ -120,7 +120,7 @@ public class FusionEvidence {
     }
 
     @Nullable
-    private String geneFromActionable(@NotNull ActionableEvent actionable) {
+    private static String geneFromActionable(@NotNull ActionableEvent actionable) {
         if (actionable instanceof ActionableGene) {
             return ((ActionableGene) actionable).gene();
         } else if (actionable instanceof ActionableFusion) {

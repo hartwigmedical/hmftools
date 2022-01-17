@@ -243,4 +243,10 @@ public abstract class LinxFusion
     {
         return (upstreamJcn + downstreamJcn) * 0.5;
     }
+
+    @NotNull
+    public String event()
+    {
+        return geneStart() + " - " + geneEnd() + " fusion";
+    }
 }

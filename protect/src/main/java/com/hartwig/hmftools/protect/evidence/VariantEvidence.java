@@ -96,13 +96,9 @@ public class VariantEvidence {
 
     @NotNull
     private ProtectEvidence evidence(@NotNull Variant variant, boolean germline, boolean report, @NotNull ActionableEvent actionable) {
-        String event = !variant.canonicalHgvsProteinImpact().isEmpty()
-                ? variant.canonicalHgvsProteinImpact()
-                : variant.canonicalHgvsCodingImpact();
-
         return personalizedEvidenceFactory.evidenceBuilder(actionable)
                 .gene(variant.gene())
-                .event(event)
+                .event(variant.event())
                 .evidenceType(typeFromActionable(actionable))
                 .rangeRank(rangeRankFromActionable(actionable))
                 .germline(germline)

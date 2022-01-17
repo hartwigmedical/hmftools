@@ -25,6 +25,7 @@ import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,8 +70,8 @@ public class ClinicalEvidenceFunctions {
     private static boolean hasHigherOrEqualEvidenceForEventAndTreatment(@NotNull List<ProtectEvidence> evidences,
             @NotNull ProtectEvidence evidenceToCheck) {
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.treatment().equals(evidenceToCheck.treatment()) && evidence.genomicEvent()
-                    .equals(evidenceToCheck.genomicEvent())) {
+            if (evidence.treatment().equals(evidenceToCheck.treatment()) && StringUtils.equals(evidence.gene(), evidenceToCheck.gene())
+                    && evidence.event().equals(evidenceToCheck.event())) {
                 if (!evidenceToCheck.level().isHigher(evidence.level())) {
                     return true;
                 }
@@ -131,7 +132,7 @@ public class ClinicalEvidenceFunctions {
     }
 
     private static boolean addEvidenceWithMaxLevel(@NotNull Table table, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
-            @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenType) {
+            @NotNull EvidenceLevel allowedHighestLevel, @NotNull String evidenceType) {
         Set<String> sortedTreatments = Sets.newTreeSet(treatmentMap.keySet().stream().collect(Collectors.toSet()));
         boolean hasEvidence = false;
         for (String treatment : sortedTreatments) {
@@ -149,7 +150,7 @@ public class ClinicalEvidenceFunctions {
                 for (ProtectEvidence responsive : sort(evidences)) {
                     Cell cellGenomic = TableUtil.createTransparentCell(display(responsive));
 
-                    if (!evidenType.equals("trial")) {
+                    if (!evidenceType.equals("trial")) {
                         cellGenomic.addStyle(ReportResources.urlStyle())
                                 .setAction(PdfAction.createURI("https://ckbhome.jax.org/gene/grid"));
                     } else {
@@ -160,7 +161,7 @@ public class ClinicalEvidenceFunctions {
                     Cell cellLevel;
                     Cell cellPredicted = TableUtil.createTransparentCell(Strings.EMPTY);
                     Cell cellResistent = TableUtil.createTransparentCell(Strings.EMPTY);
-                    if (!evidenType.equals("trial")) {
+                    if (!evidenceType.equals("trial")) {
 
                         if (PREDICTED.contains(responsive.direction())) {
                             cellPredicted = TableUtil.createTransparentCell(PREDICTED_SYMBOL).addStyle(ReportResources.predictedStyle());
@@ -184,7 +185,7 @@ public class ClinicalEvidenceFunctions {
                     responsiveTable.addCell(cellGenomic);
 
                     Cell publications = TableUtil.createTransparentCell(Strings.EMPTY);
-                    if (evidenType.equals("evidence")) {
+                    if (evidenceType.equals("evidence")) {
                         publications = TableUtil.createTransparentCell(EvidenceItems.createLinksPublications(responsive));
                         linksTable.addCell(publications);
                     } else {
@@ -192,7 +193,7 @@ public class ClinicalEvidenceFunctions {
                     }
                 }
 
-                if (evidenType.equals("evidence")) {
+                if (evidenceType.equals("evidence")) {
                     table.addCell(TableUtil.createContentCell(levelTable));
                     table.addCell(TableUtil.createContentCell(responseTable));
                     table.addCell(TableUtil.createContentCell(responsiveTable));
@@ -223,7 +224,7 @@ public class ClinicalEvidenceFunctions {
 
     @NotNull
     private static String display(@NotNull ProtectEvidence evidence) {
-        String event = evidence.genomicEvent();
+        String event = evidence.gene() != null ? evidence.gene() + " " + evidence.event() : evidence.event();
         if (event.contains("p.")) {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }

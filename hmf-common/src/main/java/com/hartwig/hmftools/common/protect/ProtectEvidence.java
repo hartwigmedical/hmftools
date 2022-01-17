@@ -17,12 +17,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
 
-    @Value.Derived
-    @NotNull
-    public String genomicEvent() {
-        return gene() != null ? gene() + " " + event() : event();
-    }
-
     @Nullable
     public abstract String gene();
 
@@ -63,9 +57,14 @@ public abstract class ProtectEvidence implements Comparable<ProtectEvidence> {
             return reportedCompare;
         }
 
-        int genomicEventCompare = StringUtils.compare(genomicEvent(), o.genomicEvent());
-        if (genomicEventCompare != 0) {
-            return genomicEventCompare;
+        int geneCompare = StringUtils.compare(gene(), o.gene());
+        if (geneCompare != 0) {
+            return geneCompare;
+        }
+
+        int eventCompare = event().compareTo(o.event());
+        if (eventCompare != 0) {
+            return eventCompare;
         }
 
         int evidenceTypeCompare = evidenceType().compareTo(o.evidenceType());

@@ -65,17 +65,17 @@ public final class EvidenceReportingFunctions {
 
     @NotNull
     private static List<ProtectEvidence> onlyReportHighestLevelForTreatmentAndEvent(@NotNull List<ProtectEvidence> evidences) {
-        Set<String> events = evidences.stream().map(ProtectEvidence::genomicEvent).collect(Collectors.toSet());
+        Set<EventKey> events = EventKey.buildUniqueEventSet(evidences);
         Set<String> treatments = evidences.stream().map(ProtectEvidence::treatment).collect(Collectors.toSet());
 
         List<ProtectEvidence> result = Lists.newArrayList();
-        for (String event : events) {
+        for (EventKey event : events) {
             for (String treatment : treatments) {
                 for (EvidenceDirection direction : EvidenceDirection.values()) {
                     result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
                             .filter(x -> x.treatment().equals(treatment))
                             .filter(x -> x.direction().equals(direction))
-                            .filter(x -> x.genomicEvent().equals(event))
+                            .filter(x -> EventKey.create(x).equals(event))
                             .collect(Collectors.toList())));
                 }
             }

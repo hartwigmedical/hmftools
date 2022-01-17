@@ -33,4 +33,16 @@ public interface Variant extends GenomePosition, AllelicDepth {
     @NotNull
     String canonicalHgvsProteinImpact();
 
+    @NotNull
+    default String event() {
+        if (!canonicalHgvsProteinImpact().isEmpty()) {
+            return canonicalHgvsProteinImpact();
+        }
+
+        if (!canonicalHgvsCodingImpact().isEmpty()) {
+            return canonicalHgvsCodingImpact();
+        }
+
+        return canonicalEffect();
+    }
 }
