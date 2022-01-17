@@ -18,7 +18,7 @@ public class ProtectEvidenceFileTest {
     public void canReadProtectEvidenceFile() throws IOException {
         List<ProtectEvidence> evidences = ProtectEvidenceFile.read(EVIDENCE_TSV);
 
-        assertEquals(4, evidences.size());
+        assertEquals(5, evidences.size());
 
         // Check one case with multiple sources and urls separately.
         ProtectEvidence evidence = findByTreatment(evidences, "Dabrafenib + Trametinib");
