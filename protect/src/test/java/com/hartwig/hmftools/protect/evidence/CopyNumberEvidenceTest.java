@@ -57,13 +57,11 @@ public class CopyNumberEvidenceTest {
         ProtectEvidence ampEvidence = find(evidences, geneAmp);
         assertTrue(ampEvidence.reported());
         assertEquals(reportableAmp.gene(), ampEvidence.gene());
-        assertEquals(reportableAmp.interpretation().display(), ampEvidence.event());
         assertEquals(ProtectEvidenceType.AMPLIFICATION, ampEvidence.evidenceType());
 
         ProtectEvidence delEvidence = find(evidences, geneDel);
         assertTrue(delEvidence.reported());
         assertEquals(reportableDel.gene(), delEvidence.gene());
-        assertEquals(reportableDel.interpretation().display(), delEvidence.event());
         assertEquals(ProtectEvidenceType.INACTIVATION, delEvidence.evidenceType());
     }
 

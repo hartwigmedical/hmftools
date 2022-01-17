@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
 
@@ -37,10 +36,7 @@ public class ChordEvidence {
             for (ActionableCharacteristic signature : actionableCharacteristics) {
                 assert signature.name() == TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
 
-                result.add(personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                        .event(HR_DEFICIENCY_EVENT)
-                        .evidenceType(ProtectEvidenceType.SIGNATURE)
-                        .build());
+                result.add(personalizedEvidenceFactory.somaticReportableEvidence(signature).event(HR_DEFICIENCY_EVENT).build());
             }
         }
 

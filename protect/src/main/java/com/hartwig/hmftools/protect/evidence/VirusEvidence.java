@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -49,7 +48,6 @@ public class VirusEvidence {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
                                 .reported(reportHPV)
                                 .event(HPV_POSITIVE_EVENT)
-                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
                         result.add(evidence);
                     }
@@ -60,7 +58,6 @@ public class VirusEvidence {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticEvidence(virus)
                                 .reported(reportEBV)
                                 .event(EBV_POSITIVE_EVENT)
-                                .evidenceType(ProtectEvidenceType.VIRAL_PRESENCE)
                                 .build();
                         result.add(evidence);
                     }

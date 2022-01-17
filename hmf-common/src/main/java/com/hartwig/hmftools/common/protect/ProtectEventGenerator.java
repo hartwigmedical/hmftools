@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.protect;
 
+import com.hartwig.hmftools.common.purple.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.Variant;
 
@@ -23,6 +24,11 @@ public final class ProtectEventGenerator {
         }
 
         return variant.canonicalEffect();
+    }
+
+    @NotNull
+    public static String copyNumberEvent(@NotNull ReportableGainLoss gainLoss) {
+        return gainLoss.interpretation().display();
     }
 
     @NotNull

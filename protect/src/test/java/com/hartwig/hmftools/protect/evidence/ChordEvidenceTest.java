@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ChordTestFactory;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
@@ -42,7 +41,7 @@ public class ChordEvidenceTest {
 
         assertEquals(1, evidence.size());
         assertTrue(evidence.get(0).reported());
-        assertEquals(ProtectEvidenceType.SIGNATURE, evidence.get(0).evidenceType());
+        assertEquals(ChordEvidence.HR_DEFICIENCY_EVENT, evidence.get(0).event());
 
         ChordAnalysis hrProficient = chordAnalysisWithStatus(ChordStatus.HR_PROFICIENT);
         assertTrue(chordEvidence.evidence(hrProficient).isEmpty());

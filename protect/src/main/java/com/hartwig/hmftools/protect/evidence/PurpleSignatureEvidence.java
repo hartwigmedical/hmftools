@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -42,7 +41,6 @@ public class PurpleSignatureEvidence {
                     if (purpleData.microsatelliteStatus() == MicrosatelliteStatus.MSI) {
                         ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
                                 .event(MICROSATELLITE_UNSTABLE_EVENT)
-                                .evidenceType(ProtectEvidenceType.SIGNATURE)
                                 .build();
                         result.add(evidence);
                     }
@@ -50,10 +48,8 @@ public class PurpleSignatureEvidence {
                 }
                 case HIGH_TUMOR_MUTATIONAL_LOAD: {
                     if (purpleData.tumorMutationalLoadStatus() == TumorMutationalStatus.HIGH) {
-                        ProtectEvidence evidence = personalizedEvidenceFactory.somaticReportableEvidence(signature)
-                                .event(HIGH_TUMOR_LOAD_EVENT)
-                                .evidenceType(ProtectEvidenceType.SIGNATURE)
-                                .build();
+                        ProtectEvidence evidence =
+                                personalizedEvidenceFactory.somaticReportableEvidence(signature).event(HIGH_TUMOR_LOAD_EVENT).build();
                         result.add(evidence);
                     }
                     break;
