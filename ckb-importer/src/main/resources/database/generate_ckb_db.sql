@@ -431,7 +431,7 @@ CREATE TABLE treatmentApproachDrugClass
     treatmentApproachId int NOT NULL,
     drugClassId int NOT NULL,
     createDate DATE NOT NULL,
-    drugClass varchar(50) NOT NULL,
+    drugClass varchar(250) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentApproachId) REFERENCES treatmentApproach(id)
 );
