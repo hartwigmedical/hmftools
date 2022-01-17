@@ -157,7 +157,10 @@ public class VariantData
 
         // only support the first of multiple alts (as can be the case for Strelka)
         // String alt = variantContext.getAlternateAlleles().get(0)stream().map(Allele::toString).collect(Collectors.joining(","));
-        String alt = variantContext.getAlternateAlleles().get(0).toString();
+        String alt = !variantContext.getAlternateAlleles().isEmpty() ? variantContext.getAlternateAlleles().get(0).toString() : ref;
+
+        if(alt.equals("*") || alt.equals("N")) // unhandled for now
+            alt = ref;
 
         VariantData variant = new VariantData(chromosome, variantPosition, ref, alt);
         variant.setContext(variantContext);
@@ -170,6 +173,8 @@ public class VariantData
 
         return variant;
     }
+
+
 
     public VariantType type()
     {
