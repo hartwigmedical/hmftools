@@ -65,18 +65,15 @@ public class ActinCurator {
 
     @NotNull
     private ActinEntry curate(@NotNull ActinEntry actinEntry) {
-
         List<String> parameters = actinEntry.parameters();
+
         String variant = Strings.EMPTY;
         String gene = Strings.EMPTY;
-
-        if (parameters.size() == 2) {
-            gene = parameters.get(0);
-            variant = parameters.get(1);
-        }
-
         if (parameters.size() == 1) {
             gene = parameters.get(0);
+        } else if (parameters.size() == 2) {
+            gene = parameters.get(0);
+            variant = parameters.get(1);
         }
 
         CurationEntry entry = new CurationEntry(gene, variant);

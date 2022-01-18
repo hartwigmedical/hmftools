@@ -13,17 +13,15 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
-import com.hartwig.hmftools.serve.sources.ckb.CkbUtil;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ActinUtils {
 
-    private static final Logger LOGGER = LogManager.getLogger(CkbUtil.class);
+    private static final Logger LOGGER = LogManager.getLogger(ActinUtils.class);
     private static final String FIELD_DELIMITER = "\t";
 
     private ActinUtils() {

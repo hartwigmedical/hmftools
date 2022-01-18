@@ -3,17 +3,12 @@ package com.hartwig.hmftools.serve.sources.actin;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
 import com.hartwig.hmftools.serve.sources.actin.curation.ActinCurator;
 import com.hartwig.hmftools.serve.sources.actin.filter.ActinFilter;
 import com.hartwig.hmftools.serve.sources.actin.filter.ActinFilterEntry;
 import com.hartwig.hmftools.serve.sources.actin.filter.ActinFilterFile;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinFileReader;
-import com.hartwig.hmftools.serve.sources.ckb.curation.CkbCurator;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilter;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterEntry;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +45,6 @@ public final class ActinReader {
 
         return curatedEntries;
     }
-
 
     @NotNull
     private static List<ActinEntry> filter(@NotNull List<ActinEntry> entries, @NotNull List<ActinFilterEntry> actinFilterEntries) {
