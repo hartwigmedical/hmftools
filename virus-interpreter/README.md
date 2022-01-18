@@ -55,8 +55,9 @@ reported | A boolean indicating whether the detected viral presence is considere
 driverLikelihood | The driver likelihood of the virus as annotated in the reporting db 
 
  ## Version History and Download Links
- - [1.2] (upcoming)
-   - Annotate the viruses with a driver likelihood 
+ - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.2)
+   - Annotate the viruses with a driver likelihood
+   - Version built on java11 JDK
  - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.1)
    - New reporting strategy of viruses to report only clinical relevant viruses
  - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/virus-interpreter-v1.0)
