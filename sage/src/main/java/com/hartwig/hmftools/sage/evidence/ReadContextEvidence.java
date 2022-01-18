@@ -63,7 +63,9 @@ public class ReadContextEvidence
 
         final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
 
-        final QualityCalculator qualityCalculator = new QualityCalculator(mSageConfig.Quality, mQualityRecalibrationMap, refSequence.IndexedBases);
+        QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
+
+        final QualityCalculator qualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, refSequence.IndexedBases);
 
         try(final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .validationStringency(mSageConfig.Stringency)

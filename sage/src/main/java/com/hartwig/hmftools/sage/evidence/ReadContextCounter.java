@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.round;
+
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
+
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -106,7 +110,6 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefSupport = 0;
         mRawAltBaseQuality = 0;
         mRawRefBaseQuality = 0;
-
     }
 
     public VariantHotspot variant() { return mVariant; }
@@ -184,7 +187,7 @@ public class ReadContextCounter implements VariantHotspot
         if(mCoverage >= MaxCoverage)
             return;
 
-        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality)
+        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality) // or DEFAULT_EVIDENCE_MAP_QUA
             return;
 
         final RawContext rawContext = RawContext.create(mVariant, record, sageConfig.maxSkippedReferenceRegions());
@@ -220,25 +223,19 @@ public class ReadContextCounter implements VariantHotspot
         if(!baseDeleted)
         {
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
-            final IndexedBases expandedBases = mExpandedBasesFactory.expand(position(), readIndex, record);
 
-            /*
+            final IndexedBases readBases = mExpandedBasesFactory.expand(position(), readIndex, record);
+
             // extract base qualities across flanks and core for use in match
-            int coreFlankLength = RightFlankIndex - LeftFlankIndex + 1;
-            BaseQualities = new int[coreFlankLength];
-            mBaseQualIndexOffset = Index - LeftFlankIndex;
+            int[] baseQualities = new int[readBases.length()];
+            final byte[] readBaseQuals = record.getBaseQualities();
 
-            final byte[] baseQuals = record.getBaseQualities();
-            final byte[] indexedBaseQuals = record.getBaseQualities();
-
-            for(int i = 0; i < indexedBaseQuals.length; ++i)
+            for(int i = 0; i < baseQualities.length; ++i)
             {
-                indexedBaseQuals[i] = baseQuals[readBases.LeftFlankIndex + i];
+                baseQualities[i] = readBaseQuals[readBases.LeftFlankIndex + i];
             }
 
-            */
-
-            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(expandedBases, wildcardMatchInCore);
+            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(readBases, wildcardMatchInCore, baseQualities);
 
             if(!match.equals(ReadContextMatch.NONE))
             {

@@ -52,8 +52,7 @@ public class AltContext implements VariantHotspot
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
-            final ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(
-                    newReadContext.indexedBases(), false);
+            final ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(newReadContext.indexedBases());
 
             switch(match)
             {

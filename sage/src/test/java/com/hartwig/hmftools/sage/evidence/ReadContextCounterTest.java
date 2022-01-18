@@ -29,17 +29,10 @@ public class ReadContextCounterTest
     private static final SageConfig CONFIG = new SageConfig();
     private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
 
-    private static final Map<String,QualityRecalibrationMap> RECALIBRATION_MAP = Maps.newHashMap();
-
     // convert to using MockRefGenome
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
 
-    static
-    {
-        RECALIBRATION_MAP.put(SAMPLE, RECALIBRATION);
-    }
-
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION_MAP, REF_BASES);
+    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION, REF_BASES);
 
     @Test
     public void testInsertInLeftSoftClip()

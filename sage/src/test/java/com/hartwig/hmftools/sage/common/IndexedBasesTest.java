@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.util.Arrays.fill;
+
+import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -68,28 +72,28 @@ public class IndexedBasesTest
         IndexedBases indexedBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
 
         IndexedBases testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTA".getBytes());
-        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGT".getBytes());
-        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 1, 2, 2, 2, "GT".getBytes());
-        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 1, 2, 2, 2, "GTAA".getBytes());
-        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 0, 2, 2, 2, "TAA".getBytes());
-        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 0, 2, 2, 2, "TA".getBytes());
-        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 0, 2, 2, 2, "T".getBytes());
-        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases));
     }
 
     @Test
@@ -98,10 +102,69 @@ public class IndexedBasesTest
         IndexedBases indexedBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
 
         IndexedBases testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, -1, 2, 2, 2, "GGTAA".getBytes());
-        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false));
+        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases));
+    }
+
+    @Test
+    public void testBaseQualityMatch()
+    {
+        String preLeftFlank = "TTTTTTTTTT";
+        int preFlankLength = preLeftFlank.length();
+        String leftFlank = "GGGGG";
+        String rightFlank = "AAAAA";
+        String core = "AATCC";
+        String refBases = preLeftFlank + leftFlank + core + rightFlank;
+
+        int position = 1000;
+
+        int flankSize = leftFlank.length();
+        int leftFlankIndex = 10;
+        int leftCoreIndex = leftFlankIndex + flankSize;
+        int readIndex = leftCoreIndex + 2;
+        int rightCoreIndex = readIndex + 2;
+
+        IndexedBases indexedBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, refBases.getBytes());
+
+        int[] readQuals = new int[indexedBases.length()];
+        fill(readQuals, MATCHING_BASE_QUALITY + 1);
+
+        IndexedBases testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, refBases.getBytes());
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        // base diff in core
+        String readBases = preLeftFlank + leftFlank + "ATTCC" + rightFlank;
+        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        assertEquals(ReadContextMatch.NONE, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        // with low qual at that base
+        readQuals[leftCoreIndex - leftFlankIndex + 1] = MATCHING_BASE_QUALITY - 1;
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        // low qual mismstch in left core
+        readBases = preLeftFlank + "GGGAG" + core + rightFlank;
+        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        readQuals[leftFlankIndex - preFlankLength + 3] = MATCHING_BASE_QUALITY - 1;
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        // low qual mismstch in right core
+        readBases = preLeftFlank + leftFlank + core + "GAAAA";
+        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        readQuals[rightCoreIndex + 1 - preFlankLength] = MATCHING_BASE_QUALITY - 1;
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        readBases = preLeftFlank + leftFlank + core + "AAAAG";
+        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        assertEquals(ReadContextMatch.CORE, indexedBases.matchAtPosition(testBases, false, readQuals));
+
+        readQuals[rightCoreIndex + 5 - preFlankLength] = MATCHING_BASE_QUALITY - 1;
+        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, false, readQuals));
     }
 
     @Test

@@ -11,11 +11,11 @@ import htsjdk.samtools.SAMRecord;
 public class QualityCalculator
 {
     private final QualityConfig mConfig;
-    private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final QualityRecalibrationMap mQualityRecalibrationMap;
     private final IndexedBases mRefBases;
 
     public QualityCalculator(
-            final QualityConfig config, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap, final IndexedBases refBases)
+            final QualityConfig config, final QualityRecalibrationMap qualityRecalibrationMap, final IndexedBases refBases)
     {
         mConfig = config;
         mQualityRecalibrationMap = qualityRecalibrationMap;
@@ -48,27 +48,31 @@ public class QualityCalculator
         int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 
-        QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(readContextCounter.Sample);
-
         double quality = Integer.MAX_VALUE;
         for(int i = 0; i < maxLength; i++)
         {
             int refPosition = readContextCounter.position() + i;
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
-            byte[] trinucleotideContext = mRefBases.trinucleotideContext(refPosition);
 
-            if(qrMap != null)
-            {
-                double recalibratedQuality = qrMap.quality(
-                        (byte) readContextCounter.ref().charAt(i), (byte) readContextCounter.alt().charAt(i),
-                        trinucleotideContext, rawQuality);
-
-                quality = Math.min(quality, recalibratedQuality);
-            }
+            double recalibratedQual = recalibrateQuality(readContextCounter, refPosition, i, rawQuality);
+            quality = Math.min(quality, recalibratedQual);
         }
 
         return quality;
+    }
+
+    private double recalibrateQuality(final ReadContextCounter readContextCounter, int refPosition, int refAltPos, byte rawQuality)
+    {
+        if(mQualityRecalibrationMap == null)
+            return rawQuality;
+
+        byte[] trinucleotideContext = mRefBases.trinucleotideContext(refPosition);
+
+        return mQualityRecalibrationMap.quality(
+                (byte) readContextCounter.ref().charAt(refAltPos),
+                (byte) readContextCounter.alt().charAt(refAltPos),
+                trinucleotideContext, rawQuality);
     }
 
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
