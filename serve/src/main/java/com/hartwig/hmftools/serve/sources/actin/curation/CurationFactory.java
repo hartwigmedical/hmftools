@@ -16,6 +16,5 @@ final class CurationFactory {
     static {
         GENE_MAPPINGS.put("AKT", "AKT1");
         GENE_MAPPINGS.put("PRA1", "RABAC1");
-        GENE_MAPPINGS.put("MRE11", "MRE11A");
     }
 }
