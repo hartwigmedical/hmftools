@@ -11,6 +11,8 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.serve.classification.EventType;
+import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
+import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
 
@@ -35,7 +37,11 @@ public final class ActinUtils {
         Set<ActinEntryTrial> mutationEntries = Sets.newHashSet();
 
         for (ActinEntry entry : entries) {
-            mutationEntries.add(new ActinEntryTrial(entry.trial(), entry.rule(), entry.gene(), entry.mutation(), entry.type()));
+            Set<String> events = ActinEventExtractor.extractEvents(entry);
+            for (String event: events) {
+                EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
+                mutationEntries.add(new ActinEntryTrial(entry.trial(), entry.rule(), entry.gene(), entry.mutation(), type));
+            }
         }
 
         for (ActinEntryTrial entry : mutationEntries) {

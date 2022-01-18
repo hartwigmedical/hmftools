@@ -7,18 +7,15 @@ import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ActinEventTypeExtractor {
+public final class ActinEventTypeExtractor {
 
-    @NotNull
     private static final EventClassifier CLASSIFIER = EventClassifierFactory.buildClassifier(ActinClassificationConfig.build());
 
     private ActinEventTypeExtractor() {
     }
 
     @NotNull
-    public static EventType extractEventType(@NotNull ActinEntry entry) {
-        String event = ActinEventExtractor.extractEvent(entry);
-
+    public static EventType determineEventType(@NotNull ActinEntry entry, @NotNull String event) {
         return CLASSIFIER.determineType(entry.gene(), event);
     }
 }

@@ -19,6 +19,7 @@ import com.hartwig.hmftools.serve.extraction.ExtractionFunctions;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventExtractor;
+import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.ckb.CkbExtractor;
 import com.hartwig.hmftools.serve.util.ProgressTracker;
@@ -43,14 +44,15 @@ public class ActinExtractor {
         ProgressTracker tracker = new ProgressTracker("ACTIN", entries.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
-            String event = ActinEventExtractor.extractEvent(entry);
-            if (entry.type() == EventType.UNKNOWN) {
-                LOGGER.warn("No event type known for '{}' on '{}'", event, entry.gene());
-            } else {
-                EventExtractorOutput extraction = eventExtractor.extract(entry.gene(), null, entry.type(), event);
-                ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
-
-                extractions.add(toExtractionResult(trial, extraction));
+            Set<String> events = ActinEventExtractor.extractEvents(entry);
+            ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
+            for (String event : events) {
+                EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
+                if (type == EventType.UNKNOWN) {
+                    LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
+                } else {
+                    extractions.add(toExtractionResult(trial, eventExtractor.extract(entry.gene(), null, type, event)));
+                }
             }
 
             tracker.update();

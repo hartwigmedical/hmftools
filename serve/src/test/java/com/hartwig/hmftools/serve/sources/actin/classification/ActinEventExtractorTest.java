@@ -2,6 +2,7 @@ package com.hartwig.hmftools.serve.sources.actin.classification;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
 import com.hartwig.hmftools.serve.sources.actin.reader.ImmutableActinEntry;
@@ -19,6 +20,6 @@ public class ActinEventExtractorTest {
                 .mutation("mut")
                 .build();
 
-        assertEquals("mut", ActinEventExtractor.extractEvent(trial1));
+        assertEquals(Sets.newHashSet("mut"), ActinEventExtractor.extractEvents(trial1));
     }
 }
