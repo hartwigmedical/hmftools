@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.ckb.classification.CkbProteinAnnotationExtractor;
 import com.hartwig.hmftools.common.serve.classification.EventClassifierConfig;
 import com.hartwig.hmftools.common.serve.classification.ImmutableEventClassifierConfig;
 

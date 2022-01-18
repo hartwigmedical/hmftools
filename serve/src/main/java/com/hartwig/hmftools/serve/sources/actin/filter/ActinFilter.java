@@ -9,7 +9,6 @@ import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActinFilter {
@@ -64,17 +63,7 @@ public class ActinFilter {
     }
 
     private static boolean isMatch(@NotNull ActinFilterEntry filterEntry, @NotNull ActinEntry entry) {
-        String variant = Strings.EMPTY;
-        String gene = Strings.EMPTY;
-
-        if (entry.parameters().size() == 1) {
-            gene = entry.parameters().get(0);
-        } else if (entry.parameters().size() == 2) {
-            gene = entry.parameters().get(0);
-            variant = entry.parameters().get(1);
-        }
-
-        String combined = gene + ", " + variant;
+        String combined = entry.gene() + ", " + entry.mutation();
 
         switch (filterEntry.type()) {
             case FILTER_EXACT_VARIANT_FULLNAME: {
@@ -86,5 +75,4 @@ public class ActinFilter {
             }
         }
     }
-
 }

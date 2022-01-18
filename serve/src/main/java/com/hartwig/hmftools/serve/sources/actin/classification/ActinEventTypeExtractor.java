@@ -20,18 +20,17 @@ public class ActinEventTypeExtractor {
     }
 
     @NotNull
-    public static List<EventType> classify(@NotNull ActinEntry actinEntry) {
+    public static List<EventType> classify(@NotNull ActinEntry entry) {
         List<EventType> eventType = Lists.newArrayList();
-        String gene = ActinEventAndGeneExtractor.extractGene(actinEntry);
-        List<String> events = ActinEventAndGeneExtractor.extractEvent(actinEntry);
+        List<String> events = ActinEventAndGeneExtractor.extractEvent(entry);
 
-        if (actinEntry.rule() == ActinRule.ACTIVATION_OF_GENE_X || actinEntry.rule() == ActinRule.INACTIVATION_OF_GENE_X) {
+        if (entry.rule() == ActinRule.ACTIVATION_OF_GENE_X || entry.rule() == ActinRule.INACTIVATION_OF_GENE_X) {
             for (String event : events) {
-                eventType.add(CLASSIFIER.determineType(gene, event));
+                eventType.add(CLASSIFIER.determineType(entry.gene(), event));
             }
         } else {
             String eventString = String.join(",", events);
-            eventType.add(CLASSIFIER.determineType(gene, eventString));
+            eventType.add(CLASSIFIER.determineType(entry.gene(), eventString));
         }
         return eventType;
     }

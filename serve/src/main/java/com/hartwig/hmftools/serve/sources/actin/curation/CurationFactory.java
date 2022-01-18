@@ -8,8 +8,6 @@ final class CurationFactory {
 
     static final Map<String, String> GENE_MAPPINGS = Maps.newHashMap();
 
-    static final Map<CurationEntry, CurationEntry> MUTATION_MAPPINGS = Maps.newHashMap();
-
     private CurationFactory() {
     }
 

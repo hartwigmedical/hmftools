@@ -2,11 +2,7 @@ package com.hartwig.hmftools.serve.sources.actin.reader;
 
 import java.util.List;
 
-import com.hartwig.hmftools.ckb.classification.CkbEventTypeExtractor;
 import com.hartwig.hmftools.common.serve.classification.EventType;
-import com.hartwig.hmftools.iclusion.classification.IclusionEventTypeExtractor;
-import com.hartwig.hmftools.serve.sources.actin.ActinExtractor;
-import com.hartwig.hmftools.serve.sources.actin.classification.ActinClassificationConfig;
 import com.hartwig.hmftools.serve.sources.actin.classification.ActinEventTypeExtractor;
 
 import org.immutables.value.Value;
@@ -31,5 +27,8 @@ public abstract class ActinEntry {
     public abstract ActinRule rule();
 
     @NotNull
-    public abstract List<String> parameters();
+    public abstract String gene();
+
+    @Nullable
+    public abstract String mutation();
 }

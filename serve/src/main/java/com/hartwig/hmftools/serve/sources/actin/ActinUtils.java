@@ -27,23 +27,24 @@ public final class ActinUtils {
     private ActinUtils() {
     }
 
-    public static void writeActinEventTypes(@NotNull String actinMutationTsv, @NotNull List<ActinEntry> actinEntries) throws IOException {
+    public static void writeActinEventTypes(@NotNull String actinMutationTsv, @NotNull List<ActinEntry> entries) throws IOException {
         List<String> lines = Lists.newArrayList();
-        String header = new StringJoiner(FIELD_DELIMITER).add("study").add("rule").add("parameters").add("type").toString();
+        String header = new StringJoiner(FIELD_DELIMITER).add("study").add("rule").add("gene").add("mutation").add("type").toString();
         lines.add(header);
 
         Set<ActinEntryTrial> mutationEntries = Sets.newHashSet();
 
-        for (ActinEntry trial : actinEntries) {
-            for (EventType type: trial.type()) {
-                mutationEntries.add(new ActinEntryTrial(trial.trial(), trial.rule(), trial.parameters(), type));
+        for (ActinEntry entry : entries) {
+            for (EventType type : entry.type()) {
+                mutationEntries.add(new ActinEntryTrial(entry.trial(), entry.rule(), entry.gene(), entry.mutation(), type));
             }
         }
 
         for (ActinEntryTrial entry : mutationEntries) {
             lines.add(new StringJoiner(FIELD_DELIMITER).add(entry.trial)
                     .add(entry.actinRule.toString())
-                    .add(entry.parameters.toString())
+                    .add(entry.gene)
+                    .add(entry.mutation)
                     .add(entry.type.toString())
                     .toString());
         }
@@ -59,36 +60,19 @@ public final class ActinUtils {
         @NotNull
         private final ActinRule actinRule;
         @NotNull
-        private final List<String> parameters;
+        private final String gene;
+        @Nullable
+        private final String mutation;
         @NotNull
         private final EventType type;
 
-        public ActinEntryTrial(@Nullable final String trial, @NotNull final ActinRule actinRule, @NotNull final List<String> parameters,
-                @NotNull final EventType type) {
+        public ActinEntryTrial(@Nullable final String trial, @NotNull final ActinRule actinRule, @NotNull final String gene,
+                @Nullable final String mutation, @NotNull final EventType type) {
             this.trial = trial;
             this.actinRule = actinRule;
-            this.parameters = parameters;
+            this.gene = gene;
+            this.mutation = mutation;
             this.type = type;
-        }
-
-        @Nullable
-        public String trial() {
-            return trial;
-        }
-
-        @NotNull
-        public ActinRule actinRule() {
-            return actinRule;
-        }
-
-        @NotNull
-        public List<String> parameters() {
-            return parameters;
-        }
-
-        @NotNull
-        public EventType type() {
-            return type;
         }
 
         @Override
@@ -100,13 +84,13 @@ public final class ActinUtils {
                 return false;
             }
             final ActinEntryTrial that = (ActinEntryTrial) o;
-            return Objects.equals(trial, that.trial) && actinRule.equals(that.actinRule) && parameters.equals(that.parameters)
-                    && type.equals(that.type);
+            return Objects.equals(trial, that.trial) && actinRule == that.actinRule && gene.equals(that.gene) && Objects.equals(mutation,
+                    that.mutation) && type == that.type;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(trial, actinRule, parameters, type);
+            return Objects.hash(trial, actinRule, gene, mutation, type);
         }
     }
 }
