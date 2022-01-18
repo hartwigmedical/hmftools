@@ -5,7 +5,6 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActinTrialFactory {
