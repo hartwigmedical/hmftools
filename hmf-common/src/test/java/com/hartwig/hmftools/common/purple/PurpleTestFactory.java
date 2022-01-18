@@ -39,6 +39,11 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
+    public static ReportableGainLoss createTestReportableGainLoss() {
+        return createReportableGainLoss(Strings.EMPTY, CopyNumberInterpretation.FULL_GAIN);
+    }
+
+    @NotNull
     public static ReportableGainLoss createReportableGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation) {
         return ImmutableReportableGainLoss.builder()
                 .chromosome(Strings.EMPTY)

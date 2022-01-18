@@ -15,6 +15,11 @@ public final class LinxTestFactory {
 
     @NotNull
     public static LinxFusion createMinimalTestFusion() {
+        return testBuilder().build();
+    }
+
+    @NotNull
+    public static ImmutableLinxFusion.Builder testBuilder() {
         return ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(0)
                 .threePrimeBreakendId(0)
@@ -38,7 +43,6 @@ public final class LinxTestFactory {
                 .geneEnd(Strings.EMPTY)
                 .geneContextEnd(Strings.EMPTY)
                 .geneTranscriptEnd(Strings.EMPTY)
-                .junctionCopyNumber(0D)
-                .build();
+                .junctionCopyNumber(0D);
     }
 }

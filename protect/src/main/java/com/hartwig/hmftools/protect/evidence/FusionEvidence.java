@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
@@ -67,8 +67,7 @@ public class FusionEvidence {
         return personalizedEvidenceFactory.somaticEvidence(actionable)
                 .reported(fusion.reported())
                 .gene(geneFromActionable(actionable))
-                .event(fusion.geneStart() + " - " + fusion.geneEnd() + " fusion")
-                .evidenceType(typeFromActionable(actionable))
+                .event(ProtectEventGenerator.fusionEvent(fusion))
                 .build();
     }
 
@@ -108,19 +107,8 @@ public class FusionEvidence {
         return true;
     }
 
-    @NotNull
-    private static ProtectEvidenceType typeFromActionable(@NotNull ActionableEvent actionable) {
-        if (actionable instanceof ActionableGene) {
-            return ProtectEvidenceType.PROMISCUOUS_FUSION;
-        } else if (actionable instanceof ActionableFusion) {
-            return ProtectEvidenceType.FUSION_PAIR;
-        } else {
-            throw new IllegalStateException("Unexpected actionable present in fusion evidence: " + actionable);
-        }
-    }
-
     @Nullable
-    private String geneFromActionable(@NotNull ActionableEvent actionable) {
+    private static String geneFromActionable(@NotNull ActionableEvent actionable) {
         if (actionable instanceof ActionableGene) {
             return ((ActionableGene) actionable).gene();
         } else if (actionable instanceof ActionableFusion) {

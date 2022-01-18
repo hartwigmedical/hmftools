@@ -39,6 +39,8 @@ public final class CkbDAO {
     @NotNull
     private final EvidenceDAO evidenceDAO;
     @NotNull
+    private final TreatmentApproachDAO treatmentApproachDAO;
+    @NotNull
     private final ClinicalTrialDAO clinicalTrialDAO;
 
     @NotNull
@@ -68,7 +70,8 @@ public final class CkbDAO {
         this.therapyDAO = new TherapyDAO(context);
         this.indicationDAO = new IndicationDAO(context);
         this.variantDAO = new VariantDAO(context);
-        this.evidenceDAO = new EvidenceDAO(context, therapyDAO, indicationDAO);
+        this.treatmentApproachDAO = new TreatmentApproachDAO(context);
+        this.evidenceDAO = new EvidenceDAO(context, therapyDAO, indicationDAO, treatmentApproachDAO);
         this.clinicalTrialDAO = new ClinicalTrialDAO(context, therapyDAO, indicationDAO);
     }
 
@@ -82,6 +85,7 @@ public final class CkbDAO {
 
         therapyDAO.deleteAll();
         indicationDAO.deleteAll();
+        treatmentApproachDAO.deleteAll();
 
         context.deleteFrom(CKBENTRY).execute();
     }

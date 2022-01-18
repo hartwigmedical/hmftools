@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.common.protect.ProtectEventGenerator;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
@@ -60,21 +61,22 @@ public class FusionEvidenceTest {
 
         assertEquals(3, evidences.size());
 
-        ProtectEvidence evidence1 = findByEvent(evidences, geneUp + " - " + geneDown + " fusion");
+        ProtectEvidence evidence1 = findByFusion(evidences, reportedFusionMatch);
         assertTrue(evidence1.reported());
         assertEquals(ProtectEvidenceType.FUSION_PAIR, evidence1.evidenceType());
 
-        ProtectEvidence evidence2 = findByEvent(evidences, genePromiscuous + " - other gene fusion");
+        ProtectEvidence evidence2 = findByFusion(evidences, reportedPromiscuousMatch);
         assertTrue(evidence2.reported());
         assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence2.evidenceType());
 
-        ProtectEvidence evidence3 = findByEvent(evidences, "other gene - " + genePromiscuous + " fusion");
+        ProtectEvidence evidence3 = findByFusion(evidences, unreportedPromiscuousMatch);
         assertFalse(evidence3.reported());
         assertEquals(ProtectEvidenceType.PROMISCUOUS_FUSION, evidence3.evidenceType());
     }
 
     @NotNull
-    private static ProtectEvidence findByEvent(@NotNull List<ProtectEvidence> evidences, @NotNull String event) {
+    private static ProtectEvidence findByFusion(@NotNull List<ProtectEvidence> evidences, @NotNull LinxFusion fusion) {
+        String event = ProtectEventGenerator.fusionEvent(fusion);
         for (ProtectEvidence evidence : evidences) {
             if (evidence.event().equals(event)) {
                 return evidence;

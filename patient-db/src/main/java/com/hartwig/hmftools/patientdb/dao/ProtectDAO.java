@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.serve.Knowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep11;
+import org.jooq.InsertValuesStep14;
 
 class ProtectDAO {
 
@@ -30,9 +30,12 @@ class ProtectDAO {
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for (List<ProtectEvidence> batch : Iterables.partition(evidence, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep11 inserter = context.insertInto(PROTECT,
+            InsertValuesStep14 inserter = context.insertInto(PROTECT,
                     PROTECT.SAMPLEID,
+                    PROTECT.GENE,
                     PROTECT.EVENT,
+                    PROTECT.EVIDENCETYPE,
+                    PROTECT.RANGERANK,
                     PROTECT.GERMLINE,
                     PROTECT.REPORTED,
                     PROTECT.TREATMENT,
@@ -47,7 +50,7 @@ class ProtectDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep11 inserter, @NotNull String sample,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep14 inserter, @NotNull String sample,
             @NotNull ProtectEvidence evidence) {
         StringJoiner urlJoiner = new StringJoiner(",");
         for (String url : evidence.urls()) {
@@ -60,7 +63,10 @@ class ProtectDAO {
         }
 
         inserter.values(sample,
-                evidence.genomicEvent(),
+                evidence.gene(),
+                evidence.event(),
+                evidence.evidenceType().toString(),
+                evidence.rangeRank(),
                 evidence.germline(),
                 evidence.reported(),
                 evidence.treatment(),

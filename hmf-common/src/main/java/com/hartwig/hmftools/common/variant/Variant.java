@@ -32,5 +32,4 @@ public interface Variant extends GenomePosition, AllelicDepth {
 
     @NotNull
     String canonicalHgvsProteinImpact();
-
 }

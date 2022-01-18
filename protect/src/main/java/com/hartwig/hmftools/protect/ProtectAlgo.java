@@ -173,10 +173,10 @@ public class ProtectAlgo {
     }
 
     private static void printExtraction(@NotNull String title, @NotNull List<ProtectEvidence> evidences) {
-        Set<String> events = evidences.stream().map(x -> x.genomicEvent()).collect(Collectors.toSet());
+        Set<EventKey> events = EventKey.buildUniqueEventSet(evidences);
         LOGGER.debug("Extracted {} evidence items for {} based off {} genomic events", evidences.size(), title, events.size());
-        for (String event : events) {
-            int count = evidences.stream().filter(x -> x.genomicEvent().equals(event)).collect(Collectors.toList()).size();
+        for (EventKey event : events) {
+            int count = evidences.stream().filter(x -> EventKey.create(x).equals(event)).collect(Collectors.toList()).size();
             LOGGER.debug(" Resolved {} items for '{}'", count, event);
         }
     }

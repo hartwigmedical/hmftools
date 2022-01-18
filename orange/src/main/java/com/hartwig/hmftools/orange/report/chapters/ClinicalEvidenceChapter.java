@@ -165,7 +165,7 @@ public class ClinicalEvidenceChapter implements ReportChapter {
 
     @NotNull
     private static String display(@NotNull ProtectEvidence evidence) {
-        String event = evidence.genomicEvent();
+        String event = evidence.gene() != null ? evidence.gene() + " " + evidence.event() : evidence.event();
         if (event.contains("p.")) {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
         }

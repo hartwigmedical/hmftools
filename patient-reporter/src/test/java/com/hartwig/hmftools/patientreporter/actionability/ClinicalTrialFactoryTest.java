@@ -32,7 +32,7 @@ public class ClinicalTrialFactoryTest {
         List<ProtectEvidence> trial = ClinicalTrialFactory.extractOnLabelTrials(Lists.newArrayList(evidence));
 
         assertEquals(1, trial.size());
-        assertEquals("event", trial.get(0).genomicEvent());
+        assertEquals("event", trial.get(0).event());
         assertEquals("acronym", trial.get(0).treatment());
     }
 }

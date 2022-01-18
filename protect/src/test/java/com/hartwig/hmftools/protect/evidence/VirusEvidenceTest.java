@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusConstants;
@@ -47,12 +46,10 @@ public class VirusEvidenceTest {
         // The test data has a reportable HPV virus
         ProtectEvidence hpvEvidence = find(evidences, VirusEvidence.HPV_POSITIVE_EVENT);
         assertTrue(hpvEvidence.reported());
-        assertEquals(ProtectEvidenceType.VIRAL_PRESENCE, hpvEvidence.evidenceType());
 
         // The test data has a reportable LOW driver EBV virus
         ProtectEvidence ebvEvidence = find(evidences, VirusEvidence.EBV_POSITIVE_EVENT);
         assertFalse(ebvEvidence.reported());
-        assertEquals(ProtectEvidenceType.VIRAL_PRESENCE, ebvEvidence.evidenceType());
     }
 
     @NotNull

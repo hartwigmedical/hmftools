@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
 import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
@@ -48,11 +47,9 @@ public class PurpleSignatureEvidenceTest {
         assertEquals(2, evidences.size());
         ProtectEvidence msiEvidence = find(evidences, PurpleSignatureEvidence.MICROSATELLITE_UNSTABLE_EVENT);
         assertTrue(msiEvidence.reported());
-        assertEquals(ProtectEvidenceType.SIGNATURE, msiEvidence.evidenceType());
 
         ProtectEvidence tmlEvidence = find(evidences, PurpleSignatureEvidence.HIGH_TUMOR_LOAD_EVENT);
         assertTrue(tmlEvidence.reported());
-        assertEquals(ProtectEvidenceType.SIGNATURE, tmlEvidence.evidenceType());
 
         PurpleData msi = createPurpleData(MicrosatelliteStatus.MSI, TumorMutationalStatus.LOW);
         assertEquals(1, purpleSignatureEvidence.evidence(msi).size());
