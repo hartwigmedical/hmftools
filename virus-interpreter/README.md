@@ -32,8 +32,9 @@ Every virus detected by VIRUSBreakend is evaluated for reporting. For a virus to
 ### Driver likelihood
 
 Viruses that are potentially reportable (i.e. present in the reporting db) are annotated with a driver 
-likelihood (HIGH/LOW) in the reporting db. All other viruses (i.e. the viruses that are not present in reporting db), 
-will be annotated with driver likelihood UNKNOWN.
+likelihood (HIGH/LOW) in the reporting db. Also, when a potentially reportable virus doesn't met the conditions of reportable the 
+driver likelihood is set to UNKNOWN. 
+All other viruses (i.e. the viruses that are not present in reporting db), will be annotated with driver likelihood UNKNOWN.
 
 ### Output data
 
