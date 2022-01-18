@@ -16,4 +16,3 @@ public class ActinProteinAnnotationExtractor implements EventPreprocessor {
         return AminoAcids.forceSingleLetterProteinAnnotation(event);
     }
 }
-

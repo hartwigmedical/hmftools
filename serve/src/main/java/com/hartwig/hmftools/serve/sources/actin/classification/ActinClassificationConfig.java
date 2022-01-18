@@ -123,21 +123,21 @@ public class ActinClassificationConfig {
     @NotNull
     private static Set<String> activatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("activation");
+        set.add(ActinKeywords.ACTIVATION);
         return set;
     }
 
     @NotNull
     private static Set<String> inactivatingGeneLevelKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("inactivation");
+        set.add(ActinKeywords.INACTIVATION);
         return set;
     }
 
     @NotNull
     private static Set<String> amplificationKeywords() {
         Set<String> set = Sets.newHashSet();
-        set.add("amplification");
+        set.add(ActinKeywords.AMPLIFICATION);
         return set;
     }
 
@@ -154,7 +154,7 @@ public class ActinClassificationConfig {
     @NotNull
     private static Set<String> deletionKeywords() {
         Set<String> set = Sets.newHashSet();
-        set.add("deletion");
+        set.add(ActinKeywords.DELETION);
         return set;
     }
 
@@ -181,7 +181,7 @@ public class ActinClassificationConfig {
     @NotNull
     private static Set<String> promiscuousFusionKeyPhrases() {
         Set<String> set = Sets.newHashSet();
-        set.add("fusion");
+        set.add(ActinKeywords.PROMISCUOUS_FUSION);
         return set;
     }
 

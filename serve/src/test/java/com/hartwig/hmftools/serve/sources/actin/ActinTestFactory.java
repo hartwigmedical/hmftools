@@ -14,6 +14,6 @@ public final class ActinTestFactory {
 
     @NotNull
     public static ActinEntry createTestEntry() {
-        return ImmutableActinEntry.builder().trial(Strings.EMPTY).rule(ActinRule.MUTATION_IN_GENE_X_OF_TYPE_Y).gene(Strings.EMPTY).build();
+        return ImmutableActinEntry.builder().trial(Strings.EMPTY).rule(ActinRule.ACTIVATION_OF_GENE_X).gene(Strings.EMPTY).build();
     }
 }

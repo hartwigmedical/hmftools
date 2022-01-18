@@ -2,14 +2,13 @@ package com.hartwig.hmftools.serve.sources.actin.classification;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
 import com.hartwig.hmftools.serve.sources.actin.reader.ImmutableActinEntry;
 
 import org.junit.Test;
 
-public class ActinEventAndGeneExtractorTest {
+public class ActinEventExtractorTest {
 
     @Test
     public void canExtractEvent() {
@@ -20,6 +19,6 @@ public class ActinEventAndGeneExtractorTest {
                 .mutation("mut")
                 .build();
 
-        assertEquals(Lists.newArrayList("mut"), ActinEventAndGeneExtractor.extractEvent(trial1));
+        assertEquals("mut", ActinEventExtractor.extractEvent(trial1));
     }
 }

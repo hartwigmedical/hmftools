@@ -35,9 +35,7 @@ public final class ActinUtils {
         Set<ActinEntryTrial> mutationEntries = Sets.newHashSet();
 
         for (ActinEntry entry : entries) {
-            for (EventType type : entry.type()) {
-                mutationEntries.add(new ActinEntryTrial(entry.trial(), entry.rule(), entry.gene(), entry.mutation(), type));
-            }
+            mutationEntries.add(new ActinEntryTrial(entry.trial(), entry.rule(), entry.gene(), entry.mutation(), entry.type()));
         }
 
         for (ActinEntryTrial entry : mutationEntries) {

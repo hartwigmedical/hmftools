@@ -35,15 +35,15 @@ public final class ServeLocalConfigProvider {
 
         // SERVE-VM is a shared vm tailored for running SERVE on GCP.
         if (hostname.toLowerCase().equals("serve-vm")) {
-            builder.viccJson("/data/resources/custom/vicc/all.json");
+            builder.viccJson("/data/resources/crunch/serve/vicc/all.json");
             builder.ckbDir("/data/resources/custom/ckb/latest");
-            builder.ckbFilterTsv("/data/resources/custom/serve/ckb_filters.tsv");
-            builder.iClusionTrialTsv("/data/resources/custom/iclusion/iclusion_trials_prod.tsv");
-            builder.actinTrialTsv("/data/resources/custom/actin/actin_knowledgebase.tsv");
-            builder.actinFilterTsv("/data/resources/custom/actin/actin_filter.tsv");
+            builder.ckbFilterTsv("/data/resources/crunch/serve/curation/ckb_filters.tsv");
+            builder.iClusionTrialTsv("/data/resources/crunch/serve/iclusion/iclusion_trials_prod.tsv");
+            builder.actinTrialTsv("/data/resources/crunch/serve/actin/actin_knowledgebase.tsv");
+            builder.actinFilterTsv("/data/resources/crunch/serve/curation/actin_filter.tsv");
 
             builder.outputDir(System.getProperty("user.home") + "/tmp/serve");
-            builder.missingDoidsMappingTsv("/data/resources/custom/serve/public_missing_doids_mapping.tsv");
+            builder.missingDoidsMappingTsv("/data/resources/crunch/serve/curation/public_missing_doids_mapping.tsv");
             builder.ensemblDataDir37("/data/resources/public/ensembl_data_cache/37");
             builder.ensemblDataDir38("/data/resources/public/ensembl_data_cache/38");
             builder.driverGene37Tsv("/data/resources/public/gene_panel/37/DriverGenePanel.37.tsv");
@@ -54,8 +54,8 @@ public final class ServeLocalConfigProvider {
                     "/data/resources/bucket/reference_genome/37/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta");
             builder.refGenome38FastaFile(
                     "/data/resources/bucket/reference_genome/38/Homo_sapiens.GRCh38.no.alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
-            builder.refGenome37To38Chain("/data/resources/custom/reference_genome_liftover/hg19ToHg38.over.chain");
-            builder.refGenome38To37Chain("/data/resources/custom/reference_genome_liftover/hg38ToHg19.over.chain");
+            builder.refGenome37To38Chain("/data/resources/crunch/reference_genome_liftover/hg19ToHg38.over.chain");
+            builder.refGenome38To37Chain("/data/resources/crunch/reference_genome_liftover/hg38ToHg19.over.chain");
         } else {
             // Assume we run on local machine with fixed paths
             String baseDir = System.getProperty("user.home") + "/hmf/";
