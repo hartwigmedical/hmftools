@@ -7,4 +7,4 @@ ALTER TABLE somaticVariant
 ####
 # Virus Interpreter
 ALTER TABLE virusAnnotation
-    ADD COLUMN likelihood VARCHAR(10) NOT NULL;
+    ADD COLUMN likelihood VARCHAR(10) NOT NULL AFTER reported;
