@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static org.junit.Assert.assertEquals;
 
+import static htsjdk.samtools.SAMUtils.phredToFastq;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -88,11 +90,24 @@ public class ReadContextCounterTest
         final ReadContextCounter victim =
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, 50, true);
 
-        final SAMRecord record = buildSamRecord(555, "2S1M", "CGT", "#####");
+        String quals = buildQualString(new int[] {37, 37, 37});
+
+        final SAMRecord record = buildSamRecord(555, "2S1M", "CGT", quals);
         victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(0, victim.depth());
         assertEquals(0, victim.altSupport());
+    }
+
+    public static String buildQualString(final int[] quals)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < quals.length; ++i)
+        {
+            sb.append(phredToFastq(37));
+        }
+
+        return sb.toString();
     }
 
     @Test

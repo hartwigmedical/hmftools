@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
@@ -18,6 +20,7 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements VariantHotspot
@@ -224,18 +227,14 @@ public class ReadContextCounter implements VariantHotspot
         {
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
-            final IndexedBases readBases = mExpandedBasesFactory.expand(position(), readIndex, record);
+            IndexedBases readBases = record.getCigar().containsOperator(CigarOperator.N) ?
+                    mExpandedBasesFactory.expand(position(), readIndex, record) :
+                    new IndexedBases(position(), readIndex, record.getReadBases());
 
-            // extract base qualities across flanks and core for use in match
-            int[] baseQualities = new int[readBases.length()];
-            final byte[] readBaseQuals = record.getBaseQualities();
+            int nonIndelLength = mVariant.isIndel() ? 0 : alt().length();
 
-            for(int i = 0; i < baseQualities.length; ++i)
-            {
-                baseQualities[i] = readBaseQuals[readBases.LeftFlankIndex + i];
-            }
-
-            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(readBases, wildcardMatchInCore, baseQualities);
+            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
+                    readBases, wildcardMatchInCore, record.getBaseQualities(), nonIndelLength);
 
             if(!match.equals(ReadContextMatch.NONE))
             {

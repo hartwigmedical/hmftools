@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
+// purpose of this class is to handle splits (ie 'N's) and fill them in with wildcards to aid with matching
 public class ExpandedBasesFactory
 {
     private final int mMaxSkippedReferenceRegions;
@@ -24,7 +25,6 @@ public class ExpandedBasesFactory
         mReferenceRegionReplacementLength = referenceRegionReplacementLength;
     }
 
-    @NotNull
     public IndexedBases expand(int position, int readIndex, final SAMRecord record)
     {
         final byte[] src = record.getReadBases();

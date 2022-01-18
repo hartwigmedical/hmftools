@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
@@ -111,10 +112,11 @@ public class IndexedBases
         return leftFlankLength() == FlankSize && rightFlankLength() == FlankSize;
     }
 
-    private int otherLeftCentreIndex(int otherRefIndex) { return otherRefIndex + LeftCoreIndex - Index; }
+    // calculate implied coords for another IndexedBase object
+    private int otherLeftCentreIndex(int otherRefIndex) { return otherRefIndex - Index + LeftCoreIndex; }
     private int otherRightCentreIndex(int otherRefIndex)
     {
-        return otherRefIndex + RightCoreIndex - Index;
+        return otherRefIndex- Index + RightCoreIndex;
     }
 
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
@@ -130,16 +132,17 @@ public class IndexedBases
 
     public ReadContextMatch matchAtPosition(final IndexedBases other)
     {
-        return getMatchType(false, other, null);
+        return getMatchType(false, other, other.length(),null, 0);
     }
 
-    public ReadContextMatch matchAtPosition(final IndexedBases other, boolean wildcardAllowedInCore, final int[] otherBaseQuals)
+    public ReadContextMatch matchAtPosition(
+            final IndexedBases other, boolean wildcardAllowedInCore, final byte[] otherBaseQuals, int nonIndelLength)
     {
-        return getMatchType(wildcardAllowedInCore, other, otherBaseQuals);
+        return getMatchType(wildcardAllowedInCore, other, length(), otherBaseQuals, nonIndelLength);
     }
 
     private ReadContextMatch getMatchType(
-            boolean wildcardAllowedInCore, final IndexedBases other, final int[] otherBaseQuals)
+            boolean wildcardAllowedInCore, final IndexedBases other, int otherLength, final byte[] otherBaseQuals, int nonIndelLength)
     {
         int otherReadIndex = other.Index;
 
@@ -148,17 +151,15 @@ public class IndexedBases
 
         final byte[] otherBases = other.Bases;
 
-        int otherCoreBaseQualStartIndex = other.LeftCoreIndex - other.LeftFlankIndex;
-        boolean centreMatch = coreMatch(wildcardAllowedInCore, otherReadIndex, otherBases, otherBaseQuals, otherCoreBaseQualStartIndex);
+        boolean centreMatch = coreMatch(wildcardAllowedInCore, otherReadIndex, otherBases, otherBaseQuals, nonIndelLength);
         if(!centreMatch)
             return NONE;
 
-        int otherLeftFlankOffset = other.LeftFlankIndex;
-        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases, otherBaseQuals, otherLeftFlankOffset);
+        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases, otherBaseQuals);
         if(leftFlankingBases < 0)
             return CORE;
 
-        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases, otherBaseQuals, otherLeftFlankOffset);
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases, otherBaseQuals);
         if(rightFlankingBases < 0)
             return CORE;
 
@@ -168,7 +169,7 @@ public class IndexedBases
         if(leftFlankingBases != leftFlankLength && rightFlankingBases != rightFlankLength)
             return CORE;
 
-        return length() == other.length() && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
+        return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
     protected boolean coreMatch(boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases)
@@ -177,7 +178,7 @@ public class IndexedBases
     }
 
     protected boolean coreMatch(
-            boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases, final int[] otherBaseQuals, int bqStartIndex)
+            boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases, final byte[] otherBaseQuals, int nonIndelLength)
     {
         int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
 
@@ -191,13 +192,20 @@ public class IndexedBases
 
         for(int i = 0; i < coreLength(); i++)
         {
-            byte ourByte = Bases[LeftCoreIndex + i];
+            int readIndex = LeftCoreIndex + i;
+            byte ourByte = Bases[readIndex];
             byte otherByte = otherBases[otherLeftCentreIndex + i];
 
             if(!bytesMatch(wildcardAllowed, ourByte, otherByte))
             {
-                if(isLowBaseQual(otherBaseQuals, bqStartIndex + i))
+                /*
+                // check for low-qual mismatches except in the actual alt region of an SNV/MNV
+                if(nonIndelLength > 0 && positionWithin(readIndex, Index, Index + nonIndelLength - 1))
+                    return false;
+
+                if(isLowBaseQual(otherBaseQuals, otherLeftCentreIndex + i))
                     continue;
+                 */
 
                 return false;
             }
@@ -206,7 +214,7 @@ public class IndexedBases
         return true;
     }
 
-    private static boolean isLowBaseQual(final int[] baseQualities, int bqIndex)
+    private static boolean isLowBaseQual(final byte[] baseQualities, int bqIndex)
     {
         if(baseQualities == null)
             return false;
@@ -224,10 +232,10 @@ public class IndexedBases
 
     protected int rightFlankMatchingBases(int otherRefIndex, final byte[] otherBases)
     {
-        return rightFlankMatchingBases(otherRefIndex, otherBases, null, 0);
+        return rightFlankMatchingBases(otherRefIndex, otherBases, null);
     }
 
-    protected int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases, final int[] otherBaseQuals, int bqLeftFlankOffset)
+    protected int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases, final byte[] otherBaseQuals)
     {
         int otherRightCentreIndex = otherRefIndex + RightCoreIndex - Index;
         int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + FlankSize) - otherRightCentreIndex;
@@ -240,7 +248,7 @@ public class IndexedBases
 
             if(Bases[RightCoreIndex + i] != otherByte && otherByte != MATCH_WILDCARD)
             {
-                if(isLowBaseQual(otherBaseQuals, otherByteIndex - bqLeftFlankOffset))
+                if(isLowBaseQual(otherBaseQuals, otherByteIndex))
                     continue;
 
                 return -1;
@@ -252,10 +260,10 @@ public class IndexedBases
 
     protected int leftFlankMatchingBases(int otherRefIndex, final byte[] otherBases)
     {
-        return leftFlankMatchingBases(otherRefIndex, otherBases, null, 0);
+        return leftFlankMatchingBases(otherRefIndex, otherBases, null);
     }
 
-    protected int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases, final int[] otherBaseQuals, int bqLeftFlankOffset)
+    protected int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases, final byte[] otherBaseQuals)
     {
         int otherLeftCentreIndex = otherRefIndex + LeftCoreIndex - Index;
         int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - FlankSize);
@@ -268,7 +276,7 @@ public class IndexedBases
 
             if(Bases[LeftCoreIndex - i] != otherByte && otherByte != MATCH_WILDCARD)
             {
-                if(isLowBaseQual(otherBaseQuals, otherByteIndex - bqLeftFlankOffset))
+                if(isLowBaseQual(otherBaseQuals, otherByteIndex))
                     continue;
 
                 return -1;
@@ -282,22 +290,22 @@ public class IndexedBases
     {
         int otherReadIndex = other.Index + offset;
 
-        boolean centreMatch = coreMatch(false, otherReadIndex, other.Bases, null, 0);
+        boolean centreMatch = coreMatch(false, otherReadIndex, other.Bases);
 
         if(!centreMatch)
             return false;
 
-        boolean otherCentreMatch = other.coreMatch(false, Index - offset, Bases, null, 0);
+        boolean otherCentreMatch = other.coreMatch(false, Index - offset, Bases);
 
         if(!otherCentreMatch)
             return false;
 
-        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.Bases, null, 0);
+        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.Bases);
 
         if(leftFlankingBases < 0)
             return false;
 
-        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.Bases, null, 0);
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.Bases);
 
         return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
     }
