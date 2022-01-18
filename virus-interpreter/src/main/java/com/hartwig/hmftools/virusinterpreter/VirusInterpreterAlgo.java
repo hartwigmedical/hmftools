@@ -42,6 +42,7 @@ public class VirusInterpreterAlgo {
             String interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
 
             int taxid = virusBreakend.referenceTaxid();
+            boolean reported = report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status());
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
                     .taxid(taxid)
                     .name(taxonomyDb.lookupName(taxid))
@@ -53,9 +54,8 @@ public class VirusInterpreterAlgo {
                     .expectedClonalCoverage(hasAcceptablePurpleQuality(purityContext.qc().status())
                             ? coveragesAnalysis.expectedClonalCoverage()
                             : null)
-                    .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status()))
-                    .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend,
-                            report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status())))
+                    .reported(reported)
+                    .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend, reported))
                     .build());
         }
 
