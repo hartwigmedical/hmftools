@@ -32,7 +32,7 @@ public final class ActinEventExtractor {
             case ACTIVATING_FUSION_IN_GENE_X:
                 return ActinKeywords.PROMISCUOUS_FUSION;
             case SPECIFIC_FUSION_X:
-                return entry.gene();
+                return entry.gene() + " fusion";
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());
             }
