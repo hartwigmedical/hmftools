@@ -95,10 +95,9 @@ public class VirusInterpreterAlgoTest {
     public void canDetermineHighRiskVirus() {
         VirusInterpreterAlgo algo = createTestAlgo();
 
-        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(1)), VirusLikelihoodType.HIGH);
-        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(2)), VirusLikelihoodType.HIGH);
-        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(3)), VirusLikelihoodType.HIGH);
-
+        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(1), true), VirusLikelihoodType.HIGH);
+        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(2), true), VirusLikelihoodType.HIGH);
+        assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(3), false), VirusLikelihoodType.UNKNOWN);
     }
 
     @Test
