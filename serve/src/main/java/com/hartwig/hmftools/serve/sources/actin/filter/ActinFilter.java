@@ -62,15 +62,20 @@ public class ActinFilter {
         return true;
     }
 
-    private static boolean isMatch(@NotNull ActinFilterEntry filterEntry, @NotNull ActinEntry entry) {
-        String combined = entry.gene() + ", " + entry.mutation();
-
-        switch (filterEntry.type()) {
-            case FILTER_EXACT_VARIANT_FULLNAME: {
-                return combined.equals(filterEntry.value());
+    private static boolean isMatch(@NotNull ActinFilterEntry filter, @NotNull ActinEntry entry) {
+        switch (filter.type()) {
+            case FILTER_VARIANT_ON_GENE: {
+                String evaluation = entry.gene() + " " + entry.mutation();
+                return evaluation.equals(filter.value());
+            } case FILTER_RULE_ON_GENE: {
+                String evaluation = entry.gene() + " " + entry.rule().toString();
+                return evaluation.equals(filter.value());
+            }
+            case FILTER_EVERYTHING_ON_GENE: {
+                return entry.gene().equals(filter.value());
             }
             default: {
-                LOGGER.warn("Filter entry found with unrecognized type: {}", filterEntry);
+                LOGGER.warn("Filter entry found with unrecognized type: {}", filter);
                 return false;
             }
         }

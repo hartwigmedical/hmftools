@@ -1,2 +1,2 @@
 filterType	value	rationale
-FILTER_EXACT_VARIANT_FULLNAME	gene	just because we can
+FILTER_VARIANT_ON_GENE	gene variant	just because we can
