@@ -24,8 +24,8 @@ SERVE supports the ingestion of the following knowledgebases:
  - [OncoKB](https://www.oncokb.org) - general purpose knowledgebase that is supported through [VICC](http://cancervariants.org)
  - [DoCM](http://www.docm.info) - database containing pathogenic mutations in cancer
  - [iClusion](https://iclusion.org) - a database with all actively recruiting clinical trials in the Netherlands 
- - ACTIN - a database with all actively recruiting clinical trials in the ACTIN study [work in progress]
- along with molecular inclusion criteria for these trials.
+ - ACTIN - a database with all actively recruiting clinical trials in the ACTIN study along with 
+ molecular inclusion criteria for these trials.
  - HMF Cohort - a database of recurrent somatic mutations in cancer-related genes from the Hartwig database.
  - HMF Curated - a database of known driver mutations curated by the Hartwig team.
  
