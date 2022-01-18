@@ -8,8 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractorFactory {
 
-    // For ACTIN we don't care about driver inconsistencies
-    private static final boolean REPORT_DRIVER_INCONSISTENCIES = false;
+    private static final boolean REPORT_DRIVER_INCONSISTENCIES = true;
 
     private ActinExtractorFactory() {
     }

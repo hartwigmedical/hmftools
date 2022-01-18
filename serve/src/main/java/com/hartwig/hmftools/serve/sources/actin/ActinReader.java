@@ -3,7 +3,6 @@ package com.hartwig.hmftools.serve.sources.actin;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.serve.sources.actin.curation.ActinCurator;
 import com.hartwig.hmftools.serve.sources.actin.filter.ActinFilter;
 import com.hartwig.hmftools.serve.sources.actin.filter.ActinFilterEntry;
 import com.hartwig.hmftools.serve.sources.actin.filter.ActinFilterFile;
@@ -31,19 +30,7 @@ public final class ActinReader {
         List<ActinFilterEntry> actinFilterEntries = ActinFilterFile.read(actinFilterTsv);
         LOGGER.info(" Read {} filter entries", actinFilterEntries.size());
 
-        return filter(curate(actinEntries), actinFilterEntries);
-    }
-
-    @NotNull
-    private static List<ActinEntry> curate(@NotNull List<ActinEntry> actinEntries) {
-        ActinCurator curator = new ActinCurator();
-
-        LOGGER.info("Curating {} ACTIN entries", actinEntries.size());
-        List<ActinEntry> curatedEntries = curator.run(actinEntries);
-
-        curator.reportUnusedCurationEntries();
-
-        return curatedEntries;
+        return filter(actinEntries, actinFilterEntries);
     }
 
     @NotNull
