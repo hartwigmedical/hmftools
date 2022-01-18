@@ -54,7 +54,8 @@ public class VirusInterpreterAlgo {
                             ? coveragesAnalysis.expectedClonalCoverage()
                             : null)
                     .reported(report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status()))
-                            .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend))
+                    .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend,
+                            report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status())))
                     .build());
         }
 
@@ -63,8 +64,8 @@ public class VirusInterpreterAlgo {
 
     @NotNull
     @VisibleForTesting
-    VirusLikelihoodType virusLikelihoodType(@NotNull VirusBreakend virusBreakend) {
-        return virusReportingDbModel.virusLikelihoodType(virusBreakend.taxidSpecies());
+    VirusLikelihoodType virusLikelihoodType(@NotNull VirusBreakend virusBreakend, Boolean reported) {
+        return reported ? virusReportingDbModel.virusLikelihoodType(virusBreakend.taxidSpecies()) :  VirusLikelihoodType.UNKNOWN;
     }
 
     @VisibleForTesting
