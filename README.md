@@ -5,6 +5,7 @@ Resources used by the HMF algorithms can be downloaded from https://resources.ha
 
 More detailed descriptions of the following algorithms are available from the links below:
  - [SAGE](./sage/README.md)
+ - [Pave](./pave/README.md)
  - [AMBER](./amber/README.md)
  - [COBALT](./cobalt/README.md)
  - [GRIPSS](./gripss/README.md)
@@ -15,6 +16,7 @@ More detailed descriptions of the following algorithms are available from the li
  - [PROTECT](./protect/README.md)
  - [Cuppa](./cuppa/README.md)
  - [Virus Interpreter](./virus-interpreter/README.md)
+ - [ORANGE](./orange/README.md)
 
 ## Acknowledgements
 

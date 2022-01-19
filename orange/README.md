@@ -29,7 +29,7 @@ SNV/Indel clonality. In addition to this front page, the following chapters are 
 
 Argument | Description
 ---|---
-disable_germline  | If set, disables the germline findings chapter and removes clinical evidence on germline events.
+disable_germline  | If set, disables the germline findings chapter and transforms germline variants to somatic variants.
 max_evidence_level | If set, filters evidence down to this level. For example, if "B" is passed as a parameter, only treatments with at least A or B level evidence are displayed in the clinical evidence chapter of the report. Do note that the front page always lists the count of all evidence present, regardless of this filter setting.
 
 ### Somatic Findings 
@@ -40,10 +40,10 @@ interesting and added to the report:
     1. Variants that are hotspots but not part of the reporting gene panel.
     1. Variants which have clinical evidence but are not part of the reporting gene panel.
     1. Coding variants that are not reported but are phased with variants that are reported.
-    1. Variants that are considered relevant for tumor type classification according to CUPPA.
+    1. Variants that are considered relevant for tumor type classification according to Cuppa.
  - Other regions with amps or autosomal losses:
     1. Any chromosomal band location with at least one gene lost or fully amplified or loss is considered potentially interesting.
-        - For a band with at least one gene amplified, the gene with the highest minimum copy number is picked.
+        - For a band with more than one gene amplified, the gene with the highest minimum copy number is picked.
         - For a band with a loss that has no losses reported in this band already, a random gene is picked.
     1. A maximum of 10 additional gains (sorted by minimum copy number) and 10 additional losses are reported as potentially interesting. 
  - Other potentially relevant fusions:
@@ -68,8 +68,8 @@ The immunology chapter is work-in-progress and will report on various immunology
 
 ### Cohort Comparison
 
-The cohort comparison reports all the properties of a tumor sample that [CUPPA](../cuppa) considers for determining tumor type. The cohort
-comparison displays the prevalence of the tumor's properties with respect to the cohorts that CUPPA could potentially assign the sample to:
+The cohort comparison reports all the properties of a tumor sample that [Cuppa](../cuppa) considers for determining tumor type. The cohort
+comparison displays the prevalence of the tumor's properties with respect to the cohorts that Cuppa could potentially assign the sample to:
  - Genomic position distribution of SNVs and their tri-nucleotide signature
  - Sample traits of the tumor (for example, number of LINE insertions)
  - (Driver) features of the tumor.
@@ -82,7 +82,7 @@ Do note that RNA features and cohort comparison thereof are only included if pla
   1. Evidence is split up based on applicable and "potentially interesting" based on PROTECT reported yes/no.
   1. Evidence is split between trials and non-trials which are further split up based on on/off label. 
   1. Evidence is grouped by treatment and split up between responsive and resistance evidence.
-  1. Evidence is filtered based on the optional configuration (germline, max_reporting_level). 
+  1. Evidence is filtered based on the optional `max_reporting_level` configuration. 
 
 ### Quality Control
 
@@ -94,6 +94,11 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+- Upcoming
+  - Transform germline variants to somatic in case germline is switched off (somatic findings + drivers on front page)
+  - Add "upstream" to variant details in case variant is upstream without annotation
+  - Add driver likelihood for viruses
+  - Generify trial sources to include any trial source that is labeled as trial by SERVE
 - [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.5)
   - Support for [PAVE](../pave/README.md)
   - Handle multiple drivers per gene where non-canonical transcripts are included. Current behaviour is to ignore non-canonical transcript drivers.

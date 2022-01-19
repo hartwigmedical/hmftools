@@ -352,20 +352,20 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     private String onLabelTreatmentString() {
-        return treatmentString(report.protect(), true, reportGermline);
+        return treatmentString(report.protect(), true);
     }
 
     @NotNull
     private String offLabelTreatmentString() {
-        return treatmentString(report.protect(), false, reportGermline);
+        return treatmentString(report.protect(), false);
     }
 
     @NotNull
-    private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel, boolean reportGermline) {
+    private static String treatmentString(@NotNull List<ProtectEvidence> evidences, boolean requireOnLabel) {
         Set<EvidenceLevel> levels = Sets.newTreeSet(Comparator.naturalOrder());
         Set<String> treatments = Sets.newHashSet();
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.onLabel() == requireOnLabel && (reportGermline || !evidence.germline())) {
+            if (evidence.onLabel() == requireOnLabel) {
                 treatments.add(evidence.treatment());
                 levels.add(evidence.level());
             }
