@@ -20,9 +20,9 @@ public class RawContext
 
     private static final RawContext DUMMY = RawContext.inSoftClip(-1);
 
-    public static RawContext create(final VariantHotspot variant, final SAMRecord record, final int maxSkippedReferenceRegions)
+    public static RawContext create(final VariantHotspot variant, final SAMRecord record)
     {
-        RawContextCigarHandler handler = new RawContextCigarHandler(maxSkippedReferenceRegions, variant);
+        RawContextCigarHandler handler = new RawContextCigarHandler(variant);
         CigarTraversal.traverseCigar(record, handler);
         RawContext result = handler.result();
         return result == null ? DUMMY : result;

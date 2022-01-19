@@ -29,12 +29,12 @@ public class ReadContextCounter implements VariantHotspot
     public final VariantTier Tier;
     public final boolean Realign;
     public final int MaxCoverage;
-    public final int MinNumberOfEvents;
 
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
-
-    private final ExpandedBasesFactory mExpandedBasesFactory;
+    private final int mMinNumberOfEvents;
+    private final boolean mIsMnv;
+    private final boolean mIsIndel;
 
     private int mFull;
     private int mPartial;
@@ -70,17 +70,18 @@ public class ReadContextCounter implements VariantHotspot
 
     public ReadContextCounter(
             final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
-            final int maxCoverage, final int minNumberOfEvents, final int maxSkippedReferenceRegions, boolean realign)
+            final int maxCoverage, final int minNumberOfEvents, boolean realign)
     {
         Sample = sample;
         Tier = tier;
         Realign = realign;
         MaxCoverage = maxCoverage;
-        MinNumberOfEvents = minNumberOfEvents;
+        mMinNumberOfEvents = minNumberOfEvents;
 
         mReadContext = readContext;
         mVariant = variant;
-        mExpandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
+        mIsMnv = variant.isMNV();
+        mIsIndel = variant.isIndel();
 
         mFull = 0;
         mPartial = 0;
@@ -190,10 +191,10 @@ public class ReadContextCounter implements VariantHotspot
         if(mCoverage >= MaxCoverage)
             return;
 
-        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality) // or DEFAULT_EVIDENCE_MAP_QUA
+        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL) // was sageConfig.MinMapQuality
             return;
 
-        final RawContext rawContext = RawContext.create(mVariant, record, sageConfig.maxSkippedReferenceRegions());
+        final RawContext rawContext = RawContext.create(mVariant, record);
 
         if(rawContext.ReadIndexInSkipped)
             return;
@@ -217,8 +218,9 @@ public class ReadContextCounter implements VariantHotspot
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
-        int numberOfEvents = Math.max(
-                MinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()));
+        int numberOfEvents = mIsMnv ?
+                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
+                : max(mMinNumberOfEvents, rawNumberOfEvents);
 
         double quality = qualityCalc.calculateQualityScore(this, readIndex, record, numberOfEvents);
 
@@ -228,10 +230,10 @@ public class ReadContextCounter implements VariantHotspot
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
             IndexedBases readBases = record.getCigar().containsOperator(CigarOperator.N) ?
-                    mExpandedBasesFactory.expand(position(), readIndex, record) :
+                    ExpandedBasesFactory.expand(position(), readIndex, record) :
                     new IndexedBases(position(), readIndex, record.getReadBases());
 
-            int nonIndelLength = mVariant.isIndel() ? 0 : alt().length();
+            int nonIndelLength = mIsIndel ? 0 : alt().length();
 
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
                     readBases, wildcardMatchInCore, record.getBaseQualities(), nonIndelLength);

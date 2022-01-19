@@ -10,7 +10,7 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static int numberOfEvents(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome)
+    public static int numberOfEvents(final SAMRecord record, final RefSequence refGenome)
     {
         int nm = rawNM(record, refGenome);
 
@@ -33,7 +33,7 @@ public final class NumberEvents
         return nm - additionalIndels + softClips;
     }
 
-    public static int rawNM(@NotNull final SAMRecord record, @NotNull final RefSequence refGenome)
+    public static int rawNM(final SAMRecord record, final RefSequence refGenome)
     {
         Object nm = record.getAttribute("NM");
         if(nm instanceof Integer)
@@ -47,22 +47,17 @@ public final class NumberEvents
 
     public static int numberOfEventsWithMNV(int rawNumberEvents, @NotNull final String ref, @NotNull final String alt)
     {
-        if(ref.length() == alt.length() && ref.length() > 1)
+        // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.
+        int differentBases = 0;
+        for(int i = 0; i < alt.length(); i++)
         {
-            // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.
-            int differentBases = 0;
-            for(int i = 0; i < alt.length(); i++)
+            if(alt.charAt(i) != ref.charAt(i))
             {
-                if(alt.charAt(i) != ref.charAt(i))
-                {
-                    differentBases++;
-                }
+                differentBases++;
             }
-
-            // We subtract one later when we actually use this value so we need to add one back in here to be consistent with SNVs and INDELs
-            return rawNumberEvents - differentBases + 1;
         }
 
-        return rawNumberEvents;
+        // We subtract one later when we actually use this value so we need to add one back in here to be consistent with SNVs and INDELs
+        return rawNumberEvents - differentBases + 1;
     }
 }

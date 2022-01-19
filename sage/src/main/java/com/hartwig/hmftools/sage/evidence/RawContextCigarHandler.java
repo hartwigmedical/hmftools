@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -11,20 +12,18 @@ import htsjdk.samtools.SAMRecord;
 public class RawContextCigarHandler implements CigarHandler
 {
     private final VariantHotspot mVariant;
-    private final int mMaxSkippedReferenceRegions;
     private final boolean mIsInsert;
     private final boolean mIsDelete;
     private final boolean mIsSNV;
 
     private RawContext mResult;
 
-    public RawContextCigarHandler(final int maxSkippedReferenceRegions, final VariantHotspot variant)
+    public RawContextCigarHandler(final VariantHotspot variant)
     {
         mVariant = variant;
         mIsInsert = variant.ref().length() < variant.alt().length();
         mIsDelete = variant.ref().length() > variant.alt().length();
         mIsSNV = variant.ref().length() == variant.alt().length();
-        mMaxSkippedReferenceRegions = maxSkippedReferenceRegions;
     }
 
     public RawContext result()
@@ -125,7 +124,7 @@ public class RawContextCigarHandler implements CigarHandler
         if(mResult != null)
             return;
 
-        if(e.getLength() > mMaxSkippedReferenceRegions)
+        if(e.getLength() > ExpandedBasesFactory.MAX_SKIPPED_REFERENCE_REGIONS)
         {
             int refPositionEnd = refPosition + e.getLength();
             if(refPositionEnd >= mVariant.position())
