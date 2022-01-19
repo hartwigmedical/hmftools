@@ -84,6 +84,7 @@ evidence is consolidated and evaluated for reporting. The following steps are ex
      - For VICC and iClusion evidence is reported up to B level.
      - For all other sources evidence is reported for A level only.
  1. For every gene/event/treatment/direction combination only the highest level of evidence is reported:
+     - All separate responsive and resistant directions are grouped for this filtering step. 
      - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
  1. Clinical trials are only reported when they are on-label.
  1. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
@@ -113,6 +114,7 @@ urls | A list of urls with additional information about the evidence | https://p
 - Upcoming
    - New datamodel supporting evidence types, range ranks and explicit genes. 
    - Support for virus interpreter v1.2
+   - Responsive and resistant directions are grouped when selecting highest level evidence for reporting
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.9)
   - A release that is technically compatible with SERVE v1.8
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.8)

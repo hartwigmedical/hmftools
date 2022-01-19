@@ -10,7 +10,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ImmutableProtectEvidence;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
@@ -71,13 +70,17 @@ public final class EvidenceReportingFunctions {
         List<ProtectEvidence> result = Lists.newArrayList();
         for (EventKey event : events) {
             for (String treatment : treatments) {
-                for (EvidenceDirection direction : EvidenceDirection.values()) {
-                    result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
-                            .filter(x -> x.treatment().equals(treatment))
-                            .filter(x -> x.direction().equals(direction))
-                            .filter(x -> EventKey.create(x).equals(event))
-                            .collect(Collectors.toList())));
-                }
+                result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
+                        .filter(x -> x.treatment().equals(treatment))
+                        .filter(x -> x.direction().isResponsive())
+                        .filter(x -> EventKey.create(x).equals(event))
+                        .collect(Collectors.toList())));
+
+                result.addAll(reportHighestPerEventTreatmentDirection(evidences.stream()
+                        .filter(x -> x.treatment().equals(treatment))
+                        .filter(x -> !x.direction().isResponsive())
+                        .filter(x -> EventKey.create(x).equals(event))
+                        .collect(Collectors.toList())));
             }
         }
 
