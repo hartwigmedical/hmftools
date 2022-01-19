@@ -94,7 +94,7 @@ investigate potential causes for QC failure.
  - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-- Upcoming
+- [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v1.6)
   - Transform germline variants to somatic in case germline is switched off (somatic findings + drivers on front page)
   - Add "upstream" to variant details in case variant is upstream without annotation
   - Add driver likelihood for viruses
