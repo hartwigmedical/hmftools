@@ -8,15 +8,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActinExtractorFactory {
 
-    // For ACTIN we don't care about driver inconsistencies
-    private static final boolean REPORT_DRIVER_INCONSISTENCIES = false;
+    private static final boolean REPORT_DRIVER_INCONSISTENCIES = true;
 
     private ActinExtractorFactory() {
     }
 
     @NotNull
-    public static ActinExtractor buildActinExtractor(@NotNull EventClassifierConfig config,
-            @NotNull RefGenomeResource refGenomeResource) {
+    public static ActinExtractor buildActinExtractor(@NotNull EventClassifierConfig config, @NotNull RefGenomeResource refGenomeResource) {
         return new ActinExtractor(EventExtractorFactory.create(config, refGenomeResource, REPORT_DRIVER_INCONSISTENCIES));
     }
 }

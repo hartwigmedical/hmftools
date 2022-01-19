@@ -7,23 +7,43 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.serve.sources.actin.ActinTestFactory;
 import com.hartwig.hmftools.serve.sources.actin.reader.ActinEntry;
+import com.hartwig.hmftools.serve.sources.actin.reader.ActinRule;
+import com.hartwig.hmftools.serve.sources.actin.reader.ImmutableActinEntry;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ActinFilterTest {
 
-    @Ignore
     @Test
-    public void canFilterOnFullNames() {
-        ActinFilter filter = new ActinFilter(createFilterEntryList(ActinFilterType.FILTER_EXACT_VARIANT_FULLNAME, "BRAF V600E"));
-        ActinEntry entry = ActinTestFactory.createEntry();
-        assertTrue(filter.run(Lists.newArrayList(entry)).isEmpty());
+    public void canFilter() {
+        List<ActinFilterEntry> filterEntries = Lists.newArrayList();
+        filterEntries.add(create(ActinFilterType.FILTER_VARIANT_ON_GENE, "BRAF V600E"));
+        filterEntries.add(create(ActinFilterType.FILTER_RULE_ON_GENE,
+                "BRAF " + ActinRule.ACTIVATION_OR_AMPLIFICATION_OF_GENE_X.toString()));
+        filterEntries.add(create(ActinFilterType.FILTER_EVERYTHING_ON_GENE, "KRAS"));
+
+        ActinFilter filter = new ActinFilter(filterEntries);
+
+        ActinEntry brafV600E =
+                ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("BRAF").mutation("V600E").build();
+        assertTrue(filter.run(Lists.newArrayList(brafV600E)).isEmpty());
+
+        ActinEntry brafActivation = ImmutableActinEntry.builder()
+                .from(ActinTestFactory.createTestEntry())
+                .gene("BRAF")
+                .rule(ActinRule.ACTIVATION_OR_AMPLIFICATION_OF_GENE_X)
+                .build();
+        assertTrue(filter.run(Lists.newArrayList(brafActivation)).isEmpty());
+
+        ActinEntry kras = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("KRAS").build();
+        assertTrue(filter.run(Lists.newArrayList(kras)).isEmpty());
+
+        filter.reportUnusedFilterEntries();
     }
 
     @NotNull
-    private static List<ActinFilterEntry> createFilterEntryList(@NotNull ActinFilterType type, @NotNull String value) {
-        return Lists.newArrayList(ImmutableActinFilterEntry.builder().type(type).value(value).build());
+    private static ActinFilterEntry create(@NotNull ActinFilterType type, @NotNull String value) {
+        return ImmutableActinFilterEntry.builder().type(type).value(value).build();
     }
 }

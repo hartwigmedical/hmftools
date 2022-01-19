@@ -18,5 +18,4 @@ public class ActinFilterFileTest {
         List<ActinFilterEntry> filterEntries = ActinFilterFile.read(TEST_ACTIN_FILTER_FILE);
         assertEquals(1, filterEntries.size());
     }
-
 }

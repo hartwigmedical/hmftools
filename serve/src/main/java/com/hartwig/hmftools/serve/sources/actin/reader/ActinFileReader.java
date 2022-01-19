@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,18 +12,17 @@ import org.jetbrains.annotations.NotNull;
 public final class ActinFileReader {
 
     private static final String MAIN_FIELD_DELIMITER = "\t";
-    private static final String PARAMETER_DELIMITER = ",";
 
     private ActinFileReader() {
     }
 
+    @NotNull
     public static List<ActinEntry> read(@NotNull String actinTrialTsv) throws IOException {
         return fromLines(Files.readAllLines(new File(actinTrialTsv).toPath()));
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<ActinEntry> fromLines(@NotNull List<String> lines) {
+    private static List<ActinEntry> fromLines(@NotNull List<String> lines) {
         List<ActinEntry> trials = Lists.newArrayList();
 
         // Skip header
@@ -37,25 +35,17 @@ public final class ActinFileReader {
 
     @NotNull
     private static ActinEntry fromString(@NotNull String line) {
-        String[] values = line.split(MAIN_FIELD_DELIMITER);
+        String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
 
+        String mutation = null;
+        if (values.length > 3 && !values[3].isEmpty()) {
+            mutation = values[3];
+        }
         return ImmutableActinEntry.builder()
                 .trial(values[0])
                 .rule(ActinRule.valueOf(values[1]))
-                .parameters(toParameters(values[2]))
+                .gene(values[2])
+                .mutation(mutation)
                 .build();
-    }
-
-    @NotNull
-    private static List<String> toParameters(@NotNull String parameterString) {
-        if (parameterString.isEmpty()) {
-            return Lists.newArrayList();
-        }
-
-        List<String> parameters = Lists.newArrayList();
-        for (String parameter : parameterString.split(PARAMETER_DELIMITER)) {
-            parameters.add(parameter.trim());
-        }
-        return parameters;
     }
 }
