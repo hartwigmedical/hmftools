@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
@@ -141,10 +142,10 @@ public class ResultsWriter
                 mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
 
             if(mConfig.runFunction(NOVEL_LOCATIONS))
-            {
                 mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
+
+            if(mConfig.runFunction(RETAINED_INTRONS))
                 mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
-            }
 
             if(mConfig.WriteGcData)
                 mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
