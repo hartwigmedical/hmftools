@@ -139,7 +139,6 @@ public class MixedGermlineTest
                 VariantTier.PANEL,
                 1000,
                 0,
-                50,
                 false);
     }
 }
