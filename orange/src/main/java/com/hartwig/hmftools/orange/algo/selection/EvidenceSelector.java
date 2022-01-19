@@ -2,8 +2,10 @@ package com.hartwig.hmftools.orange.algo.selection;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
 
@@ -12,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 public final class EvidenceSelector {
+
+    private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ACTIN, Knowledgebase.ICLUSION);
 
     private EvidenceSelector() {
     }
@@ -49,10 +53,10 @@ public final class EvidenceSelector {
     }
 
     @NotNull
-    public static List<ProtectEvidence> iclusionOnly(@NotNull List<ProtectEvidence> evidences) {
+    public static List<ProtectEvidence> trialsOnly(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (evidence.sources().contains(Knowledgebase.ICLUSION)) {
+            if (hasTrialSource(evidence.sources())) {
                 filtered.add(evidence);
             }
         }
@@ -60,14 +64,24 @@ public final class EvidenceSelector {
     }
 
     @NotNull
-    public static List<ProtectEvidence> noIclusion(@NotNull List<ProtectEvidence> evidences) {
+    public static List<ProtectEvidence> noTrials(@NotNull List<ProtectEvidence> evidences) {
         List<ProtectEvidence> filtered = Lists.newArrayList();
         for (ProtectEvidence evidence : evidences) {
-            if (!evidence.sources().contains(Knowledgebase.ICLUSION)) {
+            if (!hasTrialSource(evidence.sources())) {
                 filtered.add(evidence);
             }
         }
         return filtered;
+    }
+
+    private static boolean hasTrialSource(@NotNull Set<Knowledgebase> sources) {
+        for (Knowledgebase trialSource : TRIAL_SOURCES) {
+            if (sources.contains(trialSource)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull

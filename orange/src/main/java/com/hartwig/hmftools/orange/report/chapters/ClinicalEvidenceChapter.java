@@ -78,15 +78,15 @@ public class ClinicalEvidenceChapter implements ReportChapter {
     }
 
     private void addTreatmentSection(@NotNull Document document, @NotNull String header, @NotNull List<ProtectEvidence> evidences) {
-        List<ProtectEvidence> noIclusion = EvidenceSelector.noIclusion(evidences);
-        Map<String, List<ProtectEvidence>> onLabelTreatments = EvidenceSelector.buildTreatmentMap(noIclusion, true);
-        Map<String, List<ProtectEvidence>> offLabelTreatments = EvidenceSelector.buildTreatmentMap(noIclusion, false);
+        List<ProtectEvidence> noTrials = EvidenceSelector.noTrials(evidences);
+        Map<String, List<ProtectEvidence>> onLabelTreatments = EvidenceSelector.buildTreatmentMap(noTrials, true);
+        Map<String, List<ProtectEvidence>> offLabelTreatments = EvidenceSelector.buildTreatmentMap(noTrials, false);
         document.add(createTreatmentTable(header + " on-label evidence", onLabelTreatments));
         document.add(createTreatmentTable(header + " off-label evidence", offLabelTreatments));
 
-        List<ProtectEvidence> iclusion = EvidenceSelector.iclusionOnly(evidences);
-        Map<String, List<ProtectEvidence>> trials = EvidenceSelector.buildTreatmentMap(iclusion, true);
-        document.add(createTreatmentTable(header + " trials", trials));
+        List<ProtectEvidence> trials = EvidenceSelector.trialsOnly(evidences);
+        Map<String, List<ProtectEvidence>> onLabelTrials = EvidenceSelector.buildTreatmentMap(trials, true);
+        document.add(createTreatmentTable(header + " trials", onLabelTrials));
     }
 
     @NotNull

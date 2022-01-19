@@ -110,7 +110,7 @@ public class SomaticFindingsChapter implements ReportChapter {
 
         List<ReportableGainLoss> losses =
                 CopyNumberSelector.selectNonDriverLosses(report.purple().unreportedGainsLosses(), report.purple().reportableGainsLosses());
-        String titleLosses = "Other autosomal regions with dels (" + losses.size() + ")";
+        String titleLosses = "Regions with deletions in genes in other autosomal regions (" + losses.size() + ")";
         document.add(GeneCopyNumberTable.build(titleLosses, contentWidth(), max10(losses)));
     }
 
