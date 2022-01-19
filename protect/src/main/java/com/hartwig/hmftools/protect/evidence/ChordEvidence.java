@@ -34,8 +34,6 @@ public class ChordEvidence {
         List<ProtectEvidence> result = Lists.newArrayList();
         if (chordAnalysis.hrStatus() == ChordStatus.HR_DEFICIENT) {
             for (ActionableCharacteristic signature : actionableCharacteristics) {
-                assert signature.name() == TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
-
                 result.add(personalizedEvidenceFactory.somaticReportableEvidence(signature).event(HR_DEFICIENCY_EVENT).build());
             }
         }

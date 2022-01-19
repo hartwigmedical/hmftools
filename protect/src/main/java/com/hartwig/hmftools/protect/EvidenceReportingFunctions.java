@@ -18,15 +18,15 @@ import org.jetbrains.annotations.Nullable;
 
 public final class EvidenceReportingFunctions {
 
-    private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION);
+    private static final Set<Knowledgebase> TRIAL_SOURCES = Sets.newHashSet(Knowledgebase.ICLUSION, Knowledgebase.ACTIN);
 
     private EvidenceReportingFunctions() {
     }
 
     @NotNull
     public static List<ProtectEvidence> applyReportingAlgo(@NotNull List<ProtectEvidence> evidences) {
-        List<ProtectEvidence> meetsMaxSources = onlyReportWhenMeetsMaxLevelForSources(evidences);
-        List<ProtectEvidence> maxLevelPerTreatmentEvent = onlyReportHighestLevelForTreatmentAndEvent(meetsMaxSources);
+        List<ProtectEvidence> meetsMaxLevelSources = onlyReportWhenMeetsMaxLevelForSources(evidences);
+        List<ProtectEvidence> maxLevelPerTreatmentEvent = onlyReportHighestLevelForTreatmentAndEvent(meetsMaxLevelSources);
 
         return maxLevelPerTreatmentEvent.stream().sorted().collect(Collectors.toList());
     }

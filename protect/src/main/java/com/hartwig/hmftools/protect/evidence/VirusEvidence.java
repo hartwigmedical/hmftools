@@ -37,8 +37,8 @@ public class VirusEvidence {
         List<AnnotatedVirus> hpv = virusesWithInterpretation(virusInterpreterData, VirusConstants.HPV);
         List<AnnotatedVirus> ebv = virusesWithInterpretation(virusInterpreterData, VirusConstants.EBV);
 
-        boolean reportHPV = hasReportedWithHighConfidence(hpv);
-        boolean reportEBV = hasReportedWithHighConfidence(ebv);
+        boolean reportHPV = hasReportedWithHighDriverLikelihood(hpv);
+        boolean reportEBV = hasReportedWithHighDriverLikelihood(ebv);
 
         List<ProtectEvidence> result = Lists.newArrayList();
         for (ActionableCharacteristic virus : actionableViruses) {
@@ -68,8 +68,8 @@ public class VirusEvidence {
         return result;
     }
 
-    private static boolean hasReportedWithHighConfidence(@NotNull List<AnnotatedVirus> annotatedViruses) {
-        for (AnnotatedVirus virus : annotatedViruses) {
+    private static boolean hasReportedWithHighDriverLikelihood(@NotNull List<AnnotatedVirus> viruses) {
+        for (AnnotatedVirus virus : viruses) {
             if (virus.reported() && virus.virusDriverLikelihoodType() == VirusLikelihoodType.HIGH) {
                 return true;
             }
