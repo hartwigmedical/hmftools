@@ -28,10 +28,10 @@ public final class ViralPresenceTable {
         }
 
         Table table = TableUtil.createContent(width,
-                new float[] { 4, 3, 1, 1, 2, 2, 2 },
+                new float[] { 4, 3, 1, 1, 2, 2, 2, 2 },
                 new Cell[] { CellUtil.createHeader("Virus"), CellUtil.createHeader("QC Status"), CellUtil.createHeader("Type"),
                         CellUtil.createHeader("Int"), CellUtil.createHeader("% Covered"), CellUtil.createHeader("Mean Cov"),
-                        CellUtil.createHeader("Exp Clon Cov") });
+                        CellUtil.createHeader("Exp Clon Cov"), CellUtil.createHeader("Driver") });
 
         for (AnnotatedVirus virus : viruses) {
             table.addCell(CellUtil.createContent(virus.name()));
@@ -41,6 +41,7 @@ public final class ViralPresenceTable {
             table.addCell(CellUtil.createContent(PERCENTAGE.format(virus.percentageCovered())));
             table.addCell(CellUtil.createContent(SINGLE_DIGIT.format(virus.meanCoverage())));
             table.addCell(CellUtil.createContent(expectedClonalCoverageField(virus)));
+            table.addCell(CellUtil.createContent(virus.virusDriverLikelihoodType().display()));
         }
 
         return TableUtil.createWrapping(table, title);
