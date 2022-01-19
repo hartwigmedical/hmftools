@@ -603,7 +603,7 @@ A 'missed variant likelihood' is calculated using poisson as the mean probabilit
 A number of post processing steps are applied to the SAGE output.
 
 ## PON Filtering
-To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 1000 germline samples and recording any variants with at least 3 reads and total base quality 30. 
+To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 1000 germline samples and recording any variants with at least 3 reads and sum of base quality > 30. 
 The frequency (`PON_COUNT`) of each variant and the maximum read support in any one sample ('PON_MAX') are then aggregated into the PON file.  
 Variants with more than 1 observation are retained.
 
