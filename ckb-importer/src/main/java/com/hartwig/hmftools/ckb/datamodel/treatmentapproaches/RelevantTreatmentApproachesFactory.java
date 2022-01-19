@@ -45,6 +45,5 @@ public final class RelevantTreatmentApproachesFactory {
         }
 
         throw new IllegalStateException("Could not resolve CKB treatment approach with id '" + treatmentApproachInfo.id() + "'");
-
     }
 }
