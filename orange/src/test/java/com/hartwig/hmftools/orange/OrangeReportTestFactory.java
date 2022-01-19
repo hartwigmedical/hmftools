@@ -21,7 +21,12 @@ import com.hartwig.hmftools.common.sv.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.VariantTestFactory;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableVirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusInterpreterData;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangePlots;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
 import com.hartwig.hmftools.orange.algo.ImmutableOrangeSample;
@@ -62,6 +67,7 @@ public final class OrangeReportTestFactory {
                 .purple(createTestPurpleData())
                 .linx(createTestLinxData())
                 .protect(createTestProtectData())
+                .virusInterpreter(createTestVirusInterpreterData())
                 .build();
     }
 
@@ -136,5 +142,26 @@ public final class OrangeReportTestFactory {
                 .build());
 
         return evidences;
+    }
+
+    @NotNull
+    private static VirusInterpreterData createTestVirusInterpreterData() {
+        List<AnnotatedVirus> reportableViruses = Lists.newArrayList();
+        reportableViruses.add(ImmutableAnnotatedVirus.builder()
+                .taxid(1)
+                .name("virus A")
+                .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
+                .integrations(3)
+                .interpretation("BAD ONE")
+                .percentageCovered(87D)
+                .meanCoverage(42D)
+                .expectedClonalCoverage(3D)
+                .reported(true)
+                .virusDriverLikelihoodType(VirusLikelihoodType.UNKNOWN)
+                .build());
+
+        return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
+
+
     }
 }
