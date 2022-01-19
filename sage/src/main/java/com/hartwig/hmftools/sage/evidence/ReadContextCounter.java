@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
@@ -18,6 +20,7 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements VariantHotspot
@@ -26,12 +29,12 @@ public class ReadContextCounter implements VariantHotspot
     public final VariantTier Tier;
     public final boolean Realign;
     public final int MaxCoverage;
-    public final int MinNumberOfEvents;
 
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
-
-    private final ExpandedBasesFactory mExpandedBasesFactory;
+    private final int mMinNumberOfEvents;
+    private final boolean mIsMnv;
+    private final boolean mIsIndel;
 
     private int mFull;
     private int mPartial;
@@ -67,17 +70,18 @@ public class ReadContextCounter implements VariantHotspot
 
     public ReadContextCounter(
             final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
-            final int maxCoverage, final int minNumberOfEvents, final int maxSkippedReferenceRegions, boolean realign)
+            final int maxCoverage, final int minNumberOfEvents, boolean realign)
     {
         Sample = sample;
         Tier = tier;
         Realign = realign;
         MaxCoverage = maxCoverage;
-        MinNumberOfEvents = minNumberOfEvents;
+        mMinNumberOfEvents = minNumberOfEvents;
 
         mReadContext = readContext;
         mVariant = variant;
-        mExpandedBasesFactory = new ExpandedBasesFactory(maxSkippedReferenceRegions, maxSkippedReferenceRegions);
+        mIsMnv = variant.isMNV();
+        mIsIndel = variant.isIndel();
 
         mFull = 0;
         mPartial = 0;
@@ -187,10 +191,10 @@ public class ReadContextCounter implements VariantHotspot
         if(mCoverage >= MaxCoverage)
             return;
 
-        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < sageConfig.MinMapQuality) // or DEFAULT_EVIDENCE_MAP_QUA
+        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL) // was sageConfig.MinMapQuality
             return;
 
-        final RawContext rawContext = RawContext.create(mVariant, record, sageConfig.maxSkippedReferenceRegions());
+        final RawContext rawContext = RawContext.create(mVariant, record);
 
         if(rawContext.ReadIndexInSkipped)
             return;
@@ -214,8 +218,9 @@ public class ReadContextCounter implements VariantHotspot
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
-        int numberOfEvents = Math.max(
-                MinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()));
+        int numberOfEvents = mIsMnv ?
+                max(mMinNumberOfEvents, NumberEvents.numberOfEventsWithMNV(rawNumberOfEvents, mVariant.ref(), mVariant.alt()))
+                : max(mMinNumberOfEvents, rawNumberOfEvents);
 
         double quality = qualityCalc.calculateQualityScore(this, readIndex, record, numberOfEvents);
 
@@ -224,18 +229,14 @@ public class ReadContextCounter implements VariantHotspot
         {
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
-            final IndexedBases readBases = mExpandedBasesFactory.expand(position(), readIndex, record);
+            IndexedBases readBases = record.getCigar().containsOperator(CigarOperator.N) ?
+                    ExpandedBasesFactory.expand(position(), readIndex, record) :
+                    new IndexedBases(position(), readIndex, record.getReadBases());
 
-            // extract base qualities across flanks and core for use in match
-            int[] baseQualities = new int[readBases.length()];
-            final byte[] readBaseQuals = record.getBaseQualities();
+            int nonIndelLength = mIsIndel ? 0 : alt().length();
 
-            for(int i = 0; i < baseQualities.length; ++i)
-            {
-                baseQualities[i] = readBaseQuals[readBases.LeftFlankIndex + i];
-            }
-
-            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(readBases, wildcardMatchInCore, baseQualities);
+            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
+                    readBases, wildcardMatchInCore, record.getBaseQualities(), nonIndelLength);
 
             if(!match.equals(ReadContextMatch.NONE))
             {

@@ -20,7 +20,7 @@ public class PanelSelector
 
     public boolean inPanel(int start, int end)
     {
-        if(mRegions.isEmpty())
+        if(mRegions == null || mRegions.isEmpty())
             return false;
 
         BaseRegion current = current();

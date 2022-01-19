@@ -87,7 +87,6 @@ public class SageConfig
     {
         return 151;
     }
-    public int maxSkippedReferenceRegions() { return 50; }
 
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String RESOURCE_DIR = "resource_dir";

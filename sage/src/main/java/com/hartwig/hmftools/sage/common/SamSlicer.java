@@ -20,7 +20,7 @@ public class SamSlicer
 
     public SamSlicer(final int minMappingQuality, final ChrBaseRegion slice)
     {
-        mBamSlicer = new BamSlicer(minMappingQuality);
+        mBamSlicer = new BamSlicer(minMappingQuality, false, true, false);
         mRegions = Collections.singletonList(slice);
     }
 
