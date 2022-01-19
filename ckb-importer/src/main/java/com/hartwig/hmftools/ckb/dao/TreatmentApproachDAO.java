@@ -10,6 +10,7 @@ import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.treatmentapproaches.RelevantTreatmentApproaches;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 
 class TreatmentApproachDAO {
@@ -40,7 +41,9 @@ class TreatmentApproachDAO {
                 .fetchOne()
                 .getValue(TREATMENTAPPROACH.ID);
 
-        writeTreatmentDrugClass(treatmentApproaches.drugClass(), id);
+        if (treatmentApproaches.drugClass() != null) {
+            writeTreatmentDrugClass(treatmentApproaches.drugClass(), id);
+        }
 
         for (Reference reference : treatmentApproaches.references()) {
             writeTreatmentReference(reference, id);
@@ -49,7 +52,7 @@ class TreatmentApproachDAO {
         return id;
     }
 
-    private void writeTreatmentDrugClass(@NotNull DrugClass drugClass, int treatmentApproachDrugClassId) {
+    private void writeTreatmentDrugClass(@Nullable DrugClass drugClass, int treatmentApproachDrugClassId) {
         context.insertInto(TREATMENTAPPROACHDRUGCLASS,
                         TREATMENTAPPROACHDRUGCLASS.TREATMENTAPPROACHID,
                         TREATMENTAPPROACHDRUGCLASS.DRUGCLASSID,
