@@ -20,8 +20,9 @@ public final class RelevantTreatmentApproachesFactory {
             @NotNull List<TreatmentApproachInfo> treatmentApproachInfos) {
         List<RelevantTreatmentApproaches> relevantTreatmentApproach = Lists.newArrayList();
 
-        for (TreatmentApproachInfo treatmentApproachInfo: treatmentApproachInfos) {
-            RelevantTreatmentApproaches resolvedRelevantTreatmentApproaches = resolveRelevantTreatmentApproaches(ckbJsonDatabase, treatmentApproachInfo);
+        for (TreatmentApproachInfo treatmentApproachInfo : treatmentApproachInfos) {
+            RelevantTreatmentApproaches resolvedRelevantTreatmentApproaches =
+                    resolveRelevantTreatmentApproaches(ckbJsonDatabase, treatmentApproachInfo);
             relevantTreatmentApproach.add(resolvedRelevantTreatmentApproaches);
         }
         return relevantTreatmentApproach;
@@ -34,7 +35,8 @@ public final class RelevantTreatmentApproachesFactory {
             if (treatmentApproah.id() == treatmentApproachInfo.id()) {
                 return ImmutableRelevantTreatmentApproaches.builder()
                         .id(treatmentApproah.id())
-                        .drugClass(treatmentApproah.drugClass() != null ? DrugFactory.resolveDrugClass(ckbJsonDatabase, treatmentApproah.drugClass()) : null)
+                        .drugClass(treatmentApproah.drugClass() != null ? DrugFactory.resolveDrugClass(ckbJsonDatabase,
+                                treatmentApproah.drugClass()) : null)
                         .references(ReferenceFactory.extractReferences(ckbJsonDatabase, treatmentApproah.references()))
                         .createDate(treatmentApproah.createDate())
                         .updateDate(treatmentApproah.updateDate())
@@ -42,7 +44,7 @@ public final class RelevantTreatmentApproachesFactory {
             }
         }
 
-          throw new IllegalStateException("Could not resolve CKB treatment approach with id '" + treatmentApproachInfo.id() + "'");
+        throw new IllegalStateException("Could not resolve CKB treatment approach with id '" + treatmentApproachInfo.id() + "'");
 
     }
 }
