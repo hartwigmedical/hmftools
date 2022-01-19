@@ -32,6 +32,7 @@ public class TestReportGenerator {
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
 
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
+    private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
 
     public static void main(String[] args) throws IOException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -59,9 +60,14 @@ public class TestReportGenerator {
 
         OrangeReport withPercentiles = overwriteCohortPercentiles(report);
 
-        OrangeReport withoutReported = removeUnreported(withPercentiles);
+        OrangeReport filtered;
+        if (REMOVE_UNREPORTED_VARIANTS) {
+            filtered = removeUnreported(withPercentiles);
+        } else {
+            filtered = withPercentiles;
+        }
 
-        OrangeReport finalReport = ImmutableOrangeReport.builder().from(withoutReported).sampleId("Test").build();
+        OrangeReport finalReport = ImmutableOrangeReport.builder().from(filtered).sampleId("Test").build();
 
         return finalReport;
     }
