@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class RetainedIntronFinder
 
     public RetainedIntronFinder(final IsofoxConfig config, final BufferedWriter writer)
     {
-        mEnabled = config.runFunction(NOVEL_LOCATIONS);
+        mEnabled = config.runFunction(RETAINED_INTRONS);
         mRetainedIntrons = Lists.newArrayList();
         mWriter = writer;
         mGenes = null;

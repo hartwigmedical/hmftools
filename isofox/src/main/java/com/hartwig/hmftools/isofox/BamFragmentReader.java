@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
@@ -478,7 +479,7 @@ public class BamFragmentReader implements Callable
 
     private void postBamReadNovelLocations(final GeneCollection geneCollection)
     {
-        if(!mConfig.runFunction(NOVEL_LOCATIONS))
+        if(!mConfig.runFunction(NOVEL_LOCATIONS) && !mConfig.runFunction(RETAINED_INTRONS))
             return;
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].start();

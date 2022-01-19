@@ -39,7 +39,8 @@ STAR allows setting of the '—outFilterMultimapNmax ‘ parameter to specify th
 ## Configuration
 The 3 core functions of Isofox are controlled by the 'functions' argument:
 - TRANSCRIPT_COUNTS: calculate gene and transcript expression
-- NOVEL_LOCATIONS: annotate alternate splice junctions and retained introns
+- NOVEL_LOCATIONS: find and annotate alternate splice junctions
+- RETAINED_INTRONS: identify retained introns
 - FUSIONS: identify fusions
 
 These can be run concurrently or independently depending on the values set for this argument. By default they are all run.
@@ -53,7 +54,7 @@ bam_file | Input BAM file - must be sorted, preferably with duplicates marked an
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
 ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation or access below.
-functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
+functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;NOVEL_LOCATIONS;FUSIONS;RETAINED_INTRONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
 
 ### Optional
 Argument | Description

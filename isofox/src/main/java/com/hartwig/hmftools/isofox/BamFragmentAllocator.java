@@ -813,9 +813,15 @@ public class BamFragmentAllocator
     public void annotateNovelLocations()
     {
         recordNovelLocationReadDepth();
-        mAltSpliceJunctionFinder.prioritiseGenes();
-        mAltSpliceJunctionFinder.writeAltSpliceJunctions();
-        mRetainedIntronFinder.writeRetainedIntrons();
+
+        if(mAltSpliceJunctionFinder.enabled())
+        {
+            mAltSpliceJunctionFinder.prioritiseGenes();
+            mAltSpliceJunctionFinder.writeAltSpliceJunctions();
+        }
+
+        if(mRetainedIntronFinder.enabled())
+            mRetainedIntronFinder.writeRetainedIntrons();
     }
 
     private void recordNovelLocationReadDepth()
@@ -823,8 +829,11 @@ public class BamFragmentAllocator
         if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
             return;
 
-        mAltSpliceJunctionFinder.setPositionDepth(mBaseDepth);
-        mRetainedIntronFinder.setPositionDepth(mBaseDepth);
+        if(mAltSpliceJunctionFinder.enabled())
+            mAltSpliceJunctionFinder.setPositionDepth(mBaseDepth);
+
+        if(mRetainedIntronFinder.enabled())
+            mRetainedIntronFinder.setPositionDepth(mBaseDepth);
     }
 
     private void processChimericReadPair(final ReadRecord read1, final ReadRecord read2, boolean isDuplicate)
