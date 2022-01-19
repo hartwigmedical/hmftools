@@ -16,7 +16,7 @@ public abstract class RelevantTreatmentApproaches {
 
     public abstract int id();
 
-    @NotNull
+    @Nullable
     public abstract DrugClass drugClass();
 
     @NotNull

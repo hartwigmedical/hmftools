@@ -4,13 +4,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ckb.datamodel.drug.DrugFactory;
-import com.hartwig.hmftools.ckb.datamodel.reference.ImmutableReference;
-import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.ckb.datamodel.reference.ReferenceFactory;
 import com.hartwig.hmftools.ckb.json.CkbJsonDatabase;
-import com.hartwig.hmftools.ckb.json.common.ReferenceInfo;
 import com.hartwig.hmftools.ckb.json.common.TreatmentApproachInfo;
-import com.hartwig.hmftools.ckb.json.reference.JsonReference;
 import com.hartwig.hmftools.ckb.json.treatmentapproach.JsonTreatmentApproach;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +34,7 @@ public final class RelevantTreatmentApproachesFactory {
             if (treatmentApproah.id() == treatmentApproachInfo.id()) {
                 return ImmutableRelevantTreatmentApproaches.builder()
                         .id(treatmentApproah.id())
-                        .drugClass(DrugFactory.resolveDrugClass(ckbJsonDatabase, treatmentApproah.drugClass()))
+                        .drugClass(treatmentApproah.drugClass() != null ? DrugFactory.resolveDrugClass(ckbJsonDatabase, treatmentApproah.drugClass()) : null)
                         .references(ReferenceFactory.extractReferences(ckbJsonDatabase, treatmentApproah.references()))
                         .createDate(treatmentApproah.createDate())
                         .updateDate(treatmentApproah.updateDate())

@@ -42,6 +42,6 @@ public abstract class EvidenceInfo {
     @NotNull
     public abstract String ampCapAscoInferredTier();
 
-    @Nullable
+    @NotNull
     public abstract List<TreatmentApproachInfo> treatmentApproaches();
 }
