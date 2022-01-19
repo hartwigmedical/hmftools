@@ -49,7 +49,8 @@ For fusions that are deemed reportable according to [LINX](../linx/README.md) th
 #### Viral presence
 
 For matching viral presence to evidence, the interpretation by [Virus Interpreter](../virus-interpreter/README.md) is used. If virus 
-interpreter classified at least one viral presence as "HPV" then any evidence for "HPV Positive" will match for this sample.
+interpreter classified at least one viral presence as "HPV" then any evidence for "HPV Positive" will match for this sample.  Evidence on 
+viral presence is only reported in case the virus itself is reported and has been assigned HIGH driver likelihood. 
 
 #### Signatures
 
@@ -82,7 +83,7 @@ evidence is consolidated and evaluated for reporting. The following steps are ex
      - For CKB C evidence is reported, or up to B for predicted evidence
      - For VICC and iClusion evidence is reported up to B level.
      - For all other sources evidence is reported for A level only.
- 1. For every event/treatment/direction combination only the highest level of evidence is reported:
+ 1. For every gene/event/treatment/direction combination only the highest level of evidence is reported:
      - Off-label evidence is only reported in case the evidence level is higher than the highest on-label evidence.
  1. Clinical trials are only reported when they are on-label.
  1. There is some evidence that is never reported regardless of what event caused them or what their evidence level is. These are:
@@ -95,17 +96,23 @@ PROTECT produces a tsv with every applicable evidence after consolidation has be
 
 Field  | Description | Example
 ---|---|---
-event  | The genomic event for which evidence is applicable | BRAF p.Val600Glu  
+gene | The gene which is impact by the genomic event (empty for signatures) | BRAF
+event  | The genomic event for which evidence is applicable | p.Val600Glu
+evidenceType | The source evidence type where this evidence is based on | CODON 
+rangeRank  | In case of EXON or CODON, the index of the exon or codon on which this evidence was based | 600
 germline | Whether the genomic event is present in the germline or was acquired somatically | true/false
 reported | Whether the evidence passed all filters for reporting | true/false
 treatment | Name of the treatment (trial or drug(s)) | Vemurafenib
 onLabel | Whether the evidence is valid for the specific tumor for which the match has been made | true/false 
-level | Evidence level (from A to D) | A
+level | Evidence level (from A (highest) to D (lowest)) | A
 direction | Whether the evidence is responsive or resistant | RESPONSIVE
 sources | A list of sources from where the evidence has been extracted | vicc_cgi,vicc_civic
 urls | A list of urls with additional information about the evidence | https://pubmed.ncbi.nlm.nih.gov
 
 ## Version History and Download Links
+- Upcoming
+   - New datamodel supporting evidence types, range ranks and explicit genes. 
+   - Support for virus interpreter v1.2
 - [1.9](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.9)
   - A release that is technically compatible with SERVE v1.8
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/protect-v1.8)
