@@ -48,8 +48,9 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.healthchecker.HealthChecksApplication
-                            </mainClass>
+                            <mainClass>com.hartwig.hmftools.healthchecker.HealthChecksApplication</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                     </archive>
 

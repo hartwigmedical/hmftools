@@ -27,6 +27,9 @@ public class HealthChecksApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
+    private static final String APPLICATION = "Health-Checker";
+    private static final String VERSION = HealthChecksApplication.class.getPackage().getImplementationVersion();
+
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
     private static final String REF_WGS_METRICS_FILE = "ref_wgs_metrics_file";
@@ -69,6 +72,7 @@ public class HealthChecksApplication {
     }
 
     public static void main(String... args) throws ParseException, IOException {
+        LOGGER.info("Running {} v{}", APPLICATION, VERSION);
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
@@ -80,7 +84,7 @@ public class HealthChecksApplication {
 
         if (refSample == null || refFlagstat == null || refWgsMetricsFile == null || (writeEvaluationFile && outputDir == null)) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Health-Checker", options);
+            formatter.printHelp(APPLICATION, options);
             System.exit(1);
         }
 
