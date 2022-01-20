@@ -17,7 +17,7 @@ public final class ActinTrialFactory {
         return ImmutableActinTrial.builder()
                 .source(Knowledgebase.ACTIN)
                 .treatment(actionTrial.trial())
-                .level(EvidenceLevel.B)
+                .level(EvidenceLevel.A)
                 .direction(EvidenceDirection.RESPONSIVE)
                 .cancerType("Advanced Solid Tumor")
                 .doid("162")
