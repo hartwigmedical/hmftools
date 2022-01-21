@@ -92,9 +92,6 @@ public final class PurpleDataLoader {
             LOGGER.info("  Extracted {} additional unreported gains and losses", unreportedGainsLosses.size());
         }
 
-        List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogTsv);
-        LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
-
         List<CnPerChromosomeArmData> cnPerChromosome = Lists.newArrayList();
         if (purpleSomaticCopynumberTsv != null && refGenomeVersion != null) {
             RefGenomeCoordinates refGenomeCoordinates =
@@ -106,6 +103,9 @@ public final class PurpleDataLoader {
         List<ReportableVariant> reportableGermlineVariants = Lists.newArrayList();
         List<SomaticVariant> unreportedGermlineVariants = Lists.newArrayList();
         if (referenceSample != null) {
+            List<DriverCatalog> germlineDriverCatalog = DriverCatalogFile.read(germlineDriverCatalogTsv);
+            LOGGER.info(" Loaded {} germline driver catalog entries from {}", germlineDriverCatalog.size(), germlineDriverCatalogTsv);
+
             List<SomaticVariant> germlineVariants =
                     new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, germlineVariantVcf);
             reportableGermlineVariants = ReportableVariantFactory.toReportableGermlineVariants(germlineVariants, germlineDriverCatalog);

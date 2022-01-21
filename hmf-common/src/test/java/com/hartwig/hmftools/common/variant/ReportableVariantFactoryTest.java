@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.variant.ReportableVariantFactory.toReportableSomaticVariants;
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -30,13 +28,28 @@ public class ReportableVariantFactoryTest {
         SomaticVariant variant2 = SomaticVariantTestBuilderFactory.create().reported(false).gene(gene2).build();
 
         double likelihood = 0.6;
-        DriverCatalog driverGene1 = createCanonicalMutationEntryForGene(gene1, likelihood);
+        DriverCatalog driverGene1 = createCanonicalSomaticMutationEntryForGene(gene1, likelihood);
 
-        List<ReportableVariant> reportable =
-                toReportableSomaticVariants(Lists.newArrayList(variant1, variant2), Lists.newArrayList(driverGene1));
+        List<ReportableVariant> reportable = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant1, variant2),
+                Lists.newArrayList(driverGene1));
 
         assertEquals(1, reportable.size());
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
+    }
+
+    @Test
+    public void canResolveGermlineVariantsWithMultipleDrivers() {
+        String gene = "gene";
+        SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
+
+        DriverCatalog driver1 = createCanonicalGermlineMutationEntryForGene(gene, 0.6);
+        DriverCatalog driver2 =
+                ImmutableDriverCatalog.builder().from(driver1).driver(DriverType.GERMLINE_DELETION).driverLikelihood(1D).build();
+
+        List<ReportableVariant> reportable =
+                ReportableVariantFactory.toReportableGermlineVariants(Lists.newArrayList(variant), Lists.newArrayList(driver1, driver2));
+
+        assertEquals(0.6, reportable.get(0).driverLikelihood(), EPSILON);
     }
 
     @Test
@@ -45,33 +58,44 @@ public class ReportableVariantFactoryTest {
         SomaticVariant variant = SomaticVariantTestBuilderFactory.create().reported(true).gene(gene).build();
 
         double likelihood = 0.6;
-        DriverCatalog driverNonCanonical =
-                ImmutableDriverCatalog.builder().from(createCanonicalMutationEntryForGene(gene, likelihood)).isCanonical(false).build();
+        DriverCatalog driverNonCanonical = ImmutableDriverCatalog.builder()
+                .from(createCanonicalSomaticMutationEntryForGene(gene, likelihood))
+                .isCanonical(false)
+                .build();
 
         List<ReportableVariant> reportable =
-                toReportableSomaticVariants(Lists.newArrayList(variant), Lists.newArrayList(driverNonCanonical));
+                ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant), Lists.newArrayList(driverNonCanonical));
 
         assertEquals(1, reportable.size());
         assertEquals(likelihood, reportable.get(0).driverLikelihood(), EPSILON);
 
         double likelihoodCanonical = 0.5;
-        DriverCatalog driverCanonical = createCanonicalMutationEntryForGene(gene, likelihoodCanonical);
-        List<ReportableVariant> reportable2 =
-                toReportableSomaticVariants(Lists.newArrayList(variant), Lists.newArrayList(driverNonCanonical, driverCanonical));
+        DriverCatalog driverCanonical = createCanonicalSomaticMutationEntryForGene(gene, likelihoodCanonical);
+        List<ReportableVariant> reportable2 = ReportableVariantFactory.toReportableSomaticVariants(Lists.newArrayList(variant),
+                Lists.newArrayList(driverNonCanonical, driverCanonical));
 
         assertEquals(1, reportable2.size());
         assertEquals(likelihoodCanonical, reportable2.get(0).driverLikelihood(), EPSILON);
     }
 
     @NotNull
-    private static DriverCatalog createCanonicalMutationEntryForGene(@NotNull String gene, double likelihood) {
+    private static DriverCatalog createCanonicalSomaticMutationEntryForGene(@NotNull String gene, double likelihood) {
+        return create(gene, likelihood, DriverType.MUTATION);
+    }
+
+    @NotNull
+    private static DriverCatalog createCanonicalGermlineMutationEntryForGene(@NotNull String gene, double likelihood) {
+        return create(gene, likelihood, DriverType.GERMLINE_MUTATION);
+    }
+
+    private static DriverCatalog create(@NotNull String gene, double likelihood, @NotNull DriverType type) {
         return ImmutableDriverCatalog.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
                 .gene(gene)
                 .transcript("")
                 .isCanonical(true)
-                .driver(DriverType.MUTATION)
+                .driver(type)
                 .category(DriverCategory.ONCO)
                 .likelihoodMethod(LikelihoodMethod.DNDS)
                 .driverLikelihood(likelihood)

@@ -19,7 +19,9 @@ public final class ReportableVariantFactory {
     @NotNull
     public static List<ReportableVariant> toReportableGermlineVariants(@NotNull List<SomaticVariant> variants,
             @NotNull List<DriverCatalog> germlineDriverCatalog) {
-        return toReportableVariants(variants, germlineDriverCatalog, ReportableVariantSource.GERMLINE);
+        List<DriverCatalog> germlineMutationCatalog =
+                germlineDriverCatalog.stream().filter(x -> x.driver() == DriverType.GERMLINE_MUTATION).collect(Collectors.toList());
+        return toReportableVariants(variants, germlineMutationCatalog, ReportableVariantSource.GERMLINE);
     }
 
     @NotNull
@@ -95,8 +97,7 @@ public final class ReportableVariantFactory {
     }
 
     @NotNull
-    public static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant,
-            @NotNull ReportableVariantSource source) {
+    public static ImmutableReportableVariant.Builder fromVariant(@NotNull SomaticVariant variant, @NotNull ReportableVariantSource source) {
         return ImmutableReportableVariant.builder()
                 .type(variant.type())
                 .source(source)
