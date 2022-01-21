@@ -5,10 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterEntry;
-import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterFile;
 import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
-import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterEntry;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterFile;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterWithFile;
