@@ -18,7 +18,7 @@ import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class IclusionFilterWithFileTest {
+public class IclusionFilterTest {
 
     @Test
     public void canFilter() {
@@ -26,7 +26,7 @@ public class IclusionFilterWithFileTest {
         filterEntries.add(create(IclusionFilterType.FILTER_VARIANT_ON_GENE, "BRAF V600E"));
         filterEntries.add(create(IclusionFilterType.FILTER_EVENT_WITH_KEYWORD, "EXPRESSION"));
 
-        IclusionFilterWithFile filter = new IclusionFilterWithFile(filterEntries);
+        IclusionFilter filter = new IclusionFilter(filterEntries);
 
         String location1 = "loc1";
         String loc1Doid1 = "loc1Doid1";

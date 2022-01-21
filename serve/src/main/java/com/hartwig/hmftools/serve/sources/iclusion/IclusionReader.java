@@ -8,7 +8,7 @@ import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterEntry;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterFile;
-import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterWithFile;
+import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +51,7 @@ public final class IclusionReader {
 
     @NotNull
     private static List<IclusionTrial> filter(@NotNull List<IclusionTrial> trials, @NotNull List<IclusionFilterEntry> iClusionFilterTrials) {
-        IclusionFilterWithFile filter = new IclusionFilterWithFile(iClusionFilterTrials);
+        IclusionFilter filter = new IclusionFilter(iClusionFilterTrials);
 
         LOGGER.info("Filtering {} iClusion entries", trials.size());
         List<IclusionTrial> filteredTrials = filter.run(trials);

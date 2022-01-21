@@ -16,16 +16,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class IclusionFilterWithFile {
+public class IclusionFilter {
 
-    private static final Logger LOGGER = LogManager.getLogger(IclusionFilterWithFile.class);
+    private static final Logger LOGGER = LogManager.getLogger(IclusionFilter.class);
 
     @NotNull
     private final List<IclusionFilterEntry> filters;
     @NotNull
     private final Set<IclusionFilterEntry> usedFilters = Sets.newHashSet();
 
-    public IclusionFilterWithFile(@NotNull final List<IclusionFilterEntry> filters) {
+    public IclusionFilter(@NotNull final List<IclusionFilterEntry> filters) {
         this.filters = filters;
     }
 
