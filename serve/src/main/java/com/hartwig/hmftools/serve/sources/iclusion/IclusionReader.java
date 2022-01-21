@@ -5,8 +5,13 @@ import java.util.List;
 
 import com.hartwig.hmftools.iclusion.datamodel.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
+import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterEntry;
+import com.hartwig.hmftools.serve.sources.ckb.filter.CkbFilterFile;
 import com.hartwig.hmftools.serve.sources.iclusion.curation.IclusionCurator;
 import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilter;
+import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterEntry;
+import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterFile;
+import com.hartwig.hmftools.serve.sources.iclusion.filter.IclusionFilterWithFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,12 +25,16 @@ public final class IclusionReader {
     }
 
     @NotNull
-    public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv) throws IOException {
+    public static List<IclusionTrial> readAndCurate(@NotNull String iClusionTrialTsv, @NotNull String iClusionFilterTsv) throws IOException {
         LOGGER.info("Reading iClusion trial TSV from '{}'", iClusionTrialTsv);
         List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
         LOGGER.info(" Read {} trials", trials.size());
 
-        return filter(curate(trials));
+        LOGGER.info("Reading iClusion filter entries from {}", iClusionFilterTsv);
+        List<IclusionFilterEntry> iClusionFilterTrials = IclusionFilterFile.read(iClusionFilterTsv);
+        LOGGER.info(" Read {} filter entries", iClusionFilterTrials.size());
+
+        return filter(curate(trials), iClusionFilterTrials);
     }
 
     @NotNull
@@ -44,8 +53,8 @@ public final class IclusionReader {
     }
 
     @NotNull
-    private static List<IclusionTrial> filter(@NotNull List<IclusionTrial> trials) {
-        IclusionFilter filter = new IclusionFilter();
+    private static List<IclusionTrial> filter(@NotNull List<IclusionTrial> trials, @NotNull List<IclusionFilterEntry> iClusionFilterTrials) {
+        IclusionFilterWithFile filter = new IclusionFilterWithFile(iClusionFilterTrials);
 
         LOGGER.info("Filtering {} iClusion entries", trials.size());
         List<IclusionTrial> filteredTrials = filter.run(trials);

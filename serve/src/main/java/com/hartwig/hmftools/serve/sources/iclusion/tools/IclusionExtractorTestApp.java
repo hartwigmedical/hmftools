@@ -58,7 +58,7 @@ public class IclusionExtractorTestApp {
         IclusionExtractor extractor =
                 IclusionExtractorFactory.buildIclusionExtractor(IclusionClassificationConfig.build(), refGenomeResource, doidLookup);
 
-        List<IclusionTrial> trials = IclusionReader.readAndCurate(config.iClusionTrialTsv());
+        List<IclusionTrial> trials = IclusionReader.readAndCurate(config.iClusionTrialTsv(), config.iClusionFilterTsv());
         ExtractionResult result = extractor.extract(trials);
 
         IclusionUtil.printIclusionResult(result);

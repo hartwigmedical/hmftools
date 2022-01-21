@@ -31,6 +31,7 @@ public interface ServeConfig {
     String VICC_SOURCES = "vicc_sources";
     String USE_ICLUSION = "use_iclusion";
     String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
+    String ICLUSION_FILTER_TSV = "iclusion_filter_tsv";
     String USE_CKB = "use_ckb";
     String CKB_DIR = "ckb_dir";
     String CKB_FILTER_TSV = "ckb_filter_tsv";
@@ -75,6 +76,7 @@ public interface ServeConfig {
         options.addOption(VICC_SOURCES, true, "Comma-separated list of (lowercase) VICC sources to include");
         options.addOption(USE_ICLUSION, false, "If provided, iClusion will be used as a source in SERVE");
         options.addOption(ICLUSION_TRIAL_TSV, true, "Path to the iClusion input trial TSV");
+        options.addOption(ICLUSION_FILTER_TSV, true, "Path to the iClusion filter tsv");
         options.addOption(USE_CKB, false, "If provided, CKB FLEX will be used as a source in SERVE");
         options.addOption(CKB_DIR, true, "Path to the CKB FLEX json input dir");
         options.addOption(CKB_FILTER_TSV, true, "Path to the CKB filter tsv");
@@ -121,6 +123,9 @@ public interface ServeConfig {
 
     @NotNull
     String iClusionTrialTsv();
+
+    @NotNull
+    String iClusionFilterTsv();
 
     boolean useCkb();
 
@@ -212,6 +217,7 @@ public interface ServeConfig {
                 .viccSources(useVicc ? readViccSources(cmd) : Sets.newHashSet())
                 .useIclusion(useIclusion)
                 .iClusionTrialTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_TRIAL_TSV) : NOT_APPLICABLE)
+                .iClusionFilterTsv(useIclusion ? nonOptionalFile(cmd, ICLUSION_FILTER_TSV) : NOT_APPLICABLE)
                 .useCkb(useCkb)
                 .ckbDir(useCkb ? nonOptionalDir(cmd, CKB_DIR) : NOT_APPLICABLE)
                 .ckbFilterTsv(useCkb ? nonOptionalFile(cmd, CKB_FILTER_TSV) : NOT_APPLICABLE)

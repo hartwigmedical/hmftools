@@ -69,7 +69,7 @@ public class ServeAlgo {
         }
 
         if (config.useIclusion()) {
-            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv()));
+            extractions.add(extractIclusionKnowledge(config.iClusionTrialTsv(), config.iClusionFilterTsv()));
         }
 
         if (config.useCkb()) {
@@ -119,8 +119,8 @@ public class ServeAlgo {
     }
 
     @NotNull
-    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv) throws IOException {
-        List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv);
+    private ExtractionResult extractIclusionKnowledge(@NotNull String iClusionTrialTsv, @NotNull String iClusionFilterTsv) throws IOException {
+        List<IclusionTrial> trials = IclusionReader.readAndCurate(iClusionTrialTsv, iClusionFilterTsv);
 
         EventClassifierConfig config = IclusionClassificationConfig.build();
         RefGenomeResource refGenomeResource = refGenomeManager.pickResourceForKnowledgebase(Knowledgebase.ICLUSION);

@@ -19,6 +19,8 @@ public class ServeAlgoTest {
     private static final String ACTIN_TRIAL_TSV = Resources.getResource("actin/example.tsv").getPath();
     private static final String ACTIN_FILTER_TSV = Resources.getResource("actin/filter.tsv").getPath();
     private static final String ICLUSION_TRIAL_TSV = Resources.getResource("iclusion/empty.iclusion.tsv").getPath();
+    private static final String ICLUSION_FILTER_TSV = Resources.getResource("iclusion/filter.tsv").getPath();
+
     private static final String CKB_DIR = Resources.getResource("ckb_data").getPath();
     private static final String CKB_FILTER_TSV = Resources.getResource("ckb_filter/ckb_filters.tsv").getPath();
     private static final String DOCM_TSV = Resources.getResource("docm/example.tsv").getPath();
@@ -45,6 +47,7 @@ public class ServeAlgoTest {
                 .addViccSources(ViccSource.CIVIC, ViccSource.CGI)
                 .useIclusion(true)
                 .iClusionTrialTsv(ICLUSION_TRIAL_TSV)
+                .iClusionFilterTsv(ICLUSION_FILTER_TSV)
                 .useCkb(true)
                 .ckbDir(CKB_DIR)
                 .ckbFilterTsv(CKB_FILTER_TSV)

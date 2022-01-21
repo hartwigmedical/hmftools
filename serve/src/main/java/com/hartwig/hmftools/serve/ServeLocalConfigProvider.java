@@ -39,6 +39,7 @@ public final class ServeLocalConfigProvider {
             builder.ckbDir("/data/resources/custom/ckb/latest");
             builder.ckbFilterTsv("/data/resources/crunch/serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv("/data/resources/crunch/serve/iclusion/iclusion_trials_prod.tsv");
+            builder.iClusionFilterTsv("/data/resources/crunch/serve/curation/iclusion_filters.tsv");
             builder.actinTrialTsv("/data/resources/crunch/serve/actin/actin_knowledgebase.tsv");
             builder.actinFilterTsv("/data/resources/crunch/serve/curation/actin_filters.tsv");
 
@@ -61,6 +62,7 @@ public final class ServeLocalConfigProvider {
             builder.ckbDir(baseDir + "serve/ckb");
             builder.ckbFilterTsv(baseDir + "serve/curation/ckb_filters.tsv");
             builder.iClusionTrialTsv(baseDir + "serve/iclusion/iclusion_trials_prod.tsv");
+            builder.iClusionFilterTsv(baseDir + "serve/actin/iclusion_filter.tsv");
             builder.actinTrialTsv(baseDir + "serve/actin/actin_knowledgebase.tsv");
             builder.actinFilterTsv(baseDir + "serve/actin/actin_filter.tsv");
 
