@@ -300,7 +300,7 @@ A special and very common case of templated insertions we observe are very small
 The following figure shows a number examples of synthetic events with the shards marked.
 
 <p align="center">
-    <img src="src/main/resources/readme/one_break_events.png" width="600" alt="One Break Events">
+    <img src="../extended-docs/linx/one_break_events.png" width="600" alt="One Break Events">
 </p>
 
 #### Deletion Bridges, Anchor Distance & Overlapping Deletion Bridges
