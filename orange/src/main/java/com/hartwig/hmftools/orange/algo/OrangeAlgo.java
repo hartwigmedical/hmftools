@@ -218,11 +218,12 @@ public class OrangeAlgo {
 
     @NotNull
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
+        LOGGER.info("Loading CUPPA from {}", new File(config.cuppaResultCsv()).getParent());
         List<CuppaEntry> cuppaEntries = CuppaDataFile.read(config.cuppaResultCsv());
         LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), config.cuppaResultCsv());
 
         CuppaData cuppaData = CuppaFactory.create(cuppaEntries);
-        LOGGER.info(" Predicted cancer type {} with likelihood {}", cuppaData.predictedCancerType(), cuppaData.bestPredictionLikelihood());
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", cuppaData.predictedCancerType(), cuppaData.bestPredictionLikelihood());
         return cuppaData;
     }
 
