@@ -332,7 +332,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         } else if (viruses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
-            Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 150, 150, 40 },
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 160, 100, 40 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
                             TableUtil.createHeaderCell("Viral coverage").setTextAlignment(TextAlignment.CENTER),
