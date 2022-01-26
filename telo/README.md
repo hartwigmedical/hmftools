@@ -130,7 +130,60 @@ MT | 11000 | 14000
 
 ## Outputs
 
-To Do
+The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where at least 1 read contains telomeric content), a file which details the estimated  telomeric length and content and finally a file which predicts the telomeric reararrangements
+  
+### Telomeric Length and content
+Column | Description
+--|--
+SampleId | Unique Id of sample
+Type | ‘Tumor’ or ‘Ref’
+Purity | From PURPLE (=1 for ref)
+Ploidy | From PURPLE (=2 for ref)
+GC50ReadsPerKb | From COBALT
+MeanReadsPerKb | From COBALT
+DuplicatePercent | Estimated proportion of duplicates in file (from WGS metrics)
+fullFragments | Count of fragments with both reads classified as telomeric
+cRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a C-rich orientation
+gRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a G-rich orientation
+TotalTelomericReads | Count of telomeric reads excluding estimated interstitial repeats
+RawTelomereLength | Telomeric reads normalized for total coverage
+FinalTelomereLength | Final telomere length adjusted for tumor purity (=Raw length for ref sample)
+T-TypeProportion | T-Type repeats / total telomeric repeats
+C-TypeProportion | C-Type repeats / total telomeric repeats
+G-TypeProportion | G-Type repeats / total telomeric repeats
+J-TypeProportion | J-Type repeats / total telomeric repeats
+OtherTypeProportion | Other Type repeats / total telomeric repeats
+
+
+### Rearrangements
+Field | Description
+--|--
+Chromosome | Chromosome of breakend
+Position | Position of Breakend
+Orientation | 1 = breakend on left side; -1 = breakend on right side
+COrGRich | ‘C’ or ‘G’
+DistanceToTelomere | Distance to nearest reference telomere in nucleotides
+MaxTelomericLength | Longest continuous telomeric segment on any fragment supporting the rearrangement
+MaxAnchorLength | Longest locally anchored segment on any fragment supporting the rearrangement
+Filter | Either ‘PASS’ or one or more of the below filters
+TumorSRTelNoDP | Count of fragments in tumor with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read locally anchored
+TumorDPTelNoSR | Count of fragments in tumor with 1 read locally anchored but not spanning the breakend and the paired read discordant and containing telomeric sequence
+TumorSRTelDPTel | Count of fragments in tumor with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read discordant and containing telomeric sequence
+TumorSRTelDPNotTel | Count of fragments in tumor with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read discordant but not containing telomeric sequence (may indicate telomeric insertion)
+TumorSRNotTelDPTel | Count of fragments in tumor with 1 read with soft clip supporting the breakend but NOT containing telomeric sequence with the paired read discordant and containing telomeric sequence
+TumorMAPQ | Sum of MAPQ of locally anchored reads in fragments supporting the rearrangement in tumor
+GermlineSRTelNoDP | Count of fragments in germline with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read locally anchored
+GermlineDPTelNoSR | Count of fragments in germline with 1 read locally anchored but not spanning the breakend and the paired read discordant and containing telomeric sequence
+GermlineSRTelDPTel | Count of fragments in germline with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read discordant and containing telomeric sequence
+GermlineSRTelDPNotTel | Count of fragments in germline with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read discordant but not containing telomeric sequence (may indicate telomeric insertion)
+GermlineSRNotTelDPTel | Count of fragments in germline with 1 read with soft clip supporting the breakend but NOT containing telomeric sequence with the paired read discordant and containing telomeric sequence
+germlineMAPQ | Sum of MAPQ of locally anchored reads in fragments supporting the rearrangement in germline
+CohortFrequency | Annotated from cohortFreq.bed file
+
+### Known issues and future improvements
+* A blacklist bed file is currently only provided for hg19 / grch37 assembly.  
+* TEAL represents each breakend independently, but ideally should pair up rearrangements which are supported by the same fragment and represent telomeric insertions
+* TEAL should determine a consensus sequence for each telomeric rearrangement
 
 
 
