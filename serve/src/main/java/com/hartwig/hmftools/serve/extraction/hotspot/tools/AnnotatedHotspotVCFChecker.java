@@ -41,7 +41,7 @@ public class AnnotatedHotspotVCFChecker {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots.vcf";
+        String annotatedHotspotVcf = System.getProperty("user.home") + "/hmf/tmp/annotatedHotspots_SNPeff.vcf";
         new AnnotatedHotspotVCFChecker().run(annotatedHotspotVcf);
     }
 
@@ -58,7 +58,11 @@ public class AnnotatedHotspotVCFChecker {
         for (VariantContext variant : reader.iterator()) {
             totalCount++;
 
+            LOGGER.info("input");
+            LOGGER.info(variant);
+
             String[] inputParts = variant.getAttributeAsString(VCFWriterFactory.INPUT_FIELD, Strings.EMPTY).split("\\|");
+            LOGGER.info(inputParts);
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             String inputProteinAnnotation = inputParts[2];
