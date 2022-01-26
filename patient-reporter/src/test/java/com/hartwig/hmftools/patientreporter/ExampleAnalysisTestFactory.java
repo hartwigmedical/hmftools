@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.clinical.ImmutablePatientPrimaryTumor;
 import com.hartwig.hmftools.common.cuppa.ImmutableMolecularTissueOrigin;
 import com.hartwig.hmftools.common.cuppa.MolecularTissueOrigin;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -870,7 +871,7 @@ public final class ExampleAnalysisTestFactory {
                 .threePrimeBreakendId(2)
                 .name(Strings.EMPTY)
                 .reported(true)
-                .reportedType(Strings.EMPTY)
+                .reportedType(KnownFusionType.KNOWN_PAIR.display())
                 .phased(FusionPhasedType.INFRAME)
                 .likelihood(FusionLikelihoodType.HIGH)
                 .chainLength(1)
