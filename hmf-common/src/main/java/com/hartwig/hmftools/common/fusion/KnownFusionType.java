@@ -13,8 +13,6 @@ public enum KnownFusionType
     EXON_DEL_DUP("exon del dup"),
     PROMISCUOUS_BOTH("5' en 3' promiscuous");
 
-   // public static final String PROMISCUOUS_BOTH = "PROMISCUOUS_BOTH";
-
     private final String mDisplay;
 
     KnownFusionType(@NotNull final String display) {
