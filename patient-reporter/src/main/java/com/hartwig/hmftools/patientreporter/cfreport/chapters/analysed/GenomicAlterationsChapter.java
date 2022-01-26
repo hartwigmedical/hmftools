@@ -89,8 +89,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createHomozygousDisruptionsTable(genomicAnalysis.homozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(genomicAnalysis.geneDisruptions(), hasReliablePurity));
         reportDocument.add(createVirusTable(genomicAnalysis.reportableViruses(), sampleReport.reportViralPresence()));
-        reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(),
-                sampleReport.reportPharmogenetics()));
+        reportDocument.add(createPeachGenotypesTable(patientReport.peachGenotypes(), sampleReport.reportPharmogenetics()));
     }
 
     @NotNull
@@ -328,22 +327,24 @@ public class GenomicAlterationsChapter implements ReportChapter {
         String title = "Tumor specific viral insertions";
 
         if (!reportViralPresence) {
-                String noConsent =
-                        "This patient did not give his/her permission for reporting of virus results.";
-                return TableUtil.createNoConsentReportTable(title, noConsent);
+            String noConsent = "This patient did not give his/her permission for reporting of virus results.";
+            return TableUtil.createNoConsentReportTable(title, noConsent);
         } else if (viruses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         } else {
-            Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 150, 150 },
+            Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 150, 150, 40 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
                             TableUtil.createHeaderCell("Number of detected integration sites").setTextAlignment(TextAlignment.CENTER),
-                            TableUtil.createHeaderCell("Viral coverage").setTextAlignment(TextAlignment.CENTER) });
+                            TableUtil.createHeaderCell("Viral coverage").setTextAlignment(TextAlignment.CENTER),
+                            TableUtil.createHeaderCell("Driver").setTextAlignment(TextAlignment.CENTER) });
 
             for (AnnotatedVirus virus : viruses) {
                 contentTable.addCell(TableUtil.createContentCell(virus.name()));
                 contentTable.addCell(TableUtil.createContentCell(ViralPresence.createIntegrationSiteString(virus.integrations()))
                         .setTextAlignment(TextAlignment.CENTER));
                 contentTable.addCell(TableUtil.createContentCell(ViralPresence.createViralCoverageString(virus.percentageCovered()))
+                        .setTextAlignment(TextAlignment.CENTER));
+                contentTable.addCell(TableUtil.createContentCell(virus.virusDriverLikelihoodType().display())
                         .setTextAlignment(TextAlignment.CENTER));
             }
 
@@ -358,7 +359,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         if (reportPeach) {
             if (peachGenotypes.isEmpty()) {
                 return TableUtil.createNoneReportTable(title);
-            } else  {
+            } else {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
                                 TableUtil.createHeaderCell("Function"), TableUtil.createHeaderCell("Linked drugs"),
@@ -377,8 +378,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 return TableUtil.createWrappingReportTable(title, contentTable);
             }
         } else {
-            String noConsent =
-                    "This patient did not give his/her permission for reporting of pharmacogenomics results.";
+            String noConsent = "This patient did not give his/her permission for reporting of pharmacogenomics results.";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         }
     }

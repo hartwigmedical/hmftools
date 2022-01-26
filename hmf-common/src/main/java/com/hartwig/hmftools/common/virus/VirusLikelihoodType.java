@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.virus;
 import org.jetbrains.annotations.NotNull;
 
 public enum VirusLikelihoodType {
-    HIGH("HIGH"),
-    LOW("LOW"),
-    UNKNOWN("UNKNOWN"),;
+    HIGH("High"),
+    LOW("Low"),
+    UNKNOWN("Unknown"),;
 
     private final String mDisplay;
 

@@ -1,28 +1,19 @@
 package com.hartwig.hmftools.common.virus;
 
-import java.util.List;
-
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public enum VirusConstants {
-    MCV("MCV", true),
-    EBV("EBV", true),
-    HPV("HPV", true),
-    HBV("HBV", true),
-    HHV8("HHV-8", true);
+    MCV("MCV"),
+    EBV("EBV"),
+    HPV("HPV"),
+    HBV("HBV"),
+    HHV8("HHV-8");
 
     @NotNull
     private final String virusName;
-    private final boolean reportVirusOnSummary;
 
-    VirusConstants(@NotNull final String virusName, final boolean reportVirusOnSummary) {
+    VirusConstants(@NotNull final String virusName) {
         this.virusName = virusName;
-        this.reportVirusOnSummary = reportVirusOnSummary;
-    }
-
-    public boolean reportVirusOnSummary() {
-        return reportVirusOnSummary;
     }
 
     @NotNull
@@ -41,17 +32,5 @@ public enum VirusConstants {
             default:
                 throw new IllegalStateException("Cannot resolve virus name: " + virusName);
         }
-    }
-
-    @NotNull
-    public static List<String> allViruses() {
-        List<String> virusSummary = Lists.newArrayList();
-        for (VirusConstants virus : VirusConstants.values()) {
-            if (virus.reportVirusOnSummary()) {
-                virusSummary.add(virus.virusName);
-            }
-        }
-
-        return virusSummary;
     }
 }
