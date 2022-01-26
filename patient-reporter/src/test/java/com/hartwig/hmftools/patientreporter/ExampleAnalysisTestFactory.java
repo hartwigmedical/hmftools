@@ -935,6 +935,7 @@ public final class ExampleAnalysisTestFactory {
                 .reported(true)
                 .reportedType(Strings.EMPTY)
                 .phased(FusionPhasedType.SKIPPED_EXONS)
+                .reportedType(KnownFusionType.PROMISCUOUS_5.display())
                 .likelihood(FusionLikelihoodType.LOW)
                 .chainLength(1)
                 .chainLinks(1)
