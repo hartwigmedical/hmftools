@@ -78,6 +78,54 @@ Each candidate location is then inspected and the numbers of split reads and dis
 
 A fragment is counted as a ‘discordant pair’ support if the fragment has a improper pair alignment, neither read overlaps the candidate location, one read faces the site and is within 1000 bases on the non soft clipped side of the candidate location and does not contain a telomeric sequence (as defined above) but has a paired read which does contain a telomeric sequence. Where a discordant pair read may be counted towards multiple candidate locations, the support is assigned to the location nearest to the read alignment. 
 
+The following soft filters are applied:
+
+Name | Description | Threshold
+--|--|--
+maxGermlineSupport | Total # of reads supporting  | <min(5,2% of tumor support) | 
+minTelomericLength | Length of longest continuous telomeric content in soft clip or paired read  | >=20
+minAnchorLength | Length of longest anchored soft clip or paired read supporting the rearrangement | >=50
+minSplitReads | TumorSRTelNoDP + TumorSRTelDPTel + TumorSRNotTelDPTel + TumorSRTelDPNotTel | >=3
+minDiscordantPairs | TumorDPTelNoSR + TumorSRNotTelDPTel + TumorSRTelDPTel  | >0
+maxCohortFreq | Proportion of samples in cohort with at least 1 rearrangement within +/-50 bases  | <TBD
+minTumorMAPQ | Minimum mapq support of locally anchored reads | >=300
+duplicate | Must not be a duplicate of another nearby breakend  | =FALSE
+
+
+The following regions are blacklisted from calling telomeric rearrangements as they are frequently found to have telomeric sequences in recurrent artefacts across samples
+
+
+Chromosome | Start Position | End Position
+--|--|--
+1 | 9000 | 11000
+1 | 121483000 | 121486000
+1 | 249238000 | 249241000
+2 | 243152000 | 243154000
+3 | 197900000 | 197902000
+4 | 9000 | 11000
+4 | 191039000 | 191045000
+5 | 9000 | 13000
+7 | 9000 | 11000
+7 | 105741000 | 105743000
+8 | 43092000 | 43098000
+9 | 9000 | 11000
+10 | 42356000 | 42362000
+10 | 42377000 | 42401000
+10 | 42527000 | 42531000
+10 | 42596000 | 42601000
+10 | 135523000 | 135526000
+12 | 94000 | 97000
+12 | 133841000 | 133843000
+15 | 102520000 | 102522000
+18 | 9000 | 12000
+19 | 27731000 | 27739000
+19 | 59118000 | 59120000
+20 | 62917000 | 62919000
+21 | 9704000 | 9706000
+21 | 48119000 | 48121000
+X | 155259000 | 155262000
+MT | 11000 | 14000
+
 
 ## Outputs
 
