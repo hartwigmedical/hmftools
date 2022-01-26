@@ -2,7 +2,7 @@
 
 ## Running TEAL
 
-TO DO
+TO DO => Add example usage
 
 ### INPUTS
 
