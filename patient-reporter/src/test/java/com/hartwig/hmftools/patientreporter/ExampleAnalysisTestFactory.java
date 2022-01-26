@@ -328,6 +328,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Cobimetinib + Vemurafenib")
@@ -339,6 +340,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Dabrafenib")
@@ -350,6 +352,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Dabrafenib + Trametinib")
@@ -361,6 +364,8 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.EXON_MUTATION)
+                .rangeRank(1)
                 .germline(false)
                 .reported(true)
                 .treatment("Trametinib")
@@ -372,6 +377,8 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.CODON_MUTATION)
+                .rangeRank(600)
                 .germline(false)
                 .reported(true)
                 .treatment("Vemurafenib")
@@ -385,6 +392,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("RO4987655")
@@ -396,6 +404,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOnLabel.add(onLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
                 .treatment("Buparlisib + Carboplatin + Paclitaxel")
@@ -417,6 +426,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Array 818-103")
@@ -428,6 +438,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("CLXH254C12201")
@@ -439,6 +450,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("COWBOY")
@@ -450,6 +462,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("COWBOY")
@@ -461,6 +474,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
@@ -472,6 +486,7 @@ public final class ExampleAnalysisTestFactory {
 
         trialsOnLabel.add(onLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("EBIN (EORTC-1612-MG)")
@@ -482,6 +497,7 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
+                .evidenceType(ProtectEvidenceType.SIGNATURE)
                 .germline(false)
                 .reported(true)
                 .treatment("BASKET OF BASKETS (VHIO17002)")
@@ -492,6 +508,7 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
+                .evidenceType(ProtectEvidenceType.SIGNATURE)
                 .germline(false)
                 .reported(true)
                 .treatment("DRUP")
@@ -502,6 +519,7 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.event("High tumor mutation load")
+                .evidenceType(ProtectEvidenceType.SIGNATURE)
                 .germline(false)
                 .reported(true)
                 .treatment("KEYNOTE-158")
@@ -512,6 +530,7 @@ public final class ExampleAnalysisTestFactory {
                 .build());
 
         trialsOnLabel.add(onLabelBuilder.gene("PTEN")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .event("partial loss")
                 .germline(false)
                 .reported(true)
@@ -534,6 +553,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Bevacizumab")
@@ -545,6 +565,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("CI-1040")
@@ -556,6 +577,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Cetuximab")
@@ -572,6 +594,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Cetuximab + Irinotecan + Vemurafenib")
@@ -583,6 +606,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Fluorouracil")
@@ -594,6 +618,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Irinotecan")
@@ -605,6 +630,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Oxaliplatin")
@@ -616,6 +642,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Panitumumab")
@@ -630,6 +657,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Selumetinib")
@@ -641,6 +669,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.HOTSPOT_MUTATION)
                 .germline(false)
                 .reported(true)
                 .treatment("Sorafenib")
@@ -652,6 +681,8 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("BRAF")
                 .event("p.Val600Glu")
+                .evidenceType(ProtectEvidenceType.CODON_MUTATION)
+                .rangeRank(600)
                 .germline(false)
                 .reported(true)
                 .treatment("Vemurafenib")
@@ -663,6 +694,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
                 .treatment("Anti-EGFR monoclonal antibody")
@@ -674,6 +706,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
                 .treatment("Cetuximab")
@@ -685,6 +718,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
                 .treatment("Everolimus")
@@ -696,6 +730,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
                 .treatment("Lapatinib + Trastuzumab")
@@ -707,6 +742,7 @@ public final class ExampleAnalysisTestFactory {
 
         evidenceItemsOffLabel.add(offLabelBuilder.gene("PTEN")
                 .event("partial loss")
+                .evidenceType(ProtectEvidenceType.DELETION)
                 .germline(false)
                 .reported(true)
                 .treatment("Trastuzumab")

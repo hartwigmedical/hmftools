@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
+import com.hartwig.hmftools.common.protect.ProtectEvidenceType;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -117,7 +118,7 @@ public class ClinicalEvidenceFunctions {
         if (hasEvidence) {
             return TableUtil.createWrappingReportTable(title, treatmentTable);
         } else {
-            return  TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title);
         }
     }
 
@@ -224,9 +225,28 @@ public class ClinicalEvidenceFunctions {
 
     @NotNull
     private static String display(@NotNull ProtectEvidence evidence) {
+        String evidenceRank = Strings.EMPTY;
+        String evidenceType = evidence.evidenceType().display();
+
+        if (evidence.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || evidence.evidenceType()
+                .equals(ProtectEvidenceType.EXON_MUTATION)) {
+            evidenceRank = String.valueOf(evidence.rangeRank());
+        }
+
         String event = evidence.gene() != null ? evidence.gene() + " " + evidence.event() : evidence.event();
         if (event.contains("p.")) {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
+        }
+
+        String merged;
+        if (!evidenceRank.isEmpty()) {
+            merged = evidenceType + " " + evidenceRank;
+        } else {
+            merged = evidenceType;
+        }
+
+        if (!merged.isEmpty()) {
+            event = event + " (" + merged + ")";
         }
 
         return event;
