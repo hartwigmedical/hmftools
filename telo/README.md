@@ -180,7 +180,7 @@ GermlineSRNotTelDPTel | Count of fragments in germline with 1 read with soft cli
 germlineMAPQ | Sum of MAPQ of locally anchored reads in fragments supporting the rearrangement in germline
 CohortFrequency | Annotated from cohortFreq.bed file
 
-### Known issues and future improvements
+## Known issues and future improvements
 * A blacklist bed file is currently only provided for hg19 / grch37 assembly.  
 * TEAL represents each breakend independently, but ideally should pair up rearrangements which are supported by the same fragment and represent telomeric insertions
 * TEAL should determine a consensus sequence for each telomeric rearrangement
