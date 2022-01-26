@@ -58,11 +58,7 @@ public class AnnotatedHotspotVCFChecker {
         for (VariantContext variant : reader.iterator()) {
             totalCount++;
 
-            LOGGER.info("input");
-            LOGGER.info(variant);
-
             String[] inputParts = variant.getAttributeAsString(VCFWriterFactory.INPUT_FIELD, Strings.EMPTY).split("\\|");
-            LOGGER.info(inputParts);
             String inputGene = inputParts[0];
             String inputTranscript = inputParts[1].equals("null") ? null : inputParts[1];
             String inputProteinAnnotation = inputParts[2];
@@ -109,6 +105,8 @@ public class AnnotatedHotspotVCFChecker {
         LOGGER.info("Done comparing {} records: {} matches (of which {} are approximate and {} are due to transcript liftover changes)"
                 + " and {} differences found.", totalCount, matchCount, approximateMatchCount, transcriptChangeLiftoverCount, diffCount);
 
+        // current result will be
+        // Done comparing 9452 records: 9452 matches (of which 30 are approximate and 0 are due to transcript liftover changes) and 0 differences found.
         checkForUnusedMappings();
     }
 
