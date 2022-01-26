@@ -93,7 +93,8 @@ duplicate | Must not be a duplicate of another nearby breakend  | =FALSE
 
 
 The following regions are blacklisted from calling telomeric rearrangements as they are frequently found to have telomeric sequences in recurrent artefacts across samples
-
+  
+  
 
 Chromosome | Start Position | End Position
 --|--|--
@@ -130,5 +131,6 @@ MT | 11000 | 14000
 ## Outputs
 
 To Do
+
 
 
