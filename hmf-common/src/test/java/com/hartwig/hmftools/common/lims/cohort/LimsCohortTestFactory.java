@@ -9,7 +9,7 @@ public final class LimsCohortTestFactory {
 
     @NotNull
     public static LimsCohortConfig createCPCTCohortConfig() {
-        return createCohortConfig("CPCT", true, false, false, false, true, true, false, false, true, false, false);
+        return createCohortConfig("CPCT", true, false, false, false, false, true, false, false, true, false, false);
     }
 
     @NotNull
