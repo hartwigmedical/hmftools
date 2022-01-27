@@ -6,7 +6,7 @@ TO DO => Add example usage
 
 ### INPUTS
 
-The main inputs for TEAL are a reference and tumor bam.   The following inputs are also required and may be sourced from HMF pipeline outputs (PURPLE and WGS metrcis), or if not specified must be input as values:
+The main inputs for TEAL are a reference and tumor bam.   The following inputs are also required and may be sourced from HMF pipeline outputs (PURPLE and WGS metri s), or if not specified must be input as values:
 
 Input | Source File | Samples | Default (if not parsed) 
 --|--|--|--
