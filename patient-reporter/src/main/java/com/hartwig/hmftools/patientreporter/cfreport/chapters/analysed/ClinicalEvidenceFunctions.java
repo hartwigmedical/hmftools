@@ -86,7 +86,7 @@ public class ClinicalEvidenceFunctions {
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
                 new float[] { 25, 140, 45, 25, 40, 140, 60 },
-                new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Type", 1),
+                new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Match", 1),
                         TableUtil.createHeaderCell("Level", 1), TableUtil.createHeaderCell("Response", 1),
                         TableUtil.createHeaderCell("Genomic event", 1), TableUtil.createHeaderCell("Evidence links", 1) });
 
@@ -99,7 +99,7 @@ public class ClinicalEvidenceFunctions {
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
                 new float[] { 20, 180, 45, 180 },
-                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Type", 1),
+                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Match", 1),
                         TableUtil.createHeaderCell("Genomic event", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
