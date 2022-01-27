@@ -85,10 +85,10 @@ public class ClinicalEvidenceFunctions {
     public static Table createTreatmentTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 25, 140, 25, 40, 140, 60 },
-                new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Level", 1),
-                        TableUtil.createHeaderCell("Response", 1), TableUtil.createHeaderCell("Genomic event", 1),
-                        TableUtil.createHeaderCell("Evidence links", 1) });
+                new float[] { 25, 140, 45, 25, 40, 140, 60 },
+                new Cell[] { TableUtil.createHeaderCell("Treatment", 2), TableUtil.createHeaderCell("Type", 1),
+                        TableUtil.createHeaderCell("Level", 1), TableUtil.createHeaderCell("Response", 1),
+                        TableUtil.createHeaderCell("Genomic event", 1), TableUtil.createHeaderCell("Evidence links", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "evidence");
         return treatmentTable;
@@ -98,8 +98,9 @@ public class ClinicalEvidenceFunctions {
     public static Table createTrialTable(@NotNull String title, @NotNull Map<String, List<ProtectEvidence>> treatmentMap,
             float contentWidth) {
         Table treatmentTable = TableUtil.createReportContentTable(contentWidth,
-                new float[] { 20, 180, 180 },
-                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Genomic event", 1) });
+                new float[] { 20, 180, 45, 180 },
+                new Cell[] { TableUtil.createHeaderCell("Trial", 2), TableUtil.createHeaderCell("Type", 1),
+                        TableUtil.createHeaderCell("Genomic event", 1) });
 
         treatmentTable = addingDataIntoTable(treatmentTable, treatmentMap, title, contentWidth, "trial");
         return treatmentTable;
@@ -142,6 +143,7 @@ public class ClinicalEvidenceFunctions {
                 table.addCell(TableUtil.createContentCell(createTreatmentIcons(treatment)).setVerticalAlignment(VerticalAlignment.TOP));
                 table.addCell(TableUtil.createContentCell(treatment));
 
+                Table typeTable = new Table(new float[] { 1 });
                 Table levelTable = new Table(new float[] { 1 });
                 Table responseTable = new Table(new float[] { 1, 1 });
 
@@ -158,6 +160,10 @@ public class ClinicalEvidenceFunctions {
                         cellGenomic.addStyle(ReportResources.urlStyle())
                                 .setAction(PdfAction.createURI(ClinicalTrials.createLinkiClusion(responsive)));
                     }
+
+                    Cell cellType;
+                    cellType = TableUtil.createTransparentCell(new Paragraph(determineEvidenceType(responsive)));
+                    typeTable.addCell(cellType);
 
                     Cell cellLevel;
                     Cell cellPredicted = TableUtil.createTransparentCell(Strings.EMPTY);
@@ -177,6 +183,7 @@ public class ClinicalEvidenceFunctions {
                         }
 
                         cellLevel = TableUtil.createTransparentCell(new Paragraph(Icon.createLevelIcon(responsive.level().name())));
+
                         levelTable.addCell(cellLevel);
                         responseTable.addCell(cellResistent);
                         responseTable.addCell(cellPredicted);
@@ -195,13 +202,14 @@ public class ClinicalEvidenceFunctions {
                 }
 
                 if (evidenceType.equals("evidence")) {
+                    table.addCell(TableUtil.createContentCell(typeTable));
                     table.addCell(TableUtil.createContentCell(levelTable));
                     table.addCell(TableUtil.createContentCell(responseTable));
                     table.addCell(TableUtil.createContentCell(responsiveTable));
                     table.addCell(TableUtil.createContentCell(linksTable));
                 } else {
+                    table.addCell(TableUtil.createContentCell(typeTable));
                     table.addCell(TableUtil.createContentCell(responsiveTable));
-
                 }
 
                 hasEvidence = true;
@@ -209,6 +217,25 @@ public class ClinicalEvidenceFunctions {
         }
 
         return hasEvidence;
+    }
+
+    @NotNull
+    private static String determineEvidenceType(@NotNull ProtectEvidence evidence) {
+
+        String evidenceRank = Strings.EMPTY;
+        String evidenceSource = evidence.evidenceType().display();
+        if (evidence.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || evidence.evidenceType()
+                .equals(ProtectEvidenceType.EXON_MUTATION)) {
+            evidenceRank = String.valueOf(evidence.rangeRank());
+        }
+
+        String evidenceMerged;
+        if (!evidenceRank.isEmpty()) {
+            evidenceMerged = evidenceSource + " " + evidenceRank;
+        } else {
+            evidenceMerged = evidenceSource;
+        }
+        return evidenceMerged;
     }
 
     @NotNull
@@ -225,28 +252,9 @@ public class ClinicalEvidenceFunctions {
 
     @NotNull
     private static String display(@NotNull ProtectEvidence evidence) {
-        String evidenceRank = Strings.EMPTY;
-        String evidenceType = evidence.evidenceType().display();
-
-        if (evidence.evidenceType().equals(ProtectEvidenceType.CODON_MUTATION) || evidence.evidenceType()
-                .equals(ProtectEvidenceType.EXON_MUTATION)) {
-            evidenceRank = String.valueOf(evidence.rangeRank());
-        }
-
         String event = evidence.gene() != null ? evidence.gene() + " " + evidence.event() : evidence.event();
         if (event.contains("p.")) {
             event = AminoAcids.forceSingleLetterProteinAnnotation(event);
-        }
-
-        String merged;
-        if (!evidenceRank.isEmpty()) {
-            merged = evidenceType + " " + evidenceRank;
-        } else {
-            merged = evidenceType;
-        }
-
-        if (!merged.isEmpty()) {
-            event = event + " (" + merged + ")";
         }
 
         return event;
