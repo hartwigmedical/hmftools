@@ -180,7 +180,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant,
                     notifyGermlineStatusPerVariant.get(variant))));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
-            contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsCodingImpact()));
+            contentTable.addCell(TableUtil.createContentCell(SomaticVariants.determineCanonicalImpact(variant.canonicalHgvsCodingImpact(),
+                    variant.canonicalEffect())));
             contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsProteinImpact()));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())

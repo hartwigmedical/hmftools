@@ -94,6 +94,10 @@ public class AnnotatedHotspotVCFCheckerPAVE {
                         LOGGER.warn("Could not find a match amongst candidate transcripts for '{}' on '{}'",
                                 inputProteinAnnotation,
                                 inputGene);
+                        LOGGER.info("CanonicalHgvsProtein: " + impact.CanonicalHgvsProtein);
+                        LOGGER.info("transcript: " + impact.CanonicalTranscript);
+                        LOGGER.info("input: " + inputProteinAnnotation);
+                        LOGGER.info("pave: " + AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein));
                         diffCount++;
                         break;
                     }
@@ -115,8 +119,8 @@ public class AnnotatedHotspotVCFCheckerPAVE {
 
     @NotNull
     private MatchType determineMatch(@Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
-            @Nullable VariantImpact impact) {
-        if (impact != null) {
+            @NotNull VariantImpact impact) {
+        if (inputTranscript != null) {
             return matchOnSpecificAnnotation(inputTranscript, inputProteinAnnotation, impact);
         } else {
             // In case input transcript is missing or can't be found, we try to match against any transcript.
@@ -126,7 +130,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     }
 
     @NotNull
-    private MatchType matchOnSpecificAnnotation(@Nullable String inputTranscript, @NotNull String inputProteinAnnotation,
+    private MatchType matchOnSpecificAnnotation(@NotNull String inputTranscript, @NotNull String inputProteinAnnotation,
             @NotNull VariantImpact impact) {
         String paveProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein);
         return matchAnnotation(inputTranscript, inputProteinAnnotation, paveProteinAnnotation);
@@ -136,10 +140,10 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     private MatchType matchOnAnyTranscript(@NotNull String inputProteinAnnotation, @NotNull VariantImpact impact) {
         MatchType matchedMatchType = MatchType.NO_MATCH;
             // We only want to consider transcript features with coding impact.
+
             if ( !impact.CanonicalHgvsProtein.isEmpty()) {
-                String snpeffProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein);
-                MatchType
-                        match = matchAnnotation(impact.CanonicalTranscript, inputProteinAnnotation, snpeffProteinAnnotation);
+                String paveProteinAnnotation = AminoAcids.forceSingleLetterProteinAnnotation(impact.CanonicalHgvsProtein);
+                MatchType match = matchAnnotation(impact.CanonicalTranscript, inputProteinAnnotation, paveProteinAnnotation);
                 if (match != MatchType.NO_MATCH && matchedMatchType == MatchType.NO_MATCH) {
                     matchedMatchType = match;
                 }
@@ -150,7 +154,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
     }
 
     @NotNull
-    private MatchType matchAnnotation(@Nullable String transcript, @NotNull String inputAnnotation, @NotNull String paveAnnotation) {
+    private MatchType matchAnnotation(@NotNull String transcript, @NotNull String inputAnnotation, @NotNull String paveAnnotation) {
         String curatedInputAnnotation = curateStartCodonAnnotation(inputAnnotation);
         if (curatedInputAnnotation.equals(paveAnnotation)) {
             return MatchType.IDENTICAL;
@@ -172,7 +176,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
 
     @NotNull
     private static String curateStartCodonAnnotation(@NotNull String serveAnnotation) {
-        if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 5) {
+        if (serveAnnotation.startsWith("p.M1") && serveAnnotation.length() == 6) {
             return "p.M1?";
         } else {
             return serveAnnotation;
@@ -238,7 +242,7 @@ public class AnnotatedHotspotVCFCheckerPAVE {
         }
     }
 
-    private boolean retiredTranscriptCheck(@Nullable String transcript, @NotNull String paveAnnotation) {
+    private boolean retiredTranscriptCheck(@NotNull String transcript, @NotNull String paveAnnotation) {
         if (AnnotatedHotspotCurationFactory.RETIRED_TRANSCRIPTS.contains(transcript) && paveAnnotation.isEmpty()) {
             // In case we know a transcript has been retired from coding duty in certain ref genomes we accept the diff when empty.
             curatedTranscripts.add(transcript);

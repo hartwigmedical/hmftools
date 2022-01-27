@@ -818,7 +818,7 @@ public final class ExampleAnalysisTestFactory {
                 .alt("AA")
                 .type(VariantType.MNP)
                 .canonicalTranscript("ENST00000310581")
-                .canonicalEffect(Strings.EMPTY)
+                .canonicalEffect("upstream_gene_variant")
                 .canonicalCodingEffect(CodingEffect.NONE)
                 .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
                 .canonicalHgvsProteinImpact(Strings.EMPTY)

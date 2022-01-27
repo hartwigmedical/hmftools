@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -20,6 +21,8 @@ public final class SomaticVariants {
 
     private SomaticVariants() {
     }
+
+    private static final String UPSTREAM_GENE_VARIANT = "upstream_gene_variant";
 
     @NotNull
     public static List<ReportableVariant> sort(@NotNull List<ReportableVariant> variants) {
@@ -36,6 +39,17 @@ public final class SomaticVariants {
                 }
             }
         }).collect(Collectors.toList());
+    }
+
+    @NotNull
+    public static String determineCanonicalImpact(@NotNull String canonicalHgvsCodingImpact, @NotNull String canonicalEffect) {
+        String consequence;
+        if (canonicalEffect.equals(UPSTREAM_GENE_VARIANT)) {
+            consequence = "upstream";
+        } else {
+            consequence = canonicalHgvsCodingImpact;
+        }
+        return consequence;
     }
 
     public static boolean hasNotifiableGermlineVariant(@NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant) {
