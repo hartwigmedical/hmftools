@@ -92,9 +92,7 @@ minTumorMAPQ | Minimum mapq support of locally anchored reads | >=300
 duplicate | Must not be a duplicate of another nearby breakend  | =FALSE
 
 
-The following regions are blacklisted from calling telomeric rearrangements as they are frequently found to have telomeric sequences in recurrent artefacts across samples
-  
-  
+The following regions are blacklisted from calling telomeric rearrangements as they are frequently found to have telomeric sequences in recurrent artefacts across samples (currently for hg19/grch37 assembly only)  
 
 Chromosome | Start Position | End Position
 --|--|--
