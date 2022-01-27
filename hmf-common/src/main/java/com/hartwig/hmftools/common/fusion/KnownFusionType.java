@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 
 public enum KnownFusionType
 {
-    NONE("none"),
-    KNOWN_PAIR("known pair"),
-    PROMISCUOUS_5("5' promiscuous"),
-    PROMISCUOUS_3("3' promiscuous"),
+    NONE("None"),
+    KNOWN_PAIR("Known pair"),
+    PROMISCUOUS_5("5' Promiscuous"),
+    PROMISCUOUS_3("3' Promiscuous"),
     IG_KNOWN_PAIR("IG known pair"),
     IG_PROMISCUOUS("IG promiscuous"),
-    EXON_DEL_DUP("exon del dup"),
-    PROMISCUOUS_BOTH("5' en 3' promiscuous");
+    EXON_DEL_DUP("Exon del dup"),
+    PROMISCUOUS_BOTH("5' and 3' Promiscuous");
 
     private final String mDisplay;
 

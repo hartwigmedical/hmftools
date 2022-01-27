@@ -245,7 +245,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createHomozygousDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
-        String title = "Tumor specific homozygous disruptions";
+        String title = "Tumor specific homozygous disruptions \n (i.e. gene(s) for which the tumor harbors no wild type copy)";
         if (homozygousDisruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
