@@ -37,4 +37,19 @@ public class SomaticVariantsTest {
         assertEquals(variant3, sortedVariants.get(1));
         assertEquals(variant2, sortedVariants.get(2));
     }
+
+    @Test
+    public void canExtractMSI_genes() {
+        ReportableVariant base = VariantTestFactory.createTestReportableVariant();
+        ReportableVariant variant1 = ImmutableReportableVariant.builder().from(base).gene("MLH1").build();
+        ReportableVariant variant2 = ImmutableReportableVariant.builder().from(base).gene("MSH2").build();
+        ReportableVariant variant3 = ImmutableReportableVariant.builder().from(base).gene("MSH6").build();
+        ReportableVariant variant4 = ImmutableReportableVariant.builder().from(base).gene("PMS2").build();
+        ReportableVariant variant5 = ImmutableReportableVariant.builder().from(base).gene("EPCAM").build();
+        ReportableVariant variant6 = ImmutableReportableVariant.builder().from(base).gene("BRAF").build();
+
+        List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3, variant4, variant5, variant6);
+
+        assertEquals(5, SomaticVariants.determineMSIgenes(variants).size());
+    }
 }

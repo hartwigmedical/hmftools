@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.common.variant.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -90,7 +89,7 @@ public final class SomaticVariants {
 
     @Nullable
     public static String tVAFString(@Nullable String tVAF, boolean hasReliablePurity, Double totalCopyNumber) {
-        if (totalCopyNumber == null)  {
+        if (totalCopyNumber == null) {
             return DataUtil.NA_STRING;
         } else {
             double flooredCopyNumber = Math.max(0, totalCopyNumber);
@@ -167,5 +166,18 @@ public final class SomaticVariants {
 
     public static int countReportableVariants(@NotNull List<ReportableVariant> variants) {
         return variants.size();
+    }
+
+    @NotNull
+    public static Set<String> determineMSIgenes(@NotNull List<ReportableVariant> reportableVariants) {
+        Set<String> MSI_genes = Sets.newHashSet("MLH1", "MSH2", "MSH6", "PMS2", "EPCAM");
+        Set<String> genesDisplay = Sets.newHashSet();
+
+        for (ReportableVariant variant : reportableVariants) {
+            if (MSI_genes.contains(variant.gene())) {
+                genesDisplay.add(variant.gene());
+            }
+        }
+        return genesDisplay;
     }
 }

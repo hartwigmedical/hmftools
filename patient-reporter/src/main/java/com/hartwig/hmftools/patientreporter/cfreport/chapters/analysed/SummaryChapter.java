@@ -2,19 +2,16 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.protect.ProtectEvidence;
-import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.utils.DataUtil;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.QsFormNumber;
 import com.hartwig.hmftools.patientreporter.algo.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.algo.GenomicAnalysis;
@@ -153,7 +150,9 @@ public class SummaryChapter implements ReportChapter {
 
         int therapyEventCount = EvidenceItems.uniqueEventCount(analysis().tumorSpecificEvidence());
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Number of alterations with therapy indication").addStyle(ReportResources.bodyTextStyle())));
-        table.addCell(createTreatmentIndicationCell(therapyEventCount, EvidenceItems.onLabelTreatmentString(analysis().tumorSpecificEvidence()), "treatment(s)"));
+        table.addCell(createTreatmentIndicationCell(therapyEventCount,
+                EvidenceItems.onLabelTreatmentString(analysis().tumorSpecificEvidence()),
+                "treatment(s)"));
 
         int trialEventCount = ClinicalTrials.uniqueEventCount(analysis().clinicalTrials());
         int trialCount = ClinicalTrials.uniqueTrialCount(analysis().clinicalTrials());
@@ -164,7 +163,6 @@ public class SummaryChapter implements ReportChapter {
 
         reportDocument.add(div);
     }
-
 
     private void renderTumorCharacteristics(@NotNull Document reportDocument) {
         boolean hasReliablePurity = analysis().hasReliablePurity();
@@ -188,7 +186,9 @@ public class SummaryChapter implements ReportChapter {
                 table);
 
         String molecularTissuePrediction =
-                patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity() ? patientReport.molecularTissueOrigin().conclusion() : DataUtil.NA_STRING;
+                patientReport.molecularTissueOrigin() != null && patientReport.genomicAnalysis().hasReliablePurity()
+                        ? patientReport.molecularTissueOrigin().conclusion()
+                        : DataUtil.NA_STRING;
         Style dataStyleMolecularTissuePrediction =
                 hasReliablePurity ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
 
@@ -283,6 +283,15 @@ public class SummaryChapter implements ReportChapter {
                 .add(new Paragraph("Genes with driver mutation").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createGeneListCell(sortGenes(driverVariantGenes)));
 
+        MicrosatelliteStatus microSatelliteStabilityString =
+                analysis().hasReliablePurity() ? analysis().microsatelliteStatus() : MicrosatelliteStatus.UNKNOWN;
+        if (microSatelliteStabilityString == MicrosatelliteStatus.MSI) {
+            Set<String> genesDisplay = SomaticVariants.determineMSIgenes(analysis().reportableVariants());
+            table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+                    .add(new Paragraph("MSI genes").addStyle(ReportResources.bodyTextStyle())));
+            table.addCell(createGeneListCell(sortGenes(genesDisplay)));
+        }
+
         int reportedVariants = SomaticVariants.countReportableVariants(analysis().reportableVariants());
         Style reportedVariantsStyle =
                 (reportedVariants > 0) ? ReportResources.dataHighlightStyle() : ReportResources.dataHighlightNaStyle();
@@ -334,7 +343,7 @@ public class SummaryChapter implements ReportChapter {
             pgxGenes = Pharmacogenetics.phenotypesGenes(patientReport.peachGenotypes());
             pgxStyle = ReportResources.dataHighlightStyle();
             reportedPhenotypes = Integer.toString(Pharmacogenetics.countPhenotypes(patientReport.peachGenotypes()));
-        } else  {
+        } else {
             pgxFunctions = Sets.newHashSet(DataUtil.NA_STRING);
             pgxGenes = Sets.newHashSet(DataUtil.NA_STRING);
             pgxStyle = ReportResources.dataHighlightNaStyle();
@@ -395,7 +404,7 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Cell createTreatmentIndicationCell(int eventCount, @NotNull String  treatmentCount, @NotNull String treatmentsName) {
+    private static Cell createTreatmentIndicationCell(int eventCount, @NotNull String treatmentCount, @NotNull String treatmentsName) {
         String treatmentText;
         Style style;
         if (eventCount > 0) {
@@ -410,7 +419,7 @@ public class SummaryChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Cell createStudyIndicationCell(int eventCount, int  treatmentCount, @NotNull String treatmentsName) {
+    private static Cell createStudyIndicationCell(int eventCount, int treatmentCount, @NotNull String treatmentsName) {
         String treatmentText;
         Style style;
         if (eventCount > 0) {
