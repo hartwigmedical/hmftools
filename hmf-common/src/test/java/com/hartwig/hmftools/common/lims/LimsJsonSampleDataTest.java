@@ -29,13 +29,18 @@ public class LimsJsonSampleDataTest {
         LimsJsonSampleData missingSeqVersion = buildLimsSampleEntry("PREP013V23-QC037V20-SEQ008V");
         assertEquals(Lims.NOT_AVAILABLE_STRING, missingSeqVersion.labProcedures());
 
-        String completeSopString = "PREP013V23-QC037V20-SEQ008V25";
-        LimsJsonSampleData completeEntry = buildLimsSampleEntry(completeSopString);
-        assertEquals(completeSopString, completeEntry.labProcedures());
+        String completeSopStringOld = "PREP013V23-QC037V20-SEQ008V25";
+        LimsJsonSampleData completeEntryOld = buildLimsSampleEntry(completeSopStringOld);
+        assertEquals(completeSopStringOld, completeEntryOld.labProcedures());
 
         String completeSopStringNew = "PREP013V23-ENR11V12-QC037V20-SEQ008V25";
         LimsJsonSampleData completeEntryNew = buildLimsSampleEntry(completeSopStringNew);
         assertEquals(completeSopStringNew, completeEntryNew.labProcedures());
+
+        String completeSopStringNewWithoutENR = "PREP013V23-ENRnaVna-QC037V20-SEQ008V25";
+        String completeSopStringUsable = "PREP013V23-QC037V20-SEQ008V25";
+        LimsJsonSampleData completeSopStringNewWithoutENRCpde = buildLimsSampleEntry(completeSopStringNewWithoutENR);
+        assertEquals(completeSopStringUsable, completeSopStringNewWithoutENRCpde.labProcedures());
     }
 
     @NotNull

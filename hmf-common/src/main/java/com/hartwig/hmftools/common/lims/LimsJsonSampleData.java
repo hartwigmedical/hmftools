@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 abstract class LimsJsonSampleData {
-
     @NotNull
     @SerializedName("sample_name")
     public abstract String sampleId();
@@ -105,14 +104,22 @@ abstract class LimsJsonSampleData {
     @NotNull
     @Value.Derived
     public String labProcedures() {
+        String interpretSopString;
+        if (labSopVersions().contains("ENRnaVna")) {
+            interpretSopString = labSopVersions().replace("ENRnaVna-", "");
+        } else {
+            interpretSopString = labSopVersions();
+        }
+
         Pattern patternOld = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
         Pattern patternNew = Pattern.compile("PREP(\\d+)V(\\d+)-ENR(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");
-        Matcher matcherOld = patternOld.matcher(labSopVersions());
-        Matcher matcherNew = patternNew.matcher(labSopVersions());
+        Matcher matcherOld = patternOld.matcher(interpretSopString);
+        Matcher matcherNew = patternNew.matcher(interpretSopString);
+
         if (matcherNew.find()) {
-            return labSopVersions();
+            return interpretSopString;
         } else if (matcherOld.find()) {
-            return labSopVersions();
+            return interpretSopString;
         } else {
             return Lims.NOT_AVAILABLE_STRING;
         }
