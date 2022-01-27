@@ -8,8 +8,8 @@ public enum KnownFusionType
     KNOWN_PAIR("known pair"),
     PROMISCUOUS_5("5' promiscuous"),
     PROMISCUOUS_3("3' promiscuous"),
-    IG_KNOWN_PAIR("ig known pair"),
-    IG_PROMISCUOUS("ig promiscuous"),
+    IG_KNOWN_PAIR("IG known pair"),
+    IG_PROMISCUOUS("IG promiscuous"),
     EXON_DEL_DUP("exon del dup"),
     PROMISCUOUS_BOTH("5' en 3' promiscuous");
 
