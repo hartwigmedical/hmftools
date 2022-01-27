@@ -251,15 +251,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Wildtype remaining") });
+                        TableUtil.createHeaderCell("Gene"), });
 
         for (ReportableHomozygousDisruption homozygousDisruption : HomozygousDisruptions.sort(homozygousDisruptions)) {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
-            contentTable.addCell(TableUtil.createContentCell("No"));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
