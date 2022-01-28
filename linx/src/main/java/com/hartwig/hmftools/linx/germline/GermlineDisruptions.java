@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -381,18 +382,27 @@ public class GermlineDisruptions
         final List<SvDisruptionData> allDisruptions = Lists.newArrayList(mDisruptions);
         allDisruptions.addAll(standardDisruptions);
 
-        Set<SvVarData> processedSVs = Sets.newHashSet();
+        Map<SvVarData,Set<String>> processedSvGenes = Maps.newHashMap();
 
         for(final SvDisruptionData disruptionData : allDisruptions)
         {
             final SvVarData var = disruptionData.Var;
 
-            if(processedSVs.contains(var))
-                continue;
-
-            processedSVs.add(var);
-
             final GeneData gene = disruptionData.Gene;
+
+            Set<String> processedGenes = processedSvGenes.get(var);
+
+            if(processedGenes == null)
+            {
+                processedGenes = Sets.newHashSet();
+                processedSvGenes.put(var, processedGenes);
+            }
+            else if(processedGenes.contains(gene.GeneName))
+            {
+                continue;
+            }
+
+            processedGenes.add(gene.GeneName);
 
             StructuralVariantData svData = var.getSvData();
 
