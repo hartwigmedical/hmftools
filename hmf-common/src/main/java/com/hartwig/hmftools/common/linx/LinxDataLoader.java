@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.linx.LinxDriver;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
+import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -23,14 +24,14 @@ public final class LinxDataLoader {
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv)
-            throws IOException {
-       return load(linxFusionTsv, linxBreakendTsv, linxDriverCatalogTsv, null);
+    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv,
+            @NotNull String linxDriverCatalogTsv) throws IOException {
+        return load(linxFusionTsv, linxBreakendTsv, null, linxDriverCatalogTsv, null);
     }
 
     @NotNull
-    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @NotNull String linxDriverCatalogTsv,
-            @Nullable String linxDriverTsv) throws IOException {
+    public static LinxData load(@NotNull String linxFusionTsv, @NotNull String linxBreakendTsv, @Nullable String linxSvsTsv,
+            @NotNull String linxDriverCatalogTsv, @Nullable String linxDriverTsv) throws IOException {
         LOGGER.info("Loading LINX data from {}", new File(linxFusionTsv).getParent());
         List<LinxFusion> fusions = LinxFusion.read(linxFusionTsv);
 
@@ -45,9 +46,15 @@ public final class LinxDataLoader {
         }
         LOGGER.info(" Loaded {} fusions (of which {} are reportable) from {}", fusions.size(), reportableFusions.size(), linxFusionTsv);
 
+        List<LinxSvAnnotation> linxSvs = Lists.newArrayList();
+        if (linxSvsTsv != null) {
+            linxSvs = LinxSvAnnotation.read(linxSvsTsv);
+            LOGGER.info(" Loaded {} reportable disruptions from {}", linxSvs.size(), linxSvsTsv);
+        }
+
         List<LinxBreakend> linxBreakends =
                 LinxBreakend.read(linxBreakendTsv).stream().filter(LinxBreakend::reportedDisruption).collect(Collectors.toList());
-        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends);
+        List<ReportableGeneDisruption> geneDisruptions = ReportableGeneDisruptionFactory.convert(linxBreakends, linxSvs);
         LOGGER.debug(" Generated {} reportable disruptions based on {} breakends", geneDisruptions.size(), linxBreakends.size());
         LOGGER.info(" Loaded {} reportable disruptions from {}", geneDisruptions.size(), linxBreakendTsv);
 

@@ -3,9 +3,11 @@ package com.hartwig.hmftools.common.linx;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
 
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ReportableGeneDisruptionFactory {
 
@@ -22,7 +25,7 @@ public final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions) {
+    public static List<ReportableGeneDisruption> convert(@NotNull List<LinxBreakend> disruptions, @NotNull List<LinxSvAnnotation> linxSvs) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
@@ -47,6 +50,8 @@ public final class ReportableGeneDisruptionFactory {
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, lowestUndisruptedCopyNumber))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
+                        .svId(primaryDisruptionLeft.svId())
+                        .clusterId(determineClusterId(primaryDisruptionLeft, linxSvs))
                         .build());
             } else {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
@@ -57,11 +62,22 @@ public final class ReportableGeneDisruptionFactory {
                         .junctionCopyNumber(primaryDisruptionLeft.junctionCopyNumber())
                         .undisruptedCopyNumber(Math.max(0, primaryDisruptionLeft.undisruptedCopyNumber()))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
+                        .svId(primaryDisruptionLeft.svId())
+                        .clusterId(determineClusterId(primaryDisruptionLeft, linxSvs))
                         .build());
             }
         }
-
         return reportableDisruptions;
+    }
+
+
+    public static Integer determineClusterId(@NotNull LinxBreakend primaryDisruptionLeft, @NotNull List<LinxSvAnnotation> linxSvs) {
+        for (LinxSvAnnotation linxSvAnnotation : linxSvs) {
+            if (linxSvAnnotation.svId() == primaryDisruptionLeft.svId()) {
+                return linxSvAnnotation.clusterId();
+            }
+        }
+        return null;
     }
 
     @NotNull

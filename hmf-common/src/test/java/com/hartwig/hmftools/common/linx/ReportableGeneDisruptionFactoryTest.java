@@ -7,7 +7,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.common.sv.linx.LinxBreakend;
+import com.hartwig.hmftools.common.sv.linx.LinxSvAnnotation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -18,15 +20,33 @@ public class ReportableGeneDisruptionFactoryTest {
     private static final double EPSILON = 1.0e-10;
 
     @Test
+    public void candetermineClusterId() {
+        LinxBreakend pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1)
+                .gene("ROPN1B")
+                .chromosome("3")
+                .chrBand("p12")
+                .type("INV")
+                .junctionCopyNumber(1.12)
+                .build();
+
+        List<LinxSvAnnotation> linxAnnotationBuilder =
+                Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).build());
+        //assertEquals(2, ReportableGeneDisruptionFactory.determineClusterId(pairedDisruptionBuilder, linxAnnotationBuilder));
+    }
+
+    @Test
     public void canConvertPairedDisruption() {
         ImmutableLinxBreakend.Builder pairedDisruptionBuilder =
                 createTestDisruptionBuilder().svId(1).gene("ROPN1B").chromosome("3").chrBand("p12").type("INV").junctionCopyNumber(1.12);
+        List<LinxSvAnnotation> linxAnnotationBuilder =
+                Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).geneStart("ROPN1B").geneEnd("ROPN1B").build());
 
         List<LinxBreakend> pairedDisruptions =
                 Lists.newArrayList(pairedDisruptionBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build(),
                         pairedDisruptionBuilder.exonUp(8).exonDown(9).undisruptedCopyNumber(2.1).build());
 
-        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
+        List<ReportableGeneDisruption> reportableDisruptions =
+                ReportableGeneDisruptionFactory.convert(pairedDisruptions, linxAnnotationBuilder);
 
         assertEquals(1, reportableDisruptions.size());
 
@@ -46,7 +66,8 @@ public class ReportableGeneDisruptionFactoryTest {
     @Test
     public void doesNotPairDisruptionsOnDifferentGenes() {
         ImmutableLinxBreakend.Builder pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1);
-
+        List<LinxSvAnnotation> linxAnnotationBuilder =
+                Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).geneStart("ROPN1B").geneEnd("ROPN1B").build());
         List<LinxBreakend> pairedDisruptions = Lists.newArrayList(pairedDisruptionBuilder.gene("ROPN1B")
                         .svId(1)
                         .junctionCopyNumber(1.0)
@@ -55,7 +76,8 @@ public class ReportableGeneDisruptionFactoryTest {
                 pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(2.3).build(),
                 pairedDisruptionBuilder.gene("SETD2").svId(1).junctionCopyNumber(1.0).undisruptedCopyNumber(1.7).build());
 
-        List<ReportableGeneDisruption> reportableDisruptions = ReportableGeneDisruptionFactory.convert(pairedDisruptions);
+        List<ReportableGeneDisruption> reportableDisruptions =
+                ReportableGeneDisruptionFactory.convert(pairedDisruptions, linxAnnotationBuilder);
 
         assertEquals(2, reportableDisruptions.size());
     }
@@ -89,5 +111,29 @@ public class ReportableGeneDisruptionFactoryTest {
                 .exonUp(0)
                 .exonDown(0)
                 .junctionCopyNumber(0.1);
+    }
+
+    @NotNull
+    private static ImmutableLinxSvAnnotation.Builder createTestAnnotationBuilder() {
+        return ImmutableLinxSvAnnotation.builder()
+                .vcfId(Strings.EMPTY)
+                .svId(0)
+                .clusterId(0)
+                .clusterReason(Strings.EMPTY)
+                .fragileSiteStart(true)
+                .fragileSiteEnd(true)
+                .isFoldback(true)
+                .lineTypeStart(Strings.EMPTY)
+                .lineTypeEnd(Strings.EMPTY)
+                .junctionCopyNumberMin(0)
+                .junctionCopyNumberMax(0)
+                .geneStart(Strings.EMPTY)
+                .geneEnd(Strings.EMPTY)
+                .localTopologyIdStart(0)
+                .localTopologyIdEnd(0)
+                .localTopologyStart(Strings.EMPTY)
+                .localTopologyEnd(Strings.EMPTY)
+                .localTICountStart(0)
+                .localTICountEnd(0);
     }
 }

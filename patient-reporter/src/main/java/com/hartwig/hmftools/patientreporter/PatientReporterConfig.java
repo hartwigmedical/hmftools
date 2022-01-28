@@ -60,6 +60,7 @@ public interface PatientReporterConfig {
     String PURPLE_CIRCOS_PLOT = "purple_circos_plot";
     String LINX_FUSION_TSV = "linx_fusion_tsv";
     String LINX_BREAKEND_TSV = "linx_breakend_tsv";
+    String LINX_SVS_TSV = "linx_svs_tsv";
     String LINX_DRIVER_CATALOG_TSV = "linx_driver_catalog_tsv";
     String CHORD_PREDICTION_TXT = "chord_prediction_txt";
     String MOLECULAR_TISSUE_ORIGIN_TXT = "molecular_tissue_origin_txt";
@@ -118,6 +119,7 @@ public interface PatientReporterConfig {
         options.addOption(PURPLE_CIRCOS_PLOT, true, "Path towards the purple circos plot.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(LINX_BREAKEND_TSV, true, "Path towards the linx breakend TSV.");
+        options.addOption(LINX_SVS_TSV, true, "Path towards the linx svs TSV.");
         options.addOption(LINX_DRIVER_CATALOG_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT.");
         options.addOption(MOLECULAR_TISSUE_ORIGIN_TXT, true, "Path towards the molecular tissue origin TXT.");
@@ -218,6 +220,9 @@ public interface PatientReporterConfig {
     String linxBreakendTsv();
 
     @NotNull
+    String linxSvsTsv();
+
+    @NotNull
     String linxDriverCatalogTsv();
 
     @NotNull
@@ -290,6 +295,7 @@ public interface PatientReporterConfig {
         String purpleCircosPlot = Strings.EMPTY;
         String linxFusionTsv = Strings.EMPTY;
         String linxBreakendTsv = Strings.EMPTY;
+        String linxSvsTsv = Strings.EMPTY;
         String linxDriverCatalogTsv = Strings.EMPTY;
         String chordPredictionTxt = Strings.EMPTY;
         String molecularTissueOriginTxt = Strings.EMPTY;
@@ -323,6 +329,7 @@ public interface PatientReporterConfig {
             purpleCircosPlot = nonOptionalFile(cmd, PURPLE_CIRCOS_PLOT);
             linxFusionTsv = nonOptionalFile(cmd, LINX_FUSION_TSV);
             linxBreakendTsv = nonOptionalFile(cmd, LINX_BREAKEND_TSV);
+            linxSvsTsv = nonOptionalFile(cmd, LINX_SVS_TSV);
             linxDriverCatalogTsv = nonOptionalFile(cmd, LINX_DRIVER_CATALOG_TSV);
             chordPredictionTxt = nonOptionalFile(cmd, CHORD_PREDICTION_TXT);
             molecularTissueOriginTxt = nonOptionalFile(cmd, MOLECULAR_TISSUE_ORIGIN_TXT);
@@ -360,6 +367,7 @@ public interface PatientReporterConfig {
                 .purpleCircosPlot(purpleCircosPlot)
                 .linxFusionTsv(linxFusionTsv)
                 .linxBreakendTsv(linxBreakendTsv)
+                .linxSvsTsv(linxSvsTsv)
                 .linxDriverCatalogTsv(linxDriverCatalogTsv)
                 .chordPredictionTxt(chordPredictionTxt)
                 .molecularTissueOriginTxt(molecularTissueOriginTxt)
