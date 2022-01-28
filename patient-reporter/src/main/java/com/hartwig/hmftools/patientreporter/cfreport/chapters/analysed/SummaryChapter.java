@@ -288,7 +288,7 @@ public class SummaryChapter implements ReportChapter {
         if (microSatelliteStabilityString == MicrosatelliteStatus.MSI) {
             Set<String> genesDisplay = SomaticVariants.determineMSIgenes(analysis().reportableVariants());
             table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-                    .add(new Paragraph("MSI genes").addStyle(ReportResources.bodyTextStyle())));
+                    .add(new Paragraph("Mismatch repair genes").addStyle(ReportResources.bodyTextStyle())));
             table.addCell(createGeneListCell(sortGenes(genesDisplay)));
         }
 
