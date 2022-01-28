@@ -290,10 +290,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(fusion.junctionCopyNumber(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(fusion.phased().display()).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(fusion.phased().displayStr()).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(fusion.reportedType()).setTextAlignment(TextAlignment.CENTER));
 
-            contentTable.addCell(TableUtil.createContentCell(fusion.likelihood().display()).setTextAlignment(TextAlignment.CENTER));
+            contentTable.addCell(TableUtil.createContentCell(fusion.likelihood().displayStr()).setTextAlignment(TextAlignment.CENTER));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

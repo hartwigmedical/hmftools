@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.common.sv.linx;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType.NA;
-import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.INFRAME;
-import static com.hartwig.hmftools.common.sv.linx.FusionPhasedType.OUT_OF_FRAME;
 import static com.hartwig.hmftools.common.sv.linx.LinxCluster.DELIMITER;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createFieldsIndexMap;
 

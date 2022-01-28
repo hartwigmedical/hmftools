@@ -1,25 +1,36 @@
 package com.hartwig.hmftools.common.fusion;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum KnownFusionType
 {
-    NONE("None"),
-    KNOWN_PAIR("Known pair"),
-    PROMISCUOUS_5("5' Promiscuous"),
-    PROMISCUOUS_3("3' Promiscuous"),
-    IG_KNOWN_PAIR("IG known pair"),
-    IG_PROMISCUOUS("IG promiscuous"),
-    EXON_DEL_DUP("Exon del dup"),
-    PROMISCUOUS_BOTH("5' and 3' Promiscuous");
+    NONE,
+    KNOWN_PAIR,
+    PROMISCUOUS_5,
+    PROMISCUOUS_3,
+    IG_KNOWN_PAIR,
+    IG_PROMISCUOUS,
+    EXON_DEL_DUP;
 
-    private final String mDisplay;
+    public static final String PROMISCUOUS_BOTH = "PROMISCUOUS_BOTH";
 
-    KnownFusionType(@NotNull final String display) {
-        mDisplay = display;
-    }
-
-    public String display() {
-        return mDisplay;
+    public static String displayStr(final String knownTypeStr)
+    {
+        if(knownTypeStr.equals(NONE.toString()))
+            return "None";
+        else if(knownTypeStr.equals(KNOWN_PAIR.toString()))
+            return "Known pair";
+        else if(knownTypeStr.equals(PROMISCUOUS_5.toString()))
+            return "5' Promiscuous";
+        else if(knownTypeStr.equals(PROMISCUOUS_3.toString()))
+            return "3' Promiscuous";
+        else if(knownTypeStr.equals(IG_KNOWN_PAIR.toString()))
+            return "IG known pair";
+        else if(knownTypeStr.equals(IG_PROMISCUOUS.toString()))
+            return "IG promiscuous";
+        else if(knownTypeStr.equals(EXON_DEL_DUP.toString()))
+            return "Exon del dup";
+        else if(knownTypeStr.equals(PROMISCUOUS_BOTH))
+            return "5' and 3' Promiscuous";
+        else
+            return knownTypeStr;
     }
 }

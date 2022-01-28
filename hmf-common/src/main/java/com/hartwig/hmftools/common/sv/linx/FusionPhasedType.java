@@ -1,23 +1,19 @@
 package com.hartwig.hmftools.common.sv.linx;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum FusionPhasedType
 {
-    INFRAME("Inframe"),
-    SKIPPED_EXONS("Skipped exons"),
-    OUT_OF_FRAME ("Out of frame");
+    INFRAME,
+    SKIPPED_EXONS,
+    OUT_OF_FRAME;
 
-    private final String mDisplay;
-
-    FusionPhasedType(@NotNull final String display)
+    public String displayStr()
     {
-        mDisplay = display;
+        switch(this)
+        {
+            case INFRAME: return "Inframe";
+            case SKIPPED_EXONS: return "Skipped exons";
+            case OUT_OF_FRAME: return "Out of frame";
+            default: return "Invalid";
+        }
     }
-
-    public String display()
-    {
-        return mDisplay;
-    }
-
 }

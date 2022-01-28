@@ -45,9 +45,9 @@ public final class FusionTable {
             details.addCell(CellUtil.createKey("RNA expression"));
             details.addCell(CellUtil.createValue(ReportResources.NOT_AVAILABLE));
             details.addCell(CellUtil.createKey("Phasing"));
-            details.addCell(CellUtil.createValue(fusion.phased().display()));
+            details.addCell(CellUtil.createValue(fusion.phased().displayStr()));
             details.addCell(CellUtil.createKey("Reported type (DL)"));
-            details.addCell(CellUtil.createValue(fusion.reportedType() + " (" + fusion.likelihood().display() + ")"));
+            details.addCell(CellUtil.createValue(fusion.reportedType() + " (" + fusion.likelihood().displayStr() + ")"));
             details.addCell(CellUtil.createKey("Chain links (terminated?)"));
             details.addCell(CellUtil.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)")));
             details.addCell(CellUtil.createKey("Domains kept"));
