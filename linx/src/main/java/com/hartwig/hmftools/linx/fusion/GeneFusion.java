@@ -99,7 +99,7 @@ public class GeneFusion
         if(mKnownFusionType == PROMISCUOUS_5 || mKnownFusionType == PROMISCUOUS_3)
         {
             if(mIsPromiscuous[FS_UP] && mIsPromiscuous[FS_DOWN])
-                return PROMISCUOUS_BOTH.toString();
+                return PROMISCUOUS_BOTH;
         }
 
         return mKnownFusionType.toString();
