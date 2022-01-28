@@ -20,7 +20,7 @@ public class ReportableGeneDisruptionFactoryTest {
     private static final double EPSILON = 1.0e-10;
 
     @Test
-    public void candetermineClusterId() {
+    public void canDetermineClusterId() {
         LinxBreakend pairedDisruptionBuilder = createTestDisruptionBuilder().svId(1)
                 .gene("ROPN1B")
                 .chromosome("3")
@@ -31,7 +31,7 @@ public class ReportableGeneDisruptionFactoryTest {
 
         List<LinxSvAnnotation> linxAnnotationBuilder =
                 Lists.newArrayList(createTestAnnotationBuilder().svId(1).clusterId(2).build());
-        //assertEquals(2, ReportableGeneDisruptionFactory.determineClusterId(pairedDisruptionBuilder, linxAnnotationBuilder));
+        assertEquals(2, (int) ReportableGeneDisruptionFactory.determineClusterId(pairedDisruptionBuilder, linxAnnotationBuilder));
     }
 
     @Test
