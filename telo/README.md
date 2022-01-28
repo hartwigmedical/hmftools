@@ -2,7 +2,10 @@
 
 ## Running TEAL
 
-TO DO => Add example usage
+TO DO => Add example usage 3 cases:
+1. germline only
+2. tumor-normal without HMF pipeline
+3. tumor=normal with HMF pipeline dependencies
 
 ### INPUTS
 
@@ -143,15 +146,8 @@ DuplicatePercent | Estimated proportion of duplicates in file (from WGS metrics)
 fullFragments | Count of fragments with both reads classified as telomeric
 cRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a C-rich orientation
 gRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a G-rich orientation
-TotalTelomericReads | Count of telomeric reads excluding estimated interstitial repeats
 RawTelomereLength | Telomeric reads normalized for total coverage
 FinalTelomereLength | Final telomere length adjusted for tumor purity (=Raw length for ref sample)
-T-TypeProportion | T-Type repeats / total telomeric repeats
-C-TypeProportion | C-Type repeats / total telomeric repeats
-G-TypeProportion | G-Type repeats / total telomeric repeats
-J-TypeProportion | J-Type repeats / total telomeric repeats
-OtherTypeProportion | Other Type repeats / total telomeric repeats
-
 
 ### Rearrangements
 Field | Description
@@ -163,7 +159,7 @@ COrGRich | ‘C’ or ‘G’
 DistanceToTelomere | Distance to nearest reference telomere in nucleotides
 MaxTelomericLength | Longest continuous telomeric segment on any fragment supporting the rearrangement
 MaxAnchorLength | Longest locally anchored segment on any fragment supporting the rearrangement
-Filter | Either ‘PASS’ or one or more of the below filters
+Filter | Either ‘PASS’ or one or more of the specified filters separated by semi colon
 TumorSRTelNoDP | Count of fragments in tumor with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read locally anchored
 TumorDPTelNoSR | Count of fragments in tumor with 1 read locally anchored but not spanning the breakend and the paired read discordant and containing telomeric sequence
 TumorSRTelDPTel | Count of fragments in tumor with 1 read with soft clip supporting the breakend and containing telomeric sequence with the paired read discordant and containing telomeric sequence
@@ -182,6 +178,4 @@ CohortFrequency | Annotated from cohortFreq.bed file
 * A blacklist bed file is currently only provided for hg19 / grch37 assembly.  
 * TEAL represents each breakend independently, but ideally should pair up rearrangements which are supported by the same fragment and represent telomeric insertions
 * TEAL should determine a consensus sequence for each telomeric rearrangement
-
-
-
+* TEAL could aslo count relatve amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
