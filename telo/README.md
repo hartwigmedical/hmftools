@@ -2,7 +2,10 @@
 
 ## Running TEAL
 
-TO DO => Add example usage
+TO DO => Add example usage 3 cases:
+1. germline only
+2. tumor-normal without HMF pipeline
+3. tumor=normal with HMF pipeline dependencies
 
 ### INPUTS
 
