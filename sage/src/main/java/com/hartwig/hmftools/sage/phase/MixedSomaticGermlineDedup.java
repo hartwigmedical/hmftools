@@ -148,7 +148,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
         int difference = 0;
         for(int position = overlapStart; position <= overlapEnd; position++)
         {
-            int variantIndex = (int) (position - variant.position());
+            int variantIndex = position - variant.position();
 
             if(variant.ref().charAt(variantIndex) != variant.alt().charAt(variantIndex))
             {
