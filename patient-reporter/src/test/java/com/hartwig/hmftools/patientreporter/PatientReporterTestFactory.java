@@ -34,6 +34,7 @@ public final class PatientReporterTestFactory {
     private static final String PURPLE_CIRCOS_FILE = RUN_DIRECTORY + "/purple/plot/sample.circos.png";
     private static final String LINX_FUSIONS_TSV = RUN_DIRECTORY + "/linx/sample.linx.fusion.tsv";
     private static final String LINX_BREAKEND_TSV = RUN_DIRECTORY + "/linx/sample.linx.breakend.tsv";
+    private static final String LINX_SVS_TSV = RUN_DIRECTORY + "/linx/sample.linx.svs.tsv";
     private static final String LINX_DRIVER_CATALOG_TSV = RUN_DIRECTORY + "/linx/sample.linx.driver.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/sample_chord_prediction.txt";
     private static final String MOLECULAR_TISSUE_ORIGIN_TXT = RUN_DIRECTORY + "/cuppa/sample.cuppa.conclusion.txt";
@@ -78,6 +79,7 @@ public final class PatientReporterTestFactory {
                 .purpleCircosPlot(PURPLE_CIRCOS_FILE)
                 .linxFusionTsv(LINX_FUSIONS_TSV)
                 .linxBreakendTsv(LINX_BREAKEND_TSV)
+                .linxSvsTsv(LINX_SVS_TSV)
                 .linxDriverCatalogTsv(LINX_DRIVER_CATALOG_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .molecularTissueOriginTxt(MOLECULAR_TISSUE_ORIGIN_TXT)

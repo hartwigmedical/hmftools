@@ -71,7 +71,7 @@ public class QCFailPGXChapter implements ReportChapter {
 
         if (reportPeach) {
             if (peachGenotypes.isEmpty()) {
-                return TableUtil.createNoneReportTable(title);
+                return TableUtil.createNoneReportTable(title, null);
             } else  {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
@@ -88,7 +88,7 @@ public class QCFailPGXChapter implements ReportChapter {
                             .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
                             .setTextAlignment(TextAlignment.CENTER));
                 }
-                return TableUtil.createWrappingReportTable(title, contentTable);
+                return TableUtil.createWrappingReportTable(title, null, contentTable);
             }
         } else {
             return TableUtil.createNAReportTable(title);

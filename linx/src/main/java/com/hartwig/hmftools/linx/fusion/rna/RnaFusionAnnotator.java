@@ -286,7 +286,7 @@ public class RnaFusionAnnotator
 
         if(fivePrimeProm && threePrimeProm)
         {
-            rnaFusion.setKnownType(PROMISCUOUS_BOTH.toString());
+            rnaFusion.setKnownType(PROMISCUOUS_BOTH);
         }
         else if(fivePrimeProm)
         {

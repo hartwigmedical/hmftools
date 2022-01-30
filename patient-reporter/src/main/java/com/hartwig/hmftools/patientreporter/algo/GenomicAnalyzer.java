@@ -59,7 +59,12 @@ public class GenomicAnalyzer {
                 config.purpleSomaticCopyNumberTsv(),
                 config.refGenomeVersion());
 
-        LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv());
+        LinxData linxData = LinxDataLoader.load(config.linxFusionTsv(),
+                config.linxBreakendTsv(),
+                config.linxSvsTsv(),
+                config.linxDriverCatalogTsv(),
+                null);
+
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(config.annotatedVirusTsv());
 
         List<ReportableVariant> reportableVariants =

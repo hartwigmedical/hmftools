@@ -116,7 +116,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
         contentTable.addCell(TableUtil.createContentCell(Strings.EMPTY));
 
-        return TableUtil.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, null, contentTable);
     }
 
     @NotNull
@@ -149,7 +149,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             @NotNull Map<ReportableVariant, Boolean> notifyGermlineStatusPerVariant, boolean hasReliablePurity) {
         String title = "Tumor specific variants";
         if (reportableVariants.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title, null);
         }
 
         Table contentTable;
@@ -210,7 +210,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             + "specialist should be advised.").addStyle(ReportResources.subTextStyle())));
         }
 
-        return TableUtil.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, null, contentTable);
     }
 
     @NotNull
@@ -218,7 +218,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             @NotNull List<CnPerChromosomeArmData> cnPerChromosome) {
         String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title, null);
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80, 60, 60, 150 },
@@ -241,14 +241,15 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER));
         }
 
-        return TableUtil.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, null, contentTable);
     }
 
     @NotNull
     private static Table createHomozygousDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
-        String title = "Tumor specific homozygous disruptions \n (i.e. gene(s) for which the tumor harbors no wild type copy)";
+        String title = "Tumor specific homozygous disruptions";
+        String subtitle = "(i.e. gene(s) for which the tumor harbors no wild type copy)";
         if (homozygousDisruptions.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title, subtitle);
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100 },
@@ -261,14 +262,14 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
         }
 
-        return TableUtil.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, subtitle, contentTable);
     }
 
     @NotNull
     private static Table createFusionsTable(@NotNull List<LinxFusion> fusions, boolean hasReliablePurity) {
         String title = "Tumor specific gene fusions";
         if (fusions.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title, null);
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 60, 40 },
@@ -296,24 +297,27 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(fusion.likelihood().displayStr()).setTextAlignment(TextAlignment.CENTER));
         }
 
-        return TableUtil.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, null, contentTable);
     }
 
     @NotNull
     private static Table createDisruptionsTable(@NotNull List<ReportableGeneDisruption> disruptions, boolean hasReliablePurity) {
         String title = "Tumor specific gene disruptions";
         if (disruptions.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title, null);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 50, 85, 85 },
-                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
-                        TableUtil.createHeaderCell("Disrupted range"), TableUtil.createHeaderCell("Type"),
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 50, 100, 50, 85, 85 },
+                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Cluster ID"),
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Disrupted range"),
+                        TableUtil.createHeaderCell("Type").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
 
         for (ReportableGeneDisruption disruption : GeneDisruptions.sort(disruptions)) {
             contentTable.addCell(TableUtil.createContentCell(disruption.location()));
+            contentTable.addCell(TableUtil.createContentCell(String.valueOf(disruption.clusterId()))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));
             contentTable.addCell(TableUtil.createContentCell(disruption.type()));
@@ -322,7 +326,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(disruption.undisruptedCopyNumber(),
                     hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
         }
-        return TableUtil.createWrappingReportTable(title, contentTable);
+        return TableUtil.createWrappingReportTable(title, null, contentTable);
     }
 
     @NotNull
@@ -333,7 +337,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             String noConsent = "This patient did not give his/her permission for reporting of virus results.";
             return TableUtil.createNoConsentReportTable(title, noConsent);
         } else if (viruses.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
+            return TableUtil.createNoneReportTable(title, null);
         } else {
             Table contentTable = TableUtil.createReportContentTable(new float[] { 150, 160, 100, 40 },
                     new Cell[] { TableUtil.createHeaderCell("Virus"),
@@ -351,7 +355,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         .setTextAlignment(TextAlignment.CENTER));
             }
 
-            return TableUtil.createWrappingReportTable(title, contentTable);
+            return TableUtil.createWrappingReportTable(title, null, contentTable);
         }
     }
 
@@ -361,7 +365,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         if (reportPeach) {
             if (peachGenotypes.isEmpty()) {
-                return TableUtil.createNoneReportTable(title);
+                return TableUtil.createNoneReportTable(title, null);
             } else {
                 Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 60, 60, 100, 60 },
                         new Cell[] { TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Genotype"),
@@ -378,7 +382,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                             .setAction(PdfAction.createURI(Pharmacogenetics.url(peachGenotype.urlPrescriptionInfo())))
                             .setTextAlignment(TextAlignment.CENTER));
                 }
-                return TableUtil.createWrappingReportTable(title, contentTable);
+                return TableUtil.createWrappingReportTable(title, null, contentTable);
             }
         } else {
             String noConsent = "This patient did not give his/her permission for reporting of pharmacogenomics results.";

@@ -120,6 +120,10 @@ public final class ReportResources {
         return new Style().setFont(fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
+    public static Style sectionSubTitleStyle() {
+        return new Style().setFont(fontRegular()).setFontSize(8).setFontColor(ReportResources.PALETTE_BLUE);
+    }
+
     public static Style tableHeaderStyle() {
         return new Style().setFont(fontRegular()).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }

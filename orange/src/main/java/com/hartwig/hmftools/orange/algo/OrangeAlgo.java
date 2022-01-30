@@ -203,7 +203,7 @@ public class OrangeAlgo {
 
     @NotNull
     private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
-        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), config.linxDriverCatalogTsv(), config.linxDriverTsv());
+        return LinxDataLoader.load(config.linxFusionTsv(), config.linxBreakendTsv(), null, config.linxDriverCatalogTsv(), config.linxDriverTsv());
     }
 
     @NotNull

@@ -12,6 +12,7 @@ import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class TableUtil {
 
@@ -60,7 +61,6 @@ public final class TableUtil {
         return table;
     }
 
-
     @NotNull
     public static Table createReportContentTable(@NotNull float[] columnPercentageWidths, @NotNull Cell[] headerCells) {
         Table table = new Table(UnitValue.createPercentArray(columnPercentageWidths)).setWidth(ReportResources.CONTENT_WIDTH_WIDE);
@@ -87,18 +87,27 @@ public final class TableUtil {
 
     @NotNull
     public static Table createNoConsentReportTable(@NotNull String tableTitle, @NotNull String peachUnreliable) {
-        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] {  });
+        Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] {});
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
         table.addCell(TableUtil.createContentCell(new Paragraph(peachUnreliable)));
-        return createWrappingReportTable(tableTitle, table);
+        return createWrappingReportTable(tableTitle, null, table);
     }
 
     @NotNull
-    public static Table createNoneReportTable(@NotNull String tableTitle) {
-        Cell headerCell = new Cell().setBorder(Border.NO_BORDER)
-                .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
-                        .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
+    public static Table createNoneReportTable(@NotNull String tableTitle, @Nullable String subTableTitle) {
+        Cell headerCell;
+        if (subTableTitle == null) {
+            headerCell = new Cell().setBorder(Border.NO_BORDER)
+                    .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
+                            .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
+        } else {
+            headerCell = new Cell().setBorder(Border.NO_BORDER)
+                    .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()
+                            .setFontColor(ReportResources.PALETTE_LIGHT_GREY)))
+                    .add(new Paragraph(subTableTitle).addStyle(ReportResources.sectionSubTitleStyle()
+                            .setFontColor(ReportResources.PALETTE_LIGHT_GREY)));
+        }
 
         Table table = TableUtil.createReportContentTable(new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
@@ -122,11 +131,11 @@ public final class TableUtil {
     }
 
     @NotNull
-    public static Table createWrappingReportTable(@NotNull String tableTitle, @NotNull Table contentTable) {
+    public static Table createWrappingReportTable(@NotNull String tableTitle, @Nullable String subtitle, @NotNull Table contentTable) {
         contentTable.addFooterCell(new Cell(1, contentTable.getNumberOfColumns()).setBorder(Border.NO_BORDER)
-                .setPaddingTop(5)
-                .setPaddingBottom(5)
-                .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
+                        .setPaddingTop(5)
+                        .setPaddingBottom(5)
+                        .add(new Paragraph("The table continues on the next page".toUpperCase()).addStyle(ReportResources.subTextStyle())))
                 .setSkipLastFooter(true);
 
         Table continuedWrapTable = new Table(1).setMinWidth(contentTable.getWidth())
@@ -135,12 +144,22 @@ public final class TableUtil {
                 .setSkipFirstHeader(true)
                 .addCell(new Cell().add(contentTable).setPadding(0).setBorder(Border.NO_BORDER));
 
-        return new Table(1).setMinWidth(contentTable.getWidth())
-                .setMarginBottom(TABLE_BOTTOM_MARGIN)
-                .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
-                        .setPadding(0)
-                        .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())))
-                .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
+        if (subtitle == null) {
+            return new Table(1).setMinWidth(contentTable.getWidth())
+                    .setMarginBottom(TABLE_BOTTOM_MARGIN)
+                    .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
+                            .setPadding(0)
+                            .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle())))
+                    .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
+        } else {
+            return new Table(1).setMinWidth(contentTable.getWidth())
+                    .setMarginBottom(TABLE_BOTTOM_MARGIN)
+                    .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
+                            .setPadding(0)
+                            .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()))
+                            .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionSubTitleStyle())))
+                    .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
+        }
     }
 
     @NotNull
