@@ -90,6 +90,8 @@ public class RefSvData implements RefClassifier
                     CUP_LOGGER.debug("processed {} sample SV files", i);
                 }
             }
+
+            sampleSvData.values().forEach(x -> assignSampleData(x));
         }
         else
         {
