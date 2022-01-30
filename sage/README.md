@@ -334,6 +334,7 @@ A match can be:
   - `PARTIAL` - Core and at least one flank match read fully at same position. Remaining flank matches but is truncated.  An 'N' cigar (representating a splice junction gap in RNA) may overlap both the flank and part of the core as long as the remaining flank and core match precisely.  
   - `CORE` - Core matches read but either flank doesn't.
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
+  - `ALT` - variant matches but CORE does not
 
 Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
