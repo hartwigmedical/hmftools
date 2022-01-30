@@ -50,7 +50,7 @@ public class RefAltSpliceJunctions implements RefClassifier
 
     public CategoryType categoryType() { return ALT_SJ; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.RefAltSjFile.isEmpty(); }
+    public static boolean requiresBuild(final RefDataConfig config) { return !config.AltSjFile.isEmpty(); }
 
     public void buildRefDataSets()
     {
@@ -59,7 +59,7 @@ public class RefAltSpliceJunctions implements RefClassifier
         final List<String> cancerTypes = Lists.newArrayList();
         final Map<String,Integer> sampleIndexMap = Maps.newHashMap();
         final List<String> asjLocations = Lists.newArrayList();
-        final Matrix sampleFragCounts = loadSampleAltSjMatrixData(mConfig.RefAltSjFile, sampleIndexMap, asjLocations);
+        final Matrix sampleFragCounts = loadSampleAltSjMatrixData(mConfig.AltSjFile, sampleIndexMap, asjLocations);
 
         if(sampleFragCounts == null)
             return;

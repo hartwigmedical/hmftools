@@ -25,16 +25,20 @@ public class RefDataConfig
     public final String OutputDir;
 
     // reference data
-    public final String RefSampleDataFile;
-    public final String RefSampleTraitsFile;
-    public final String RefSampleSvDataFile;
-    public final String RefSigContribsFile;
-    public final String RefSnvPositionDataFile;
-    public final String RefSnvCountsFile;
-    public final String RefFeaturesFile;
-    public final String RefGeneExpFile;
-    public final String RefAltSjFile;
-    public final String RefFeatureOverrideFile;
+    public final String SampleDataFile;
+    public final String CohortSampleTraitsFile;
+    public final String CohortSampleSvDataFile;
+    public final String CohortSigContribsFile;
+    public final String SnvPositionDataFile;
+    public final String SnvCountsFile;
+    public final String CohortFeaturesFile;
+    public final String GeneExpFile;
+    public final String AltSjFile;
+    public final String FeatureOverrideFile;
+
+    public final String SampleFeaturesDir;
+    public final String SampleSomaticVcf;
+    public final String SampleSvVcf;
 
     public final DatabaseAccess DbAccess;
 
@@ -42,32 +46,44 @@ public class RefDataConfig
 
     // config strings
 
-    // cohort files to avoid database data extraction
-    public static final String REF_SAMPLE_TRAITS_FILE = "ref_sample_traits_file";
-    public static final String REF_SIG_CONTRIBS_FILE = "ref_sig_contribs_file";
-    public static final String REF_SV_DATA_FILE = "ref_sv_data_file";
-    public static final String REF_FEATURES_FILE = "ref_features_file";
+    // cohort files instead of extracting data from database
+    private static final String REF_SAMPLE_TRAITS_FILE = "cohort_sample_traits_file";
+    private static final String REF_SIG_CONTRIBS_FILE = "cohort_sig_contribs_file";
+    private static final String REF_SV_DATA_FILE = "cohort_sv_data_file";
+    private static final String REF_FEATURES_FILE = "cohort_features_file";
 
-    public static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
-    public static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
-    public static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
+    private static final String REF_GENE_EXP_DATA_FILE = "ref_gene_exp_file";
+    private static final String REF_ALT_SJ_DATA_FILE = "ref_alt_sj_file";
+
+    private static final String SAMPLE_FEATURES_DIR = "sample_features_dir";
+    private static final String SAMPLE_SOMATIC_VCF = "sample_somatic_vcf";
+    private static final String SAMPLE_SV_VCF = "sample_sv_vcf";
+
+    private static final String REF_FEATURE_OVERRIDE_FILE = "feature_override_file";
     public static final String GENDER_RATES = "gender_rates";
-    public static final String WRITE_COHORT_FILES = "write_cohort_files";
+    private static final String WRITE_COHORT_FILES = "write_cohort_files";
 
-    public static final String FILE_DELIM = ",";
+    private static final String FILE_DELIM = ",";
 
     public RefDataConfig(final CommandLine cmd)
     {
-        RefSampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
-        RefSampleTraitsFile = cmd.getOptionValue(REF_SAMPLE_TRAITS_FILE, "");
-        RefSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
-        RefSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
-        RefSnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
-        RefSnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
-        RefFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
-        RefGeneExpFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
-        RefAltSjFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
-        RefFeatureOverrideFile = cmd.getOptionValue(REF_FEATURE_OVERRIDE_FILE, "");
+        SampleDataFile = cmd.getOptionValue(REF_SAMPLE_DATA_FILE, "");
+        CohortSampleTraitsFile = cmd.getOptionValue(REF_SAMPLE_TRAITS_FILE, "");
+        CohortSigContribsFile = cmd.getOptionValue(REF_SIG_CONTRIBS_FILE, "");
+        CohortSampleSvDataFile = cmd.getOptionValue(REF_SV_DATA_FILE, "");
+        CohortFeaturesFile = cmd.getOptionValue(REF_FEATURES_FILE, "");
+
+        SampleFeaturesDir = cmd.getOptionValue(SAMPLE_FEATURES_DIR, "");
+        SampleSomaticVcf = cmd.getOptionValue(SAMPLE_SOMATIC_VCF, "");
+        SampleSvVcf = cmd.getOptionValue(SAMPLE_SV_VCF, "");
+
+        SnvPositionDataFile = cmd.getOptionValue(REF_SNV_SAMPLE_POS_FREQ_FILE, "");
+        SnvCountsFile = cmd.getOptionValue(REF_SNV_COUNTS_FILE, "");
+
+        GeneExpFile = cmd.getOptionValue(REF_GENE_EXP_DATA_FILE, "");
+        AltSjFile = cmd.getOptionValue(REF_ALT_SJ_DATA_FILE, "");
+
+        FeatureOverrideFile = cmd.getOptionValue(REF_FEATURE_OVERRIDE_FILE, "");
 
         DbAccess = createDatabaseAccess(cmd);
 
@@ -84,15 +100,22 @@ public class RefDataConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
-        options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample traits data file");
-        options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref signature contributions data file");
-        options.addOption(REF_SV_DATA_FILE, true, "Ref sample SV data file");
+        options.addOption(REF_SAMPLE_TRAITS_FILE, true, "Ref sample cohort traits file");
+        options.addOption(REF_SIG_CONTRIBS_FILE, true, "Ref sample cohort signature contributions file");
+        options.addOption(REF_SV_DATA_FILE, true, "Ref sample cohort SV file");
         options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
         options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
         options.addOption(REF_FEATURES_FILE, true, "Ref sample features data file");
+
+        options.addOption(SAMPLE_FEATURES_DIR, true, "Ref sample directory containing features files");
+        options.addOption(SAMPLE_SV_VCF, true, "Ref sample SV VCF path, wildcards allowed");
+        options.addOption(SAMPLE_SOMATIC_VCF, true, "Ref sample somatic VCF path, wildcards allowed");
+
         options.addOption(REF_GENE_EXP_DATA_FILE, true, "Ref sample RNA gene expression cohort data file");
         options.addOption(REF_ALT_SJ_DATA_FILE, true, "Ref sample RNA alternate splice junction cohort data file");
+
         options.addOption(REF_FEATURE_OVERRIDE_FILE, true, "Ref feature override data file");
+
         options.addOption(GENDER_RATES, true, "Gender-rate overrides - format CancerType;MalePerc;FemalePerc, etc");
         options.addOption(WRITE_COHORT_FILES, false, "Re-write ref data as cohort files");
 

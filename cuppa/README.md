@@ -158,10 +158,10 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.ref.RefDataBuilder \
   -ref_sample_data_file cup_ref_sample_data.csv 
   -ref_snv_counts_file cup_ref_snv_counts.csv \
   -ref_sample_snv_pos_freq_file cup_ref_sample_pos_freq_counts.csv \
-  -ref_sample_traits_file cup_ref_cohort_traits_data.csv \
-  -ref_sig_contribs_file cup_ref_cohort_signature_data.csv \
-  -ref_sv_data_file cup_ref_cohort_sv_data.csv \
-  -ref_features_file cup_ref_cohort_feature_data.csv \ 
+  -cohort_sample_traits_file cup_ref_cohort_traits_data.csv \
+  -cohort_sig_contribs_file cup_ref_cohort_signature_data.csv \
+  -cohort_sv_data_file cup_ref_cohort_sv_data.csv \
+  -cohort_features_file cup_ref_cohort_feature_data.csv \ 
   -output_dir /output_dir \
 ```
 

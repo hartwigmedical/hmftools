@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_FEATURE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.cup.common.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefFeatureOverrides;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
@@ -28,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -45,15 +48,21 @@ public class RefFeatures implements RefClassifier
         mSampleDataCache = sampleDataCache;
 
         mFeatureOverrides = Maps.newHashMap();
-        loadRefFeatureOverrides(mConfig.RefFeatureOverrideFile, mFeatureOverrides);
+        loadRefFeatureOverrides(mConfig.FeatureOverrideFile, mFeatureOverrides);
     }
 
     public CategoryType categoryType() { return FEATURE; }
 
-    public static boolean requiresBuild(final RefDataConfig config) { return config.DbAccess != null || !config.RefFeaturesFile.isEmpty(); }
+    public static boolean requiresBuild(final RefDataConfig config)
+    {
+        return config.DbAccess != null || !config.CohortFeaturesFile.isEmpty() || !config.SampleFeaturesDir.isEmpty();
+    }
 
     public void buildRefDataSets()
     {
+        if(mConfig.CohortFeaturesFile.isEmpty() && mConfig.DbAccess == null && mConfig.SampleFeaturesDir.isEmpty())
+            return;
+
         CUP_LOGGER.info("building feature reference data");
 
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
@@ -76,11 +85,11 @@ public class RefFeatures implements RefClassifier
 
     private void loadSampleData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
-        if(!mConfig.RefFeaturesFile.isEmpty())
+        if(!mConfig.CohortFeaturesFile.isEmpty())
         {
             final Map<String,List<SampleFeatureData>> allSampleFeatures = Maps.newHashMap();
 
-            final List<String> files = parseFileSet(mConfig.RefFeaturesFile);
+            final List<String> files = parseFileSet(mConfig.CohortFeaturesFile);
             files.forEach(x -> loadFeaturesFromCohortFile(x, allSampleFeatures));
 
             // extract only reference sample data
@@ -94,9 +103,28 @@ public class RefFeatures implements RefClassifier
                 }
             }
         }
-        else
+        else if(mConfig.DbAccess != null)
         {
             loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap);
+        }
+        else
+        {
+            // load from per-sample files
+            for(int i = 0; i < mSampleDataCache.RefSampleDataList.size(); ++i)
+            {
+                SampleData sample = mSampleDataCache.RefSampleDataList.get(i);
+
+                final String sampleDataDir = formSamplePath(mConfig.SampleFeaturesDir, sample.Id);
+                final String somaticVcf = formSamplePath(mConfig.SampleSomaticVcf, sample.Id);
+
+                if(!loadFeaturesFromFile(sample.Id, sampleDataDir, somaticVcf, sampleFeaturesMap))
+                    break;
+
+                if(i > 0 && (i % 100) == 0)
+                {
+                    CUP_LOGGER.debug("processed {} sample feature files", i);
+                }
+            }
         }
     }
 

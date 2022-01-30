@@ -98,20 +98,20 @@ public class RefSampleTraits implements RefClassifier
     }
 
     public CategoryType categoryType() { return SNV; }
-    public static boolean requiresBuild(final RefDataConfig config) { return !config.RefSampleTraitsFile.isEmpty() || config.DbAccess != null; }
+    public static boolean requiresBuild(final RefDataConfig config) { return !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null; }
 
     public void buildRefDataSets()
     {
-        if(mConfig.RefSampleTraitsFile.isEmpty() && mConfig.DbAccess == null)
+        if(mConfig.CohortSampleTraitsFile.isEmpty() && mConfig.DbAccess == null)
             return;
 
         CUP_LOGGER.info("building sample traits reference data");
 
         final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
 
-        if(!mConfig.RefSampleTraitsFile.isEmpty())
+        if(!mConfig.CohortSampleTraitsFile.isEmpty())
         {
-            final List<String> files = parseFileSet(mConfig.RefSampleTraitsFile);
+            final List<String> files = parseFileSet(mConfig.CohortSampleTraitsFile);
             files.forEach(x -> loadRefPurityData(x, sampleTraitsData));
         }
         else

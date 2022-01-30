@@ -7,13 +7,16 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndic
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FILE_SV_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SV_PERC;
 import static com.hartwig.hmftools.cup.common.CategoryType.SV;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
+import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromCohortFile;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromDatabase;
+import static com.hartwig.hmftools.cup.svs.SvDataLoader.loadSvDataFromFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -25,7 +28,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.linx.LinxCluster;
 import com.hartwig.hmftools.cup.common.CategoryType;
+import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
@@ -49,27 +54,47 @@ public class RefSvData implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || !config.RefSampleSvDataFile.isEmpty();
+        return config.DbAccess != null || !config.CohortSampleSvDataFile.isEmpty() || !config.SampleSvVcf.isEmpty();
     }
 
     public void buildRefDataSets()
     {
-        if(mConfig.RefSampleSvDataFile.isEmpty() && mConfig.DbAccess == null)
+        if(mConfig.CohortSampleSvDataFile.isEmpty() && mConfig.SampleSvVcf.isEmpty() && mConfig.DbAccess == null)
             return;
 
         CUP_LOGGER.info("building SV reference data");
 
         final Map<String,SvData> sampleSvData = Maps.newHashMap();
 
-        if(mConfig.RefSampleSvDataFile.isEmpty())
+        if(!mConfig.CohortSampleSvDataFile.isEmpty())
         {
-            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData);
-            sampleSvData.values().forEach(x -> assignSampleData(x));
+            final List<String> files = parseFileSet(mConfig.CohortSampleSvDataFile);
+            files.forEach(x -> loadCohortSvData(x, sampleSvData));
+        }
+        else if(!mConfig.SampleSvVcf.isEmpty())
+        {
+            // load from per-sample files
+            for(int i = 0; i < mSampleDataCache.RefSampleDataList.size(); ++i)
+            {
+                SampleData sample = mSampleDataCache.RefSampleDataList.get(i);
+
+                final String svVcfFile = formSamplePath(mConfig.SampleSvVcf, sample.Id);
+                final String sampleDataDir = formSamplePath(mConfig.SampleFeaturesDir, sample.Id);
+                final String clusterFile = LinxCluster.generateFilename(sampleDataDir, sample.Id);
+
+                if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, sampleSvData))
+                    break;
+
+                if(i > 0 && (i % 100) == 0)
+                {
+                    CUP_LOGGER.debug("processed {} sample SV files", i);
+                }
+            }
         }
         else
         {
-            final List<String> files = parseFileSet(mConfig.RefSampleSvDataFile);
-            files.forEach(x -> loadCohortSvData(x, sampleSvData));
+            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData);
+            sampleSvData.values().forEach(x -> assignSampleData(x));
         }
 
         writeCohortData(sampleSvData);

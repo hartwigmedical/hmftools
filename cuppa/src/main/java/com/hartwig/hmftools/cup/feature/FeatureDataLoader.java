@@ -52,6 +52,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -115,8 +116,7 @@ public class FeatureDataLoader
             {
                 AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(x -> x.reported()).forEach(x -> virusAnnotations.add(x));
             }
-
-            if(Files.exists(Paths.get(viralInsertFilename)))
+            else if(Files.exists(Paths.get(viralInsertFilename)))
             {
                 final List<LinxViralInsertion> viralInserts = LinxViralInsertion.read(viralInsertFilename);
                 virusAnnotations.addAll(mapViralInsertsToAnnotations(viralInserts));
@@ -291,6 +291,7 @@ public class FeatureDataLoader
         Result<Record> result = dbAccess.context().select()
                 .from(VIRUSANNOTATION)
                 .where(specificSampleId != null ? VIRUSANNOTATION.SAMPLEID.eq(specificSampleId) : VIRUSANNOTATION.SAMPLEID.isNotNull())
+                .and(VIRUSANNOTATION.REPORTED.eq((byte)1))
                 .fetch();
 
         for (Record record : result)
@@ -307,6 +308,12 @@ public class FeatureDataLoader
                         .interpretation(interpretation)
                         .reported(record.getValue(VIRUSANNOTATION.REPORTED) == 1)
                         .integrations(record.getValue(VIRUSANNOTATION.INTEGRATIONS))
+                        .percentageCovered(record.getValue(VIRUSANNOTATION.PERCENTAGECOVERED))
+                        .meanCoverage(record.getValue(VIRUSANNOTATION.MEANCOVERAGE))
+                        .expectedClonalCoverage(record.getValue(VIRUSANNOTATION.EXPECTEDCLONALCOVERAGE))
+                        .percentageCovered(record.getValue(VIRUSANNOTATION.PERCENTAGECOVERED))
+                        .virusDriverLikelihoodType(VirusLikelihoodType.UNKNOWN)
+                        //.virusDriverLikelihoodType(VirusLikelihoodType.valueOf(record.getValue(VIRUSANNOTATION.LIKELIHOOD)))
                         .build();
 
             List<AnnotatedVirus> annotatedVirusList = sampleVirusMap.get(sampleId);
@@ -438,9 +445,11 @@ public class FeatureDataLoader
 
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
+                    .transcript(record.getValue(DRIVERCATALOG.TRANSCRIPTID))
+                    .isCanonical(record.getValue(DRIVERCATALOG.CANONICALTRANSCRIPT) == 1)
                     .chromosome(record.getValue(DRIVERCATALOG.CHROMOSOME))
                     .chromosomeBand(record.getValue(DRIVERCATALOG.CHROMOSOMEBAND))
-                    .driver(DriverType.valueOf(record.getValue(DRIVERCATALOG.DRIVER)))
+                    .driver(DriverType.checkConvertType(record.getValue(DRIVERCATALOG.DRIVER)))
                     .category(DriverCategory.valueOf(record.getValue(DRIVERCATALOG.CATEGORY)))
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))

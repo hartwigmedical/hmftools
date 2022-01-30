@@ -110,7 +110,7 @@ public class RefSomatics implements RefClassifier
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
-        return config.DbAccess != null || (!config.RefSigContribsFile.isEmpty() && !config.RefSnvCountsFile.isEmpty());
+        return config.DbAccess != null || (!config.CohortSigContribsFile.isEmpty() && !config.SnvCountsFile.isEmpty());
     }
 
     public static void addCmdLineArgs(@NotNull Options options)
@@ -122,8 +122,8 @@ public class RefSomatics implements RefClassifier
     {
         CUP_LOGGER.info("building SNV and signatures reference data");
 
-        final List<String> snvCountFiles = parseFileSet(mConfig.RefSnvCountsFile);
-        final List<String> posFreqCountFiles = parseFileSet(mConfig.RefSnvPositionDataFile);
+        final List<String> snvCountFiles = parseFileSet(mConfig.SnvCountsFile);
+        final List<String> posFreqCountFiles = parseFileSet(mConfig.SnvPositionDataFile);
 
         if(snvCountFiles.size() > 1 && posFreqCountFiles.size() == snvCountFiles.size())
         {
@@ -133,8 +133,8 @@ public class RefSomatics implements RefClassifier
         }
         else
         {
-            mTriNucCounts = loadReferenceSnvCounts(mConfig.RefSnvCountsFile, mTriNucCountsIndex, MATRIX_TYPE_SNV_96);
-            mPosFreqCounts = loadReferenceSnvCounts(mConfig.RefSnvPositionDataFile, mPosFreqCountsIndex, MATRIX_TYPE_GEN_POS);
+            mTriNucCounts = loadReferenceSnvCounts(mConfig.SnvCountsFile, mTriNucCountsIndex, MATRIX_TYPE_SNV_96);
+            mPosFreqCounts = loadReferenceSnvCounts(mConfig.SnvPositionDataFile, mPosFreqCountsIndex, MATRIX_TYPE_GEN_POS);
             retrieveMissingSampleCounts();
         }
 
@@ -393,11 +393,11 @@ public class RefSomatics implements RefClassifier
 
         final Map<String,Map<String,Double>> sampleSigContributions = Maps.newHashMap();
 
-        if(!mConfig.RefSigContribsFile.isEmpty())
+        if(!mConfig.CohortSigContribsFile.isEmpty())
         {
             final Map<String,Map<String,Double>> allSampleSigContributions = Maps.newHashMap();
 
-            final List<String> files = parseFileSet(mConfig.RefSigContribsFile);
+            final List<String> files = parseFileSet(mConfig.CohortSigContribsFile);
             files.forEach(x -> loadSigContribsFromCohortFile(x, allSampleSigContributions));
 
             // extract only reference sample data
