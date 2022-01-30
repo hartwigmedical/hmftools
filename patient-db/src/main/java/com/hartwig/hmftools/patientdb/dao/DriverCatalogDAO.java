@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
+import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
@@ -45,6 +46,7 @@ class DriverCatalogDAO
 
     void writePurpleDrivers(@NotNull String sample, @NotNull List<DriverCatalog> somaticCatalog, @NotNull List<DriverCatalog> germlineCatalog)
     {
+        deleteForSample(sample, Sets.newHashSet(GERMLINE)); // clean up deprecated type
         write(sample, somaticCatalog, Sets.newHashSet(DRIVERS_PURPLE_SOMATIC));
         write(sample, germlineCatalog, Sets.newHashSet(DRIVERS_PURPLE_GERMLINE));
     }

@@ -83,16 +83,4 @@ public class LoadPurpleData {
         addDatabaseCmdLineArgs(options);
         return options;
     }
-
-    public static void persistToDatabase(@NotNull DatabaseAccess dbAccess, @NotNull String tumorSample,
-            @NotNull List<FittedPurity> bestFitPerPurity, @NotNull List<PurpleCopyNumber> copyNumbers,
-            @NotNull List<PurpleCopyNumber> germlineDeletions, @NotNull PurityContext purityContext, @NotNull PurpleQC qcChecks,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<DriverCatalog> somaticDriverCatalog,
-            @NotNull List<DriverCatalog> germlineDriverCatalog) {
-        dbAccess.writePurity(tumorSample, purityContext, qcChecks);
-        dbAccess.writeBestFitPerPurity(tumorSample, bestFitPerPurity);
-        dbAccess.writeCopynumbers(tumorSample, copyNumbers);
-        dbAccess.writeGeneCopyNumbers(tumorSample, geneCopyNumbers);
-        dbAccess.writePurpleDriverCatalog(tumorSample, somaticDriverCatalog, germlineDriverCatalog);
-    }
 }

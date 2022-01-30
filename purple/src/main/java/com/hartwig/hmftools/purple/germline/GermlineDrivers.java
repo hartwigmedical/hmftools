@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.drivers;
+package com.hartwig.hmftools.purple.germline;
 
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
@@ -32,7 +32,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineDrivers
 {
-    @NotNull
     private final Map<String, DriverCategory> mDriverCatalogMap;
 
     public GermlineDrivers(final List<DriverGene> driverGenes)

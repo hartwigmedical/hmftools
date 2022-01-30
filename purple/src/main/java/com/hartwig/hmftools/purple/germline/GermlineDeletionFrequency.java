@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.drivers;
+package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.abs;
 
@@ -14,6 +14,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.purple.drivers.DeletionRegionFrequency;
 
 public class GermlineDeletionFrequency
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.drivers;
+package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
@@ -265,31 +265,35 @@ public class GermlineDeletionDrivers
 
             boolean reported = filters.isEmpty() && driverGene.reportGermlineDisruption();
 
-            // create a driver record for reportable genes
-            if(reported)
-            {
-                DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
-                        .chromosome(region.chromosome())
-                        .chromosomeBand(geneData.KaryotypeBand)
-                        .gene(geneData.GeneName)
-                        .transcript(transData.TransName)
-                        .isCanonical(transData.IsCanonical)
-                        .driver(DriverType.GERMLINE_DELETION)
-                        .category(driverGene.likelihoodType())
-                        .driverLikelihood(1)
-                        .missense(0)
-                        .nonsense(0)
-                        .splice(0)
-                        .inframe(0)
-                        .frameshift(0)
-                        .biallelic(false)
-                        .minCopyNumber(region.refNormalisedCopyNumber())
-                        .maxCopyNumber(region.refNormalisedCopyNumber())
-                        .likelihoodMethod(LikelihoodMethod.GERMLINE)
-                        .build();
+            if(!reported)
+                continue;
 
-                mDrivers.add(driverCatalog);
-            }
+            // only create one record even if multiple sections of the gene are deleted
+            if(mDrivers.stream().anyMatch(x -> x.gene().equals(geneData.GeneName) && x.transcript().equals(transData.TransName)))
+                continue;
+
+            // create a driver record for reportable genes
+            DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
+                    .chromosome(region.chromosome())
+                    .chromosomeBand(geneData.KaryotypeBand)
+                    .gene(geneData.GeneName)
+                    .transcript(transData.TransName)
+                    .isCanonical(transData.IsCanonical)
+                    .driver(DriverType.GERMLINE_DELETION)
+                    .category(driverGene.likelihoodType())
+                    .driverLikelihood(1)
+                    .missense(0)
+                    .nonsense(0)
+                    .splice(0)
+                    .inframe(0)
+                    .frameshift(0)
+                    .biallelic(false)
+                    .minCopyNumber(region.refNormalisedCopyNumber())
+                    .maxCopyNumber(region.refNormalisedCopyNumber())
+                    .likelihoodMethod(LikelihoodMethod.GERMLINE)
+                    .build();
+
+            mDrivers.add(driverCatalog);
         }
     }
 }

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.purple.PurpleCommon.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
-import static com.hartwig.hmftools.purple.drivers.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +36,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
-import com.hartwig.hmftools.purple.drivers.GermlineDeletionFrequency;
+import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
