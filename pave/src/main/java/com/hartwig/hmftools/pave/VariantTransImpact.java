@@ -80,7 +80,8 @@ public class VariantTransImpact
     public ProteinContext proteinContext() { return mProteinContext; }
     public void setProteinContext(final ProteinContext context) { mProteinContext = context; }
 
-    public boolean hasAminoAcids() { return mProteinContext != null && mProteinContext.hasCodingBases(); }
+    public boolean hasCodingBases() { return mProteinContext != null && mProteinContext.hasCodingBases(); }
+    public boolean hasAminoAcids() { return mProteinContext != null && mProteinContext.hasAminoAcids(); }
     public boolean hasProteinContext() { return mProteinContext != null; }
 
     public void markSpliceRegion() { mInSpliceRegion = true; }

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
+import static com.hartwig.hmftools.pave.HgvsProtein.HGVS_SPLICE_UNKNOWN;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createNegTranscript;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createPosTranscript;
@@ -47,6 +48,7 @@ public class InsertCodingContextTest
         assertEquals(CODING, impact.codingContext().CodingType);
         assertEquals(INTRONIC, impact.codingContext().RegionType);
         assertEquals(6, impact.codingContext().CodingBase);
+        assertEquals(HGVS_SPLICE_UNKNOWN, impact.proteinContext().Hgvs);
 
         // frameshift
         pos = 19;

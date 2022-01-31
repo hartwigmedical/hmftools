@@ -37,6 +37,8 @@ public final class HgvsProtein
     private static final String HGVS_STOP_TRI_CODE = "Ter";
     private static final String HGVS_SYNONYMOUS = "=";
 
+    public static final String HGVS_SPLICE_UNKNOWN = PROTEIN_ID + "?";
+
     private static final Map<Character,String> AMINO_ACID_SINGLE_TO_TRI_MAP = Maps.newHashMap();
 
     static
@@ -53,7 +55,7 @@ public final class HgvsProtein
         return isInframe(effect) || isNonsenseOrFrameshift(effect) || effect == SYNONYMOUS || effect == MISSENSE;
     }
 
-    public static String generate(final VariantData variant, final ProteinContext proteinContext, final List<VariantEffect> effects)
+    public static String generate(final ProteinContext proteinContext, final List<VariantEffect> effects)
     {
         boolean hasStopGained = false;
         VariantEffect topEffect = null;

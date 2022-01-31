@@ -55,7 +55,8 @@ public class ProteinContext
         Hgvs = "";
     }
 
-    public boolean hasCodingBases() { return !RefAminoAcids.isEmpty(); }
+    public boolean hasCodingBases() { return !RefCodonBases.isEmpty(); }
+    public boolean hasAminoAcids() { return !RefAminoAcids.isEmpty(); }
 
     public boolean hasProteinChange() { return !RefAminoAcids.equals(AltAminoAcids); }
 

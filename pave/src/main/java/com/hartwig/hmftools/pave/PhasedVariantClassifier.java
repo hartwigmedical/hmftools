@@ -140,7 +140,7 @@ public class PhasedVariantClassifier
             int localPhaseSet, final List<VariantData> variants, final List<VariantTransImpact> transImpacts, final RefGenomeInterface refGenome)
     {
         // ignore if not 2 or more with coding impacts
-        if(transImpacts.stream().filter(x -> x.hasProteinContext()).count() < 2)
+        if(transImpacts.stream().filter(x -> x.hasCodingBases()).count() < 2)
             return;
 
         if(transImpacts.stream().anyMatch(x -> x.hasEffect(STOP_LOST) || x.hasEffect(START_LOST)))
@@ -156,7 +156,7 @@ public class PhasedVariantClassifier
             VariantTransImpact transImpact = transImpacts.get(i);
             VariantData variant = variants.get(i);
 
-            if(!transImpact.hasProteinContext() || !variant.isIndel())
+            if(!transImpact.hasCodingBases() || !variant.isIndel())
                 continue;
 
             indelBaseTotal += variant.isInsert() ? variant.baseDiff() : -transImpact.codingContext().DeletedCodingBases;
@@ -176,7 +176,7 @@ public class PhasedVariantClassifier
             if(i > 0 && variants.get(i - 1).Position >= variant.Position)
                 return; // don't handle overlapping or out-of-order variants
 
-            if(!transImpact.hasProteinContext() || variant.isIndel())
+            if(!transImpact.hasCodingBases() || variant.isIndel())
                 continue;
 
             if(i > minIndelIndex && i < maxIndelIndex)
@@ -185,10 +185,10 @@ public class PhasedVariantClassifier
             VariantTransImpact prevTransImpact = i > 0 ? transImpacts.get(i - 1) : null;
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            boolean overlapsOnStart = prevTransImpact != null && prevTransImpact.hasProteinContext()
+            boolean overlapsOnStart = prevTransImpact != null && prevTransImpact.hasCodingBases()
                     && prevTransImpact.proteinContext().refCodingBaseEnd() >= transImpact.proteinContext().refCodingBaseStart();
 
-            boolean overlapsOnEnd = nextTransImpact != null && nextTransImpact.hasProteinContext()
+            boolean overlapsOnEnd = nextTransImpact != null && nextTransImpact.hasCodingBases()
                     && nextTransImpact.proteinContext().refCodingBaseStart() <= transImpact.proteinContext().refCodingBaseEnd();
 
             if(!overlapsOnStart && !overlapsOnEnd)
@@ -219,7 +219,7 @@ public class PhasedVariantClassifier
 
             VariantTransImpact transImpact = transImpacts.get(i);
 
-            if(!transImpact.hasProteinContext())
+            if(!transImpact.hasCodingBases())
                 continue;
 
             int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
@@ -227,7 +227,7 @@ public class PhasedVariantClassifier
 
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            int nextRefCodonStart = nextTransImpact != null && nextTransImpact.hasProteinContext()
+            int nextRefCodonStart = nextTransImpact != null && nextTransImpact.hasCodingBases()
                     ? nextTransImpact.proteinContext().refCodingBaseStart() : 0;
 
             boolean overlapsOnStart = lastRefCodonEnd > 0 && refCodonStart <= lastRefCodonEnd;
@@ -354,7 +354,7 @@ public class PhasedVariantClassifier
         }
 
         combinedPc.IsPhased = true;
-        combinedPc.Hgvs = HgvsProtein.generate(variants.get(0), combinedPc, combinedEffects);
+        combinedPc.Hgvs = HgvsProtein.generate(combinedPc, combinedEffects);
 
         // now convert missense / synonymous to phased inframe to it's clearer what has happened
         if(combinedEffects.contains(SYNONYMOUS) || combinedEffects.contains(MISSENSE))
@@ -374,7 +374,7 @@ public class PhasedVariantClassifier
 
             VariantTransImpact transImpact = transImpacts.get(i);
 
-            if(!transImpact.hasProteinContext())
+            if(!transImpact.hasCodingBases())
                 continue;
 
             transImpact.markPhasedFrameshift();

@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOU
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isSplice;
+import static com.hartwig.hmftools.pave.HgvsProtein.HGVS_SPLICE_UNKNOWN;
 import static com.hartwig.hmftools.pave.HgvsProtein.reportProteinImpact;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
@@ -118,7 +119,16 @@ public class ImpactClassifier
             List<VariantEffect> proteinEffects = transImpact.effects().stream().filter(x -> reportProteinImpact(x)).collect(Collectors.toList());
 
             if(!proteinEffects.isEmpty())
-                transImpact.proteinContext().Hgvs = HgvsProtein.generate(variant, transImpact.proteinContext(), proteinEffects);
+                transImpact.proteinContext().Hgvs = HgvsProtein.generate(transImpact.proteinContext(), proteinEffects);
+        }
+
+        // override for splice-effect variants
+        if(isSplice(transImpact.topEffect()) && !transData.nonCoding())
+        {
+            if(!transImpact.hasProteinContext())
+                transImpact.setProteinContext(new ProteinContext());
+
+            transImpact.proteinContext().Hgvs = HGVS_SPLICE_UNKNOWN;
         }
 
         return transImpact;
