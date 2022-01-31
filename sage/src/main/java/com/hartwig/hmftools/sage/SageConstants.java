@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage;
 
+import com.hartwig.hmftools.sage.config.SoftFilterConfig;
+
 public class SageConstants
 {
     public static final int DEFAULT_THREADS = 2;
@@ -21,6 +23,28 @@ public class SageConstants
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
 
     public static final int DEFAULT_EVIDENCE_MAP_QUAL = 1;
+    
+    // filtering defaults and constants
+    public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
+    public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
+    public static final int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
+    public static final int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
+
+    public static final double HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL = 0.08;
+    public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
+
+    public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
+            0, 0, 0.1, 0.5);
+
+    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.015,
+            0, 0, 0.04, 0.04);
+
+    public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
+            10, 6, 0.04, 0.04);
+
+    public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
+            10, 6, 0.04, 0.04);
+
 
     public static final String ITEM_DELIM = ";";
     public static final String SUB_ITEM_DELIM = ":";

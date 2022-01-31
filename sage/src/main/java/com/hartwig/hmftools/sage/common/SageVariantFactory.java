@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.List;
@@ -142,7 +144,7 @@ public class SageVariantFactory
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return tier.equals(VariantTier.HOTSPOT) && primaryTumor.altSupport() >= mConfig.hotspotMinTumorAltSupportToSkipQualCheck()
-                && Doubles.greaterOrEqual(primaryTumor.vaf(), mConfig.hotspotMinTumorVafToSkipQualCheck());
+        return tier.equals(VariantTier.HOTSPOT) && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
+                && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL);
     }
 }

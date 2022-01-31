@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_CONFIDENCE_FILTER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HOTSPOT_FILTER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FILTER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
 
 import java.util.function.Predicate;
 
@@ -25,13 +33,6 @@ public class FilterConfig
     public final SoftFilterConfig SoftHighConfidenceFilter;
     public final SoftFilterConfig SoftLowConfidenceFilter;
 
-    public double hotspotMinTumorVafToSkipQualCheck()
-    {
-        return 0.08;
-    }
-
-    public int hotspotMinTumorAltSupportToSkipQualCheck() { return 8; }
-
     private static final String SOFT_FILTER = "soft_filter_enabled";
     private static final String HARD_FILTER = "hard_filter_enabled";
     private static final String MNV_FILTER = "mnv_filter_enabled";
@@ -44,11 +45,6 @@ public class FilterConfig
     private static final boolean DEFAULT_SOFT_FILTER_ENABLED = true;
     private static final boolean DEFAULT_HARD_FILTER_ENABLED = false;
     private static final boolean DEFAULT_MNV_FILTER_ENABLED = true;
-
-    private static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
-    private static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
-    private static final int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
-    private static final int DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT = 3;
 
     public FilterConfig(final CommandLine cmd)
     {
@@ -84,17 +80,6 @@ public class FilterConfig
             0, 0, 0, 0,
             1d, 1d);
 
-    private static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
-            0, 0, 0.1, 0.5);
-
-    private static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.015,
-            0, 0, 0.04, 0.04);
-
-    private static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
-            10, 6, 0.04, 0.04);
-
-    private static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
-            10, 6, 0.04, 0.04);
 
     public static Options createOptions()
     {
