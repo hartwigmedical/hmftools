@@ -171,6 +171,7 @@ public final class ExampleAnalysisTestFactory {
                 .molecularTissueOrigin(molecularTissueOrigin)
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectionReport())
+                .isCorrectedReportExtern(config.isCorrectionReportExtern())
                 .signaturePath(reportData.signaturePath())
                 .udiDi(UDI_DI)
                 .logoRVAPath(reportData.logoRVAPath())

@@ -104,6 +104,7 @@ public class AnalysedPatientReporter {
                 .circosPath(config.purpleCircosPlot())
                 .comments(Optional.ofNullable(config.comments()))
                 .isCorrectedReport(config.isCorrectedReport())
+                .isCorrectedReportExtern(config.isCorrectedReportExtern())
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())

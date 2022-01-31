@@ -67,7 +67,11 @@ public class ReportingDb {
                 }
 
                 if (report.isCorrectedReport()) {
-                    reportType = reportType + "_corrected";
+                    if (report.isCorrectedReportExtern()) {
+                        reportType = reportType + "_corrected_external";
+                    } else {
+                        reportType = reportType + "_corrected_internal";
+                    }
                 }
 
                 writeApiUpdateJson(outputDirectory,

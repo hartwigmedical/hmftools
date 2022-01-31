@@ -11,6 +11,7 @@ public class ExampleAnalysisConfig {
     @NotNull
     private final String sampleId;
     private final boolean isCorrectionReport;
+    private final boolean isCorrectionReportExtern;
     @Nullable
     private final String comments;
     @NotNull
@@ -22,11 +23,13 @@ public class ExampleAnalysisConfig {
     @NotNull
     private final LimsCohortConfig limsCohortConfig;
 
-    private ExampleAnalysisConfig(@NotNull final String sampleId, final boolean isCorrectionReport, @Nullable final String comments,
-            @NotNull final QsFormNumber qcForNumber, final boolean hasReliablePurity, final double impliedTumorPurity,
-            final boolean includeSummary, final boolean reportGermline, @NotNull final LimsCohortConfig limsCohortConfig) {
+    private ExampleAnalysisConfig(@NotNull final String sampleId, final boolean isCorrectionReport, final boolean isCorrectionReportExtern,
+            @Nullable final String comments, @NotNull final QsFormNumber qcForNumber, final boolean hasReliablePurity,
+            final double impliedTumorPurity, final boolean includeSummary, final boolean reportGermline,
+            @NotNull final LimsCohortConfig limsCohortConfig) {
         this.sampleId = sampleId;
         this.isCorrectionReport = isCorrectionReport;
+        this.isCorrectionReportExtern = isCorrectionReportExtern;
         this.comments = comments;
         this.qcForNumber = qcForNumber;
         this.hasReliablePurity = hasReliablePurity;
@@ -44,6 +47,8 @@ public class ExampleAnalysisConfig {
     public boolean isCorrectionReport() {
         return isCorrectionReport;
     }
+
+    public boolean isCorrectionReportExtern() {return isCorrectionReportExtern; }
 
     @Nullable
     public String comments() {
@@ -80,6 +85,7 @@ public class ExampleAnalysisConfig {
         @NotNull
         private String sampleId = "COLO829T";
         private boolean isCorrectionReport = false;
+        private boolean isCorrectionReportExtern = false;
         @Nullable
         private String comments = null;
         @NotNull
@@ -103,6 +109,12 @@ public class ExampleAnalysisConfig {
         @NotNull
         public Builder isCorrectionReport(final boolean isCorrectionReport) {
             this.isCorrectionReport = isCorrectionReport;
+            return this;
+        }
+
+        @NotNull
+        public Builder isCorrectionReportExtern(final boolean isCorrectionReportExtern) {
+            this.isCorrectionReportExtern = isCorrectionReportExtern;
             return this;
         }
 
@@ -150,7 +162,9 @@ public class ExampleAnalysisConfig {
 
         @NotNull
         public ExampleAnalysisConfig build() {
-            return new ExampleAnalysisConfig(sampleId, isCorrectionReport,
+            return new ExampleAnalysisConfig(sampleId,
+                    isCorrectionReport,
+                    isCorrectionReportExtern,
                     comments,
                     qcForNumber,
                     hasReliablePurity,

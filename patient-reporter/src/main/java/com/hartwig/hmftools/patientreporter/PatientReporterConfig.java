@@ -75,6 +75,7 @@ public interface PatientReporterConfig {
     // Some additional optional params and flags
     String COMMENTS = "comments";
     String CORRECTED_REPORT = "corrected_report";
+    String CORRECTED_REPORT_EXTERN = "corrected_report_extern";
     String LOG_DEBUG = "log_debug";
     String ONLY_CREATE_PDF = "only_create_pdf";
 
@@ -132,6 +133,8 @@ public interface PatientReporterConfig {
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
+        options.addOption(CORRECTED_REPORT_EXTERN, false, "If provided, generate a corrected report with intern/extern correction");
+
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         options.addOption(ONLY_CREATE_PDF, false, "If provided, just the PDF will be generated and no additional data will be updated.");
 
@@ -250,6 +253,8 @@ public interface PatientReporterConfig {
     String comments();
 
     boolean isCorrectedReport();
+
+    boolean isCorrectedReportExtern();
 
     boolean onlyCreatePDF();
 
@@ -379,6 +384,7 @@ public interface PatientReporterConfig {
                 .sampleSummaryTsv(sampleSummaryTsv)
                 .comments(cmd.getOptionValue(COMMENTS))
                 .isCorrectedReport(cmd.hasOption(CORRECTED_REPORT))
+                .isCorrectedReportExtern(cmd.hasOption(CORRECTED_REPORT_EXTERN))
                 .onlyCreatePDF(cmd.hasOption(ONLY_CREATE_PDF))
                 .requirePipelineVersionFile(requirePipelineVersion)
                 .pipelineVersionFile(pipelineVersion)
