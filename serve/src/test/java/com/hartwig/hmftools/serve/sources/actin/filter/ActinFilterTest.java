@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.actin.filter;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -19,9 +20,8 @@ public class ActinFilterTest {
     public void canFilter() {
         List<ActinFilterEntry> filterEntries = Lists.newArrayList();
         filterEntries.add(create(ActinFilterType.FILTER_VARIANT_ON_GENE, "BRAF V600E"));
-        filterEntries.add(create(ActinFilterType.FILTER_RULE_ON_GENE,
-                "BRAF " + ActinRule.ACTIVATION_OR_AMPLIFICATION_OF_GENE_X.toString()));
-        filterEntries.add(create(ActinFilterType.FILTER_EVERYTHING_ON_GENE, "KRAS"));
+        filterEntries.add(create(ActinFilterType.FILTER_EVERYTHING_FOR_GENE, "KRAS"));
+        filterEntries.add(create(ActinFilterType.FILTER_EVERYTHING_FOR_RULE, ActinRule.WILDTYPE_OF_GENE_X.toString()));
 
         ActinFilter filter = new ActinFilter(filterEntries);
 
@@ -29,15 +29,15 @@ public class ActinFilterTest {
                 ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("BRAF").mutation("V600E").build();
         assertTrue(filter.run(Lists.newArrayList(brafV600E)).isEmpty());
 
-        ActinEntry brafActivation = ImmutableActinEntry.builder()
-                .from(ActinTestFactory.createTestEntry())
-                .gene("BRAF")
-                .rule(ActinRule.ACTIVATION_OR_AMPLIFICATION_OF_GENE_X)
-                .build();
-        assertTrue(filter.run(Lists.newArrayList(brafActivation)).isEmpty());
-
         ActinEntry kras = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("KRAS").build();
         assertTrue(filter.run(Lists.newArrayList(kras)).isEmpty());
+
+        ActinEntry wildtype =
+                ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).rule(ActinRule.WILDTYPE_OF_GENE_X).build();
+        assertTrue(filter.run(Lists.newArrayList(wildtype)).isEmpty());
+
+        ActinEntry tmb = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).rule(ActinRule.TMB_OF_AT_LEAST_X).build();
+        assertFalse(filter.run(Lists.newArrayList(tmb)).isEmpty());
 
         filter.reportUnusedFilterEntries();
     }

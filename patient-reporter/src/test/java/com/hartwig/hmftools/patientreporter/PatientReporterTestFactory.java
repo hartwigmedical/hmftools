@@ -90,6 +90,7 @@ public final class PatientReporterTestFactory {
                 .germlineReportingTsv(Strings.EMPTY)
                 .sampleSummaryTsv(SAMPLE_SUMMARY_TSV)
                 .isCorrectedReport(false)
+                .isCorrectedReportExtern(false)
                 .onlyCreatePDF(false)
                 .requirePipelineVersionFile(true)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)

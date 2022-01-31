@@ -44,6 +44,9 @@ public abstract class QCFailReport implements PatientReport {
     public abstract boolean isCorrectedReport();
 
     @Override
+    public abstract boolean isCorrectedReportExtern();
+
+    @Override
     @NotNull
     public abstract String signaturePath();
 
@@ -63,4 +66,3 @@ public abstract class QCFailReport implements PatientReport {
     @Override
     public abstract String reportDate();
 }
-

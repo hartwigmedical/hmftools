@@ -15,12 +15,15 @@ public final class ActinEventExtractor {
     @NotNull
     public static Set<String> extractEvents(@NotNull ActinEntry entry) {
         switch (entry.rule()) {
-            case ACTIVATION_OR_AMPLIFICATION_OF_GENE_X:
+            case ACTIVATION_OR_AMPLIFICATION_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.ACTIVATION, ActinKeywords.AMPLIFICATION);
-            case ACTIVATING_MUTATION_IN_GENE_X:
+            }
+            case ACTIVATING_MUTATION_IN_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.ACTIVATION);
-            case INACTIVATION_OF_GENE_X:
+            }
+            case INACTIVATION_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.INACTIVATION);
+            }
             case MUTATION_IN_GENE_X_OF_TYPE_Y: {
                 String mutation = entry.mutation();
                 if (mutation == null) {
@@ -28,14 +31,36 @@ public final class ActinEventExtractor {
                 }
                 return Sets.newHashSet(mutation);
             }
-            case AMPLIFICATION_OF_GENE_X:
+            case AMPLIFICATION_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.AMPLIFICATION);
-            case DELETION_OF_GENE_X:
+            }
+            case DELETION_OF_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.DELETION);
-            case ACTIVATING_FUSION_IN_GENE_X:
+            }
+            case FUSION_IN_GENE_X: {
                 return Sets.newHashSet(ActinKeywords.PROMISCUOUS_FUSION);
-            case SPECIFIC_FUSION_X:
-                return Sets.newHashSet(entry.gene() + " fusion");
+            }
+            case SPECIFIC_FUSION_OF_X_TO_Y: {
+                return Sets.newHashSet(entry.mutation() + " fusion");
+            }
+            case WILDTYPE_OF_GENE_X: {
+                return Sets.newHashSet(ActinKeywords.WILDTYPE);
+            }
+            case MSI_SIGNATURE: {
+                return Sets.newHashSet(ActinKeywords.MSI_SIGNATURE);
+            }
+            case HRD_SIGNATURE: {
+                return Sets.newHashSet(ActinKeywords.HRD_SIGNATURE);
+            }
+            case TMB_OF_AT_LEAST_X: {
+                return Sets.newHashSet(ActinKeywords.TMB_HIGH);
+            }
+            case TML_OF_AT_LEAST_X: {
+                return Sets.newHashSet(ActinKeywords.TML_HIGH);
+            }
+            case TML_OF_AT_MOST_X: {
+                return Sets.newHashSet(ActinKeywords.TML_LOW);
+            }
             default: {
                 throw new IllegalStateException("Unrecognized event: " + entry.rule());
             }

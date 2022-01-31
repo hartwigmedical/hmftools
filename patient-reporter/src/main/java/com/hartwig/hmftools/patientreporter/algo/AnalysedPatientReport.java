@@ -52,6 +52,9 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract boolean isCorrectedReport();
 
     @Override
+    public abstract boolean isCorrectedReportExtern();
+
+    @Override
     @NotNull
     public abstract String signaturePath();
 

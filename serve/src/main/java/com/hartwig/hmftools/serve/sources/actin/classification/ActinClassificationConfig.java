@@ -187,7 +187,9 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> microsatelliteUnstableEvents() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.MSI_SIGNATURE);
+        return set;
     }
 
     @NotNull
@@ -197,17 +199,24 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Set<String> highTumorMutationalLoadEvents() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.TML_HIGH);
+        set.add(ActinKeywords.TMB_HIGH);
+        return set;
     }
 
     @NotNull
     private static Set<String> lowTumorMutationalLoadEvents() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.TML_LOW);
+        return set;
     }
 
     @NotNull
     private static Set<String> hrDeficiencyEvents() {
-        return Sets.newHashSet();
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.HRD_SIGNATURE);
+        return set;
     }
 
     @NotNull
@@ -232,7 +241,7 @@ public class ActinClassificationConfig {
 
     @NotNull
     private static Map<String, Set<String>> complexEventsPerGene() {
-        // complex events are present in curation file
+        // complex events are expected to be removed by filters
         return Maps.newHashMap();
     }
 }

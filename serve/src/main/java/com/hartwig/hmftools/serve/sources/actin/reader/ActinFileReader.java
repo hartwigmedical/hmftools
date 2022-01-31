@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.FileWriterUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ActinFileReader {
 
@@ -25,27 +28,28 @@ public final class ActinFileReader {
     private static List<ActinEntry> fromLines(@NotNull List<String> lines) {
         List<ActinEntry> trials = Lists.newArrayList();
 
-        // Skip header
+        Map<String, Integer> fields = FileWriterUtils.createFieldsIndexMap(lines.get(0), MAIN_FIELD_DELIMITER);
         for (String line : lines.subList(1, lines.size())) {
-            trials.add(fromString(line));
+            trials.add(fromString(fields, line));
         }
 
         return trials;
     }
 
     @NotNull
-    private static ActinEntry fromString(@NotNull String line) {
+    private static ActinEntry fromString(@NotNull Map<String, Integer> fields, @NotNull String line) {
         String[] values = line.split(MAIN_FIELD_DELIMITER, -1);
 
-        String mutation = null;
-        if (values.length > 3 && !values[3].isEmpty()) {
-            mutation = values[3];
-        }
         return ImmutableActinEntry.builder()
-                .trial(values[0])
-                .rule(ActinRule.valueOf(values[1]))
-                .gene(values[2])
-                .mutation(mutation)
+                .trial(values[fields.get("trial")])
+                .rule(ActinRule.valueOf(values[fields.get("rule")]))
+                .gene(emptyToNull(values[fields.get("gene")]))
+                .mutation(emptyToNull(values[fields.get("mutation")]))
                 .build();
+    }
+
+    @Nullable
+    private static String emptyToNull(@NotNull String value) {
+        return !value.isEmpty() ? value : null;
     }
 }

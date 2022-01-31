@@ -245,8 +245,10 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_DNA,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -256,8 +258,10 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
+                true,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -267,8 +271,10 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_DNA,
                 true,
+                false,
                 COMMENT_STRING_QC_FAIL_CORRECTED,
-                LimsCohortTestFactory.createCOREDBCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCOREDBCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -278,8 +284,10 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.TECHNICAL_FAILURE,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -289,8 +297,10 @@ public class CFReportWriterTest {
                 "70%",
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.FAIL_CONTAMINATION);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
     @Test
@@ -300,8 +310,10 @@ public class CFReportWriterTest {
                 "70%",
                 QCFailReason.SUFFICIENT_TCP_QC_FAILURE,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -311,8 +323,10 @@ public class CFReportWriterTest {
                 "18%",
                 QCFailReason.INSUFFICIENT_TCP_DEEP_WGS,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -322,8 +336,10 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCPCTCohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCPCTCohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -333,8 +349,10 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createCORECohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createCORECohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
     @Test
@@ -344,12 +362,14 @@ public class CFReportWriterTest {
                 null,
                 QCFailReason.INSUFFICIENT_TCP_SHALLOW_WGS,
                 false,
+                false,
                 COMMENT_STRING_QC_FAIL,
-                LimsCohortTestFactory.createWIDECohortConfig(), PurpleQCStatus.PASS);
+                LimsCohortTestFactory.createWIDECohortConfig(),
+                PurpleQCStatus.PASS);
     }
 
-    private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity,
-            @Nullable String wgsPurityString, @NotNull QCFailReason reason, boolean correctedReport, @NotNull String comments,
+    private static void generateQCFailReport(@NotNull String sampleId, @NotNull String shallowSeqPurity, @Nullable String wgsPurityString,
+            @NotNull QCFailReason reason, boolean correctedReport, boolean correctionReportExtern, @NotNull String comments,
             @NotNull LimsCohortConfig limsCohortConfig, @NotNull PurpleQCStatus purpleQCStatus) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId("x")
@@ -393,6 +413,7 @@ public class CFReportWriterTest {
                 .wgsPurityString(wgsPurityString)
                 .comments(comments)
                 .isCorrectedReport(correctedReport)
+                .isCorrectedReportExtern(correctionReportExtern)
                 .signaturePath(testReportData.signaturePath())
                 .logoRVAPath(testReportData.logoRVAPath())
                 .logoCompanyPath(testReportData.logoCompanyPath())

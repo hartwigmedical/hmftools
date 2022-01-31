@@ -22,9 +22,9 @@ public class ActinFileReaderTest {
         assertEquals(3, entries.size());
 
         ActinEntry trial1 = findByTrial(entries, "Trial 1");
-        assertEquals(ActinRule.AMPLIFICATION_OF_GENE_X, trial1.rule());
-        assertEquals("CCND1", trial1.gene());
-        assertNull(trial1.mutation());
+        assertEquals(ActinRule.TMB_OF_AT_LEAST_X, trial1.rule());
+        assertNull(trial1.gene());
+        assertEquals("TMB high", trial1.mutation());
 
         ActinEntry trial2 = findByTrial(entries, "Trial 2");
         assertEquals(ActinRule.INACTIVATION_OF_GENE_X, trial2.rule());

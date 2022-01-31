@@ -57,6 +57,8 @@ public interface PatientReport {
 
     boolean isCorrectedReport();
 
+    boolean isCorrectedReportExtern();
+
     @NotNull
     String signaturePath();
 

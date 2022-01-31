@@ -49,9 +49,9 @@ public class QCFailReporter {
 
     @NotNull
     public QCFailReport run(@Nullable QCFailReason reason, @NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv,
-            @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport, @NotNull String expectedPipelineVersion,
-            boolean overridePipelineVersion, @Nullable String pipelineVersionFile, boolean requirePipelineVersionFile,
-            @NotNull String peachGenotypeTsv) throws IOException {
+            @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport, boolean correctedReportExtern,
+            @NotNull String expectedPipelineVersion, boolean overridePipelineVersion, @Nullable String pipelineVersionFile,
+            boolean requirePipelineVersionFile, @NotNull String peachGenotypeTsv) throws IOException {
         assert reason != null;
 
         String patientId = reportData.limsModel().patientId(sampleMetadata.tumorSampleBarcode());
@@ -97,7 +97,6 @@ public class QCFailReporter {
             peachGenotypesOverrule = sampleReport.reportPharmogenetics() ? peachGenotypes : Lists.newArrayList();
         }
 
-
         return ImmutableQCFailReport.builder()
                 .sampleReport(sampleReport)
                 .qsFormNumber(reason.qcFormNumber())
@@ -105,6 +104,7 @@ public class QCFailReporter {
                 .wgsPurityString(wgsPurityString)
                 .comments(Optional.ofNullable(comments))
                 .isCorrectedReport(correctedReport)
+                .isCorrectedReportExtern(correctedReportExtern)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
                 .logoCompanyPath(reportData.logoCompanyPath())
@@ -122,7 +122,7 @@ public class QCFailReporter {
             List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
             LOGGER.info(" Loaded {} reportable genotypes from {}", peachGenotypes.size(), peachGenotypeTsv);
             return peachGenotypes;
-        }else {
+        } else {
             return Lists.newArrayList();
         }
     }

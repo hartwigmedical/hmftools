@@ -105,6 +105,7 @@ public class PatientReporterApplication {
                 config.purpleQcFile(),
                 config.comments(),
                 config.isCorrectedReport(),
+                config.isCorrectedReportExtern(),
                 config.expectedPipelineVersion(),
                 config.overridePipelineVersion(),
                 config.pipelineVersionFile(),
