@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.sv.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.sv.linx.LinxFusion;
 
@@ -47,5 +48,28 @@ public final class GeneFusions {
     @NotNull
     public static String transcriptUrl(@NotNull String transcriptField) {
         return "http://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;t=" + transcriptField;
+    }
+
+    @NotNull
+    public static String displayStr(final String knownTypeStr)
+    {
+        if(knownTypeStr.equals(KnownFusionType.NONE.toString()))
+            return "None";
+        else if(knownTypeStr.equals(KnownFusionType.KNOWN_PAIR.toString()))
+            return "Known pair";
+        else if(knownTypeStr.equals(KnownFusionType.PROMISCUOUS_5.toString()))
+            return "5' Promiscuous";
+        else if(knownTypeStr.equals(KnownFusionType.PROMISCUOUS_3.toString()))
+            return "3' Promiscuous";
+        else if(knownTypeStr.equals(KnownFusionType.IG_KNOWN_PAIR.toString()))
+            return "IG known pair";
+        else if(knownTypeStr.equals(KnownFusionType.IG_PROMISCUOUS.toString()))
+            return "IG promiscuous";
+        else if(knownTypeStr.equals(KnownFusionType.EXON_DEL_DUP.toString()))
+            return "Exon del dup";
+        else if(knownTypeStr.equals(KnownFusionType.PROMISCUOUS_BOTH))
+            return "5' and 3' Promiscuous";
+        else
+            return knownTypeStr;
     }
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters.analysed;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.linx.ReportableGeneDisruption;
 import com.hartwig.hmftools.common.linx.ReportableHomozygousDisruption;
@@ -292,8 +293,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(fusion.junctionCopyNumber(), hasReliablePurity))
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(fusion.phased().displayStr()).setTextAlignment(TextAlignment.CENTER));
-            contentTable.addCell(TableUtil.createContentCell(fusion.reportedType()).setTextAlignment(TextAlignment.CENTER));
-
+            contentTable.addCell(TableUtil.createContentCell(GeneFusions.displayStr(fusion.reportedType()))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(fusion.likelihood().displayStr()).setTextAlignment(TextAlignment.CENTER));
         }
 
