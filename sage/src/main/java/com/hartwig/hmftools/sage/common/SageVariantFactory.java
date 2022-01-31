@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
+
 import java.util.List;
 import java.util.Set;
 
@@ -100,7 +104,15 @@ public class SageVariantFactory
             result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
 
-        if(Doubles.greaterThan(normal.vaf(), config.MaxGermlineVaf))
+        double normalVaf = normal.vaf();
+
+        if(!primaryTumor.isIndel() && normal.rawAltBaseQuality() > 0 && normal.rawAltBaseQuality() < NORMAL_RAW_ALT_BQ_MAX)
+        {
+            double normalRawBqVcf = normal.rawAltBaseQuality() / (double)(normal.rawAltBaseQuality() + normal.rawRefBaseQuality());
+            normalVaf = min(normalVaf, normalRawBqVcf);
+        }
+
+        if(Doubles.greaterThan(normalVaf, config.MaxGermlineVaf))
         {
             result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }

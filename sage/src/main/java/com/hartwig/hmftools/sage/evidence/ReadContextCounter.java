@@ -191,7 +191,7 @@ public class ReadContextCounter implements VariantHotspot
         if(mCoverage >= MaxCoverage)
             return;
 
-        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL) // was sageConfig.MinMapQuality
+        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
             return;
 
         final RawContext rawContext = RawContext.create(mVariant, record);
@@ -243,17 +243,16 @@ public class ReadContextCounter implements VariantHotspot
                 switch(match)
                 {
                     case FULL:
-                        incrementQualityFlags(record);
                         mFull++;
                         mFullQuality += quality;
                         break;
+
                     case PARTIAL:
-                        incrementQualityFlags(record);
                         mPartial++;
                         mPartialQuality += quality;
                         break;
+
                     case CORE:
-                        incrementQualityFlags(record);
                         mCore++;
                         mCoreQuality += quality;
                         break;
@@ -261,7 +260,9 @@ public class ReadContextCounter implements VariantHotspot
 
                 mCoverage++;
                 mTotalQuality += quality;
+
                 countStrandedness(record);
+                checkImproperCount(record);
                 return;
             }
         }
@@ -319,7 +320,6 @@ public class ReadContextCounter implements VariantHotspot
             mReverseStrand++;
     }
 
-    @NotNull
     private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record)
     {
         if(!realign)
@@ -342,7 +342,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private int qualityJitterPenalty() { return (int) mJitterPenalty; }
 
-    private void incrementQualityFlags(final SAMRecord record)
+    private void checkImproperCount(final SAMRecord record)
     {
         if(!record.getReadPairedFlag() || !record.getProperPairFlag())
         {

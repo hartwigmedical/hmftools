@@ -72,7 +72,6 @@ public class RefContext implements GenomePosition
         return mRawDepth;
     }
 
-
     public boolean exceedsDepthLimit(int standardDepthLimit, int panelDepthLimit)
     {
         if(mUsePanelDepth)

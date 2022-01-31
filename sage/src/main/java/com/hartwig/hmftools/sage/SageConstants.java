@@ -18,6 +18,8 @@ public class SageConstants
 
     public static final int MATCHING_BASE_QUALITY = 20;
 
+    public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
+
     public static final int DEFAULT_EVIDENCE_MAP_QUAL = 1;
 
     public static final String ITEM_DELIM = ";";

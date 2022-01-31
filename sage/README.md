@@ -53,6 +53,7 @@ ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf
 panel_bed | Path to panel bed
 high_confidence_bed | Path to high confidence bed
+ensembl_data_dir | Path to Ensembl data cache
 
 The cardinality of `tumor` must match `tumor_bam`. At least one tumor must be supplied.
 
@@ -109,6 +110,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -ensembl_data_dir /path_to_ensmebl_cache/ \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
@@ -124,12 +126,12 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -ensembl_data_dir /path_to_ensmebl_cache/ \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
 # Append Reference Samples
-From SAGE 2.4 onwards it is possible to append additional reference samples to an existing SAGE 2.4+ VCF file. 
-A typical use case would be to append RNA without having to rerun all of SAGE.
+It is possible to append additional reference samples to an existing SAGE VCF file. A typical use case would be to append RNA without having to rerun all of SAGE.
 
 In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
 The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
@@ -171,8 +173,6 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageAppendApplication
     -input_vcf /path/to/COLO829v003.sage.vcf.gz
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
-
-Do note that from SAGE v2.9+ the package of the SageAppendApplication will become `com.hartwig.hmftools.sage.apps`
 
  # Read context 
  The read context of a variant is the region surrounding it in the read where it was found.
