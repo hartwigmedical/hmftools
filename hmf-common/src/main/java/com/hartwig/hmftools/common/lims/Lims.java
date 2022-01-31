@@ -253,6 +253,9 @@ public class Lims {
     public String labProcedures(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
+            if (sampleData.labProcedures().equals(NOT_AVAILABLE_STRING)) {
+                LOGGER.info("The lab procedure is '{}'", sampleData.labProcedures());
+            }
             return sampleData.labProcedures();
         }
         LOGGER.warn("Could not find lab procedures for sample '{}' in LIMS", sampleBarcode);
