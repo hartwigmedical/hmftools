@@ -273,7 +273,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title, null);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 60, 40 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 40, 40, 40, 65, 65, 40 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
                         TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER),
@@ -309,8 +309,9 @@ public class GenomicAlterationsChapter implements ReportChapter {
         }
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 50, 100, 50, 85, 85 },
-                new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Cluster ID"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Disrupted range"),
+                new Cell[] { TableUtil.createHeaderCell("Location"),
+                        TableUtil.createHeaderCell("Cluster ID").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("Gene"),
+                        TableUtil.createHeaderCell("Disrupted range"),
                         TableUtil.createHeaderCell("Type").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
@@ -321,7 +322,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));
-            contentTable.addCell(TableUtil.createContentCell(disruption.type()));
+            contentTable.addCell(TableUtil.createContentCell(disruption.type())).setTextAlignment(TextAlignment.CENTER);
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(disruption.junctionCopyNumber(),
                     hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(disruption.undisruptedCopyNumber(),
