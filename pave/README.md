@@ -145,7 +145,7 @@ Amino acid numbering conventions
 * AA *110+1 = 1st AA after the stop codon at AA position 110
 * Use most 3’ residue in case of AA homology
 
-Examples:
+Any variant with codingEffect = SPLICE in a coding transcript is given the hvgs protein impact 'p.?'.  Other variants are annotated as per below examples:
 
 Type | Context | Examples | Notes
 ---|---|---|---
