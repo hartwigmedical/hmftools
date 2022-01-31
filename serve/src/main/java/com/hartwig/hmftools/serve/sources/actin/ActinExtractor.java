@@ -51,7 +51,8 @@ public class ActinExtractor {
                 if (type == EventType.UNKNOWN) {
                     LOGGER.warn("No event type known for '{}' on '{}'", entry, entry.gene());
                 } else {
-                    extractions.add(toExtractionResult(trial, eventExtractor.extract(entry.gene(), null, type, event)));
+                    String gene = entry.gene() != null ? entry.gene() : "-";
+                    extractions.add(toExtractionResult(trial, eventExtractor.extract(gene, null, type, event)));
                 }
             }
 

@@ -63,14 +63,14 @@ public final class ActinUtils {
         private final String trial;
         @NotNull
         private final ActinRule actinRule;
-        @NotNull
+        @Nullable
         private final String gene;
         @Nullable
         private final String mutation;
         @NotNull
         private final EventType type;
 
-        public ActinEntryTrial(@Nullable final String trial, @NotNull final ActinRule actinRule, @NotNull final String gene,
+        public ActinEntryTrial(@Nullable final String trial, @NotNull final ActinRule actinRule, @Nullable final String gene,
                 @Nullable final String mutation, @NotNull final EventType type) {
             this.trial = trial;
             this.actinRule = actinRule;
@@ -88,7 +88,8 @@ public final class ActinUtils {
                 return false;
             }
             final ActinEntryTrial that = (ActinEntryTrial) o;
-            return Objects.equals(trial, that.trial) && actinRule == that.actinRule && gene.equals(that.gene) && Objects.equals(mutation,
+            return Objects.equals(trial, that.trial) && actinRule == that.actinRule && Objects.equals(gene, that.gene) && Objects.equals(
+                    mutation,
                     that.mutation) && type == that.type;
         }
 

@@ -70,7 +70,7 @@ public class ActinFilter {
             }
             case FILTER_EVERYTHING_FOR_GENE: {
                 String gene = entry.gene();
-                return gene == null || gene.equals(filter.value());
+                return gene != null && gene.equals(filter.value());
             }
             case FILTER_VARIANT_ON_GENE: {
                 String gene = entry.gene();

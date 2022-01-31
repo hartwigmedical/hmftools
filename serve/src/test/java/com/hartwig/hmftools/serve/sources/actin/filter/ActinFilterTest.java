@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.serve.sources.actin.filter;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -34,6 +35,9 @@ public class ActinFilterTest {
         ActinEntry wildtype =
                 ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).rule(ActinRule.WILDTYPE_OF_GENE_X).build();
         assertTrue(filter.run(Lists.newArrayList(wildtype)).isEmpty());
+
+        ActinEntry tmb = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).rule(ActinRule.TMB_OF_AT_LEAST_X).build();
+        assertFalse(filter.run(Lists.newArrayList(tmb)).isEmpty());
 
         filter.reportUnusedFilterEntries();
     }

@@ -201,6 +201,7 @@ public class ActinClassificationConfig {
     private static Set<String> highTumorMutationalLoadEvents() {
         Set<String> set = Sets.newHashSet();
         set.add(ActinKeywords.TML_HIGH);
+        set.add(ActinKeywords.TMB_HIGH);
         return set;
     }
 
