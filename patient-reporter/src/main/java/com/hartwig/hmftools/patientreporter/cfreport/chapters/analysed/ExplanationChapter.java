@@ -142,7 +142,7 @@ public class ExplanationChapter implements ReportChapter {
                         + "clinically relevant (HPV, MCV, HBV, EBV and HHV-8) and DNA integration for the virus can be detected. "
                         + "If the virus is clinically relevant and no DNA integration is found, the following conditions must be met:\n"
                         + "- Percentage covered of the viral genome is >90%\n"
-                        + "- Coverage of the virus is higher than the expected clonal mean coverage\n",
+                        + "- Coverage of the virus DNA is higher than expected tumor mean coverage\n",
                         "Reporting of EBV is independent of tumor integration. This means that to be reportable, the viral EBV"
                         + " genome must be covered >90% and the coverage of the virus must be higher than the expected clonal "
                         + "mean coverage."})));

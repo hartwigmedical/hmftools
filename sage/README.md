@@ -520,10 +520,6 @@ We can detect local realigned variants using a similar process to phasing but wi
 
 Any variants that are can be locally realigned are given a shared `LRS` (local realigned set) identifier.
 
-### Phased Inframe Indels
-
-If two phased frameshift variant in a single coding exon together form an inframe INDEL, then both are given a shared `PII` (phased inframe indel) identifier.
-
 ## 7. De-duplication
 
 ### Realigned Indels

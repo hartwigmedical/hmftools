@@ -248,7 +248,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
     @NotNull
     private static Table createHomozygousDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
         String title = "Tumor specific homozygous disruptions";
-        String subtitle = "(i.e. gene(s) for which the tumor harbors no wild type copy)";
+        String subtitle = "Complete loss of wild type allele";
         if (homozygousDisruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title, subtitle);
         }
@@ -308,21 +308,22 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title, null);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 50, 100, 50, 85, 85 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 50, 100, 50, 80, 85, 85 },
                 new Cell[] { TableUtil.createHeaderCell("Location"),
-                        TableUtil.createHeaderCell("Cluster ID").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("Gene"),
+                        TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Disrupted range"),
                         TableUtil.createHeaderCell("Type").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Cluster ID").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
 
         for (ReportableGeneDisruption disruption : GeneDisruptions.sort(disruptions)) {
             contentTable.addCell(TableUtil.createContentCell(disruption.location()));
-            contentTable.addCell(TableUtil.createContentCell(String.valueOf(disruption.clusterId()))
-                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));
             contentTable.addCell(TableUtil.createContentCell(disruption.type())).setTextAlignment(TextAlignment.CENTER);
+            contentTable.addCell(TableUtil.createContentCell(String.valueOf(disruption.clusterId()))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(disruption.junctionCopyNumber(),
                     hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.copyNumberToString(disruption.undisruptedCopyNumber(),
