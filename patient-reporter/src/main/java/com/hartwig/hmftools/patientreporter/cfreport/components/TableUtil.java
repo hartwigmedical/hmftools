@@ -157,7 +157,7 @@ public final class TableUtil {
                     .addHeaderCell(new Cell().setBorder(Border.NO_BORDER)
                             .setPadding(0)
                             .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionTitleStyle()))
-                            .add(new Paragraph(tableTitle).addStyle(ReportResources.sectionSubTitleStyle())))
+                            .add(new Paragraph(subtitle).addStyle(ReportResources.sectionSubTitleStyle())))
                     .addCell(new Cell().add(continuedWrapTable).setPadding(0).setBorder(Border.NO_BORDER));
         }
     }
