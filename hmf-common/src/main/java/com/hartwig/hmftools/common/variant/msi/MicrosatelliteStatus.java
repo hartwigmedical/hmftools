@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 public enum MicrosatelliteStatus {
-    MSI("Unstable"),
+    MSI("Instable"),
     MSS("Stable"),
     UNKNOWN("Unknown");
 
