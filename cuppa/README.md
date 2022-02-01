@@ -1,7 +1,7 @@
 # Cuppa
 
 ## Overview
-CUPPA is a tool that weighs multiple genomic features observed from WGS and/or WTS data to predict the tissue of origin of a tumor sample. It is intended to 1) provide molecular tumor type prediction to verify histopathological classification, 2) provide support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis) and 3) prediction of primary tumor location for Cancer of Unknown Primary (CUP). 
+CUPPA is a tool that weighs multiple features observed from WGS and/or WTS data to predict the tissue of origin of a tumor sample. It is intended to 1) provide molecular tumor type prediction to verify histopathological classification, 2) provide support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis) and 3) prediction of primary tumor location for Cancer of Unknown Primary (CUP). 
 
 The key inputs to Cuppa are:
 - a collection of reference data files which define rates of various DNA and RNA features and characteristics
