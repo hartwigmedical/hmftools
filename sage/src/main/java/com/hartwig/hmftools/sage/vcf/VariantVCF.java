@@ -75,6 +75,9 @@ public class VariantVCF implements AutoCloseable
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
 
+    public static final String LOCAL_PHASE_SET_READ_COUNT = "LPS_RC";
+    private static final String LPS_READ_COUNT_DESCRIPTION = "Local Phase Set Read Count";
+
     private final VariantContextWriter mWriter;
     private final Consumer<VariantContext> mConsumer;
 
@@ -138,6 +141,8 @@ public class VariantVCF implements AutoCloseable
     private static VCFHeader header(final String version, final List<String> allSamples)
     {
         VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET_READ_COUNT, 1, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESCRIPTION));
 
         header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));

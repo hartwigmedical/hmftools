@@ -67,6 +67,7 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawRefBaseQuality;
 
     private int mLocalPhaseSet;
+    private int mLpsReadCount;
 
     public ReadContextCounter(
             final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
@@ -116,6 +117,7 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefBaseQuality = 0;
 
         mLocalPhaseSet = 0;
+        mLpsReadCount = 0;
     }
 
     public VariantHotspot variant() { return mVariant; }
@@ -183,6 +185,9 @@ public class ReadContextCounter implements VariantHotspot
 
     public void setLocalPhaseSet(int lps) { mLocalPhaseSet = lps; }
     public int localPhaseSet() { return mLocalPhaseSet; }
+
+    public void setLpsReadCount(int count) { mLpsReadCount = count; }
+    public int lpsReadCount() { return mLpsReadCount; }
 
     public boolean exceedsMaxCoverage() { return mCoverage >= MaxCoverage; }
 

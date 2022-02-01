@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.sage.SageMetaData.LOCAL_REALIGN_SET;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.PASS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
@@ -54,6 +55,7 @@ public final class VariantContextFactory
         if(variant.localPhaseSet() > 0)
         {
             builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSet());
+            builder.attribute(LOCAL_PHASE_SET_READ_COUNT, variant.lpsReadCount());
         }
 
         if(variant.localRealignSet() > 0)

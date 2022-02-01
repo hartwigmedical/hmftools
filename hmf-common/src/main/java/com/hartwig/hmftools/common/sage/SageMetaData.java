@@ -6,8 +6,8 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public final class SageMetaData {
-
+public final class SageMetaData
+{
     public static final String TIER = "TIER";
     public static final String LOCAL_PHASE_SET = "LPS";
     public static final String LOCAL_REALIGN_SET = "LRS";
@@ -20,11 +20,13 @@ public final class SageMetaData {
     public static final String PHASED_INFRAME_INDEL = "PII";
     private static final String PHASED_INFRAME_INDEL_DESCRIPTION = "Phased inframe indel identifier";
 
-    private SageMetaData() {
+    private SageMetaData()
+    {
     }
 
     @NotNull
-    public static VCFHeader addSageMetaData(@NotNull final VCFHeader header) {
+    public static VCFHeader addSageMetaData(@NotNull final VCFHeader header)
+    {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_REALIGN_SET, 1, VCFHeaderLineType.Integer, REALIGN_DESCRIPTION));

@@ -25,29 +25,30 @@ class LocalRealignSet extends BufferedPostProcessor
 
         for(final SageVariant other : variants)
         {
-            boolean oldIsIndel = other.isIndel();
-            if(newIsIndel || oldIsIndel)
-            {
-                final ReadContext oldReadContext = other.readContext();
-                int positionOffset = LocalPhaseSet.positionOffset(other.variant(), variant.variant());
-                int offset = LocalPhaseSet.adjustedOffset(other.variant(), variant.variant());
+            if(!other.isIndel() && !newIsIndel)
+                continue;
 
-                if(positionOffset != offset && oldReadContext.phased(positionOffset, newReadContext))
+            if(!variant.hasLocalPhaseSet() || variant.localPhaseSet() != other.localPhaseSet())
+                continue;
+
+            int positionOffset = LocalPhaseSet.positionOffset(other.variant(), variant.variant());
+            int offset = LocalPhaseSet.adjustedOffset(other.variant(), variant.variant());
+
+            if(positionOffset != offset && other.readContext().phased(positionOffset, newReadContext))
+            {
+                if(other.localRealignSet() != 0)
                 {
-                    if(other.localRealignSet() != 0)
-                    {
-                        variant.localRealignSet(other.localRealignSet());
-                    }
-                    else if(variant.localRealignSet() != 0)
-                    {
-                        other.localRealignSet(variant.localRealignSet());
-                    }
-                    else
-                    {
-                        mRealign++;
-                        other.localRealignSet(mRealign);
-                        variant.localRealignSet(mRealign);
-                    }
+                    variant.localRealignSet(other.localRealignSet());
+                }
+                else if(variant.localRealignSet() != 0)
+                {
+                    other.localRealignSet(variant.localRealignSet());
+                }
+                else
+                {
+                    mRealign++;
+                    other.localRealignSet(mRealign);
+                    variant.localRealignSet(mRealign);
                 }
             }
         }

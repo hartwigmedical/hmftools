@@ -13,22 +13,24 @@ public class SageVariant
 {
     private final Candidate mCandidate;
     private final Set<String> mFilters;
-    private final List<ReadContextCounter> mNormalAltContexts;
-    private final List<ReadContextCounter> mTumorAltContexts;
+    private final List<ReadContextCounter> mNormalReadCounters;
+    private final List<ReadContextCounter> mTumorReadCounters;
 
     private int mLocalPhaseSet;
+    private int mLpsReadCount;
     private int mLocalRealignSet;
     private int mMixedImpact;
 
     public SageVariant(
             final Candidate candidate, final Set<String> filters,
-            final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts)
+            final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
     {
         mCandidate = candidate;
-        mNormalAltContexts = normal;
-        mTumorAltContexts = tumorAltContexts;
+        mNormalReadCounters = normalCounters;
+        mTumorReadCounters = tumorReadCounters;
         mFilters = filters;
-        mLocalPhaseSet = 0;
+        mLocalPhaseSet = tumorReadCounters.stream().mapToInt(x -> x.localPhaseSet()).findFirst().orElse(0);
+        mLpsReadCount = tumorReadCounters.stream().mapToInt(x -> x.lpsReadCount()).findFirst().orElse(0);
         mLocalRealignSet = 0;
     }
 
@@ -78,16 +80,14 @@ public class SageVariant
     }
 
     public int localPhaseSet() { return mLocalPhaseSet; }
+    public int lpsReadCount() { return mLpsReadCount; }
     public boolean hasLocalPhaseSet() { return mLocalPhaseSet > 0; }
     public void localPhaseSet(int localPhaseSet)
     {
         mLocalPhaseSet = localPhaseSet;
     }
 
-    public int localRealignSet()
-    {
-        return mLocalRealignSet;
-    }
+    public int localRealignSet() { return mLocalRealignSet; }
     public boolean hasLocalRealignSet() { return mLocalRealignSet > 0; }
     public void localRealignSet(int localRealignSet)
     {
@@ -111,13 +111,10 @@ public class SageVariant
 
     public boolean isTumorEmpty()
     {
-        return mTumorAltContexts.isEmpty();
+        return mTumorReadCounters.isEmpty();
     }
 
-    public boolean isNormalEmpty()
-    {
-        return mNormalAltContexts.isEmpty();
-    }
+    public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
     @NotNull
     public VariantHotspot variant()
@@ -138,7 +135,7 @@ public class SageVariant
     }
 
     @NotNull
-    public ReadContext readContext() { return mTumorAltContexts.get(0).readContext(); }
+    public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 
     @NotNull
     public String microhomology()
@@ -149,13 +146,13 @@ public class SageVariant
     @NotNull
     public List<ReadContextCounter> normalAltContexts()
     {
-        return mNormalAltContexts;
+        return mNormalReadCounters;
     }
 
     @NotNull
     public List<ReadContextCounter> tumorAltContexts()
     {
-        return mTumorAltContexts;
+        return mTumorReadCounters;
     }
 
     @NotNull
@@ -168,7 +165,7 @@ public class SageVariant
 
     public int totalQuality()
     {
-        return mTumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
+        return mTumorReadCounters.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
 
     public String toString() { return String.format("%s", mCandidate.toString()); }

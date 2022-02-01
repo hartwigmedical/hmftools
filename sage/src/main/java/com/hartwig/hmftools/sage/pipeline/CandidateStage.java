@@ -40,8 +40,31 @@ public class CandidateStage
         mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, refGenome, coverage);
     }
 
+    public List<Candidate> findCandidates(final ChrBaseRegion region, final RefSequence refSequence)
+    {
+        final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
+
+        for(int i = 0; i < mConfig.TumorIds.size(); i++)
+        {
+            final String sample = mConfig.TumorIds.get(i);
+            final String sampleBam = mConfig.TumorBams.get(i);
+
+            // SG_LOGGER.trace("region({}) finding candidates from tumor sample({})", region, sample);
+
+            List<AltContext> altContexts = mCandidateEvidence.readBam(sample, sampleBam, refSequence, region);
+
+            initialCandidates.add(altContexts);
+        }
+
+        List<Candidate> candidates = initialCandidates.candidates(mConfig.SpecificPositions);
+
+        SG_LOGGER.trace("region({}) found {} candidates", region.toString(), candidates.size());
+
+        return candidates;
+    }
+
     @NotNull
-    public CompletableFuture<List<Candidate>> findCandidates(final ChrBaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
+    public CompletableFuture<List<Candidate>> findCandidatesOld(final ChrBaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
     {
         return refSequenceFuture.thenCompose(refSequence ->
         {

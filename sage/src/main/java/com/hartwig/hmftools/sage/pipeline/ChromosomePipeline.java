@@ -10,15 +10,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -41,6 +44,7 @@ public class ChromosomePipeline implements AutoCloseable
     private final SomaticPipeline mSomaticPipeline;
     private final Consumer<SageVariant> mWriteConsumer;
     private final ChromosomePartition mPartition;
+    private final List<RegionTask> mRegionTasks;
     private final VariantPhaser mVariantPhaser;
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
@@ -65,6 +69,19 @@ public class ChromosomePipeline implements AutoCloseable
 
         mPartition = new ChromosomePartition(config, mRefGenome);
 
+        List<ChrBaseRegion> partitionedRegions = mPartition.partition(mChromosome);
+
+        mRegionTasks = Lists.newArrayList();
+
+        for(int i = 0; i < partitionedRegions.size(); ++i)
+        {
+            ChrBaseRegion region = partitionedRegions.get(i);
+
+            mRegionTasks.add(new RegionTask(i, region, config, mRefGenome,
+                    refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr),
+                    refData.HighConfidence.get(chr), qualityRecalibrationMap, phaseSetCounter, coverage));
+        }
+
         mVariantPhaser = new VariantPhaser(refData.ChromosomeTranscripts.get(chromosome), phaseSetCounter, this::write);
     }
 
@@ -73,7 +90,29 @@ public class ChromosomePipeline implements AutoCloseable
         return mChromosome;
     }
 
-    public void process() throws ExecutionException, InterruptedException
+    public void process()
+    {
+        SG_LOGGER.debug("chromosome({}) executing {} regions", mChromosome, mRegionTasks.size());
+
+        final List<Callable> callableList = mRegionTasks.stream().collect(Collectors.toList());
+        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+
+        SG_LOGGER.debug("chromosome({}) {} regions complete", mChromosome, mRegionTasks.size());
+
+        for(RegionTask regionTask : mRegionTasks)
+        {
+            List<SageVariant> regionVariants = regionTask.getVariants();
+
+            SG_LOGGER.trace("phasing {} variants", regionVariants.size());
+            regionVariants.forEach(mVariantPhaser);
+        }
+
+        mVariantPhaser.flush();
+
+        SG_LOGGER.debug("chromosome({}) analysis complete", mChromosome);
+    }
+
+    public void processOld() throws ExecutionException, InterruptedException
     {
         for(ChrBaseRegion region : mPartition.partition(mChromosome))
         {
