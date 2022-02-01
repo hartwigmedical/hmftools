@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -40,7 +41,7 @@ public class AdditionalReferencePipeline
     {
         mConfig = config;
         mRefGenome = refGenome;
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
+        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, new PhaseSetCounter());
         mExecutor = executor;
     }
 

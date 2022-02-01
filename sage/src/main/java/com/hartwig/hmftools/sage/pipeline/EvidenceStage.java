@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -22,9 +23,9 @@ public class EvidenceStage
 
     public EvidenceStage(
             final SageConfig config, final ReferenceSequenceFile refGenome,
-            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter)
     {
-        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap);
+        mReadContextEvidence = new ReadContextEvidence(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
     }
 
     public CompletableFuture<ReadContextCounters> findEvidence(
@@ -48,7 +49,7 @@ public class EvidenceStage
 
                 // SG_LOGGER.trace("region({}) tumor sample({}) gathering evidence for {} candidates", region, sample, initialCandidates.size());
 
-                done = done.<List<ReadContextCounter>>thenApply(x -> mReadContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
+                done = done.<List<ReadContextCounter>>thenApply(x -> mReadContextEvidence.collectEvidence(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
             }
 
             SG_LOGGER.trace("region({}) gathered {} evidence for {} variants", region, sampleType, result.readContextCounters().size());

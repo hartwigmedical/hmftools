@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
@@ -44,8 +48,8 @@ public class IndexedBases
         LeftCoreIndex = leftCoreIndex;
         RightCoreIndex = rightCoreIndex;
         Bases = bases;
-        LeftFlankIndex = Math.max(0, leftCoreIndex - flankSize);
-        RightFlankIndex = Math.min(bases.length - 1, rightCoreIndex + flankSize);
+        LeftFlankIndex = max(0, leftCoreIndex - flankSize);
+        RightFlankIndex = min(bases.length - 1, rightCoreIndex + flankSize);
         FlankSize = flankSize;
     }
 
@@ -99,7 +103,7 @@ public class IndexedBases
 
     public int maxFlankLength()
     {
-        return Math.min(LeftCoreIndex, Bases.length - RightCoreIndex - 1);
+        return min(LeftCoreIndex, Bases.length - RightCoreIndex - 1);
     }
 
     public byte[] trinucleotideContext(int position)
@@ -113,20 +117,20 @@ public class IndexedBases
     }
 
     // calculate implied coords for another IndexedBase object
-    private int otherLeftCentreIndex(int otherRefIndex) { return otherRefIndex - Index + LeftCoreIndex; }
-    private int otherRightCentreIndex(int otherRefIndex)
+    private int otherLeftCoreIndex(int otherRefIndex) { return otherRefIndex - Index + LeftCoreIndex; }
+    private int otherRightCoreIndex(int otherRefIndex)
     {
         return otherRefIndex- Index + RightCoreIndex;
     }
 
     public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
     {
-        int otherLeftCentreIndex = otherLeftCentreIndex(otherReadIndex);
+        int otherLeftCentreIndex = otherLeftCoreIndex(otherReadIndex);
 
         if(otherLeftCentreIndex < 0)
             return false;
 
-        int otherRightCentreIndex = otherRightCentreIndex(otherReadIndex);
+        int otherRightCentreIndex = otherRightCoreIndex(otherReadIndex);
         return otherRightCentreIndex < otherBases.length;
     }
 
@@ -151,7 +155,7 @@ public class IndexedBases
 
         final byte[] otherBases = other.Bases;
 
-        boolean centreMatch = coreMatch(wildcardAllowedInCore, otherReadIndex, otherBases, otherBaseQuals, nonIndelLength);
+        boolean centreMatch = coreMatch(wildcardAllowedInCore, otherReadIndex, otherBases);
         if(!centreMatch)
             return NONE;
 
@@ -174,18 +178,12 @@ public class IndexedBases
 
     protected boolean coreMatch(boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases)
     {
-        return coreMatch(wildcardAllowed, otherRefIndex, otherBases, null, 0);
-    }
-
-    protected boolean coreMatch(
-            boolean wildcardAllowed, int otherRefIndex, final byte[] otherBases, final byte[] otherBaseQuals, int nonIndelLength)
-    {
-        int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
+        int otherLeftCentreIndex = otherLeftCoreIndex(otherRefIndex);
 
         if(otherLeftCentreIndex < 0)
             return false;
 
-        int otherRightCentreIndex = otherRightCentreIndex(otherRefIndex);
+        int otherRightCentreIndex = otherRightCoreIndex(otherRefIndex);
 
         if(otherRightCentreIndex >= otherBases.length)
             return false;
@@ -197,18 +195,7 @@ public class IndexedBases
             byte otherByte = otherBases[otherLeftCentreIndex + i];
 
             if(!bytesMatch(wildcardAllowed, ourByte, otherByte))
-            {
-                /*
-                // check for low-qual mismatches except in the actual alt region of an SNV/MNV
-                if(nonIndelLength > 0 && positionWithin(readIndex, Index, Index + nonIndelLength - 1))
-                    return false;
-
-                if(isLowBaseQual(otherBaseQuals, otherLeftCentreIndex + i))
-                    continue;
-                 */
-
                 return false;
-            }
         }
 
         return true;
@@ -225,7 +212,7 @@ public class IndexedBases
         return baseQualities[bqIndex] < MATCHING_BASE_QUALITY;
     }
 
-    private boolean bytesMatch(final boolean wildcardAllowed, byte ours, byte other)
+    private static boolean bytesMatch(final boolean wildcardAllowed, byte ours, byte other)
     {
         return (wildcardAllowed && other == MATCH_WILDCARD) || ours == other;
     }
@@ -238,8 +225,8 @@ public class IndexedBases
     protected int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases, final byte[] otherBaseQuals)
     {
         int otherRightCentreIndex = otherRefIndex + RightCoreIndex - Index;
-        int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + FlankSize) - otherRightCentreIndex;
-        int maxLength = Math.min(rightFlankLength(), otherRightFlankLength);
+        int otherRightFlankLength = min(otherBases.length - 1, otherRightCentreIndex + FlankSize) - otherRightCentreIndex;
+        int maxLength = min(rightFlankLength(), otherRightFlankLength);
 
         for(int i = 1; i <= maxLength; i++)
         {
@@ -266,8 +253,8 @@ public class IndexedBases
     protected int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases, final byte[] otherBaseQuals)
     {
         int otherLeftCentreIndex = otherRefIndex + LeftCoreIndex - Index;
-        int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - FlankSize);
-        int totalLength = Math.min(leftFlankLength(), otherLeftFlankLength);
+        int otherLeftFlankLength = otherLeftCentreIndex - max(0, otherLeftCentreIndex - FlankSize);
+        int totalLength = min(leftFlankLength(), otherLeftFlankLength);
 
         for(int i = 1; i <= totalLength; i++)
         {
@@ -284,6 +271,118 @@ public class IndexedBases
         }
 
         return totalLength;
+    }
+
+    public boolean phasedNew(int offset, final IndexedBases other)
+    {
+        int otherRefIndex = other.Index + offset;
+
+        int otherLeftCoreIndex = otherLeftCoreIndex(otherRefIndex);
+
+        if(otherLeftCoreIndex < 0)
+            return false;
+
+        int otherRightCoreIndex = otherRightCoreIndex(otherRefIndex);
+
+        if(otherRightCoreIndex >= other.Bases.length)
+            return false;
+
+        // test this core vs the other variant's bases
+        int coreLength = RightCoreIndex - LeftCoreIndex + 1;
+
+        boolean hasCoreMatch = true;
+
+        for(int i = 0; i < coreLength; i++)
+        {
+            int readIndex = LeftCoreIndex + i;
+            byte ourByte = Bases[readIndex];
+
+            int otherReadIndex = otherLeftCoreIndex + i;
+            byte otherByte = other.Bases[otherReadIndex];
+
+            if(ourByte != otherByte)
+            {
+                if(positionWithin(otherReadIndex, other.LeftFlankIndex, other.RightFlankIndex))
+                    return false;
+
+                hasCoreMatch = false;
+            }
+        }
+
+        if(!hasCoreMatch)
+        {
+            // test other core vs this variant's bases
+            hasCoreMatch = true;
+
+            int adjRefIndex = Index - offset;
+            int adjLeftCoreIndex = other.otherLeftCoreIndex(adjRefIndex);
+
+            if(adjLeftCoreIndex < 0)
+                return false;
+
+            int adjRightCoreIndex = other.otherRightCoreIndex(adjRefIndex);
+
+            if(adjRightCoreIndex >= Bases.length)
+                return false;
+
+            for(int i = 0; i < other.coreLength(); i++)
+            {
+                int otherReadIndex = other.LeftCoreIndex + i;
+                byte otherByte = other.Bases[otherReadIndex];
+
+                int readIndex = adjLeftCoreIndex + i;
+                byte ourByte = Bases[readIndex];
+
+                if(ourByte != otherByte)
+                {
+                    if(positionWithin(readIndex, LeftFlankIndex, RightFlankIndex))
+                        return false;
+
+                    hasCoreMatch = false;
+                }
+            }
+        }
+
+        if(!hasCoreMatch) // neither variant has a core match in their other's read bases
+            return false;
+
+        // test left flank bases
+
+        // int otherLeftCentreIndex = otherRefIndex + LeftCoreIndex - Index;
+        int otherLeftFlankLength = otherLeftCoreIndex - max(0, otherLeftCoreIndex - FlankSize);
+        int leftFlankLength = LeftCoreIndex - LeftFlankIndex;
+
+        int totalLength = min(leftFlankLength, otherLeftFlankLength);
+
+        for(int i = 1; i <= totalLength; i++)
+        {
+            byte ourByte = Bases[LeftCoreIndex - i];
+
+            int otherReadIndex = otherLeftCoreIndex - i;
+            byte otherByte = other.Bases[otherReadIndex];
+
+            if(ourByte != otherByte && positionWithin(otherReadIndex, LeftFlankIndex, RightFlankIndex))
+                return false;
+        }
+
+        // test right flank bases
+
+        // int otherRightCentreIndex = otherRefIndex + RightCoreIndex - Index;
+        int otherRightFlankLength = min(other.Bases.length - 1, otherRightCoreIndex + FlankSize) - otherRightCoreIndex;
+        int rightFlankLength = RightFlankIndex - RightCoreIndex;
+        int maxLength = min(rightFlankLength, otherRightFlankLength);
+
+        for(int i = 1; i <= maxLength; i++)
+        {
+            byte ourByte = Bases[RightCoreIndex + i];
+            int otherReadIndex = otherRightCoreIndex + i;
+            byte otherByte = other.Bases[otherReadIndex];
+
+            if(ourByte != otherByte &&  positionWithin(otherReadIndex, LeftFlankIndex, RightFlankIndex))
+                return false;
+        }
+
+        return true;
     }
 
     public boolean phased(int offset, final IndexedBases other)
@@ -310,13 +409,131 @@ public class IndexedBases
         return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
     }
 
+    public boolean phasedNewByPos(int offset, final IndexedBases other)
+    {
+        int otherAdjReadIndex = other.Index + offset;
+        int otherAdjPosition = Position;
+
+        int posIndexOffset = Position - Index;
+        int coreStart = Position - (Index - LeftCoreIndex);
+        int coreEnd = Position + (RightCoreIndex - Index);
+        int leftFlankPos = Position - (Index - LeftFlankIndex);
+        int rightFlankPos = Position + (RightFlankIndex - Index);
+
+        int otherPosIndexOffset = otherAdjPosition - otherAdjReadIndex;
+        int otherCoreStart = otherAdjPosition - (otherAdjReadIndex - other.LeftCoreIndex);
+        int otherCoreEnd = otherAdjPosition + (other.RightCoreIndex - otherAdjReadIndex);
+        int otherLeftFlankPos = otherAdjPosition - (otherAdjReadIndex - other.LeftFlankIndex);
+        int otherRightFlankPos = otherAdjPosition + (other.RightFlankIndex - otherAdjReadIndex);
+
+        /*
+        int otherPosIndexOffset = other.Position - other.Index;
+        int otherCoreStart = other.Position - (other.Index - other.LeftCoreIndex);
+        int otherCoreEnd = other.Position + (other.RightCoreIndex - other.Index);
+        int otherLeftFlankPos = other.Position - (other.Index - other.LeftFlankIndex);
+        int otherRightFlankPos = other.Position + (other.RightFlankIndex - other.Index);
+        */
+
+        // determine overlap of core + flanks - these must exact match
+        if(positionsOverlap(leftFlankPos, rightFlankPos, otherLeftFlankPos, otherRightFlankPos))
+        {
+            int overlapStart = max(leftFlankPos, otherLeftFlankPos);
+            int overlapEnd = min(rightFlankPos, otherRightFlankPos);
+
+            for(int pos = overlapStart; pos <= overlapEnd; ++pos)
+            {
+                int readIndex = pos - posIndexOffset;
+                byte thisByte = Bases[readIndex];
+
+                int otherReadIndex = pos - otherPosIndexOffset;
+                byte otherByte = other.Bases[otherReadIndex];
+
+                if(thisByte != otherByte)
+                    return false;
+            }
+        }
+
+        // additionally check any part of core that is only overlapped by the extended flanks - this must also match
+        if(coreEnd > otherRightFlankPos)
+        {
+            if(!checkCoreInExtendedBasesRight(coreStart, coreEnd, Bases, posIndexOffset, otherRightFlankPos, other.Bases, otherPosIndexOffset))
+                return false;
+        }
+        else if(otherCoreEnd > rightFlankPos)
+        {
+            if(!checkCoreInExtendedBasesRight(otherCoreStart, otherCoreEnd, other.Bases, otherPosIndexOffset, rightFlankPos, Bases, posIndexOffset))
+                return false;
+        }
+
+        if(coreStart < otherLeftFlankPos)
+        {
+            if(!checkCoreInExtendedBasesLeft(coreStart, coreEnd,  Bases, posIndexOffset, otherLeftFlankPos, other.Bases, otherPosIndexOffset))
+                return false;
+        }
+        else if(otherCoreStart < leftFlankPos)
+        {
+            if(!checkCoreInExtendedBasesLeft(otherCoreStart, otherCoreEnd, other.Bases, otherPosIndexOffset, leftFlankPos, Bases, posIndexOffset))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static boolean checkCoreInExtendedBasesRight(
+            int coreStart, int coreEnd, final byte[] bases, int posIndexOffset, int otherRightFlankPos, final byte[] otherBases, int otherPosIndexOffset)
+    {
+        int startPos = max(coreStart, otherRightFlankPos + 1);
+
+        for(int pos = startPos; pos <= coreEnd; ++pos)
+        {
+            int readIndex = pos - posIndexOffset;
+            byte thisByte = bases[readIndex];
+
+            int otherReadIndex = pos - otherPosIndexOffset;
+
+            if(otherReadIndex >= otherBases.length)
+                return false;
+
+            byte otherByte = otherBases[otherReadIndex];
+
+            if(thisByte != otherByte)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static boolean checkCoreInExtendedBasesLeft(
+            int coreStart, int coreEnd, final byte[] bases, int posIndexOffset, int otherLeftFlankPos, final byte[] otherBases, int otherPosIndexOffset)
+    {
+        int endPos = min(coreEnd, otherLeftFlankPos - 1);
+
+        for(int pos = coreStart; pos <= endPos; ++pos)
+        {
+            int readIndex = pos - posIndexOffset;
+            byte thisByte = bases[readIndex];
+
+            int otherReadIndex = pos - otherPosIndexOffset;
+
+            if(otherReadIndex < 0)
+                return false;
+
+            byte otherByte = otherBases[otherReadIndex];
+
+            if(thisByte != otherByte)
+                return false;
+        }
+
+        return true;
+    }
+
     public static IndexedBases resize(
             final int position, final int recordIndex, final int recordLeftCoreIndex,
             final int recordRightCoreIndex, final int flankSize, final int additionalFlank, final byte[] recordBases)
     {
-        int recordLeftFlankIndex = Math.max(0, recordLeftCoreIndex - flankSize - additionalFlank);
+        int recordLeftFlankIndex = max(0, recordLeftCoreIndex - flankSize - additionalFlank);
         int recordLeftFlankLength = recordLeftCoreIndex - recordLeftFlankIndex;
-        int recordRightFlankIndex = Math.min(recordBases.length - 1, recordRightCoreIndex + flankSize + additionalFlank);
+        int recordRightFlankIndex = min(recordBases.length - 1, recordRightCoreIndex + flankSize + additionalFlank);
 
         int rightCentreIndex = recordLeftFlankLength + recordRightCoreIndex - recordLeftCoreIndex;
         int index = recordLeftFlankLength + recordIndex - recordLeftCoreIndex;

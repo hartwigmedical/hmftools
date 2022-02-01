@@ -46,12 +46,12 @@ public class LocalPhaseSet extends BufferedPostProcessor
 
         for(final SageVariant other : variants)
         {
-            final ReadContext oldReadContext = other.readContext();
+            final ReadContext otherReadContext = other.readContext();
 
             if(!rightInLeftDel(other.variant(), variant.variant()))
             {
                 int offset = adjustedOffset(other.variant(), variant.variant());
-                if(oldReadContext.phased(offset, newReadContext))
+                if(otherReadContext.phased(offset, newReadContext))
                 {
                     if(other.localPhaseSet() != 0)
                     {

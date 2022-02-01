@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -34,15 +35,14 @@ public class SomaticPipeline
     public SomaticPipeline(
             final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
-            final List<BaseRegion> highConfidenceRegions,
-            final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final Coverage coverage)
+            final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
+            final PhaseSetCounter phaseSetCounter, final Coverage coverage)
     {
         mConfig = config;
         mExecutor = executor;
         mRefGenome = refGenome;
         mCandidateState = new CandidateStage(config, refGenome, hotspots, panelRegions, highConfidenceRegions, coverage);
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap);
+        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
     }
 
     public CompletableFuture<List<SageVariant>> findVariants(final ChrBaseRegion region)

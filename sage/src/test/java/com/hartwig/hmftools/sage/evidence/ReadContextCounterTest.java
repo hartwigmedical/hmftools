@@ -5,9 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import java.util.Collections;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -46,7 +44,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR,1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR,1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -61,7 +59,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR,1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR,1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -76,7 +74,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -93,7 +91,7 @@ public class ReadContextCounterTest
         String quals = buildQualString(new int[] {37, 37, 37});
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CGT", quals);
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(0, victim.depth());
         assertEquals(0, victim.altSupport());
@@ -119,7 +117,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -134,7 +132,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -149,7 +147,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -166,7 +164,7 @@ public class ReadContextCounterTest
                 new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, 0, true);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
-        victim.accept(record, CONFIG, QUALITY_CALCULATOR, 1);
+        victim.processRead(record, CONFIG, QUALITY_CALCULATOR, 1);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());

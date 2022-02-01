@@ -106,7 +106,7 @@ public class ReadContext
         return mReadBases.phased(offset, other.mReadBases);
     }
 
-    public boolean isCentreCovered(int otherReadIndex, byte[] otherBases)
+    public boolean isCoreCovered(int otherReadIndex, byte[] otherBases)
     {
         return mReadBases.isCentreCovered(otherReadIndex, otherBases);
     }

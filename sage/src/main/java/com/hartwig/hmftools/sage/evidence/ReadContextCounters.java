@@ -38,7 +38,6 @@ public class ReadContextCounters
 
     public ListMultimap<VariantHotspot,ReadContextCounter> readContextCounters() { return mMap; }
 
-    @NotNull
     public List<ReadContextCounter> readContextCounters(final VariantHotspot variant)
     {
         assert (mMap.containsKey(variant));
@@ -55,7 +54,6 @@ public class ReadContextCounters
         }
     }
 
-    @NotNull
     public List<Candidate> candidates(final Predicate<ReadContextCounter> anyPredicate)
     {
         final List<Candidate> result = Lists.newArrayList();

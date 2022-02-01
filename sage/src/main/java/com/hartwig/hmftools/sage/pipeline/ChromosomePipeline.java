@@ -61,7 +61,7 @@ public class ChromosomePipeline implements AutoCloseable
         mSomaticPipeline = new SomaticPipeline(
                 config, executor, mRefGenome,
                 refData.Hotspots.get(chr), refData.PanelWithHotspots.get(chr),
-                refData.HighConfidence.get(chr), qualityRecalibrationMap, coverage);
+                refData.HighConfidence.get(chr), qualityRecalibrationMap, phaseSetCounter, coverage);
 
         mPartition = new ChromosomePartition(config, mRefGenome);
 

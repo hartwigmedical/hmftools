@@ -17,8 +17,6 @@ import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -68,6 +66,8 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawAltBaseQuality;
     private int mRawRefBaseQuality;
 
+    private int mLocalPhaseSet;
+
     public ReadContextCounter(
             final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
             final int maxCoverage, final int minNumberOfEvents, boolean realign)
@@ -114,6 +114,8 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefSupport = 0;
         mRawAltBaseQuality = 0;
         mRawRefBaseQuality = 0;
+
+        mLocalPhaseSet = 0;
     }
 
     public VariantHotspot variant() { return mVariant; }
@@ -179,6 +181,11 @@ public class ReadContextCounter implements VariantHotspot
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
 
+    public void setLocalPhaseSet(int lps) { mLocalPhaseSet = lps; }
+    public int localPhaseSet() { return mLocalPhaseSet; }
+
+    public boolean exceedsMaxCoverage() { return mCoverage >= MaxCoverage; }
+
     public String toString()
     {
         return String.format("var(%s:%d %s>%s) core(%s) counts(f=%d p=%d c=%d)",
@@ -186,18 +193,18 @@ public class ReadContextCounter implements VariantHotspot
                 mReadContext.toString(), mFull, mPartial, mCore);
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
+    public boolean processRead(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
     {
-        if(mCoverage >= MaxCoverage)
-            return;
+        if(exceedsMaxCoverage())
+            return false;
 
         if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
-            return;
+            return false;
 
         final RawContext rawContext = RawContext.create(mVariant, record);
 
         if(rawContext.ReadIndexInSkipped)
-            return;
+            return false;
 
         int readIndex = rawContext.ReadIndex;
         boolean baseDeleted = rawContext.ReadIndexInDelete;
@@ -209,12 +216,12 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefBaseQuality += rawContext.RefQuality;
 
         if(readIndex < 0)
-            return;
+            return false;
 
-        boolean covered = mReadContext.isCentreCovered(readIndex, record.getReadBases());
+        boolean covered = mReadContext.isCoreCovered(readIndex, record.getReadBases());
 
         if(!covered)
-            return;
+            return false;
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
@@ -263,7 +270,7 @@ public class ReadContextCounter implements VariantHotspot
 
                 countStrandedness(record);
                 checkImproperCount(record);
-                return;
+                return true;
             }
         }
 
@@ -276,12 +283,12 @@ public class ReadContextCounter implements VariantHotspot
             mRealignedQuality += quality;
             mCoverage++;
             mTotalQuality += quality;
-            return;
+            return true;
         }
 
         if(realignmentType.equals(RealignedType.NONE) && rawContext.ReadIndexInSoftClip)
         {
-            return;
+            return false;
         }
 
         mCoverage++;
@@ -310,6 +317,8 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
                 break;
         }
+
+        return false;
     }
 
     private void countStrandedness(final SAMRecord record)
