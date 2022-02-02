@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.phase.VariantPhaser.PHASE_BUFFER;
+import static com.hartwig.hmftools.sage.phase.VariantDeduper.PHASE_BUFFER;
 
 import java.util.Collection;
 import java.util.Set;
@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class LocalPhaseSet extends BufferedPostProcessor

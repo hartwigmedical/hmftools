@@ -21,13 +21,14 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.phase.VariantPhaser;
+import com.hartwig.hmftools.sage.phase.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -45,7 +46,7 @@ public class ChromosomePipeline implements AutoCloseable
     private final Consumer<SageVariant> mWriteConsumer;
     private final ChromosomePartition mPartition;
     private final List<RegionTask> mRegionTasks;
-    private final VariantPhaser mVariantPhaser;
+    private final VariantDeduper mVariantDeduper;
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
@@ -82,7 +83,7 @@ public class ChromosomePipeline implements AutoCloseable
                     refData.HighConfidence.get(chr), qualityRecalibrationMap, phaseSetCounter, coverage));
         }
 
-        mVariantPhaser = new VariantPhaser(refData.ChromosomeTranscripts.get(chromosome), phaseSetCounter, this::write);
+        mVariantDeduper = new VariantDeduper(refData.ChromosomeTranscripts.get(chromosome), phaseSetCounter, this::write);
     }
 
     public String chromosome()
@@ -92,24 +93,45 @@ public class ChromosomePipeline implements AutoCloseable
 
     public void process()
     {
-        SG_LOGGER.debug("chromosome({}) executing {} regions", mChromosome, mRegionTasks.size());
+        SG_LOGGER.info("chromosome({}) executing {} regions", mChromosome, mRegionTasks.size());
 
         final List<Callable> callableList = mRegionTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         SG_LOGGER.debug("chromosome({}) {} regions complete", mChromosome, mRegionTasks.size());
 
+        List<PerformanceCounter> perfCounters = mRegionTasks.get(0).getPerfCounters();
+
+        for(int i = 1; i < mRegionTasks.size(); ++i)
+        {
+            List<PerformanceCounter> taskPerfCounters = mRegionTasks.get(i).getPerfCounters();
+
+            for(int j = 0; j < perfCounters.size(); ++j)
+            {
+                perfCounters.get(j).merge(taskPerfCounters.get(j));
+            }
+        }
+
+        perfCounters.forEach(x -> x.logStats());
+
+        PerformanceCounter perfCounter = new PerformanceCounter("Dedup");
+
+        perfCounter.start();
+
         for(RegionTask regionTask : mRegionTasks)
         {
             List<SageVariant> regionVariants = regionTask.getVariants();
 
             SG_LOGGER.trace("phasing {} variants", regionVariants.size());
-            regionVariants.forEach(mVariantPhaser);
+            regionVariants.forEach(mVariantDeduper);
         }
 
-        mVariantPhaser.flush();
+        mVariantDeduper.flush();
 
-        SG_LOGGER.debug("chromosome({}) analysis complete", mChromosome);
+        perfCounter.stop();
+        perfCounter.logStats();
+
+        SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }
 
     public void processOld() throws ExecutionException, InterruptedException
@@ -143,7 +165,7 @@ public class ChromosomePipeline implements AutoCloseable
             done = done.thenCombine(regionVariantsFuture, (aVoid, sageVariants) ->
             {
                 SG_LOGGER.trace("phasing {} variants", sageVariants.size());
-                sageVariants.forEach(mVariantPhaser);
+                sageVariants.forEach(mVariantDeduper);
                 return null;
             });
 
@@ -152,7 +174,7 @@ public class ChromosomePipeline implements AutoCloseable
 
         return done.thenApply(aVoid ->
         {
-            mVariantPhaser.flush();
+            mVariantDeduper.flush();
             SG_LOGGER.info("processing chromosome {} complete", mChromosome);
             return ChromosomePipeline.this;
         });
@@ -160,7 +182,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     private void write(final SageVariant variant)
     {
-        if(checkWriteVariant(variant, mVariantPhaser.passingPhaseSets()))
+        if(checkWriteVariant(variant, mVariantDeduper.passingPhaseSets()))
         {
             mWriteConsumer.accept(variant);
         }

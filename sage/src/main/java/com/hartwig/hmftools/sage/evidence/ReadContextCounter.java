@@ -5,6 +5,9 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
@@ -198,18 +201,18 @@ public class ReadContextCounter implements VariantHotspot
                 mReadContext.toString(), mFull, mPartial, mCore);
     }
 
-    public boolean processRead(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
+    public ReadMatchType processRead(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
     {
         if(exceedsMaxCoverage())
-            return false;
+            return UNRELATED;
 
         if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
-            return false;
+            return UNRELATED;
 
         final RawContext rawContext = RawContext.create(mVariant, record);
 
         if(rawContext.ReadIndexInSkipped)
-            return false;
+            return UNRELATED;
 
         int readIndex = rawContext.ReadIndex;
         boolean baseDeleted = rawContext.ReadIndexInDelete;
@@ -221,12 +224,12 @@ public class ReadContextCounter implements VariantHotspot
         mRawRefBaseQuality += rawContext.RefQuality;
 
         if(readIndex < 0)
-            return false;
+            return UNRELATED;
 
         boolean covered = mReadContext.isCoreCovered(readIndex, record.getReadBases());
 
         if(!covered)
-            return false;
+            return UNRELATED;
 
         final QualityConfig qualityConfig = sageConfig.Quality;
 
@@ -275,7 +278,7 @@ public class ReadContextCounter implements VariantHotspot
 
                 countStrandedness(record);
                 checkImproperCount(record);
-                return true;
+                return SUPPORT;
             }
         }
 
@@ -288,13 +291,15 @@ public class ReadContextCounter implements VariantHotspot
             mRealignedQuality += quality;
             mCoverage++;
             mTotalQuality += quality;
-            return true;
+            return SUPPORT;
         }
 
         if(realignmentType.equals(RealignedType.NONE) && rawContext.ReadIndexInSoftClip)
         {
-            return false;
+            return UNRELATED;
         }
+
+        ReadMatchType matchType = UNRELATED;
 
         mCoverage++;
         mTotalQuality += quality;
@@ -302,6 +307,7 @@ public class ReadContextCounter implements VariantHotspot
         {
             mReference++;
             mReferenceQuality += quality;
+            matchType = NO_SUPPORT;
         }
         else if(rawContext.AltSupport)
         {
@@ -323,7 +329,7 @@ public class ReadContextCounter implements VariantHotspot
                 break;
         }
 
-        return false;
+        return matchType;
     }
 
     private void countStrandedness(final SAMRecord record)

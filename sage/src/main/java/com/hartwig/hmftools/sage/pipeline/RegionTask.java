@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -40,6 +37,12 @@ public class RegionTask implements Callable
 
     private final List<SageVariant> mSageVariants;
 
+    private final List<PerformanceCounter> mPerfCounters;
+
+    public static final int PC_CANDIDATES = 0;
+    public static final int PC_EVIDENCE = 1;
+    public static final int PC_DEDUP = 2;
+
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final SageConfig config, final ReferenceSequenceFile refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
@@ -55,12 +58,16 @@ public class RegionTask implements Callable
         mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter);
 
         mSageVariants = Lists.newArrayList();
+
+        mPerfCounters = Lists.newArrayList();
+        mPerfCounters.add(new PerformanceCounter("Candidates"));
+        mPerfCounters.add(new PerformanceCounter("Evidence"));
+        // mPerfCounters.add(new PerformanceCounter("Dedup"));
     }
 
-    // public final CandidateStage mCandidateState;
-    // public final EvidenceStage mEvidenceStage;
-
     public final List<SageVariant> getVariants() { return mSageVariants; }
+
+    public final List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
 
     @Override
     public Long call()
@@ -68,9 +75,14 @@ public class RegionTask implements Callable
         SG_LOGGER.trace("{}: region({}) finding candidates", mTaskId, mRegion);
 
         final RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
+
+        mPerfCounters.get(PC_CANDIDATES).start();
         List<Candidate> initialCandidates = mCandidateState.findCandidates(mRegion, refSequence);
+        mPerfCounters.get(PC_CANDIDATES).stop();
 
         SG_LOGGER.trace("{}: region({}) building evidence for {} candidates", mTaskId, mRegion, initialCandidates.size());
+
+        mPerfCounters.get(PC_EVIDENCE).start();
 
         ReadContextCounters tumorEvidence = mEvidenceStage.findEvidence(
                 mRegion, "tumor", mConfig.TumorIds, mConfig.TumorBams, initialCandidates, true);
@@ -80,6 +92,8 @@ public class RegionTask implements Callable
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
                 (mRegion, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates, false);
+
+        mPerfCounters.get(PC_EVIDENCE).stop();
 
         final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
 
@@ -97,52 +111,4 @@ public class RegionTask implements Callable
 
         return (long)0;
     }
-
-    /*
-    public CompletableFuture<List<SageVariant>> findVariants(final ChrBaseRegion region)
-    {
-        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, mRefGenome), mExecutor);
-
-        final CompletableFuture<List<Candidate>> initialCandidates = mCandidateState.findCandidates(region, refSequenceFuture);
-
-        final CompletableFuture<ReadContextCounters> tumorEvidence =
-                mEvidenceStage.findEvidence(region, "tumor", mConfig.TumorIds, mConfig.TumorBams, initialCandidates, true);
-
-        final CompletableFuture<List<Candidate>> finalCandidates = filteredCandidates(tumorEvidence);
-
-        final CompletableFuture<ReadContextCounters> normalEvidence =
-                mEvidenceStage.findEvidence(region, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates, false);
-
-        return createSageVariants(finalCandidates, tumorEvidence, normalEvidence);
-    }
-
-    private CompletableFuture<List<SageVariant>> createSageVariants(
-            final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
-            final CompletableFuture<ReadContextCounters> doneNormal)
-    {
-        return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) ->
-        {
-            // SG_LOGGER.trace("gathering evidence in {}:{}", region.Chromosome, region.start());
-
-            final SageVariantFactory variantFactory = new SageVariantFactory(mConfig.Filter);
-
-            // Combine normal and tumor together and create variants
-            final List<SageVariant> result = Lists.newArrayList();
-            for(Candidate candidate : candidates.join())
-            {
-                final List<ReadContextCounter> normal = normalCandidates.readContextCounters(candidate.variant());
-                final List<ReadContextCounter> tumor = tumorCandidates.readContextCounters(candidate.variant());
-                SageVariant sageVariant = variantFactory.create(candidate, normal, tumor);
-                result.add(sageVariant);
-            }
-
-            return result;
-        });
-    }
-
-    private CompletableFuture<List<Candidate>> filteredCandidates(final CompletableFuture<ReadContextCounters> tumorEvidence)
-    {
-        return tumorEvidence.thenApply(x -> x.candidates(mConfig.Filter.readContextFilter()));
-    }
-    */
 }

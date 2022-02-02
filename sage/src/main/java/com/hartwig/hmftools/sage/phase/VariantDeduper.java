@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
-public class VariantPhaser implements Consumer<SageVariant>
+public class VariantDeduper implements Consumer<SageVariant>
 {
     public static final int PHASE_BUFFER = 150;
 
@@ -19,7 +19,7 @@ public class VariantPhaser implements Consumer<SageVariant>
     private final MixedSomaticGermlineIdentifier mMixedSomaticGermlineIdentifier;
     private final MixedSomaticGermlineDedup mMixedSomaticGermlineDedup;
 
-    public VariantPhaser(final List<TranscriptData> transcripts, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
+    public VariantDeduper(final List<TranscriptData> transcripts, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
     {
         mDedupRealign = new DedupRealign(consumer);
         mDedupIndel = new DedupIndel(mDedupRealign);

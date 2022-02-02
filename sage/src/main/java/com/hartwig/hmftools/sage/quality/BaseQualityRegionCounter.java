@@ -129,7 +129,7 @@ class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
             {
                 if(repeatedAlts != null && repeatedAlts.contains(altKey(entry.getKey())))
                 {
-                    SG_LOGGER.trace("skipped repeated alt location({})", entry.getKey());
+                    // SG_LOGGER.trace("skipped repeated alt location({})", entry.getKey());
                     continue;
                 }
 

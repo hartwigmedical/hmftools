@@ -118,6 +118,7 @@ public class SageApplication implements AutoCloseable
                     final ChromosomePipeline pipeline = new ChromosomePipeline(
                             chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
 
+                    // pipeline.processOld();
                     pipeline.process();
                 }
                 catch(Exception e)

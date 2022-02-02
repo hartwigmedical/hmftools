@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -17,8 +20,6 @@ import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicer;
 import com.hartwig.hmftools.sage.read.NumberEvents;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -34,7 +35,6 @@ public class ReadContextEvidence
     private final ReferenceSequenceFile mRefGenome;
     private final ReadContextCounterFactory mFactory;
     private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
-    private final PhaseSetCounter mPhaseSetCounter;
 
     // state per slice region
     private RefSequence mRefSequence;
@@ -43,7 +43,7 @@ public class ReadContextEvidence
     private int mLastCandidateIndex;
     private boolean mCheckPhasing;
 
-    private final List<PhasedReadCounters> mPhasedReadCounters;
+    private final VariantPhaser mVariantPhaser;
 
     public ReadContextEvidence(
             final SageConfig config, final ReferenceSequenceFile refGenome,
@@ -54,22 +54,21 @@ public class ReadContextEvidence
         mFactory = new ReadContextCounterFactory(config);
         mTypicalReadLength = config.typicalReadLength();
         mQualityRecalibrationMap = qualityRecalibrationMap;
-        mPhaseSetCounter = phaseSetCounter;
 
         mRefSequence = null;
         mQualityCalculator = null;
         mReadCounters = null;
         mLastCandidateIndex = 0;
-        mPhasedReadCounters = Lists.newArrayList();
-        mCheckPhasing = false;
+        mVariantPhaser = new VariantPhaser(phaseSetCounter);
     }
 
     public List<ReadContextCounter> collectEvidence(
             final List<Candidate> candidates, final String sample, final String bam, boolean checkPhasing)
     {
         mReadCounters = mFactory.create(sample, candidates);
-        mCheckPhasing = checkPhasing;
         mLastCandidateIndex = 0;
+        mVariantPhaser.reset();
+        mVariantPhaser.setEnabled(checkPhasing);
 
         if(candidates.isEmpty())
             return mReadCounters;
@@ -94,39 +93,10 @@ public class ReadContextEvidence
         slicer.slice(tumorReader, this::processReadRecord);
 
         // assign local phase set IDs to all phased variants
-        assignLocalPhaseSets();
+        mVariantPhaser.assignLocalPhaseSets();
 
         return mReadCounters;
     }
-
-        /*
-        try
-        {
-            final SamRecordSelector<ReadContextCounter> consumerSelector = new SamRecordSelector<>(counters);
-
-            final RefSequence refSequence = new RefSequence(bounds, mRefGenome);
-
-            QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
-
-            mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, refSequence.IndexedBases);
-
-            final SamReader tumorReader = SamReaderFactory.makeDefault().validationStringency(mSageConfig.Stringency)
-                    .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
-
-            final SamSlicer slicer = new SamSlicer(0, bounds);
-
-            slicer.slice(tumorReader, samRecord ->
-            {
-                int numberOfEvents = NumberEvents.numberOfEvents(samRecord, refSequence);
-                consumerSelector.select(samRecord, x -> x.processRead(samRecord, mSageConfig, qualityCalculator, numberOfEvents));
-
-            });
-        }
-        catch(IOException e)
-        {
-            throw new CompletionException(e);
-        }
-         */
 
     private void processReadRecord(final SAMRecord record)
     {
@@ -194,74 +164,23 @@ public class ReadContextEvidence
         if(readCounters.isEmpty())
             return;
 
-        Set<ReadContextCounter> phasedCounters = mCheckPhasing ? Sets.newHashSet() : null;
+        Set<ReadContextCounter> posPhasedCounters = mCheckPhasing ? Sets.newHashSet() : null;
+        Set<ReadContextCounter> negPhasedCounters = mCheckPhasing ? Sets.newHashSet() : null;
 
         for(ReadContextCounter readCounter : readCounters)
         {
-            if(readCounter.processRead(record, mSageConfig, mQualityCalculator, numberOfEvents))
+            ReadMatchType matchType = readCounter.processRead(record, mSageConfig, mQualityCalculator, numberOfEvents);
+
+            if(mCheckPhasing)
             {
-                if(mCheckPhasing)
-                    phasedCounters.add(readCounter);
+                if(matchType == SUPPORT)
+                    posPhasedCounters.add(readCounter);
+                else if(matchType == NO_SUPPORT)
+                    negPhasedCounters.add(readCounter);
             }
         }
 
-        registeredPhasedVariants(phasedCounters);
+        mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
     }
 
-    private void registeredPhasedVariants(final Set<ReadContextCounter> phasedCounters)
-    {
-        if(!mCheckPhasing)
-            return;
-
-        if(phasedCounters.size() < 2)
-            return;
-
-        for(PhasedReadCounters phasedReadCounters : mPhasedReadCounters)
-        {
-            if(phasedReadCounters.processPhasedCounters(phasedCounters))
-                return;
-        }
-
-        mPhasedReadCounters.add(new PhasedReadCounters(phasedCounters));
-    }
-
-    private void assignLocalPhaseSets()
-    {
-        // assign local phase set IDs to all phased variants
-        if(!mCheckPhasing)
-            return;
-
-        for(PhasedReadCounters phasedReadCounters : mPhasedReadCounters)
-        {
-            int nextLps = mPhaseSetCounter.getNext();
-            phasedReadCounters.ReadCounters.forEach(x -> x.setLocalPhaseSet(nextLps));
-            phasedReadCounters.ReadCounters.forEach(x -> x.setLpsReadCount(phasedReadCounters.ReadCount));
-        }
-
-        mPhasedReadCounters.clear();
-    }
-
-    private class PhasedReadCounters
-    {
-        public final Set<ReadContextCounter> ReadCounters;
-        public int ReadCount;
-
-        public PhasedReadCounters(final Set<ReadContextCounter> phasedCounters)
-        {
-            ReadCounters = phasedCounters;
-            ++ReadCount;
-        }
-
-        public boolean processPhasedCounters(final Set<ReadContextCounter> phasedCounters)
-        {
-            if(ReadCounters.stream().anyMatch(x -> phasedCounters.contains(x)))
-            {
-                phasedCounters.forEach(x -> ReadCounters.add(x));
-                ++ReadCount;
-                return true;
-            }
-
-            return false;
-        }
-    }
 }
