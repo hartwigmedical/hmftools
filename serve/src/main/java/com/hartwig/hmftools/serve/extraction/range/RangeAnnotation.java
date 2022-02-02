@@ -4,6 +4,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.serve.extraction.util.MutationTypeFilter;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface RangeAnnotation extends GenomeRegion {
 
@@ -13,7 +14,8 @@ public interface RangeAnnotation extends GenomeRegion {
     @NotNull
     String transcript();
 
-    int rank();
+    @Nullable
+    Integer rank();
 
     @NotNull
     MutationTypeFilter mutationType();

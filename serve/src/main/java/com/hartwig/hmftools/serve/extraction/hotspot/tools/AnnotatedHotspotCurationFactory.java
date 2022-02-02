@@ -8,6 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 final class AnnotatedHotspotCurationFactory {
 
+    private AnnotatedHotspotCurationFactory() {
+    }
+
     public static final Set<String> RETIRED_TRANSCRIPTS = createRetiredTranscriptWhitelist();
     public static final Set<String> CHANGED_TRANSCRIPTS = createChangedTranscriptWhitelist();
 
@@ -46,6 +49,4 @@ final class AnnotatedHotspotCurationFactory {
         return transcripts;
     }
 
-    private AnnotatedHotspotCurationFactory() {
-    }
 }
