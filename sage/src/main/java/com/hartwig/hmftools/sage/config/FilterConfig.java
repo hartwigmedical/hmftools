@@ -118,17 +118,13 @@ public class FilterConfig
         }
     }
 
-    public Predicate<ReadContextCounter> readContextFilter()
+    public boolean passesHardFilters(final ReadContextCounter readContextCounter)
     {
-        return readContextCounter ->
-        {
-            if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
-            {
-                return true;
-            }
-            return readContextCounter.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
-                    && readContextCounter.rawAltSupport() >= HardMinTumorRawAltSupport
-                    && readContextCounter.tumorQuality() >= HardMinTumorQual;
-        };
+        if(readContextCounter.Tier.equals(VariantTier.HOTSPOT))
+            return true;
+
+        return readContextCounter.rawAltBaseQuality() >= HardMinTumorRawBaseQuality
+                && readContextCounter.rawAltSupport() >= HardMinTumorRawAltSupport
+                && readContextCounter.tumorQuality() >= HardMinTumorQual;
     }
 }

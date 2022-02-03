@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 
+import java.util.Comparator;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -30,10 +31,11 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements VariantHotspot
 {
-    public final String Sample;
     public final VariantTier Tier;
     public final boolean Realign;
     public final int MaxCoverage;
+
+    private final int mId;
 
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
@@ -72,16 +74,12 @@ public class ReadContextCounter implements VariantHotspot
     public static final int RC_TOTAL = 6;
     public static final int RC_MAX = RC_TOTAL + 1;
 
-    // public int[] counts()
-    //    {
-    //        return new int[] { mFull, mPartial, mCore, mRealigned, mAlt, mReference, mCoverage };
-    //    }
-
     public ReadContextCounter(
-            final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
+            final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
             final int maxCoverage, final int minNumberOfEvents, boolean realign)
     {
-        Sample = sample;
+        mId = id;
+
         Tier = tier;
         Realign = realign;
         MaxCoverage = maxCoverage;
@@ -115,6 +113,7 @@ public class ReadContextCounter implements VariantHotspot
         mLpsCounts = null;
     }
 
+    public int id() { return mId; }
     public VariantHotspot variant() { return mVariant; }
     public ReadContext readContext() { return mReadContext; }
 
@@ -150,7 +149,7 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public int[] counts() { return mCounts; }
-    // new int[] { mFull, mPartial, mCore, mRealigned, mAlt, mReference, mCoverage };
+    public int[] quality() { return mQualities; }
 
     public int[] jitter()
     {
@@ -162,9 +161,6 @@ public class ReadContextCounter implements VariantHotspot
         double total = mForwardStrand + mReverseStrand;
         return total > 0 ? mForwardStrand / total : 0;
     }
-
-    public int[] quality() { return mQualities; }
-    // { return new int[] { mFullQuality, mPartialQuality, mCoreQuality, mRealignedQuality, mAltQuality, mReferenceQuality, mTotalQuality };
 
     public int improperPair() { return mImproperPair; }
 

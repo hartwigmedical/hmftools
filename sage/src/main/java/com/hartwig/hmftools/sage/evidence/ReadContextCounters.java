@@ -1,69 +1,61 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.config.FilterConfig;
 
 public class ReadContextCounters
 {
-    private final Comparator<ReadContextCounter> mComparator;
     private final List<Candidate> mCandidates;
 
-    private final ListMultimap<VariantHotspot,ReadContextCounter> mMap;
+    private final Map<VariantHotspot,List<ReadContextCounter>> mVariantReadCounters;
 
     public ReadContextCounters(final String primarySample, final List<Candidate> candidates)
     {
         mCandidates = candidates;
-        mMap = ArrayListMultimap.create();
-        mComparator = (o1, o2) ->
-        {
-            if(o1.Sample.equals(primarySample))
-                return -1;
-
-            if(o2.Sample.equals(primarySample))
-                return 1;
-
-            return o1.Sample.compareTo(o2.Sample);
-        };
+        mVariantReadCounters = Maps.newHashMap();
     }
 
-    public ListMultimap<VariantHotspot,ReadContextCounter> readContextCounters() { return mMap; }
+    public int variantCount() { return mVariantReadCounters.size(); }
 
-    public List<ReadContextCounter> readContextCounters(final VariantHotspot variant)
+    public List<ReadContextCounter> getVariantReadCounters(final VariantHotspot variant)
     {
-        assert (mMap.containsKey(variant));
-        final List<ReadContextCounter> result = mMap.get(variant);
-        result.sort(mComparator);
-        return result;
+        return mVariantReadCounters.get(variant);
     }
 
-    public void addCounters(Collection<ReadContextCounter> counters)
+    public void addCounters(final List<ReadContextCounter> readCounters, int expectedCount)
     {
-        for(ReadContextCounter counter : counters)
+        for(ReadContextCounter readCounter : readCounters)
         {
-            mMap.put(counter.variant(), counter);
+            List<ReadContextCounter> variantReadCounters = mVariantReadCounters.get(readCounter.variant());
+            if(variantReadCounters == null)
+            {
+                variantReadCounters = Lists.newArrayListWithExpectedSize(expectedCount);
+                mVariantReadCounters.put(readCounter.variant(), variantReadCounters);
+
+            }
+
+            variantReadCounters.add(readCounter);
         }
     }
 
-    public List<Candidate> candidates(final Predicate<ReadContextCounter> anyPredicate)
+    public List<Candidate> filterCandidates(final FilterConfig filterConfig)
     {
         final List<Candidate> result = Lists.newArrayList();
+
         for(Candidate candidate : mCandidates)
         {
-            List<ReadContextCounter> counters = mMap.get(candidate.variant());
-            if(counters != null && counters.stream().anyMatch(anyPredicate))
-            {
+            List<ReadContextCounter> readCounters = mVariantReadCounters.get(candidate.variant());
+
+            if(readCounters != null && readCounters.stream().anyMatch(x -> filterConfig.passesHardFilters(x)))
                 result.add(candidate);
-            }
         }
         return result;
     }

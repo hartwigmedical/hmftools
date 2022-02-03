@@ -32,16 +32,21 @@ public final class VariantContextFactory
 {
     private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
-    public static VariantContext create(final SageVariant variant)
+    public static VariantContext create(final SageVariant variant, final List<String> referenceIds, final List<String> tumorIds)
     {
         final List<Genotype> genotypes = Lists.newArrayList();
-        for(int i = 0; i < variant.normalAltContexts().size(); i++)
+        for(int i = 0; i < variant.normalReadCounters().size(); i++)
         {
-            ReadContextCounter normalContext = variant.normalAltContexts().get(i);
-            genotypes.add(createGenotype(normalContext));
+            ReadContextCounter normalContext = variant.normalReadCounters().get(i);
+            genotypes.add(createGenotype(normalContext, referenceIds.get(i)));
         }
 
-        variant.tumorAltContexts().stream().map(VariantContextFactory::createGenotype).forEach(genotypes::add);
+        for(int i = 0; i < variant.tumorReadCounters().size(); i++)
+        {
+            ReadContextCounter tumorContext = variant.tumorReadCounters().get(i);
+            genotypes.add(createGenotype(tumorContext, tumorIds.get(i)));
+        }
+
         return createContext(variant, genotypes);
     }
 
@@ -81,9 +86,10 @@ public final class VariantContextFactory
         return context;
     }
 
-    public static Genotype createGenotype(final ReadContextCounter counter)
+    public static Genotype createGenotype(final ReadContextCounter counter, final String sampleId)
     {
-        return new GenotypeBuilder(counter.Sample).DP(counter.depth())
+        return new GenotypeBuilder(sampleId)
+                .DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())

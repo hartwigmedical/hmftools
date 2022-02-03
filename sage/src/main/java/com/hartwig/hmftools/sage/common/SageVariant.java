@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.common;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -21,13 +22,12 @@ public class SageVariant
     private int mMixedImpact;
 
     public SageVariant(
-            final Candidate candidate, final Set<String> filters,
-            final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
+            final Candidate candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
     {
         mCandidate = candidate;
         mNormalReadCounters = normalCounters;
         mTumorReadCounters = tumorReadCounters;
-        mFilters = filters;
+        mFilters = Sets.newHashSet();
         mLocalRealignSet = 0;
     }
 
@@ -36,11 +36,16 @@ public class SageVariant
         return mCandidate;
     }
 
+    public String chromosome()
+    {
+        return variant().chromosome();
+    }
+    public int position() { return (int)variant().position(); }
+
     public String ref()
     {
         return variant().ref();
     }
-
     public String alt()
     {
         return variant().alt();
@@ -49,31 +54,6 @@ public class SageVariant
     public int end()
     {
         return position() + ref().length() - 1;
-    }
-
-    public boolean isIndel()
-    {
-        return variant().ref().length() != variant().alt().length();
-    }
-
-    public boolean isMnv()
-    {
-        return variant().ref().length() >= 1 && variant().ref().length() == variant().alt().length();
-    }
-
-    public boolean isSnv()
-    {
-        return variant().ref().length() == 1 && variant().alt().length() == 1;
-    }
-
-    public boolean isInsert()
-    {
-        return variant().ref().length() < variant().alt().length();
-    }
-
-    public boolean isDelete()
-    {
-        return variant().ref().length() > variant().alt().length();
     }
 
     @Nullable
@@ -142,56 +122,52 @@ public class SageVariant
 
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
-    @NotNull
     public VariantHotspot variant()
     {
         return mCandidate.variant();
     }
-
-    @NotNull
     public VariantTier tier()
     {
         return mCandidate.tier();
     }
-
-    @NotNull
     public Set<String> filters()
     {
         return mFilters;
     }
 
-    @NotNull
     public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
-
-    @NotNull
     public String microhomology()
     {
         return readContext().microhomology();
     }
 
-    @NotNull
-    public List<ReadContextCounter> normalAltContexts()
-    {
-        return mNormalReadCounters;
-    }
-
-    @NotNull
-    public List<ReadContextCounter> tumorAltContexts()
-    {
-        return mTumorReadCounters;
-    }
-
-    @NotNull
-    public String chromosome()
-    {
-        return variant().chromosome();
-    }
-
-    public int position() { return (int)variant().position(); }
+    public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
+    public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }
 
     public int totalQuality()
     {
         return mTumorReadCounters.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
+    }
+
+    public boolean isIndel()
+    {
+        return variant().ref().length() != variant().alt().length();
+    }
+    public boolean isMnv()
+    {
+        return variant().ref().length() >= 1 && variant().ref().length() == variant().alt().length();
+    }
+    public boolean isSnv()
+    {
+        return variant().ref().length() == 1 && variant().alt().length() == 1;
+    }
+    public boolean isInsert()
+    {
+        return variant().ref().length() < variant().alt().length();
+    }
+    public boolean isDelete()
+    {
+        return variant().ref().length() > variant().alt().length();
     }
 
     public String toString() { return String.format("%s", mCandidate.toString()); }

@@ -7,10 +7,9 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -44,6 +43,11 @@ public class ReadContextEvidence
 
     private final VariantPhaser mVariantPhaser;
 
+    private final List<PerformanceCounter> mPerfCounters;
+
+    public static final int PC_PHASE_READS = 0;
+    public static final int PC_FORM_LPS = 1;
+
     public ReadContextEvidence(
             final SageConfig config, final ReferenceSequenceFile refGenome,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter)
@@ -59,14 +63,20 @@ public class ReadContextEvidence
         mReadCounters = null;
         mLastCandidateIndex = 0;
         mVariantPhaser = new VariantPhaser(phaseSetCounter);
+
+        mPerfCounters = Lists.newArrayList();
+        mPerfCounters.add(new PerformanceCounter("PhaseReads"));
+        mPerfCounters.add(new PerformanceCounter("FormLPS"));
     }
+
+    public List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
 
     public List<ReadContextCounter> collectEvidence(
             final List<Candidate> candidates, final String sample, final String bam, boolean checkPhasing)
     {
-        mReadCounters = mFactory.create(sample, candidates);
+        mReadCounters = mFactory.create(candidates);
         mLastCandidateIndex = 0;
-        mVariantPhaser.reset(mReadCounters);
+        mVariantPhaser.reset();
         mVariantPhaser.setEnabled(checkPhasing);
 
         if(candidates.isEmpty())
@@ -89,10 +99,17 @@ public class ReadContextEvidence
 
         final SamSlicer slicer = new SamSlicer(0, bounds);
 
+        mPerfCounters.get(PC_PHASE_READS).start();
+        mPerfCounters.get(PC_PHASE_READS).resume();
+
         slicer.slice(tumorReader, this::processReadRecord);
 
+        mPerfCounters.get(PC_PHASE_READS).stop();
+
         // assign local phase set IDs to all phased variants
+        mPerfCounters.get(PC_FORM_LPS).start();
         mVariantPhaser.assignLocalPhaseSets();
+        mPerfCounters.get(PC_FORM_LPS).stop();
 
         return mReadCounters;
     }
@@ -163,8 +180,8 @@ public class ReadContextEvidence
         if(readCounters.isEmpty())
             return;
 
-        Set<ReadContextCounter> posPhasedCounters = mVariantPhaser.enabled() ? Sets.newHashSet() : null;
-        Set<ReadContextCounter> negPhasedCounters = mVariantPhaser.enabled() ? Sets.newHashSet() : null;
+        List<ReadContextCounter> posPhasedCounters = mVariantPhaser.enabled() ? Lists.newArrayList() : null;
+        List<ReadContextCounter> negPhasedCounters = mVariantPhaser.enabled() ? Lists.newArrayList() : null;
 
         for(ReadContextCounter readCounter : readCounters)
         {
@@ -179,7 +196,9 @@ public class ReadContextEvidence
             }
         }
 
+        mPerfCounters.get(PC_PHASE_READS).resume();
         mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
+        mPerfCounters.get(PC_PHASE_READS).pause();
     }
 
 }

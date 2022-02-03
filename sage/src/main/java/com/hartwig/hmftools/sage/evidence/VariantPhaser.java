@@ -2,24 +2,25 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 
 public class VariantPhaser
 {
     private final PhaseSetCounter mPhaseSetCounter;
-    private List<ReadContextCounter> mReadCounters; // only to get consistent indexes
 
     private boolean mEnabled;
 
-    private final List<PhasedReadCounters> mPhasedReadCounters;
+    private final Map<String,PhasedReadCounters> mPhasedReadCounters;
 
     public static final int MIN_READ_COUNT = 1;
 
@@ -28,19 +29,18 @@ public class VariantPhaser
         mPhaseSetCounter = phaseSetCounter;
         mEnabled = false;
 
-        mPhasedReadCounters = Lists.newArrayList();
+        mPhasedReadCounters = Maps.newHashMap();
     }
 
     public void setEnabled(boolean toggle) { mEnabled = toggle; }
     public boolean enabled() { return mEnabled; }
 
-    public void reset(List<ReadContextCounter> readCounters)
+    public void reset()
     {
         mPhasedReadCounters.clear();
-        mReadCounters = readCounters;
     }
 
-    public void registeredPhasedVariants(final Set<ReadContextCounter> posCounters, final Set<ReadContextCounter> negCounters)
+    public void registeredPhasedVariants(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
     {
         if(!mEnabled)
             return;
@@ -48,44 +48,42 @@ public class VariantPhaser
         if(posCounters.isEmpty() || posCounters.size() + negCounters.size() < 2)
             return;
 
-        for(PhasedReadCounters phasedReadCounters : mPhasedReadCounters)
+        String phaseRcId = formRcId(posCounters, negCounters);
+
+        PhasedReadCounters phasedRc = mPhasedReadCounters.get(phaseRcId);
+
+        if(phasedRc != null)
         {
-            if(phasedReadCounters.processPhasedCounters(posCounters, negCounters))
-                return;
+            phasedRc.ReadCount++;
         }
-
-        int id = mPhasedReadCounters.size();
-        mPhasedReadCounters.add(new PhasedReadCounters(id, posCounters, negCounters));
+        else
+        {
+            int id = mPhasedReadCounters.size();
+            mPhasedReadCounters.put(phaseRcId, new PhasedReadCounters(id, phaseRcId, posCounters, negCounters));
+        }
     }
-
-    /*
-    For each additional row update the set of  candidate LPS using the following rules:  (this will make a maximally collapsed set of candidates)
-        If it is a subset of an existing LPS then do nothing
-        If it agrees with but extends that LPS then extend the LPS
-        If it does not match any overlapping LPS then make a new LPS
-    For each LPS, count uniquely matching reads and assigned matching reads (pro rata)
-    Filter for LPS support > X
-    Remove any uninformative LPS (ie LPS has 1+ variant and is the only LPS that includes that variant).
-
-    Routine:
-    - merge the smaller / subsets into the larger groups
-    - where multiple options exist, split the counts pro-rata
-    - continue until no more merging can be done
-
-
-    */
 
     private void mergeGroups()
     {
+        /*
+        For each additional row update the set of  candidate LPS using the following rules:  (this will make a maximally collapsed set of candidates)
+            If it is a subset of an existing LPS then do nothing
+            If it agrees with but extends that LPS then extend the LPS
+            If it does not match any overlapping LPS then make a new LPS
+        For each LPS, count uniquely matching reads and assigned matching reads (pro rata)
+        Filter for LPS support > X
+        Remove any uninformative LPS (ie LPS has 1+ variant and is the only LPS that includes that variant).
+        */
+
         List<PhasedReadCounters> removedGroups = Lists.newArrayList();
 
-        for(PhasedReadCounters phasedRc : mPhasedReadCounters)
+        for(PhasedReadCounters phasedRc : mPhasedReadCounters.values())
         {
             if(removedGroups.contains(phasedRc))
                 continue;
 
             // check for super-set groups
-            List<PhasedReadCounters> superGroups = mPhasedReadCounters.stream()
+            List<PhasedReadCounters> superGroups = mPhasedReadCounters.values().stream()
                     .filter(x -> x != phasedRc)
                     .filter(x -> !removedGroups.contains(x))
                     .filter(x -> phasedRc.isSubsetOf(x))
@@ -122,13 +120,16 @@ public class VariantPhaser
             }
         }
 
+        removedGroups.forEach(x -> mPhasedReadCounters.remove(x.RcId));
+        removedGroups.clear();
+
         // remove any small groups or those with a single variant not present as a +ve in another group
-        for(PhasedReadCounters phasedRc : mPhasedReadCounters)
+        for(PhasedReadCounters phasedRc : mPhasedReadCounters.values())
         {
             if(phasedRc.PositiveReadCounters.size() != 1)
                 continue;
 
-            if(mPhasedReadCounters.stream()
+            if(mPhasedReadCounters.values().stream()
                     .filter(x -> x != phasedRc)
                     .filter(x -> !removedGroups.contains(x))
                     .noneMatch(x -> x.PositiveReadCounters.contains(phasedRc)))
@@ -150,7 +151,7 @@ public class VariantPhaser
 
         // logPhasedReadCounters();
 
-        for(PhasedReadCounters phasedRc : mPhasedReadCounters)
+        for(PhasedReadCounters phasedRc : mPhasedReadCounters.values())
         {
             if(phasedRc.ReadCount + phasedRc.AllocatedReadCount < MIN_READ_COUNT)
                 continue;
@@ -162,35 +163,50 @@ public class VariantPhaser
         mPhasedReadCounters.clear();
     }
 
-    private class PhasedReadCounters implements Comparable<PhasedReadCounters>
+    private static String formRcId(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
+    {
+        Collections.sort(posCounters, new ReadContextCounterComparator());
+        StringJoiner posSj = new StringJoiner("_");
+        posCounters.forEach(x -> posSj.add(String.valueOf(x.id())));
+
+        Collections.sort(negCounters, new ReadContextCounterComparator());
+        StringJoiner negSj = new StringJoiner("_");
+        negCounters.forEach(x -> negSj.add(String.valueOf(x.id())));
+
+        return posSj.toString() + "-" + negSj.toString();
+    }
+
+    public static class ReadContextCounterComparator implements Comparator<ReadContextCounter>
+    {
+        public int compare(final ReadContextCounter first, final ReadContextCounter second)
+        {
+            return first.id() - second.id();
+        }
+    }
+
+    private class PhasedReadCounters
     {
         public final int Id;
-        public final Set<ReadContextCounter> PositiveReadCounters; // supported by the reads
-        public final Set<ReadContextCounter> NegativeReadCounters; // not supported by the reads
+        public final String RcId;
+        public final List<ReadContextCounter> PositiveReadCounters; // supported by the reads
+        public final List<ReadContextCounter> NegativeReadCounters; // not supported by the reads
 
         public int ReadCount; // from uniquely supporting reads
         public double AllocatedReadCount; // allocated from subset groups
 
-        public PhasedReadCounters(final int id, final Set<ReadContextCounter> posCounters, final Set<ReadContextCounter> negCounters)
+        public PhasedReadCounters(
+                final int id, final String rcId,
+                final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
         {
             Id = id;
+            RcId = rcId;
             PositiveReadCounters = posCounters;
             NegativeReadCounters = negCounters;
             ReadCount = 1;
             AllocatedReadCount = 0;
         }
 
-        public boolean processPhasedCounters(final Set<ReadContextCounter> posCounters, final Set<ReadContextCounter> negCounters)
-        {
-            // merge the groups if either +ve or -ve is a subset of the other, with no conflicts
-            if(!isExactMatch(posCounters, negCounters))
-                return false;
-
-            ReadCount++;
-            return true;
-        }
-
-        private boolean isExactMatch(final Set<ReadContextCounter> posCounters, final Set<ReadContextCounter> negCounters)
+        private boolean isExactMatch(final List<ReadContextCounter> posCounters, final List<ReadContextCounter> negCounters)
         {
             if(PositiveReadCounters.size() != posCounters.size() || NegativeReadCounters.size() != negCounters.size())
                 return false;
@@ -220,15 +236,9 @@ public class VariantPhaser
             return true;
         }
 
-        private boolean hasAnyOverlap(final Set<ReadContextCounter> counters1, final Set<ReadContextCounter> counters2)
+        private boolean hasAnyOverlap(final List<ReadContextCounter> counters1, final List<ReadContextCounter> counters2)
         {
             return counters1.stream().anyMatch(x -> counters2.contains(x)) || counters2.stream().anyMatch(x -> counters1.contains(x));
-        }
-
-        @Override
-        public int compareTo(final PhasedReadCounters other)
-        {
-            return other.ReadCount - ReadCount;
         }
 
         public String toString()
@@ -242,7 +252,7 @@ public class VariantPhaser
     {
         Map<ReadContextCounter,Integer> rcIds = Maps.newHashMap();
 
-        for(PhasedReadCounters phasedReadCounters : mPhasedReadCounters)
+        for(PhasedReadCounters phasedReadCounters : mPhasedReadCounters.values())
         {
             StringJoiner posVars = new StringJoiner(";");
             StringJoiner posIds = new StringJoiner(";");
@@ -252,13 +262,13 @@ public class VariantPhaser
             for(ReadContextCounter rc : phasedReadCounters.PositiveReadCounters)
             {
                 posVars.add(getReadCounterVar(rc));
-                posIds.add(String.valueOf(getReadCounterId(rcIds, rc)));
+                posIds.add(String.valueOf(rc.id()));
             }
 
             for(ReadContextCounter rc : phasedReadCounters.NegativeReadCounters)
             {
                 negVars.add(getReadCounterVar(rc));
-                negIds.add(String.valueOf(getReadCounterId(rcIds, rc)));
+                negIds.add(String.valueOf(rc.id()));
             }
 
             SG_LOGGER.debug(String.format("LPS_DATA: %s,%s,%d,%.1f,%s,%s",
@@ -269,23 +279,5 @@ public class VariantPhaser
     private static String getReadCounterVar(final ReadContextCounter rc)
     {
         return String.format("%d_%s>%s", rc.position(), rc.ref(), rc.alt());
-    }
-
-    private int getReadCounterId(final Map<ReadContextCounter,Integer> rcIds, final ReadContextCounter rc)
-    {
-        Integer id = rcIds.get(rc);
-        if(id != null)
-            return id;
-
-        for(int i = 0; i < mReadCounters.size(); ++i)
-        {
-            if(rc == mReadCounters.get(i))
-            {
-                rcIds.put(rc, i);
-                return i;
-            }
-        }
-
-        return -1;
     }
 }

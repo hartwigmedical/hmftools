@@ -13,7 +13,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -104,7 +103,7 @@ public class MixedGermlineTest
 
         for(SageVariant variant : variants)
         {
-            variant.tumorAltContexts().get(0).addLocalPhaseSet(nextLps, 1, 1);
+            variant.tumorReadCounters().get(0).addLocalPhaseSet(nextLps, 1, 1);
             victim.accept(variant);
         }
         assertEquals(0, consumer.size());
@@ -125,7 +124,7 @@ public class MixedGermlineTest
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
         final Candidate candidate = new Candidate(VariantTier.PANEL, variant, counter.readContext(), 0, 0, 0);
-        return new SageVariant(candidate, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
+        return new SageVariant(candidate, Lists.newArrayList(), Lists.newArrayList(counter));
     }
 
     @NotNull
@@ -133,7 +132,8 @@ public class MixedGermlineTest
     {
         ReadContext dummyReadContext = ReadContextCounterTest.createReadContext(100, 0, 0, 0, "AAA", microhomology);
 
-        return new ReadContextCounter("SAMPLE",
+        return new ReadContextCounter(
+                1,
                 variant,
                 dummyReadContext,
                 VariantTier.PANEL,

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -23,17 +24,25 @@ public class ReadContextCounterFactory
         mConfig = config;
     }
 
-    public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates)
+    public List<ReadContextCounter> create(final List<Candidate> candidates)
     {
-        return candidates.stream()
-                .map(x -> new ReadContextCounter(sample,
-                        x.variant(),
-                        x.readContext(),
-                        x.tier(),
-                        maxCoverage(x),
-                        x.minNumberOfEvents(),
-                        x.maxReadDepth() < mConfig.MaxRealignmentDepth))
-                .collect(Collectors.toList());
+        List<ReadContextCounter> readCounters = Lists.newArrayListWithExpectedSize(candidates.size());
+
+        int readId = 0;
+
+        for(Candidate candidate : candidates)
+        {
+            readCounters.add(new ReadContextCounter(
+                    readId++,
+                    candidate.variant(),
+                    candidate.readContext(),
+                    candidate.tier(),
+                    maxCoverage(candidate),
+                    candidate.minNumberOfEvents(),
+                    candidate.maxReadDepth() < mConfig.MaxRealignmentDepth));
+        }
+
+        return readCounters;
     }
 
     private int maxCoverage(@NotNull final Candidate candidate)

@@ -108,10 +108,12 @@ class BaseQualityRegionCounter implements CigarHandler, Callable<Long>
         // remove locations where the alt count exceeds the configured limit
         Map<Integer,Set<BaseQualityKey>> repeatedAltLocations = findRepeatedAltLocations();
 
+        /*
         if(!repeatedAltLocations.isEmpty())
         {
             SG_LOGGER.trace("region({}) has {} repeated alt locations", mRegion, repeatedAltLocations.size());
         }
+        */
 
         // form a set of counts by variant, no longer taking position into account
         Map<BaseQualityKey,Integer> countsMap = Maps.newHashMap();

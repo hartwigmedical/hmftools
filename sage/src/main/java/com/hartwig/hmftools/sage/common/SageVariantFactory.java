@@ -32,69 +32,65 @@ public class SageVariantFactory
 
     public SageVariant create(final Candidate candidate, final List<ReadContextCounter> normal, final List<ReadContextCounter> tumor)
     {
-        final Set<String> filters = Sets.newHashSet();
-        final boolean isNormalEmpty = normal.isEmpty();
+        boolean isNormalEmpty = normal.isEmpty();
 
         final VariantTier tier = candidate.tier();
         final SoftFilterConfig softConfig = mConfig.softConfig(tier);
 
+        SageVariant variant = new SageVariant(candidate, normal, tumor);
+
         if(!mConfig.SoftFilter)
         {
-            return new SageVariant(candidate, filters, normal, tumor);
+            return new SageVariant(candidate, normal, tumor);
         }
 
-        boolean passingTumor = false;
+        final Set<String> variantFilters = variant.filters();
+
         for(ReadContextCounter tumorReadContextCounter : tumor)
         {
             final Set<String> tumorFilters = Sets.newHashSet();
 
-            tumorFilters.addAll(tumorFilters(tier, softConfig, tumorReadContextCounter));
+            tumorFilters(tier, softConfig, tumorReadContextCounter, tumorFilters);
+
             if(!isNormalEmpty)
             {
-                tumorFilters.addAll(somaticFilters(tier, softConfig, normal.get(0), tumorReadContextCounter));
+                somaticFilters(tier, softConfig, normal.get(0), tumorReadContextCounter, tumorFilters);
             }
 
             if(tumorFilters.isEmpty())
             {
-                passingTumor = true;
+                variantFilters.clear();
+                break;
             }
-
-            filters.addAll(tumorFilters);
+            else
+            {
+                variantFilters.addAll(tumorFilters);
+            }
         }
 
-        if(passingTumor)
-        {
-            filters.clear();
-        }
-
-        return new SageVariant(candidate, filters, normal, tumor);
+        return new SageVariant(candidate, normal, tumor);
     }
 
-    private Set<String> tumorFilters(final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor)
+    private void tumorFilters(
+            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<String> filters)
     {
-        final Set<String> result = Sets.newHashSet();
-
         // TUMOR Tests
         final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
         if(!skipTumorTests && primaryTumor.tumorQuality() < config.MinTumorQual)
         {
-            result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
+            filters.add(SoftFilter.MIN_TUMOR_QUAL.toString());
         }
 
         if(!skipTumorTests && Doubles.lessThan(primaryTumor.vaf(), config.MinTumorVaf))
         {
-            result.add(SoftFilter.MIN_TUMOR_VAF.toString());
+            filters.add(SoftFilter.MIN_TUMOR_VAF.toString());
         }
-
-        return result;
     }
 
-    private Set<String> somaticFilters(
+    private void somaticFilters(
             final VariantTier tier, final SoftFilterConfig config,
-            final ReadContextCounter normal, final ReadContextCounter primaryTumor)
+            final ReadContextCounter normal, final ReadContextCounter primaryTumor, final Set<String> filters)
     {
-        Set<String> result = Sets.newHashSet();
-
         // Germline Tests
         boolean chromosomeIsAllosome = HumanChromosome.contains(normal.chromosome())
                 && HumanChromosome.fromString(normal.chromosome()).isAllosome();
@@ -103,7 +99,7 @@ public class SageVariantFactory
 
         if(normal.coverage() < minGermlineCoverage)
         {
-            result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
+            filters.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
 
         double normalVaf = normal.vaf();
@@ -116,7 +112,7 @@ public class SageVariantFactory
 
         if(Doubles.greaterThan(normalVaf, config.MaxGermlineVaf))
         {
-            result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
+            filters.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
 
         // Paired Tests
@@ -126,7 +122,7 @@ public class SageVariantFactory
         {
             if(Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual))
             {
-                result.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
+                filters.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
             }
         }
 
@@ -135,11 +131,9 @@ public class SageVariantFactory
         {
             if(normal.altSupport() != 0)
             {
-                result.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
+                filters.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
             }
         }
-
-        return result;
     }
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)

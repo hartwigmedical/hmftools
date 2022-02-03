@@ -62,12 +62,15 @@ public class RegionTask implements Callable
         mPerfCounters = Lists.newArrayList();
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
-        // mPerfCounters.add(new PerformanceCounter("Dedup"));
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }
 
-    public final List<PerformanceCounter> getPerfCounters() { return mPerfCounters; }
+    public final List<PerformanceCounter> getPerfCounters()
+    {
+        mPerfCounters.addAll(mEvidenceStage.getPerfCounters());
+        return mPerfCounters;
+    }
 
     @Override
     public Long call()
@@ -87,8 +90,7 @@ public class RegionTask implements Callable
         ReadContextCounters tumorEvidence = mEvidenceStage.findEvidence(
                 mRegion, "tumor", mConfig.TumorIds, mConfig.TumorBams, initialCandidates, true);
 
-        // final List<Candidate> finalCandidates = filteredCandidates(tumorEvidence);
-        List<Candidate> finalCandidates = tumorEvidence.candidates(mConfig.Filter.readContextFilter());
+        List<Candidate> finalCandidates = tumorEvidence.filterCandidates(mConfig.Filter);
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
                 (mRegion, "normal", mConfig.ReferenceIds, mConfig.ReferenceBams, finalCandidates, false);
@@ -100,8 +102,8 @@ public class RegionTask implements Callable
         // combine normal and tumor together and create variants
         for(Candidate candidate : finalCandidates)
         {
-            final List<ReadContextCounter> normal = normalEvidence.readContextCounters(candidate.variant());
-            final List<ReadContextCounter> tumor = tumorEvidence.readContextCounters(candidate.variant());
+            final List<ReadContextCounter> normal = normalEvidence.getVariantReadCounters(candidate.variant());
+            final List<ReadContextCounter> tumor = tumorEvidence.getVariantReadCounters(candidate.variant());
 
             SageVariant sageVariant = variantFactory.create(candidate, normal, tumor);
             mSageVariants.add(sageVariant);

@@ -65,33 +65,36 @@ public class AdditionalReferencePipeline
                 .map(y -> CandidateSerialization.toCandidate(y, x))
                 .collect(Collectors.toList()));
 
-        final CompletableFuture<ReadContextCounters> evidenceFutures =
-                mEvidenceStage.findEvidenceOld(region, "reference", mConfig.ReferenceIds, mConfig.ReferenceBams, candidateFutures, false);
+        // final CompletableFuture<ReadContextCounters> evidenceFutures =
+        //        mEvidenceStage.findEvidenceOld(region, "reference", mConfig.ReferenceIds, mConfig.ReferenceBams, candidateFutures, false);
 
-        return evidenceFutures.thenApply(x -> update(x, variants));
+        return null; // evidenceFutures.thenApply(x -> update(x, variants));
     }
 
-    public List<VariantContext> update(final ReadContextCounters readContextCounters, final List<VariantContext> variantContexts)
+    public List<VariantContext> update(
+            final ReadContextCounters readContextCounters, final List<VariantContext> variantContexts, final List<String> sampleIds)
     {
         final List<VariantContext> result = Lists.newArrayList();
         for(VariantContext old : variantContexts)
         {
             VariantHotspot variant = CandidateSerialization.toVariantHotspot(old);
-            List<ReadContextCounter> counters = readContextCounters.readContextCounters(variant);
-            result.add(addGenotype(old, counters));
+            List<ReadContextCounter> counters = readContextCounters.getVariantReadCounters(variant);
+            result.add(addGenotype(old, counters, sampleIds));
         }
 
         return result;
     }
 
-    private static VariantContext addGenotype(final VariantContext parent, final List<ReadContextCounter> counters)
+    private static VariantContext addGenotype(
+            final VariantContext parent, final List<ReadContextCounter> readCounters, final List<String> sampleIds)
     {
         final VariantContextBuilder builder = new VariantContextBuilder(parent);
         final List<Genotype> genotypes = Lists.newArrayList(parent.getGenotypes());
 
-        for(ReadContextCounter counter : counters)
+        for(int i = 0; i < readCounters.size(); ++i)
         {
-            Genotype genotype = createGenotype(counter);
+            ReadContextCounter readCounter = readCounters.get(i);
+            Genotype genotype = createGenotype(readCounter, sampleIds.get(i));
             genotypes.add(genotype);
         }
         return builder.genotypes(genotypes).make();

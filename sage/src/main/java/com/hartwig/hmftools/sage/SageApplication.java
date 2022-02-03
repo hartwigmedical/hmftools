@@ -113,20 +113,10 @@ public class SageApplication implements AutoCloseable
                 if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
                     continue;
 
-                try
-                {
-                    final ChromosomePipeline pipeline = new ChromosomePipeline(
-                            chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
+                final ChromosomePipeline pipeline = new ChromosomePipeline(
+                        chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
 
-                    // pipeline.processOld();
-                    pipeline.process();
-                }
-                catch(Exception e)
-                {
-                    SG_LOGGER.error("chromosome({}) failed to execute pipeline tasks: {}", chromosome, e.toString());
-                    e.printStackTrace();
-                }
-
+                pipeline.process();
                 System.gc();
             }
         }
@@ -161,7 +151,7 @@ public class SageApplication implements AutoCloseable
 
     public void writeVariant(final SageVariant variant)
     {
-        mVcfFile.write(VariantContextFactory.create(variant));
+        mVcfFile.write(VariantContextFactory.create(variant, mConfig.ReferenceIds, mConfig.TumorIds));
 
         if(mVariantFile != null)
             mVariantFile.writeToFile(variant);

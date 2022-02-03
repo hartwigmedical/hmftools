@@ -62,44 +62,4 @@ public class CandidateStage
 
         return candidates;
     }
-
-    @NotNull
-    public CompletableFuture<List<Candidate>> findCandidatesOld(final ChrBaseRegion region, final CompletableFuture<RefSequence> refSequenceFuture)
-    {
-        return refSequenceFuture.thenCompose(refSequence ->
-        {
-            if(region.start() == 1)
-            {
-                SG_LOGGER.info("processing chromosome {}", region.Chromosome);
-            }
-
-            // SG_LOGGER.trace("region({}) finding candidates", region.toString());
-
-            final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
-
-            CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-
-            for(int i = 0; i < mConfig.TumorIds.size(); i++)
-            {
-                final String sample = mConfig.TumorIds.get(i);
-                final String sampleBam = mConfig.TumorBams.get(i);
-
-                // SG_LOGGER.trace("region({}) finding candidates from tumor sample({})", region, sample);
-
-                done = done.<List<AltContext>>thenApply(aVoid -> mCandidateEvidence.readBam(sample, sampleBam, refSequence, region))
-                        .thenAccept(initialCandidates::add);
-            }
-
-            //return done.thenApply(y -> initialCandidates.candidates());
-            return done.thenApply(y -> collectCandidates(region, initialCandidates));
-        });
-    }
-
-    private List<Candidate> collectCandidates(final ChrBaseRegion region, final Candidates initialCandidates)
-    {
-        List<Candidate> candidates = initialCandidates.candidates(mConfig.SpecificPositions);
-        SG_LOGGER.trace("region({}) found {} candidates", region.toString(), candidates.size());
-
-        return candidates;
-    }
 }
