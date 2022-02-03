@@ -65,7 +65,7 @@ public class AnnotatedCodonVCFCheckerPAVE {
     @Nullable
     private static VariantImpact annotationForTranscript(@NotNull VariantImpact impact, @NotNull String transcript) {
 
-        if (impact.CanonicalHgvsProtein.equals(transcript)) {
+        if (impact.CanonicalTranscript.equals(transcript)) {
             return impact;
         }
 
