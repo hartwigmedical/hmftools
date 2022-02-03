@@ -245,10 +245,9 @@ class RefGenomeConverter {
                 return Strings.EMPTY;
             }
 
-            //TODO: lift over rank
             @Override
             public Integer rank() {
-                return 0;
+                return annotation.rank();
             }
 
             @NotNull
