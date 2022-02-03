@@ -37,7 +37,7 @@ Argument | Description
 -sv_vcf | Full path and filename for the SV VCF
 -purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
 -output_dir | Required: directory where all output files are written
--ref_genome_version | Defaults to version 37, valid values are 19, 37 or 38. 
+-ref_genome_version | Defaults to version 37, valid values are 37 or 38 
 -check_drivers | Run driver annotation logic
 -driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
 -check_fusions | Discover and annotate gene fusions
