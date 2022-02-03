@@ -41,7 +41,6 @@ public class ReadContextEvidence
     private QualityCalculator mQualityCalculator;
     private List<ReadContextCounter> mReadCounters;
     private int mLastCandidateIndex;
-    private boolean mCheckPhasing;
 
     private final VariantPhaser mVariantPhaser;
 
@@ -67,7 +66,7 @@ public class ReadContextEvidence
     {
         mReadCounters = mFactory.create(sample, candidates);
         mLastCandidateIndex = 0;
-        mVariantPhaser.reset();
+        mVariantPhaser.reset(mReadCounters);
         mVariantPhaser.setEnabled(checkPhasing);
 
         if(candidates.isEmpty())
@@ -164,14 +163,14 @@ public class ReadContextEvidence
         if(readCounters.isEmpty())
             return;
 
-        Set<ReadContextCounter> posPhasedCounters = mCheckPhasing ? Sets.newHashSet() : null;
-        Set<ReadContextCounter> negPhasedCounters = mCheckPhasing ? Sets.newHashSet() : null;
+        Set<ReadContextCounter> posPhasedCounters = mVariantPhaser.enabled() ? Sets.newHashSet() : null;
+        Set<ReadContextCounter> negPhasedCounters = mVariantPhaser.enabled() ? Sets.newHashSet() : null;
 
         for(ReadContextCounter readCounter : readCounters)
         {
             ReadMatchType matchType = readCounter.processRead(record, mSageConfig, mQualityCalculator, numberOfEvents);
 
-            if(mCheckPhasing)
+            if(mVariantPhaser.enabled())
             {
                 if(matchType == SUPPORT)
                     posPhasedCounters.add(readCounter);

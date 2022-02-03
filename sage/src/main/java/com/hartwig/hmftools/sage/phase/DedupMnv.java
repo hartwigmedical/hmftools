@@ -18,15 +18,14 @@ public class DedupMnv extends BufferedPostProcessor
     @Override
     protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        if(!variant.isPassing() || variant.isIndel() || variant.localPhaseSet() <= 0)
+        if(!variant.isPassing() || variant.isIndel() || !variant.hasLocalPhaseSets())
             return;
 
-        int lps = variant.localPhaseSet();
         int newVariantSize = variant.alt().length();
 
         for(final SageVariant other : variants)
         {
-            if(other.isPassing() && !other.isIndel() && other.localPhaseSet() == lps)
+            if(other.isPassing() && !other.isIndel() && other.hasMatchingLps(variant.localPhaseSets()))
             {
                 int oldVariantSize = other.alt().length();
                 if(newVariantSize != oldVariantSize)

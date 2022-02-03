@@ -18,8 +18,6 @@ public class ReadContext
 
     private boolean mIncompleteCore;
 
-    private static final int BONUS_FLANK = 50;
-
     public ReadContext(
             int position, final String repeat, final int repeatCount, final String microhomology, final IndexedBases readBases,
             final boolean incompleteCore)
@@ -62,19 +60,6 @@ public class ReadContext
 
         mReadBases = newReadBases;
         mIncompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
-    }
-
-    public ReadContext cloneAndExpand()
-    {
-        IndexedBases newReadBases = IndexedBases.resize(Position,
-                mReadBases.Index,
-                mReadBases.LeftCoreIndex,
-                mReadBases.RightCoreIndex,
-                mReadBases.FlankSize,
-                BONUS_FLANK,
-                mReadBases.Bases);
-
-        return new ReadContext(Position, Repeat, RepeatCount, Microhomology, newReadBases, mIncompleteCore);
     }
 
     public boolean hasIncompleteFlanks()

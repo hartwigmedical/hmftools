@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.phase;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -30,9 +31,9 @@ public class VariantDeduper implements Consumer<SageVariant>
         mLocalPhaseSet = new LocalPhaseSet(phaseSetCounter, mLocalRealignSet);
     }
 
-    public Set<Integer> passingPhaseSets()
+    public List<Integer> passingPhaseSets()
     {
-        return mLocalPhaseSet.passingPhaseSets();
+        return mLocalPhaseSet.passingPhaseSets().stream().collect(Collectors.toList());
     }
 
     @Override

@@ -100,19 +100,22 @@ public class ChromosomePipeline implements AutoCloseable
 
         SG_LOGGER.debug("chromosome({}) {} regions complete", mChromosome, mRegionTasks.size());
 
-        List<PerformanceCounter> perfCounters = mRegionTasks.get(0).getPerfCounters();
-
-        for(int i = 1; i < mRegionTasks.size(); ++i)
+        if(SG_LOGGER.isDebugEnabled())
         {
-            List<PerformanceCounter> taskPerfCounters = mRegionTasks.get(i).getPerfCounters();
+            List<PerformanceCounter> perfCounters = mRegionTasks.get(0).getPerfCounters();
 
-            for(int j = 0; j < perfCounters.size(); ++j)
+            for(int i = 1; i < mRegionTasks.size(); ++i)
             {
-                perfCounters.get(j).merge(taskPerfCounters.get(j));
-            }
-        }
+                List<PerformanceCounter> taskPerfCounters = mRegionTasks.get(i).getPerfCounters();
 
-        perfCounters.forEach(x -> x.logStats());
+                for(int j = 0; j < perfCounters.size(); ++j)
+                {
+                    perfCounters.get(j).merge(taskPerfCounters.get(j));
+                }
+            }
+
+            perfCounters.forEach(x -> x.logStats());
+        }
 
         PerformanceCounter perfCounter = new PerformanceCounter("Dedup");
 
@@ -129,7 +132,9 @@ public class ChromosomePipeline implements AutoCloseable
         mVariantDeduper.flush();
 
         perfCounter.stop();
-        perfCounter.logStats();
+
+        if(SG_LOGGER.isDebugEnabled())
+            perfCounter.logStats();
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }
@@ -188,7 +193,7 @@ public class ChromosomePipeline implements AutoCloseable
         }
     }
 
-    private boolean checkWriteVariant(final SageVariant variant, final Set<Integer> passingPhaseSets)
+    private boolean checkWriteVariant(final SageVariant variant, final List<Integer> passingPhaseSets)
     {
         if(mConfig.PanelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
             return false;
@@ -207,7 +212,7 @@ public class ChromosomePipeline implements AutoCloseable
             return true;
 
         if(!variant.isNormalEmpty() && !variant.isTumorEmpty() && !MitochondrialChromosome.contains(variant.chromosome())
-        && !passingPhaseSets.contains(variant.localPhaseSet()))
+        && !variant.hasMatchingLps(passingPhaseSets))
         {
             final ReadContextCounter normal = variant.normalAltContexts().get(0);
 

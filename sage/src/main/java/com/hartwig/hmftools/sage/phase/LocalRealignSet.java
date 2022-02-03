@@ -28,7 +28,7 @@ class LocalRealignSet extends BufferedPostProcessor
             if(!other.isIndel() && !newIsIndel)
                 continue;
 
-            if(!variant.hasLocalPhaseSet() || variant.localPhaseSet() != other.localPhaseSet())
+            if(!variant.hasLocalPhaseSets() || !other.hasMatchingLps(variant.localPhaseSets()))
                 continue;
 
             int positionOffset = LocalPhaseSet.positionOffset(other.variant(), variant.variant());

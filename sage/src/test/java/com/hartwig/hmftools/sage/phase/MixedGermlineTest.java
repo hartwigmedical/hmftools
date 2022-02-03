@@ -104,7 +104,7 @@ public class MixedGermlineTest
 
         for(SageVariant variant : variants)
         {
-            variant.localPhaseSet(nextLps);
+            variant.tumorAltContexts().get(0).addLocalPhaseSet(nextLps, 1, 1);
             victim.accept(variant);
         }
         assertEquals(0, consumer.size());

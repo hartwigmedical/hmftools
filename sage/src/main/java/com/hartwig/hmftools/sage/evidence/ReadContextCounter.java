@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -19,6 +21,8 @@ import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantTier;
+
+import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -37,24 +41,11 @@ public class ReadContextCounter implements VariantHotspot
     private final boolean mIsMnv;
     private final boolean mIsIndel;
 
-    private int mFull;
-    private int mPartial;
-    private int mCore;
-    private int mAlt;
-    private int mRealigned;
-    private int mReference;
-    private int mCoverage;
+    private final int[] mQualities;
+    private final int[] mCounts;
 
     private int mLengthened;
     private int mShortened;
-
-    private int mFullQuality;
-    private int mPartialQuality;
-    private int mCoreQuality;
-    private int mAltQuality;
-    private int mRealignedQuality;
-    private int mReferenceQuality;
-    private int mTotalQuality;
 
     private int mForwardStrand;
     private int mReverseStrand;
@@ -69,8 +60,22 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawAltBaseQuality;
     private int mRawRefBaseQuality;
 
-    private int mLocalPhaseSet;
-    private int mLpsReadCount;
+    private List<Integer> mLocalPhaseSets;
+    private List<double[]> mLpsCounts;
+
+    public static final int RC_FULL = 0;
+    public static final int RC_PARTIAL = 1;
+    public static final int RC_CORE = 2;
+    public static final int RC_REALIGNED = 3;
+    public static final int RC_ALT = 4;
+    public static final int RC_REF = 5;
+    public static final int RC_TOTAL = 6;
+    public static final int RC_MAX = RC_TOTAL + 1;
+
+    // public int[] counts()
+    //    {
+    //        return new int[] { mFull, mPartial, mCore, mRealigned, mAlt, mReference, mCoverage };
+    //    }
 
     public ReadContextCounter(
             final String sample, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
@@ -87,24 +92,11 @@ public class ReadContextCounter implements VariantHotspot
         mIsMnv = variant.isMNV();
         mIsIndel = variant.isIndel();
 
-        mFull = 0;
-        mPartial = 0;
-        mCore = 0;
-        mAlt = 0;
-        mRealigned = 0;
-        mReference = 0;
-        mCoverage = 0;
+        mQualities = new int[RC_MAX];
+        mCounts = new int[RC_MAX];
 
         mLengthened = 0;
         mShortened = 0;
-
-        mFullQuality = 0;
-        mPartialQuality = 0;
-        mCoreQuality = 0;
-        mAltQuality = 0;
-        mRealignedQuality = 0;
-        mReferenceQuality = 0;
-        mTotalQuality = 0;
 
         mForwardStrand = 0;
         mReverseStrand = 0;
@@ -119,8 +111,8 @@ public class ReadContextCounter implements VariantHotspot
         mRawAltBaseQuality = 0;
         mRawRefBaseQuality = 0;
 
-        mLocalPhaseSet = 0;
-        mLpsReadCount = 0;
+        mLocalPhaseSets = null;
+        mLpsCounts = null;
     }
 
     public VariantHotspot variant() { return mVariant; }
@@ -138,29 +130,27 @@ public class ReadContextCounter implements VariantHotspot
     @Override
     public String alt() { return mVariant.alt(); }
 
-    public int altSupport() { return mFull + mPartial + mCore + mAlt + mRealigned; }
+    public int altSupport() { return mCounts[RC_FULL] + mCounts[RC_PARTIAL] + mCounts[RC_CORE] + mCounts[RC_ALT] + mCounts[RC_REALIGNED]; }
 
-    public int refSupport() { return mReference; }
-    public int coverage() { return mCoverage; }
-    public int depth() { return mCoverage; }
+    public int refSupport() { return mCounts[RC_REF]; }
+    public int coverage() { return mCounts[RC_TOTAL]; }
+    public int depth() { return mCounts[RC_TOTAL]; }
 
     public double vaf() { return af(altSupport()); }
 
     private double af(double support)
     {
-        return mCoverage == 0 ? 0d : support / mCoverage;
+        return mCounts[RC_TOTAL] == 0 ? 0d : support / mCounts[RC_TOTAL];
     }
 
     public int tumorQuality()
     {
-        int tumorQuality = mFullQuality + mPartialQuality;
+        int tumorQuality = mQualities[RC_FULL] + mQualities[RC_PARTIAL];
         return Math.max(0, tumorQuality - (int) mJitterPenalty);
     }
 
-    public int[] counts()
-    {
-        return new int[] { mFull, mPartial, mCore, mRealigned, mAlt, mReference, mCoverage };
-    }
+    public int[] counts() { return mCounts; }
+    // new int[] { mFull, mPartial, mCore, mRealigned, mAlt, mReference, mCoverage };
 
     public int[] jitter()
     {
@@ -173,10 +163,8 @@ public class ReadContextCounter implements VariantHotspot
         return total > 0 ? mForwardStrand / total : 0;
     }
 
-    public int[] quality()
-    {
-        return new int[] { mFullQuality, mPartialQuality, mCoreQuality, mRealignedQuality, mAltQuality, mReferenceQuality, mTotalQuality };
-    }
+    public int[] quality() { return mQualities; }
+    // { return new int[] { mFullQuality, mPartialQuality, mCoreQuality, mRealignedQuality, mAltQuality, mReferenceQuality, mTotalQuality };
 
     public int improperPair() { return mImproperPair; }
 
@@ -186,19 +174,28 @@ public class ReadContextCounter implements VariantHotspot
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
 
-    public void setLocalPhaseSet(int lps) { mLocalPhaseSet = lps; }
-    public int localPhaseSet() { return mLocalPhaseSet; }
+    public void addLocalPhaseSet(int lps, int readCount, double allocCount)
+    {
+        if(mLocalPhaseSets == null)
+        {
+            mLocalPhaseSets = Lists.newArrayList();
+            mLpsCounts = Lists.newArrayList();
+        }
 
-    public void setLpsReadCount(int count) { mLpsReadCount = count; }
-    public int lpsReadCount() { return mLpsReadCount; }
+        mLocalPhaseSets.add(lps);
+        mLpsCounts.add(new double[] { readCount, allocCount } );
+    }
 
-    public boolean exceedsMaxCoverage() { return mCoverage >= MaxCoverage; }
+    public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
+    public List<double[]> lpsCounts() { return mLpsCounts; }
+
+    public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
 
     public String toString()
     {
         return String.format("var(%s:%d %s>%s) core(%s) counts(f=%d p=%d c=%d)",
                 mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(),
-                mReadContext.toString(), mFull, mPartial, mCore);
+                mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
     }
 
     public ReadMatchType processRead(final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, final int rawNumberOfEvents)
@@ -258,23 +255,23 @@ public class ReadContextCounter implements VariantHotspot
                 switch(match)
                 {
                     case FULL:
-                        mFull++;
-                        mFullQuality += quality;
+                        mCounts[RC_FULL]++;
+                        mQualities[RC_FULL] += quality;
                         break;
 
                     case PARTIAL:
-                        mPartial++;
-                        mPartialQuality += quality;
+                        mCounts[RC_PARTIAL]++;
+                        mQualities[RC_PARTIAL] += quality;
                         break;
 
                     case CORE:
-                        mCore++;
-                        mCoreQuality += quality;
+                        ++mCounts[RC_CORE];
+                        mQualities[RC_CORE] += quality;
                         break;
                 }
 
-                mCoverage++;
-                mTotalQuality += quality;
+                ++mCounts[RC_TOTAL];
+                mQualities[RC_TOTAL] += quality;
 
                 countStrandedness(record);
                 checkImproperCount(record);
@@ -287,10 +284,11 @@ public class ReadContextCounter implements VariantHotspot
         final RealignedType realignmentType = realignment.Type;
         if(realignmentType.equals(RealignedType.EXACT))
         {
-            mRealigned++;
-            mRealignedQuality += quality;
-            mCoverage++;
-            mTotalQuality += quality;
+            mCounts[RC_REALIGNED]++;
+            mQualities[RC_REALIGNED] += quality;
+
+            mCounts[RC_TOTAL]++;
+            mQualities[RC_TOTAL] += quality;
             return SUPPORT;
         }
 
@@ -301,18 +299,19 @@ public class ReadContextCounter implements VariantHotspot
 
         ReadMatchType matchType = UNRELATED;
 
-        mCoverage++;
-        mTotalQuality += quality;
+        mCounts[RC_TOTAL]++;
+        mQualities[RC_TOTAL] += quality;
+
         if(rawContext.RefSupport)
         {
-            mReference++;
-            mReferenceQuality += quality;
+            mCounts[RC_REF]++;
+            mQualities[RC_REF] += quality;
             matchType = NO_SUPPORT;
         }
         else if(rawContext.AltSupport)
         {
-            mAlt++;
-            mAltQuality++;
+            mCounts[RC_ALT]++;
+            mQualities[RC_ALT] += quality;
             countStrandedness(record);
         }
 

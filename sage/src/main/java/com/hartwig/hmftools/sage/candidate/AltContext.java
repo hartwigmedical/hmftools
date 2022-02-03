@@ -186,7 +186,6 @@ public class AltContext implements VariantHotspot
         ReadContextCandidate(int numberOfEvents, final ReadContext readContext)
         {
             mReadContext = readContext;
-            // mReadContext = readContext.cloneAndExpand();
             mMinNumberOfEvents = numberOfEvents;
         }
 

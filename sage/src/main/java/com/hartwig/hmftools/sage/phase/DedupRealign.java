@@ -49,21 +49,22 @@ public class DedupRealign extends BufferedPostProcessor
         if(localRealigned.size() > 1)
         {
             SageVariant keeper = localRealigned.get(0);
-            for(SageVariant sageVariant : localRealigned)
+            for(SageVariant variant : localRealigned)
             {
-                if(sageVariant.totalQuality() > keeper.totalQuality())
+                if(variant.totalQuality() > keeper.totalQuality())
                 {
-                    keeper = sageVariant;
+                    keeper = variant;
                 }
             }
 
-            for(SageVariant sageVariant : localRealigned)
+            for(SageVariant variant : localRealigned)
             {
-                boolean keep =
-                        sageVariant.equals(keeper) || (keeper.localPhaseSet() > 0 && keeper.localPhaseSet() == sageVariant.localPhaseSet());
+                boolean keep = variant.equals(keeper)
+                        || (keeper.hasLocalPhaseSets() && keeper.hasMatchingLps(variant.localPhaseSets()));
+
                 if(!keep)
                 {
-                    sageVariant.filters().add(VariantVCF.DEDUP_FILTER);
+                    variant.filters().add(VariantVCF.DEDUP_FILTER);
                 }
             }
         }

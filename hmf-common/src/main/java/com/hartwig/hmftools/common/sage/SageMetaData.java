@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.sage;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
@@ -28,7 +29,7 @@ public final class SageMetaData
     public static VCFHeader addSageMetaData(@NotNull final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_REALIGN_SET, 1, VCFHeaderLineType.Integer, REALIGN_DESCRIPTION));
         return header;
     }

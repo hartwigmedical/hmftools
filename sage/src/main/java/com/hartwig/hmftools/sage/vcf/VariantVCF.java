@@ -27,6 +27,7 @@ import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
+import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
@@ -142,7 +143,8 @@ public class VariantVCF implements AutoCloseable
     {
         VCFHeader header = SageMetaData.addSageMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(LOCAL_PHASE_SET_READ_COUNT, 1, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESCRIPTION));
 
         header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));

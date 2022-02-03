@@ -52,10 +52,14 @@ public final class VariantContextFactory
                 .genotypes(genotypes)
                 .filters(variant.filters());
 
-        if(variant.localPhaseSet() > 0)
+        if(variant.hasLocalPhaseSets())
         {
-            builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSet());
-            builder.attribute(LOCAL_PHASE_SET_READ_COUNT, variant.lpsReadCount());
+            builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSets());
+
+            List<double[]> readCountsRaw = variant.localPhaseSetCounts();
+            List<Integer> readCountTotals = Lists.newArrayListWithExpectedSize(readCountsRaw.size());
+            readCountsRaw.forEach(x -> readCountTotals.add((int)(x[0] + x[1])));
+            builder.attribute(LOCAL_PHASE_SET_READ_COUNT, readCountTotals);
         }
 
         if(variant.localRealignSet() > 0)

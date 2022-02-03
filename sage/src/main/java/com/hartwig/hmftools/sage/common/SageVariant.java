@@ -8,6 +8,7 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SageVariant
 {
@@ -16,8 +17,6 @@ public class SageVariant
     private final List<ReadContextCounter> mNormalReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
 
-    private int mLocalPhaseSet;
-    private int mLpsReadCount;
     private int mLocalRealignSet;
     private int mMixedImpact;
 
@@ -29,8 +28,6 @@ public class SageVariant
         mNormalReadCounters = normalCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = filters;
-        mLocalPhaseSet = tumorReadCounters.stream().mapToInt(x -> x.localPhaseSet()).findFirst().orElse(0);
-        mLpsReadCount = tumorReadCounters.stream().mapToInt(x -> x.lpsReadCount()).findFirst().orElse(0);
         mLocalRealignSet = 0;
     }
 
@@ -79,12 +76,41 @@ public class SageVariant
         return variant().ref().length() > variant().alt().length();
     }
 
-    public int localPhaseSet() { return mLocalPhaseSet; }
-    public int lpsReadCount() { return mLpsReadCount; }
-    public boolean hasLocalPhaseSet() { return mLocalPhaseSet > 0; }
-    public void localPhaseSet(int localPhaseSet)
+    @Nullable
+    public List<Integer> localPhaseSets()
     {
-        mLocalPhaseSet = localPhaseSet;
+        if(mTumorReadCounters.isEmpty())
+            return null;
+
+        return mTumorReadCounters.get(0).localPhaseSets();
+    }
+
+    public boolean hasLocalPhaseSets()
+    {
+        if(mTumorReadCounters.isEmpty())
+            return false;
+
+        return mTumorReadCounters.get(0).localPhaseSets() != null;
+    }
+
+    public boolean hasMatchingLps(final List<Integer> otherLocalPhaseSets)
+    {
+        if(otherLocalPhaseSets == null)
+            return false;
+
+        if(mTumorReadCounters.isEmpty() || mTumorReadCounters.get(0).localPhaseSets() == null)
+            return false;
+
+        return mTumorReadCounters.get(0).localPhaseSets().stream().anyMatch(x -> otherLocalPhaseSets.contains(x));
+    }
+
+    @Nullable
+    public List<double[]> localPhaseSetCounts()
+    {
+        if(mTumorReadCounters.isEmpty())
+            return null;
+
+        return mTumorReadCounters.get(0).lpsCounts();
     }
 
     public int localRealignSet() { return mLocalRealignSet; }

@@ -36,9 +36,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
     @Override
     protected void processSageVariant(final SageVariant variant, final Collection<SageVariant> variants)
     {
-        int lps = variant.localPhaseSet();
-
-        if(variant.isIndel() || lps <= 0)
+        if(variant.isIndel() || !variant.hasLocalPhaseSets())
             return;
 
         boolean newVariantIsSnv = isPassingSnv(variant);
@@ -49,7 +47,7 @@ public class MixedSomaticGermlineDedup extends BufferedPostProcessor
 
         for(SageVariant other : variants)
         {
-            if(other.localPhaseSet() == lps)
+            if(other.hasMatchingLps(variant.localPhaseSets()))
             {
                 if(newVariantIsSnv && isMixedGermlineMnv(other))
                 {

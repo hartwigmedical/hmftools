@@ -31,9 +31,9 @@ public class LocalPhaseSet extends BufferedPostProcessor
     {
         for(SageVariant variant : variants)
         {
-            if(variant.isPassing() && variant.hasLocalPhaseSet())
+            if(variant.isPassing() && variant.hasLocalPhaseSets())
             {
-                mPassingPhaseSets.add(variant.localPhaseSet());
+                mPassingPhaseSets.addAll(variant.localPhaseSets());
             }
         }
     }

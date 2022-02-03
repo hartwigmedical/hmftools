@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.sage.common.SageVariant;
 
@@ -50,8 +51,15 @@ public class VariantFile
             mWriter.write(String.format(",%s,%d,%s,%d",
                     variant.isPassing(), variant.candidate().maxReadDepth(), variant.candidate().tier(), variant.totalQuality()));
 
+            StringJoiner sj = new StringJoiner(";");
+
+            if(variant.hasLocalPhaseSets())
+            {
+                variant.localPhaseSets().forEach(x -> sj.add(String.valueOf(x)));
+            }
+
             mWriter.write(String.format(",%d,%d",
-                    variant.localPhaseSet(), variant.localRealignSet()));
+                    sj.toString(), variant.localRealignSet()));
 
             mWriter.newLine();
         }

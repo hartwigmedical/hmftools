@@ -21,7 +21,7 @@ public class DedupIndel extends BufferedPostProcessor
 
         for(final SageVariant other : variants)
         {
-            if(isPassingPhasedIndel(other) && variant.localPhaseSet() == other.localPhaseSet())
+            if(isPassingPhasedIndel(other) && other.hasMatchingLps(variant.localPhaseSets()))
             {
                 if(variant.isDelete() && other.isDelete())
                 {
@@ -86,6 +86,6 @@ public class DedupIndel extends BufferedPostProcessor
 
     private static boolean isPassingPhasedIndel(final SageVariant variant)
     {
-        return variant.isPassing() && variant.localPhaseSet() > 0 && variant.isIndel();
+        return variant.isPassing() && variant.hasLocalPhaseSets() && variant.isIndel();
     }
 }

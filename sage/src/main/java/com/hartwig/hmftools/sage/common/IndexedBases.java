@@ -297,19 +297,4 @@ public class IndexedBases
 
         return rightFlankingBases >= 0 && (rightFlankingBases >= FlankSize || leftFlankingBases >= FlankSize);
     }
-
-    public static IndexedBases resize(
-            final int position, final int recordIndex, final int recordLeftCoreIndex,
-            final int recordRightCoreIndex, final int flankSize, final int additionalFlank, final byte[] recordBases)
-    {
-        int recordLeftFlankIndex = max(0, recordLeftCoreIndex - flankSize - additionalFlank);
-        int recordLeftFlankLength = recordLeftCoreIndex - recordLeftFlankIndex;
-        int recordRightFlankIndex = min(recordBases.length - 1, recordRightCoreIndex + flankSize + additionalFlank);
-
-        int rightCentreIndex = recordLeftFlankLength + recordRightCoreIndex - recordLeftCoreIndex;
-        int index = recordLeftFlankLength + recordIndex - recordLeftCoreIndex;
-        byte[] bases = Arrays.copyOfRange(recordBases, recordLeftFlankIndex, recordRightFlankIndex + 1);
-        return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
-    }
-
 }
