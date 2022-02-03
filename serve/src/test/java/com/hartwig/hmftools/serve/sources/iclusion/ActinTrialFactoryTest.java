@@ -10,6 +10,7 @@ import com.hartwig.hmftools.iclusion.datamodel.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.datamodel.ImmutableIclusionTumorLocation;
 import com.hartwig.hmftools.serve.curation.DoidLookupTestFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ActinTrialFactoryTest {
@@ -29,7 +30,7 @@ public class ActinTrialFactoryTest {
         IclusionTrial trial = IclusionTestFactory.trialWithTumors(treatment, Lists.newArrayList(loc1, loc2));
 
         ActionableTrialFactory factory = new ActionableTrialFactory(DoidLookupTestFactory.dummy());
-        List<ActionableTrial> actionableTrials = factory.toActionableTrials(trial);
+        List<ActionableTrial> actionableTrials = factory.toActionableTrials(trial, Strings.EMPTY);
         assertEquals(3, actionableTrials.size());
         assertEquals(treatment, actionableTrials.get(0).treatment());
         assertEquals(location1, actionableTrials.get(0).cancerType());

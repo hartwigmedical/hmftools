@@ -228,7 +228,7 @@ public final class ServeTestFactory {
 
     @NotNull
     private static ActionableEvent createTestBaseEvent(@NotNull Knowledgebase source) {
-        return ActionabilityTestUtil.create(source,
+        return ActionabilityTestUtil.create(Strings.EMPTY, source,
                 Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,

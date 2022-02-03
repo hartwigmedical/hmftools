@@ -13,6 +13,7 @@ import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusion;
 import com.hartwig.hmftools.serve.actionability.fusion.ActionableFusionUrlConsolidator;
 import com.hartwig.hmftools.serve.actionability.fusion.ImmutableActionableFusion;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class ActionableEventUrlMergerTest {
     @NotNull
     private static ActionableFusion createFusion(@NotNull String gene, @NotNull String url) {
         return ImmutableActionableFusion.builder()
-                .from(ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
+                .from(ActionabilityTestUtil.create("fusion", Knowledgebase.VICC_CGI,
                         "treatment",
                         "cancerType",
                         "doid",

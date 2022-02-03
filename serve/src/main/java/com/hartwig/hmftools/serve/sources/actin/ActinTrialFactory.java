@@ -13,8 +13,9 @@ public final class ActinTrialFactory {
     }
 
     @NotNull
-    public static ActinTrial toActinTrial(@NotNull ActinEntry actionTrial) {
+    public static ActinTrial toActinTrial(@NotNull ActinEntry actionTrial, @NotNull String rawInput) {
         return ImmutableActinTrial.builder()
+                .rawInput(rawInput)
                 .source(Knowledgebase.ACTIN)
                 .treatment(actionTrial.trial())
                 .level(EvidenceLevel.A)

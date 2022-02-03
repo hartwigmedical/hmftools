@@ -82,7 +82,7 @@ public class CkbExtractor {
             String transcript = null;
 
             EventExtractorOutput eventExtractorOutput = eventExtractor.extract(gene, transcript, entry.type(), event);
-            Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry);
+            Set<? extends ActionableEvent> actionableEvents = actionableEntryFactory.toActionableEntries(entry, variant.variant());
 
             extractions.add(toExtractionResult(gene, event, transcript, eventExtractorOutput, actionableEvents));
 

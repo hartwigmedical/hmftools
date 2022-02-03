@@ -85,7 +85,7 @@ class ActionableEvidenceFactory {
     }
 
     @NotNull
-    public Set<ActionableEvent> toActionableEvents(@NotNull ViccEntry entry) {
+    public Set<ActionableEvent> toActionableEvents(@NotNull ViccEntry entry, @NotNull String rawInput) {
         Set<ActionableEvent> actionableEvents = Sets.newHashSet();
 
         boolean isSupportive = isSupportiveEntry(entry);
@@ -103,6 +103,7 @@ class ActionableEvidenceFactory {
             List<List<String>> drugLists = drugCurator.curate(entry.source(), level, treatment);
 
             ImmutableActionableEvidence.Builder builder = ImmutableActionableEvidence.builder()
+                    .rawInput(rawInput)
                     .source(fromViccSource(entry.source()))
                     .level(level)
                     .direction(direction)

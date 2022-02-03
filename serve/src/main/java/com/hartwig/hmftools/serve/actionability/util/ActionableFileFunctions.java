@@ -22,7 +22,8 @@ public final class ActionableFileFunctions {
 
     @NotNull
     public static String header() {
-        return new StringJoiner(FIELD_DELIMITER).add("source")
+        return new StringJoiner(FIELD_DELIMITER).add("rawInput")
+                .add("source")
                 .add("treatment")
                 .add("cancerType")
                 .add("doid")
@@ -37,44 +38,50 @@ public final class ActionableFileFunctions {
         return new ActionableEvent() {
             @NotNull
             @Override
+            public String rawInput() {
+                return values[startingPosition];
+            }
+
+            @NotNull
+            @Override
             public Knowledgebase source() {
-                return Knowledgebase.valueOf(values[startingPosition]);
+                return Knowledgebase.valueOf(values[startingPosition + 1]);
             }
 
             @NotNull
             @Override
             public String treatment() {
-                return values[startingPosition + 1];
-            }
-
-            @NotNull
-            @Override
-            public String cancerType() {
                 return values[startingPosition + 2];
             }
 
             @NotNull
             @Override
-            public String doid() {
+            public String cancerType() {
                 return values[startingPosition + 3];
             }
 
             @NotNull
             @Override
+            public String doid() {
+                return values[startingPosition + 4];
+            }
+
+            @NotNull
+            @Override
             public EvidenceLevel level() {
-                return EvidenceLevel.valueOf(values[startingPosition + 4]);
+                return EvidenceLevel.valueOf(values[startingPosition + 5]);
             }
 
             @NotNull
             @Override
             public EvidenceDirection direction() {
-                return EvidenceDirection.valueOf(values[startingPosition + 5]);
+                return EvidenceDirection.valueOf(values[startingPosition + 6]);
             }
 
             @NotNull
             @Override
             public Set<String> urls() {
-                int urlPosition = startingPosition + 6;
+                int urlPosition = startingPosition + 7;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
         };
@@ -82,7 +89,8 @@ public final class ActionableFileFunctions {
 
     @NotNull
     public static String toLine(@NotNull ActionableEvent event) {
-        return new StringJoiner(FIELD_DELIMITER).add(event.source().toString())
+        return new StringJoiner(FIELD_DELIMITER).add(event.rawInput())
+                .add(event.source().toString())
                 .add(event.treatment())
                 .add(event.cancerType())
                 .add(event.doid())

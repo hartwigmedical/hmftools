@@ -11,6 +11,9 @@ import org.jetbrains.annotations.NotNull;
 public interface ActionableEvent {
 
     @NotNull
+    String rawInput();
+
+    @NotNull
     Knowledgebase source();
 
     @NotNull

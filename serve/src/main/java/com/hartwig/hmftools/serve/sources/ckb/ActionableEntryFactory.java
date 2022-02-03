@@ -55,7 +55,7 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry) {
+    public Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
@@ -76,6 +76,7 @@ class ActionableEntryFactory {
                     }
 
                     actionableEntries.add(ImmutableActionableEntry.builder()
+                            .rawInput(rawInput)
                             .source(Knowledgebase.CKB)
                             .treatment(treatment)
                             .cancerType(cancerType)

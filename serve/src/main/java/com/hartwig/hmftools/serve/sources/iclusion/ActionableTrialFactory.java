@@ -29,8 +29,9 @@ public class ActionableTrialFactory {
     }
 
     @NotNull
-    public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial) {
+    public List<ActionableTrial> toActionableTrials(@NotNull IclusionTrial trial, @NotNull String rawInput) {
         ImmutableActionableTrial.Builder actionableBuilder = ImmutableActionableTrial.builder()
+                .rawInput(rawInput)
                 .source(Knowledgebase.ICLUSION)
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)

@@ -25,6 +25,7 @@ import com.hartwig.hmftools.serve.util.ProgressTracker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class IclusionExtractor {
@@ -48,20 +49,22 @@ public class IclusionExtractor {
         ProgressTracker tracker = new ProgressTracker("iClusion", trials.size());
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (IclusionTrial trial : trials) {
-            List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial);
-            for (ActionableTrial actionableTrial : actionableTrials) {
-                LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
-            }
-
             List<EventExtractorOutput> eventExtractions = Lists.newArrayList();
+            String rawInput = Strings.EMPTY;
             for (IclusionMutationCondition mutationCondition : trial.mutationConditions()) {
                 for (IclusionMutation mutation : mutationCondition.mutations()) {
+                    rawInput = mutation.name();
                     LOGGER.debug("Interpreting '{}' on '{}' for {}", mutation.name(), mutation.gene(), trial.acronym());
                     if (mutation.type() == EventType.UNKNOWN) {
                         LOGGER.warn("No event type known for '{}' on '{}'", mutation.name(), mutation.gene());
                     }
                     eventExtractions.add(eventExtractor.extract(mutation.gene(), null, mutation.type(), mutation.name()));
                 }
+            }
+
+            List<ActionableTrial> actionableTrials = actionableTrialFactory.toActionableTrials(trial, rawInput);
+            for (ActionableTrial actionableTrial : actionableTrials) {
+                LOGGER.debug("Generated {} based off {}", actionableTrial, trial);
             }
 
             extractions.add(toExtractionResult(actionableTrials, eventExtractions));

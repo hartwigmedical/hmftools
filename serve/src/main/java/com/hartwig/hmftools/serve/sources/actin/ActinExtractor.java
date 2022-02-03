@@ -45,7 +45,7 @@ public class ActinExtractor {
         List<ExtractionResult> extractions = Lists.newArrayList();
         for (ActinEntry entry : entries) {
             Set<String> events = ActinEventExtractor.extractEvents(entry);
-            ActinTrial trial = ActinTrialFactory.toActinTrial(entry);
+            ActinTrial trial = ActinTrialFactory.toActinTrial(entry, entry.rule().name());
             for (String event : events) {
                 EventType type = ActinEventTypeExtractor.determineEventType(entry, event);
                 if (type == EventType.UNKNOWN) {

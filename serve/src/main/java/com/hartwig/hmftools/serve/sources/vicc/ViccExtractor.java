@@ -48,6 +48,7 @@ import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccExtractor {
@@ -101,6 +102,7 @@ public final class ViccExtractor {
         Map<Feature, KnownCopyNumber> ampsDelsPerFeature = Maps.newHashMap();
         Map<Feature, KnownFusionPair> fusionsPerFeature = Maps.newHashMap();
         Map<Feature, TumorCharacteristic> characteristicsPerFeature = Maps.newHashMap();
+        String rawInput = Strings.EMPTY;
 
         for (Feature feature : entry.features()) {
             String gene = feature.geneSymbol();
@@ -108,6 +110,7 @@ public final class ViccExtractor {
                 LOGGER.warn("No gene configured for {}. Skipping!", feature);
             } else {
                 EventExtractorOutput extractorOutput = eventExtractor.extract(gene, entry.transcriptId(), feature.type(), feature.name());
+                rawInput = feature.name();
                 if (extractorOutput.hotspots() != null) {
                     hotspotsPerFeature.put(feature, extractorOutput.hotspots());
                 }
@@ -144,7 +147,7 @@ public final class ViccExtractor {
                 && ampsDelsPerFeature.isEmpty() && fusionsPerFeature.isEmpty() && characteristicsPerFeature.isEmpty()) {
             actionableEvents = Sets.newHashSet();
         } else {
-            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry);
+            actionableEvents = actionableEvidenceFactory.toActionableEvents(entry, rawInput);
         }
 
         return ImmutableViccExtractionResult.builder()
