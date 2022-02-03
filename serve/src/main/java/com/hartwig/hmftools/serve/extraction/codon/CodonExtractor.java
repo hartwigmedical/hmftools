@@ -94,8 +94,12 @@ public class CodonExtractor {
 
     @Nullable
     private static List<CodonAnnotation> determineCodonAnnotations(@NotNull String gene, @NotNull HmfTranscriptRegion canonicalTranscript,
-            int codonRank, @NotNull MutationTypeFilter mutationTypeFilter) {
-        List<GenomeRegion> regions = codonRangeByRank(canonicalTranscript, codonRank, codonRank);
+            @Nullable Integer codonRank, @NotNull MutationTypeFilter mutationTypeFilter) {
+
+        List<GenomeRegion> regions = Lists.newArrayList();
+        if (codonRank != null) {
+            regions = codonRangeByRank(canonicalTranscript, codonRank, codonRank);
+        }
 
         if (regions != null) {
             List<CodonAnnotation> codonAnnotations = Lists.newArrayList();

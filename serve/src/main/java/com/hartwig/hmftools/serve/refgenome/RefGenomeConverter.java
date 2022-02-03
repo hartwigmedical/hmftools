@@ -245,8 +245,9 @@ class RefGenomeConverter {
                 return Strings.EMPTY;
             }
 
+            //TODO: lift over rank
             @Override
-            public int rank() {
+            public Integer rank() {
                 return 0;
             }
 
