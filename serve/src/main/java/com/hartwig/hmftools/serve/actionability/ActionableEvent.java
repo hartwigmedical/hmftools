@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface ActionableEvent {
 
@@ -30,6 +31,9 @@ public interface ActionableEvent {
 
     @NotNull
     EvidenceDirection direction();
+
+    @NotNull
+    String urlSource();
 
     @NotNull
     Set<String> urls();

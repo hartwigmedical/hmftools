@@ -15,6 +15,7 @@ import com.hartwig.hmftools.serve.curation.DoidLookup;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ActionableTrialFactory {
@@ -36,7 +37,8 @@ public class ActionableTrialFactory {
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .urls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()));
+                .urls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
+                .urlSource(Strings.EMPTY);
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {

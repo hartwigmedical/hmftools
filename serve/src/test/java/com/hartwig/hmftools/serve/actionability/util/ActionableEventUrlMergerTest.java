@@ -38,12 +38,14 @@ public class ActionableEventUrlMergerTest {
     @NotNull
     private static ActionableFusion createFusion(@NotNull String gene, @NotNull String url) {
         return ImmutableActionableFusion.builder()
-                .from(ActionabilityTestUtil.create("fusion", Knowledgebase.VICC_CGI,
+                .from(ActionabilityTestUtil.create("fusion",
+                        Knowledgebase.VICC_CGI,
                         "treatment",
                         "cancerType",
                         "doid",
                         EvidenceLevel.A,
                         EvidenceDirection.RESPONSIVE,
+                        Strings.EMPTY,
                         Sets.newHashSet(url)))
                 .geneUp(gene)
                 .geneDown(gene)

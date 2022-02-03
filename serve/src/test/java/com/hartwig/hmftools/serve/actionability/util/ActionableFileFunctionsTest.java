@@ -18,12 +18,14 @@ public class ActionableFileFunctionsTest {
 
     @Test
     public void canConvertActionableEvents() {
-        ActionableEvent event = ActionabilityTestUtil.create(Strings.EMPTY, Knowledgebase.VICC_CGI,
+        ActionableEvent event = ActionabilityTestUtil.create(Strings.EMPTY,
+                Knowledgebase.VICC_CGI,
                 "treatment",
                 "cancerType",
                 "doid",
                 EvidenceLevel.C,
                 EvidenceDirection.RESISTANT,
+                Strings.EMPTY,
                 Sets.newHashSet("url1", "url2"));
 
         String line = ActionableFileFunctions.toLine(event);

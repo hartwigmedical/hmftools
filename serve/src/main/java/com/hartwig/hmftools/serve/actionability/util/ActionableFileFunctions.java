@@ -9,7 +9,9 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceDirection;
 import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ActionableFileFunctions {
 
@@ -29,6 +31,7 @@ public final class ActionableFileFunctions {
                 .add("doid")
                 .add("level")
                 .add("direction")
+                .add("urlSource")
                 .add("urls")
                 .toString();
     }
@@ -80,8 +83,15 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public Set<String> urls() {
+            public String urlSource(){
                 int urlPosition = startingPosition + 7;
+                return values.length > urlPosition ? values[urlPosition] : Strings.EMPTY;
+            }
+
+            @NotNull
+            @Override
+            public Set<String> urls() {
+                int urlPosition = startingPosition + 8;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
         };
@@ -96,6 +106,7 @@ public final class ActionableFileFunctions {
                 .add(event.doid())
                 .add(event.level().toString())
                 .add(event.direction().toString())
+                .add(event.urlSource())
                 .add(urlsToString(event.urls()))
                 .toString();
     }

@@ -26,6 +26,7 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.internal.$guava$.annotations.$VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -107,6 +108,7 @@ class ActionableEvidenceFactory {
                     .source(fromViccSource(entry.source()))
                     .level(level)
                     .direction(direction)
+                    .urlSource(Strings.EMPTY)
                     .urls(urls);
 
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
