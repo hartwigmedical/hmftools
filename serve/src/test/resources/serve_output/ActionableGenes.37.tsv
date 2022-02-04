@@ -1,8 +1,8 @@
-gene	event	source	treatment	cancerType	doid	level	direction	urls
-ALK	FUSION	VICC_CGI	Crizotinib	Lung Adenocarcinoma	X	A	RESPONSIVE	http
-BRCA1	INACTIVATION	ICLUSION	DRUP	Solid Tumors	X	B	RESPONSIVE	http
-ERBB2	AMPLIFICATION	VICC_CIVIC	Trastuzumab	Breast Cancer	X	A	RESPONSIVE	http
-ERBB2	AMPLIFICATION	VICC_CIVIC	Panitumumab	Colorectal Cancer	X	B	RESISTANT	http,https
-FGFR2	FUSION	VICC_CGI	Erdafitinib	Bladder Cancer	X	B	RESPONSIVE	http
-MET	AMPLIFICATION	ICLUSION	DRUP	Solid Tumors	X	B	RESPONSIVE
-NRAS	ACTIVATION	VICC_CGI	Cetuximab	Colorectal Cancer	X	A	RESISTANT	http
+gene	event	rawInput	source	treatment	cancerType	doid	level	direction	urlSource	urls
+ALK	FUSION	fusion	VICC_CGI	Crizotinib	Lung Adenocarcinoma	X	A	RESPONSIVE	http
+BRCA1	INACTIVATION	inact	ICLUSION	DRUP	Solid Tumors	X	B	RESPONSIVE	http
+ERBB2	AMPLIFICATION	amp	VICC_CIVIC	Trastuzumab	Breast Cancer	X	A	RESPONSIVE	http
+ERBB2	AMPLIFICATION	amp	VICC_CIVIC	Panitumumab	Colorectal Cancer	X	B	RESISTANT		http,https
+FGFR2	FUSION	fusion	VICC_CGI	Erdafitinib	Bladder Cancer	X	B	RESPONSIVE	http
+MET	AMPLIFICATION	amp	ICLUSION	DRUP	Solid Tumors	X	B	RESPONSIVE
+NRAS	ACTIVATION	act	VICC_CGI	Cetuximab	Colorectal Cancer	X	A	RESISTANT	http

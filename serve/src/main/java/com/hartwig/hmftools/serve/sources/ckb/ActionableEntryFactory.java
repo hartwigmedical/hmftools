@@ -55,7 +55,7 @@ class ActionableEntryFactory {
     }
 
     @NotNull
-    public Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry) {
+    public Set<ActionableEntry> toActionableEntries(@NotNull CkbEntry entry, @NotNull String rawInput) {
         Set<ActionableEntry> actionableEntries = Sets.newHashSet();
 
         for (Evidence evidence : entry.evidences()) {
@@ -75,13 +75,24 @@ class ActionableEntryFactory {
                         }
                     }
 
+                    int molecularProfileId = entry.profileId();
+                    int drugId = evidence.therapy().id(); //TODO fix correct drugId
+
+                    String doidKb = extractDoidKB(evidence.indication().termId());
+                    String sourceLink =
+                            "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
+                                    + "&drugId=" + drugId + "&doId=" + doidKb + "&responseType=" + evidence.responseType() + "&evidenceType="
+                                    + evidence.evidenceType();
+
                     actionableEntries.add(ImmutableActionableEntry.builder()
+                            .rawInput(rawInput)
                             .source(Knowledgebase.CKB)
                             .treatment(treatment)
                             .cancerType(cancerType)
                             .doid(doid)
                             .level(level)
                             .direction(direction)
+                            .urlSource(sourceLink)
                             .urls(urls)
                             .build());
                 }
@@ -89,6 +100,28 @@ class ActionableEntryFactory {
         }
 
         return actionableEntries;
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static String extractDoidKB(@Nullable String doidString) {
+        if (doidString == null) {
+            return null;
+        }
+
+        String[] parts = doidString.split(":");
+        if (parts.length == 2) {
+            String source = parts[0];
+            String id = parts[1];
+            if (source.equalsIgnoreCase("doid")) {
+                return id;
+            } else {
+                return null;
+            }
+        } else {
+            LOGGER.warn("Unexpected DOID string in CKB: '{}'", doidString);
+            return null;
+        }
     }
 
     @Nullable

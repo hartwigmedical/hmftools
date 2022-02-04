@@ -39,6 +39,14 @@ public class ActionableEventComparatorTest {
     @NotNull
     private static ActionableEvent create(@NotNull Knowledgebase source, @NotNull String treatment, @NotNull String cancerType,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction) {
-        return ActionabilityTestUtil.create(source, treatment, cancerType, Strings.EMPTY, level, direction, Sets.newHashSet());
+        return ActionabilityTestUtil.create(Strings.EMPTY,
+                source,
+                treatment,
+                cancerType,
+                Strings.EMPTY,
+                level,
+                direction,
+                Strings.EMPTY,
+                Sets.newHashSet());
     }
 }

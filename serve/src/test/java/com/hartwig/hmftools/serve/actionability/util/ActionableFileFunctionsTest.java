@@ -11,18 +11,21 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 import com.hartwig.hmftools.serve.actionability.ActionabilityTestUtil;
 import com.hartwig.hmftools.serve.actionability.ActionableEvent;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class ActionableFileFunctionsTest {
 
     @Test
     public void canConvertActionableEvents() {
-        ActionableEvent event = ActionabilityTestUtil.create(Knowledgebase.VICC_CGI,
+        ActionableEvent event = ActionabilityTestUtil.create(Strings.EMPTY,
+                Knowledgebase.VICC_CGI,
                 "treatment",
                 "cancerType",
                 "doid",
                 EvidenceLevel.C,
                 EvidenceDirection.RESISTANT,
+                Strings.EMPTY,
                 Sets.newHashSet("url1", "url2"));
 
         String line = ActionableFileFunctions.toLine(event);

@@ -18,6 +18,7 @@ import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -42,7 +43,7 @@ public class ActionableEvidenceFactoryTest {
                 "url");
 
         ViccEntry entry = ViccTestFactory.testEntryWithGeneEventAndAssociation("gene", "event", actionable);
-        Set<ActionableEvent> events = factory.toActionableEvents(entry);
+        Set<ActionableEvent> events = factory.toActionableEvents(entry, Strings.EMPTY);
         assertEquals(2, events.size());
 
         ActionableEvent eventA = findByCancerType(events, cancerTypeA);
@@ -139,27 +140,27 @@ public class ActionableEvidenceFactoryTest {
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Does Not Support").kbSpecificObject())
                 .build();
 
-        assertEquals(0, factory.toActionableEvents(doesNotSupport).size());
+        assertEquals(0, factory.toActionableEvents(doesNotSupport, Strings.EMPTY).size());
 
         ViccEntry supports = ImmutableViccEntry.builder()
                 .from(actionable)
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Supports").kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(supports).size());
+        assertEquals(1, factory.toActionableEvents(supports, Strings.EMPTY).size());
 
         ViccEntry undefined = ImmutableViccEntry.builder()
                 .from(actionable)
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection(null).kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(undefined).size());
+        assertEquals(1, factory.toActionableEvents(undefined, Strings.EMPTY).size());
 
         ViccEntry notRecognized = ImmutableViccEntry.builder()
                 .from(actionable)
                 .kbSpecificObject(ViccTestFactory.testEntryWithCivicEvidenceDirection("Not a direction").kbSpecificObject())
                 .build();
 
-        assertEquals(1, factory.toActionableEvents(notRecognized).size());
+        assertEquals(1, factory.toActionableEvents(notRecognized, Strings.EMPTY).size());
     }
 }
