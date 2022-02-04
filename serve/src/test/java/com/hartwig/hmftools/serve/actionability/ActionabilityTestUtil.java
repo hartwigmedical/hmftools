@@ -20,9 +20,20 @@ public final class ActionabilityTestUtil {
 
     @NotNull
     public static ActionableEvent create(@NotNull String rawInput, @NotNull Knowledgebase source, @NotNull String treatment,
-            @NotNull String cancerType, @NotNull String doid, @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction,
-            @Nullable Set<String> urlSource, @NotNull Set<String> urls) {
-        return new ActionableEventImpl(rawInput, source, treatment, cancerType, doid, level, direction, urlSource, urls);
+            @NotNull String cancerType, @NotNull String doid, @NotNull String blacklistCancerType, @NotNull String blacklistedDoid,
+            @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> urlSource,
+            @NotNull Set<String> urls) {
+        return new ActionableEventImpl(rawInput,
+                source,
+                treatment,
+                cancerType,
+                doid,
+                blacklistCancerType,
+                blacklistedDoid,
+                level,
+                direction,
+                urlSource,
+                urls);
     }
 
     private static class ActionableEventImpl implements ActionableEvent {
@@ -38,6 +49,10 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final String doid;
         @NotNull
+        private final String blacklistCancerType;
+        @NotNull
+        private final String blacklistedDoid;
+        @NotNull
         private final EvidenceLevel level;
         @NotNull
         private final EvidenceDirection direction;
@@ -46,17 +61,17 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final Set<String> urls;
 
-
         public ActionableEventImpl(@NotNull String rawInput, @NotNull final Knowledgebase source, @NotNull final String treatment,
-                @NotNull final String cancerType, @NotNull final String doid, @NotNull final EvidenceLevel level,
-                @NotNull final EvidenceDirection direction, @Nullable Set<String> urlSource,@NotNull final Set<String> urls)
-
-        {
+                @NotNull final String cancerType, @NotNull final String doid, @NotNull final String blacklistCancerType,
+                @NotNull final String blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
+                @Nullable Set<String> urlSource, @NotNull final Set<String> urls) {
             this.rawInput = rawInput;
             this.source = source;
             this.treatment = treatment;
             this.cancerType = cancerType;
             this.doid = doid;
+            this.blacklistCancerType = blacklistCancerType;
+            this.blacklistedDoid = blacklistedDoid;
             this.level = level;
             this.direction = direction;
             this.urlSource = urlSource;
@@ -95,6 +110,18 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
+        public String blacklistCancerType() {
+            return blacklistCancerType;
+        }
+
+        @NotNull
+        @Override
+        public String blacklistedDoid() {
+            return blacklistedDoid;
+        }
+
+        @NotNull
+        @Override
         public EvidenceLevel level() {
             return level;
         }
@@ -127,20 +154,32 @@ public final class ActionabilityTestUtil {
             }
             final ActionableEventImpl that = (ActionableEventImpl) o;
             return rawInput.equals(that.rawInput()) && source == that.source && treatment.equals(that.treatment)
-                    && cancerType.equals(that.cancerType) && doid.equals(that.doid) && level == that.level && direction == that.direction
+                    && cancerType.equals(that.cancerType) && doid.equals(that.doid) && blacklistCancerType.equals(that.blacklistCancerType)
+                    && blacklistedDoid.equals(that.blacklistedDoid) && level == that.level && direction == that.direction
                     && urlSource.equals(that.urlSource) && urls.equals(that.urls);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(rawInput, source, treatment, cancerType, doid, level, direction, urlSource, urls);
+            return Objects.hash(rawInput,
+                    source,
+                    treatment,
+                    cancerType,
+                    doid,
+                    blacklistCancerType,
+                    blacklistedDoid,
+                    level,
+                    direction,
+                    urlSource,
+                    urls);
         }
 
         @Override
         public String toString() {
             return "ActionableEventImpl{" + "rawInput=" + rawInput + ",source=" + source + ", treatment='" + treatment + '\''
-                    + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + '\'' + ", level=" + level + ", direction=" + direction
-                    + ", urlSource=" + urlSource+ ", urls=" + urls +  '}';
+                    + ", cancerType='" + cancerType + '\'' + ", doid='" + doid + ", blacklistCancerType='" + blacklistCancerType + '\''
+                    + ", blacklistedDoid='" + blacklistedDoid + '\'' + ", level=" + level + ", direction=" + direction + ", urlSource="
+                    + urlSource + ", urls=" + urls + '}';
         }
     }
 }

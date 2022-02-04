@@ -1,2 +1,2 @@
-gene	event	rawInput	source	treatment	cancerType	doid	level	direction	urlSource	urls
-BRCA1	INACTIVATION	inac	HARTWIG_CURATED	drug	all	162	B	RESPONSIVE
+gene	event	rawInput	source	treatment	cancerType	doid	blacklistCancerType	blacklistDoid	level	direction	urlSource	urls
+BRCA1	INACTIVATION	inac	HARTWIG_CURATED	drug	all	162			B	RESPONSIVE

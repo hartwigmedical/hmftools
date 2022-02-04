@@ -1,2 +1,2 @@
-geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	rawInput	source	treatment	cancerType	doid	level	direction	urlSource	urls
-EML4			ALK			fusion	HARTWIG_CURATED	drug	all	162	A	RESPONSIVE
+geneUp	minExonUp	maxExonUp	geneDown	minExonDown	maxExonDown	rawInput	source	treatment	cancerType	doid	blacklistCancerType	blacklistDoid	level	direction	urlSource	urls
+EML4			ALK			fusion	HARTWIG_CURATED	drug	all	162			A	RESPONSIVE

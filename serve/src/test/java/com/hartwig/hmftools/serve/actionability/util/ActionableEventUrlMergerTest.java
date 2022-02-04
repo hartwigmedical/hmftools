@@ -43,6 +43,8 @@ public class ActionableEventUrlMergerTest {
                         "treatment",
                         "cancerType",
                         "doid",
+                        "blacklistCancerType",
+                        "blacklistDoid",
                         EvidenceLevel.A,
                         EvidenceDirection.RESPONSIVE,
                         Sets.newHashSet(),

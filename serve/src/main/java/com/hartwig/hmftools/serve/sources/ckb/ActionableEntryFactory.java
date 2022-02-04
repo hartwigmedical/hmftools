@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -95,6 +96,8 @@ class ActionableEntryFactory {
                             .treatment(treatment)
                             .cancerType(cancerType)
                             .doid(doid)
+                            .blacklistCancerType(cancerType.equals("Advanced Solid Tumor") ? "hematologic cancer" :Strings.EMPTY)
+                            .blacklistedDoid(doid.equals("162") ? "2531" : Strings.EMPTY)
                             .level(level)
                             .direction(direction)
                             .urlSource(sourceLinks)

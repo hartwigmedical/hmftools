@@ -115,7 +115,12 @@ class ActionableEvidenceFactory {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
                     for (List<String> drugList : drugLists) {
-                        actionableEvents.add(builder.cancerType(cancerType).doid(doid).treatment(formatDrugList(drugList)).build());
+                        actionableEvents.add(builder.cancerType(cancerType)
+                                .doid(doid)
+                                .blacklistCancerType(cancerType.equals("cancer") ? "hematologic cancer" : Strings.EMPTY)
+                                .blacklistedDoid(doid.equals("162") ? "2531" : Strings.EMPTY)
+                                .treatment(formatDrugList(drugList))
+                                .build());
                     }
                 }
             }

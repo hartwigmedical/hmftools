@@ -1,2 +1,2 @@
-name	rawInput	source	treatment	cancerType	doid	level	direction	urlSource	urls
-MICROSATELLITE_UNSTABLE	msi	HARTWIG_CURATED	drug	all	162	B	RESPONSIVE
+name	rawInput	source	treatment	cancerType	doid	blacklistCancerType	blacklistDoid	level	direction	urlSource	urls
+MICROSATELLITE_UNSTABLE	msi	HARTWIG_CURATED	drug	all	162			B	RESPONSIVE

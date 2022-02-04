@@ -1,2 +1,2 @@
-gene	transcript	chromosome	start	end	mutationType	rangeType	rank	rawInput	source	treatment	cancerType	doid	level	direction	urlSource	urls
-BRAF	ENST000002886027	7	100	200	MISSENSE	EXON	2	exon	HARTWIG_CURATED	drug	all	162	C	PREDICTED_RESPONSIVE
+gene	transcript	chromosome	start	end	mutationType	rangeType	rank	rawInput	source	treatment	cancerType	doid	blacklistCancerType	blacklistDoid	level	direction	urlSource	urls
+BRAF	ENST000002886027	7	100	200	MISSENSE	EXON	2	exon	HARTWIG_CURATED	drug	all	162			C	PREDICTED_RESPONSIVE

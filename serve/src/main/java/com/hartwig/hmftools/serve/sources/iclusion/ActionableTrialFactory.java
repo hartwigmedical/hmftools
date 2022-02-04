@@ -56,9 +56,35 @@ public class ActionableTrialFactory {
             }
             for (String doid : doids) {
                 String doidCorrected = extractDoid(doid);
-                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation()).doid(doidCorrected).build());
+                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation())
+                        .doid(doidCorrected)
+                        .blacklistCancerType(Strings.EMPTY)
+                        .blacklistedDoid(Strings.EMPTY)
+                        .build());
             }
         }
+
+//        //TODO implement extraction
+//        for (IclusionTumorLocation tumorLocation : trial.blacklistedTumorLocations()) {
+//            List<String> doids = tumorLocation.doids();
+//            if (doids.isEmpty()) {
+//                Set<String> manualDoids = missingDoidLookup.lookupDoidsForCancerType(tumorLocation.primaryTumorLocation());
+//                if (manualDoids == null) {
+//                    LOGGER.warn("No doids could be derived for iClusion primary tumor location '{}'", tumorLocation.primaryTumorLocation());
+//                } else {
+//                    LOGGER.debug("Resolved doids to '{}' for iClusion primary tumor location '{}'",
+//                            manualDoids,
+//                            tumorLocation.primaryTumorLocation());
+//                    doids = Lists.newArrayList(manualDoids.iterator());
+//                }
+//            }
+//            for (String doid : doids) {
+//                String doidCorrected = extractDoid(doid);
+//                actionableTrials.add(actionableBuilder.blacklistCancerType(tumorLocation.primaryTumorLocation())
+//                        .blacklistedDoid(doidCorrected)
+//                        .build());
+//            }
+//        }
 
         return actionableTrials;
     }

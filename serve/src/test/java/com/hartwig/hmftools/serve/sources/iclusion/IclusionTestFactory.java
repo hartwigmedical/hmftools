@@ -42,6 +42,7 @@ public final class IclusionTestFactory {
                 .ccmo("ccmo")
                 .mutationConditions(mutationConditions)
                 .tumorLocations(tumorLocations)
+                .blacklistedTumorLocations(tumorLocations)
                 .build();
     }
 

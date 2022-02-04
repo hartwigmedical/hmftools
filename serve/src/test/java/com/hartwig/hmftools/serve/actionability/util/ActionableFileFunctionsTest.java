@@ -23,6 +23,8 @@ public class ActionableFileFunctionsTest {
                 "treatment",
                 "cancerType",
                 "doid",
+                "blacklistCancerType",
+                "blacklistDoid",
                 EvidenceLevel.C,
                 EvidenceDirection.RESISTANT,
                 Sets.newHashSet(),
