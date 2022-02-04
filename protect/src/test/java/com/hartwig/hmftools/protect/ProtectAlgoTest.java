@@ -11,7 +11,6 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
 import org.apache.logging.log4j.util.Strings;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ProtectAlgoTest {

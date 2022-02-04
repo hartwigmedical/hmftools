@@ -235,7 +235,7 @@ public final class ServeTestFactory {
                 Strings.EMPTY,
                 EvidenceLevel.A,
                 EvidenceDirection.RESPONSIVE,
-                Strings.EMPTY,
+                Sets.newHashSet(),
                 Sets.newHashSet());
     }
 }

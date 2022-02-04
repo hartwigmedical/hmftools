@@ -83,9 +83,9 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
-            public String urlSource(){
+            public Set<String> urlSource(){
                 int urlPosition = startingPosition + 7;
-                return values.length > urlPosition ? values[urlPosition] : Strings.EMPTY;
+                return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
 
             @NotNull
@@ -106,7 +106,7 @@ public final class ActionableFileFunctions {
                 .add(event.doid())
                 .add(event.level().toString())
                 .add(event.direction().toString())
-                .add(event.urlSource())
+                .add(urlsToString(event.urlSource()))
                 .add(urlsToString(event.urls()))
                 .toString();
     }

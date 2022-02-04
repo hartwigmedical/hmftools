@@ -25,7 +25,7 @@ public class ActionableFileFunctionsTest {
                 "doid",
                 EvidenceLevel.C,
                 EvidenceDirection.RESISTANT,
-                Strings.EMPTY,
+                Sets.newHashSet(),
                 Sets.newHashSet("url1", "url2"));
 
         String line = ActionableFileFunctions.toLine(event);

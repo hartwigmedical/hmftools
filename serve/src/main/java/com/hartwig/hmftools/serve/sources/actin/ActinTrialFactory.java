@@ -25,7 +25,7 @@ public final class ActinTrialFactory {
                 .cancerType("Advanced Solid Tumor")
                 .doid("162")
                 .urls(Sets.newHashSet())
-                .urlSource(Strings.EMPTY)
+                .urlSource(Sets.newHashSet())
                 .build();
     }
 }

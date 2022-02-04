@@ -21,7 +21,7 @@ public final class ActionabilityTestUtil {
     @NotNull
     public static ActionableEvent create(@NotNull String rawInput, @NotNull Knowledgebase source, @NotNull String treatment,
             @NotNull String cancerType, @NotNull String doid, @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction,
-            @Nullable String urlSource, @NotNull Set<String> urls) {
+            @Nullable Set<String> urlSource, @NotNull Set<String> urls) {
         return new ActionableEventImpl(rawInput, source, treatment, cancerType, doid, level, direction, urlSource, urls);
     }
 
@@ -42,14 +42,14 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final EvidenceDirection direction;
         @Nullable
-        private final String urlSource;
+        private final Set<String> urlSource;
         @NotNull
         private final Set<String> urls;
 
 
         public ActionableEventImpl(@NotNull String rawInput, @NotNull final Knowledgebase source, @NotNull final String treatment,
                 @NotNull final String cancerType, @NotNull final String doid, @NotNull final EvidenceLevel level,
-                @NotNull final EvidenceDirection direction, @Nullable String urlSource,@NotNull final Set<String> urls)
+                @NotNull final EvidenceDirection direction, @Nullable Set<String> urlSource,@NotNull final Set<String> urls)
 
         {
             this.rawInput = rawInput;
@@ -107,7 +107,7 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String urlSource() {
+        public Set<String> urlSource() {
             return urlSource;
         }
 
@@ -128,7 +128,7 @@ public final class ActionabilityTestUtil {
             final ActionableEventImpl that = (ActionableEventImpl) o;
             return rawInput.equals(that.rawInput()) && source == that.source && treatment.equals(that.treatment)
                     && cancerType.equals(that.cancerType) && doid.equals(that.doid) && level == that.level && direction == that.direction
-                    && urlSource.equals(that.urlSource) &&urls.equals(that.urls);
+                    && urlSource.equals(that.urlSource) && urls.equals(that.urls);
         }
 
         @Override

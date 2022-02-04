@@ -46,7 +46,7 @@ public class ActionableEventComparatorTest {
                 Strings.EMPTY,
                 level,
                 direction,
-                Strings.EMPTY,
+                Sets.newHashSet(),
                 Sets.newHashSet());
     }
 }

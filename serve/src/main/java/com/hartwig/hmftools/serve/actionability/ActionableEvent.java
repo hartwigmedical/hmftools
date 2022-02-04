@@ -33,7 +33,7 @@ public interface ActionableEvent {
     EvidenceDirection direction();
 
     @NotNull
-    String urlSource();
+    Set<String> urlSource();
 
     @NotNull
     Set<String> urls();
