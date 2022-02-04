@@ -74,7 +74,6 @@ public class SageConfig
     public final RefGenomeVersion RefGenVersion;
     public final String HighConfidenceBed;
     public final String CoverageBed;
-    public final String InputFile;
     public final String OutputFile;
     public final boolean WriteCsv;
 
@@ -98,7 +97,6 @@ public class SageConfig
     private static final String TUMOR = "tumor";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String OUTPUT_VCF = "out";
-    private static final String INPUT_VCF = "input_vcf";
     private static final String WRITE_CSV = "write_csv";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";
@@ -204,8 +202,6 @@ public class SageConfig
         OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
         WriteCsv = cmd.hasOption(WRITE_CSV);
 
-        InputFile = SampleDataDir + cmd.getOptionValue(INPUT_VCF, "");
-
         PanelBed = getReferenceFile(cmd, PANEL_BED);
         CoverageBed = getReferenceFile(cmd, COVERAGE_BED);
         HighConfidenceBed = getReferenceFile(cmd, HIGH_CONFIDENCE_BED);
@@ -293,29 +289,8 @@ public class SageConfig
             return false;
         }
 
-        if(AppendMode)
+        if(!AppendMode)
         {
-            if(InputFile.isEmpty())
-            {
-                SG_LOGGER.error("no input VCF file specified");
-                return false;
-            }
-
-            if(InputFile.equals(OutputFile))
-            {
-                SG_LOGGER.error("input and output VCFs must be different");
-                return false;
-            }
-
-            if(ReferenceIds.isEmpty())
-            {
-                SG_LOGGER.error("at least one reference must be supplied");
-                return false;
-            }
-        }
-        else
-        {
-
             if(TumorIds.isEmpty())
             {
                 SG_LOGGER.error("At least one tumor must be supplied");
@@ -330,7 +305,6 @@ public class SageConfig
     {
         final Options options = new Options();
         options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
-        options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(TUMOR, true, "Tumor sample, or collection separated by ',\"");
         options.addOption(TUMOR_BAM, true, "Tumor bam file");
         options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
@@ -342,8 +316,6 @@ public class SageConfig
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
         options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(LOG_LEVEL, true, "Log level");
 
         commonOptions().getOptions().forEach(options::addOption);
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
@@ -351,15 +323,7 @@ public class SageConfig
         return options;
     }
 
-    public static Options createAddReferenceOptions()
-    {
-        final Options options = new Options();
-        options.addOption(INPUT_VCF, true, "Path to input vcf");
-        commonOptions().getOptions().forEach(options::addOption);
-        return options;
-    }
-
-    static Options commonOptions()
+    public static Options commonOptions()
     {
         final Options options = new Options();
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
@@ -368,6 +332,7 @@ public class SageConfig
         options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
         options.addOption(REFERENCE_BAM, true, "Reference bam file");
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
         options.addOption(OUTPUT_VCF, true, "Output vcf");
         options.addOption(WRITE_CSV, false, "Write variant data to CSV as well as VCF");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
@@ -379,8 +344,12 @@ public class SageConfig
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
         options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
+
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
         QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
+
+        options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(LOG_LEVEL, true, "Log level");
         return options;
     }
 
@@ -424,7 +393,6 @@ public class SageConfig
         RefGenomeFile = "refGenome";
         HighConfidenceBed = "highConf";
         CoverageBed = "coverage";
-        InputFile = "in.vcf";
         OutputFile = "out.vcf";
         WriteCsv = false;
         Version = "1.0";

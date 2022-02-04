@@ -46,7 +46,7 @@ public class ChromosomePipeline implements AutoCloseable
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
     public ChromosomePipeline(
-            final String chromosome, final SageConfig config, final Executor executor,
+            final String chromosome, final SageConfig config,
             final ReferenceData refData, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
             final Coverage coverage, final PhaseSetCounter phaseSetCounter, final Consumer<SageVariant> consumer)
     {

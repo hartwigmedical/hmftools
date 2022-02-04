@@ -108,17 +108,17 @@ public class SageApplication implements AutoCloseable
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(mConfig.SpecificChromosomes.isEmpty() || mConfig.SpecificChromosomes.contains(chromosome))
-            {
-                if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
-                    continue;
+            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
+                continue;
 
-                final ChromosomePipeline pipeline = new ChromosomePipeline(
-                        chromosome, mConfig, mExecutorService, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
+            if(!HumanChromosome.contains(chromosome) && !MitochondrialChromosome.contains(chromosome))
+                continue;
 
-                pipeline.process();
-                System.gc();
-            }
+            final ChromosomePipeline pipeline = new ChromosomePipeline(
+                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, this::writeVariant);
+
+            pipeline.process();
+            System.gc();
         }
 
         for(String sample : coverage.samples())

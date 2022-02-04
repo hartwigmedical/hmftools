@@ -29,48 +29,39 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SageQualityRecalibrationBedApplication implements AutoCloseable
+public class WriteBaseQualRecalibrationBed
 {
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String REF_GENOME = "ref_genome";
     private static final String OUT = "out";
     private static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
 
-    public static void main(final String[] args)
-    {
-        final Options options = createOptions();
-        try(final SageQualityRecalibrationBedApplication application = new SageQualityRecalibrationBedApplication(options, args))
-        {
-            application.run();
-        }
-        catch(Exception e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageQualityRecalibrationBedApplication", options);
-            System.exit(1);
-        }
-    }
+    private final IndexedFastaSequenceFile mRefGenome;
+    private final int mSampleSize;
+    private final String mOutputFile;
 
-    private final IndexedFastaSequenceFile refGenome;
-    private final int sampleSize;
-    private final String out;
-
-    private SageQualityRecalibrationBedApplication(final Options options, final String... args)
+    private WriteBaseQualRecalibrationBed(final Options options, final String... args)
             throws ParseException, FileNotFoundException
     {
         final CommandLine cmd = createCommandLine(args, options);
 
-        this.refGenome = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME)));
-        this.sampleSize = getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE);
-        this.out = cmd.getOptionValue(OUT);
+        mRefGenome = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME)));
+        mSampleSize = getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE);
+        mOutputFile = cmd.getOptionValue(OUT);
     }
 
     public void run() throws IOException
     {
-        List<ChrBaseRegion> regions = createRegions(refGenome, Sets.newHashSet(), sampleSize);
+        List<ChrBaseRegion> regions = createRegions(mRefGenome, Sets.newHashSet(), mSampleSize);
+
+        SG_LOGGER.info("writing {} BQR regions to BED file: {}", regions.size(), mOutputFile);
+
         List<GenomeRegion> genRegions = regions.stream().map(x -> GenomeRegions.create(x.Chromosome, x.start(), x.end())).collect(Collectors.toList());
-        NamedBedFile.writeUnnamedBedFile(out, genRegions);
+        NamedBedFile.writeUnnamedBedFile(mOutputFile, genRegions);
+
+        SG_LOGGER.info("BED file write complete");
+
+        mRefGenome.close();
     }
 
     private static final int END_BUFFER = 1000000;
@@ -104,11 +95,21 @@ public class SageQualityRecalibrationBedApplication implements AutoCloseable
         return result;
     }
 
-
-    @Override
-    public void close() throws Exception
+    public static void main(final String[] args)
     {
-        refGenome.close();
+        final Options options = createOptions();
+        try
+        {
+            final WriteBaseQualRecalibrationBed application = new WriteBaseQualRecalibrationBed(options, args);
+            application.run();
+        }
+        catch(Exception e)
+        {
+            SG_LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("SageQualityRecalibrationBedApplication", options);
+            System.exit(1);
+        }
     }
 
     @NotNull

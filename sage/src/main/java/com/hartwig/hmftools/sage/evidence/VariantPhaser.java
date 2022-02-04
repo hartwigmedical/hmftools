@@ -8,11 +8,13 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -167,7 +169,7 @@ public class VariantPhaser
             - remove any uninformative LPS (ie LPS has 1+ variant and is the only LPS that includes that variant).
         */
 
-        List<PhasedReadCounters> removedGroups = Lists.newArrayList();
+        Set<PhasedReadCounters> removedGroups = Sets.newHashSet();
 
         /*
         List<PhasedReadCounters> phasedReadCounters = mPhasedReadCountersMap.values().stream().collect(Collectors.toList());
@@ -294,38 +296,6 @@ public class VariantPhaser
         mPhasedReadCounters.clear();
     }
 
-    public static class ReadCounterIdComparator implements Comparator<ReadContextCounter>
-    {
-        public int compare(final ReadContextCounter first, final ReadContextCounter second)
-        {
-            return first.id() - second.id();
-        }
-    }
-
-    public static class PhasedRcReadCountComparator implements Comparator<PhasedReadCounters>
-    {
-        public int compare(final PhasedReadCounters first, final PhasedReadCounters second)
-        {
-            return second.ReadCount - first.ReadCount;
-        }
-    }
-
-    public static class PhasedRcPosCountComparator implements Comparator<PhasedReadCounters>
-    {
-        public int compare(final PhasedReadCounters first, final PhasedReadCounters second)
-        {
-            return second.PositiveReadCounters.size() - first.PositiveReadCounters.size();
-        }
-    }
-
-    public static class PhasedRcNegCountComparator implements Comparator<PhasedReadCounters>
-    {
-        public int compare(final PhasedReadCounters first, final PhasedReadCounters second)
-        {
-            return second.NegativeReadCounters.size() - first.NegativeReadCounters.size();
-        }
-    }
-
     private class PhasedReadCounters
     {
         public final int Id;
@@ -425,6 +395,38 @@ public class VariantPhaser
         {
             return String.format("%d: range(%d - %d) pos(%d) neg(%d) rc(%d) alloc(%.1f)",
                 Id, MinVariantPos, MaxVariantPos, PositiveReadCounters.size(), NegativeReadCounters.size(), ReadCount, AllocatedReadCount);
+        }
+    }
+
+    public static class ReadCounterIdComparator implements Comparator<ReadContextCounter>
+    {
+        public int compare(final ReadContextCounter first, final ReadContextCounter second)
+        {
+            return first.id() - second.id();
+        }
+    }
+
+    public static class PhasedRcReadCountComparator implements Comparator<PhasedReadCounters>
+    {
+        public int compare(final PhasedReadCounters first, final PhasedReadCounters second)
+        {
+            return second.ReadCount - first.ReadCount;
+        }
+    }
+
+    public static class PhasedRcPosCountComparator implements Comparator<PhasedReadCounters>
+    {
+        public int compare(final PhasedReadCounters first, final PhasedReadCounters second)
+        {
+            return second.PositiveReadCounters.size() - first.PositiveReadCounters.size();
+        }
+    }
+
+    public static class PhasedRcNegCountComparator implements Comparator<PhasedReadCounters>
+    {
+        public int compare(final PhasedReadCounters first, final PhasedReadCounters second)
+        {
+            return second.NegativeReadCounters.size() - first.NegativeReadCounters.size();
         }
     }
 

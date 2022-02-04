@@ -26,7 +26,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RegionTask implements Callable
 {
-    private final ChrBaseRegion mRegion; // region to slice and analyse for this tasl
+    private final ChrBaseRegion mRegion; // region to slice and analyse for this task
     private final int mTaskId;
 
     private final SageConfig mConfig;
