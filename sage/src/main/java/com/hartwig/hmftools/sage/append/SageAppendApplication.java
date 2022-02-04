@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -124,13 +123,10 @@ public class SageAppendApplication
         SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
         final SAMSequenceDictionary dictionary = dictionary();
-        // final List<Future<List<VariantContext>>> futures = Lists.newArrayList();
 
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mExecutorService, mRefGenome);
         baseQualityRecalibration.produceRecalibrationMap();
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
-
-        // final AdditionalReferencePipeline pipeline = new AdditionalReferencePipeline(mConfig, mExecutorService, mRefGenome, recalibrationMap);
 
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
 
@@ -158,7 +154,6 @@ public class SageAppendApplication
                 ChrBaseRegion region = chrBaseRegions.get(i);
 
                 final List<VariantContext> regionVariants = chromosomeVariants.stream()
-                        // .filter(x -> x.getStart() >= region.start() && x.getStart() <= region.end()) // would ignore variants spanning a region
                         .filter(x -> positionWithin(x.getStart(), region.start(), region.end()))
                         .collect(Collectors.toList());
 
@@ -166,8 +161,6 @@ public class SageAppendApplication
                     continue;
 
                 regionTasks.add(new RegionAppendTask(i, region, regionVariants, mConfig, mRefGenome, recalibrationMap));
-
-                // futures.add(pipeline.appendReference(region, regionVariants));
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
@@ -179,14 +172,6 @@ public class SageAppendApplication
                 updatedVariants.forEach(outputVCF::write);
             }
         }
-
-        /*
-        for(Future<List<VariantContext>> updatedVariantsFuture : futures)
-        {
-            final List<VariantContext> updatedVariants = updatedVariantsFuture.get();
-            updatedVariants.forEach(outputVCF::write);
-        }
-        */
 
         vcfReader.close();
         outputVCF.close();
