@@ -189,8 +189,8 @@ public class ReadContextCounter implements VariantHotspot
 
     public String toString()
     {
-        return String.format("var(%s:%d %s>%s) core(%s) counts(f=%d p=%d c=%d)",
-                mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(),
+        return String.format("id(%d) var(%s:%d %s>%s) core(%s) counts(f=%d p=%d c=%d)",
+                mId, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(),
                 mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
     }
 
