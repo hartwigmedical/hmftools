@@ -80,6 +80,7 @@ public class SageConfig
 
     public final String Version;
     public final int Threads;
+    public final boolean LogLpsData;
 
     public final ValidationStringency Stringency;
 
@@ -116,6 +117,7 @@ public class SageConfig
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String VALIDATION_STRINGENCY = "validation_stringency";
+    private static final String LOG_LPS_DATA = "log_lps_data";
 
     public SageConfig(boolean appendMode, @NotNull final String version, @NotNull final CommandLine cmd)
     {
@@ -224,6 +226,7 @@ public class SageConfig
         QualityRecalibration = new QualityRecalibrationConfig(cmd);
 
         PanelOnly = containsFlag(cmd, PANEL_ONLY);
+        LogLpsData = containsFlag(cmd, LOG_LPS_DATA);
 
         Threads = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
     }
@@ -338,6 +341,7 @@ public class SageConfig
         options.addOption(HOTSPOTS, true, "Hotspots");
         options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
         options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
+        options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(LOG_LEVEL, true, "Log level");
 
@@ -425,6 +429,7 @@ public class SageConfig
         WriteCsv = false;
         Version = "1.0";
         Threads = DEFAULT_THREADS;
+        LogLpsData = false;
         RefGenVersion = V37;
         Stringency = ValidationStringency.DEFAULT_STRINGENCY;
         AppendMode = false;

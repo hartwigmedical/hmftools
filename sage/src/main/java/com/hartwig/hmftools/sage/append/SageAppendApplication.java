@@ -50,14 +50,15 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SageAppendApplication implements AutoCloseable
 {
-    private static final double MIN_PRIOR_VERSION = 2.4;
-
     private final VariantVCF mOutputVCF;
     private final SageConfig mConfig;
     private final ExecutorService mExecutorService;
     private final IndexedFastaSequenceFile mRefGenome;
     private final AbstractFeatureReader<VariantContext, LineIterator> mInputReader;
+
     private final long mTimeStamp = System.currentTimeMillis();
+
+    private static final double MIN_PRIOR_VERSION = 3.0;
 
     public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
     {
@@ -75,17 +76,17 @@ public class SageAppendApplication implements AutoCloseable
         mInputReader = AbstractFeatureReader.getFeatureReader(inputVcf, new VCFCodec(), false);
 
         VCFHeader inputHeader = (VCFHeader) mInputReader.getHeader();
-        SG_LOGGER.info("Reading and validating file: {}", inputVcf);
+        SG_LOGGER.info("reading and validating file: {}", inputVcf);
         validateInputHeader(inputHeader);
 
         mOutputVCF = new VariantVCF(mRefGenome, mConfig, inputHeader);
-        SG_LOGGER.info("Writing to file: {}", mConfig.OutputFile);
+        SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException
     {
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
-        final List<VariantContext> existing = verifyAndReadExisting();
+        final List<VariantContext> existingVariants = verifyAndReadExisting();
 
         final SAMSequenceDictionary dictionary = dictionary();
         final List<Future<List<VariantContext>>> futures = Lists.newArrayList();
@@ -102,7 +103,7 @@ public class SageAppendApplication implements AutoCloseable
             if(HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig))
             {
                 final List<VariantContext> chromosomeVariants =
-                        existing.stream().filter(x -> x.getContig().equals(contig)).collect(Collectors.toList());
+                        existingVariants.stream().filter(x -> x.getContig().equals(contig)).collect(Collectors.toList());
 
                 for(ChrBaseRegion region : chromosomePartition.partition(contig))
                 {

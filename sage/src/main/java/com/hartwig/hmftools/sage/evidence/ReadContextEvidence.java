@@ -76,8 +76,6 @@ public class ReadContextEvidence
     {
         mReadCounters = mFactory.create(candidates);
         mLastCandidateIndex = 0;
-        mVariantPhaser.reset();
-        mVariantPhaser.setEnabled(checkPhasing);
 
         if(candidates.isEmpty())
             return mReadCounters;
@@ -85,11 +83,13 @@ public class ReadContextEvidence
         final Candidate firstCandidate = candidates.get(0);
         final Candidate lastCandidate = candidates.get(candidates.size() - 1);
 
-        final ChrBaseRegion bounds = new ChrBaseRegion(
+        final ChrBaseRegion sliceRegion = new ChrBaseRegion(
                 firstCandidate.chromosome(),
                 Math.max(firstCandidate.position() - mTypicalReadLength, 1), lastCandidate.position() + mTypicalReadLength);
 
-        mRefSequence = new RefSequence(bounds, mRefGenome);
+        mVariantPhaser.initialise(sliceRegion, checkPhasing, mSageConfig.LogLpsData);
+
+        mRefSequence = new RefSequence(sliceRegion, mRefGenome);
 
         QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
         mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
@@ -97,7 +97,7 @@ public class ReadContextEvidence
         final SamReader tumorReader = SamReaderFactory.makeDefault().validationStringency(mSageConfig.Stringency)
                 .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
 
-        final SamSlicer slicer = new SamSlicer(0, bounds);
+        final SamSlicer slicer = new SamSlicer(0, sliceRegion);
 
         mPerfCounters.get(PC_PHASE_READS).start();
         mPerfCounters.get(PC_PHASE_READS).resume();
