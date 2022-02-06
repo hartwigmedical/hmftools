@@ -16,7 +16,7 @@ public class ExonCoverageTest
     public void testAlignmentBefore()
     {
         ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(alignment(30, 99));
+        victim.processRead(30, 99);
         assertCoverage(victim, 0, 0, 0, 0, 0);
     }
 
@@ -24,10 +24,10 @@ public class ExonCoverageTest
     public void testAlignmentOverlapsStart()
     {
         ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(alignment(90, 100));
+        victim.processRead(90, 100);
         assertCoverage(victim, 1, 0, 0, 0, 0);
 
-        victim.accept(alignment(91, 102));
+        victim.processRead(91, 102);
         assertCoverage(victim, 2, 1, 1, 0, 0);
     }
 
@@ -35,10 +35,10 @@ public class ExonCoverageTest
     public void testAlignmentOverlapsEnd()
     {
         ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(alignment(103, 110));
+        victim.processRead(103, 110);
         assertCoverage(victim, 0, 0, 0, 1, 1);
 
-        victim.accept(alignment(104, 110));
+        victim.processRead(104, 110);
         assertCoverage(victim, 0, 0, 0, 1, 2);
     }
 
@@ -46,10 +46,10 @@ public class ExonCoverageTest
     public void testAlignmentOverlapsBoth()
     {
         ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(alignment(90, 110));
+        victim.processRead(90, 110);
         assertCoverage(victim, 1, 1, 1, 1, 1);
 
-        victim.accept(alignment(90, 110));
+        victim.processRead(90, 110);
         assertCoverage(victim, 2, 2, 2, 2, 2);
     }
 
@@ -57,13 +57,13 @@ public class ExonCoverageTest
     public void testAlignmentWithin()
     {
         ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(alignment(101, 103));
+        victim.processRead(101, 103);
         assertCoverage(victim, 0, 1, 1, 1, 0);
 
-        victim.accept(alignment(101, 105));
+        victim.processRead(101, 105);
         assertCoverage(victim, 0, 2, 2, 2, 1);
 
-        victim.accept(alignment(99, 101));
+        victim.processRead(99, 101);
         assertCoverage(victim, 1, 3, 2, 2, 1);
     }
 
@@ -71,7 +71,7 @@ public class ExonCoverageTest
     public void testAlignmentAfter()
     {
         ExonCoverage victim = exon("Gene", 100, 104);
-        victim.accept(alignment(106, 200));
+        victim.processRead(106, 200);
         assertCoverage(victim, 0, 0, 0, 0, 0);
     }
 

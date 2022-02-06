@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.sage.coverage;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
-public class GeneCoverage implements Consumer<ChrBaseRegion>
+public class GeneCoverage
 {
     private final String mChromosome;
     private final String mGene;
@@ -88,16 +88,12 @@ public class GeneCoverage implements Consumer<ChrBaseRegion>
         mMaxPosition = tmpMax;
     }
 
-    @Override
-    public void accept(final ChrBaseRegion alignment)
+    public void processRead(final String chromosome, int readStartPos, int readEndPos)
     {
-        if(alignment.chromosome().equals(mChromosome))
-        {
-            if(alignment.start() <= mMaxPosition && alignment.end() >= mMinPosition)
-            {
-                mExonCoverage.forEach(x -> x.accept(alignment));
-            }
-        }
+        if(!chromosome.equals(mChromosome) || !positionsOverlap(readStartPos, readEndPos, mMinPosition, mMaxPosition))
+            return;
+
+        mExonCoverage.forEach(x -> x.processRead(readStartPos, readEndPos));
     }
 
     public String chromosome()

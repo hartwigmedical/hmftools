@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.sage.coverage;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
-public class ExonCoverage implements Consumer<ChrBaseRegion>
+public class ExonCoverage
 {
     private final NamedBed mExon;
     private final int[] mBaseCoverage;
@@ -13,7 +15,7 @@ public class ExonCoverage implements Consumer<ChrBaseRegion>
     ExonCoverage(final NamedBed exon)
     {
         mExon = exon;
-        mBaseCoverage = new int[(int) exon.bases()];
+        mBaseCoverage = new int[exon.bases()];
     }
 
     public int[] coverage()
@@ -30,34 +32,30 @@ public class ExonCoverage implements Consumer<ChrBaseRegion>
         return mExon.chromosome();
     }
 
-    public int start() { return (int)mExon.start(); }
+    public int start() { return mExon.start(); }
 
-    public int end() { return (int)mExon.end(); }
+    public int end() { return mExon.end(); }
 
-    @Override
-    public void accept(final ChrBaseRegion alignment)
+    public void processRead(int readStartPos, int readEndPos)
     {
-        if(alignment.start() <= mExon.end() && alignment.end() >= mExon.start())
+        if(!positionsOverlap(readStartPos, readEndPos, mExon.start(), mExon.end()))
+            return;
+
+        int startPosition = Math.max(start(), readStartPos);
+        int endPosition = Math.min(end(), readEndPos);
+
+        int startIndex = index(startPosition);
+        int endIndex = index(endPosition);
+
+        synchronized (mBaseCoverage)
         {
-            int startPosition = (int) Math.max(start(), alignment.start());
-            int endPosition = (int) Math.min(end(), alignment.end());
-
-            int startIndex = index(startPosition);
-            int endIndex = index(endPosition);
-
-            synchronized (mBaseCoverage)
+            for(int i = startIndex; i <= endIndex; i++)
             {
-                for(int i = startIndex; i <= endIndex; i++)
-                {
-                    mBaseCoverage[i] += 1;
-                }
+                mBaseCoverage[i] += 1;
             }
         }
     }
 
 
-    private int index(int position)
-    {
-        return (int) (position - start());
-    }
+    private int index(int position) { return position - start(); }
 }

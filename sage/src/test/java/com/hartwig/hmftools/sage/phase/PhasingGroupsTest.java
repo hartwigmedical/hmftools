@@ -215,17 +215,36 @@ public class PhasingGroupsTest
 
         mPhaser.mergeGroups();
 
+        /* when -ves are not copied from subsets to supersets
         assertEquals(2, mPhaser.getPhasedGroups().size());
 
         PhasedVariantGroup group = findGroup(Lists.newArrayList(rc0, rc1, rc3, rc4, rc5));
         assertNotNull(group);
         assertEquals(3, group.ReadCount);
-        assertEquals(1.2, group.AllocatedReadCount);
+        assertEquals(1.2, group.AllocatedReadCount, 0.1);
 
         group = findGroup(Lists.newArrayList(rc0, rc2, rc3, rc7));
         assertNotNull(group);
         assertEquals(2, group.ReadCount);
-        assertEquals(0.8, group.AllocatedReadCount);
+        assertEquals(0.8, group.AllocatedReadCount, 0.1);
+        */
+
+        assertEquals(3, mPhaser.getPhasedGroups().size());
+
+        PhasedVariantGroup group = findGroup(Lists.newArrayList(rc0, rc3, rc4, rc5));
+        assertNotNull(group);
+        assertEquals(2, group.ReadCount);
+        assertEquals(1.2, group.AllocatedReadCount, 0.1);
+
+        group = findGroup(Lists.newArrayList(rc0, rc1));
+        assertNotNull(group);
+        assertEquals(1, group.ReadCount);
+        assertEquals(0, group.AllocatedReadCount, 0.1);
+
+        group = findGroup(Lists.newArrayList(rc0, rc2, rc3, rc7));
+        assertNotNull(group);
+        assertEquals(2, group.ReadCount);
+        assertEquals(0.8, group.AllocatedReadCount, 0.1);
     }
 
     private PhasedVariantGroup findGroup(final List<ReadContextCounter> posCounters)

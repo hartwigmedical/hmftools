@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.sage.common.ReadContext;
 
@@ -59,10 +61,15 @@ public class PhasedVariantGroup
     public void merge(final PhasedVariantGroup other)
     {
         ReadCount += other.ReadCount;
+
+
+        // TODO: merged reads need to go into allocated not original
+
         AllocatedReadCount += other.AllocatedReadCount;
 
         int index = 0;
 
+        // keep merged positive RCs in positional order
         for(ReadContextCounter readCounter : other.PositiveReadCounters)
         {
             boolean matched = false;

@@ -85,7 +85,31 @@ public class VariantPhaser
 
         PhasedVariantGroup currentPhasedGroup = mPhasedGroups.get(index);
 
-        boolean searchBackwards = minVarPos < currentPhasedGroup.minVariantPos();
+        //boolean searchBackwards = minVarPos < currentPhasedGroup.minVariantPos();
+
+        boolean searchBackwards;
+
+        if(minVarPos > currentPhasedGroup.minVariantPos())
+        {
+            searchBackwards = false;
+        }
+        else if(minVarPos < currentPhasedGroup.minVariantPos())
+        {
+            searchBackwards = true;
+        }
+        else
+        {
+            // may not be the first the the matching groups at this position, in which case move to the last matching
+            searchBackwards = true;
+            while(minVarPos == mPhasedGroups.get(index).minVariantPos())
+            {
+                if(index == mPhasedGroups.size() - 1)
+                    break;
+
+                index++;
+            }
+        }
+
 
         boolean matchFound = false;
 
@@ -176,14 +200,14 @@ public class VariantPhaser
             - remove any uninformative LPS (ie LPS has 1+ variant and is the only LPS that includes that variant).
         */
 
-        Set<PhasedVariantGroup> removedGroups = Sets.newHashSet();
-
         /*
         List<PhasedReadCounters> phasedReadCounters = mPhasedReadCountersMap.values().stream().collect(Collectors.toList());
         Collections.sort(phasedReadCounters, new PhasedRcReadCountComparator());
         Collections.sort(phasedReadCounters, new PhasedRcPosCountComparator());
         Collections.sort(phasedReadCounters, new PhasedRcNegCountComparator());
         */
+
+        Set<PhasedVariantGroup> removedGroups = Sets.newHashSet();
 
         for(PhasedVariantGroup phasedGroup : mPhasedGroups)
         {
@@ -211,6 +235,7 @@ public class VariantPhaser
                     double allocFraction = superGroup.ReadCount / totalReads;
                     superGroup.AllocatedReadCount += allocFraction * phasedGroup.ReadCount;
                     superGroup.AllocatedReadCount += allocFraction * phasedGroup.AllocatedReadCount;
+                    superGroup.mergeNegatives(phasedGroup.NegativeReadCounters);
                 }
 
                 // remove subset group
@@ -287,19 +312,26 @@ public class VariantPhaser
             logPhasedReadCounters();
 
         int assignedLps = 0;
+        Set<ReadContextCounter> uniqueRCs = mLogData && SG_LOGGER.isTraceEnabled() ? Sets.newHashSet() : null;
 
-        for(PhasedVariantGroup phasedRc : mPhasedGroups)
+        for(PhasedVariantGroup phasedGroup : mPhasedGroups)
         {
-            if(phasedRc.ReadCount + phasedRc.AllocatedReadCount < MIN_READ_COUNT)
+            if(phasedGroup.ReadCount + phasedGroup.AllocatedReadCount < MIN_READ_COUNT) // currently pointless since all PGs have RC >= 1
                 continue;
 
             int nextLps = mPhaseSetCounter.getNext();
-            phasedRc.PositiveReadCounters.forEach(x -> x.addLocalPhaseSet(nextLps, phasedRc.ReadCount, phasedRc.AllocatedReadCount));
+            phasedGroup.PositiveReadCounters.forEach(x -> x.addLocalPhaseSet(nextLps, phasedGroup.ReadCount, phasedGroup.AllocatedReadCount));
             ++assignedLps;
+
+            if(uniqueRCs != null)
+            {
+                phasedGroup.PositiveReadCounters.forEach(x -> uniqueRCs.add(x));
+                phasedGroup.NegativeReadCounters.forEach(x -> uniqueRCs.add(x));
+            }
         }
 
-        SG_LOGGER.trace("region({}) phasing groups start({}) postMerge({}) assigned({})",
-                mRegion, startCount, mPhasedGroups.size(), assignedLps);
+        SG_LOGGER.trace("region({}) phasing groups start({}) postMerge({}) assigned({}) uniqueRCs({})",
+                mRegion, startCount, mPhasedGroups.size(), assignedLps, uniqueRCs != null ? uniqueRCs.size() : 0);
 
         mPhasedGroups.clear();
     }
@@ -338,29 +370,27 @@ public class VariantPhaser
 
     private void logPhasedReadCounters()
     {
-        Map<ReadContextCounter,Integer> rcIds = Maps.newHashMap();
-
-        for(PhasedVariantGroup phasedVariantGroup : mPhasedGroups)
+        for(PhasedVariantGroup phasedGroup : mPhasedGroups)
         {
             StringJoiner posVars = new StringJoiner(";");
             StringJoiner posIds = new StringJoiner(";");
             StringJoiner negVars = new StringJoiner(";");
             StringJoiner negIds = new StringJoiner(";");
 
-            for(ReadContextCounter rc : phasedVariantGroup.PositiveReadCounters)
+            for(ReadContextCounter rc : phasedGroup.PositiveReadCounters)
             {
                 posVars.add(getReadCounterVar(rc));
                 posIds.add(String.valueOf(rc.id()));
             }
 
-            for(ReadContextCounter rc : phasedVariantGroup.NegativeReadCounters)
+            for(ReadContextCounter rc : phasedGroup.NegativeReadCounters)
             {
                 negVars.add(getReadCounterVar(rc));
                 negIds.add(String.valueOf(rc.id()));
             }
 
-            SG_LOGGER.debug(String.format("LPS_DATA: %s,%s,%d,%.1f,%s,%s",
-                    posIds, negIds, phasedVariantGroup.ReadCount, phasedVariantGroup.AllocatedReadCount, posVars, negVars));
+            SG_LOGGER.debug(String.format("LPS_DATA,%s,%s,%d,%.1f,%s,%s",
+                    posIds, negIds, phasedGroup.ReadCount, phasedGroup.AllocatedReadCount, posVars, negVars));
         }
     }
 

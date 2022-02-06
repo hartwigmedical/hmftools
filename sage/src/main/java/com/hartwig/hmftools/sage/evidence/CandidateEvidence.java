@@ -45,7 +45,6 @@ public class CandidateEvidence
         mCoverage = coverage;
     }
 
-    @NotNull
     public List<AltContext> readBam(
             final String sample, final String bamFile, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
@@ -59,8 +58,7 @@ public class CandidateEvidence
 
             if(!geneCoverage.isEmpty())
             {
-                ChrBaseRegion alignment = new ChrBaseRegion(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd());
-                geneCoverage.forEach(x -> x.accept(alignment));
+                geneCoverage.forEach(x -> x.processRead(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()));
             }
         };
 
