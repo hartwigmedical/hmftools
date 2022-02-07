@@ -48,7 +48,9 @@ public class GeneLevelExtractor {
 
     @Nullable
     public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
-        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
+        if (type == EventType.WILD_TYPE && exomeGeneChecker.isValidGene(gene)) {
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
+        } else if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
         } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {

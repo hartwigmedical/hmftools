@@ -93,6 +93,8 @@ public class PersonalizedEvidenceFactory {
                 return ProtectEvidenceType.ANY_MUTATION;
             case FUSION:
                 return ProtectEvidenceType.PROMISCUOUS_FUSION;
+            case WILD_TYPE:
+                return ProtectEvidenceType.WILD_TYPE;
             default: {
                 throw new IllegalStateException("Unsupported gene level event: " + gene.event());
             }

@@ -30,5 +30,6 @@ public class FusionPairMatcherTest {
         assertFalse(matcher.matches("BRAF", "BRAF amp"));
         assertFalse(matcher.matches("AR", "AR-V7"));
         assertFalse(matcher.matches("BRAF", "V600E"));
+        assertFalse(matcher.matches("BRAF", "wild-type"));
     }
 }

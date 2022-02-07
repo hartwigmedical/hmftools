@@ -14,7 +14,8 @@ public enum ProtectEvidenceType {
     HOTSPOT_MUTATION("Hotspot"),
     CODON_MUTATION("Codon"),
     EXON_MUTATION("Exon"),
-    ANY_MUTATION("Any mutation");
+    ANY_MUTATION("Any mutation"),
+    WILD_TYPE("Wild-type");;
 
     private final String mDisplay;
 

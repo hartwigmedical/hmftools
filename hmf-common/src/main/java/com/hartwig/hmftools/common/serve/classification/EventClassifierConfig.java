@@ -33,6 +33,9 @@ public abstract class EventClassifierConfig {
     public abstract Set<String> geneLevelBlacklistKeyPhrases();
 
     @NotNull
+    public abstract Set<String> geneWildTypesKeyPhrases();
+
+    @NotNull
     public abstract Set<String> genericGeneLevelKeyPhrases();
 
     @NotNull

@@ -22,6 +22,16 @@ public class GeneLevelExtractorTest {
             new GeneChecker(Sets.newHashSet("KIT", "NTRK3", "STK11", "MET", "TP53", "KRAS", "NOTCH1", "BRCA1"));
 
     @Test
+    public void canExtractGeneLevelEventWiltType() {
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
+        GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.WILD_TYPE, "KIT  wild type");
+
+        assertNotNull(geneLevelEvent);
+        assertEquals("KIT", geneLevelEvent.gene());
+        assertEquals(GeneLevelEvent.WILD_TYPE, geneLevelEvent.event());
+    }
+
+    @Test
     public void canExtractGeneLevelEventOnco() {
         GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("STK11", "KIT"));
         GeneLevelAnnotation geneLevelEvent = geneLevelExtractor.extract("KIT", EventType.GENE_LEVEL, "KIT  positive");

@@ -18,6 +18,7 @@ public class ActinClassificationConfig {
     private static final Set<String> SPECIFIC_EXON_EVENTS = specificExonEvents();
     private static final Map<String, Set<String>> FUSION_PAIR_AND_EXONS_PER_GENE = fusionPairAndExonsPerGene();
     private static final Set<String> GENE_LEVEL_BLACKLIST_KEY_PHRASES = geneLevelBlacklistKeyPhrases();
+    private static final Set<String> GENE_WILD_TYPES_KEY_PHRASES = geneWildTypesKeyPhrases();
     private static final Set<String> GENERIC_GENE_LEVEL_KEY_PHRASES = genericGeneLevelKeyPhrases();
     private static final Set<String> ACTIVATING_GENE_LEVEL_KEY_PHRASES = activatingGeneLevelKeyPhrases();
     private static final Set<String> INACTIVATING_GENE_LEVEL_KEY_PHRASES = inactivatingGeneLevelKeyPhrases();
@@ -54,6 +55,7 @@ public class ActinClassificationConfig {
                 .specificExonEvents(SPECIFIC_EXON_EVENTS)
                 .fusionPairAndExonsPerGene(FUSION_PAIR_AND_EXONS_PER_GENE)
                 .geneLevelBlacklistKeyPhrases(GENE_LEVEL_BLACKLIST_KEY_PHRASES)
+                .geneWildTypesKeyPhrases(GENE_WILD_TYPES_KEY_PHRASES)
                 .genericGeneLevelKeyPhrases(GENERIC_GENE_LEVEL_KEY_PHRASES)
                 .activatingGeneLevelKeyPhrases(ACTIVATING_GENE_LEVEL_KEY_PHRASES)
                 .inactivatingGeneLevelKeyPhrases(INACTIVATING_GENE_LEVEL_KEY_PHRASES)
@@ -113,6 +115,13 @@ public class ActinClassificationConfig {
     @NotNull
     private static Set<String> geneLevelBlacklistKeyPhrases() {
         return Sets.newHashSet();
+    }
+
+    @NotNull
+    private static Set<String> geneWildTypesKeyPhrases() {
+        Set<String> set = Sets.newHashSet();
+        set.add(ActinKeywords.WILDTYPE);
+        return set;
     }
 
     @NotNull
