@@ -49,7 +49,8 @@ public class GeneLevelExtractor {
     @Nullable
     public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
         if (type == EventType.WILD_TYPE && exomeGeneChecker.isValidGene(gene)) {
-            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.WILD_TYPE).build();
+            GeneLevelEvent geneLevelEvent = extractWildTypeEvents(gene, type);
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
         } else if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
@@ -60,6 +61,27 @@ public class GeneLevelExtractor {
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
         }
 
+        return null;
+    }
+
+    @NotNull
+    GeneLevelEvent extractWildTypeEvents(@NotNull String gene, @NotNull EventType type) {
+        if (reportOnDriverInconsistencies) {
+            DriverCategory driverCategory = findByGene(driverGenes, gene);
+            if (driverCategory == null) {
+                LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+            }
+        }
+        return GeneLevelEvent.WILD_TYPE;
+    }
+
+    @Nullable
+    private static DriverCategory findByGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                return driverGene.likelihoodType();
+            }
+        }
         return null;
     }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.serve.extraction.gene;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -101,6 +102,14 @@ public class GeneLevelExtractorTest {
         assertEquals(GeneLevelEvent.INACTIVATION, geneLevelExtractor.extractGeneLevelEvent("NOTCH1", "NOTCH1 "));
         assertEquals(GeneLevelEvent.ANY_MUTATION, geneLevelExtractor.extractGeneLevelEvent("BRCA1", "BRCA1"));
         assertEquals(GeneLevelEvent.ANY_MUTATION, geneLevelExtractor.extractGeneLevelEvent("KRAS", "not a gene level event"));
+    }
+
+    @Test
+    public void canExtractWildTypeEvents() {
+        GeneLevelExtractor geneLevelExtractor = createWithDriverGenes(DriverGeneTestFactory.createDriverGenes("NOTCH1", "MET"));
+        assertEquals(GeneLevelEvent.WILD_TYPE, geneLevelExtractor.extractWildTypeEvents("MET", EventType.WILD_TYPE));
+        assertEquals(GeneLevelEvent.WILD_TYPE, geneLevelExtractor.extractWildTypeEvents("AB", EventType.WILD_TYPE));
+        assertNotEquals(GeneLevelEvent.ACTIVATION, geneLevelExtractor.extractWildTypeEvents("TP53", EventType.WILD_TYPE));
     }
 
     @Test
