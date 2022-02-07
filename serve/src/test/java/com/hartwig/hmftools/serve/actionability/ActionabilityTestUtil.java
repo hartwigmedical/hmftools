@@ -20,7 +20,7 @@ public final class ActionabilityTestUtil {
 
     @NotNull
     public static ActionableEvent create(@NotNull String rawInput, @NotNull Knowledgebase source, @NotNull String treatment,
-            @NotNull String cancerType, @NotNull String doid, @NotNull String blacklistCancerType, @NotNull String blacklistedDoid,
+            @NotNull String cancerType, @NotNull String doid, @NotNull Set<String> blacklistCancerType, @NotNull Set<String> blacklistedDoid,
             @NotNull EvidenceLevel level, @NotNull EvidenceDirection direction, @Nullable Set<String> urlSource,
             @NotNull Set<String> urls) {
         return new ActionableEventImpl(rawInput,
@@ -49,9 +49,9 @@ public final class ActionabilityTestUtil {
         @NotNull
         private final String doid;
         @NotNull
-        private final String blacklistCancerType;
+        private final Set<String> blacklistCancerType;
         @NotNull
-        private final String blacklistedDoid;
+        private final Set<String> blacklistedDoid;
         @NotNull
         private final EvidenceLevel level;
         @NotNull
@@ -62,8 +62,8 @@ public final class ActionabilityTestUtil {
         private final Set<String> urls;
 
         public ActionableEventImpl(@NotNull String rawInput, @NotNull final Knowledgebase source, @NotNull final String treatment,
-                @NotNull final String cancerType, @NotNull final String doid, @NotNull final String blacklistCancerType,
-                @NotNull final String blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
+                @NotNull final String cancerType, @NotNull final String doid, @NotNull final Set<String> blacklistCancerType,
+                @NotNull final Set<String> blacklistedDoid, @NotNull final EvidenceLevel level, @NotNull final EvidenceDirection direction,
                 @Nullable Set<String> urlSource, @NotNull final Set<String> urls) {
             this.rawInput = rawInput;
             this.source = source;
@@ -110,13 +110,13 @@ public final class ActionabilityTestUtil {
 
         @NotNull
         @Override
-        public String blacklistCancerType() {
+        public Set<String> blacklistCancerType() {
             return blacklistCancerType;
         }
 
         @NotNull
         @Override
-        public String blacklistedDoid() {
+        public Set<String> blacklistedDoid() {
             return blacklistedDoid;
         }
 

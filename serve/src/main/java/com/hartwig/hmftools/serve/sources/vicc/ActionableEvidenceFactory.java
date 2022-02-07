@@ -117,8 +117,8 @@ class ActionableEvidenceFactory {
                     for (List<String> drugList : drugLists) {
                         actionableEvents.add(builder.cancerType(cancerType)
                                 .doid(doid)
-                                .blacklistCancerType(cancerType.equals("cancer") ? "hematologic cancer" : Strings.EMPTY)
-                                .blacklistedDoid(doid.equals("162") ? "2531" : Strings.EMPTY)
+                                .blacklistCancerType(doid.equals("162") ? Sets.newHashSet("Hematologic cancer") : Sets.newHashSet())
+                                .blacklistedDoid(doid.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
                                 .treatment(formatDrugList(drugList))
                                 .build());
                     }

@@ -24,8 +24,8 @@ public final class ActinTrialFactory {
                 .direction(EvidenceDirection.RESPONSIVE)
                 .cancerType("Advanced Solid Tumor")
                 .doid("162")
-                .blacklistCancerType("hematologic cancer")
-                .blacklistedDoid("2531")
+                .blacklistCancerType(Sets.newHashSet("Hematologic cancer"))
+                .blacklistedDoid(Sets.newHashSet("2531"))
                 .urls(Sets.newHashSet())
                 .urlSource(Sets.newHashSet())
                 .build();

@@ -58,10 +58,10 @@ public class ActionableTrialFactory {
                 String doidCorrected = extractDoid(doid);
                 actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation())
                         .doid(doidCorrected)
-                        .blacklistCancerType(tumorLocation.primaryTumorLocation().equals("Solid Tumors")
-                                ? "hematologic cancer"
-                                : Strings.EMPTY)
-                        .blacklistedDoid(doidCorrected.equals("162") ? "2531" : Strings.EMPTY)
+                        .blacklistCancerType(doidCorrected.equals("162")
+                                ? Sets.newHashSet("Hematologic cancer")
+                                : Sets.newHashSet())
+                        .blacklistedDoid(doidCorrected.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
                         .build());
             }
         }
