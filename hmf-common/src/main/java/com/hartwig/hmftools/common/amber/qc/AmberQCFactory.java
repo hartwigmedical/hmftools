@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class AmberQCFactory {
 
@@ -13,7 +14,8 @@ public final class AmberQCFactory {
     }
 
     @NotNull
-    public static AmberQC create(double contamination, @NotNull final List<AmberBAF> baf) {
+    public static AmberQC create(double contamination, @NotNull final List<AmberBAF> baf,
+            double consanguinityProportion, @Nullable String uniparentalDisomy) {
         final double meanBaf = baf.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
                 .filter(x -> HumanChromosome.fromString(x.chromosome()).isAutosome())
@@ -22,6 +24,9 @@ public final class AmberQCFactory {
                 .average()
                 .orElse(0);
 
-        return ImmutableAmberQC.builder().meanBAF(meanBaf).contamination(contamination).build();
+        return ImmutableAmberQC.builder().meanBAF(meanBaf)
+                .contamination(contamination)
+                .consanguinityProportion(consanguinityProportion)
+                .uniparentalDisomy(uniparentalDisomy).build();
     }
 }

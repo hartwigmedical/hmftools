@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntri
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +22,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParametersDelegate;
+import com.beust.jcommander.UnixStyleUsageFormatter;
+
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
@@ -32,37 +38,37 @@ import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
+import com.hartwig.hmftools.common.utils.config.LoggingOptions;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class AmberApplication implements AutoCloseable
 {
-    private final AmberConfig mConfig;
-    private final ExecutorService mExecutorService;
-    private final Predicate<BaseDepth> mSnpCheckFilter;
-    private final Predicate<BaseDepth> mHomozygousFilter;
-    private final Predicate<BaseDepth> mHeterozygousFilter;
-    private final AmberPersistence mPersistence;
-    private final VersionInfo mVersionInfo;
-    private final ListMultimap<Chromosome,AmberSite> mChromosomeSites;
+    // add the AmberConfig options
+    @ParametersDelegate
+    private final AmberConfig mConfig = new AmberConfig();
 
-    private AmberApplication(final Options options, final String... args) throws IOException, ParseException
+    // add to the logging options
+    @ParametersDelegate
+    private final LoggingOptions mLoggingOptions = new LoggingOptions();
+
+    private ExecutorService mExecutorService;
+    private Predicate<BaseDepth> mSnpCheckFilter;
+    private Predicate<BaseDepth> mHomozygousFilter;
+    private Predicate<BaseDepth> mHeterozygousFilter;
+    private AmberPersistence mPersistence;
+    private VersionInfo mVersionInfo;
+    private ListMultimap<Chromosome,AmberSite> mChromosomeSites;
+
+    public int run() throws IOException, InterruptedException, ExecutionException
     {
+        mLoggingOptions.setLogLevel();
+
         mVersionInfo = new VersionInfo("amber.version");
         AMB_LOGGER.info("AMBER version: {}", mVersionInfo.version());
-
-        final CommandLine cmd = createCommandLine(args, options);
-        mConfig = new AmberConfig(cmd);
 
         final Predicate<BaseDepth> isValidFilter = BaseDepth::isValid;
         mHomozygousFilter = new NormalHomozygousFilter().and(isValidFilter);
@@ -75,17 +81,14 @@ public class AmberApplication implements AutoCloseable
         AMB_LOGGER.info("Loading vcf file {}", mConfig.BafLociPath);
         mChromosomeSites = AmberSiteFactory.sites(mConfig.BafLociPath);
         mSnpCheckFilter = new SnpCheckFilter(mChromosomeSites);
-    }
 
-    private void run() throws InterruptedException, ExecutionException, IOException
-    {
         if(!mConfig.isValid())
         {
             AMB_LOGGER.error(" invalid config, exiting");
-            System.exit(1);
+            return 1;
         }
-        
-        if(mConfig.TumorOnly)
+
+        if(mConfig.isTumorOnly())
         {
             runTumorOnly();
         }
@@ -93,6 +96,7 @@ public class AmberApplication implements AutoCloseable
         {
             runNormalMode();
         }
+        return 0;
     }
 
     private void runNormalMode() throws InterruptedException, ExecutionException, IOException
@@ -125,14 +129,22 @@ public class AmberApplication implements AutoCloseable
         final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberBAF::create).filter(AmberApplication::isValid).collect(toList());
 
         final ListMultimap<Chromosome, TumorContamination> tumorContamination = contamination(readerFactory, homNormal);
-        final List<TumorContamination> contaminationList = Lists.newArrayList(tumorContamination.values());
+        final List<TumorContamination> contaminationList = new ArrayList<>(tumorContamination.values());
 
-        mPersistence.persistQC(amberBAFList, contaminationList);
+        RegionOfHomozygosityFinder rohFinder = new RegionOfHomozygosityFinder(mConfig.refGenomeVersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
+        final List<RegionOfHomozygosity> regionsOfHomozygosity = rohFinder.findRegions(unfilteredNormal);
+
+        double consanguinityProportion = ConsanguinityAnalyser.calcConsanguinityProportion(regionsOfHomozygosity);
+        Chromosome uniparentalDisomy = ConsanguinityAnalyser.findUniparentalDisomy(regionsOfHomozygosity);
+
+        mPersistence.persistQC(amberBAFList, contaminationList, consanguinityProportion, uniparentalDisomy);
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistBafVcf(tumorBAFList, hetNormalEvidence);
         mPersistence.persistContamination(contaminationList);
         mPersistence.persistSnpCheck(snpCheck);
+        //mPersistence.persistPrimaryRefUnfiltered(unfilteredNormal);
         mPersistence.persistBAF(amberBAFList);
+        mPersistence.persistHomozygousRegions(regionsOfHomozygosity);
     }
 
     private void runTumorOnly() throws InterruptedException, ExecutionException, IOException
@@ -153,7 +165,7 @@ public class AmberApplication implements AutoCloseable
         final List<AmberBAF> amberBAFList =
                 tumorBAFList.stream().map(AmberBAF::create).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
-        mPersistence.persistQC(amberBAFList, Lists.newArrayList());
+        mPersistence.persistQC(amberBAFList, new ArrayList<>(), 0.0, null);
         mPersistence.persistVersionInfo(mVersionInfo);
         mPersistence.persistBafVcf(tumorBAFList, new AmberHetNormalEvidence());
         mPersistence.persistBAF(amberBAFList);
@@ -168,10 +180,10 @@ public class AmberApplication implements AutoCloseable
         AMB_LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), bamPath);
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
-        final List<Future<BaseDepthEvidence>> futures = Lists.newArrayList();
+        final List<Future<BaseDepthEvidence>> futures = new ArrayList<>();
         for(final Chromosome contig : bedRegionsSortedSet.keySet())
         {
-            for(final List<AmberSite> inner : Lists.partition(Lists.newArrayList(bedRegionsSortedSet.get(contig)), partitionSize))
+            for(final List<AmberSite> inner : Lists.partition(new ArrayList<>(bedRegionsSortedSet.get(contig)), partitionSize))
             {
                 final BaseDepthEvidence evidence = new BaseDepthEvidence(mConfig.typicalReadDepth(),
                         mConfig.MinMappingQuality, mConfig.MinBaseQuality,
@@ -205,7 +217,7 @@ public class AmberApplication implements AutoCloseable
         AMB_LOGGER.info("Processing {} heterozygous sites in tumor bam {}", normalHetSites.values().size(), mConfig.TumorBamPath);
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
-        final List<Future<TumorBAFEvidence>> futures = Lists.newArrayList();
+        final List<Future<TumorBAFEvidence>> futures = new ArrayList<>();
         for(final Chromosome chromosome : normalHetSites.keySet())
         {
             for(final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHetSites.get(chromosome), partitionSize))
@@ -240,7 +252,7 @@ public class AmberApplication implements AutoCloseable
         AMB_LOGGER.info("Processing {} homozygous sites in tumor bam {} for contamination", normalHomSites.size(), mConfig.TumorBamPath);
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
-        final List<Future<TumorContaminationEvidence>> futures = Lists.newArrayList();
+        final List<Future<TumorContaminationEvidence>> futures = new ArrayList<>();
         for(final Chromosome chromosome : normalHomSites.keySet())
         {
             for(final List<BaseDepth> chromosomeBafPoints : Lists.partition(normalHomSites.get(chromosome), partitionSize))
@@ -266,12 +278,6 @@ public class AmberApplication implements AutoCloseable
         return result;
     }
 
-    private static CommandLine createCommandLine(String[] args, Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
     private static boolean isValid(final AmberBAF baf)
     {
         return Double.isFinite(baf.tumorBAF()) & Double.isFinite(baf.normalBAF());
@@ -279,7 +285,7 @@ public class AmberApplication implements AutoCloseable
 
     private static <T> List<T> getFuture(final List<Future<T>> futures) throws ExecutionException, InterruptedException
     {
-        final List<T> result = Lists.newArrayList();
+        final List<T> result = new ArrayList<>();
         for(Future<T> chromosomeBAFEvidenceFuture : futures)
         {
             result.add(chromosomeBAFEvidenceFuture.get());
@@ -306,20 +312,28 @@ public class AmberApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException
     {
-        final Options options = AmberConfig.createOptions();
+        AmberApplication amberApp = new AmberApplication();
+        JCommander commander = JCommander.newBuilder()
+                .addObject(amberApp)
+                .build();
+
+        // use unix style formatter
+        commander.setUsageFormatter(new UnixStyleUsageFormatter(commander));
+        // help message show in order parameters are declared
+        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(AmberApplication.class));
 
         try
         {
-            AmberApplication application = new AmberApplication(options, args);
-            application.run();
+            commander.parse(args);
         }
-        catch(ParseException e)
+        catch (com.beust.jcommander.ParameterException e)
         {
-            AMB_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("AmberApplication", options);
+            System.out.println("Unable to parse args: " + e.getMessage());
+            commander.usage();
             System.exit(1);
         }
+
+        System.exit(amberApp.run());
     }
 
 }

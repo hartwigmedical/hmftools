@@ -30,14 +30,14 @@ This is the default and recommended mode.
 
 ### Mandatory Arguments
 
-Argument | Description 
----|---
-reference | Name of the reference sample
-reference_bam | Path to indexed reference BAM file
-tumor | Name of the tumor sample
-tumor_bam | Path to indexed tumor BAM file
-output_dir | Path to the output directory. This directory will be created if it does not already exist.
-loci | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.  
+| Argument      | Description                                                                                |
+|---------------|--------------------------------------------------------------------------------------------|
+| reference     | Name of the reference sample                                                               |
+| reference_bam | Path to indexed reference BAM file                                                         |
+| tumor         | Name of the tumor sample                                                                   |
+| tumor_bam     | Path to indexed tumor BAM file                                                             |
+| output_dir    | Path to the output directory. This directory will be created if it does not already exist. |
+| loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
 
 The vcf file used by HMF (GermlineHetPon.37.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
@@ -50,17 +50,17 @@ AMBER supports both BAM and CRAM file formats.
 
 ### Optional Arguments
 
-Argument | Default | Description 
----|---|---
-threads | 1 | Number of threads to use
-min_mapping_quality | 1| Minimum mapping quality for an alignment to be used
-min_base_quality | 13| Minimum quality for a base to be considered
-min_depth_percent | 0.5 | Only include reference sites with read depth within min percentage of median reference read depth
-max_depth_percent | 1.5 | Only include reference sites with read depth within max percentage of median reference read depth
-min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
-max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
-ref_genome | NA | Path to the reference genome fasta file. Required only when using CRAM files.
-validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
+| Argument              | Default | Description                                                                                       |
+|-----------------------|---------|---------------------------------------------------------------------------------------------------|
+| threads               | 1       | Number of threads to use                                                                          |
+| min_mapping_quality   | 1       | Minimum mapping quality for an alignment to be used                                               |
+| min_base_quality      | 13      | Minimum quality for a base to be considered                                                       |
+| min_depth_percent     | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
+| max_depth_percent     | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
+| min_het_af_percent    | 0.4     | Minimum allelic frequency to be considered heterozygous                                           |
+| max_het_af_percent    | 0.65    | Maximum allelic frequency to be considered heterozygous                                           |
+| ref_genome            | NA      | Path to the reference genome fasta file. Required only when using CRAM files.                     |
+| validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
 
 ### Example Usage
 
@@ -74,7 +74,7 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 
 ## Tumor Only Mode
-In the absence of a reference bam, AMBER can be put into tumor only mode with the `tumor_only` flag.
+If no reference BAM is supplied, AMBER will be put into tumor only mode.
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
@@ -84,24 +84,23 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 
 ### Mandatory Arguments
 
-Argument | Description 
----|---
-tumor_only | Flag to put AMBER into tumor only mode
-tumor | Name of the tumor sample
-tumor_bam | Path to indexed tumor BAM file
-output_dir | Path to the output directory. This directory will be created if it does not already exist.
-loci | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.  
+| Argument   | Description                                                                                |
+|------------|--------------------------------------------------------------------------------------------|
+| tumor      | Name of the tumor sample                                                                   |
+| tumor_bam  | Path to indexed tumor BAM file                                                             |
+| output_dir | Path to the output directory. This directory will be created if it does not already exist. |
+| loci       | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
 
 ### Optional Arguments
 
-Argument | Default | Description 
----|---|---
-threads | 1 | Number of threads to use
-min_mapping_quality | 1| Minimum mapping quality for an alignment to be used
-min_base_quality | 13| Minimum quality for a base to be considered
-tumor_only_min_vaf | 0.05 | Min VAF in ref and alt in tumor only mode
-tumor_only_min_support | 2 | Min support in ref and alt in tumor only mode
-ref_genome | NA | Path to the reference genome fasta file. Required only when using CRAM files.
+| Argument               | Default | Description                                                                   |
+|------------------------|---------|-------------------------------------------------------------------------------|
+| threads                | 1       | Number of threads to use                                                      |
+| min_mapping_quality    | 1       | Minimum mapping quality for an alignment to be used                           |
+| min_base_quality       | 13      | Minimum quality for a base to be considered                                   |
+| tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
+| tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
+| ref_genome             | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
 
 ### Example Usage
 
@@ -122,25 +121,26 @@ CPU time is minutes spent in user mode.
 Peak memory is measure in gigabytes.
 
 
-Threads | Elapsed Time| CPU Time | Peak Mem
----|---|---|---
-1 | 144 | 230 | 15.04
-8 | 22 | 164 | 18.40
-16 | 12 | 164 | 21.00
-32 | 8 | 170 | 21.60
-48 | 7 | 199 | 21.43
-64 | 6 | 221 | 21.78
+| Threads | Elapsed Time | CPU Time | Peak Mem |
+|---------|--------------|----------|----------|
+| 1       | 144          | 230      | 15.04    |
+| 8       | 22           | 164      | 18.40    |
+| 16      | 12           | 164      | 21.00    |
+| 32      | 8            | 170      | 21.60    |
+| 48      | 7            | 199      | 21.43    |
+| 64      | 6            | 221      | 21.78    |
 
 ## Output
-File | Description
---- | ---
-TUMOR.amber.baf.tsv | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site.
-TUMOR.amber.baf.pcf | TSV of BAF segments using PCF algorithm.
-TUMOR.amber.qc | Contains median tumor baf and QC status. FAIL may indicate contamination in sample. 
-TUMOR.amber.baf.vcf.gz | Similar information as BAF file but in VCF format. 
-TUMOR.amber.contamination.vcf.gz | Entry at each homozygous site in the reference and tumor.
-REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference. 
- 
+| File                                    | Description                                                                              |
+|-----------------------------------------|------------------------------------------------------------------------------------------|
+| TUMOR.amber.baf.tsv                     | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
+| TUMOR.amber.baf.pcf                     | TSV of BAF segments using PCF algorithm.                                                 |
+| TUMOR.amber.qc                          | Contains median tumor baf and QC status. FAIL may indicate contamination in sample.      |
+| TUMOR.amber.baf.vcf.gz                  | Similar information as BAF file but in VCF format.                                       |
+| TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
+| REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
+| REFERENCE.amber.homozygousregion.vcf.gz | Regions of homozygosity found in the reference.                                          |
+
 # Patient Matching
 
 The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to identify if a new sample belongs to an existing patient. 

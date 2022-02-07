@@ -34,11 +34,19 @@ public class AmberQCTest {
 
     @NotNull
     private static AmberQC createWithMean(double meanBAF) {
-        return ImmutableAmberQC.builder().meanBAF(meanBAF).contamination(0).build();
+        return ImmutableAmberQC.builder()
+                .meanBAF(meanBAF)
+                .contamination(0)
+                .consanguinityProportion(0)
+                .uniparentalDisomy(null).build();
     }
 
     @NotNull
     private static AmberQC createWithContamination(double contamination) {
-        return ImmutableAmberQC.builder().meanBAF(0.5).contamination(contamination).build();
+        return ImmutableAmberQC.builder()
+                .meanBAF(0.5)
+                .contamination(contamination)
+                .consanguinityProportion(0)
+                .uniparentalDisomy(null).build();
     }
 }
