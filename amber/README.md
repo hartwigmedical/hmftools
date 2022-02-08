@@ -205,6 +205,9 @@ Peak memory is measure in gigabytes.
 
  
 # Version History and Download Links
+- [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.6)
+  - Added detection of regions of homozygosity, consanguinity proportion and uniparentaldisomy.
+  - Remove `tumor_only` config.
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.5)
   - Updated patient matching logic [Database patch required](../patient-db/src/main/resources/patches/amber/amber3.4_to_3.5_migration.sql).
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.4)
