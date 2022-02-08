@@ -81,20 +81,27 @@ public class GeneLevelExtractor {
         GeneLevelEvent driverBasedEvent = determineGeneLevelEventFromDriverGenes(driverGenes, gene);
         // If we find both an activating and inactivating event, we assume the longest event is the most important.
         // This is to support cases where an activating keyphrase is a substring of inactivating keyphrase (eg "act mut" vs "inact mut".
+        GeneLevelEvent result;
         if (longestActivationMatchLength > 0 || longestInactivatingMatchLength > 0) {
-            GeneLevelEvent geneLevelEvent = longestActivationMatchLength >= longestInactivatingMatchLength
+            result = longestActivationMatchLength >= longestInactivatingMatchLength
                     ? GeneLevelEvent.ACTIVATION
                     : GeneLevelEvent.INACTIVATION;
-            if (reportOnDriverInconsistencies && geneLevelEvent != driverBasedEvent && driverBasedEvent != GeneLevelEvent.ANY_MUTATION) {
+        } else {
+            result = driverBasedEvent;
+        }
+
+        if (reportOnDriverInconsistencies) {
+            if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
+                LOGGER.warn("Gene {} not present in driver catalog. {} will never be reported", gene, result);
+            } else if (result != driverBasedEvent) {
                 LOGGER.warn("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                         gene,
-                        geneLevelEvent,
+                        result,
                         driverBasedEvent);
             }
-            return geneLevelEvent;
-        } else {
-            return driverBasedEvent;
         }
+
+        return result;
     }
 
     @NotNull
