@@ -72,7 +72,7 @@ public class ActinFilter {
                 String gene = entry.gene();
                 return gene != null && gene.equals(filter.value());
             }
-            case FILTER_VARIANT_ON_GENE: {
+            case FILTER_MUTATION_ON_GENE: {
                 String gene = entry.gene();
                 if (gene == null) {
                     return false;
@@ -80,7 +80,17 @@ public class ActinFilter {
                     String evaluation = gene + " " + entry.mutation();
                     return evaluation.equals(filter.value());
                 }
-            } default: {
+            }
+            case FILTER_RULE_ON_GENE: {
+                String gene = entry.gene();
+                if (gene == null) {
+                    return false;
+                } else {
+                    String evaluation = gene + " " + entry.rule();
+                    return evaluation.equals(filter.value());
+                }
+            }
+            default: {
                 LOGGER.warn("Filter entry found with unrecognized type: {}", filter);
                 return false;
             }

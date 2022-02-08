@@ -15,9 +15,9 @@ public abstract class ActinEntry {
     @NotNull
     public abstract ActinRule rule();
 
-    @Nullable
+    @NotNull
     public abstract String gene();
 
-    @Nullable
+    @NotNull
     public abstract String mutation();
 }

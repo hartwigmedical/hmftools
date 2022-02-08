@@ -29,6 +29,8 @@ public final class ActionableFileFunctions {
                 .add("treatment")
                 .add("cancerType")
                 .add("doid")
+                .add("blacklistCancerType")
+                .add("blacklistedDoid")
                 .add("level")
                 .add("direction")
                 .add("urlSource")
@@ -71,27 +73,41 @@ public final class ActionableFileFunctions {
 
             @NotNull
             @Override
+            public Set<String> blacklistCancerType() {
+                int urlPosition = startingPosition + 5;
+                return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
+            }
+
+            @NotNull
+            @Override
+            public Set<String> blacklistedDoid() {
+                int urlPosition = startingPosition + 6;
+                return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
+            }
+
+            @NotNull
+            @Override
             public EvidenceLevel level() {
-                return EvidenceLevel.valueOf(values[startingPosition + 5]);
+                return EvidenceLevel.valueOf(values[startingPosition + 7]);
             }
 
             @NotNull
             @Override
             public EvidenceDirection direction() {
-                return EvidenceDirection.valueOf(values[startingPosition + 6]);
+                return EvidenceDirection.valueOf(values[startingPosition + 8]);
             }
 
             @NotNull
             @Override
-            public String urlSource(){
-                int urlPosition = startingPosition + 7;
-                return values.length > urlPosition ? values[urlPosition] : Strings.EMPTY;
+            public Set<String> urlSource(){
+                int urlPosition = startingPosition + 9;
+                return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
 
             @NotNull
             @Override
             public Set<String> urls() {
-                int urlPosition = startingPosition + 8;
+                int urlPosition = startingPosition + 10;
                 return values.length > urlPosition ? stringToUrls(values[urlPosition]) : Sets.newHashSet();
             }
         };
@@ -104,9 +120,11 @@ public final class ActionableFileFunctions {
                 .add(event.treatment())
                 .add(event.cancerType())
                 .add(event.doid())
+                .add(urlsToString(event.blacklistCancerType()))
+                .add(urlsToString(event.blacklistedDoid()))
                 .add(event.level().toString())
                 .add(event.direction().toString())
-                .add(event.urlSource())
+                .add(urlsToString(event.urlSource()))
                 .add(urlsToString(event.urls()))
                 .toString();
     }

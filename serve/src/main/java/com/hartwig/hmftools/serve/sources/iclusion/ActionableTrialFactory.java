@@ -37,8 +37,8 @@ public class ActionableTrialFactory {
                 .treatment(trial.acronym())
                 .level(EvidenceLevel.B)
                 .direction(EvidenceDirection.RESPONSIVE)
-                .urls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()))
-                .urlSource(Strings.EMPTY);
+                .urlSource(Sets.newHashSet())
+                .urls(Sets.newHashSet("https://trial-eye.com/hmf/" + trial.id()));
 
         List<ActionableTrial> actionableTrials = Lists.newArrayList();
         for (IclusionTumorLocation tumorLocation : trial.tumorLocations()) {
@@ -56,9 +56,17 @@ public class ActionableTrialFactory {
             }
             for (String doid : doids) {
                 String doidCorrected = extractDoid(doid);
-                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation()).doid(doidCorrected).build());
+                actionableTrials.add(actionableBuilder.cancerType(tumorLocation.primaryTumorLocation())
+                        .doid(doidCorrected)
+                        .blacklistCancerType(doidCorrected.equals("162")
+                                ? Sets.newHashSet("Hematologic cancer")
+                                : Sets.newHashSet())
+                        .blacklistedDoid(doidCorrected.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
+                        .build());
             }
         }
+
+        //TODO implement extraction blacklisted tumorLocation from API?
 
         return actionableTrials;
     }

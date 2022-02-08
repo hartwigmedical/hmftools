@@ -36,6 +36,8 @@ public final class EventMatcherFactory {
                 config.activatingGeneLevelKeyPhrases(),
                 config.inactivatingGeneLevelKeyPhrases());
 
+        WildTypeMatcher wildTypeMatcher = new WildTypeMatcher(config.geneWildTypesKeyPhrases());
+
         FusionPairAndExonMatcher fusionPairAndExonMatcher = new FusionPairAndExonMatcher(config.fusionPairAndExonsPerGene());
         AmplificationMatcher amplificationMatcher =
                 new AmplificationMatcher(config.amplificationKeywords(), config.amplificationKeyPhrases());
@@ -55,6 +57,7 @@ public final class EventMatcherFactory {
         map.put(EventType.EXON, withFirstTierMatchers(firstTierEventMatchers, exonMatcher));
         map.put(EventType.FUSION_PAIR_AND_EXON, fusionPairAndExonMatcher);
         map.put(EventType.GENE_LEVEL, withFirstTierMatchers(firstTierEventMatchers, geneLevelMatcher));
+        map.put(EventType.WILD_TYPE, withFirstTierMatchers(firstTierEventMatchers, wildTypeMatcher));
         map.put(EventType.AMPLIFICATION, withFirstTierMatchers(firstTierEventMatchers, amplificationMatcher));
         map.put(EventType.DELETION, withFirstTierMatchers(firstTierEventMatchers, deletionMatcher));
         map.put(EventType.FUSION_PAIR, withFirstTierMatchers(firstTierEventMatchers, fusionPairMatcher));

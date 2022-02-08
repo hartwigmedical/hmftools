@@ -57,7 +57,7 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <amber.version>3.5</amber.version>
+        <amber.version>3.6</amber.version>
         <ckb-importer.version>1.3</ckb-importer.version>
         <cobalt.version>1.12</cobalt.version>
         <compar.version>1.0</compar.version>
@@ -110,6 +110,7 @@
         <selenium.version>3.14.0</selenium.version>
         <itext.version>7.1.5</itext.version>
         <tablesaw.version>0.38.5</tablesaw.version>
+        <jcommander.version>1.81</jcommander.version>
 
         <kotest.version>4.6.4</kotest.version>
         <junit.version>4.13.1</junit.version>
@@ -400,6 +401,11 @@
                 <groupId>tech.tablesaw</groupId>
                 <artifactId>tablesaw-core</artifactId>
                 <version>${tablesaw.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.beust</groupId>
+                <artifactId>jcommander</artifactId>
+                <version>${jcommander.version}</version>
             </dependency>
 
             <!-- Test dependencies -->

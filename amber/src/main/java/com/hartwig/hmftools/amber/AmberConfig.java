@@ -11,109 +11,98 @@ import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_TUMOR_ONLY_MIN_S
 import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_TUMOR_ONLY_MIN_VAF;
 import static com.hartwig.hmftools.amber.AmberConstants.DEFAULT_TYPICAL_READ_DEPTH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-
-import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
 
+import com.beust.jcommander.IStringConverter;
 import com.google.common.collect.Lists;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
+
+import com.beust.jcommander.Parameter;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import htsjdk.samtools.ValidationStringency;
 
 public class AmberConfig
 {
-    public final String TumorId;
-
-    public final String BafLociPath;
-    public final String TumorBamPath;
-    public final List<String> ReferenceIds;
-    public final List<String> ReferenceBamPath;
-    public final String RefGenomePath;
-    public final String OutputDir;
-
-    public final boolean TumorOnly;
-    public final int TumorOnlyMinSupport;
-    public final double TumorOnlyMinVaf;
-
-    public final int MinBaseQuality;
-    public final int MinMappingQuality;
-    public final double MinDepthPercent;
-    public final double MaxDepthPercent;
-    public final double MinHetAfPercent;
-    public final double MaxHetAfPercent;
-    public final ValidationStringency Stringency;
-
-    public final int ThreadCount;
-
     public static final int DEFAULT_THREADS = 1;
 
-    public static final String TUMOR = "tumor";
-    public static final String BAF_LOCI = "loci";
-    public static final String THREADS = "threads";
-    public static final String REFERENCE = "reference";
-    public static final String TUMOR_BAM = "tumor_bam";
-    public static final String OUTPUT_DIR = "output_dir";
-    public static final String REFERENCE_BAM = "reference_bam";
-    public static final String MIN_BASE_QUALITY = "min_base_quality";
-    public static final String MIN_MAPPING_QUALITY = "min_mapping_quality";
-    public static final String MIN_DEPTH_PERCENTAGE = "min_depth_percent";
-    public static final String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
-    public static final String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
-    public static final String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
-    public static final String VALIDATION_STRINGENCY = "validation_stringency";
+    @Parameter(names = "-tumor", required = true, description = "Name of tumor sample")
+    public String TumorId;
 
-    public static final String TUMOR_ONLY = "tumor_only";
-    public static final String TUMOR_ONLY_MIN_VAF = "tumor_only_min_vaf";
-    public static final String TUMOR_ONLY_MIN_SUPPORT = "tumor_only_min_support";
+    @Parameter(names = "-loci", required = true, description = "Path to BAF loci vcf file")
+    public String BafLociPath;
+
+    @Parameter(names = "-tumor_bam", required = true, description = "Path to indexed tumor bam file")
+    public String TumorBamPath;
+
+    @Parameter(names = "-reference", description = "Name of reference sample")
+    public List<String> ReferenceIds;
+
+    @Parameter(names = "-reference_bam", description = "Path to reference bam file")
+    public List<String> ReferenceBamPath;
+
+    @Parameter(names = "-" + REF_GENOME,
+               description = "Path to the reference genome fasta file. Required only when using CRAM files.")
+    public String RefGenomePath;
+
+    @Parameter(names = "-output_dir",
+               required = true,
+               description = "Path to the output directory. "
+                       + "This directory will be created if it does not already exist.")
+    public String OutputDir;
+
+    @Parameter(names = "-tumor_only_min_support",
+                        description = "Min support in ref and alt in tumor only mode")
+    public int TumorOnlyMinSupport = DEFAULT_TUMOR_ONLY_MIN_SUPPORT;
+
+    @Parameter(names = "-tumor_only_min_vaf",
+                        description = "Min VAF in ref and alt in tumor only mode")
+    public double TumorOnlyMinVaf = DEFAULT_TUMOR_ONLY_MIN_VAF;
+
+    @Parameter(names = "-min_base_quality",
+                        description = "Minimum quality for a base to be considered")
+    public int MinBaseQuality = DEFAULT_MIN_BASE_QUALITY;
+
+    @Parameter(names = "-min_mapping_quality",
+                        description = "Minimum mapping quality for an alignment to be used")
+    public int MinMappingQuality = DEFAULT_MIN_MAPPING_QUALITY;
+
+    @Parameter(names = "-min_depth_percent",
+                        description = "Min percentage of median depth")
+    public double MinDepthPercent = DEFAULT_MIN_DEPTH_PERCENTAGE;
+
+    @Parameter(names = "-max_depth_percent",
+                        description = "Max percentage of median depth")
+    public double MaxDepthPercent = DEFAULT_MAX_DEPTH_PERCENTAGE;
+
+    @Parameter(names = "-min_het_af_percent",
+                        description = "Min heterozygous AF%")
+    public double MinHetAfPercent = DEFAULT_MIN_HET_AF_PERCENTAGE;
+
+    @Parameter(names = "-max_het_af_percent",
+                        description = "Max heterozygous AF%")
+    public double MaxHetAfPercent = DEFAULT_MAX_HET_AF_PERCENTAGE;
+
+    @Parameter(names = "-validation_stringency",
+                        description = "SAM validation strategy")
+    public ValidationStringency Stringency = ValidationStringency.DEFAULT_STRINGENCY;
+
+    @Parameter(names = "-threads",
+                        description = "Number of threads")
+    public int ThreadCount = DEFAULT_THREADS;
+
+    @Parameter(names = "-" + RefGenomeVersion.REF_GENOME_VERSION,
+               description = RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC,
+               converter = RefGenomeVersionConverter.class)
+    public RefGenomeVersion refGenomeVersion = RefGenomeVersion.V37;
 
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
-
-    public AmberConfig(final CommandLine cmd)
-    {
-        TumorId = cmd.getOptionValue(TUMOR);
-
-        TumorOnly = cmd.hasOption(TUMOR_ONLY);
-
-        ThreadCount = getConfigValue(cmd, THREADS, DEFAULT_THREADS);
-        MinBaseQuality = getConfigValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY);
-        MinMappingQuality = getConfigValue(cmd, MIN_MAPPING_QUALITY, DEFAULT_MIN_MAPPING_QUALITY);
-        TumorOnlyMinSupport = getConfigValue(cmd, TUMOR_ONLY_MIN_SUPPORT, DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
-
-        MinDepthPercent = getConfigValue(cmd, MIN_DEPTH_PERCENTAGE, DEFAULT_MIN_DEPTH_PERCENTAGE);
-        MaxDepthPercent = getConfigValue(cmd, MAX_DEPTH_PERCENTAGE, DEFAULT_MAX_DEPTH_PERCENTAGE);
-        MinHetAfPercent = getConfigValue(cmd, MIN_HET_AF_PERCENTAGE, DEFAULT_MIN_HET_AF_PERCENTAGE);
-        MaxHetAfPercent = getConfigValue(cmd, MAX_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
-        TumorOnlyMinVaf = getConfigValue(cmd, TUMOR_ONLY_MIN_VAF, DEFAULT_TUMOR_ONLY_MIN_VAF);
-
-        ReferenceIds = TumorOnly ? Collections.emptyList() : Arrays.asList(cmd.getOptionValue(REFERENCE).split(","));
-
-        ReferenceBamPath = TumorOnly ? Collections.emptyList() : Arrays.asList(cmd.getOptionValue(REFERENCE_BAM).split(","));
-        BafLociPath = cmd.getOptionValue(BAF_LOCI);
-        TumorBamPath = cmd.getOptionValue(TUMOR_BAM);
-        OutputDir = parseOutputDir(cmd);
-
-        RefGenomePath = cmd.getOptionValue(REF_GENOME, Strings.EMPTY);
-
-        Stringency = ValidationStringency.valueOf(cmd.getOptionValue(VALIDATION_STRINGENCY, DEFAULT_STRINGENCY.toString()));
-    }
-
+    
     public String primaryReference()
     {
         return ReferenceIds.get(0);
@@ -135,6 +124,8 @@ public class AmberConfig
     {
         return DEFAULT_MIN_PARTITION;
     }
+
+    public boolean isTumorOnly() { return ReferenceBamPath.isEmpty(); }
 
     public boolean isValid()
     {
@@ -158,7 +149,7 @@ public class AmberConfig
             return false;
         }
 
-        if(!TumorOnly)
+        if(!isTumorOnly())
         {
             for(String referenceBam : ReferenceBamPath)
             {
@@ -173,33 +164,13 @@ public class AmberConfig
         return true;
     }
 
-    public static Options createOptions()
+    // we need to define a converter for ref genome version
+    static class RefGenomeVersionConverter implements IStringConverter<RefGenomeVersion>
     {
-        final Options options = new org.apache.commons.cli.Options();
-        options.addOption(TUMOR_ONLY, false, "Tumor only mode");
-        options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
-        options.addOption(REFERENCE, true, "Name of reference sample");
-        options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
-        options.addOption(TUMOR, true, "Name of tumor sample");
-        options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(BAF_LOCI, true, "Path to BAF loci vcf file");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(MIN_BASE_QUALITY, true, "Minimum quality for a base to be considered [" + DEFAULT_MIN_BASE_QUALITY + "]");
-        options.addOption(MIN_MAPPING_QUALITY,
-                true,
-                "Minimum mapping quality for an alignment to be used [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
-        options.addOption(MIN_HET_AF_PERCENTAGE, true, "Min heterozygous AF% [" + DEFAULT_MIN_HET_AF_PERCENTAGE + "]");
-        options.addOption(MAX_HET_AF_PERCENTAGE, true, "Max heterozygous AF% [" + DEFAULT_MAX_HET_AF_PERCENTAGE + "]");
-        options.addOption(MIN_DEPTH_PERCENTAGE, true, "Max percentage of median depth [" + DEFAULT_MIN_DEPTH_PERCENTAGE + "]");
-        options.addOption(MAX_DEPTH_PERCENTAGE, true, "Min percentage of median depth [" + DEFAULT_MAX_DEPTH_PERCENTAGE + "]");
-
-        options.addOption(TUMOR_ONLY_MIN_VAF, true, "Min support in ref and alt in tumor only mode [" + DEFAULT_TUMOR_ONLY_MIN_VAF + "]");
-        options.addOption(TUMOR_ONLY_MIN_SUPPORT,
-                true,
-                "Min VAF in ref and alt in tumor only mode [" + DEFAULT_TUMOR_ONLY_MIN_SUPPORT + "]");
-        options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
-
-        return options;
+        @Override
+        public RefGenomeVersion convert(String value)
+        {
+            return RefGenomeVersion.from(value);
+        }
     }
 }

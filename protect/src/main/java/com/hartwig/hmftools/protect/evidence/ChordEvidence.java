@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +25,7 @@ public class ChordEvidence {
             @NotNull final List<ActionableCharacteristic> actionableCharacteristics) {
         this.personalizedEvidenceFactory = personalizedEvidenceFactory;
         this.actionableCharacteristics = actionableCharacteristics.stream()
-                .filter(x -> x.name() == TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
+                .filter(x -> x.name() == TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .collect(Collectors.toList());
     }
 

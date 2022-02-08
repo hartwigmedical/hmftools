@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.serve.extraction.characteristic;
 
-public enum TumorCharacteristic {
-    MICROSATELLITE_UNSTABLE,
-    MICROSATELLITE_STABLE,
-    HIGH_TUMOR_MUTATIONAL_LOAD,
-    LOW_TUMOR_MUTATIONAL_LOAD,
-    HOMOLOGOUS_RECOMBINATION_DEFICIENT,
-    HPV_POSITIVE,
-    EBV_POSITIVE,
-    IMMUNO_HLA
+import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Value.Immutable
+@Value.Style(allParameters = true,
+             passAnnotations = { NotNull.class, Nullable.class })
+public abstract class TumorCharacteristic {
+
+    @Nullable
+    public abstract TumorCharacteristicAnnotation tumorCharacteristicAnnotation();
+
+    @NotNull
+    public abstract String cutoff();
 }

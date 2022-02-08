@@ -1,3 +1,3 @@
-name	rawInput	source	treatment	cancerType	doid	level	direction	urlSource	urls
-MICROSATELLITE_UNSTABLE	msi	VICC_CIVIC	Nivolumab	All cancer types	X	A	RESPONSIVE	http	http,http
-MICROSATELLITE_UNSTABLE	msi	VICC_CGI	Nivolumab	All cancer types	X	A	RESPONSIVE	http	http,http,https
+name	cutOff	rawInput	source	treatment	cancerType	doid	blacklistCancerType	blacklistDoid	level	direction	urlSource	urls
+MICROSATELLITE_UNSTABLE		msi	VICC_CIVIC	Nivolumab	All cancer types	X			A	RESPONSIVE	http	http,http
+MICROSATELLITE_UNSTABLE		msi	VICC_CGI	Nivolumab	All cancer types	X			A	RESPONSIVE	http	http,http,https

@@ -33,5 +33,14 @@ public class ActinEventExtractorTest {
                 .build();
 
         assertEquals(Sets.newHashSet("mut"), ActinEventExtractor.extractEvents(trial1));
+
+        ActinEntry trial2 = ImmutableActinEntry.builder()
+                .trial("trial1")
+                .rule(ActinRule.WILDTYPE_OF_GENE_X)
+                .gene("A")
+                .mutation("wildtype")
+                .build();
+
+        assertEquals(Sets.newHashSet("wildtype"), ActinEventExtractor.extractEvents(trial2));
     }
 }

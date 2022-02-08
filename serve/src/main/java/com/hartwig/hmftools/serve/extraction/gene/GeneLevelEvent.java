@@ -6,5 +6,6 @@ public enum GeneLevelEvent {
     ACTIVATION,
     INACTIVATION,
     ANY_MUTATION,
-    FUSION
+    FUSION,
+    WILD_TYPE
 }

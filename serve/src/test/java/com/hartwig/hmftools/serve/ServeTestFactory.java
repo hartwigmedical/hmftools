@@ -19,7 +19,7 @@ import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
 import com.hartwig.hmftools.serve.extraction.ExtractionResult;
 import com.hartwig.hmftools.serve.extraction.ImmutableExtractionResult;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.CodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableCodonAnnotation;
 import com.hartwig.hmftools.serve.extraction.codon.ImmutableKnownCodon;
@@ -217,7 +217,8 @@ public final class ServeTestFactory {
     public static ActionableCharacteristic createTestActionableCharacteristic() {
         return ImmutableActionableCharacteristic.builder()
                 .from(createTestBaseEvent())
-                .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
+                .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
+                .cutOff(Strings.EMPTY)
                 .build();
     }
 
@@ -233,9 +234,11 @@ public final class ServeTestFactory {
                 Strings.EMPTY,
                 Strings.EMPTY,
                 Strings.EMPTY,
+                Sets.newHashSet(),
+                Sets.newHashSet(),
                 EvidenceLevel.A,
                 EvidenceDirection.RESPONSIVE,
-                Strings.EMPTY,
+                Sets.newHashSet(),
                 Sets.newHashSet());
     }
 }

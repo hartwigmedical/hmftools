@@ -41,4 +41,9 @@ public abstract class AmberQC {
     public abstract double meanBAF();
 
     public abstract double contamination();
+
+    public abstract double consanguinityProportion();
+
+    @Nullable
+    public abstract String uniparentalDisomy();
 }

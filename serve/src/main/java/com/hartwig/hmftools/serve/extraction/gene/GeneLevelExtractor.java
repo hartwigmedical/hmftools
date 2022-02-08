@@ -48,7 +48,10 @@ public class GeneLevelExtractor {
 
     @Nullable
     public GeneLevelAnnotation extract(@NotNull String gene, @NotNull EventType type, @NotNull String event) {
-        if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
+        if (type == EventType.WILD_TYPE && exomeGeneChecker.isValidGene(gene)) {
+            GeneLevelEvent geneLevelEvent = extractWildTypeEvents(gene, type);
+            return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
+        } else if (type == EventType.GENE_LEVEL && exomeGeneChecker.isValidGene(gene)) {
             GeneLevelEvent geneLevelEvent = extractGeneLevelEvent(gene, event);
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(geneLevelEvent).build();
         } else if (type == EventType.PROMISCUOUS_FUSION && fusionGeneChecker.isValidGene(gene)) {
@@ -58,6 +61,27 @@ public class GeneLevelExtractor {
             return ImmutableGeneLevelAnnotation.builder().gene(gene).event(GeneLevelEvent.FUSION).build();
         }
 
+        return null;
+    }
+
+    @NotNull
+    GeneLevelEvent extractWildTypeEvents(@NotNull String gene, @NotNull EventType type) {
+        if (reportOnDriverInconsistencies) {
+            DriverCategory driverCategory = findByGene(driverGenes, gene);
+            if (driverCategory == null) {
+                LOGGER.warn("{} on {} is not included in driver catalog and won't ever be reported.", type, gene);
+            }
+        }
+        return GeneLevelEvent.WILD_TYPE;
+    }
+
+    @Nullable
+    private static DriverCategory findByGene(@NotNull List<DriverGene> driverGenes, @NotNull String gene) {
+        for (DriverGene driverGene : driverGenes) {
+            if (driverGene.gene().equals(gene)) {
+                return driverGene.likelihoodType();
+            }
+        }
         return null;
     }
 
@@ -81,20 +105,27 @@ public class GeneLevelExtractor {
         GeneLevelEvent driverBasedEvent = determineGeneLevelEventFromDriverGenes(driverGenes, gene);
         // If we find both an activating and inactivating event, we assume the longest event is the most important.
         // This is to support cases where an activating keyphrase is a substring of inactivating keyphrase (eg "act mut" vs "inact mut".
+        GeneLevelEvent result;
         if (longestActivationMatchLength > 0 || longestInactivatingMatchLength > 0) {
-            GeneLevelEvent geneLevelEvent = longestActivationMatchLength >= longestInactivatingMatchLength
+            result = longestActivationMatchLength >= longestInactivatingMatchLength
                     ? GeneLevelEvent.ACTIVATION
                     : GeneLevelEvent.INACTIVATION;
-            if (reportOnDriverInconsistencies && geneLevelEvent != driverBasedEvent && driverBasedEvent != GeneLevelEvent.ANY_MUTATION) {
+        } else {
+            result = driverBasedEvent;
+        }
+
+        if (reportOnDriverInconsistencies) {
+            if (driverBasedEvent == GeneLevelEvent.ANY_MUTATION) {
+                LOGGER.warn("Gene {} not present in driver catalog. {} will never be reported", gene, result);
+            } else if (result != driverBasedEvent) {
                 LOGGER.warn("Mismatch in driver gene event for '{}'. Event suggests {} while driver catalog suggests {}",
                         gene,
-                        geneLevelEvent,
+                        result,
                         driverBasedEvent);
             }
-            return geneLevelEvent;
-        } else {
-            return driverBasedEvent;
         }
+
+        return result;
     }
 
     @NotNull

@@ -13,5 +13,6 @@ public enum EventType {
     CHARACTERISTIC,
     COMBINED,
     COMPLEX,
+    WILD_TYPE,
     UNKNOWN
 }

@@ -5,6 +5,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.ckb.datamodel.CkbEntry;
+import com.hartwig.hmftools.ckb.datamodel.drug.Drug;
 import com.hartwig.hmftools.ckb.datamodel.evidence.Evidence;
 import com.hartwig.hmftools.ckb.datamodel.reference.Reference;
 import com.hartwig.hmftools.common.serve.Knowledgebase;
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.common.serve.actionability.EvidenceLevel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,13 +78,17 @@ class ActionableEntryFactory {
                     }
 
                     int molecularProfileId = entry.profileId();
-                    int drugId = evidence.therapy().id(); //TODO fix correct drugId
-
                     String doidKb = extractDoidKB(evidence.indication().termId());
-                    String sourceLink =
-                            "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
-                                    + "&drugId=" + drugId + "&doId=" + doidKb + "&responseType=" + evidence.responseType() + "&evidenceType="
-                                    + evidence.evidenceType();
+
+                    String responseType = extractResponseType(evidence.responseType());
+
+                    Set<String> sourceLinks = Sets.newHashSet();
+                    for (Drug drug : evidence.therapy().drugs()) {
+                        sourceLinks.add(
+                                "https://ckbhome.jax.org/profileResponse/advancedEvidenceFind?molecularProfileId=" + molecularProfileId
+                                        + "&drugId=" + drug.id() + "&doId=" + doidKb + "&responseType=" + responseType
+                                        + "&evidenceType=" + evidence.evidenceType());
+                    }
 
                     actionableEntries.add(ImmutableActionableEntry.builder()
                             .rawInput(rawInput)
@@ -90,9 +96,11 @@ class ActionableEntryFactory {
                             .treatment(treatment)
                             .cancerType(cancerType)
                             .doid(doid)
+                            .blacklistCancerType(doid.equals("162") ? Sets.newHashSet("Hematologic cancer") : Sets.newHashSet())
+                            .blacklistedDoid(doid.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
                             .level(level)
                             .direction(direction)
-                            .urlSource(sourceLink)
+                            .urlSource(sourceLinks)
                             .urls(urls)
                             .build());
                 }
@@ -102,6 +110,16 @@ class ActionableEntryFactory {
         return actionableEntries;
     }
 
+    @NotNull
+    static String extractResponseType(@NotNull String responseType) {
+        if (responseType.equals("predicted - sensitive")) {
+            return"predicted+-+sensitive";
+        } else if (responseType.equals("predicted - resistant")) {
+            return"predicted+-+resistant";
+        } else {
+            return responseType;
+        }
+    }
     @Nullable
     @VisibleForTesting
     static String extractDoidKB(@Nullable String doidString) {
@@ -113,7 +131,7 @@ class ActionableEntryFactory {
         if (parts.length == 2) {
             String source = parts[0];
             String id = parts[1];
-            if (source.equalsIgnoreCase("doid")) {
+            if (source.equalsIgnoreCase("doid") || source.equalsIgnoreCase("jax")) {
                 return id;
             } else {
                 return null;

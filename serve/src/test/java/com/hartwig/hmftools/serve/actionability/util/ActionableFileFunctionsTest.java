@@ -23,9 +23,11 @@ public class ActionableFileFunctionsTest {
                 "treatment",
                 "cancerType",
                 "doid",
+                Sets.newHashSet("blacklistCancerType"),
+                Sets.newHashSet("blacklistDoid"),
                 EvidenceLevel.C,
                 EvidenceDirection.RESISTANT,
-                Strings.EMPTY,
+                Sets.newHashSet(),
                 Sets.newHashSet("url1", "url2"));
 
         String line = ActionableFileFunctions.toLine(event);

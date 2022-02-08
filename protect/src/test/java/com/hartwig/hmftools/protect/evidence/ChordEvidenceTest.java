@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.protect.ProtectEvidence;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -25,12 +25,12 @@ public class ChordEvidenceTest {
     public void canDetermineEvidenceForChord() {
         ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
+                .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
         ActionableCharacteristic signature2 = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .build();
 
         ChordEvidence chordEvidence =

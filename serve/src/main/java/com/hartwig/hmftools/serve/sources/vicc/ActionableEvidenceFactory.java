@@ -108,14 +108,19 @@ class ActionableEvidenceFactory {
                     .source(fromViccSource(entry.source()))
                     .level(level)
                     .direction(direction)
-                    .urlSource(Strings.EMPTY)
+                    .urlSource(Sets.newHashSet())
                     .urls(urls);
 
             for (Map.Entry<String, Set<String>> cancerTypeEntry : cancerTypeToDoidsMap.entrySet()) {
                 String cancerType = cancerTypeEntry.getKey();
                 for (String doid : cancerTypeEntry.getValue()) {
                     for (List<String> drugList : drugLists) {
-                        actionableEvents.add(builder.cancerType(cancerType).doid(doid).treatment(formatDrugList(drugList)).build());
+                        actionableEvents.add(builder.cancerType(cancerType)
+                                .doid(doid)
+                                .blacklistCancerType(doid.equals("162") ? Sets.newHashSet("Hematologic cancer") : Sets.newHashSet())
+                                .blacklistedDoid(doid.equals("162") ? Sets.newHashSet("2531") : Sets.newHashSet())
+                                .treatment(formatDrugList(drugList))
+                                .build());
                     }
                 }
             }

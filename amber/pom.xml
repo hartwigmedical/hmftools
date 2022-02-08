@@ -23,6 +23,14 @@
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tech.tablesaw</groupId>
+            <artifactId>tablesaw-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

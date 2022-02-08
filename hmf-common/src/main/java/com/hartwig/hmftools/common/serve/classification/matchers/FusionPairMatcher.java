@@ -48,7 +48,7 @@ class FusionPairMatcher implements EventMatcher {
             potentialFusion = trimmedEvent;
         }
 
-        if (potentialFusion.contains("-")) {
+        if (potentialFusion.contains("-") && !potentialFusion.equals("wild-type")) {
             String[] parts = potentialFusion.split("-");
             // Assume genes that are fused contain no spaces and do not end with "-"
             return parts.length > 1 && !parts[0].contains(" ") && !parts[1].contains(" ");

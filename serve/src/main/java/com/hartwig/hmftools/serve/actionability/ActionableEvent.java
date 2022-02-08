@@ -27,13 +27,19 @@ public interface ActionableEvent {
     String doid();
 
     @NotNull
+    Set<String> blacklistCancerType();
+
+    @NotNull
+    Set<String> blacklistedDoid();
+
+    @NotNull
     EvidenceLevel level();
 
     @NotNull
     EvidenceDirection direction();
 
     @NotNull
-    String urlSource();
+    Set<String> urlSource();
 
     @NotNull
     Set<String> urls();

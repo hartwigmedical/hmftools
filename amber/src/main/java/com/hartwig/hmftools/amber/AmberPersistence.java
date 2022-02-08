@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.BaseDepth;
@@ -20,6 +19,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 class AmberPersistence
 {
@@ -51,10 +51,12 @@ class AmberPersistence
         new AmberVCF(mConfig).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
     }
 
-    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException
+    void persistQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords,
+            double consanguinityProportion, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
-        final AmberQC qcStats = AmberQCFactory.create(contamination, result);
+        final AmberQC qcStats = AmberQCFactory.create(contamination, result, consanguinityProportion,
+                uniparentalDisomy != null ? uniparentalDisomy.toString() : null);
         final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.TumorId);
         AmberQCFile.write(qcFilename, qcStats);
     }
@@ -73,11 +75,27 @@ class AmberPersistence
 
     void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
     {
-        if(baseDepths.size() > 0)
+        if (baseDepths.size() > 0)
         {
             final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.snp.vcf.gz";
             AMB_LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
-            new AmberVCF(mConfig).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
+            AmberVCF.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
+    }
+
+    void persistPrimaryRefUnfiltered(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
+    {
+        if (baseDepths.size() > 0)
+        {
+            final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.unfiltered.vcf.gz";
+            AMB_LOGGER.info("Writing {} germline unfiltered records to {}", baseDepths.size(), outputVcf);
+            AmberVCF.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
+        }
+    }
+
+    void persistHomozygousRegions(@NotNull final List<RegionOfHomozygosity> regionOfHomozygosities) throws IOException
+    {
+        final String filename = RegionOfHomozygosityFile.generateFilename(mConfig.OutputDir, mConfig.primaryReference());
+        RegionOfHomozygosityFile.write(filename, regionOfHomozygosities);
     }
 }

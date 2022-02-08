@@ -11,7 +11,6 @@ import com.hartwig.hmftools.serve.actionability.ActionableEvents;
 import com.hartwig.hmftools.serve.actionability.ActionableEventsLoader;
 
 import org.apache.logging.log4j.util.Strings;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ProtectAlgoTest {
@@ -36,7 +35,7 @@ public class ProtectAlgoTest {
     private static final String ANNOTATED_VIRUS_TSV = Resources.getResource("test_run/virusbreakend/sample.virus.annotated.tsv").getPath();
     private static final String CHORD_PREDICTION_TXT = Resources.getResource("test_run/chord/sample_chord_prediction.txt").getPath();
 
-    @Ignore
+    @Test
     public void canRunProtectAlgo() throws IOException {
         ProtectConfig config = ImmutableProtectConfig.builder()
                 .tumorSampleId("sample")

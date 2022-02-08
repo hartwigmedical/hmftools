@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.protect.evidence;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -13,7 +14,7 @@ import com.hartwig.hmftools.serve.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.serve.actionability.range.ActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.ImmutableActionableRange;
 import com.hartwig.hmftools.serve.actionability.range.RangeType;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 import com.hartwig.hmftools.serve.extraction.gene.GeneLevelEvent;
 
 import org.junit.Test;
@@ -40,9 +41,11 @@ public class PersonalizedEvidenceFactoryTest {
 
         ActionableCharacteristic characteristic = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .cutOff("10")
                 .build();
         assertEquals(ProtectEvidenceType.SIGNATURE, PersonalizedEvidenceFactory.determineEvidenceType(characteristic));
+        assertEquals("10", characteristic.cutOff());
     }
 
     @Test
@@ -65,7 +68,7 @@ public class PersonalizedEvidenceFactoryTest {
 
     @Test
     public void canDetermineEvidenceTypesForAllCharacteristics() {
-        for (TumorCharacteristic name : TumorCharacteristic.values()) {
+        for (TumorCharacteristicAnnotation name : TumorCharacteristicAnnotation.values()) {
             ActionableCharacteristic characteristic = ImmutableActionableCharacteristic.builder()
                     .from(ServeTestFactory.createTestActionableCharacteristic())
                     .name(name)

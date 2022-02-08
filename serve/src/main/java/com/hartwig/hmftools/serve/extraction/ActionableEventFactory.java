@@ -134,6 +134,10 @@ public final class ActionableEventFactory {
     @NotNull
     public static ActionableCharacteristic toActionableCharacteristic(@NotNull ActionableEvent actionableEvent,
             @NotNull TumorCharacteristic characteristic) {
-        return ImmutableActionableCharacteristic.builder().from(actionableEvent).name(characteristic).build();
+        return ImmutableActionableCharacteristic.builder()
+                .from(actionableEvent)
+                .name(characteristic.tumorCharacteristicAnnotation())
+                .cutOff(characteristic.cutoff())
+                .build();
     }
 }

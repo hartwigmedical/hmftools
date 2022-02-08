@@ -43,9 +43,11 @@ public class ActionableEventUrlMergerTest {
                         "treatment",
                         "cancerType",
                         "doid",
+                        Sets.newHashSet("blacklistCancerType"),
+                        Sets.newHashSet("blacklistDoid"),
                         EvidenceLevel.A,
                         EvidenceDirection.RESPONSIVE,
-                        Strings.EMPTY,
+                        Sets.newHashSet(),
                         Sets.newHashSet(url)))
                 .geneUp(gene)
                 .geneDown(gene)

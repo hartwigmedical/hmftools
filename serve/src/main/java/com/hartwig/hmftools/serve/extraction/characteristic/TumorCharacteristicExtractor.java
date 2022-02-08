@@ -46,36 +46,36 @@ public class TumorCharacteristicExtractor {
     }
 
     @Nullable
-    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event) {
+    public TumorCharacteristic extract(@NotNull EventType type, @NotNull String event, @NotNull String cutOff) {
         if (type == EventType.CHARACTERISTIC) {
-            TumorCharacteristic characteristic = determineCharacteristic(event);
+            TumorCharacteristicAnnotation characteristic = determineCharacteristic(event);
             if (characteristic == null) {
                 LOGGER.warn("Could not extract characteristic from '{}'", event);
+            } else {
+                return ImmutableTumorCharacteristic.builder().tumorCharacteristicAnnotation(characteristic).cutoff(cutOff).build();
             }
-            return characteristic;
         }
-
         return null;
     }
 
     @Nullable
-    private TumorCharacteristic determineCharacteristic(@NotNull String event) {
+    private TumorCharacteristicAnnotation determineCharacteristic(@NotNull String event) {
         if (microsatelliteUnstableEvents.contains(event)) {
-            return TumorCharacteristic.MICROSATELLITE_UNSTABLE;
+            return TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE;
         } else if (microsatelliteStableEvents.contains(event)) {
-            return TumorCharacteristic.MICROSATELLITE_STABLE;
+            return TumorCharacteristicAnnotation.MICROSATELLITE_STABLE;
         } else if (highTumorMutationalLoadEvents.contains(event)) {
-            return TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD;
+            return TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD;
         } else if (lowTumorMutationalLoadEvents.contains(event)) {
-            return TumorCharacteristic.LOW_TUMOR_MUTATIONAL_LOAD;
+            return TumorCharacteristicAnnotation.LOW_TUMOR_MUTATIONAL_LOAD;
         } else if (hrDeficiencyEvents.contains(event)) {
-            return TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
+            return TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
         } else if (hpvPositiveEvents.contains(event)) {
-            return TumorCharacteristic.HPV_POSITIVE;
+            return TumorCharacteristicAnnotation.HPV_POSITIVE;
         } else if (ebvPositiveEvents.contains(event)) {
-            return TumorCharacteristic.EBV_POSITIVE;
+            return TumorCharacteristicAnnotation.EBV_POSITIVE;
         } else if (immunoHlaEvents.contains(event)) {
-            return TumorCharacteristic.IMMUNO_HLA;
+            return TumorCharacteristicAnnotation.IMMUNO_HLA;
         }
 
         return null;

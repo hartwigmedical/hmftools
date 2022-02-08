@@ -19,7 +19,8 @@ public class ActinFilterTest {
     @Test
     public void canFilter() {
         List<ActinFilterEntry> filterEntries = Lists.newArrayList();
-        filterEntries.add(create(ActinFilterType.FILTER_VARIANT_ON_GENE, "BRAF V600E"));
+        filterEntries.add(create(ActinFilterType.FILTER_MUTATION_ON_GENE, "BRAF V600E"));
+        filterEntries.add(create(ActinFilterType.FILTER_RULE_ON_GENE, "BRAF " + ActinRule.ACTIVATING_MUTATION_IN_GENE_X.toString()));
         filterEntries.add(create(ActinFilterType.FILTER_EVERYTHING_FOR_GENE, "KRAS"));
         filterEntries.add(create(ActinFilterType.FILTER_EVERYTHING_FOR_RULE, ActinRule.WILDTYPE_OF_GENE_X.toString()));
 
@@ -28,6 +29,13 @@ public class ActinFilterTest {
         ActinEntry brafV600E =
                 ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("BRAF").mutation("V600E").build();
         assertTrue(filter.run(Lists.newArrayList(brafV600E)).isEmpty());
+
+        ActinEntry brafActivation = ImmutableActinEntry.builder()
+                .from(ActinTestFactory.createTestEntry())
+                .rule(ActinRule.ACTIVATING_MUTATION_IN_GENE_X)
+                .gene("BRAF")
+                .build();
+        assertTrue(filter.run(Lists.newArrayList(brafActivation)).isEmpty());
 
         ActinEntry kras = ImmutableActinEntry.builder().from(ActinTestFactory.createTestEntry()).gene("KRAS").build();
         assertTrue(filter.run(Lists.newArrayList(kras)).isEmpty());

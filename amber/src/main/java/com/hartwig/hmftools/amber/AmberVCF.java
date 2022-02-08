@@ -47,7 +47,7 @@ public class AmberVCF
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
 
-        final VCFHeader header = header(mConfig.TumorOnly ? Collections.singletonList(mConfig.TumorId) : mConfig.allSamples());
+        final VCFHeader header = header(mConfig.isTumorOnly() ? Collections.singletonList(mConfig.TumorId) : mConfig.allSamples());
 
         writer.setHeader(header);
         writer.writeHeader(header);
@@ -86,30 +86,30 @@ public class AmberVCF
         writer.close();
     }
 
-    void writeSNPCheck(@NotNull final String filename, @NotNull final List<BaseDepth> baseDepths)
+    public static void writeBaseDepths(@NotNull final String filename, @NotNull final Collection<BaseDepth> baseDepths, String sampleName)
     {
         final List<BaseDepth> list = Lists.newArrayList(baseDepths);
         Collections.sort(list);
 
         final VariantContextWriter writer =
                 new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        final VCFHeader header = header(Lists.newArrayList(mConfig.primaryReference()));
+        final VCFHeader header = header(Collections.singletonList(sampleName));
         writer.setHeader(header);
         writer.writeHeader(header);
 
-        list.forEach(x -> writer.add(create(x)));
+        list.forEach(x -> writer.add(create(x, sampleName)));
         writer.close();
     }
 
     @NotNull
-    private VariantContext create(@NotNull final TumorBAF tumorBaf, final List<Genotype> genotypes)
+    private static VariantContext create(@NotNull final TumorBAF tumorBaf, final List<Genotype> genotypes)
     {
 
         final List<Allele> alleles = alleles(tumorBaf);
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(tumorBaf.chromosome())
                 .start(tumorBaf.position())
-                .computeEndFromAlleles(alleles, (int) tumorBaf.position())
+                .computeEndFromAlleles(alleles, tumorBaf.position())
                 .genotypes(genotypes)
                 .alleles(alleles);
 
@@ -140,7 +140,7 @@ public class AmberVCF
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(contamination.chromosome())
                 .start(contamination.position())
-                .computeEndFromAlleles(alleles, (int) contamination.position())
+                .computeEndFromAlleles(alleles, contamination.position())
                 .genotypes(tumor, normal)
                 .alleles(alleles);
 
@@ -148,7 +148,7 @@ public class AmberVCF
     }
 
     @NotNull
-    private VariantContext create(@NotNull final BaseDepth snp)
+    private static VariantContext create(@NotNull final BaseDepth snp, String sampleName)
     {
         final List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(snp.ref().toString(), true));
@@ -158,14 +158,14 @@ public class AmberVCF
         adField.add(snp.refSupport());
         adField.add(snp.altSupport());
 
-        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(snp.readDepth())
+        final Genotype normal = new GenotypeBuilder(sampleName).DP(snp.readDepth())
                 .AD(adField.stream().mapToInt(i -> i).toArray())
                 .alleles(alleles)
                 .make();
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(snp.chromosome())
                 .start(snp.position())
-                .computeEndFromAlleles(alleles, (int) snp.position())
+                .computeEndFromAlleles(alleles, snp.position())
                 .genotypes(normal)
                 .alleles(alleles);
 

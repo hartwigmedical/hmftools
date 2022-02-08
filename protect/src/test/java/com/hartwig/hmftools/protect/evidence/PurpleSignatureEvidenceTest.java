@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.serve.ServeTestFactory;
 import com.hartwig.hmftools.serve.actionability.characteristic.ActionableCharacteristic;
 import com.hartwig.hmftools.serve.actionability.characteristic.ImmutableActionableCharacteristic;
-import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristic;
+import com.hartwig.hmftools.serve.extraction.characteristic.TumorCharacteristicAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -26,17 +26,17 @@ public class PurpleSignatureEvidenceTest {
     public void canDeterminePurpleSignatureEvidence() {
         ActionableCharacteristic signature1 = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristic.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
+                .name(TumorCharacteristicAnnotation.HOMOLOGOUS_RECOMBINATION_DEFICIENT)
                 .build();
 
         ActionableCharacteristic signature2 = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristic.HIGH_TUMOR_MUTATIONAL_LOAD)
+                .name(TumorCharacteristicAnnotation.HIGH_TUMOR_MUTATIONAL_LOAD)
                 .build();
 
         ActionableCharacteristic signature3 = ImmutableActionableCharacteristic.builder()
                 .from(ServeTestFactory.createTestActionableCharacteristic())
-                .name(TumorCharacteristic.MICROSATELLITE_UNSTABLE)
+                .name(TumorCharacteristicAnnotation.MICROSATELLITE_UNSTABLE)
                 .build();
 
         PurpleSignatureEvidence purpleSignatureEvidence = new PurpleSignatureEvidence(EvidenceTestFactory.createTestEvidenceFactory(),

@@ -44,9 +44,11 @@ public class ActionableEventComparatorTest {
                 treatment,
                 cancerType,
                 Strings.EMPTY,
+                Sets.newHashSet(),
+                Sets.newHashSet(),
                 level,
                 direction,
-                Strings.EMPTY,
+                Sets.newHashSet(),
                 Sets.newHashSet());
     }
 }
