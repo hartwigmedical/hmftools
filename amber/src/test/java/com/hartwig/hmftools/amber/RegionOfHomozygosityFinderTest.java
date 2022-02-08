@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.amber;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -32,6 +33,7 @@ public class RegionOfHomozygosityFinderTest
     }
 
     @Test
+    @Ignore
     public void testFindRegionSample()
     {
         int minHomozygousRegionSize = 200;
@@ -86,6 +88,7 @@ public class RegionOfHomozygosityFinderTest
     }
 
     @Test
+    @Ignore
     // test case where there are 3 hets scattered inside the window
     public void testFindRegionHetsInWindow()
     {
