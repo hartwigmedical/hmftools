@@ -112,37 +112,25 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
    -threads 16 \
    -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
+## Regions of Homozygosity Algorithm
+Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
 
+For determination of the region each BAF site in the provided bed file is calculated as homozygous (alt or ref) or heterozygous according to the following criteria:
+```
+Homozygous alt:   totalReadCount==AltReadCount) OR (AltReadCount > 0.75*TotalReadCount AND POISSON.DIST(totalReadCount-AltReadCount,TotalReadCount/2,TRUE) < 0.005
+Homozygous ref:  AltReadCount==0) OR (AltReadCount < 0.25*TotalReadCount AND POISSON.DIST(AltReadCount,TotalReadCount/2,TRUE) < 0.005
+Heterozygous: all other sites
+```
+A region must meet the following criteria to be considered a region of homozygosity:
+- Region must have at least 50 consecutive SNP locations with no 5 of any consecutive 50 locations heterozygous
+- Region must be at least 500,000 bases in length.   For regions of <3M a soft filter of minLength is applied 
+- <5% of the SNP locations in the whole region may be  heterozygous (soft filter only)
 
-## Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
-Elapsed time is measured in minutes. 
-CPU time is minutes spent in user mode. 
-Peak memory is measure in gigabytes.
+If multiple references are provided (for example donor & patient reference) then regions of homozygosity are calculated for the first reference only.
 
+If only one chromosome is affected and the regions affected amount to more than 10Mb than mark that chromosome with UniparentalDisomy in the QC file.   Determine the ConsanguinityProportion as the sum of homozygous regions > 3MB divided by the size of the autosome genome (2.88bn bases).     Note that the expected value for consanguinityProportion for a child of direct siblings would be 0.25, dividing by a factor of 2 for each further level of removal in relationship.
 
-| Threads | Elapsed Time | CPU Time | Peak Mem |
-|---------|--------------|----------|----------|
-| 1       | 144          | 230      | 15.04    |
-| 8       | 22           | 164      | 18.40    |
-| 16      | 12           | 164      | 21.00    |
-| 32      | 8            | 170      | 21.60    |
-| 48      | 7            | 199      | 21.43    |
-| 64      | 6            | 221      | 21.78    |
-
-## Output
-| File                                    | Description                                                                              |
-|-----------------------------------------|------------------------------------------------------------------------------------------|
-| TUMOR.amber.baf.tsv                     | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
-| TUMOR.amber.baf.pcf                     | TSV of BAF segments using PCF algorithm.                                                 |
-| TUMOR.amber.qc                          | Contains median tumor baf and QC status. FAIL may indicate contamination in sample.      |
-| TUMOR.amber.baf.vcf.gz                  | Similar information as BAF file but in VCF format.                                       |
-| TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
-| REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
-| REFERENCE.amber.homozygousregion.vcf.gz | Regions of homozygosity found in the reference.                                          |
-
-# Patient Matching
-
+## Patient Matching
 The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to identify if a new sample belongs to an existing patient. 
 This is particularly important when doing cohort analysis as multiple samples from the same patient can skew results.
 
@@ -186,6 +174,34 @@ GROUP BY patientId
 HAVING sampleCount > 1
 ORDER BY sampleCount desc;
 ```
+
+
+## Output
+| File                                    | Description                                                                              |
+|-----------------------------------------|------------------------------------------------------------------------------------------|
+| TUMOR.amber.baf.tsv                     | Tab separated values (TSV) containing reference and tumor BAF at each heterozygous site. |
+| TUMOR.amber.baf.pcf                     | TSV of BAF segments using PCF algorithm.                                                 |
+| TUMOR.amber.qc                          | Contains median tumor baf and QC status. FAIL may indicate contamination in sample.      |
+| TUMOR.amber.baf.vcf.gz                  | Similar information as BAF file but in VCF format.                                       |
+| TUMOR.amber.contamination.vcf.gz        | Entry at each homozygous site in the reference and tumor.                                |
+| REFERENCE.amber.snp.vcf.gz              | Entry at each SNP location in the reference.                                             |
+| REFERENCE.amber.homozygousregion.vcf.gz | Regions of homozygosity found in the reference.                                          |
+
+## Performance Characteristics
+Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
+
+
+| Threads | Elapsed Time | CPU Time | Peak Mem |
+|---------|--------------|----------|----------|
+| 1       | 144          | 230      | 15.04    |
+| 8       | 22           | 164      | 18.40    |
+| 16      | 12           | 164      | 21.00    |
+| 32      | 8            | 170      | 21.60    |
+| 48      | 7            | 199      | 21.43    |
+| 64      | 6            | 221      | 21.78    |
 
  
 # Version History and Download Links
